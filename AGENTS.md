@@ -337,3 +337,199 @@ export default defineConfig({
 - [TypeScript Official Documentation](https://www.typescriptlang.org/)
 - [React Router Documentation](https://reactrouter.com/)
 - [Zustand Documentation](https://github.com/pmndrs/zustand)
+
+Este repositorio contiene el sistema de apoyo para la gestión de trámites de posgrados de la Escuela de Ingeniería de Sistemas e Informática (EISI – UIS).  
+Stack principal: **Spring Boot (Java)** + **PostgreSQL** + **React (TypeScript)**.
+
+El objetivo del sistema es **centralizar, estandarizar y dar trazabilidad** a procesos de:
+
+- Admisiones
+- Matrícula académica
+- Matrícula financiera / créditos condonables
+- Solicitudes estudiantiles
+- Examen de candidatura
+- Trabajos de grado
+- Notificaciones y configuración de fechas
+
+---
+
+## 1. Arquitectura y principios generales
+
+- **Backend**: Spring Boot, arquitectura por módulos / capas:
+  - `domain` (entidades de dominio, servicios de dominio)
+  - `application` (casos de uso / servicios de aplicación)
+  - `infrastructure` (JPA, controladores REST, integración con IDP, correo, etc.)
+- **Base de datos**: PostgreSQL, esquema definido a través de migraciones (`Flyway` o similar) usando el SQL del modelo actual.
+- **Frontend**: React + TypeScript, con:
+  - React Router para navegación
+  - Algún cliente de datos tipo React Query / fetch encapsulado en servicios
+- **Principio guía**: **el dominio manda**, no la tecnología. Antes de agregar campos o cambiar lógica, preguntarse:
+  > ¿Qué implica esto en términos de reglamento de posgrados / proceso académico?
+
+---
+
+## 2. Dominio y nomenclatura
+
+Usar nombres coherentes con el modelo de datos y el contexto UIS/EISI:
+
+- Programas: `Programa`, `ProgramaService`, `ProgramaController`…
+- Periodos: `PeriodoAcademico`
+- Personas y usuarios:
+  - **IDP**: `PersonasIdp` (`personas_idp`)
+  - **Sistema SAPP**: `UsuarioSapp` (`usuarios_sapp`)
+- Admisiones: `Aspirante`, `ConvocatoriaAdmision`, `InscripcionAdmision`, `EvaluacionAdmision`
+- Matrícula: `MatriculaAcademica`, `MatriculaAsignatura`, `LiquidacionMatricula`
+- Créditos: `SolicitudCredito`, `CertificadoContraprestacion`
+- Solicitudes: `Solicitud`, `SolicitudHomologacion`, etc.
+- Trabajos de grado: `TrabajoGrado`, `EtapaTrabajoGrado`, `SustentacionTrabajoGrado`
+- Examen de candidatura: `ExamenCandidatura`
+
+**No inventar terminología** anglófona para conceptos de reglamento (ej. “ThesisExam” → mejor `ExamenCandidatura`).
+
+---
+
+## 3. Reglas clave del modelo de datos (no romper)
+
+Al tocar código que usa la BD:
+
+- Un registro en `estudiantes` está ligado **1:1** a `personas_idp`:
+  - Respetar `constraint uq_persona_estudiante unique (persona_id)`
+- Un `UsuarioSapp` siempre referencia una `PersonaIdp`.  
+  El ID principal del sistema para autenticación/autorización es `usuarios_sapp.id`.
+- No eliminar ni modificar constraints de unicidad sin revisar impacto:
+  - `uq_periodo` (año + periodo)
+  - `uq_convocatoria` (programa + periodo)
+  - `uq_matricula_est_per`, `uq_liq_est_per`, `uq_credito_est_per_tipo`
+  - `uq_plan_prog_anio`, `uq_plan_asig`
+- **Documentos**:
+  - Metadatos en `documentos`
+  - Contenido base64 en `documentos_contenido`
+  - Siempre manipular ambos de forma consistente (transacción / rollback coherente).
+
+---
+
+## 4. Backend (Spring Boot)
+
+### 4.1. Acceso a datos
+
+- Usar **Spring Data JPA** para repositorios.
+- Evitar SQL crudo salvo en:
+  - migraciones (`Flyway`)
+  - consultas muy específicas/problemas de rendimiento.
+- No modificar el esquema desde JPA (no usar `ddl-auto=create/update` en entornos serios).
+
+### 4.2. Servicios y casos de uso
+
+- Exponer casos de uso claros por módulo:
+  - `AdmisionService`, `MatriculaAcademicaService`, `CreditoCondonableService`, etc.
+- Reglas de negocio importantes:
+  - Un estudiante solo puede tener **una matrícula académica por periodo**.
+  - Una solicitud de crédito por estudiante+periodo+tipo (`uq_credito_est_per_tipo`).
+  - El estado de procesos debe seguir flujos válidos (ej. `RADICADA → EN_REVISION → APROBADA / RECHAZADA`).
+- Manejar fechas y horas con `OffsetDateTime` / `ZonedDateTime` considerando horario de Colombia.
+
+### 4.3. API REST
+
+- Prefijo: `/api/v1/...`
+- Estándar:
+  - `GET /api/v1/estudiantes`
+  - `POST /api/v1/solicitudes`
+  - `PATCH /api/v1/solicitudes/{id}/estado`
+- Respuestas:
+  - JSON con DTOs, **no exponer entidades JPA crudas**.
+  - Incluir `id`, `estado`, timestamps y referencias mínimas (`*_id`) necesarias.
+- Manejo de errores:
+  - Validaciones → HTTP 400 (`BAD_REQUEST`) con lista de errores.
+  - No encontrado → 404.
+  - No autorizado / prohibido → 401 / 403.
+  - Errores internos → 500, log detallado pero mensaje de usuario genérico.
+
+---
+
+## 5. Frontend (React)
+
+### 5.1. Organización
+
+- Estructura sugerida:
+  - `/src/modules/admisiones`
+  - `/src/modules/matricula`
+  - `/src/modules/creditos`
+  - `/src/modules/solicitudes`
+  - `/src/modules/trabajos-grado`
+  - `/src/shared/components`, `/src/shared/hooks`, `/src/shared/api`
+- Cada módulo con:
+  - vistas (`pages`),
+  - componentes presentacionales (`components`),
+  - servicios de API (`api.ts` o `service.ts`).
+
+### 5.2. Buenas prácticas específicas
+
+- Formularios complejos (admisión, matrícula, solicitudes):
+  - usar alguna librería tipo `react-hook-form` o similar.
+  - Validar tanto en cliente como en servidor (no confiar solo en el frontend).
+- Tablas/lists:
+  - siempre manejar **paginación** y **filtros básicos** (por programa, periodo, estado).
+- Fechas:
+  - almacenar en backend en UTC / timestamptz;
+  - mostrar siempre en zona horaria de Colombia y formato consistente.
+
+---
+
+## 6. Seguridad, roles y permisos
+
+- Autenticación:
+  - El sujeto autenticado se mapea a un `UsuarioSapp` (tabla `usuarios_sapp`).
+- Autorización:
+  - Roles de `roles` + `usuario_roles`:
+    - `ESTUDIANTE`, `ASPIRANTE`, `SECRETARIA`, `COORDINACION`, `COMITE`, `DOCENTE`, `INVITADO`.
+  - Controlar acceso en backend con anotaciones (`@PreAuthorize`) basadas en roles.
+- Reglas de ejemplo:
+  - Estudiante solo ve y modifica **sus propios trámites**.
+  - Secretaría/Coordinación pueden ver y gestionar trámites del programa.
+  - Comité solo ve lo que va a comité (admisiones, ciertas solicitudes, exámenes, trabajos).
+
+---
+
+## 7. Notificaciones y comunicación
+
+- Las notificaciones deben registrarse en tabla `notificaciones`:
+  - `usuario_destino_id`, `canal`, `asunto`, `cuerpo`, `estado`.
+- Los envíos de correo deben:
+  - ser idempotentes (no duplicar correos si se reintenta),
+  - cambiar el `estado` de la notificación adecuadamente (`PENDIENTE`, `ENVIADA`, `ERROR`).
+
+---
+
+## 8. Migraciones y evolución del modelo
+
+- Toda modificación de esquema se hace mediante **migraciones versionadas** (Flyway).
+- No borrar columnas/tablas que ya están en producción sin plan de migración de datos.
+- Mantener el SQL del modelo **alineado con las entidades JPA**.
+- Antes de cambiar una constraint importante, documentar el motivo en la migración.
+
+---
+
+## 9. Testing
+
+- Backend:
+  - tests de servicios (unitarios) para reglas de negocio clave:
+    - cálculo de liquidaciones,
+    - transiciones de estados de solicitudes,
+    - validación de admisión (ponderaciones).
+  - tests de integración para endpoints críticos de cada módulo.
+- Frontend:
+  - pruebas de componentes de formularios complejos
+  - pruebas de flujo de usuario para:
+    - creación de solicitudes,
+    - revisión y cambio de estado por parte de secretaría/coordinación.
+
+---
+
+## 10. Cosas que NO hacer
+
+- No exponer directamente datos sensibles de personas (ej: teléfonos, correos) a usuarios que no lo requieren por rol.
+- No crear campos “rápidos” en tablas preexistentes sin revisar modelo de datos y migrações.
+- No acoplar el frontend directamente a la estructura interna de la BD (usar siempre la API).
+- No mezclar lógica de negocios compleja dentro de controladores o componentes React; debe estar en servicios.
+
+---
