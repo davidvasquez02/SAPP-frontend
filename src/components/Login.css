@@ -1,0 +1,120 @@
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #1f2933;
+}
+
+.login__panel {
+  padding: 4rem 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
+.login__header h1 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 2.5rem;
+}
+
+.login__header p {
+  margin: 0;
+  color: #52606d;
+  max-width: 420px;
+}
+
+.login__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.85rem;
+}
+
+.login__form {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 420px;
+}
+
+.login__field {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #344054;
+}
+
+.login__field input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d0d5dd;
+  font-size: 1rem;
+  background: #fff;
+  color: #101828;
+}
+
+.login__field input:focus {
+  outline: 2px solid #6366f1;
+  border-color: transparent;
+}
+
+.login__submit {
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1.5rem;
+  background: #4f46e5;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+}
+
+.login__aside {
+  padding: 4rem 12%;
+  background: linear-gradient(160deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+
+.login__aside h2 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+
+.login__aside p {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: 1fr;
+  }
+
+  .login__aside {
+    order: -1;
+    text-align: center;
+  }
+
+  .login__panel,
+  .login__aside {
+    padding: 3rem 8%;
+  }
+}
