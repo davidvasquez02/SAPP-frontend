@@ -11,6 +11,16 @@ const HomeView = ({
 }: HomeViewProps) => {
   return (
     <main className="home">
+      <aside className="home__sidebar">
+        <div className="home__sidebar-header">
+          <span className="home__sidebar-badge">Menú</span>
+          <h2>Accesos rápidos</h2>
+          <p>Los botones del sidebar se definirán en una siguiente iteración.</p>
+        </div>
+        <div className="home__sidebar-placeholder">
+          Próximamente: accesos a módulos y trámites.
+        </div>
+      </aside>
       <div className="home__content">
         <h1>{title}</h1>
         <p>{description}</p>
