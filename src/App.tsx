@@ -1,30 +1,28 @@
 import { useState } from 'react'
+import reactLogo from './assets/react.svg'
 import './App.css'
-import HomeView from './components/HomeView'
-import LoginView from './components/LoginView'
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setIsAuthenticated(true)
-  }
-
-  if (isAuthenticated) {
-    return <HomeView />
-  }
+  const [count, setCount] = useState(0)
 
   return (
-    <LoginView
-      email={email}
-      password={password}
-      onEmailChange={setEmail}
-      onPasswordChange={setPassword}
-      onSubmit={handleSubmit}
-    />
+    <>
+      <div>
+        <a href="https://react.dev" target="_blank" rel="noreferrer">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      <h1>Vite + React</h1>
+      <div className="card">
+        <button type="button" onClick={() => setCount((value) => value + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
+    </>
   )
 }
 
