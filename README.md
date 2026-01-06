@@ -46,3 +46,4 @@ There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
 - Use `rolldown-vite@7.2.5` as the Vite engine via npm alias.
 - Centralize routing in `src/app/routes/index.tsx` with module route files and a `ProtectedRoute` wrapper.
 - Move router/auth providers to `src/main.tsx` and introduce `Layout` for the protected app shell.
+- Export module routes as route elements (not components) so React Router v7 `Routes` accepts them without rendering errors.

@@ -4,7 +4,7 @@
 - Auth mock flow now lives in `src/api/authService.ts` and feeds the AuthContext.
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Protected routes rely on `isAuthenticated` only (no loading state).
-- Routing is centralized in `src/app/routes/index.tsx` with module route helpers.
+- Routing is centralized in `src/app/routes/index.tsx` with module route helpers that export route elements.
 - Router/Auth providers now wrap the app in `src/main.tsx`.
 - Protected app shell lives in `src/components/Layout`.
 
