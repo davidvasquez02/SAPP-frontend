@@ -1,24 +1,24 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- Documentation refreshed (README + HANDOFF).
-- App runs as a React/Vite SPA with protected routes and a mocked authentication flow.
-- No backend integration or real API calls are wired yet (auth is mocked).
+- Auth mock flow now lives in `src/api/authService.ts` and feeds the AuthContext.
+- AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
+- Protected routes rely on `isAuthenticated` only (no loading state).
 
 ## Open Challenges
-- Replace `loginMock` with real API integration when backend endpoints are ready.
+- Replace the mock auth service with real backend integration once auth endpoints are available.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 
 ## Next Steps
-1. Confirm backend auth/session contract and implement real login in `src/api`.
-2. Introduce `.env.local` (or equivalent) for API base URLs.
+1. Align frontend auth contracts with backend (`/api/v1` auth endpoints) and replace the mock service.
+2. Add `.env.local` (or equivalent) for API base URLs.
 3. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/AppRoutes/AppRoutes.tsx`
-- **Auth context/types:** `src/context/Auth/*`
-- **Mock auth API:** `src/api/auth.ts`
+- **Auth context/types/storage:** `src/context/Auth/*`
+- **Mock auth API:** `src/api/authService.ts`
 - **Pages:** `src/pages/*`
 - **Shared components:** `src/components/*`
 - **Assets:** `src/assets/*`
@@ -30,8 +30,8 @@
 ## Schemas / Contracts (Expected Outputs)
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ accessToken: string, user: { id, username, roles, nombreCompleto?, programa?, email? } }`
-- **Mock login output:** `src/api/auth.ts`
-  - Returns `AuthSession` with `accessToken: "mock-token-<username>"` and a single role based on username.
+- **Mock login output:** `src/api/authService.ts`
+  - Returns `AuthSession` with `accessToken: "mock-token"` and demo user data.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

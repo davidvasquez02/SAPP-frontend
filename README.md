@@ -5,7 +5,8 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 
 ## Architecture (Brief)
 - **Routing:** React Router v7 with protected routes (`src/app/routes/AppRoutes`).
-- **Auth state:** Context-based session management (`src/context/Auth`), currently backed by a mock login helper (`src/api/auth.ts`).
+- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`).
+- **Mock auth service:** `src/api/authService.ts` provides a simple login flow for UI development.
 - **UI composition:** Page-level views in `src/pages`, shared layout/components in `src/components`, global styles in `src/styles` and scoped CSS modules per feature.
 - **App shell:** `src/app/App.tsx` wraps `AppRoutes` with `AuthProvider`.
 
@@ -34,12 +35,13 @@ npm run lint
 ```
 
 ### Seeds / Mock Data
-There are no seed scripts. Authentication is mocked in `src/api/auth.ts`:
-- Provide any non-empty username/password.
-- Certain usernames map to roles (`secretaria`, `coordinacion`, `comite`, `docente`, `aspirante`, `invitado`).
-- Any other username defaults to `ESTUDIANTE`.
+There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
+- Provide any non-empty username/password (otherwise it throws `Credenciales inválidas`).
+- Returns a fixed demo session with `accessToken: "mock-token"` and a demo user (`roles: ["ESTUDIANTE"]`, `programa: "MAESTRIA"`).
 
 ## Recent Decisions (Changelog-lite)
-- Keep mocked authentication (`loginMock`) to enable UI flow without backend integration.
+- Replaced the old `loginMock` helper with `authService.login` for mock auth.
+- Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.
+- Keep mocked authentication to enable UI flow without backend integration.
 - Use `rolldown-vite@7.2.5` as the Vite engine via npm alias.
 - Centralize routing in `AppRoutes` with a `ProtectedRoute` wrapper for authenticated areas.
