@@ -6,7 +6,7 @@
 - Protected routes rely on `isAuthenticated` only (no loading state).
 - Routing is centralized in `src/app/routes/index.tsx` with module route helpers that export route elements.
 - Router/Auth providers now wrap the app in `src/main.tsx`.
-- Protected app shell lives in `src/components/Layout`.
+- Protected app shell lives in `src/components/Layout`, now paired with the persistent sidebar in `src/components/Sidebar`.
 
 ## Open Challenges
 - Replace the mock auth service with real backend integration once auth endpoints are available.
@@ -25,6 +25,7 @@
 - **Mock auth API:** `src/api/authService.ts`
 - **Pages:** `src/pages/*`
 - **Shared components:** `src/components/*`
+- **Layout + Sidebar:** `src/components/Layout`, `src/components/Sidebar`
 - **Assets:** `src/assets/*`
 - **Datasets/Artifacts:** None bundled in repo.
 

@@ -1,5 +1,11 @@
 .app-shell {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  background-color: #f5f7fb;
+}
+
+.app-shell__content {
+  flex: 1;
+  padding: 32px;
 }
