@@ -51,24 +51,6 @@
   cursor: pointer;
 }
 
-.module-layout__nav {
-  display: flex;
-  gap: 1rem;
-}
-
-.module-layout__nav a {
-  text-decoration: none;
-  color: #374151;
-  font-weight: 600;
-  padding-bottom: 0.25rem;
-  border-bottom: 2px solid transparent;
-}
-
-.module-layout__nav a.active {
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
-}
-
 .module-layout__content {
   background: #ffffff;
   border-radius: 16px;
