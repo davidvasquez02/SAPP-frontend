@@ -22,10 +22,10 @@ export interface AuthSession {
 }
 
 export interface AuthContextValue {
-  user: AuthUser | null
   session: AuthSession | null
+  user: AuthUser | null
+  token: string | null
   isAuthenticated: boolean
-  isLoading: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
 }
