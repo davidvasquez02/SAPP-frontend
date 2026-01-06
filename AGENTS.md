@@ -525,7 +525,19 @@ Al tocar código que usa la BD:
 
 ---
 
-## 10. Cosas que NO hacer
+## 10. Trazabilidad
+
+Please update two files based on our recent work and decisions.
+README.md — keep a holistic, up-to-date view:
+purpose/scope, brief architecture, stack with exact versions,
+how to run (commands, seeds), recent decisions (changelog-lite).
+HANDOFF.md — for a fresh instance (who will take this conversation when we hit the context limit) to continue smoothly: (remember the new instance has not context about our work or previous conversation) Please add (examples)
+current status, open challenges, next steps,
+paths/artifacts/datasets, recent test results + logs,
+schemas/contracts and expected outputs,
+exact environment (venv/conda/poetry), package versions, and notes to avoid creating duplicate envs.
+
+## 11. Cosas que NO hacer
 
 - No exponer directamente datos sensibles de personas (ej: teléfonos, correos) a usuarios que no lo requieren por rol.
 - No crear campos “rápidos” en tablas preexistentes sin revisar modelo de datos y migrações.
