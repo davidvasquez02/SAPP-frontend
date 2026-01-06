@@ -1,4 +1,3 @@
-import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
@@ -27,11 +26,6 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
           </button>
         </div>
       </header>
-      <nav className="module-layout__nav">
-        <NavLink to="/tramites">Trámites</NavLink>
-        <NavLink to="/matricula">Matrícula</NavLink>
-        <NavLink to="/creditos">Créditos</NavLink>
-      </nav>
       <main className="module-layout__content">{children}</main>
     </div>
   )
