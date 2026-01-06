@@ -1,11 +1,11 @@
-import type { AuthUser } from '../context/Auth'
+import type { AuthSession, RoleCode } from '../context/Auth'
 
 type LoginPayload = {
   username: string
   password: string
 }
 
-const ROLE_BY_USERNAME: Record<string, AuthUser['role']> = {
+const ROLE_BY_USERNAME: Record<string, RoleCode> = {
   secretaria: 'SECRETARIA',
   coordinacion: 'COORDINACION',
   comite: 'COMITE',
@@ -14,7 +14,7 @@ const ROLE_BY_USERNAME: Record<string, AuthUser['role']> = {
   invitado: 'INVITADO',
 }
 
-export const loginMock = async ({ username, password }: LoginPayload): Promise<AuthUser> => {
+export const loginMock = async ({ username, password }: LoginPayload): Promise<AuthSession> => {
   if (!username.trim() || !password.trim()) {
     throw new Error('Usuario y contraseña son obligatorios.')
   }
@@ -23,8 +23,12 @@ export const loginMock = async ({ username, password }: LoginPayload): Promise<A
   const role = ROLE_BY_USERNAME[normalized] ?? 'ESTUDIANTE'
 
   return {
-    id: `mock-${normalized}`,
-    name: username.trim(),
-    role,
+    accessToken: `mock-token-${normalized}`,
+    user: {
+      id: Date.now(),
+      username: username.trim(),
+      roles: [role],
+      nombreCompleto: username.trim(),
+    },
   }
 }
