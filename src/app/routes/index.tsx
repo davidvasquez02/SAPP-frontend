@@ -3,10 +3,10 @@ import { Layout } from '../../components/Layout'
 import { useAuth } from '../../context/Auth'
 import { HomePage } from '../../pages/HomePage'
 import { LoginPage } from '../../pages/LoginPage'
-import { CreditosRoutes } from './creditosRoutes'
-import { MatriculaRoutes } from './matriculaRoutes'
+import { creditosRoutes } from './creditosRoutes'
+import { matriculaRoutes } from './matriculaRoutes'
 import { ProtectedRoute } from './protectedRoute'
-import { TramitesRoutes } from './tramitesRoutes'
+import { tramitesRoutes } from './tramitesRoutes'
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth()
@@ -22,9 +22,9 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
-          <TramitesRoutes />
-          <MatriculaRoutes />
-          <CreditosRoutes />
+          {tramitesRoutes}
+          {matriculaRoutes}
+          {creditosRoutes}
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
