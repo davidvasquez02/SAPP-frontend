@@ -8,7 +8,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`).
 - **Mock auth service:** `src/api/authService.ts` provides a simple login flow for UI development.
 - **UI composition:** Page-level views in `src/pages`, shared layout/components in `src/components`, global styles in `src/styles` and scoped CSS modules per feature.
-- **App shell:** `src/components/Layout` wraps protected routes; `src/main.tsx` provides router + auth providers.
+- **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers.
 
 ## Tech Stack (Exact Versions)
 - **React:** 19.2.0
@@ -47,3 +47,4 @@ There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
 - Centralize routing in `src/app/routes/index.tsx` with module route files and a `ProtectedRoute` wrapper.
 - Move router/auth providers to `src/main.tsx` and introduce `Layout` for the protected app shell.
 - Export module routes as route elements (not components) so React Router v7 `Routes` accepts them without rendering errors.
+- Added the shared `Sidebar` component to drive navigation and logout across protected routes.
