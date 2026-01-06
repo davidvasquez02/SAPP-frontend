@@ -4,6 +4,9 @@
 - Auth mock flow now lives in `src/api/authService.ts` and feeds the AuthContext.
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Protected routes rely on `isAuthenticated` only (no loading state).
+- Routing is centralized in `src/app/routes/index.tsx` with module route helpers.
+- Router/Auth providers now wrap the app in `src/main.tsx`.
+- Protected app shell lives in `src/components/Layout`.
 
 ## Open Challenges
 - Replace the mock auth service with real backend integration once auth endpoints are available.
@@ -16,7 +19,8 @@
 3. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 
 ## Key Paths / Artifacts / Datasets
-- **Routing:** `src/app/routes/AppRoutes/AppRoutes.tsx`
+- **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
+- **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
 - **Auth context/types/storage:** `src/context/Auth/*`
 - **Mock auth API:** `src/api/authService.ts`
 - **Pages:** `src/pages/*`
