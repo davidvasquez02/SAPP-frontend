@@ -1,4 +1,4 @@
-export type UserRole =
+export type RoleCode =
   | 'ESTUDIANTE'
   | 'ASPIRANTE'
   | 'SECRETARIA'
@@ -8,13 +8,22 @@ export type UserRole =
   | 'INVITADO'
 
 export interface AuthUser {
-  id: string
-  name: string
-  role: UserRole
+  id: number
+  username: string
+  roles: RoleCode[]
+  nombreCompleto?: string
+  programa?: string
+  email?: string
+}
+
+export interface AuthSession {
+  accessToken: string
+  user: AuthUser
 }
 
 export interface AuthContextValue {
   user: AuthUser | null
+  session: AuthSession | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (username: string, password: string) => Promise<void>

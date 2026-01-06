@@ -1,2 +1,2 @@
 export { AuthProvider, useAuth } from './AuthContext'
-export type { AuthContextValue, AuthUser, UserRole } from './types'
+export type { AuthContextValue, AuthSession, AuthUser, RoleCode } from './types'
