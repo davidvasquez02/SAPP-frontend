@@ -1,4 +1,4 @@
-import { ModuleLayout } from '../../components/ModuleLayout'
+import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import './HomePage.css'
 

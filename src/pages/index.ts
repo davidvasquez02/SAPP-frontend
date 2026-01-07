@@ -1,0 +1,5 @@
+export { CreditosPage } from './Creditos'
+export { HomePage } from './Home'
+export { LoginPage } from './Login'
+export { MatriculaPage } from './Matricula'
+export { TramitesPage } from './Tramites'

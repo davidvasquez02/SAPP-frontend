@@ -1,4 +1,4 @@
-import { ModuleLayout } from '../../components/ModuleLayout'
+import { ModuleLayout } from '../../components'
 import './TramitesPage.css'
 
 const TramitesPage = () => {
