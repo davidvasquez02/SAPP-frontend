@@ -5,7 +5,7 @@ import { HomePage, LoginPage } from '../../pages'
 import { creditosRoutes } from './creditosRoutes'
 import { matriculaRoutes } from './matriculaRoutes'
 import { ProtectedRoute } from './protectedRoute'
-import { tramitesRoutes } from './tramitesRoutes'
+import { solicitudesRoutes } from './solicitudesRoutes'
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth()
@@ -21,7 +21,7 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
-          {tramitesRoutes}
+          {solicitudesRoutes}
           {matriculaRoutes}
           {creditosRoutes}
         </Route>
