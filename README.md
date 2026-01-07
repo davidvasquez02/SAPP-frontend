@@ -9,6 +9,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Mock auth service:** `src/api/authService.ts` provides a simple login flow for UI development.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling.
 - **UI composition:** Page-level views in `src/pages` (Home/Trámites/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
+- **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 
 ## Tech Stack (Exact Versions)
@@ -51,6 +52,7 @@ There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
 - Added the shared `Sidebar` component to drive navigation and logout across protected routes.
 - Removed the duplicated module-level top navigation so the sidebar is the single source of navigation.
 - Standardized the page folders under `src/pages/Home`, `src/pages/Tramites`, `src/pages/Matricula`, and `src/pages/Creditos`.
+- Added top-level barrel exports for components and pages to standardize imports.
 - Updated the Home page to greet the signed-in user by `nombreCompleto || username` and prompt to select a menu option.
 - Added “En construcción” placeholders to Trámites, Matrícula, and Créditos module pages.
 - Standardized the login page location to `src/pages/Login` and default redirect to `/` after login.

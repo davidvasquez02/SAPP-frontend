@@ -13,6 +13,7 @@
 - Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
 - Added stub API services for Trámites, Matrícula, and Créditos in `src/api/*Service.ts`.
+- Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 
 ## Open Challenges
 - Replace the mock auth service with real backend integration once auth endpoints are available.
@@ -35,6 +36,7 @@
 - **Module service stubs:** `src/api/tramitesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Tramites`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`
 - **Shared components:** `src/components/*`
+- **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
 - **Layout + Sidebar:** `src/components/Layout`, `src/components/Sidebar`
 - **Module layout:** `src/components/ModuleLayout`
 - **Assets:** `src/assets/*`
