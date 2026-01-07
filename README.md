@@ -7,6 +7,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`).
 - **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`).
 - **Mock auth service:** `src/api/authService.ts` provides a simple login flow for UI development.
+- **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling.
 - **UI composition:** Page-level views in `src/pages` (Home/Trámites/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 
@@ -53,3 +54,5 @@ There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
 - Updated the Home page to greet the signed-in user by `nombreCompleto || username` and prompt to select a menu option.
 - Added “En construcción” placeholders to Trámites, Matrícula, and Créditos module pages.
 - Standardized the login page location to `src/pages/Login` and default redirect to `/` after login.
+- Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
+- Stubbed module API services in `src/api/tramitesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
