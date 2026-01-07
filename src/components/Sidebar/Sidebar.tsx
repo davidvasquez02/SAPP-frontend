@@ -18,12 +18,12 @@ const Sidebar = () => {
       <div className="sidebar__brand">SAPP Posgrados</div>
       <nav className="sidebar__nav">
         <NavLink
-          to="/tramites"
+          to="/solicitudes"
           className={({ isActive }) =>
             `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
           }
         >
-          Trámites
+          Solicitudes
         </NavLink>
         <NavLink
           to="/matricula"

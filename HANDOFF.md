@@ -9,10 +9,10 @@
 - Protected app shell lives in `src/components/Layout`, now paired with the persistent sidebar in `src/components/Sidebar`.
 - Module pages now rely on the sidebar for navigation; the module-level top nav was removed from `src/components/ModuleLayout`.
 - Home now greets the signed-in user by `nombreCompleto || username` and prompts selection from the menu.
-- Trámites, Matrícula, and Créditos pages render “En construcción” placeholders.
+- Solicitudes, Matrícula, and Créditos pages render “En construcción” placeholders.
 - Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
-- Added stub API services for Trámites, Matrícula, and Créditos in `src/api/*Service.ts`.
+- Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 
 ## Open Challenges
@@ -33,8 +33,8 @@
 - **Auth context/types/storage:** `src/context/Auth/*`
 - **Mock auth API:** `src/api/authService.ts`
 - **HTTP client:** `src/api/httpClient.ts`
-- **Module service stubs:** `src/api/tramitesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
-- **Pages:** `src/pages/Home`, `src/pages/Tramites`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`
+- **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
+- **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`
 - **Shared components:** `src/components/*`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
 - **Layout + Sidebar:** `src/components/Layout`, `src/components/Sidebar`
