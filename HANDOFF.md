@@ -9,6 +9,7 @@
 - Protected app shell lives in `src/components/Layout`, now paired with the persistent sidebar in `src/components/Sidebar`.
 - Module pages now rely on the sidebar for navigation; the module-level top nav was removed from `src/components/ModuleLayout`.
 - Trámites, Matrícula, and Créditos pages currently render their screens without additional content blocks (ready for future feature content).
+- Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
 
 ## Open Challenges
 - Replace the mock auth service with real backend integration once auth endpoints are available.

@@ -21,7 +21,7 @@ const LoginPage = () => {
       await login(username, password)
       const redirectPath = (location.state as { from?: { pathname: string } } | undefined)?.from
         ?.pathname
-      navigate(redirectPath ?? '/tramites', { replace: true })
+      navigate(redirectPath ?? '/', { replace: true })
     } catch (loginError) {
       if (loginError instanceof Error) {
         setError(loginError.message)
