@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '../../components/Layout'
 import { useAuth } from '../../context/Auth'
-import { HomePage } from '../../pages/HomePage'
+import { HomePage } from '../../pages/Home'
 import { LoginPage } from '../../pages/Login'
 import { creditosRoutes } from './creditosRoutes'
 import { matriculaRoutes } from './matriculaRoutes'
