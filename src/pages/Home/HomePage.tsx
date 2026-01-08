@@ -4,7 +4,11 @@ import './HomePage.css'
 
 const HomePage = () => {
   const { user } = useAuth()
-  const displayName = user?.nombreCompleto || user?.username || 'Usuario'
+  const displayName = user
+    ? 'username' in user
+      ? user.nombreCompleto || user.username
+      : [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.numeroAspirante
+    : 'Usuario'
 
   return (
     <ModuleLayout title="Inicio">

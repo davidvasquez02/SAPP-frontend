@@ -11,7 +11,11 @@ const Sidebar = () => {
     navigate('/login', { replace: true })
   }
 
-  const displayName = user?.nombreCompleto || user?.username || 'Usuario'
+  const displayName = user
+    ? 'username' in user
+      ? user.nombreCompleto || user.username
+      : [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.numeroAspirante
+    : 'Usuario'
 
   return (
     <aside className="sidebar">

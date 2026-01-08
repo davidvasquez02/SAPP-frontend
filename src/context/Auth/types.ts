@@ -7,6 +7,8 @@ export type RoleCode =
   | 'DOCENTE'
   | 'INVITADO'
 
+export type SessionKind = 'SAPP' | 'ASPIRANTE'
+
 export interface AuthUser {
   id: number
   username: string
@@ -16,16 +18,27 @@ export interface AuthUser {
   email?: string
 }
 
+export interface AspiranteUser {
+  id: number
+  numeroAspirante: string
+  roles: RoleCode[]
+  programa?: string
+  nombres?: string
+  apellidos?: string
+}
+
 export interface AuthSession {
+  kind: SessionKind
   accessToken: string
-  user: AuthUser
+  user: AuthUser | AspiranteUser
 }
 
 export interface AuthContextValue {
   session: AuthSession | null
-  user: AuthUser | null
+  user: AuthUser | AspiranteUser | null
   token: string | null
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
+  loginAspirante: (numeroAspirante: string) => Promise<void>
   logout: () => void
 }

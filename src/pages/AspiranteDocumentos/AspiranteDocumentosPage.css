@@ -1,0 +1,21 @@
+.aspirante-documentos {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.aspirante-documentos__title {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.aspirante-documentos__placeholder {
+  margin: 0;
+  color: #6b7280;
+}
+
+.aspirante-documentos__uploader {
+  min-height: 200px;
+  border: 1px dashed #cbd5f5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
