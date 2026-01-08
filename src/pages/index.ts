@@ -1,3 +1,5 @@
+export { AspiranteDocumentosPage } from './AspiranteDocumentos'
+export { AspiranteLoginPage } from './AspiranteLogin'
 export { CreditosPage } from './Creditos'
 export { HomePage } from './Home'
 export { LoginPage } from './Login'

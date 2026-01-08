@@ -6,6 +6,7 @@ export const login = async (username: string, password: string): Promise<AuthSes
   }
 
   return {
+    kind: 'SAPP',
     accessToken: 'mock-token',
     user: {
       id: 1,

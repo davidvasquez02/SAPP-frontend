@@ -1,5 +1,6 @@
 import { createContext, useCallback, useMemo, useState } from 'react'
 import { login as loginService } from '../../api/authService'
+import { loginAspirante as loginAspiranteService } from '../../api/aspiranteService'
 import * as AuthStorage from './AuthStorage'
 import type { AuthContextValue, AuthSession } from './types'
 
@@ -10,6 +11,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = useCallback(async (username: string, password: string) => {
     const authenticatedSession = await loginService(username, password)
+    setSessionState(authenticatedSession)
+    AuthStorage.setSession(authenticatedSession)
+  }, [])
+
+  const loginAspirante = useCallback(async (numeroAspirante: string) => {
+    const authenticatedSession = await loginAspiranteService(numeroAspirante)
     setSessionState(authenticatedSession)
     AuthStorage.setSession(authenticatedSession)
   }, [])
@@ -26,9 +33,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       token: session?.accessToken ?? null,
       isAuthenticated: Boolean(session?.accessToken),
       login,
+      loginAspirante,
       logout,
     }),
-    [session, login, logout],
+    [session, login, loginAspirante, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

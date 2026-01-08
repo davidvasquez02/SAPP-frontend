@@ -8,6 +8,12 @@ type ModuleLayoutProps = {
 
 const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
   const { user, logout } = useAuth()
+  const displayName = user
+    ? 'username' in user
+      ? user.nombreCompleto || user.username
+      : [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.numeroAspirante
+    : 'Usuario'
+  const roleLabel = user?.roles?.[0] ?? 'ESTUDIANTE'
 
   return (
     <div className="module-layout">
@@ -18,8 +24,8 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
         </div>
         <div className="module-layout__user">
           <div>
-            <p className="module-layout__user-name">{user?.name}</p>
-            <p className="module-layout__user-role">{user?.role}</p>
+            <p className="module-layout__user-name">{displayName}</p>
+            <p className="module-layout__user-role">{roleLabel}</p>
           </div>
           <button type="button" className="module-layout__logout" onClick={logout}>
             Cerrar sesión
