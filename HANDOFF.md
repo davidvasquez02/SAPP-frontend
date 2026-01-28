@@ -1,7 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- Auth mock flow now lives in `src/api/authService.ts` and feeds the AuthContext.
+- SAPP login now calls the backend (`POST /sapp/auth/login`) and maps the `{ ok, message, data }` response into `AuthSession`.
+- Added API base URL config (`src/api/config.ts`) using `VITE_API_BASE_URL` with a localhost default.
+- Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
 - Added an aspirante mock auth flow in `src/api/aspiranteService.ts` with its own login screen and session kind.
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Session now includes a `kind` discriminator (`SAPP` vs `ASPIRANTE`) and union user types.
@@ -20,14 +22,14 @@
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 
 ## Open Challenges
-- Replace the mock auth service with real backend integration once auth endpoints are available.
+- Backend auth does not return a token yet; the frontend uses `accessToken: "NO_TOKEN"` for session compatibility.
 - Define the aspirante document upload flow and API contract once backend endpoints are available.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
 
 ## Next Steps
-1. Align frontend auth contracts with backend (`/api/v1` auth endpoints) and replace the mock service.
+1. Align auth token handling once the backend returns access tokens, replacing the `NO_TOKEN` placeholder.
 2. Define aspirante document submission endpoints and replace the aspirante mock flow.
 3. Add `.env.local` (or equivalent) for API base URLs.
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
@@ -38,7 +40,9 @@
 - **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
 - **Aspirante guard/routes:** `src/app/routes/aspiranteOnlyRoute.tsx`, `src/app/routes/aspiranteRoutes.tsx`
 - **Auth context/types/storage:** `src/context/Auth/*`
-- **Mock auth API:** `src/api/authService.ts`
+- **Auth API (SAPP login):** `src/api/authService.ts`
+- **Auth DTOs/mappers:** `src/api/authTypes.ts`, `src/api/authMappers.ts`
+- **API config/types:** `src/api/config.ts`, `src/api/types.ts`
 - **Mock aspirante API:** `src/api/aspiranteService.ts`
 - **HTTP client:** `src/api/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
@@ -57,8 +61,8 @@
 ## Schemas / Contracts (Expected Outputs)
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, user: AuthUser | AspiranteUser }`
-- **Mock login output:** `src/api/authService.ts`
-  - Returns `AuthSession` with `kind: "SAPP"`, `accessToken: "mock-token"` and demo user data.
+- **SAPP login output:** `src/api/authService.ts`
+  - Expects backend response envelope `{ ok, message, data }` and maps `data` into `AuthSession` with `accessToken: "NO_TOKEN"` until tokens are available.
 - **Mock aspirante login output:** `src/api/aspiranteService.ts`
   - Returns `AuthSession` with `kind: "ASPIRANTE"`, `accessToken: "mock-aspirante-token"` and aspirante demo data.
 - **HTTP client request helper:** `src/api/httpClient.ts`
@@ -74,6 +78,7 @@
   - Vite (rolldown-vite) 7.2.5
   - @vitejs/plugin-react-swc 4.2.2
   - ESLint 9.39.1
+- **Environment variables:** `VITE_API_BASE_URL` (defaults to `http://localhost:8080` if unset).
 - **Python envs (venv/conda/poetry):** Not used in this project.
 
 ### Avoiding Duplicate Environments

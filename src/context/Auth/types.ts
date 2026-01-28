@@ -16,6 +16,9 @@ export interface AuthUser {
   nombreCompleto?: string
   programa?: string
   email?: string
+  personaId?: number
+  authId?: number
+  activo?: boolean
 }
 
 export interface AspiranteUser {
