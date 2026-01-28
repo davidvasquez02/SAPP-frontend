@@ -1,4 +1,6 @@
-import type { AuthSession } from '../context/Auth'
+import { API_BASE_URL } from './config'
+import type { AspiranteConsultaInfoDto } from './aspiranteConsultaTypes'
+import type { ApiResponse } from './types'
 
 export interface AspiranteLoginParams {
   numeroInscripcion: string
@@ -6,28 +8,25 @@ export interface AspiranteLoginParams {
   numeroDocumento: string
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-export const loginAspirante = async (
+export const consultaInfoAspirante = async (
   params: AspiranteLoginParams,
-): Promise<AuthSession> => {
-  const { numeroInscripcion, tipoDocumentoId, numeroDocumento } = params
+): Promise<AspiranteConsultaInfoDto> => {
+  const qs = new URLSearchParams({
+    numeroInscripcion: params.numeroInscripcion,
+    tipoDocumentoId: String(params.tipoDocumentoId),
+    numeroDocumento: params.numeroDocumento,
+  })
+  const url = `${API_BASE_URL}/sapp/aspirante/consultaInfo?${qs.toString()}`
 
-  if (!numeroInscripcion.trim() || !tipoDocumentoId || !numeroDocumento.trim()) {
-    throw new Error('Parámetros incompletos')
+  const response = await fetch(url, { method: 'GET' })
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`)
   }
 
-  await delay(800)
-
-  return {
-    kind: 'ASPIRANTE',
-    accessToken: 'mock-aspirante-token',
-    user: {
-      id: 999,
-      roles: ['ASPIRANTE'],
-      numeroInscripcion: numeroInscripcion.trim(),
-      tipoDocumentoId,
-      numeroDocumento: numeroDocumento.trim(),
-    },
+  const parsed = (await response.json()) as ApiResponse<AspiranteConsultaInfoDto>
+  if (!parsed.ok) {
+    throw new Error(parsed.message || 'Consulta fallida')
   }
+
+  return parsed.data
 }

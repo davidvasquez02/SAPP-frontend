@@ -14,7 +14,7 @@ const Sidebar = () => {
   const displayName = user
     ? 'username' in user
       ? user.nombreCompleto || user.username
-      : [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.numeroAspirante
+      : user.numeroInscripcionUis || user.numeroDocumento
     : 'Usuario'
 
   return (

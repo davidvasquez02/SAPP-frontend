@@ -83,7 +83,8 @@ const AspiranteLoginPage = () => {
         tipoDocumentoId: Number(tipoDocumentoId),
         numeroDocumento: numeroDocumento.trim(),
       })
-      navigate('/aspirante/documentos', { replace: true })
+      console.log('[AspiranteLogin] login ok, session aspirante creada')
+      navigate('/aspirante/documentos')
     } catch (loginError) {
       if (loginError instanceof Error) {
         setError(loginError.message)

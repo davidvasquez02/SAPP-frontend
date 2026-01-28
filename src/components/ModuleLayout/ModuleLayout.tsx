@@ -11,7 +11,7 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
   const displayName = user
     ? 'username' in user
       ? user.nombreCompleto || user.username
-      : [user.nombres, user.apellidos].filter(Boolean).join(' ') || user.numeroAspirante
+      : user.numeroInscripcionUis || user.numeroDocumento
     : 'Usuario'
   const roleLabel = user?.roles?.[0] ?? 'ESTUDIANTE'
 
