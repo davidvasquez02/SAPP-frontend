@@ -47,8 +47,12 @@ const LoginPage = () => {
     }
   }
 
-  const handleAspiranteContinue = () => {
-    navigate('/login/aspirante')
+  const handleAspiranteToggle = (checked: boolean) => {
+    setIsAspirante(checked)
+
+    if (checked) {
+      navigate('/login/aspirante')
+    }
   }
 
   return (
@@ -60,7 +64,7 @@ const LoginPage = () => {
           <input
             type="checkbox"
             checked={isAspirante}
-            onChange={(event) => setIsAspirante(event.target.checked)}
+            onChange={(event) => handleAspiranteToggle(event.target.checked)}
           />
           Soy aspirante (no estudiante)
         </label>
@@ -93,11 +97,7 @@ const LoginPage = () => {
               {isSubmitting ? 'Validando...' : 'Ingresar'}
             </button>
           </form>
-        ) : (
-          <button type="button" className="login-button" onClick={handleAspiranteContinue}>
-            Continuar
-          </button>
-        )}
+        ) : null}
       </div>
     </div>
   )

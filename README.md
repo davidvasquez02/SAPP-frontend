@@ -63,3 +63,4 @@ There are no seed scripts. Authentication is mocked in `src/api/authService.ts`:
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
 - Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
 - Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
+- Updated the login page so selecting “Soy aspirante” immediately routes to `/login/aspirante` instead of showing a continue button.

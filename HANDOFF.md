@@ -14,6 +14,7 @@
 - Home now greets the signed-in user by `nombreCompleto || username` and prompts selection from the menu.
 - Solicitudes, Matrícula, and Créditos pages render “En construcción” placeholders.
 - Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
+- The “Soy aspirante” checkbox now routes directly to `/login/aspirante` (no intermediate continue button).
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
