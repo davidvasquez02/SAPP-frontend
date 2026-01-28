@@ -6,6 +6,10 @@
 - Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
 - Added an aspirante mock auth flow in `src/api/aspiranteService.ts` with its own login screen and session kind.
 - Added trámite documentos DTOs + service (`src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`) and wired the aspirante documents page to fetch and log `/sapp/tramite/document?tipoTramiteId=4` on entry.
+- Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
+- Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
+- Added UI types for document upload items (`src/pages/AspiranteDocumentos/types.ts`).
+- Added a mock upload service to simulate document submissions (`src/api/aspiranteUploadService.ts`).
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Session now includes a `kind` discriminator (`SAPP` vs `ASPIRANTE`) and union user types.
 - Protected routes rely on `isAuthenticated` only (no loading state).
@@ -24,8 +28,8 @@
 
 ## Open Challenges
 - Backend auth does not return a token yet; the frontend uses `accessToken: "NO_TOKEN"` for session compatibility.
-- Define the aspirante document upload flow and API contract once backend endpoints are available.
-- Determine the final UI/UX for aspirante document upload and replace console logging with real rendering.
+- Define the real aspirante document upload API contract to replace the mock service.
+- Confirm backend response for uploaded document metadata (filename, status) to sync UI states.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
@@ -36,7 +40,7 @@
 3. Add `.env.local` (or equivalent) for API base URLs.
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 5. Wire module pages to the new service stubs once backend endpoints are defined.
-6. Replace the aspirante documents console log with UI once the document list and upload contract are finalized.
+6. Replace the mock aspirante upload service with a real endpoint once available.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -50,8 +54,10 @@
 - **HTTP client:** `src/api/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
 - **Trámite documentos DTO/service:** `src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`
+- **Aspirante upload mock service:** `src/api/aspiranteUploadService.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`, `src/pages/AspiranteLogin`, `src/pages/AspiranteDocumentos`
 - **Shared components:** `src/components/*`
+- **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
 - **Layout + Sidebar:** `src/components/Layout`, `src/components/Sidebar`
 - **Aspirante layout:** `src/components/AspiranteLayout`
@@ -73,6 +79,10 @@
   - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists, and throws on non-OK responses.
 - **Trámite documentos response:** `src/api/tramiteDocumentService.ts`
   - Expects `{ ok, message, data: TramiteDocumentoDto[] }` from `GET /sapp/tramite/document?tipoTramiteId=4` and returns the typed `data` array.
+- **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
+  - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
+- **Mock upload response:** `src/api/aspiranteUploadService.ts`
+  - `uploadAspiranteDocumento({ aspiranteId, tipoTramiteDocumentoId, file })` returns `{ ok, message }` after a 0.8–1.5s delay.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

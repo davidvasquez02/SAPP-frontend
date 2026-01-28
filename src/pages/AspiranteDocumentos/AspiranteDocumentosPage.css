@@ -1,21 +1,50 @@
 .aspirante-documentos {
   display: grid;
+  gap: 1.5rem;
+}
+
+.aspirante-documentos__header {
+  display: grid;
   gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .aspirante-documentos__title {
   margin: 0;
   font-size: 1.6rem;
+  color: #0f172a;
 }
 
-.aspirante-documentos__placeholder {
+.aspirante-documentos__summary {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.aspirante-documentos__progress {
+  position: relative;
+  height: 0.6rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.aspirante-documentos__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transition: width 0.3s ease;
+}
+
+.aspirante-documentos__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.aspirante-documentos__empty {
   margin: 0;
-  color: #6b7280;
-}
-
-.aspirante-documentos__uploader {
-  min-height: 200px;
-  border: 1px dashed #cbd5f5;
-  border-radius: 12px;
-  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.95rem;
 }

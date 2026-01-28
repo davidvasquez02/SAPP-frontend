@@ -1,4 +1,5 @@
 export { AspiranteLayout } from './AspiranteLayout'
+export { DocumentUploadCard } from './DocumentUploadCard'
 export { Layout } from './Layout'
 export { ModuleLayout } from './ModuleLayout'
 export { Sidebar } from './Sidebar'
