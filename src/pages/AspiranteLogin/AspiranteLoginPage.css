@@ -36,16 +36,31 @@
   color: #374151;
 }
 
-.aspirante-login__field input {
+.aspirante-login__field input,
+.aspirante-login__field select {
   padding: 0.75rem 1rem;
   border-radius: 10px;
   border: 1px solid #d1d5db;
   background: #f9fafb;
+  font-size: 1rem;
 }
 
-.aspirante-login__field input:focus {
+.aspirante-login__field input:focus,
+.aspirante-login__field select:focus {
   outline: 2px solid rgba(79, 70, 229, 0.35);
   border-color: #6366f1;
+}
+
+.aspirante-login__field select:disabled,
+.aspirante-login__field input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.aspirante-login__status {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 .aspirante-login__error {
@@ -77,4 +92,9 @@
   color: #4f46e5;
   font-weight: 600;
   cursor: pointer;
+}
+
+.aspirante-login__back:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

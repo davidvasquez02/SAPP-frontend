@@ -6,8 +6,12 @@ const AspiranteLayout = () => {
   const { session, logout } = useAuth()
   const navigate = useNavigate()
   const aspiranteUser = session?.kind === 'ASPIRANTE' ? session.user : null
-  const numeroAspirante =
-    aspiranteUser && 'numeroAspirante' in aspiranteUser ? aspiranteUser.numeroAspirante : '—'
+  const numeroInscripcion =
+    aspiranteUser && 'numeroInscripcion' in aspiranteUser
+      ? aspiranteUser.numeroInscripcion ?? aspiranteUser.numeroAspirante ?? '—'
+      : aspiranteUser && 'numeroAspirante' in aspiranteUser
+        ? aspiranteUser.numeroAspirante ?? '—'
+        : '—'
 
   const handleLogout = () => {
     logout()
@@ -19,7 +23,7 @@ const AspiranteLayout = () => {
       <header className="aspirante-layout__header">
         <div>
           <p className="aspirante-layout__eyebrow">SAPP – Aspirantes</p>
-          <p className="aspirante-layout__meta">Número de aspirante: {numeroAspirante}</p>
+          <p className="aspirante-layout__meta">Número de inscripción: {numeroInscripcion}</p>
         </div>
         <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
           Cerrar sesión

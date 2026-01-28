@@ -4,7 +4,9 @@
 - SAPP login now calls the backend (`POST /sapp/auth/login`) and maps the `{ ok, message, data }` response into `AuthSession`.
 - Added API base URL config (`src/api/config.ts`) using `VITE_API_BASE_URL` with a localhost default.
 - Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
-- Added an aspirante mock auth flow in `src/api/aspiranteService.ts` with its own login screen and session kind.
+- Updated aspirante login to capture número de inscripción, tipo de documento, and número de documento before starting the mock session.
+- Added tipos de documento DTOs/service (`src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`) to fetch `/sapp/tipoDocumentoIdentificacion` for the aspirante login combo.
+- Replaced the aspirante mock auth flow with `src/api/aspiranteAuthService.ts` using the new 3-field params.
 - Added trámite documentos DTOs + service (`src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`) and wired the aspirante documents page to fetch and log `/sapp/tramite/document?tipoTramiteId=4` on entry.
 - Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
 - Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
@@ -50,7 +52,8 @@
 - **Auth API (SAPP login):** `src/api/authService.ts`
 - **Auth DTOs/mappers:** `src/api/authTypes.ts`, `src/api/authMappers.ts`
 - **API config/types:** `src/api/config.ts`, `src/api/types.ts`
-- **Mock aspirante API:** `src/api/aspiranteService.ts`
+- **Mock aspirante API:** `src/api/aspiranteAuthService.ts`
+- **Tipos documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`
 - **HTTP client:** `src/api/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
 - **Trámite documentos DTO/service:** `src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`
@@ -73,8 +76,10 @@
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, user: AuthUser | AspiranteUser }`
 - **SAPP login output:** `src/api/authService.ts`
   - Expects backend response envelope `{ ok, message, data }` and maps `data` into `AuthSession` with `accessToken: "NO_TOKEN"` until tokens are available.
-- **Mock aspirante login output:** `src/api/aspiranteService.ts`
-  - Returns `AuthSession` with `kind: "ASPIRANTE"`, `accessToken: "mock-aspirante-token"` and aspirante demo data.
+- **Mock aspirante login output:** `src/api/aspiranteAuthService.ts`
+  - Accepts `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }` and returns `AuthSession` with `kind: "ASPIRANTE"`, `accessToken: "mock-aspirante-token"` plus the submitted params stored on the aspirante user.
+- **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`
+  - Expects `{ ok, message, data: TipoDocumentoIdentificacionDto[] }` from `GET /sapp/tipoDocumentoIdentificacion` and returns the typed `data` array.
 - **HTTP client request helper:** `src/api/httpClient.ts`
   - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists, and throws on non-OK responses.
 - **Trámite documentos response:** `src/api/tramiteDocumentService.ts`

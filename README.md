@@ -11,6 +11,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling for module services.
 - **Trámite documentos API:** `src/api/tramiteDocumentTypes.ts` + `src/api/tramiteDocumentService.ts` define DTOs and a GET client for `/sapp/tramite/document`.
+- **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by a mock upload service (`src/api/aspiranteUploadService.ts`).
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
@@ -51,9 +52,9 @@ There are no seed scripts. The SAPP login now calls the backend directly:
 - Endpoint: `POST ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/auth/login`
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the response into an `AuthSession` and keeps a placeholder token (`accessToken: "NO_TOKEN"`) until the backend returns one.
-- Aspirante login remains mocked in `src/api/aspiranteService.ts`:
-  - Empty number -> `Número de aspirante requerido`; less than 4 chars -> `Número de aspirante inválido`.
-  - Returns `kind: "ASPIRANTE"`, `accessToken: "mock-aspirante-token"` and a demo aspirante user.
+- Aspirante login remains mocked in `src/api/aspiranteAuthService.ts`:
+  - Requires `numeroInscripcion`, `tipoDocumentoId`, and `numeroDocumento` (all required) and returns a mock `AuthSession`.
+  - Returns `kind: "ASPIRANTE"`, `accessToken: "mock-aspirante-token"` and stores the submitted parameters on the aspirante user.
 
 ## Recent Decisions (Changelog-lite)
 - Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
@@ -78,3 +79,4 @@ There are no seed scripts. The SAPP login now calls the backend directly:
 - Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
 - Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
 - Updated the login page so selecting “Soy aspirante” immediately routes to `/login/aspirante` instead of showing a continue button.
+- Updated the aspirante login screen to capture número de inscripción, tipo de documento (loaded from `/sapp/tipoDocumentoIdentificacion`), and número de documento before starting the mock session.
