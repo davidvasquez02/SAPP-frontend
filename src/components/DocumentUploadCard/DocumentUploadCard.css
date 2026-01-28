@@ -1,0 +1,147 @@
+.document-upload-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #ffffff;
+  display: grid;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.document-upload-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.document-upload-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.document-upload-card__code {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.document-upload-card__badge {
+  align-self: flex-start;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.document-upload-card__badge--required {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.document-upload-card__badge--optional {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.document-upload-card__description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.document-upload-card__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.document-upload-card__status {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.document-upload-card__status--not_selected {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.document-upload-card__status--ready_to_upload {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.document-upload-card__status--uploading {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.document-upload-card__status--uploaded {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.document-upload-card__status--error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.document-upload-card__filename {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.document-upload-card__filename--empty {
+  color: #94a3b8;
+}
+
+.document-upload-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.document-upload-card__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  border: 1px dashed #cbd5f5;
+  color: #1e293b;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.document-upload-card__file input {
+  display: none;
+}
+
+.document-upload-card__button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.document-upload-card__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.document-upload-card__error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
