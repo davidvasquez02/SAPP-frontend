@@ -10,6 +10,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and the mapping into `AuthSession`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling for module services.
+- **Trámite documentos API:** `src/api/tramiteDocumentTypes.ts` + `src/api/tramiteDocumentService.ts` define DTOs and a GET client for `/sapp/tramite/document`.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
@@ -69,6 +70,7 @@ There are no seed scripts. The SAPP login now calls the backend directly:
 - Added “En construcción” placeholders to Solicitudes, Matrícula, and Créditos module pages.
 - Standardized the login page location to `src/pages/Login` and default redirect to `/` after login.
 - Added aspirante authentication: session kind (`SAPP` vs `ASPIRANTE`), mock aspirante login, and `/aspirante/*` protected routes with their own layout and placeholder documents page.
+- Added DTOs + service for trámite documentos (`/sapp/tramite/document`) and hooked the aspirante documents page to log the fetched data on entry.
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
 - Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
 - Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
