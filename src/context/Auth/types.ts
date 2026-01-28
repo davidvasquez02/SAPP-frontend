@@ -24,13 +24,13 @@ export interface AuthUser {
 export interface AspiranteUser {
   id: number
   roles: RoleCode[]
-  numeroAspirante?: string
-  numeroInscripcion?: string
-  tipoDocumentoId?: number
-  numeroDocumento?: string
-  programa?: string
-  nombres?: string
-  apellidos?: string
+  numeroInscripcionUis: string
+  tipoDocumentoIdentificacion: string
+  numeroDocumento: string
+  emailPersonal?: string
+  fechaRegistro?: string
+  observaciones?: string | null
+  inscripcionAdmisionId?: number | null
 }
 
 export interface AspiranteLoginParams {

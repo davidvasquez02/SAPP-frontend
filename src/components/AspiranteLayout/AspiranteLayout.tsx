@@ -7,11 +7,17 @@ const AspiranteLayout = () => {
   const navigate = useNavigate()
   const aspiranteUser = session?.kind === 'ASPIRANTE' ? session.user : null
   const numeroInscripcion =
-    aspiranteUser && 'numeroInscripcion' in aspiranteUser
-      ? aspiranteUser.numeroInscripcion ?? aspiranteUser.numeroAspirante ?? '—'
-      : aspiranteUser && 'numeroAspirante' in aspiranteUser
-        ? aspiranteUser.numeroAspirante ?? '—'
-        : '—'
+    aspiranteUser && 'numeroInscripcionUis' in aspiranteUser
+      ? aspiranteUser.numeroInscripcionUis
+      : '—'
+  const tipoDocumento =
+    aspiranteUser && 'tipoDocumentoIdentificacion' in aspiranteUser
+      ? aspiranteUser.tipoDocumentoIdentificacion
+      : '—'
+  const numeroDocumento =
+    aspiranteUser && 'numeroDocumento' in aspiranteUser ? aspiranteUser.numeroDocumento : '—'
+  const emailPersonal =
+    aspiranteUser && 'emailPersonal' in aspiranteUser ? aspiranteUser.emailPersonal : undefined
 
   const handleLogout = () => {
     logout()
@@ -24,6 +30,12 @@ const AspiranteLayout = () => {
         <div>
           <p className="aspirante-layout__eyebrow">SAPP – Aspirantes</p>
           <p className="aspirante-layout__meta">Número de inscripción: {numeroInscripcion}</p>
+          <p className="aspirante-layout__meta">
+            Doc: {tipoDocumento} {numeroDocumento}
+          </p>
+          {emailPersonal ? (
+            <p className="aspirante-layout__meta">Email: {emailPersonal}</p>
+          ) : null}
         </div>
         <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
           Cerrar sesión

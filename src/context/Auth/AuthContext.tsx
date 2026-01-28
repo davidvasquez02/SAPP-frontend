@@ -1,6 +1,7 @@
 import { createContext, useCallback, useMemo, useState } from 'react'
 import { login as loginService } from '../../api/authService'
-import { loginAspirante as loginAspiranteService } from '../../api/aspiranteAuthService'
+import { consultaInfoAspirante } from '../../api/aspiranteAuthService'
+import { mapAspiranteInfoToSession } from '../../api/aspiranteAuthMappers'
 import * as AuthStorage from './AuthStorage'
 import type { AspiranteLoginParams, AuthContextValue, AuthSession } from './types'
 
@@ -16,7 +17,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   const loginAspirante = useCallback(async (params: AspiranteLoginParams) => {
-    const authenticatedSession = await loginAspiranteService(params)
+    const info = await consultaInfoAspirante(params)
+    const authenticatedSession = mapAspiranteInfoToSession(info)
     setSessionState(authenticatedSession)
     AuthStorage.setSession(authenticatedSession)
   }, [])
