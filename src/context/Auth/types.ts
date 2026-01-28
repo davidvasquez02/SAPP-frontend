@@ -23,11 +23,20 @@ export interface AuthUser {
 
 export interface AspiranteUser {
   id: number
-  numeroAspirante: string
   roles: RoleCode[]
+  numeroAspirante?: string
+  numeroInscripcion?: string
+  tipoDocumentoId?: number
+  numeroDocumento?: string
   programa?: string
   nombres?: string
   apellidos?: string
+}
+
+export interface AspiranteLoginParams {
+  numeroInscripcion: string
+  tipoDocumentoId: number
+  numeroDocumento: string
 }
 
 export interface AuthSession {
@@ -42,6 +51,6 @@ export interface AuthContextValue {
   token: string | null
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
-  loginAspirante: (numeroAspirante: string) => Promise<void>
+  loginAspirante: (params: AspiranteLoginParams) => Promise<void>
   logout: () => void
 }
