@@ -7,7 +7,8 @@
 - Updated aspirante login to capture número de inscripción, tipo de documento, and número de documento before starting the session.
 - Added tipos de documento DTOs/service (`src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`) to fetch `/sapp/tipoDocumentoIdentificacion` for the aspirante login combo.
 - Replaced the aspirante mock auth flow with a real `/sapp/aspirante/consultaInfo` GET in `src/api/aspiranteAuthService.ts`, mapping the response into `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
-- Aspirante layout header now shows inscripción, documento, and email from the persisted aspirante session.
+- Aspirante session now normalizes `numeroInscripcionUis` to a string and persists new backend fields (nombre, director, grupoInvestigacion, telefono, fechaRegistro).
+- Aspirante layout header now shows nombre, inscripción, grupo, director, teléfono, documento, and email from the persisted aspirante session.
 - Added trámite documentos DTOs + service (`src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`) and wired the aspirante documents page to fetch and log `/sapp/tramite/document?tipoTramiteId=4` on entry.
 - Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
 - Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
@@ -78,7 +79,7 @@
 - **SAPP login output:** `src/api/authService.ts`
   - Expects backend response envelope `{ ok, message, data }` and maps `data` into `AuthSession` with `accessToken: "NO_TOKEN"` until tokens are available.
 - **Aspirante consulta info output:** `src/api/aspiranteAuthService.ts`
-  - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }`, and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
+  - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }` (including `nombre`, `director`, `grupoInvestigacion`, `telefono`, `numeroInscripcionUis`, `fechaRegistro`), and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`. `numeroInscripcionUis` is normalized to string on write.
 - **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`
   - Expects `{ ok, message, data: TipoDocumentoIdentificacionDto[] }` from `GET /sapp/tipoDocumentoIdentificacion` and returns the typed `data` array.
 - **HTTP client request helper:** `src/api/httpClient.ts`

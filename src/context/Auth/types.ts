@@ -25,6 +25,10 @@ export interface AspiranteUser {
   id: number
   roles: RoleCode[]
   numeroInscripcionUis: string
+  nombre?: string
+  director?: string
+  grupoInvestigacion?: string
+  telefono?: string
   tipoDocumentoIdentificacion: string
   numeroDocumento: string
   emailPersonal?: string
