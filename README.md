@@ -84,4 +84,6 @@ The aspirante login now also calls the backend directly:
 - Updated the login page so selecting “Soy aspirante” immediately routes to `/login/aspirante` instead of showing a continue button.
 - Updated the aspirante login screen to capture número de inscripción, tipo de documento (loaded from `/sapp/tipoDocumentoIdentificacion`), and número de documento before starting the session.
 - Replaced the aspirante mock login with a real `/sapp/aspirante/consultaInfo` GET and mapped the response into the aspirante session stored in localStorage.
-- Show the aspirante session metadata (inscripción, documento, email) in the aspirante layout header.
+- Normalize aspirante `numeroInscripcionUis` to a string in session storage to keep rendering/routes consistent.
+- Extend aspirante session data to include nombre, director, grupo de investigación, teléfono, y fecha de registro as returned by the backend.
+- Show the expanded aspirante session metadata (nombre, inscripción, grupo, director, teléfono, email) in the aspirante layout header.

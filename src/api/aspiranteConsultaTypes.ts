@@ -1,6 +1,10 @@
 export interface AspiranteConsultaInfoDto {
   id: number
-  numeroInscripcionUis: string
+  director?: string | null
+  grupoInvestigacion?: string | null
+  nombre?: string | null
+  telefono?: string | null
+  numeroInscripcionUis: number | string
   tipoDocumentoIdentificacion: string
   numeroDocumento: string
   emailPersonal?: string | null
