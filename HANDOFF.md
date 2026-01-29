@@ -9,7 +9,7 @@
 - Replaced the aspirante mock auth flow with a real `/sapp/aspirante/consultaInfo` GET in `src/api/aspiranteAuthService.ts`, mapping the response into `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - Aspirante session now normalizes `numeroInscripcionUis` to a string and persists new backend fields (nombre, director, grupoInvestigacion, telefono, fechaRegistro).
 - Aspirante layout header now shows nombre, inscripción, grupo, director, teléfono, documento, and email from the persisted aspirante session.
-- Added trámite documentos DTOs + service (`src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`) and wired the aspirante documents page to fetch and log `/sapp/tramite/document?tipoTramiteId=4` on entry.
+- Added document checklist DTOs + service (`src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`) and wired the aspirante documents page to fetch `/sapp/document?nombreTipoTramite=ADMISION_ASPIRANTE&tramiteId=...` using `session.user.inscripcionAdmisionId`.
 - Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
 - Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
 - Added UI types for document upload items (`src/pages/AspiranteDocumentos/types.ts`).
@@ -58,7 +58,7 @@
 - **Tipos documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`
 - **HTTP client:** `src/api/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
-- **Trámite documentos DTO/service:** `src/api/tramiteDocumentTypes.ts`, `src/api/tramiteDocumentService.ts`
+- **Document checklist DTO/service:** `src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`
 - **Aspirante upload mock service:** `src/api/aspiranteUploadService.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`, `src/pages/AspiranteLogin`, `src/pages/AspiranteDocumentos`
 - **Shared components:** `src/components/*`
@@ -84,12 +84,12 @@
   - Expects `{ ok, message, data: TipoDocumentoIdentificacionDto[] }` from `GET /sapp/tipoDocumentoIdentificacion` and returns the typed `data` array.
 - **HTTP client request helper:** `src/api/httpClient.ts`
   - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists, and throws on non-OK responses.
-- **Trámite documentos response:** `src/api/tramiteDocumentService.ts`
-  - Expects `{ ok, message, data: TramiteDocumentoDto[] }` from `GET /sapp/tramite/document?tipoTramiteId=4` and returns the typed `data` array.
+- **Document checklist response:** `src/api/documentChecklistService.ts`
+  - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?nombreTipoTramite=ADMISION_ASPIRANTE&tramiteId=...` and returns the typed `data` array.
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Mock upload response:** `src/api/aspiranteUploadService.ts`
-  - `uploadAspiranteDocumento({ aspiranteId, tipoTramiteDocumentoId, file })` returns `{ ok, message }` after a 0.8–1.5s delay.
+  - `uploadAspiranteDocumento({ aspiranteId, idTipoDocumentoTramite, file })` returns `{ ok, message }` after a 0.8–1.5s delay.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.
