@@ -9,7 +9,7 @@
 - Replaced the aspirante mock auth flow with a real `/sapp/aspirante/consultaInfo` GET in `src/api/aspiranteAuthService.ts`, mapping the response into `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - Aspirante session now normalizes `numeroInscripcionUis` to a string and persists new backend fields (nombre, director, grupoInvestigacion, telefono, fechaRegistro).
 - Aspirante layout header now shows nombre, inscripción, grupo, director, teléfono, documento, and email from the persisted aspirante session.
-- Added document checklist DTOs + service (`src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`) and wired the aspirante documents page to fetch `/sapp/document?nombreTipoTramite=ADMISION_ASPIRANTE&tramiteId=...` using `session.user.inscripcionAdmisionId`.
+- Added document checklist DTOs + service (`src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`) and wired the aspirante documents page to fetch `/sapp/document?codigoTipoTramite=1002&tramiteId=...` using `session.user.inscripcionAdmisionId`, mapping `documentoCargado` + `documentoUploadedResponse` into UI status/filename.
 - Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
 - Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
 - Added UI types for document upload items (`src/pages/AspiranteDocumentos/types.ts`).
@@ -33,7 +33,7 @@
 ## Open Challenges
 - Backend auth does not return a token yet; the frontend uses `accessToken: "NO_TOKEN"` for session compatibility.
 - Define the real aspirante document upload API contract to replace the mock service.
-- Confirm backend response for uploaded document metadata (filename, status) to sync UI states.
+- Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
@@ -85,7 +85,7 @@
 - **HTTP client request helper:** `src/api/httpClient.ts`
   - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists, and throws on non-OK responses.
 - **Document checklist response:** `src/api/documentChecklistService.ts`
-  - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?nombreTipoTramite=ADMISION_ASPIRANTE&tramiteId=...` and returns the typed `data` array.
+  - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Mock upload response:** `src/api/aspiranteUploadService.ts`

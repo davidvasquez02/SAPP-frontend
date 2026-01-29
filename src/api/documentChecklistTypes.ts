@@ -1,3 +1,15 @@
+export interface DocumentoUploadedResponseDto {
+  aspiranteCargaDocumento: number
+  base64DocumentoContenido: string
+  estadoDocumento: string
+  fechaCargaDocumento: string
+  idDocumento: number
+  mimeTypeDocumentoContenido: string
+  nombreArchivoDocumento: string
+  usuarioCargaDocumento: number | null
+  versionDocumento: number
+}
+
 export interface DocumentChecklistItemDto {
   idTipoDocumentoTramite: number
   codigoTipoDocumentoTramite: string
@@ -6,5 +18,5 @@ export interface DocumentChecklistItemDto {
   obligatorioTipoDocumentoTramite: boolean
   tipoTramite: string
   documentoCargado: boolean
-  documentoUploadedResponse: unknown | null
+  documentoUploadedResponse: DocumentoUploadedResponseDto | null
 }
