@@ -13,7 +13,9 @@
 - Implemented a checklist UI for aspirante document upload with per-document status, file selection, and progress tracking (`src/pages/AspiranteDocumentos`).
 - Added the `DocumentUploadCard` component for rendering each document requirement (`src/components/DocumentUploadCard`).
 - Added UI types for document upload items (`src/pages/AspiranteDocumentos/types.ts`).
-- Added a mock upload service to simulate document submissions (`src/api/aspiranteUploadService.ts`).
+- Added a real document upload service (`src/api/documentUploadService.ts`) that posts to `/sapp/document` with base64 content + SHA-256 checksum.
+- Added base64 + SHA-256 helpers for uploads (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
+- Aspirante document uploads now update UI status to UPLOADED/ERROR and refresh the checklist after a successful upload.
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Session now includes a `kind` discriminator (`SAPP` vs `ASPIRANTE`) and union user types.
 - Protected routes rely on `isAuthenticated` only (no loading state).
@@ -32,7 +34,6 @@
 
 ## Open Challenges
 - Backend auth does not return a token yet; the frontend uses `accessToken: "NO_TOKEN"` for session compatibility.
-- Define the real aspirante document upload API contract to replace the mock service.
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
@@ -40,11 +41,11 @@
 
 ## Next Steps
 1. Align auth token handling once the backend returns access tokens, replacing the `NO_TOKEN` placeholder.
-2. Define aspirante document submission endpoints and replace the aspirante mock upload flow.
+2. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
 3. Add `.env.local` (or equivalent) for API base URLs.
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 5. Wire module pages to the new service stubs once backend endpoints are defined.
-6. Replace the mock aspirante upload service with a real endpoint once available.
+6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -59,7 +60,8 @@
 - **HTTP client:** `src/api/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
 - **Document checklist DTO/service:** `src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`
-- **Aspirante upload mock service:** `src/api/aspiranteUploadService.ts`
+- **Aspirante upload service:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
+- **Upload utilities:** `src/utils/fileToBase64.ts`, `src/utils/sha256.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`, `src/pages/AspiranteLogin`, `src/pages/AspiranteDocumentos`
 - **Shared components:** `src/components/*`
 - **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
@@ -88,8 +90,8 @@
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
-- **Mock upload response:** `src/api/aspiranteUploadService.ts`
-  - `uploadAspiranteDocumento({ aspiranteId, idTipoDocumentoTramite, file })` returns `{ ok, message }` after a 0.8–1.5s delay.
+- **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
+  - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

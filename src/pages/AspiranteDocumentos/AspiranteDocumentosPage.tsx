@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getChecklistDocumentos } from '../../api/documentChecklistService'
 import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
-import { uploadAspiranteDocumento } from '../../api/aspiranteUploadService'
+import { uploadDocument } from '../../api/documentUploadService'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
+import { fileToBase64 } from '../../utils/fileToBase64'
+import { sha256Hex } from '../../utils/sha256'
 import type { DocumentUploadItem } from './types'
 import './AspiranteDocumentosPage.css'
 
@@ -113,32 +115,63 @@ const AspiranteDocumentosPage = () => {
       )
 
       try {
-        const response = await uploadAspiranteDocumento({
-          aspiranteId: session.user.id,
-          idTipoDocumentoTramite: item.id,
-          file: item.selectedFile,
-        })
+        const tramiteId = session.user.inscripcionAdmisionId
 
-        if (response.ok) {
+        if (tramiteId == null) {
           setItems((prev) =>
             prev.map((current) =>
               current.id === id
                 ? {
                     ...current,
-                    status: 'UPLOADED',
-                    uploadedFileName: item.selectedFile?.name,
+                    status: 'ERROR',
+                    errorMessage: 'No se encontró inscripcionAdmisionId en la sesión del aspirante.',
                   }
                 : current,
             ),
           )
-        } else {
-          setItems((prev) =>
-            prev.map((current) =>
-              current.id === id
-                ? { ...current, status: 'ERROR', errorMessage: response.message }
-                : current,
-            ),
-          )
+          return
+        }
+
+        const buffer = await item.selectedFile.arrayBuffer()
+        const contenidoBase64 = await fileToBase64(item.selectedFile)
+        const checksum = await sha256Hex(buffer)
+
+        const uploaded = await uploadDocument({
+          tipoDocumentoTramiteId: item.id,
+          nombreArchivo: item.selectedFile.name,
+          tramiteId,
+          usuarioCargaId: null,
+          aspiranteCargaId: session.user.id,
+          contenidoBase64,
+          mimeType: item.selectedFile.type || 'application/octet-stream',
+          tamanoBytes: item.selectedFile.size,
+          checksum,
+        })
+
+        setItems((prev) =>
+          prev.map((current) =>
+            current.id === id
+              ? {
+                  ...current,
+                  status: 'UPLOADED',
+                  uploadedFileName: uploaded.nombreArchivo,
+                  selectedFile: null,
+                  errorMessage: undefined,
+                }
+              : current,
+          ),
+        )
+
+        try {
+          const documentos = await getChecklistDocumentos({
+            codigoTipoTramite: 1002,
+            tramiteId,
+          })
+          setItems(documentos.map(mapDocumentoToUploadItem))
+        } catch (refreshError) {
+          const refreshMessage =
+            refreshError instanceof Error ? refreshError.message : String(refreshError)
+          console.warn('[AspiranteDocumentos] error refrescando checklist:', refreshMessage)
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error desconocido'
