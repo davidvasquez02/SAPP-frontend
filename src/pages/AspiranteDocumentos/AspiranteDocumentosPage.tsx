@@ -1,26 +1,40 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getChecklistDocumentos } from '../../api/documentChecklistService'
+import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
 import { uploadAspiranteDocumento } from '../../api/aspiranteUploadService'
-import { getDocumentosPorTipoTramite } from '../../api/tramiteDocumentService'
-import type { TramiteDocumentoDto } from '../../api/tramiteDocumentTypes'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
 import type { DocumentUploadItem } from './types'
 import './AspiranteDocumentosPage.css'
 
-const mapDocumentoToUploadItem = (documento: TramiteDocumentoDto): DocumentUploadItem => ({
-  id: documento.id,
-  codigo: documento.codigo,
-  nombre: documento.nombre,
-  descripcion: documento.descripcion,
-  obligatorio: documento.obligatorio,
-  status: 'NOT_SELECTED',
+const getUploadedFileName = (documento: DocumentChecklistItemDto): string | undefined => {
+  if (!documento.documentoCargado) {
+    return undefined
+  }
+
+  if (typeof documento.documentoUploadedResponse === 'string') {
+    return documento.documentoUploadedResponse
+  }
+
+  return 'Cargado en servidor'
+}
+
+const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => ({
+  id: documento.idTipoDocumentoTramite,
+  codigo: documento.codigoTipoDocumentoTramite,
+  nombre: documento.nombreTipoDocumentoTramite,
+  descripcion: documento.descripcionTipoDocumentoTramite,
+  obligatorio: documento.obligatorioTipoDocumentoTramite,
+  status: documento.documentoCargado ? 'UPLOADED' : 'NOT_SELECTED',
   selectedFile: null,
+  uploadedFileName: getUploadedFileName(documento),
 })
 
 const AspiranteDocumentosPage = () => {
   const { session } = useAuth()
   const hasFetchedRef = useRef(false)
   const [items, setItems] = useState<DocumentUploadItem[]>([])
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!session || session.kind !== 'ASPIRANTE') {
@@ -31,16 +45,27 @@ const AspiranteDocumentosPage = () => {
       return
     }
 
-    hasFetchedRef.current = true
-
     const fetchDocumentos = async () => {
       try {
-        const documentos = await getDocumentosPorTipoTramite(4)
+        const tramiteId = session.user.inscripcionAdmisionId
+
+        if (tramiteId == null) {
+          setErrorMessage('No se encontró inscripcionAdmisionId en la sesión del aspirante.')
+          return
+        }
+
+        hasFetchedRef.current = true
+        setErrorMessage(null)
+        const documentos = await getChecklistDocumentos({
+          nombreTipoTramite: 'ADMISION_ASPIRANTE',
+          tramiteId,
+        })
         console.log('[AspiranteDocumentos] requisitos:', documentos)
         setItems(documentos.map(mapDocumentoToUploadItem))
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error('[AspiranteDocumentos] error consultando documentos:', message)
+        setErrorMessage(message)
       }
     }
 
@@ -96,7 +121,7 @@ const AspiranteDocumentosPage = () => {
       try {
         const response = await uploadAspiranteDocumento({
           aspiranteId: session.user.id,
-          tipoTramiteDocumentoId: item.id,
+          idTipoDocumentoTramite: item.id,
           file: item.selectedFile,
         })
 
@@ -152,7 +177,9 @@ const AspiranteDocumentosPage = () => {
       </header>
 
       <div className="aspirante-documentos__list">
-        {items.length === 0 ? (
+        {errorMessage ? (
+          <p className="aspirante-documentos__error">{errorMessage}</p>
+        ) : items.length === 0 ? (
           <p className="aspirante-documentos__empty">No hay requisitos disponibles.</p>
         ) : (
           items.map((item) => (

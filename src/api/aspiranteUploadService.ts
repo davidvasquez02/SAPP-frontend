@@ -5,17 +5,17 @@ export interface UploadResponse {
 
 interface UploadParams {
   aspiranteId: number
-  tipoTramiteDocumentoId: number
+  idTipoDocumentoTramite: number
   file: File
 }
 
 export const uploadAspiranteDocumento = async ({
   aspiranteId,
-  tipoTramiteDocumentoId,
+  idTipoDocumentoTramite,
   file,
 }: UploadParams): Promise<UploadResponse> => {
   void aspiranteId
-  void tipoTramiteDocumentoId
+  void idTipoDocumentoTramite
   const delay = Math.floor(Math.random() * 700) + 800
 
   return new Promise((resolve) => {

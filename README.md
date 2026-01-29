@@ -11,7 +11,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and the mapping into `AuthSession`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling for module services.
-- **Trámite documentos API:** `src/api/tramiteDocumentTypes.ts` + `src/api/tramiteDocumentService.ts` define DTOs and a GET client for `/sapp/tramite/document`.
+- **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs and a GET client for `/sapp/document?nombreTipoTramite=ADMISION_ASPIRANTE&tramiteId=...`.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by a mock upload service (`src/api/aspiranteUploadService.ts`).
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
@@ -75,7 +75,7 @@ The aspirante login now also calls the backend directly:
 - Added “En construcción” placeholders to Solicitudes, Matrícula, and Créditos module pages.
 - Standardized the login page location to `src/pages/Login` and default redirect to `/` after login.
 - Added aspirante authentication: session kind (`SAPP` vs `ASPIRANTE`) and `/aspirante/*` protected routes with their own layout and placeholder documents page.
-- Added DTOs + service for trámite documentos (`/sapp/tramite/document`) and hooked the aspirante documents page to log the fetched data on entry.
+- Switched the aspirante documents checklist to `/sapp/document` with `nombreTipoTramite=ADMISION_ASPIRANTE` and `tramiteId` from `session.user.inscripcionAdmisionId`, mapping the new DTO fields into the existing upload UI.
 - Implemented a checklist-style aspirante document upload UI with per-document status, file selection, and progress tracking.
 - Added `DocumentUploadCard` component styles and a mock upload service to simulate document submissions.
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
