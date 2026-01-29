@@ -13,7 +13,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling for module services.
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
-- **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by a mock upload service (`src/api/aspiranteUploadService.ts`).
+- **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
@@ -77,7 +77,8 @@ The aspirante login now also calls the backend directly:
 - Added aspirante authentication: session kind (`SAPP` vs `ASPIRANTE`) and `/aspirante/*` protected routes with their own layout and placeholder documents page.
 - Switched the aspirante documents checklist to `/sapp/document` with `codigoTipoTramite=1002` and `tramiteId` from `session.user.inscripcionAdmisionId`, mapping `documentoCargado` + `documentoUploadedResponse` into UI status and filename.
 - Implemented a checklist-style aspirante document upload UI with per-document status, file selection, and progress tracking.
-- Added `DocumentUploadCard` component styles and a mock upload service to simulate document submissions.
+- Added `DocumentUploadCard` component styles and the checklist-driven aspirante upload UI.
+- Replaced the aspirante mock upload with a real `POST /sapp/document` integration that sends base64 content + SHA-256 checksum, updates the UI status, and refreshes the checklist after a successful upload.
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
 - Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
 - Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
