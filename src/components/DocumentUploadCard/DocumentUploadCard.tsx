@@ -37,7 +37,8 @@ export const DocumentUploadCard = ({
 }: DocumentUploadCardProps) => {
   const inputId = `document-upload-${item.id}`
   const statusClass = `document-upload-card__status document-upload-card__status--${item.status.toLowerCase()}`
-  const fileName = item.selectedFile?.name ?? item.uploadedFileName
+  const uploadedFileName = item.status === 'UPLOADED' ? item.uploadedFileName : undefined
+  const fileName = item.selectedFile?.name ?? uploadedFileName
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null

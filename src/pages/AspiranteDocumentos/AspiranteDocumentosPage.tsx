@@ -7,28 +7,22 @@ import { useAuth } from '../../context/Auth'
 import type { DocumentUploadItem } from './types'
 import './AspiranteDocumentosPage.css'
 
-const getUploadedFileName = (documento: DocumentChecklistItemDto): string | undefined => {
-  if (!documento.documentoCargado) {
-    return undefined
-  }
+const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => {
+  const isUploaded = documento.documentoCargado === true && documento.documentoUploadedResponse != null
 
-  if (typeof documento.documentoUploadedResponse === 'string') {
-    return documento.documentoUploadedResponse
+  return {
+    id: documento.idTipoDocumentoTramite,
+    codigo: documento.codigoTipoDocumentoTramite,
+    nombre: documento.nombreTipoDocumentoTramite,
+    descripcion: documento.descripcionTipoDocumentoTramite,
+    obligatorio: documento.obligatorioTipoDocumentoTramite,
+    status: isUploaded ? 'UPLOADED' : 'NOT_SELECTED',
+    selectedFile: null,
+    uploadedFileName: isUploaded
+      ? documento.documentoUploadedResponse?.nombreArchivoDocumento
+      : undefined,
   }
-
-  return 'Cargado en servidor'
 }
-
-const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => ({
-  id: documento.idTipoDocumentoTramite,
-  codigo: documento.codigoTipoDocumentoTramite,
-  nombre: documento.nombreTipoDocumentoTramite,
-  descripcion: documento.descripcionTipoDocumentoTramite,
-  obligatorio: documento.obligatorioTipoDocumentoTramite,
-  status: documento.documentoCargado ? 'UPLOADED' : 'NOT_SELECTED',
-  selectedFile: null,
-  uploadedFileName: getUploadedFileName(documento),
-})
 
 const AspiranteDocumentosPage = () => {
   const { session } = useAuth()
@@ -57,7 +51,7 @@ const AspiranteDocumentosPage = () => {
         hasFetchedRef.current = true
         setErrorMessage(null)
         const documentos = await getChecklistDocumentos({
-          nombreTipoTramite: 'ADMISION_ASPIRANTE',
+          codigoTipoTramite: 1002,
           tramiteId,
         })
         console.log('[AspiranteDocumentos] requisitos:', documentos)

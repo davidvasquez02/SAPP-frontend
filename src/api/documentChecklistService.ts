@@ -3,16 +3,16 @@ import type { DocumentChecklistItemDto } from './documentChecklistTypes'
 import type { ApiResponse } from './types'
 
 interface ChecklistParams {
-  nombreTipoTramite: string
+  codigoTipoTramite: number
   tramiteId: number
 }
 
 export const getChecklistDocumentos = async ({
-  nombreTipoTramite,
+  codigoTipoTramite,
   tramiteId,
 }: ChecklistParams): Promise<DocumentChecklistItemDto[]> => {
   const qs = new URLSearchParams({
-    nombreTipoTramite,
+    codigoTipoTramite: String(codigoTipoTramite),
     tramiteId: String(tramiteId),
   })
 
