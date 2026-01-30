@@ -19,7 +19,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Role-based UI guard:** `src/auth/roleGuards.ts` centralizes role checks for sidebar/menu visibility and protected routes.
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
-- **Admisiones module (mocked):** `src/modules/admisiones` defines the convocatoria types + mock data; `src/pages/AdmisionesHome` and `src/pages/ConvocatoriaDetalle` implement the initial convocatoria selector and placeholder detail view.
+- **Admisiones module (mocked):** `src/modules/admisiones` defines convocatoria types + mock data (now grouped by programa); `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` provides a placeholder detail view.
 
 ## Tech Stack (Exact Versions)
 - **React:** 19.2.0
@@ -99,3 +99,4 @@ Mock data for the Admisiones module lives in:
 - Added a “Mi cuenta” panel on Home to visualize username, roles, and token expiration for debugging JWT claims.
 - Added role-based guards for Coordinación/Secretaría and a protected “Admisiones” module route with a placeholder page plus conditional sidebar navigation.
 - Implemented the Admisiones home selector with mock convocatorias, plus a convocatoria detail placeholder and parameterized routes for `/admisiones/convocatoria/:convocatoriaId`.
+- Split the Admisiones selector into two program sections with program-specific current/previous convocatorias and updated the placeholder detail view to show the new program-period metadata.
