@@ -6,7 +6,10 @@ export const getInscripcionesByConvocatoria = async (
   convocatoriaId: number
 ): Promise<InscripcionAdmisionDto[]> => {
   const response = await request<ApiResponse<InscripcionAdmisionDto[]>>(
-    `${API_BASE_URL}/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`
+    `${API_BASE_URL}/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`,
+    {
+      skipAuth: true,
+    }
   )
 
   if (!response.ok) {

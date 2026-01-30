@@ -32,6 +32,7 @@
 - Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
 - The “Soy aspirante” checkbox routes directly to `/login/aspirante` (no intermediate continue button).
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
+- Added a `skipAuth` option to the shared `request<T>` helper so public endpoints can avoid sending Authorization headers (used for convocatorias/inscripciones fetch).
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 - Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
@@ -107,7 +108,7 @@
 - **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`
   - Expects `{ ok, message, data: TipoDocumentoIdentificacionDto[] }` from `GET /sapp/tipoDocumentoIdentificacion` and returns the typed `data` array.
 - **HTTP client request helper:** `src/api/httpClient.ts`
-  - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists, and throws on non-OK responses.
+  - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists (unless `skipAuth` is set), and throws on non-OK responses.
 - **Document checklist response:** `src/api/documentChecklistService.ts`
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`

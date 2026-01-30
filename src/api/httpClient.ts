@@ -1,15 +1,20 @@
 import * as AuthStorage from '../context/Auth/AuthStorage'
 
-export async function request<T>(input: RequestInfo, init: RequestInit = {}): Promise<T> {
+export type RequestOptions = RequestInit & {
+  skipAuth?: boolean
+}
+
+export async function request<T>(input: RequestInfo, init: RequestOptions = {}): Promise<T> {
   const session = AuthStorage.getSession()
+  const { skipAuth, ...requestInit } = init
   const headers = new Headers(init.headers)
 
-  if (session?.accessToken && !headers.has('Authorization')) {
+  if (!skipAuth && session?.accessToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${session.accessToken}`)
   }
 
   const response = await fetch(input, {
-    ...init,
+    ...requestInit,
     headers,
   })
 
