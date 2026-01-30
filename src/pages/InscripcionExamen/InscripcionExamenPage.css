@@ -1,0 +1,26 @@
+.inscripcion-examen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 900px;
+}
+
+.inscripcion-examen__back {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.inscripcion-examen__back:hover {
+  text-decoration: underline;
+}
+
+.inscripcion-examen__title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.inscripcion-examen__subtitle {
+  margin: 0;
+  color: #4b5563;
+}

@@ -7,6 +7,10 @@ import {
   ConvocatoriaDetallePage,
   HomePage,
   InscripcionAdmisionDetallePage,
+  InscripcionDocumentosPage,
+  InscripcionEntrevistasPage,
+  InscripcionExamenPage,
+  InscripcionHojaVidaPage,
   LoginPage,
 } from '../../pages'
 import RequireRoles from '../../routes/RequireRoles/RequireRoles'
@@ -60,6 +64,38 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
                 <InscripcionAdmisionDetallePage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <InscripcionDocumentosPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <InscripcionHojaVidaPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/examen"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <InscripcionExamenPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <InscripcionEntrevistasPage />
               </RequireRoles>
             }
           />
