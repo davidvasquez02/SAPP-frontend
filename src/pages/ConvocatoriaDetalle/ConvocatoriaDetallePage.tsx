@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
@@ -8,9 +8,20 @@ import './ConvocatoriaDetallePage.css'
 const ConvocatoriaDetallePage = () => {
   const { convocatoriaId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [inscripciones, setInscripciones] = useState<InscripcionAdmisionDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const { periodoAcademico } = useMemo(() => {
+    return (location.state as { periodoAcademico?: string } | null) ?? {}
+  }, [location.state])
+
+  const periodoConvocatoria =
+    periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
+  const pageTitle = periodoConvocatoria
+    ? `Convocatoria - ${periodoConvocatoria}`
+    : 'Convocatoria'
 
   useEffect(() => {
     if (!convocatoriaId) {
@@ -55,12 +66,21 @@ const ConvocatoriaDetallePage = () => {
     }
   }, [convocatoriaId])
 
-  const handleRowClick = (inscripcionId: number) => {
+  const handleRowClick = (inscripcion: InscripcionAdmisionDto) => {
     if (!convocatoriaId) {
       return
     }
 
-    navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`)
+    navigate(
+      `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcion.id}`,
+      {
+        state: {
+          nombreAspirante: inscripcion.nombreAspirante,
+          periodoAcademico: inscripcion.periodoAcademico,
+          inscripcionId: inscripcion.id,
+        },
+      }
+    )
   }
 
   return (
@@ -70,7 +90,7 @@ const ConvocatoriaDetallePage = () => {
           ← Volver
         </Link>
 
-        <h1 className="convocatoria-detalle__title">Convocatoria {convocatoriaId}</h1>
+        <h1 className="convocatoria-detalle__title">{pageTitle}</h1>
 
         {isLoading ? (
           <p className="convocatoria-detalle__status">Cargando estudiantes…</p>
@@ -106,7 +126,7 @@ const ConvocatoriaDetallePage = () => {
                   <tr
                     key={inscripcion.id}
                     className="convocatoria-detalle__row"
-                    onClick={() => handleRowClick(inscripcion.id)}
+                    onClick={() => handleRowClick(inscripcion)}
                   >
                     <td>{inscripcion.nombreAspirante}</td>
                     <td>{inscripcion.estado}</td>

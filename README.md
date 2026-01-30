@@ -72,6 +72,7 @@ Mock data for the Admisiones module lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (convocatorias list used by the selector UI).
 
 ## Recent Decisions (Changelog-lite)
+- Updated Admisiones convocatoria/inscripción headers to derive titles from navigation state or loaded data (with safe fallbacks) and passed periodo/nombre state through routing for instant titles on navigation.
 - Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
 - Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
 - Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.

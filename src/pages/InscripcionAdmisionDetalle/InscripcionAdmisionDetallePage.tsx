@@ -1,17 +1,27 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import './InscripcionAdmisionDetallePage.css'
 
 const InscripcionAdmisionDetallePage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const nombreAspirante = (
+    location.state as { nombreAspirante?: string } | null
+  )?.nombreAspirante
+  const pageTitle = nombreAspirante
+    ? `Inscripción - ${nombreAspirante}`
+    : 'Inscripción'
 
   const handleNavigate = (path: string) => {
     if (!convocatoriaId || !inscripcionId) {
       return
     }
 
-    navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/${path}`)
+    navigate(
+      `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/${path}`
+    )
   }
 
   return (
@@ -24,7 +34,7 @@ const InscripcionAdmisionDetallePage = () => {
           ← Volver a Convocatoria
         </Link>
 
-        <h1 className="inscripcion-detalle__title">Inscripción {inscripcionId}</h1>
+        <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
         <p className="inscripcion-detalle__subtitle">Seleccione una opción</p>
 
         <div className="inscripcion-detalle__options">

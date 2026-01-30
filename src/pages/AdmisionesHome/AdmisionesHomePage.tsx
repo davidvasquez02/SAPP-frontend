@@ -68,8 +68,10 @@ const AdmisionesHomePage = () => {
       .sort((a, b) => a.programaId - b.programaId)
   }, [])
 
-  const handleSelectConvocatoria = (id: number) => {
-    navigate(`/admisiones/convocatoria/${id}`)
+  const handleSelectConvocatoria = (convocatoria: Convocatoria) => {
+    navigate(`/admisiones/convocatoria/${convocatoria.id}`, {
+      state: { periodoAcademico: formatoPeriodo(convocatoria.periodo) },
+    })
   }
 
   const togglePrograma = (programaId: number) => {
@@ -113,7 +115,7 @@ const AdmisionesHomePage = () => {
                     className="admisiones-home__card"
                     onClick={() =>
                       convocatoriaActual &&
-                      handleSelectConvocatoria(convocatoriaActual.id)
+                      handleSelectConvocatoria(convocatoriaActual)
                     }
                     disabled={!convocatoriaActual}
                   >
@@ -160,7 +162,7 @@ const AdmisionesHomePage = () => {
                               type="button"
                               className="admisiones-home__item"
                               onClick={() =>
-                                handleSelectConvocatoria(convocatoria.id)
+                                handleSelectConvocatoria(convocatoria)
                               }
                             >
                               <span>
