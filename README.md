@@ -13,6 +13,8 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token (unless `skipAuth` is set) and standardizing error handling for module services.
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
+- **Documentos module (coordinación/secretaría):** `src/modules/documentos` defines shared checklist DTOs, a reusable `/sapp/document` service, and a validation service stub to be wired once the backend endpoint is ready.
+- **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), with UI-only validation controls and a prepared payload for future persistence.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared `request<T>` helper.
@@ -104,3 +106,5 @@ Mock data for the Admisiones module lives in:
 - Split the Admisiones selector into two program sections with program-specific current/previous convocatorias and updated the placeholder detail view to show the new program-period metadata.
 - Wired Convocatoria detalle to the real `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId` endpoint and added a placeholder route for inscripcion detail.
 - Added inscripcion detail navigation cards and protected placeholder child routes for documentos, hoja de vida, examen de conocimiento, and entrevistas.
+- Implemented “Documentos cargados” for coordinación/secretaría using the real `/sapp/document` checklist endpoint and added UI-only validation controls plus a stubbed save service.
+- Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.

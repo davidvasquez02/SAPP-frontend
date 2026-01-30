@@ -1,0 +1,23 @@
+export type { ApiResponse } from '../../../api/types'
+
+export interface DocumentoUploadedResponseDto {
+  idDocumento: number
+  nombreArchivoDocumento: string
+  versionDocumento: number
+  fechaCargaDocumento: string
+  mimeTypeDocumentoContenido: string
+  base64DocumentoContenido: string
+  aspiranteCargaDocumento?: number
+  usuarioCargaDocumento?: number | null
+}
+
+export interface DocumentoTramiteItemDto {
+  codigoTipoDocumentoTramite: string
+  descripcionTipoDocumentoTramite: string
+  documentoCargado: boolean
+  documentoUploadedResponse: DocumentoUploadedResponseDto | null
+  idTipoDocumentoTramite: number
+  nombreTipoDocumentoTramite: string
+  obligatorioTipoDocumentoTramite: boolean
+  tipoTramite: string
+}
