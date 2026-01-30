@@ -46,6 +46,8 @@
 - Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
 - Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that uses `PUT /sapp/document`.
 - Centralized `codigoTipoTramite=1002` in `src/modules/documentos/constants.ts` and reused it in the aspirante checklist fetch.
+- Added base64 file utilities (`src/shared/files/base64FileUtils.ts`) for normalizing base64 content, generating blobs, opening documents in a new tab, and triggering downloads.
+- Added “Ver” and “Descargar” actions on the inscripcion documentos table to open/download the uploaded document using the base64 payload returned by `documentoUploadedResponse`.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -97,6 +99,8 @@
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
+- **Document view/download utilities:** `src/shared/files/base64FileUtils.ts`
+- **Document view/download UI:** `src/pages/InscripcionDocumentos`
 - **Shared components:** `src/components/*`
 - **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
@@ -126,6 +130,8 @@
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Documentos checklist (coordinación/secretaría):** `src/modules/documentos/api/documentosService.ts`
   - Expects `{ ok, message, data: DocumentoTramiteItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array for the coordinador screen.
+- **Documentos base64 fields:** `DocumentoUploadedResponseDto`
+  - The frontend now expects `base64DocumentoContenido` or `contenidoBase64`, plus `mimeTypeDocumentoContenido` or `mimeType`, to open/download the uploaded document without additional endpoints.
 - **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`
   - Sends `{ documentoId, aprobado, observaciones }` to `PUT /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
