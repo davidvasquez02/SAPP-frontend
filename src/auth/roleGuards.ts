@@ -1,8 +1,9 @@
+import { hasAnyRole } from '../modules/auth/roles/roleUtils'
+
 export const ROLES = {
   COORDINACION: 'COORDINADOR',
   SECRETARIA: 'SECRETARIA',
+  ADMIN: 'ADMIN',
 } as const
 
-export function hasAnyRole(userRoles: string[], allowed: string[]): boolean {
-  return allowed.some((role) => userRoles.includes(role))
-}
+export { hasAnyRole }

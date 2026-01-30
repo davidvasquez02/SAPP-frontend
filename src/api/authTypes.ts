@@ -3,12 +3,6 @@ export interface LoginRequestDto {
   password: string
 }
 
-export interface RolDto {
-  id: number
-  codigo: string
-  nombre: string
-}
-
 export interface PersonaDto {
   id: number
   tipoDocumento: string
@@ -22,7 +16,7 @@ export interface PersonaDto {
   telefono: string | null
 }
 
-export interface LoginResponseDto {
+export interface UserLoginResponseDto {
   id: number
   username: string
   authId: number
@@ -30,6 +24,8 @@ export interface LoginResponseDto {
   fechaCreacion: string
   lastLogin: string
   persona: PersonaDto
-  roles: RolDto[]
+  roles: string[]
   token: string
 }
+
+export type LoginResponseDto = UserLoginResponseDto

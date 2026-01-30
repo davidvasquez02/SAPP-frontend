@@ -1,10 +1,9 @@
-import type { RolDto } from './authTypes'
-
 export interface JwtPayload {
   sub?: string
   iat?: number
   exp?: number
-  rolesUsuario?: RolDto[]
+  rolesUsuario?: string[]
+  roles?: string[]
   idUsuario?: number
   nombreUsuario?: string
 }

@@ -1,21 +1,11 @@
-import type { PersonaDto, RolDto } from '../../api/authTypes'
-
-export type RoleCode =
-  | 'ESTUDIANTE'
-  | 'ASPIRANTE'
-  | 'SECRETARIA'
-  | 'COORDINACION'
-  | 'COMITE'
-  | 'DOCENTE'
-  | 'INVITADO'
+import type { PersonaDto } from '../../api/authTypes'
 
 export type SessionKind = 'SAPP' | 'ASPIRANTE'
 
 export interface AuthUser {
   id: number
   username: string
-  roles: RoleCode[]
-  rolesDetail?: RolDto[]
+  roles: string[]
   persona: PersonaDto
   nombreCompleto?: string
   programa?: string
@@ -27,7 +17,7 @@ export interface AuthUser {
 
 export interface AspiranteUser {
   id: number
-  roles: RoleCode[]
+  roles: string[]
   numeroInscripcionUis: string
   nombre?: string
   director?: string

@@ -3,6 +3,7 @@
 ## Current Status
 - SAPP login calls the backend (`POST /sapp/auth/login`) and returns the typed DTO, mapping it + JWT payload claims into `AuthSession`.
 - JWT payload decoding (base64url only, no signature validation) lives in `src/utils/jwt.ts` and is used to populate username, roles, `iat`, and `exp`.
+- SAPP login roles are now treated as `string[]` (response `data.roles` preferred, JWT roles fallback) and normalized to uppercase before storing in session.
 - Auth sessions store `accessToken` (JWT), `issuedAt`, and `expiresAt`; protected routes log out when the token is expired.
 - Added API base URL config (`src/api/config.ts`) using `VITE_API_BASE_URL` with a localhost default.
 - Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
@@ -36,6 +37,7 @@
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 - Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
+- Added `src/modules/auth/roles/roleUtils.ts` to normalize and compare role strings; Admisiones visibility now also allows `ADMIN`.
 - Implemented the Admisiones home selector UI with mock convocatorias, including current vs previous selection and parameterized navigation to convocatoria detail placeholders.
 - Expanded Admisiones convocatorias to include programa metadata (id/nivel/nombre) and split the selector into two program-specific sections with independent current/previous lists.
 - Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displayed program name + periodo from the mock list.
@@ -71,7 +73,7 @@
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
 - **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
-- **Role guard helper:** `src/auth/roleGuards.ts`
+- **Role guard helper:** `src/auth/roleGuards.ts`, `src/modules/auth/roles/roleUtils.ts`
 - **RequireRoles wrapper:** `src/routes/RequireRoles/RequireRoles.tsx`
 - **Aspirante guard/routes:** `src/app/routes/aspiranteOnlyRoute.tsx`, `src/app/routes/aspiranteRoutes.tsx`
 - **Auth context/types/storage:** `src/context/Auth/*`
@@ -112,7 +114,8 @@
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
 - **SAPP login output:** `src/api/authService.ts`
   - Expects backend response envelope `{ ok, message, data }` and maps `data` + decoded JWT payload into `AuthSession` (username, roles, iat/exp).
-  - JWT payload contract: `src/api/jwtPayloadTypes.ts` (supports `rolesUsuario`, `nombreUsuario`/`sub`, `idUsuario`, `iat`, `exp`).
+  - `data.roles` is now `string[]`; the mapper prefers response roles and falls back to JWT payload roles.
+  - JWT payload contract: `src/api/jwtPayloadTypes.ts` (supports `rolesUsuario`/`roles`, `nombreUsuario`/`sub`, `idUsuario`, `iat`, `exp`).
 - **Aspirante consulta info output:** `src/api/aspiranteAuthService.ts`
   - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }` (including `nombre`, `director`, `grupoInvestigacion`, `telefono`, `numeroInscripcionUis`, `fechaRegistro`), and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`. `numeroInscripcionUis` is normalized to string on write.
 - **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`

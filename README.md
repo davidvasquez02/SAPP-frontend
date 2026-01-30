@@ -8,7 +8,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
 - **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
 - **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
-- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload into `AuthSession`.
+- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload (string roles) into `AuthSession`.
 - **Aspirante auth:** `src/api/aspiranteAuthService.ts` fetches `/sapp/aspirante/consultaInfo` and maps the aspirante info into an `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token (unless `skipAuth` is set) and standardizing error handling for module services.
@@ -19,7 +19,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared `request<T>` helper.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
-- **Role-based UI guard:** `src/auth/roleGuards.ts` centralizes role checks for sidebar/menu visibility and protected routes.
+- **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 - **Admisiones module:** `src/modules/admisiones` defines convocatoria types + mock data; `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` now fetches real inscripciones for the selected convocatoria.
@@ -73,6 +73,8 @@ Mock data for the Admisiones module lives in:
 - Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
 - Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.
 - Updated SAPP login to persist JWT `accessToken`, decode payload claims (username, roles, iat/exp), and map them into `AuthSession`.
+- Adapted SAPP login to the new backend roles format (`roles: string[]`), preferring roles from the login response and falling back to JWT roles when missing.
+- Normalized role checks to compare uppercase string roles and extended the Admisiones guard to allow `ADMIN` alongside Coordinación/Secretaría.
 - Added JWT payload typings and a base64url decoder utility to extract claims without signature verification.
 - Use `rolldown-vite@7.2.5` as the Vite engine via npm alias.
 - Centralize routing in `src/app/routes/index.tsx` with module route files and a `ProtectedRoute` wrapper.
