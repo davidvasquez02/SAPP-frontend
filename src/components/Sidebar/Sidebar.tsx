@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
+import { hasAnyRole, ROLES } from '../../auth/roleGuards'
 import './Sidebar.css'
 
 const Sidebar = () => {
-  const { user, logout } = useAuth()
+  const { session, user, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -16,6 +17,9 @@ const Sidebar = () => {
       ? user.nombreCompleto || user.username
       : user.numeroInscripcionUis || user.numeroDocumento
     : 'Usuario'
+  const canSeeAdmisiones =
+    session?.kind === 'SAPP' &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA])
 
   return (
     <aside className="sidebar">
@@ -45,6 +49,16 @@ const Sidebar = () => {
         >
           Créditos
         </NavLink>
+        {canSeeAdmisiones ? (
+          <NavLink
+            to="/admisiones"
+            className={({ isActive }) =>
+              `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+            }
+          >
+            Admisiones
+          </NavLink>
+        ) : null}
       </nav>
       <div className="sidebar__footer">
         <p className="sidebar__user">{displayName}</p>

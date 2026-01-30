@@ -16,6 +16,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
+- **Role-based UI guard:** `src/auth/roleGuards.ts` centralizes role checks for sidebar/menu visibility and protected routes.
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 
@@ -92,3 +93,4 @@ The aspirante login now also calls the backend directly:
 - Extend aspirante session data to include nombre, director, grupo de investigación, teléfono, y fecha de registro as returned by the backend.
 - Show the expanded aspirante session metadata (nombre, inscripción, grupo, director, teléfono, email) in the aspirante layout header.
 - Added a “Mi cuenta” panel on Home to visualize username, roles, and token expiration for debugging JWT claims.
+- Added role-based guards for Coordinación/Secretaría and a protected “Admisiones” module route with a placeholder page plus conditional sidebar navigation.

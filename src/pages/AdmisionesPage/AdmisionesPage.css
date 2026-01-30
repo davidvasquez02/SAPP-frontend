@@ -1,0 +1,15 @@
+.admisiones-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admisiones-page__title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.admisiones-page__text {
+  margin: 0;
+  color: #4b5563;
+}
