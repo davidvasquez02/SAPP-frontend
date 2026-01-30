@@ -19,7 +19,7 @@ const Sidebar = () => {
     : 'Usuario'
   const canSeeAdmisiones =
     session?.kind === 'SAPP' &&
-    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA])
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
 
   return (
     <aside className="sidebar">

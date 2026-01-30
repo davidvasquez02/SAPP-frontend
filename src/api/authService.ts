@@ -1,8 +1,8 @@
 import { API_BASE_URL } from './config'
-import type { LoginRequestDto, LoginResponseDto } from './authTypes'
+import type { LoginRequestDto, UserLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
 
-export const login = async (username: string, password: string): Promise<LoginResponseDto> => {
+export const login = async (username: string, password: string): Promise<UserLoginResponseDto> => {
   if (!username.trim() || !password.trim()) {
     throw new Error('Credenciales inválidas')
   }
@@ -42,7 +42,7 @@ export const login = async (username: string, password: string): Promise<LoginRe
     throw new Error(errorMessage)
   }
 
-  const data = (await response.json()) as ApiResponse<LoginResponseDto>
+  const data = (await response.json()) as ApiResponse<UserLoginResponseDto>
 
   if (!data.ok) {
     throw new Error(data.message || 'Login fallido')

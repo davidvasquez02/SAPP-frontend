@@ -5,6 +5,5 @@ export type {
   AuthContextValue,
   AuthSession,
   AuthUser,
-  RoleCode,
   SessionKind,
 } from './types'
