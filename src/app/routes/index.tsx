@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AspiranteLayout, Layout } from '../../components'
 import { useAuth } from '../../context/Auth'
-import { AspiranteLoginPage, HomePage, LoginPage } from '../../pages'
+import { AdmisionesPage, AspiranteLoginPage, HomePage, LoginPage } from '../../pages'
+import RequireRoles from '../../routes/RequireRoles/RequireRoles'
+import { ROLES } from '../../auth/roleGuards'
 import { aspiranteRoutes } from './aspiranteRoutes'
 import { AspiranteOnlyRoute } from './aspiranteOnlyRoute'
 import { creditosRoutes } from './creditosRoutes'
@@ -30,6 +32,14 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route
+            path="/admisiones"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <AdmisionesPage />
+              </RequireRoles>
+            }
+          />
           {solicitudesRoutes}
           {matriculaRoutes}
           {creditosRoutes}

@@ -34,6 +34,7 @@
 - Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
+- Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -53,6 +54,8 @@
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
 - **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
+- **Role guard helper:** `src/auth/roleGuards.ts`
+- **RequireRoles wrapper:** `src/routes/RequireRoles/RequireRoles.tsx`
 - **Aspirante guard/routes:** `src/app/routes/aspiranteOnlyRoute.tsx`, `src/app/routes/aspiranteRoutes.tsx`
 - **Auth context/types/storage:** `src/context/Auth/*`
 - **Auth API (SAPP login):** `src/api/authService.ts`
@@ -67,6 +70,7 @@
 - **Aspirante upload service:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
 - **Upload utilities:** `src/utils/fileToBase64.ts`, `src/utils/sha256.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`, `src/pages/AspiranteLogin`, `src/pages/AspiranteDocumentos`
+- **Admisiones page:** `src/pages/AdmisionesPage`
 - **Shared components:** `src/components/*`
 - **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
