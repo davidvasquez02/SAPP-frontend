@@ -5,19 +5,20 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 
 ## Architecture (Brief)
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
-- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
+- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
+- **Session store:** A non-React session store (`src/modules/auth/session/sessionStore.ts`) keeps the token accessible for API clients and handles save/clear/get operations.
 - **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
 - **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
 - **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload (string roles) into `AuthSession`.
 - **Aspirante auth:** `src/api/aspiranteAuthService.ts` fetches `/sapp/aspirante/consultaInfo` and maps the aspirante info into an `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
-- **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token (unless `skipAuth` is set) and standardizing error handling for module services.
+- **HTTP client:** `src/shared/http/httpClient.ts` wraps `fetch`, automatically attaching the Bearer token from the session store (unless `auth: false` is passed) and handling 401/403 logout redirects.
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos` defines shared checklist DTOs, a reusable `/sapp/document` service, and a validation service stub to be wired once the backend endpoint is ready.
 - **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), with UI-only validation controls and a prepared payload for future persistence.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
-- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared `request<T>` helper.
+- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared HTTP client wrapper.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
@@ -92,8 +93,8 @@ Mock data for the Admisiones module lives in:
 - Implemented a checklist-style aspirante document upload UI with per-document status, file selection, and progress tracking.
 - Added `DocumentUploadCard` component styles and the checklist-driven aspirante upload UI.
 - Replaced the aspirante mock upload with a real `POST /sapp/document` integration that sends base64 content + SHA-256 checksum, updates the UI status, and refreshes the checklist after a successful upload.
-- Added a shared `request<T>` helper in `src/api/httpClient.ts` to centralize auth headers and HTTP error messaging.
-- Allow public API calls to opt out of auth headers via `skipAuth` (used for `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`).
+- Added a centralized session store (`src/modules/auth/session/sessionStore.ts`) to read/save/clear the JWT without React hooks.
+- Added a shared HTTP client wrapper (`src/shared/http/httpClient.ts`) that auto-injects Bearer tokens when available, skips auth for public endpoints, and logs out on 401/403.
 - Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
 - Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
 - Updated the login page so selecting “Soy aspirante” immediately routes to `/login/aspirante` instead of showing a continue button.

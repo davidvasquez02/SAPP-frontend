@@ -19,7 +19,7 @@
 - Added a real document upload service (`src/api/documentUploadService.ts`) that posts to `/sapp/document` with base64 content + SHA-256 checksum.
 - Added base64 + SHA-256 helpers for uploads (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - Aspirante document uploads now update UI status to UPLOADED/ERROR and refresh the checklist after a successful upload.
-- AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
+- AuthContext restores sessions from localStorage on load via the session store (`src/modules/auth/session/sessionStore.ts`).
 - Session includes a `kind` discriminator (`SAPP` vs `ASPIRANTE`) and union user types.
 - Protected routes rely on `isAuthenticated` and token expiration checks (no loading state).
 - Home page renders a “Mi cuenta” panel that displays username, role codes, and token expiration (to validate JWT decoding).
@@ -32,8 +32,8 @@
 - Solicitudes, Matrícula, and Créditos pages render “En construcción” placeholders.
 - Login page lives in `src/pages/Login` and redirects to `/` after successful login by default.
 - The “Soy aspirante” checkbox routes directly to `/login/aspirante` (no intermediate continue button).
-- Added a shared `request<T>` helper in `src/api/httpClient.ts` for authenticated fetch requests with consistent error handling.
-- Added a `skipAuth` option to the shared `request<T>` helper so public endpoints can avoid sending Authorization headers (used for convocatorias/inscripciones fetch).
+- Added a centralized session store (`src/modules/auth/session/sessionStore.ts`) so non-React modules can read/save/clear the JWT.
+- Added a shared HTTP client wrapper (`src/shared/http/httpClient.ts`) that auto-injects Bearer tokens, skips auth for public endpoints, and logs out on 401/403.
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 - Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
@@ -76,14 +76,14 @@
 - **Role guard helper:** `src/auth/roleGuards.ts`, `src/modules/auth/roles/roleUtils.ts`
 - **RequireRoles wrapper:** `src/routes/RequireRoles/RequireRoles.tsx`
 - **Aspirante guard/routes:** `src/app/routes/aspiranteOnlyRoute.tsx`, `src/app/routes/aspiranteRoutes.tsx`
-- **Auth context/types/storage:** `src/context/Auth/*`
+- **Auth context/types/storage:** `src/context/Auth/*`, `src/modules/auth/session/sessionStore.ts`
 - **Auth API (SAPP login):** `src/api/authService.ts`
 - **JWT payload + decoder:** `src/api/jwtPayloadTypes.ts`, `src/utils/jwt.ts`
 - **Auth DTOs/mappers:** `src/api/authTypes.ts`, `src/api/authMappers.ts`
 - **API config/types:** `src/api/config.ts`, `src/api/types.ts`
 - **Aspirante consulta info API:** `src/api/aspiranteAuthService.ts`, `src/api/aspiranteConsultaTypes.ts`, `src/api/aspiranteAuthMappers.ts`
 - **Tipos documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`
-- **HTTP client:** `src/api/httpClient.ts`
+- **HTTP client:** `src/shared/http/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
 - **Document checklist DTO/service:** `src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`
 - **Aspirante upload service:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
@@ -120,8 +120,8 @@
   - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }` (including `nombre`, `director`, `grupoInvestigacion`, `telefono`, `numeroInscripcionUis`, `fechaRegistro`), and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`. `numeroInscripcionUis` is normalized to string on write.
 - **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`
   - Expects `{ ok, message, data: TipoDocumentoIdentificacionDto[] }` from `GET /sapp/tipoDocumentoIdentificacion` and returns the typed `data` array.
-- **HTTP client request helper:** `src/api/httpClient.ts`
-  - `request<T>(input, init?)` uses `fetch`, attaches `Authorization` when a session token exists (unless `skipAuth` is set), and throws on non-OK responses.
+- **HTTP client wrapper:** `src/shared/http/httpClient.ts`
+  - `http<T>(path, options?)` uses `fetch`, attaches `Authorization` when a session token exists (unless `auth: false`), and logs out + redirects on 401/403.
 - **Document checklist response:** `src/api/documentChecklistService.ts`
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Documentos checklist (coordinación/secretaría):** `src/modules/documentos/api/documentosService.ts`
@@ -137,7 +137,7 @@
 - **Inscripcion admision response:** `src/modules/admisiones/api/types.ts`
   - `InscripcionAdmisionDto`: `{ id, aspiranteId, nombreAspirante, estado, fechaInscripcion, fechaResultado, puntajeTotal, posicion_admision, periodoAcademico, programaAcademico, observaciones }` from `GET /sapp/inscripcionAdmision/convocatoria/:convocatoriaId`.
 - **Inscripcion admision service:** `src/modules/admisiones/api/inscripcionAdmisionService.ts`
-  - Uses `request<ApiResponse<InscripcionAdmisionDto[]>>` and throws when `ok` is false.
+  - Uses `httpGet<ApiResponse<InscripcionAdmisionDto[]>>` and throws when `ok` is false.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

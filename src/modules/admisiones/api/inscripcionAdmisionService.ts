@@ -1,15 +1,11 @@
-import { API_BASE_URL } from '../../../api/config'
-import { request } from '../../../api/httpClient'
+import { httpGet } from '../../../shared/http/httpClient'
 import type { ApiResponse, InscripcionAdmisionDto } from './types'
 
 export const getInscripcionesByConvocatoria = async (
   convocatoriaId: number
 ): Promise<InscripcionAdmisionDto[]> => {
-  const response = await request<ApiResponse<InscripcionAdmisionDto[]>>(
-    `${API_BASE_URL}/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`,
-    {
-      skipAuth: true,
-    }
+  const response = await httpGet<ApiResponse<InscripcionAdmisionDto[]>>(
+    `/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`,
   )
 
   if (!response.ok) {

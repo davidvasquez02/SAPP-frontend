@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config'
+import { httpGet } from '../shared/http/httpClient'
 import type { AspiranteConsultaInfoDto } from './aspiranteConsultaTypes'
 import type { ApiResponse } from './types'
 
@@ -16,14 +16,10 @@ export const consultaInfoAspirante = async (
     tipoDocumentoId: String(params.tipoDocumentoId),
     numeroDocumento: params.numeroDocumento,
   })
-  const url = `${API_BASE_URL}/sapp/aspirante/consultaInfo?${qs.toString()}`
-
-  const response = await fetch(url, { method: 'GET' })
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
-  }
-
-  const parsed = (await response.json()) as ApiResponse<AspiranteConsultaInfoDto>
+  const parsed = await httpGet<ApiResponse<AspiranteConsultaInfoDto>>(
+    `/sapp/aspirante/consultaInfo?${qs.toString()}`,
+    { auth: false },
+  )
   if (!parsed.ok) {
     throw new Error(parsed.message || 'Consulta fallida')
   }

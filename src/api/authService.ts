@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config'
+import { httpPost } from '../shared/http/httpClient'
 import type { LoginRequestDto, UserLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
 
@@ -12,37 +12,9 @@ export const login = async (username: string, password: string): Promise<UserLog
     password,
   }
 
-  const response = await fetch(`${API_BASE_URL}/sapp/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+  const data = await httpPost<ApiResponse<UserLoginResponseDto>>('/sapp/auth/login', payload, {
+    auth: false,
   })
-
-  if (!response.ok) {
-    let errorMessage = `Error HTTP ${response.status}`
-
-    try {
-      const errorBody = (await response.json()) as Partial<ApiResponse<unknown>>
-      if (errorBody?.message) {
-        errorMessage = errorBody.message
-      }
-    } catch {
-      try {
-        const fallbackText = await response.text()
-        if (fallbackText) {
-          errorMessage = fallbackText
-        }
-      } catch {
-        // Ignore parsing errors and keep the default message.
-      }
-    }
-
-    throw new Error(errorMessage)
-  }
-
-  const data = (await response.json()) as ApiResponse<UserLoginResponseDto>
 
   if (!data.ok) {
     throw new Error(data.message || 'Login fallido')

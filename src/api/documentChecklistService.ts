@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config'
+import { httpGet } from '../shared/http/httpClient'
 import type { DocumentChecklistItemDto } from './documentChecklistTypes'
 import type { ApiResponse } from './types'
 
@@ -16,13 +16,9 @@ export const getChecklistDocumentos = async ({
     tramiteId: String(tramiteId),
   })
 
-  const response = await fetch(`${API_BASE_URL}/sapp/document?${qs.toString()}`)
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
-  }
-
-  const parsed = (await response.json()) as ApiResponse<DocumentChecklistItemDto[]>
+  const parsed = await httpGet<ApiResponse<DocumentChecklistItemDto[]>>(
+    `/sapp/document?${qs.toString()}`,
+  )
 
   if (!parsed.ok) {
     throw new Error(parsed.message || 'Consulta fallida')
