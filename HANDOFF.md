@@ -35,6 +35,8 @@
 - Added stub API services for Solicitudes, Matrícula, and Créditos in `src/api/*Service.ts`.
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 - Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
+- Implemented the Admisiones home selector UI with mock convocatorias, including current vs previous selection and parameterized navigation to convocatoria detail placeholders.
+- Added convocatoria mock data + types under `src/modules/admisiones` and a placeholder detail page that resolves convocatoria metadata from the mock list.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -42,6 +44,7 @@
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
+- Replace the Admisiones mock data with real service integration once the backend endpoint is defined.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -50,6 +53,7 @@
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 5. Wire module pages to the new service stubs once backend endpoints are defined.
 6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
+7. Define the Admisiones convocatorias API contract and swap the mock selector for a real service call.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -71,6 +75,9 @@
 - **Upload utilities:** `src/utils/fileToBase64.ts`, `src/utils/sha256.ts`
 - **Pages:** `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, `src/pages/Creditos`, `src/pages/Login`, `src/pages/AspiranteLogin`, `src/pages/AspiranteDocumentos`
 - **Admisiones page:** `src/pages/AdmisionesPage`
+- **Admisiones module:** `src/modules/admisiones/types.ts`, `src/modules/admisiones/mock/convocatorias.mock.ts`
+- **Admisiones selector UI:** `src/pages/AdmisionesHome`
+- **Convocatoria detail placeholder:** `src/pages/ConvocatoriaDetalle`
 - **Shared components:** `src/components/*`
 - **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
@@ -101,6 +108,8 @@
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
   - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.
+- **Admisiones convocatoria mock contract:** `src/modules/admisiones/types.ts`
+  - `Convocatoria`: `{ id, programaNombre, periodo: { anio, periodo }, fechaInicio, fechaFin, estado, cupos? }` with period formatting helper `formatoPeriodo()`.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

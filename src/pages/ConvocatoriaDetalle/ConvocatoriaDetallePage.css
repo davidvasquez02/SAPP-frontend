@@ -1,0 +1,42 @@
+.convocatoria-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 900px;
+}
+
+.convocatoria-detalle__back {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.convocatoria-detalle__back:hover {
+  text-decoration: underline;
+}
+
+.convocatoria-detalle__title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.convocatoria-detalle__subtitle {
+  margin: 0;
+  color: #4b5563;
+}
+
+.convocatoria-detalle__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  margin: 0;
+}
+
+.convocatoria-detalle__meta--empty {
+  color: #6b7280;
+  border-style: dashed;
+}
