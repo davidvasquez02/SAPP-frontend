@@ -36,7 +36,8 @@
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 - Added role guard utilities (`src/auth/roleGuards.ts`) plus a protected “Admisiones” route with a placeholder page and sidebar visibility limited to Coordinación/Secretaría roles.
 - Implemented the Admisiones home selector UI with mock convocatorias, including current vs previous selection and parameterized navigation to convocatoria detail placeholders.
-- Added convocatoria mock data + types under `src/modules/admisiones` and a placeholder detail page that resolves convocatoria metadata from the mock list.
+- Expanded Admisiones convocatorias to include programa metadata (id/nivel/nombre) and split the selector into two program-specific sections with independent current/previous lists.
+- Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displays program name + periodo from the mock list.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -109,7 +110,7 @@
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
   - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.
 - **Admisiones convocatoria mock contract:** `src/modules/admisiones/types.ts`
-  - `Convocatoria`: `{ id, programaNombre, periodo: { anio, periodo }, fechaInicio, fechaFin, estado, cupos? }` with period formatting helper `formatoPeriodo()`.
+  - `Convocatoria`: `{ id, programaId, programaNivel, programaNombre, periodo: { anio, periodo }, fechaInicio, fechaFin, estado, cupos? }` with period formatting helper `formatoPeriodo()`.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.

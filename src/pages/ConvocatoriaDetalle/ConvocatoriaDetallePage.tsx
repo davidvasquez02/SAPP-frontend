@@ -21,15 +21,13 @@ const ConvocatoriaDetallePage = () => {
     <ModuleLayout title="Admisiones">
       <section className="convocatoria-detalle">
         <Link className="convocatoria-detalle__back" to="/admisiones">
-          ← Volver a Admisiones
+          ← Volver
         </Link>
 
         <h1 className="convocatoria-detalle__title">
           Convocatoria {convocatoriaId}
         </h1>
-        <p className="convocatoria-detalle__subtitle">
-          Listado de aspirantes/estudiantes en construcción.
-        </p>
+        <p className="convocatoria-detalle__subtitle">En construcción.</p>
 
         {convocatoria ? (
           <div className="convocatoria-detalle__meta">
@@ -40,11 +38,7 @@ const ConvocatoriaDetallePage = () => {
               <strong>Periodo:</strong> {formatoPeriodo(convocatoria.periodo)}
             </p>
           </div>
-        ) : (
-          <p className="convocatoria-detalle__meta convocatoria-detalle__meta--empty">
-            No se encontró información adicional para esta convocatoria.
-          </p>
-        )}
+        ) : null}
       </section>
     </ModuleLayout>
   )
