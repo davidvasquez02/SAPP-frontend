@@ -42,6 +42,7 @@
 - Expanded Admisiones convocatorias to include programa metadata (id/nivel/nombre) and split the selector into two program-specific sections with independent current/previous lists.
 - Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displayed program name + periodo from the mock list.
 - Replaced the convocatoria detail placeholder with a real inscripciones fetch from `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`, including loading/error/empty states and row navigation to a new inscripcion detail placeholder route.
+- Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
 - Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that uses `PUT /sapp/document`.
