@@ -1,4 +1,4 @@
-import { httpPost } from '../../../shared/http/httpClient'
+import { httpPut } from '../../../shared/http/httpClient'
 import type { ApiResponse } from './types'
 
 export interface AprobarRechazarDocumentoRequest {
@@ -10,7 +10,7 @@ export interface AprobarRechazarDocumentoRequest {
 export const aprobarRechazarDocumento = async (
   req: AprobarRechazarDocumentoRequest,
 ): Promise<void> => {
-  const response = await httpPost<ApiResponse<unknown>>('/sapp/document', req, { auth: true })
+  const response = await httpPut<ApiResponse<unknown>>('/sapp/document', req, { auth: true })
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible actualizar el documento.')

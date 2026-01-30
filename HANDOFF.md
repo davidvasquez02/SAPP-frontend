@@ -44,7 +44,7 @@
 - Replaced the convocatoria detail placeholder with a real inscripciones fetch from `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`, including loading/error/empty states and row navigation to a new inscripcion detail placeholder route.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
-- Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that posts to `/sapp/document`.
+- Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that uses `PUT /sapp/document`.
 - Centralized `codigoTipoTramite=1002` in `src/modules/documentos/constants.ts` and reused it in the aspirante checklist fetch.
 
 ## Open Challenges
@@ -127,7 +127,7 @@
 - **Documentos checklist (coordinación/secretaría):** `src/modules/documentos/api/documentosService.ts`
   - Expects `{ ok, message, data: DocumentoTramiteItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array for the coordinador screen.
 - **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`
-  - Sends `{ documentoId, aprobado, observaciones }` to `POST /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
+  - Sends `{ documentoId, aprobado, observaciones }` to `PUT /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
