@@ -6,6 +6,7 @@ import {
   AspiranteLoginPage,
   ConvocatoriaDetallePage,
   HomePage,
+  InscripcionAdmisionDetallePage,
   LoginPage,
 } from '../../pages'
 import RequireRoles from '../../routes/RequireRoles/RequireRoles'
@@ -51,6 +52,14 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
                 <ConvocatoriaDetallePage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId"
+            element={
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+                <InscripcionAdmisionDetallePage />
               </RequireRoles>
             }
           />

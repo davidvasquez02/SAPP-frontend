@@ -15,11 +15,12 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
+- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared `request<T>` helper.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Role-based UI guard:** `src/auth/roleGuards.ts` centralizes role checks for sidebar/menu visibility and protected routes.
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
-- **Admisiones module (mocked):** `src/modules/admisiones` defines convocatoria types + mock data (now grouped by programa); `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` provides a placeholder detail view.
+- **Admisiones module:** `src/modules/admisiones` defines convocatoria types + mock data; `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` now fetches real inscripciones for the selected convocatoria.
 
 ## Tech Stack (Exact Versions)
 - **React:** 19.2.0
@@ -100,3 +101,4 @@ Mock data for the Admisiones module lives in:
 - Added role-based guards for Coordinación/Secretaría and a protected “Admisiones” module route with a placeholder page plus conditional sidebar navigation.
 - Implemented the Admisiones home selector with mock convocatorias, plus a convocatoria detail placeholder and parameterized routes for `/admisiones/convocatoria/:convocatoriaId`.
 - Split the Admisiones selector into two program sections with program-specific current/previous convocatorias and updated the placeholder detail view to show the new program-period metadata.
+- Wired Convocatoria detalle to the real `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId` endpoint and added a placeholder route for inscripcion detail.
