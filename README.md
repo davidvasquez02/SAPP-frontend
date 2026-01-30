@@ -25,6 +25,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 - **Admisiones module:** `src/modules/admisiones` defines convocatoria types + mock data; `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` now fetches real inscripciones for the selected convocatoria.
+- **Evaluación de admisión:** `src/modules/admisiones/api/evaluacionAdmisionService.ts` consume `/sapp/evaluacionAdmision/info`, `src/modules/admisiones/components/EvaluacionEtapaSection` renderiza tablas editables por etapa, y las páginas de hoja de vida/examen/entrevista usan la misma base con validación de puntajes.
 
 ## Tech Stack (Exact Versions)
 - **React:** 19.2.0
@@ -110,6 +111,7 @@ Mock data for the Admisiones module lives in:
 - Split the Admisiones selector into two program sections with program-specific current/previous convocatorias and updated the placeholder detail view to show the new program-period metadata.
 - Wired Convocatoria detalle to the real `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId` endpoint and added a placeholder route for inscripcion detail.
 - Added inscripcion detail navigation cards and protected placeholder child routes for documentos, hoja de vida, examen de conocimiento, and entrevistas.
+- Implemented the evaluación de admisión screens for hoja de vida, examen de conocimientos, y entrevista with editable row drafts, inline validation, and mock save handling backed by `/sapp/evaluacionAdmision/info`.
 - Implemented “Documentos cargados” for coordinación/secretaría using the real `/sapp/document` checklist endpoint and added UI-only validation controls plus a stubbed save service.
 - Replaced the coordinador/secretaría validation UI with per-document approve/reject actions, required rejection notes, and `/sapp/document` PUT integration with per-item loading plus refresh on success.
 - Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.

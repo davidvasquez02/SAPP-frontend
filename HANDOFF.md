@@ -48,6 +48,7 @@
 - Centralized `codigoTipoTramite=1002` in `src/modules/documentos/constants.ts` and reused it in the aspirante checklist fetch.
 - Added base64 file utilities (`src/shared/files/base64FileUtils.ts`) for normalizing base64 content, generating blobs, opening documents in a new tab, and triggering downloads.
 - Added “Ver” and “Descargar” actions on the inscripcion documentos table to open/download the uploaded document using the base64 payload returned by `documentoUploadedResponse`.
+- Added evaluación de admisión types + service for `/sapp/evaluacionAdmision/info` and implemented hoja de vida, examen de conocimientos, y entrevista screens with editable rows, validation, and mock save handling.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -59,6 +60,7 @@
 - Validate the inscripcion detail API contract when it becomes available (currently placeholder UI only).
 - Confirm the backend response and state transitions for `/sapp/document` approve/reject, especially error messaging and allowed document states.
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
+- Confirm save/update endpoint for evaluación de admisión and decide payload + response contract.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -70,7 +72,8 @@
 7. Replace the Admisiones convocatorias mock list with real data once the endpoint is defined.
 8. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
 9. Validate `/sapp/document` approve/reject flows with real data and document states.
-10. Implement the remaining inscripcion child features (hoja de vida, examen, entrevistas) once backend endpoints are available.
+10. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
+11. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -98,6 +101,9 @@
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
+- **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
+- **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
+- **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
 - **Document view/download utilities:** `src/shared/files/base64FileUtils.ts`
 - **Document view/download UI:** `src/pages/InscripcionDocumentos`
@@ -144,6 +150,10 @@
   - `InscripcionAdmisionDto`: `{ id, aspiranteId, nombreAspirante, estado, fechaInscripcion, fechaResultado, puntajeTotal, posicion_admision, periodoAcademico, programaAcademico, observaciones }` from `GET /sapp/inscripcionAdmision/convocatoria/:convocatoriaId`.
 - **Inscripcion admision service:** `src/modules/admisiones/api/inscripcionAdmisionService.ts`
   - Uses `httpGet<ApiResponse<InscripcionAdmisionDto[]>>` and throws when `ok` is false.
+- **Evaluación admisión response:** `src/modules/admisiones/api/evaluacionAdmisionService.ts`
+  - Calls `GET /sapp/evaluacionAdmision/info?inscripcionId=...&etapa=...`, expects `{ ok, message, data: EvaluacionAdmisionItem[] }`, throws when `ok` is `false`, and returns `data ?? []`.
+- **Evaluación admisión DTO:** `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
+  - `EvaluacionAdmisionItem`: `{ id, inscripcionId, etapaEvaluacion, aspecto, codigo, consideraciones, evaluador, fechaRegistro, observaciones, ponderacionId, puntajeAspirante, puntajeMax }`.
 
 ## Environment & Package Versions
 - **Runtime:** Node.js (version not captured here; use `node -v`), npm.
