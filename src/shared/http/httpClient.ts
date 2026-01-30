@@ -78,3 +78,10 @@ export const httpPost = <T>(path: string, body?: unknown, options?: HttpOptions)
     method: 'POST',
     body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
+
+export const httpPut = <T>(path: string, body?: unknown, options?: HttpOptions) =>
+  http<T>(path, {
+    ...options,
+    method: 'PUT',
+    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+  })
