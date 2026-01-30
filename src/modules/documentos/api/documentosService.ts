@@ -1,5 +1,4 @@
-import { API_BASE_URL } from '../../../api/config'
-import { request } from '../../../api/httpClient'
+import { httpGet } from '../../../shared/http/httpClient'
 import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../constants'
 import type { ApiResponse, DocumentoTramiteItemDto } from './types'
 
@@ -11,8 +10,8 @@ export const getDocumentosByTramite = async (
     tramiteId: String(tramiteId),
   })
 
-  const response = await request<ApiResponse<DocumentoTramiteItemDto[]>>(
-    `${API_BASE_URL}/sapp/document?${qs.toString()}`,
+  const response = await httpGet<ApiResponse<DocumentoTramiteItemDto[]>>(
+    `/sapp/document?${qs.toString()}`,
   )
 
   if (!response.ok) {

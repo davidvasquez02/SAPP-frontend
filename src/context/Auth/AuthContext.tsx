@@ -3,31 +3,46 @@ import { login as loginService } from '../../api/authService'
 import { mapLoginToUserSession } from '../../api/authMappers'
 import { consultaInfoAspirante } from '../../api/aspiranteAuthService'
 import { mapAspiranteInfoToSession } from '../../api/aspiranteAuthMappers'
-import * as AuthStorage from './AuthStorage'
+import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
 import type { AspiranteLoginParams, AuthContextValue, AuthSession } from './types'
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+const getInitialSession = () => {
+  const storedSession = getSession()
+  const isExpired =
+    storedSession?.kind === 'SAPP' && storedSession.expiresAt
+      ? Math.floor(Date.now() / 1000) >= storedSession.expiresAt
+      : false
+
+  if (isExpired) {
+    clearSession()
+    return null
+  }
+
+  return storedSession
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSessionState] = useState<AuthSession | null>(() => AuthStorage.getSession())
+  const [session, setSessionState] = useState<AuthSession | null>(() => getInitialSession())
 
   const login = useCallback(async (username: string, password: string) => {
     const loginDto = await loginService(username, password)
     const authenticatedSession = mapLoginToUserSession(loginDto)
     setSessionState(authenticatedSession)
-    AuthStorage.setSession(authenticatedSession)
+    saveSession(authenticatedSession)
   }, [])
 
   const loginAspirante = useCallback(async (params: AspiranteLoginParams) => {
     const info = await consultaInfoAspirante(params)
     const authenticatedSession = mapAspiranteInfoToSession(info)
     setSessionState(authenticatedSession)
-    AuthStorage.setSession(authenticatedSession)
+    saveSession(authenticatedSession)
   }, [])
 
   const logout = useCallback(() => {
     setSessionState(null)
-    AuthStorage.clearSession()
+    clearSession()
   }, [])
 
   const value = useMemo<AuthContextValue>(
