@@ -1,7 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- SAPP login now calls the backend (`POST /sapp/auth/login`) and maps the `{ ok, message, data }` response into `AuthSession`.
+- SAPP login now calls the backend (`POST /sapp/auth/login`) and returns the typed DTO, mapping it + JWT payload claims into `AuthSession`.
+- JWT payload decoding (base64url only, no signature validation) lives in `src/utils/jwt.ts` and is used to populate username, roles, `iat`, and `exp`.
+- Auth sessions now store `accessToken` (JWT), `issuedAt`, and `expiresAt`; protected routes log out when the token is expired.
 - Added API base URL config (`src/api/config.ts`) using `VITE_API_BASE_URL` with a localhost default.
 - Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
 - Updated aspirante login to capture número de inscripción, tipo de documento, and número de documento before starting the session.
@@ -18,7 +20,8 @@
 - Aspirante document uploads now update UI status to UPLOADED/ERROR and refresh the checklist after a successful upload.
 - AuthContext restores sessions from localStorage on load (`src/context/Auth/AuthStorage.ts`).
 - Session now includes a `kind` discriminator (`SAPP` vs `ASPIRANTE`) and union user types.
-- Protected routes rely on `isAuthenticated` only (no loading state).
+- Protected routes rely on `isAuthenticated` and token expiration checks (no loading state).
+- Home page now renders a “Mi cuenta” panel that displays username, role codes, and token expiration (to validate JWT decoding).
 - Aspirante-only routes live under `/aspirante/*` with their own layout and guard.
 - Routing is centralized in `src/app/routes/index.tsx` with module route helpers that export route elements.
 - Router/Auth providers now wrap the app in `src/main.tsx`.
@@ -33,14 +36,14 @@
 - Added top-level barrel exports in `src/components/index.ts` and `src/pages/index.ts` for standardized imports.
 
 ## Open Challenges
-- Backend auth does not return a token yet; the frontend uses `accessToken: "NO_TOKEN"` for session compatibility.
+- Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
 
 ## Next Steps
-1. Align auth token handling once the backend returns access tokens, replacing the `NO_TOKEN` placeholder.
+1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
 2. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
 3. Add `.env.local` (or equivalent) for API base URLs.
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
@@ -53,6 +56,7 @@
 - **Aspirante guard/routes:** `src/app/routes/aspiranteOnlyRoute.tsx`, `src/app/routes/aspiranteRoutes.tsx`
 - **Auth context/types/storage:** `src/context/Auth/*`
 - **Auth API (SAPP login):** `src/api/authService.ts`
+- **JWT payload + decoder:** `src/api/jwtPayloadTypes.ts`, `src/utils/jwt.ts`
 - **Auth DTOs/mappers:** `src/api/authTypes.ts`, `src/api/authMappers.ts`
 - **API config/types:** `src/api/config.ts`, `src/api/types.ts`
 - **Aspirante consulta info API:** `src/api/aspiranteAuthService.ts`, `src/api/aspiranteConsultaTypes.ts`, `src/api/aspiranteAuthMappers.ts`
@@ -77,9 +81,10 @@
 
 ## Schemas / Contracts (Expected Outputs)
 - **Auth session contract:** `src/context/Auth/types.ts`
-  - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, user: AuthUser | AspiranteUser }`
+  - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
 - **SAPP login output:** `src/api/authService.ts`
-  - Expects backend response envelope `{ ok, message, data }` and maps `data` into `AuthSession` with `accessToken: "NO_TOKEN"` until tokens are available.
+  - Expects backend response envelope `{ ok, message, data }` and maps `data` + decoded JWT payload into `AuthSession` (username, roles, iat/exp).
+  - JWT payload contract: `src/api/jwtPayloadTypes.ts` (supports `rolesUsuario`, `nombreUsuario`/`sub`, `idUsuario`, `iat`, `exp`).
 - **Aspirante consulta info output:** `src/api/aspiranteAuthService.ts`
   - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }` (including `nombre`, `director`, `grupoInvestigacion`, `telefono`, `numeroInscripcionUis`, `fechaRegistro`), and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`. `numeroInscripcionUis` is normalized to string on write.
 - **Tipos documento response:** `src/api/tipoDocumentoIdentificacionService.ts`

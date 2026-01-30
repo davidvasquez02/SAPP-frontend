@@ -1,3 +1,5 @@
+import type { PersonaDto, RolDto } from '../../api/authTypes'
+
 export type RoleCode =
   | 'ESTUDIANTE'
   | 'ASPIRANTE'
@@ -13,12 +15,14 @@ export interface AuthUser {
   id: number
   username: string
   roles: RoleCode[]
+  rolesDetail?: RolDto[]
+  persona: PersonaDto
   nombreCompleto?: string
   programa?: string
   email?: string
-  personaId?: number
-  authId?: number
-  activo?: boolean
+  authId: number
+  activo: boolean
+  lastLogin?: string
 }
 
 export interface AspiranteUser {
@@ -46,6 +50,8 @@ export interface AspiranteLoginParams {
 export interface AuthSession {
   kind: SessionKind
   accessToken: string
+  issuedAt?: number
+  expiresAt?: number
   user: AuthUser | AspiranteUser
 }
 

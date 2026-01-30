@@ -5,10 +5,11 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 
 ## Architecture (Brief)
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
-- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`) and session kind support (`SAPP` vs `ASPIRANTE`).
-- **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and maps the response into the local auth session.
+- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth` + `src/context/Auth/AuthStorage.ts`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
+- **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
+- **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
+- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload into `AuthSession`.
 - **Aspirante auth:** `src/api/aspiranteAuthService.ts` fetches `/sapp/aspirante/consultaInfo` and maps the aspirante info into an `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
-- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and the mapping into `AuthSession`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/api/httpClient.ts` wraps `fetch`, attaching the auth token and standardizing error handling for module services.
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
@@ -52,7 +53,7 @@ VITE_API_BASE_URL=http://localhost:8080
 There are no seed scripts. The SAPP login calls the backend directly:
 - Endpoint: `POST ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/auth/login`
 - Response envelope: `{ ok, message, data }`
-- The frontend maps the response into an `AuthSession` and keeps a placeholder token (`accessToken: "NO_TOKEN"`) until the backend returns one.
+- The frontend maps the response into an `AuthSession`, stores the JWT as `accessToken`, and decodes the payload for username, roles, and `iat/exp`.
 
 The aspirante login now also calls the backend directly:
 - Endpoint: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/aspirante/consultaInfo?numeroInscripcion=...&tipoDocumentoId=...&numeroDocumento=...`
@@ -63,6 +64,8 @@ The aspirante login now also calls the backend directly:
 - Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
 - Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
 - Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.
+- Updated SAPP login to persist JWT `accessToken`, decode payload claims (username, roles, iat/exp), and map them into `AuthSession`.
+- Added JWT payload typings and a base64url decoder utility to extract claims without signature verification.
 - Use `rolldown-vite@7.2.5` as the Vite engine via npm alias.
 - Centralize routing in `src/app/routes/index.tsx` with module route files and a `ProtectedRoute` wrapper.
 - Move router/auth providers to `src/main.tsx` and introduce `Layout` for the protected app shell.
@@ -88,3 +91,4 @@ The aspirante login now also calls the backend directly:
 - Normalize aspirante `numeroInscripcionUis` to a string in session storage to keep rendering/routes consistent.
 - Extend aspirante session data to include nombre, director, grupo de investigación, teléfono, y fecha de registro as returned by the backend.
 - Show the expanded aspirante session metadata (nombre, inscripción, grupo, director, teléfono, email) in the aspirante layout header.
+- Added a “Mi cuenta” panel on Home to visualize username, roles, and token expiration for debugging JWT claims.
