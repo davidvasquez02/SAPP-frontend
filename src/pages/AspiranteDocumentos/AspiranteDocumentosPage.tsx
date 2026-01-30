@@ -4,6 +4,7 @@ import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
 import { uploadDocument } from '../../api/documentUploadService'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
+import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos/constants'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
 import type { DocumentUploadItem } from './types'
@@ -53,7 +54,7 @@ const AspiranteDocumentosPage = () => {
         hasFetchedRef.current = true
         setErrorMessage(null)
         const documentos = await getChecklistDocumentos({
-          codigoTipoTramite: 1002,
+          codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
           tramiteId,
         })
         console.log('[AspiranteDocumentos] requisitos:', documentos)
@@ -164,7 +165,7 @@ const AspiranteDocumentosPage = () => {
 
         try {
           const documentos = await getChecklistDocumentos({
-            codigoTipoTramite: 1002,
+            codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
             tramiteId,
           })
           setItems(documentos.map(mapDocumentoToUploadItem))
