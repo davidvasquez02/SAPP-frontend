@@ -43,8 +43,8 @@
 - Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displayed program name + periodo from the mock list.
 - Replaced the convocatoria detail placeholder with a real inscripciones fetch from `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`, including loading/error/empty states and row navigation to a new inscripcion detail placeholder route.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
-- Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture validation decisions in local UI state.
-- Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a stubbed `guardarValidacionDocumentos` function for the upcoming backend endpoint.
+- Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
+- Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that posts to `/sapp/document`.
 - Centralized `codigoTipoTramite=1002` in `src/modules/documentos/constants.ts` and reused it in the aspirante checklist fetch.
 
 ## Open Challenges
@@ -55,7 +55,7 @@
 - Replace stub module services with real API calls once endpoints are available.
 - Replace the Admisiones mock data with real service integration once the backend endpoint is defined.
 - Validate the inscripcion detail API contract when it becomes available (currently placeholder UI only).
-- Define the data contracts and endpoints for documentos validation (coordinación/secretaría) once available.
+- Confirm the backend response and state transitions for `/sapp/document` approve/reject, especially error messaging and allowed document states.
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
 
 ## Next Steps
@@ -67,7 +67,7 @@
 6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
 7. Replace the Admisiones convocatorias mock list with real data once the endpoint is defined.
 8. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
-9. Wire the inscripcion documentos validation payload to the backend endpoint once delivered.
+9. Validate `/sapp/document` approve/reject flows with real data and document states.
 10. Implement the remaining inscripcion child features (hoja de vida, examen, entrevistas) once backend endpoints are available.
 
 ## Key Paths / Artifacts / Datasets
@@ -96,7 +96,7 @@
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
-- **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/validacionDocumentosService.ts`
+- **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
 - **Shared components:** `src/components/*`
 - **Document upload UI:** `src/components/DocumentUploadCard`, `src/pages/AspiranteDocumentos/types.ts`
 - **Barrel exports:** `src/components/index.ts`, `src/pages/index.ts`
@@ -126,8 +126,8 @@
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Documentos checklist (coordinación/secretaría):** `src/modules/documentos/api/documentosService.ts`
   - Expects `{ ok, message, data: DocumentoTramiteItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array for the coordinador screen.
-- **Documentos validación payload (stub):** `src/modules/documentos/api/validacionDocumentosService.ts`
-  - Payload shape: `{ tramiteId, validaciones: [{ tipoDocumentoTramiteId, estado: "CORRECTO" | "INCORRECTO" }] }` with TODO endpoint integration.
+- **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`
+  - Sends `{ documentoId, aprobado, observaciones }` to `POST /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
 - **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`

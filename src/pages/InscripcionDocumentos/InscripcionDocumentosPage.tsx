@@ -1,25 +1,71 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
-import {
-  guardarValidacionDocumentos,
-  type EstadoValidacionDocumento,
-} from '../../modules/documentos/api/validacionDocumentosService'
 import './InscripcionDocumentosPage.css'
+
+type DocumentoDecision = 'APROBAR' | 'RECHAZAR' | null
+
+interface DocumentoDecisionState {
+  decision: DocumentoDecision
+  motivoRechazo: string
+  errorMotivo: string | null
+  loading: boolean
+}
 
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const [documentos, setDocumentos] = useState<DocumentoTramiteItemDto[]>([])
-  const [validaciones, setValidaciones] = useState<
-    Record<number, EstadoValidacionDocumento | null>
-  >({})
+  const [decisionStates, setDecisionStates] = useState<Record<number, DocumentoDecisionState>>(
+    {},
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [saveMessage, setSaveMessage] = useState<string | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
   const tramiteId = useMemo(() => Number(inscripcionId), [inscripcionId])
+
+  const getDecisionState = useCallback(
+    (id: number): DocumentoDecisionState =>
+      decisionStates[id] ?? {
+        decision: null,
+        motivoRechazo: '',
+        errorMotivo: null,
+        loading: false,
+      },
+    [decisionStates],
+  )
+
+  const updateDecisionState = useCallback(
+    (id: number, updates: Partial<DocumentoDecisionState>) => {
+      setDecisionStates((prev) => ({
+        ...prev,
+        [id]: {
+          decision: null,
+          motivoRechazo: '',
+          errorMotivo: null,
+          loading: false,
+          ...prev[id],
+          ...updates,
+        },
+      }))
+    },
+    [],
+  )
+
+  const fetchDocumentos = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setErrorMessage(null)
+      const data = await getDocumentosByTramite(tramiteId)
+      setDocumentos(data)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setErrorMessage(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [tramiteId])
 
   useEffect(() => {
     if (!inscripcionId) {
@@ -34,54 +80,47 @@ const InscripcionDocumentosPage = () => {
       return
     }
 
-    const fetchDocumentos = async () => {
-      try {
-        setIsLoading(true)
-        setErrorMessage(null)
-        const data = await getDocumentosByTramite(tramiteId)
-        setDocumentos(data)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        setErrorMessage(message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     void fetchDocumentos()
-  }, [inscripcionId, tramiteId])
+  }, [fetchDocumentos, inscripcionId, tramiteId])
 
-  const handleValidacionChange = (id: number, estado: EstadoValidacionDocumento) => {
-    setValidaciones((prev) => ({
-      ...prev,
-      [id]: prev[id] === estado ? null : estado,
-    }))
+  const handleDecisionSelect = (id: number, decision: DocumentoDecision) => {
+    updateDecisionState(id, {
+      decision: getDecisionState(id).decision === decision ? null : decision,
+      errorMotivo: null,
+    })
   }
 
-  const payloadValidaciones = useMemo(
-    () => ({
-      tramiteId,
-      validaciones: Object.entries(validaciones)
-        .filter(([, estado]) => estado != null)
-        .map(([tipoDocumentoTramiteId, estado]) => ({
-          tipoDocumentoTramiteId: Number(tipoDocumentoTramiteId),
-          estado: estado as EstadoValidacionDocumento,
-        })),
-    }),
-    [tramiteId, validaciones],
-  )
+  const handleMotivoChange = (id: number, value: string) => {
+    updateDecisionState(id, {
+      motivoRechazo: value,
+      errorMotivo: null,
+    })
+  }
 
-  const handleGuardarValidaciones = async () => {
-    setSaveMessage(null)
-    setSaveError(null)
-    console.log('[InscripcionDocumentos] payload validaciones:', payloadValidaciones)
+  const handleConfirmDecision = async (id: number, aprobado: boolean) => {
+    const estado = getDecisionState(id)
+    const motivo = estado.motivoRechazo.trim()
+
+    if (!aprobado && !motivo) {
+      updateDecisionState(id, { errorMotivo: 'Debe ingresar el motivo del rechazo.' })
+      return
+    }
+
+    updateDecisionState(id, { loading: true })
 
     try {
-      await guardarValidacionDocumentos(payloadValidaciones)
-      setSaveMessage('Validaciones guardadas correctamente.')
+      await aprobarRechazarDocumento({
+        documentoId: id,
+        aprobado,
+        observaciones: aprobado ? null : motivo,
+      })
+      window.alert(aprobado ? 'Documento aprobado.' : 'Documento rechazado.')
+      await fetchDocumentos()
     } catch (error) {
-      console.error('[InscripcionDocumentos] error guardando validaciones:', error)
-      setSaveError('Endpoint pendiente de implementar.')
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      updateDecisionState(id, { loading: false })
     }
   }
 
@@ -116,8 +155,10 @@ const InscripcionDocumentosPage = () => {
               <span>Acciones</span>
             </div>
             {documentos.map((documento) => {
-              const validacionActual = validaciones[documento.idTipoDocumentoTramite] ?? null
-              const uploaded = documento.documentoCargado && documento.documentoUploadedResponse
+              const documentoId = documento.documentoUploadedResponse?.idDocumento
+              const uploaded = documento.documentoCargado && Boolean(documentoId)
+              const decisionState = documentoId ? getDecisionState(documentoId) : null
+              const isLoadingDecision = decisionState?.loading ?? false
 
               return (
                 <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row">
@@ -163,37 +204,78 @@ const InscripcionDocumentosPage = () => {
                     )}
                   </div>
                   <div>
-                    <div className="inscripcion-documentos__validation-actions">
+                    <div className="inscripcion-documentos__decision-actions">
                       <button
                         type="button"
                         className={
-                          validacionActual === 'CORRECTO'
-                            ? 'inscripcion-documentos__validation-button is-active is-correct'
-                            : 'inscripcion-documentos__validation-button'
+                          decisionState?.decision === 'APROBAR'
+                            ? 'inscripcion-documentos__decision-button is-active is-approve'
+                            : 'inscripcion-documentos__decision-button'
                         }
-                        onClick={() =>
-                          handleValidacionChange(documento.idTipoDocumentoTramite, 'CORRECTO')
-                        }
+                        onClick={() => documentoId && handleDecisionSelect(documentoId, 'APROBAR')}
+                        disabled={!uploaded || isLoadingDecision}
                       >
-                        Correcto
+                        Aprobar
                       </button>
                       <button
                         type="button"
                         className={
-                          validacionActual === 'INCORRECTO'
-                            ? 'inscripcion-documentos__validation-button is-active is-incorrect'
-                            : 'inscripcion-documentos__validation-button'
+                          decisionState?.decision === 'RECHAZAR'
+                            ? 'inscripcion-documentos__decision-button is-active is-reject'
+                            : 'inscripcion-documentos__decision-button'
                         }
-                        onClick={() =>
-                          handleValidacionChange(documento.idTipoDocumentoTramite, 'INCORRECTO')
-                        }
+                        onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
+                        disabled={!uploaded || isLoadingDecision}
                       >
-                        Incorrecto
+                        Rechazar
                       </button>
                     </div>
-                    <span className="inscripcion-documentos__validation-status">
-                      {validacionActual ? `Marcado: ${validacionActual}` : 'Sin validar'}
-                    </span>
+                    {!uploaded ? (
+                      <span className="inscripcion-documentos__hint">
+                        Pendiente por cargar
+                      </span>
+                    ) : null}
+                    {decisionState?.decision === 'RECHAZAR' ? (
+                      <div className="inscripcion-documentos__decision-panel">
+                        <label className="inscripcion-documentos__decision-label" htmlFor={`motivo-${documentoId}`}>
+                          Motivo del rechazo
+                        </label>
+                        <textarea
+                          id={`motivo-${documentoId}`}
+                          className="inscripcion-documentos__decision-textarea"
+                          value={decisionState.motivoRechazo}
+                          onChange={(event) =>
+                            documentoId && handleMotivoChange(documentoId, event.target.value)
+                          }
+                          rows={3}
+                        />
+                        {decisionState.errorMotivo ? (
+                          <span className="inscripcion-documentos__decision-error">
+                            {decisionState.errorMotivo}
+                          </span>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="inscripcion-documentos__decision-confirm"
+                          onClick={() => documentoId && handleConfirmDecision(documentoId, false)}
+                          disabled={isLoadingDecision}
+                        >
+                          {isLoadingDecision ? 'Enviando...' : 'Confirmar rechazo'}
+                        </button>
+                      </div>
+                    ) : null}
+                    {decisionState?.decision === 'APROBAR' ? (
+                      <div className="inscripcion-documentos__decision-panel">
+                        <button
+                          type="button"
+                          className="inscripcion-documentos__decision-confirm"
+                          onClick={() => documentoId && handleConfirmDecision(documentoId, true)}
+                          disabled={isLoadingDecision}
+                        >
+                          {isLoadingDecision ? 'Enviando...' : 'Confirmar aprobación'}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                   <div>
                     <button
@@ -212,21 +294,6 @@ const InscripcionDocumentosPage = () => {
             })}
           </div>
         )}
-
-        <div className="inscripcion-documentos__footer">
-          <button
-            type="button"
-            className="inscripcion-documentos__save-button"
-            onClick={handleGuardarValidaciones}
-            disabled={isLoading || documentos.length === 0}
-          >
-            Guardar validaciones
-          </button>
-          {saveMessage ? (
-            <span className="inscripcion-documentos__save-message">{saveMessage}</span>
-          ) : null}
-          {saveError ? <span className="inscripcion-documentos__error">{saveError}</span> : null}
-        </div>
       </section>
     </ModuleLayout>
   )
