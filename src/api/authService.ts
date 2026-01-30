@@ -1,10 +1,8 @@
 import { API_BASE_URL } from './config'
-import type { LoginRequestDto, LoginResponseDataDto } from './authTypes'
-import { mapLoginDataToAuthSession } from './authMappers'
+import type { LoginRequestDto, LoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
-import type { AuthSession } from '../context/Auth'
 
-export const login = async (username: string, password: string): Promise<AuthSession> => {
+export const login = async (username: string, password: string): Promise<LoginResponseDto> => {
   if (!username.trim() || !password.trim()) {
     throw new Error('Credenciales inválidas')
   }
@@ -44,11 +42,11 @@ export const login = async (username: string, password: string): Promise<AuthSes
     throw new Error(errorMessage)
   }
 
-  const data = (await response.json()) as ApiResponse<LoginResponseDataDto>
+  const data = (await response.json()) as ApiResponse<LoginResponseDto>
 
   if (!data.ok) {
     throw new Error(data.message || 'Login fallido')
   }
 
-  return mapLoginDataToAuthSession(data.data)
+  return data.data
 }

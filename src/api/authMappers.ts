@@ -1,7 +1,9 @@
-import type { LoginResponseDataDto } from './authTypes'
-import type { AuthSession } from '../context/Auth'
+import type { LoginResponseDto, RolDto } from './authTypes'
+import type { JwtPayload } from './jwtPayloadTypes'
+import type { AuthSession, RoleCode } from '../context/Auth'
+import { decodeJwtPayload } from '../utils/jwt'
 
-const buildNombreCompleto = (dto: LoginResponseDataDto) => {
+const buildNombreCompleto = (dto: LoginResponseDto) => {
   const parts = [
     dto.persona.nombre1,
     dto.persona.nombre2,
@@ -12,19 +14,32 @@ const buildNombreCompleto = (dto: LoginResponseDataDto) => {
   return parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
 }
 
-export const mapLoginDataToAuthSession = (dto: LoginResponseDataDto): AuthSession => {
+const buildRoleCodes = (roles: RolDto[]): RoleCode[] =>
+  roles.map((role) => role.codigo as RoleCode)
+
+export const mapLoginToUserSession = (dto: LoginResponseDto): AuthSession => {
+  const payload = decodeJwtPayload<JwtPayload>(dto.token)
+  const username = payload.nombreUsuario ?? payload.sub ?? dto.username
+  const userId = payload.idUsuario ?? dto.id
+  const roles = payload.rolesUsuario ?? dto.roles
+  const rolesCodes = buildRoleCodes(roles)
+
   return {
     kind: 'SAPP',
-    accessToken: 'NO_TOKEN',
+    accessToken: dto.token,
+    issuedAt: payload.iat,
+    expiresAt: payload.exp,
     user: {
-      id: dto.id,
-      username: dto.username,
-      roles: ['ESTUDIANTE'],
+      id: userId,
+      username,
+      roles: rolesCodes,
+      rolesDetail: roles,
+      persona: dto.persona,
       nombreCompleto: buildNombreCompleto(dto),
       email: dto.persona.emailInstitucional ?? dto.persona.emailPersonal ?? undefined,
       authId: dto.authId,
       activo: dto.activo,
-      personaId: dto.persona.id,
+      lastLogin: dto.lastLogin,
     },
   }
 }
