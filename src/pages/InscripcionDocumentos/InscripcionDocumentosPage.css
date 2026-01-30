@@ -48,7 +48,7 @@
 .inscripcion-documentos__table-header,
 .inscripcion-documentos__table-row {
   display: grid;
-  grid-template-columns: 2fr 0.7fr 0.9fr 1.2fr 1.6fr 0.7fr;
+  grid-template-columns: 2fr 0.7fr 0.9fr 1.2fr 1.6fr 1.2fr;
   gap: 0.75rem;
   align-items: center;
 }
@@ -216,6 +216,29 @@
 
 .inscripcion-documentos__view-button:disabled {
   border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.inscripcion-documentos__file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.inscripcion-documentos__download-button {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #16a34a;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inscripcion-documentos__download-button:disabled {
+  border-color: #d1d5db;
+  background: #e5e7eb;
   color: #9ca3af;
   cursor: not-allowed;
 }

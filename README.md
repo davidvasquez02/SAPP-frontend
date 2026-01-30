@@ -16,6 +16,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos` defines shared checklist DTOs, the GET checklist service, and the approval/rejection service for `/sapp/document` using `PUT` and the standard `{ ok, message, data }` envelope.
 - **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), with per-document approve/reject actions, required rejection notes, and per-item loading/refresh.
+- **Base64 file utilities:** `src/shared/files/base64FileUtils.ts` normalizes base64 payloads and supports blob creation, tab opening, and download handling for document previews.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared HTTP client wrapper.
@@ -112,3 +113,4 @@ Mock data for the Admisiones module lives in:
 - Implemented “Documentos cargados” for coordinación/secretaría using the real `/sapp/document` checklist endpoint and added UI-only validation controls plus a stubbed save service.
 - Replaced the coordinador/secretaría validation UI with per-document approve/reject actions, required rejection notes, and `/sapp/document` PUT integration with per-item loading plus refresh on success.
 - Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.
+- Added “Ver/Descargar” actions on inscripción documentos to open/download base64 PDFs without extra endpoints, using shared base64-to-Blob utilities.
