@@ -74,6 +74,7 @@ Mock data for the Admisiones module lives in:
 ## Recent Decisions (Changelog-lite)
 - Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
 - Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
+- Fixed the convocatoria cards grid to four columns on desktop with responsive breakpoints for smaller screens.
 - Updated Admisiones convocatoria/inscripción headers to derive titles from navigation state or loaded data (with safe fallbacks) and passed periodo/nombre state through routing for instant titles on navigation.
 - Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
 - Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
