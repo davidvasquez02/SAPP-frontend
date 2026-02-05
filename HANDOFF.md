@@ -42,6 +42,9 @@
 - Expanded Admisiones convocatorias to include programa metadata (id/nivel/nombre) and split the selector into two program-specific sections with independent current/previous lists.
 - Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displayed program name + periodo from the mock list.
 - Replaced the convocatoria detail placeholder with a real inscripciones fetch from `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`, including loading/error/empty states and row navigation to a new inscripcion detail placeholder route.
+- Replaced the convocatoria inscripciones table with a responsive grid of student cards that show a large mock photo, key metadata (estado, programa, periodo, puntaje, fecha), and accessible click/keyboard navigation to the inscripción detail.
+- Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
+- Adjusted the convocatoria cards grid to a fixed four-column layout on desktop with responsive breakpoints for tablet/mobile.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
@@ -62,6 +65,7 @@
 - Confirm the backend response and state transitions for `/sapp/document` approve/reject, especially error messaging and allowed document states.
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
 - Confirm save/update endpoint for evaluación de admisión and decide payload + response contract.
+- Replace the aspirante mock photo URLs with real backend-provided photo data (URL or base64).
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -75,6 +79,7 @@
 9. Validate `/sapp/document` approve/reject flows with real data and document states.
 10. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
 11. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
+12. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -100,6 +105,8 @@
 - **Admisiones API:** `src/modules/admisiones/api/types.ts`, `src/modules/admisiones/api/inscripcionAdmisionService.ts`
 - **Admisiones selector UI:** `src/pages/AdmisionesHome`
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
+- **Student cards (Admisiones):** `src/modules/admisiones/components/StudentCard`
+- **Mock photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
@@ -151,6 +158,8 @@
   - `InscripcionAdmisionDto`: `{ id, aspiranteId, nombreAspirante, estado, fechaInscripcion, fechaResultado, puntajeTotal, posicion_admision, periodoAcademico, programaAcademico, observaciones }` from `GET /sapp/inscripcionAdmision/convocatoria/:convocatoriaId`.
 - **Inscripcion admision service:** `src/modules/admisiones/api/inscripcionAdmisionService.ts`
   - Uses `httpGet<ApiResponse<InscripcionAdmisionDto[]>>` and throws when `ok` is false.
+- **Mock aspirante photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
+  - DEV-only helper that returns stable placeholder URLs per aspiranteId (modulo selection). Swap with backend `fotoUrl` or `fotoBase64` when available (e.g., `data:image/jpeg;base64,${base64}`).
 - **Evaluación admisión response:** `src/modules/admisiones/api/evaluacionAdmisionService.ts`
   - Calls `GET /sapp/evaluacionAdmision/info?inscripcionId=...&etapa=...`, expects `{ ok, message, data: EvaluacionAdmisionItem[] }`, throws when `ok` is `false`, and returns `data ?? []`.
 - **Evaluación admisión DTO:** `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
