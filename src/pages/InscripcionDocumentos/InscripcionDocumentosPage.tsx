@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useParams } from 'react-router-dom'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
@@ -24,7 +23,7 @@ interface DocumentoActionState {
 }
 
 const InscripcionDocumentosPage = () => {
-  const { convocatoriaId, inscripcionId } = useParams()
+  const { inscripcionId } = useParams()
   const { session, user } = useAuth()
   const [documentos, setDocumentos] = useState<DocumentoTramiteItemDto[]>([])
   const [decisionStates, setDecisionStates] = useState<Record<number, DocumentoDecisionState>>(
@@ -213,203 +212,195 @@ const InscripcionDocumentosPage = () => {
   }
 
   return (
-    <ModuleLayout title="Admisiones">
-      <section className="inscripcion-documentos">
-        <Link
-          className="inscripcion-documentos__back"
-          to={`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`}
-        >
-          ← Volver a Inscripción
-        </Link>
-        <h1 className="inscripcion-documentos__title">Documentos cargados</h1>
-        <p className="inscripcion-documentos__subtitle">
-          Revisa los documentos cargados por el aspirante y marca la validación.
-        </p>
+    <section className="inscripcion-documentos">
+      <p className="inscripcion-documentos__subtitle">
+        Revisa los documentos cargados por el aspirante y marca la validación.
+      </p>
 
-        {isLoading ? (
-          <p className="inscripcion-documentos__status">Cargando documentos...</p>
-        ) : errorMessage ? (
-          <p className="inscripcion-documentos__error">{errorMessage}</p>
-        ) : documentos.length === 0 ? (
-          <p className="inscripcion-documentos__status">No hay documentos registrados.</p>
-        ) : (
-          <div className="inscripcion-documentos__table">
-            <div className="inscripcion-documentos__table-header">
-              <span>Documento</span>
-              <span>Código</span>
-              <span>Requisito</span>
-              <span>Estado</span>
-              <span>Validación</span>
-              {canManageDocuments ? <span>Acciones</span> : null}
-            </div>
-            {documentos.map((documento) => {
-              const documentoId = documento.documentoUploadedResponse?.idDocumento
-              const uploaded =
-                documento.documentoCargado === true && documento.documentoUploadedResponse != null
-              const decisionState = documentoId ? getDecisionState(documentoId) : null
-              const isLoadingDecision = decisionState?.loading ?? false
-              const actionState = documentoId ? getActionState(documentoId) : null
-              const documentoResponse = documento.documentoUploadedResponse
-              const base64 =
-                documentoResponse?.base64DocumentoContenido ?? documentoResponse?.contenidoBase64
-              const mimeType =
-                documentoResponse?.mimeTypeDocumentoContenido ??
-                documentoResponse?.mimeType ??
-                'application/pdf'
-              const filename =
-                documentoResponse?.nombreArchivoDocumento ??
-                `documento_${documento.idTipoDocumentoTramite}.pdf`
+      {isLoading ? (
+        <p className="inscripcion-documentos__status">Cargando documentos...</p>
+      ) : errorMessage ? (
+        <p className="inscripcion-documentos__error">{errorMessage}</p>
+      ) : documentos.length === 0 ? (
+        <p className="inscripcion-documentos__status">No hay documentos registrados.</p>
+      ) : (
+        <div className="inscripcion-documentos__table">
+          <div className="inscripcion-documentos__table-header">
+            <span>Documento</span>
+            <span>Código</span>
+            <span>Requisito</span>
+            <span>Estado</span>
+            <span>Validación</span>
+            {canManageDocuments ? <span>Acciones</span> : null}
+          </div>
+          {documentos.map((documento) => {
+            const documentoId = documento.documentoUploadedResponse?.idDocumento
+            const uploaded =
+              documento.documentoCargado === true && documento.documentoUploadedResponse != null
+            const decisionState = documentoId ? getDecisionState(documentoId) : null
+            const isLoadingDecision = decisionState?.loading ?? false
+            const actionState = documentoId ? getActionState(documentoId) : null
+            const documentoResponse = documento.documentoUploadedResponse
+            const base64 =
+              documentoResponse?.base64DocumentoContenido ?? documentoResponse?.contenidoBase64
+            const mimeType =
+              documentoResponse?.mimeTypeDocumentoContenido ??
+              documentoResponse?.mimeType ??
+              'application/pdf'
+            const filename =
+              documentoResponse?.nombreArchivoDocumento ??
+              `documento_${documento.idTipoDocumentoTramite}.pdf`
 
-              return (
-                <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row">
-                  <div>
-                    <p className="inscripcion-documentos__doc-name">
-                      {documento.nombreTipoDocumentoTramite}
+            return (
+              <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row">
+                <div>
+                  <p className="inscripcion-documentos__doc-name">
+                    {documento.nombreTipoDocumentoTramite}
+                  </p>
+                  {documento.descripcionTipoDocumentoTramite ? (
+                    <p className="inscripcion-documentos__doc-description">
+                      {documento.descripcionTipoDocumentoTramite}
                     </p>
-                    {documento.descripcionTipoDocumentoTramite ? (
-                      <p className="inscripcion-documentos__doc-description">
-                        {documento.descripcionTipoDocumentoTramite}
+                  ) : null}
+                </div>
+                <span className="inscripcion-documentos__code">
+                  {documento.codigoTipoDocumentoTramite}
+                </span>
+                <span>
+                  {documento.obligatorioTipoDocumentoTramite ? (
+                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--required">
+                      Obligatorio
+                    </span>
+                  ) : (
+                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--optional">
+                      Opcional
+                    </span>
+                  )}
+                </span>
+                <div>
+                  {uploaded ? (
+                    <>
+                      <span className="inscripcion-documentos__badge inscripcion-documentos__badge--loaded">
+                        Cargado
+                      </span>
+                      <p className="inscripcion-documentos__file">
+                        {documento.documentoUploadedResponse?.nombreArchivoDocumento} (v
+                        {documento.documentoUploadedResponse?.versionDocumento})
                       </p>
-                    ) : null}
+                    </>
+                  ) : (
+                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--pending">
+                      Pendiente
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <div className="inscripcion-documentos__decision-actions">
+                    <button
+                      type="button"
+                      className={
+                        decisionState?.decision === 'APROBAR'
+                          ? 'inscripcion-documentos__decision-button is-active is-approve'
+                          : 'inscripcion-documentos__decision-button'
+                      }
+                      onClick={() => documentoId && handleDecisionSelect(documentoId, 'APROBAR')}
+                      disabled={!uploaded || isLoadingDecision}
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      type="button"
+                      className={
+                        decisionState?.decision === 'RECHAZAR'
+                          ? 'inscripcion-documentos__decision-button is-active is-reject'
+                          : 'inscripcion-documentos__decision-button'
+                      }
+                      onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
+                      disabled={!uploaded || isLoadingDecision}
+                    >
+                      Rechazar
+                    </button>
                   </div>
-                  <span className="inscripcion-documentos__code">
-                    {documento.codigoTipoDocumentoTramite}
-                  </span>
-                  <span>
-                    {documento.obligatorioTipoDocumentoTramite ? (
-                      <span className="inscripcion-documentos__badge inscripcion-documentos__badge--required">
-                        Obligatorio
-                      </span>
-                    ) : (
-                      <span className="inscripcion-documentos__badge inscripcion-documentos__badge--optional">
-                        Opcional
-                      </span>
-                    )}
-                  </span>
-                  <div>
-                    {uploaded ? (
-                      <>
-                        <span className="inscripcion-documentos__badge inscripcion-documentos__badge--loaded">
-                          Cargado
+                  {!uploaded ? (
+                    <span className="inscripcion-documentos__hint">Pendiente por cargar</span>
+                  ) : null}
+                  {decisionState?.decision === 'RECHAZAR' ? (
+                    <div className="inscripcion-documentos__decision-panel">
+                      <label
+                        className="inscripcion-documentos__decision-label"
+                        htmlFor={`motivo-${documentoId}`}
+                      >
+                        Motivo del rechazo
+                      </label>
+                      <textarea
+                        id={`motivo-${documentoId}`}
+                        className="inscripcion-documentos__decision-textarea"
+                        value={decisionState.motivoRechazo}
+                        onChange={(event) =>
+                          documentoId && handleMotivoChange(documentoId, event.target.value)
+                        }
+                        rows={3}
+                      />
+                      {decisionState.errorMotivo ? (
+                        <span className="inscripcion-documentos__decision-error">
+                          {decisionState.errorMotivo}
                         </span>
-                        <p className="inscripcion-documentos__file">
-                          {documento.documentoUploadedResponse?.nombreArchivoDocumento} (v
-                          {documento.documentoUploadedResponse?.versionDocumento})
-                        </p>
-                      </>
-                    ) : (
-                      <span className="inscripcion-documentos__badge inscripcion-documentos__badge--pending">
-                        Pendiente
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="inscripcion-documentos__decision-actions">
+                      ) : null}
                       <button
                         type="button"
-                        className={
-                          decisionState?.decision === 'APROBAR'
-                            ? 'inscripcion-documentos__decision-button is-active is-approve'
-                            : 'inscripcion-documentos__decision-button'
-                        }
-                        onClick={() => documentoId && handleDecisionSelect(documentoId, 'APROBAR')}
-                        disabled={!uploaded || isLoadingDecision}
+                        className="inscripcion-documentos__decision-confirm"
+                        onClick={() => documentoId && handleConfirmDecision(documentoId, false)}
+                        disabled={isLoadingDecision}
                       >
-                        Aprobar
-                      </button>
-                      <button
-                        type="button"
-                        className={
-                          decisionState?.decision === 'RECHAZAR'
-                            ? 'inscripcion-documentos__decision-button is-active is-reject'
-                            : 'inscripcion-documentos__decision-button'
-                        }
-                        onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
-                        disabled={!uploaded || isLoadingDecision}
-                      >
-                        Rechazar
+                        {isLoadingDecision ? 'Enviando...' : 'Confirmar rechazo'}
                       </button>
                     </div>
-                    {!uploaded ? (
-                      <span className="inscripcion-documentos__hint">
-                        Pendiente por cargar
-                      </span>
-                    ) : null}
-                    {decisionState?.decision === 'RECHAZAR' ? (
-                      <div className="inscripcion-documentos__decision-panel">
-                        <label className="inscripcion-documentos__decision-label" htmlFor={`motivo-${documentoId}`}>
-                          Motivo del rechazo
-                        </label>
-                        <textarea
-                          id={`motivo-${documentoId}`}
-                          className="inscripcion-documentos__decision-textarea"
-                          value={decisionState.motivoRechazo}
-                          onChange={(event) =>
-                            documentoId && handleMotivoChange(documentoId, event.target.value)
-                          }
-                          rows={3}
-                        />
-                        {decisionState.errorMotivo ? (
-                          <span className="inscripcion-documentos__decision-error">
-                            {decisionState.errorMotivo}
-                          </span>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="inscripcion-documentos__decision-confirm"
-                          onClick={() => documentoId && handleConfirmDecision(documentoId, false)}
-                          disabled={isLoadingDecision}
-                        >
-                          {isLoadingDecision ? 'Enviando...' : 'Confirmar rechazo'}
-                        </button>
-                      </div>
-                    ) : null}
-                    {decisionState?.decision === 'APROBAR' ? (
-                      <div className="inscripcion-documentos__decision-panel">
-                        <button
-                          type="button"
-                          className="inscripcion-documentos__decision-confirm"
-                          onClick={() => documentoId && handleConfirmDecision(documentoId, true)}
-                          disabled={isLoadingDecision}
-                        >
-                          {isLoadingDecision ? 'Enviando...' : 'Confirmar aprobación'}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                  {canManageDocuments ? (
-                    <div className="inscripcion-documentos__file-actions">
+                  ) : null}
+                  {decisionState?.decision === 'APROBAR' ? (
+                    <div className="inscripcion-documentos__decision-panel">
                       <button
                         type="button"
-                        className="inscripcion-documentos__view-button"
-                        onClick={() =>
-                          documentoId &&
-                          handleViewDocumento(documentoId, base64, mimeType, filename)
-                        }
-                        disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                        className="inscripcion-documentos__decision-confirm"
+                        onClick={() => documentoId && handleConfirmDecision(documentoId, true)}
+                        disabled={isLoadingDecision}
                       >
-                        {actionState?.viewing ? 'Abriendo...' : 'Ver'}
-                      </button>
-                      <button
-                        type="button"
-                        className="inscripcion-documentos__download-button"
-                        onClick={() =>
-                          documentoId &&
-                          handleDownloadDocumento(documentoId, base64, mimeType, filename)
-                        }
-                        disabled={!uploaded || actionState?.viewing || actionState?.downloading}
-                      >
-                        {actionState?.downloading ? 'Descargando...' : 'Descargar'}
+                        {isLoadingDecision ? 'Enviando...' : 'Confirmar aprobación'}
                       </button>
                     </div>
                   ) : null}
                 </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
-    </ModuleLayout>
+                {canManageDocuments ? (
+                  <div className="inscripcion-documentos__file-actions">
+                    <button
+                      type="button"
+                      className="inscripcion-documentos__view-button"
+                      onClick={() =>
+                        documentoId &&
+                        handleViewDocumento(documentoId, base64, mimeType, filename)
+                      }
+                      disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                    >
+                      {actionState?.viewing ? 'Abriendo...' : 'Ver'}
+                    </button>
+                    <button
+                      type="button"
+                      className="inscripcion-documentos__download-button"
+                      onClick={() =>
+                        documentoId &&
+                        handleDownloadDocumento(documentoId, base64, mimeType, filename)
+                      }
+                      disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                    >
+                      {actionState?.downloading ? 'Descargando...' : 'Descargar'}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
   )
 }
 

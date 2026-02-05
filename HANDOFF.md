@@ -47,6 +47,8 @@
 - Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
+- Replaced the inscripción detail cards with accordion windows tied to nested routes; child pages now render inside the accordion body while preserving deep links.
+- Added the reusable `InscripcionAccordionWindow` component for accordion-style windows in Admisiones.
 - Implemented the coordinador/secretaría “Documentos cargados” screen to call the real `/sapp/document` checklist endpoint using `tramiteId = inscripcionId`, render load status + metadata, and capture per-document approve/reject decisions with required rejection notes.
 - Added a shared documentos module (`src/modules/documentos`) with checklist DTOs, a reusable `getDocumentosByTramite` service, and a dedicated approve/reject service that uses `PUT /sapp/document`.
 - Centralized `codigoTipoTramite=1002` in `src/modules/documentos/constants.ts` and reused it in the aspirante checklist fetch.
@@ -108,6 +110,7 @@
 - **Student cards (Admisiones):** `src/modules/admisiones/components/StudentCard`
 - **Mock photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
+- **Accordion window component:** `src/modules/admisiones/components/InscripcionAccordionWindow`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
 - **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
