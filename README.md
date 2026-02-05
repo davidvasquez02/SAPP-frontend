@@ -76,6 +76,8 @@ Mock data for the Admisiones module lives in:
 - Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
 - Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
 - Updated Admisiones convocatoria/inscripción headers to derive titles from navigation state or loaded data (with safe fallbacks) and passed periodo/nombre state through routing for instant titles on navigation.
+- Replaced the inscripción detail navigation cards with accordion-style windows that render child routes inline, keeping deep links and refresh behavior intact.
+- Added a reusable `InscripcionAccordionWindow` component and embedded the documentos/hoja de vida/examen/entrevistas views inside the accordion bodies.
 - Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
 - Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
 - Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.

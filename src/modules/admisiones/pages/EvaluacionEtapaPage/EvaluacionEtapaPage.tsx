@@ -14,6 +14,7 @@ import './EvaluacionEtapaPage.css'
 interface EvaluacionEtapaPageProps {
   title: string
   etapa: EtapaEvaluacion
+  embedded?: boolean
 }
 
 const buildValidationMessage = (
@@ -35,7 +36,7 @@ const buildValidationMessage = (
   return null
 }
 
-const EvaluacionEtapaPage = ({ title, etapa }: EvaluacionEtapaPageProps) => {
+const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapaPageProps) => {
   const { convocatoriaId, inscripcionId } = useParams()
   const [items, setItems] = useState<EvaluacionAdmisionItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -152,47 +153,57 @@ const EvaluacionEtapaPage = ({ title, etapa }: EvaluacionEtapaPageProps) => {
     }
   }
 
-  return (
-    <ModuleLayout title="Admisiones">
-      <section className="evaluacion-etapa-page">
-        <Link
-          className="evaluacion-etapa-page__back"
-          to={`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`}
-        >
-          ← Volver a Inscripción
-        </Link>
-        <div className="evaluacion-etapa-page__header">
-          <h1 className="evaluacion-etapa-page__title">{title}</h1>
-          <p className="evaluacion-etapa-page__meta">
-            Inscripción #{inscripcionId}
-          </p>
-        </div>
+  const content = (
+    <section
+      className={`evaluacion-etapa-page${embedded ? ' evaluacion-etapa-page--embedded' : ''}`}
+    >
+      {!embedded ? (
+        <>
+          <Link
+            className="evaluacion-etapa-page__back"
+            to={`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`}
+          >
+            ← Volver a Inscripción
+          </Link>
+          <div className="evaluacion-etapa-page__header">
+            <h1 className="evaluacion-etapa-page__title">{title}</h1>
+            <p className="evaluacion-etapa-page__meta">Inscripción #{inscripcionId}</p>
+          </div>
+        </>
+      ) : (
+        <p className="evaluacion-etapa-page__meta">Inscripción #{inscripcionId}</p>
+      )}
 
-        {loading && <p className="evaluacion-etapa-page__status">Cargando evaluación...</p>}
-        {!loading && error && (
-          <p className="evaluacion-etapa-page__status evaluacion-etapa-page__status--error">
-            {error}
-          </p>
-        )}
+      {loading && <p className="evaluacion-etapa-page__status">Cargando evaluación...</p>}
+      {!loading && error && (
+        <p className="evaluacion-etapa-page__status evaluacion-etapa-page__status--error">
+          {error}
+        </p>
+      )}
 
-        {!loading && !error && (
-          <EvaluacionEtapaSection
-            title={`Componentes de ${title.toLowerCase()}`}
-            etapa={etapa}
-            items={items}
-            drafts={drafts}
-            editingRowId={editingRowId}
-            errorsByRow={errorsByRow}
-            savingRowId={savingRowId}
-            onEditRow={handleEditRow}
-            onCancelEdit={handleCancelEdit}
-            onChangeDraft={handleChangeDraft}
-            onSaveItem={handleSaveItem}
-          />
-        )}
-      </section>
-    </ModuleLayout>
+      {!loading && !error && (
+        <EvaluacionEtapaSection
+          title={`Componentes de ${title.toLowerCase()}`}
+          etapa={etapa}
+          items={items}
+          drafts={drafts}
+          editingRowId={editingRowId}
+          errorsByRow={errorsByRow}
+          savingRowId={savingRowId}
+          onEditRow={handleEditRow}
+          onCancelEdit={handleCancelEdit}
+          onChangeDraft={handleChangeDraft}
+          onSaveItem={handleSaveItem}
+        />
+      )}
+    </section>
   )
+
+  if (embedded) {
+    return content
+  }
+
+  return <ModuleLayout title="Admisiones">{content}</ModuleLayout>
 }
 
 export default EvaluacionEtapaPage

@@ -1,6 +1,32 @@
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
 import './InscripcionAdmisionDetallePage.css'
+
+const INSCRIPCION_SECTIONS = [
+  {
+    key: 'documentos',
+    title: 'Documentos cargados',
+    pathSuffix: 'documentos',
+  },
+  {
+    key: 'hoja-vida',
+    title: 'Hoja de vida',
+    pathSuffix: 'hoja-vida',
+  },
+  {
+    key: 'examen',
+    title: 'Examen de conocimiento',
+    pathSuffix: 'examen',
+  },
+  {
+    key: 'entrevistas',
+    title: 'Entrevistas',
+    pathSuffix: 'entrevistas',
+  },
+] as const
+
+type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 
 const InscripcionAdmisionDetallePage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
@@ -14,15 +40,35 @@ const InscripcionAdmisionDetallePage = () => {
     ? `Inscripción - ${nombreAspirante}`
     : 'Inscripción'
 
-  const handleNavigate = (path: string) => {
-    if (!convocatoriaId || !inscripcionId) {
+  const basePath =
+    convocatoriaId && inscripcionId
+      ? `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`
+      : ''
+
+  const activeKey: InscripcionSectionKey | null =
+    INSCRIPCION_SECTIONS.find((section) =>
+      location.pathname.endsWith(`/${section.pathSuffix}`),
+    )?.key ?? null
+
+  const handleToggle = (sectionKey: InscripcionSectionKey) => {
+    if (!basePath) {
       return
     }
 
-    navigate(
-      `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/${path}`
-    )
+    if (activeKey === sectionKey) {
+      navigate(basePath)
+      return
+    }
+
+    const section = INSCRIPCION_SECTIONS.find((item) => item.key === sectionKey)
+    if (!section) {
+      return
+    }
+
+    navigate(`${basePath}/${section.pathSuffix}`)
   }
+
+  const outlet = <Outlet />
 
   return (
     <ModuleLayout title="Admisiones">
@@ -37,35 +83,20 @@ const InscripcionAdmisionDetallePage = () => {
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
         <p className="inscripcion-detalle__subtitle">Seleccione una opción</p>
 
-        <div className="inscripcion-detalle__options">
-          <button
-            className="inscripcion-detalle__card"
-            type="button"
-            onClick={() => handleNavigate('documentos')}
-          >
-            Documentos cargados
-          </button>
-          <button
-            className="inscripcion-detalle__card"
-            type="button"
-            onClick={() => handleNavigate('hoja-vida')}
-          >
-            Hoja de vida
-          </button>
-          <button
-            className="inscripcion-detalle__card"
-            type="button"
-            onClick={() => handleNavigate('examen')}
-          >
-            Examen de conocimiento
-          </button>
-          <button
-            className="inscripcion-detalle__card"
-            type="button"
-            onClick={() => handleNavigate('entrevistas')}
-          >
-            Entrevistas
-          </button>
+        <div className="inscripcion-detalle__windows">
+          {INSCRIPCION_SECTIONS.map((section) => {
+            const isOpen = activeKey === section.key
+            return (
+              <InscripcionAccordionWindow
+                key={section.key}
+                title={section.title}
+                isOpen={isOpen}
+                onToggle={() => handleToggle(section.key)}
+              >
+                {isOpen ? outlet : null}
+              </InscripcionAccordionWindow>
+            )
+          })}
         </div>
       </section>
     </ModuleLayout>

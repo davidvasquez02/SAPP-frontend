@@ -1,0 +1,59 @@
+.inscripcion-accordion-window {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.inscripcion-accordion-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.inscripcion-accordion-window__header:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: -2px;
+}
+
+.inscripcion-accordion-window__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.inscripcion-accordion-window__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.inscripcion-accordion-window__subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.inscripcion-accordion-window__chevron {
+  font-size: 1.1rem;
+  color: #4b5563;
+  transition: transform 0.2s ease;
+}
+
+.inscripcion-accordion-window.is-open .inscripcion-accordion-window__chevron {
+  transform: rotate(180deg);
+}
+
+.inscripcion-accordion-window__body {
+  border-top: 1px solid #e5e7eb;
+  padding: 1.25rem;
+  background: #ffffff;
+  overflow-x: auto;
+}

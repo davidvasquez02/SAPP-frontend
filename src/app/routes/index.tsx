@@ -66,39 +66,12 @@ export const AppRoutes = () => {
                 <InscripcionAdmisionDetallePage />
               </RequireRoles>
             }
-          />
-          <Route
-            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos"
-            element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
-                <InscripcionDocumentosPage />
-              </RequireRoles>
-            }
-          />
-          <Route
-            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida"
-            element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
-                <InscripcionHojaVidaPage />
-              </RequireRoles>
-            }
-          />
-          <Route
-            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/examen"
-            element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
-                <InscripcionExamenPage />
-              </RequireRoles>
-            }
-          />
-          <Route
-            path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas"
-            element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
-                <InscripcionEntrevistasPage />
-              </RequireRoles>
-            }
-          />
+          >
+            <Route path="documentos" element={<InscripcionDocumentosPage />} />
+            <Route path="hoja-vida" element={<InscripcionHojaVidaPage />} />
+            <Route path="examen" element={<InscripcionExamenPage />} />
+            <Route path="entrevistas" element={<InscripcionEntrevistasPage />} />
+          </Route>
           {solicitudesRoutes}
           {matriculaRoutes}
           {creditosRoutes}
