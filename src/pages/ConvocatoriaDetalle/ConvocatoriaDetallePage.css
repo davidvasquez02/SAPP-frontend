@@ -49,13 +49,13 @@
 
 .convocatoria-detalle__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
 }
 
 .convocatoria-detalle__skeletons {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
 }
 
@@ -73,26 +73,5 @@
   }
   100% {
     background-position: -200% 0%;
-  }
-}
-
-@media (max-width: 1200px) {
-  .convocatoria-detalle__grid,
-  .convocatoria-detalle__skeletons {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .convocatoria-detalle__grid,
-  .convocatoria-detalle__skeletons {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .convocatoria-detalle__grid,
-  .convocatoria-detalle__skeletons {
-    grid-template-columns: 1fr;
   }
 }
