@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
+import StudentCard from '../../modules/admisiones/components/StudentCard/StudentCard'
+import { getMockStudentPhotoUrl } from '../../modules/admisiones/utils/mockStudentPhoto'
 import './ConvocatoriaDetallePage.css'
 
 const ConvocatoriaDetallePage = () => {
@@ -23,6 +25,34 @@ const ConvocatoriaDetallePage = () => {
     ? `Convocatoria - ${periodoConvocatoria}`
     : 'Convocatoria'
 
+  const loadInscripciones = useCallback(async () => {
+    if (!convocatoriaId) {
+      setError('Convocatoria inválida.')
+      return
+    }
+
+    const convocatoriaIdNumber = Number(convocatoriaId)
+
+    if (Number.isNaN(convocatoriaIdNumber)) {
+      setError('Convocatoria inválida.')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const data = await getInscripcionesByConvocatoria(convocatoriaIdNumber)
+      setInscripciones(data)
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [convocatoriaId])
+
   useEffect(() => {
     if (!convocatoriaId) {
       setError('Convocatoria inválida.')
@@ -36,35 +66,8 @@ const ConvocatoriaDetallePage = () => {
       return
     }
 
-    let isMounted = true
-
-    const loadInscripciones = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const data = await getInscripcionesByConvocatoria(convocatoriaIdNumber)
-        if (isMounted) {
-          setInscripciones(data)
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
-        if (isMounted) {
-          setError(message)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
     loadInscripciones()
-
-    return () => {
-      isMounted = false
-    }
-  }, [convocatoriaId])
+  }, [convocatoriaId, loadInscripciones])
 
   const handleRowClick = (inscripcion: InscripcionAdmisionDto) => {
     if (!convocatoriaId) {
@@ -93,51 +96,45 @@ const ConvocatoriaDetallePage = () => {
         <h1 className="convocatoria-detalle__title">{pageTitle}</h1>
 
         {isLoading ? (
-          <p className="convocatoria-detalle__status">Cargando estudiantes…</p>
+          <div className="convocatoria-detalle__skeletons" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`skeleton-${index}`} className="convocatoria-detalle__skeleton" />
+            ))}
+          </div>
         ) : null}
 
         {error ? (
-          <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
-            {error}
-          </p>
+          <div className="convocatoria-detalle__status convocatoria-detalle__status--error">
+            <p>{error}</p>
+            <button
+              className="convocatoria-detalle__retry"
+              type="button"
+              onClick={loadInscripciones}
+            >
+              Reintentar
+            </button>
+          </div>
         ) : null}
 
         {!isLoading && !error && inscripciones.length === 0 ? (
           <p className="convocatoria-detalle__status">
-            No hay aspirantes registrados para esta convocatoria.
+            No hay inscripciones para esta convocatoria.
           </p>
         ) : null}
 
         {!isLoading && !error && inscripciones.length > 0 ? (
-          <div className="convocatoria-detalle__table-wrapper">
-            <table className="convocatoria-detalle__table">
-              <thead>
-                <tr>
-                  <th>Nombre aspirante</th>
-                  <th>Estado</th>
-                  <th>Fecha inscripción</th>
-                  <th>Periodo académico</th>
-                  <th>Programa académico</th>
-                  <th>Puntaje total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inscripciones.map((inscripcion) => (
-                  <tr
-                    key={inscripcion.id}
-                    className="convocatoria-detalle__row"
-                    onClick={() => handleRowClick(inscripcion)}
-                  >
-                    <td>{inscripcion.nombreAspirante}</td>
-                    <td>{inscripcion.estado}</td>
-                    <td>{inscripcion.fechaInscripcion}</td>
-                    <td>{inscripcion.periodoAcademico}</td>
-                    <td>{inscripcion.programaAcademico}</td>
-                    <td>{inscripcion.puntajeTotal ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="convocatoria-detalle__grid">
+            {inscripciones.map((inscripcion) => (
+              <StudentCard
+                key={inscripcion.id}
+                inscripcion={inscripcion}
+                photoUrl={getMockStudentPhotoUrl(
+                  inscripcion.aspiranteId,
+                  inscripcion.nombreAspirante
+                )}
+                onClick={() => handleRowClick(inscripcion)}
+              />
+            ))}
           </div>
         ) : null}
       </section>
