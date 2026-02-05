@@ -27,43 +27,51 @@
 
 .convocatoria-detalle__status--error {
   color: #b91c1c;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.convocatoria-detalle__table-wrapper {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-}
-
-.convocatoria-detalle__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.convocatoria-detalle__table th,
-.convocatoria-detalle__table td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.convocatoria-detalle__table th {
-  background: #f9fafb;
+.convocatoria-detalle__retry {
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
   font-weight: 600;
-  color: #111827;
-}
-
-.convocatoria-detalle__row {
   cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.convocatoria-detalle__row:hover {
-  background: #f3f4f6;
+.convocatoria-detalle__retry:hover {
+  background: #fecaca;
 }
 
-.convocatoria-detalle__row:last-child td {
-  border-bottom: none;
+.convocatoria-detalle__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.convocatoria-detalle__skeletons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.convocatoria-detalle__skeleton {
+  height: 320px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: convocatoria-detalle-skeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes convocatoria-detalle-skeleton {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: -200% 0%;
+  }
 }
