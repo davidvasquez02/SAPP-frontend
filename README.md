@@ -72,6 +72,7 @@ Mock data for the Admisiones module lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (convocatorias list used by the selector UI).
 
 ## Recent Decisions (Changelog-lite)
+- Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
 - Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
 - Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
 - Updated Admisiones convocatoria/inscripción headers to derive titles from navigation state or loaded data (with safe fallbacks) and passed periodo/nombre state through routing for instant titles on navigation.
