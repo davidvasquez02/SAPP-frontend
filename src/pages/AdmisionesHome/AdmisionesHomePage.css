@@ -16,6 +16,32 @@
   font-size: 1.75rem;
 }
 
+.admisiones-home__status {
+  margin: 0;
+  color: #4b5563;
+}
+
+.admisiones-home__status--error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  padding: 1rem;
+  border-radius: 12px;
+  color: #b91c1c;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admisiones-home__retry {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+}
+
 .admisiones-home__programs {
   display: grid;
   gap: 1.5rem;
@@ -32,44 +58,39 @@
   background: #ffffff;
 }
 
+.admisiones-home__program-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .admisiones-home__program-title {
   margin: 0;
   font-size: 1.15rem;
   color: #111827;
 }
 
-.admisiones-home__actions {
-  display: grid;
-  gap: 1rem;
+.admisiones-home__program-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .admisiones-home__card {
-  text-align: left;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
   padding: 1.25rem 1.5rem;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 0.75rem;
 }
 
-.admisiones-home__card--secondary {
-  background: #f8fafc;
-}
-
-.admisiones-home__card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-}
-
-.admisiones-home__card:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-  box-shadow: none;
-  transform: none;
+.admisiones-home__card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
 }
 
 .admisiones-home__card-title {
@@ -79,46 +100,58 @@
 }
 
 .admisiones-home__card-meta {
+  display: block;
   font-size: 0.95rem;
   color: #6b7280;
+  margin-top: 0.25rem;
 }
 
-.admisiones-home__list {
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  padding: 1rem;
-  background: #ffffff;
+.admisiones-home__pill {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  text-transform: uppercase;
 }
 
-.admisiones-home__items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.admisiones-home__card-details {
+  display: grid;
+  gap: 0.25rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.admisiones-home__enter-button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+}
+
+.admisiones-home__enter-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.admisiones-home__previous {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.admisiones-home__item {
+.admisiones-home__select {
   width: 100%;
-  border: 1px solid #e5e7eb;
+  padding: 0.6rem 0.75rem;
   border-radius: 12px;
-  padding: 0.75rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  background: #f9fafb;
-  cursor: pointer;
+  border: 1px solid #e5e7eb;
   font-size: 0.95rem;
-}
-
-.admisiones-home__item span:last-child {
-  color: #4b5563;
-}
-
-.admisiones-home__item:hover {
-  background: #eef2ff;
-  border-color: #c7d2fe;
+  color: #111827;
+  background: #f9fafb;
 }
 
 .admisiones-home__empty {

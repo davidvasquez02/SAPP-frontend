@@ -15,15 +15,21 @@ const ConvocatoriaDetallePage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { periodoAcademico } = useMemo(() => {
-    return (location.state as { periodoAcademico?: string } | null) ?? {}
+  const { periodoAcademico, periodoLabel, programaNombre } = useMemo(() => {
+    return (
+      (location.state as
+        | { periodoAcademico?: string; periodoLabel?: string; programaNombre?: string }
+        | null) ?? {}
+    )
   }, [location.state])
 
   const periodoConvocatoria =
-    periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
-  const pageTitle = periodoConvocatoria
-    ? `Convocatoria - ${periodoConvocatoria}`
-    : 'Convocatoria'
+    periodoLabel ?? periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
+  const pageTitle = programaNombre && periodoConvocatoria
+    ? `Convocatoria - ${programaNombre} · ${periodoConvocatoria}`
+    : periodoConvocatoria
+      ? `Convocatoria - ${periodoConvocatoria}`
+      : 'Convocatoria'
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {

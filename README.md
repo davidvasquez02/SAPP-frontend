@@ -19,12 +19,12 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Base64 file utilities:** `src/shared/files/base64FileUtils.ts` normalizes base64 payloads and supports blob creation, tab opening, and download handling for document previews.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
-- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias/inscripciones, backed by the shared HTTP client wrapper.
+- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias (`/sapp/convocatoriaAdmision`) and inscripciones, backed by the shared HTTP client wrapper.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
-- **Admisiones module:** `src/modules/admisiones` defines convocatoria types + mock data; `src/pages/AdmisionesHome` renders program-specific selectors, and `src/pages/ConvocatoriaDetalle` now fetches real inscripciones for the selected convocatoria.
+- **Admisiones module:** `src/modules/admisiones` defines convocatoria DTOs/services and program helpers; `src/pages/AdmisionesHome` renders program-specific selectors sourced from the backend, and `src/pages/ConvocatoriaDetalle` fetches real inscripciones for the selected convocatoria.
 - **Evaluación de admisión:** `src/modules/admisiones/api/evaluacionAdmisionService.ts` consume `/sapp/evaluacionAdmision/info`, `src/modules/admisiones/components/EvaluacionEtapaSection` renderiza tablas editables por etapa, y las páginas de hoja de vida/examen/entrevista usan la misma base con validación de puntajes.
 
 ## Tech Stack (Exact Versions)
@@ -68,8 +68,8 @@ The aspirante login now also calls the backend directly:
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
 
-Mock data for the Admisiones module lives in:
-- `src/modules/admisiones/mock/convocatorias.mock.ts` (convocatorias list used by the selector UI).
+Mock data for the Admisiones module still lives in:
+- `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
 - Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
@@ -123,3 +123,5 @@ Mock data for the Admisiones module lives in:
 - Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.
 - Added “Ver/Descargar” actions on inscripción documentos to open/download base64 PDFs without extra endpoints, using shared base64-to-Blob utilities.
 - Grouped entrevista evaluation items by entrevistador with a summary section for consolidated results, keeping row-level editing intact.
+- Replaced the Admisiones home mock convocatorias with the real `/sapp/convocatoriaAdmision` service, including loading/error/empty states, dynamic program sections, and a “vigente vs anteriores” selector per program.
+- Added program name helpers to render the long-form program titles (Maestría/Doctorado) while keeping backend `programa` as a subtitle/badge when provided.
