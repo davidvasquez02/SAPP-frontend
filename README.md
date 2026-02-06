@@ -122,3 +122,4 @@ Mock data for the Admisiones module lives in:
 - Replaced the coordinador/secretaría validation UI with per-document approve/reject actions, required rejection notes, and `/sapp/document` PUT integration with per-item loading plus refresh on success.
 - Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.
 - Added “Ver/Descargar” actions on inscripción documentos to open/download base64 PDFs without extra endpoints, using shared base64-to-Blob utilities.
+- Grouped entrevista evaluation items by entrevistador with a summary section for consolidated results, keeping row-level editing intact.
