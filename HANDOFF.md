@@ -40,6 +40,8 @@
 - Added `src/modules/auth/roles/roleUtils.ts` to normalize and compare role strings; Admisiones visibility now also allows `ADMIN`.
 - Implemented the Admisiones home selector UI with mock convocatorias, including current vs previous selection and parameterized navigation to convocatoria detail placeholders.
 - Expanded Admisiones convocatorias to include programa metadata (id/nivel/nombre) and split the selector into two program-specific sections with independent current/previous lists.
+- Replaced the Admisiones home mock convocatorias with the real `/sapp/convocatoriaAdmision` service, added loading/error/empty states, and rendered “vigente vs anteriores” selectors per programa using the shared HTTP client (Bearer token).
+- Added helpers for long-form program names and periodo parsing (`programNames`, `periodo`) to support program section titles and sorting.
 - Simplified the convocatoria detail page to a placeholder (“En construcción”) that optionally displayed program name + periodo from the mock list.
 - Replaced the convocatoria detail placeholder with a real inscripciones fetch from `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId`, including loading/error/empty states and row navigation to a new inscripcion detail placeholder route.
 - Replaced the convocatoria inscripciones table with a responsive grid of student cards that show a large mock photo, key metadata (estado, programa, periodo, puntaje, fecha), and accessible click/keyboard navigation to the inscripción detail.
@@ -63,7 +65,7 @@
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
-- Replace the Admisiones mock data with real service integration once the backend endpoint is defined.
+- Confirm the convocatoria admisión response contract (fields, `vigente` rules) with the backend team.
 - Validate the inscripcion detail API contract when it becomes available (currently placeholder UI only).
 - Confirm the backend response and state transitions for `/sapp/document` approve/reject, especially error messaging and allowed document states.
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
@@ -78,12 +80,11 @@
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 5. Wire module pages to the new service stubs once backend endpoints are defined.
 6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
-7. Replace the Admisiones convocatorias mock list with real data once the endpoint is defined.
-8. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
-9. Validate `/sapp/document` approve/reject flows with real data and document states.
-10. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
-11. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
-12. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
+7. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
+8. Validate `/sapp/document` approve/reject flows with real data and document states.
+9. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
+10. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
+11. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -107,7 +108,10 @@
 - **Admisiones page:** `src/pages/AdmisionesPage`
 - **Admisiones module:** `src/modules/admisiones/types.ts`, `src/modules/admisiones/mock/convocatorias.mock.ts`
 - **Admisiones API:** `src/modules/admisiones/api/types.ts`, `src/modules/admisiones/api/inscripcionAdmisionService.ts`
+- **Admisiones convocatorias API:** `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`, `src/modules/admisiones/api/convocatoriaAdmisionService.ts`
 - **Admisiones selector UI:** `src/pages/AdmisionesHome`
+  - Program names helper: `src/modules/admisiones/utils/programNames.ts`
+  - Periodo parsing helper: `src/modules/admisiones/utils/periodo.ts`
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
 - **Student cards (Admisiones):** `src/modules/admisiones/components/StudentCard`
 - **Mock photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
@@ -159,6 +163,9 @@
   - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.
 - **Admisiones convocatoria mock contract:** `src/modules/admisiones/types.ts`
   - `Convocatoria`: `{ id, programaId, programaNivel, programaNombre, periodo: { anio, periodo }, fechaInicio, fechaFin, estado, cupos? }` with period formatting helper `formatoPeriodo()`.
+- **Convocatoria admisión response:** `src/modules/admisiones/api/convocatoriaAdmisionService.ts`
+  - Calls `GET /sapp/convocatoriaAdmision`, expects `{ ok, message, data: ConvocatoriaAdmisionDto[] }`, throws when `ok` is `false`, and returns `data ?? []`.
+  - `ConvocatoriaAdmisionDto` includes `{ id, programaId, programa, periodoId, periodo, vigente, cupos, fechaInicio, fechaFin, observaciones }`.
 - **Inscripcion admision response:** `src/modules/admisiones/api/types.ts`
   - `InscripcionAdmisionDto`: `{ id, aspiranteId, nombreAspirante, estado, fechaInscripcion, fechaResultado, puntajeTotal, posicion_admision, periodoAcademico, programaAcademico, observaciones }` from `GET /sapp/inscripcionAdmision/convocatoria/:convocatoriaId`.
 - **Inscripcion admision service:** `src/modules/admisiones/api/inscripcionAdmisionService.ts`
