@@ -9,6 +9,7 @@ import type {
   EvaluacionAdmisionItem,
   EtapaEvaluacion,
 } from '../../types/evaluacionAdmisionTypes'
+import { groupByEvaluador } from '../../utils/groupByEvaluador'
 import './EvaluacionEtapaPage.css'
 
 interface EvaluacionEtapaPageProps {
@@ -45,6 +46,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [editingRowId, setEditingRowId] = useState<number | null>(null)
   const [errorsByRow, setErrorsByRow] = useState<Record<number, string | null>>({})
   const [savingRowId, setSavingRowId] = useState<number | null>(null)
+  const isEntrevista = etapa === 'ENTREVISTA'
 
   const inscripcionIdNumber = useMemo(
     () => (inscripcionId ? Number(inscripcionId) : NaN),
@@ -153,6 +155,23 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     }
   }
 
+  const entrevistaItems = useMemo(
+    () => items.filter((item) => item.etapaEvaluacion === 'ENTREVISTA'),
+    [items],
+  )
+  const resumenEntrevista = useMemo(
+    () => entrevistaItems.find((item) => item.codigo === 'ENTREV'),
+    [entrevistaItems],
+  )
+  const itemsSinResumen = useMemo(
+    () => entrevistaItems.filter((item) => item.codigo !== 'ENTREV'),
+    [entrevistaItems],
+  )
+  const gruposEntrevista = useMemo(
+    () => groupByEvaluador(itemsSinResumen),
+    [itemsSinResumen],
+  )
+
   const content = (
     <section
       className={`evaluacion-etapa-page${embedded ? ' evaluacion-etapa-page--embedded' : ''}`}
@@ -181,7 +200,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
         </p>
       )}
 
-      {!loading && !error && (
+      {!loading && !error && !isEntrevista && (
         <EvaluacionEtapaSection
           title={`Componentes de ${title.toLowerCase()}`}
           etapa={etapa}
@@ -195,6 +214,62 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           onChangeDraft={handleChangeDraft}
           onSaveItem={handleSaveItem}
         />
+      )}
+      {!loading && !error && isEntrevista && entrevistaItems.length === 0 && (
+        <p className="evaluacion-etapa-page__status">No hay evaluaciones de entrevista.</p>
+      )}
+      {!loading && !error && isEntrevista && entrevistaItems.length > 0 && (
+        <div className="evaluacion-etapa-page__groups">
+          {resumenEntrevista && (
+            <section className="evaluacion-etapa-page__summary">
+              <h2 className="evaluacion-etapa-page__summary-title">Resumen entrevista</h2>
+              <div className="evaluacion-etapa-page__summary-grid">
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Puntaje</p>
+                  <p className="evaluacion-etapa-page__summary-value">
+                    {resumenEntrevista.puntajeAspirante ?? '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Puntaje máximo</p>
+                  <p className="evaluacion-etapa-page__summary-value">
+                    {resumenEntrevista.puntajeMax}
+                  </p>
+                </div>
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Consideraciones</p>
+                  <p className="evaluacion-etapa-page__summary-value">
+                    {resumenEntrevista.consideraciones || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Observaciones</p>
+                  <p className="evaluacion-etapa-page__summary-value">
+                    {resumenEntrevista.observaciones || '-'}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+          {gruposEntrevista.map((grupo) => (
+            <div key={grupo.evaluadorKey} className="evaluacion-etapa-page__group">
+              <h2 className="evaluacion-etapa-page__group-title">{grupo.evaluadorLabel}</h2>
+              <EvaluacionEtapaSection
+                title="Componentes evaluados"
+                etapa={etapa}
+                items={grupo.items}
+                drafts={drafts}
+                editingRowId={editingRowId}
+                errorsByRow={errorsByRow}
+                savingRowId={savingRowId}
+                onEditRow={handleEditRow}
+                onCancelEdit={handleCancelEdit}
+                onChangeDraft={handleChangeDraft}
+                onSaveItem={handleSaveItem}
+              />
+            </div>
+          ))}
+        </div>
       )}
     </section>
   )

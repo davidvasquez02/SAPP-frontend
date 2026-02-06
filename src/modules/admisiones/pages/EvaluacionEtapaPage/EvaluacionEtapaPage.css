@@ -46,3 +46,51 @@
 .evaluacion-etapa-page__status--error {
   color: #b91c1c;
 }
+
+.evaluacion-etapa-page__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.evaluacion-etapa-page__summary {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  background: #f9fafb;
+}
+
+.evaluacion-etapa-page__summary-title {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.evaluacion-etapa-page__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.evaluacion-etapa-page__summary-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.evaluacion-etapa-page__summary-value {
+  margin: 0;
+  color: #111827;
+  font-weight: 500;
+}
+
+.evaluacion-etapa-page__group {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.evaluacion-etapa-page__group-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  color: #111827;
+}

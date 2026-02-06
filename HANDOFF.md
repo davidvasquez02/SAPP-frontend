@@ -55,6 +55,7 @@
 - Added base64 file utilities (`src/shared/files/base64FileUtils.ts`) for normalizing base64 content, generating blobs, opening documents in a new tab, and triggering downloads.
 - Added “Ver” and “Descargar” actions on the inscripcion documentos table to open/download the uploaded document using the base64 payload returned by `documentoUploadedResponse`.
 - Added evaluación de admisión types + service for `/sapp/evaluacionAdmision/info` and implemented hoja de vida, examen de conocimientos, y entrevista screens with editable rows, validation, and mock save handling.
+- Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -68,6 +69,7 @@
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
 - Confirm save/update endpoint for evaluación de admisión and decide payload + response contract.
 - Replace the aspirante mock photo URLs with real backend-provided photo data (URL or base64).
+- Confirm whether entrevista “resumen” entries (codigo `ENTREV`) should be editable and define the desired backend payload.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -114,7 +116,7 @@
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
 - **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
-- **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`
+- **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`, `src/modules/admisiones/utils/groupByEvaluador.ts`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
 - **Document view/download utilities:** `src/shared/files/base64FileUtils.ts`
 - **Document view/download UI:** `src/pages/InscripcionDocumentos`
