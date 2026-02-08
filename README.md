@@ -20,7 +20,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias (`/sapp/convocatoriaAdmision`) and inscripciones, backed by the shared HTTP client wrapper.
-- **Aspirante creation flow (mock):** `CreateAspiranteModal` in the Admisiones module collects form data, profile image, and required documents from `/sapp/tramite/document?tipoTramiteId=1` (filtered to `ADMISION_COORDINACION`), logs the payload to the console, and does not call the backend yet.
+- **Aspirante creation flow (mock):** `CreateAspiranteModal` in the Admisiones module collects form data, profile image, and **all documents** from `/sapp/tramite/document?tipoTramiteId=1` (filtered to `ADMISION_COORDINACION`); every listed document must be attached (no selection checkbox), logs the payload to the console, and does not call the backend yet.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
@@ -73,7 +73,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
-- Ensure required documentos in the “Crear aspirante” modal always fall back to `obligatorio` selection so checkbox/file inputs remain interactive even if selection state has not initialized yet.
+- Require all documents in the “Crear aspirante” modal: removed the optional-selection checkbox and validated that every listed file is attached before allowing submission.
 - Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
 - Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
 - Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
