@@ -155,6 +155,14 @@ export const CreateAspiranteModal = ({
   ])
 
   useEffect(() => {
+    if (!open || documentos.length === 0) {
+      return
+    }
+
+    initializeDocumentSelections(documentos)
+  }, [documentos, initializeDocumentSelections, open])
+
+  useEffect(() => {
     if (!open) {
       return
     }

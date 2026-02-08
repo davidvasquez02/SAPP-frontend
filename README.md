@@ -73,6 +73,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Ensure required documentos in the “Crear aspirante” modal are pre-selected whenever the modal opens so file inputs are enabled, even when documentos were previously cached.
 - Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
 - Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
 - Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
