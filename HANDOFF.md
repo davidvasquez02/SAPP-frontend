@@ -49,6 +49,7 @@
 - Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
 - Added a “Crear aspirante” modal in Convocatoria detalle that loads tipos de documento and admisión documentos on demand, validates inputs, and **mocks** submission by logging the full payload (form + profile image metadata + selected documents) to the console.
+- Fixed the “Crear aspirante” modal to re-initialize required document selections on every open so required file inputs are no longer stuck disabled when documentos were already cached.
 - Convocatoria detalle now resolves `programaId` from navigation state (preferred) or inscripciones (`programaAcademico` string mapper for DCC/MISI) to avoid prompting the user.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Replaced the inscripción detail cards with accordion windows tied to nested routes; child pages now render inside the accordion body while preserving deep links.
