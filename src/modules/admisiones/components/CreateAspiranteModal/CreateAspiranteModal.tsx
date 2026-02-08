@@ -1,25 +1,46 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { uploadDocument } from '../../../../api/documentUploadService'
 import { getTiposDocumentoIdentificacion } from '../../../../api/tipoDocumentoIdentificacionService'
 import type { TipoDocumentoIdentificacionDto } from '../../../../api/tipoDocumentoIdentificacionTypes'
+import { DocumentUploadCard } from '../../../../components'
+import { fileToBase64 } from '../../../../utils/fileToBase64'
+import { sha256Hex } from '../../../../utils/sha256'
+import { createAspirante } from '../../api/aspiranteService'
 import type {
   AspiranteCreateRequestDto,
   AspiranteCreateResponseDto,
 } from '../../api/aspiranteCreateTypes'
-import { getTramiteDocumentosAdmision } from '../../api/tramiteDocumentoService'
-import type { TramiteDocumentoDto } from '../../api/tramiteDocumentoTypes'
+import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
+import { admisionAspiranteDocumentTemplate } from '../../../documentos/templates/admisionAspiranteDocumentTemplate'
 import './CreateAspiranteModal.css'
 
 interface CreateAspiranteModalProps {
   open: boolean
   onClose: () => void
   programaId: number | null
-  onCreated?: (created: AspiranteCreateResponseDto | null) => void
+  onCreated?: (result: CreateAspiranteResult) => void
 }
 
 type FormErrors = Partial<Record<keyof AspiranteCreateRequestDto, string>> & {
   general?: string
   documentos?: string
+}
+
+interface UploadErrorItem {
+  id: number
+  nombre: string
+  errorMessage: string
+}
+
+interface UploadSummary {
+  status: 'idle' | 'success' | 'partial'
+  failedItems: UploadErrorItem[]
+}
+
+interface CreateAspiranteResult {
+  created: AspiranteCreateResponseDto
+  uploadSummary: UploadSummary
 }
 
 interface FormState {
@@ -57,22 +78,40 @@ export const CreateAspiranteModal = ({
   const [tiposDocumento, setTiposDocumento] = useState<TipoDocumentoIdentificacionDto[]>([])
   const [tiposLoading, setTiposLoading] = useState(false)
   const [tiposError, setTiposError] = useState<string | null>(null)
-  const [documentos, setDocumentos] = useState<TramiteDocumentoDto[]>([])
-  const [documentosLoading, setDocumentosLoading] = useState(false)
-  const [documentosError, setDocumentosError] = useState<string | null>(null)
-  const [documentFiles, setDocumentFiles] = useState<Record<number, File | null>>({})
+  const [documentos, setDocumentos] = useState<DocumentUploadItem[]>([])
+  const [uploadSummary, setUploadSummary] = useState<UploadSummary>({
+    status: 'idle',
+    failedItems: [],
+  })
+  const [createdAspirante, setCreatedAspirante] = useState<AspiranteCreateResponseDto | null>(
+    null,
+  )
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
+
+  const buildDocumentItems = useCallback((): DocumentUploadItem[] => {
+    return admisionAspiranteDocumentTemplate.map((item) => ({
+      id: item.idTipoDocumentoTramite,
+      codigo: item.codigoTipoDocumentoTramite,
+      nombre: item.nombreTipoDocumentoTramite,
+      descripcion: item.descripcionTipoDocumentoTramite ?? null,
+      obligatorio: item.obligatorioTipoDocumentoTramite,
+      status: 'NOT_SELECTED',
+      selectedFile: null,
+    }))
+  }, [])
 
   const resetForm = useCallback(() => {
     setFormState(initialFormState)
     setErrors({})
     setIsSubmitting(false)
+    setUploadSummary({ status: 'idle', failedItems: [] })
+    setCreatedAspirante(null)
     setProfileImage(null)
     setProfilePreviewUrl(null)
-    setDocumentFiles({})
-  }, [])
+    setDocumentos(buildDocumentItems())
+  }, [buildDocumentItems])
 
   const loadTiposDocumento = useCallback(async () => {
     setTiposLoading(true)
@@ -92,47 +131,33 @@ export const CreateAspiranteModal = ({
     }
   }, [])
 
-  const loadDocumentos = useCallback(async () => {
-    setDocumentosLoading(true)
-    setDocumentosError(null)
-
-    try {
-      const data = await getTramiteDocumentosAdmision()
-      setDocumentos(data)
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'No fue posible cargar los documentos requeridos.'
-      setDocumentosError(message)
-    } finally {
-      setDocumentosLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
     if (!open) {
       return
     }
 
-    resetForm()
+    const shouldPreserveState =
+      createdAspirante != null && uploadSummary.status === 'partial'
+
+    if (!shouldPreserveState) {
+      resetForm()
+    } else if (documentos.length === 0) {
+      setDocumentos(buildDocumentItems())
+    }
 
     if (tiposDocumento.length === 0 && !tiposLoading) {
       loadTiposDocumento()
     }
-
-    if (documentos.length === 0 && !documentosLoading) {
-      loadDocumentos()
-    }
   }, [
     open,
     loadTiposDocumento,
-    loadDocumentos,
     resetForm,
     tiposDocumento.length,
     tiposLoading,
     documentos.length,
-    documentosLoading,
+    buildDocumentItems,
+    createdAspirante,
+    uploadSummary.status,
   ])
 
   useEffect(() => {
@@ -184,38 +209,44 @@ export const CreateAspiranteModal = ({
 
   const validateForm = (): FormErrors => {
     const nextErrors: FormErrors = {}
+    const isAspiranteCreated = createdAspirante != null
 
-    if (!formState.nombre.trim()) {
+    if (!isAspiranteCreated && !formState.nombre.trim()) {
       nextErrors.nombre = 'El nombre es obligatorio.'
     }
 
-    if (!formState.tipoDocumentoIdentificacionId) {
+    if (!isAspiranteCreated && !formState.tipoDocumentoIdentificacionId) {
       nextErrors.tipoDocumentoIdentificacionId = 'Seleccione un tipo de documento.'
     }
 
-    if (!formState.numeroDocumento.trim()) {
+    if (!isAspiranteCreated && !formState.numeroDocumento.trim()) {
       nextErrors.numeroDocumento = 'El número de documento es obligatorio.'
-    } else if (!digitsRegex.test(formState.numeroDocumento.trim())) {
+    } else if (!isAspiranteCreated && !digitsRegex.test(formState.numeroDocumento.trim())) {
       nextErrors.numeroDocumento = 'Solo se permiten dígitos.'
     }
 
-    if (!formState.emailPersonal.trim()) {
+    if (!isAspiranteCreated && !formState.emailPersonal.trim()) {
       nextErrors.emailPersonal = 'El email es obligatorio.'
-    } else if (!emailRegex.test(formState.emailPersonal.trim())) {
+    } else if (!isAspiranteCreated && !emailRegex.test(formState.emailPersonal.trim())) {
       nextErrors.emailPersonal = 'Ingrese un email válido.'
     }
 
-    if (!formState.numeroInscripcionUis.trim()) {
+    if (!isAspiranteCreated && !formState.numeroInscripcionUis.trim()) {
       nextErrors.numeroInscripcionUis = 'El número de inscripción es obligatorio.'
-    } else if (!digitsRegex.test(formState.numeroInscripcionUis.trim())) {
+    } else if (
+      !isAspiranteCreated &&
+      !digitsRegex.test(formState.numeroInscripcionUis.trim())
+    ) {
       nextErrors.numeroInscripcionUis = 'Solo se permiten dígitos.'
     }
 
-    if (!programaId) {
+    if (!programaId && !isAspiranteCreated) {
       nextErrors.general = 'No se pudo determinar el programa de la convocatoria.'
     }
 
-    const missingDocument = documentos.find((item) => !documentFiles[item.id])
+    const missingDocument = documentos.find(
+      (item) => item.obligatorio && !item.selectedFile && !item.uploadedFileName,
+    )
 
     if (missingDocument) {
       nextErrors.documentos = 'Adjunte todos los documentos requeridos.'
@@ -224,56 +255,226 @@ export const CreateAspiranteModal = ({
     return nextErrors
   }
 
+  const handleSelectFile = useCallback((id: number, file: File | null) => {
+    setDocumentos((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) {
+          return item
+        }
+
+        if (!file) {
+          return {
+            ...item,
+            selectedFile: null,
+            status: item.uploadedFileName ? 'UPLOADED' : 'NOT_SELECTED',
+            errorMessage: undefined,
+          }
+        }
+
+        return {
+          ...item,
+          selectedFile: file,
+          status: 'READY_TO_UPLOAD',
+          errorMessage: undefined,
+        }
+      }),
+    )
+    setErrors((prev) => ({ ...prev, documentos: undefined }))
+  }, [])
+
+  const handleRemoveFile = useCallback((id: number) => {
+    handleSelectFile(id, null)
+  }, [handleSelectFile])
+
+  const uploadSelectedDocuments = useCallback(
+    async (
+      aspiranteId: number,
+      tramiteId: number,
+      mode: 'all' | 'failed'
+    ): Promise<UploadErrorItem[]> => {
+      const itemsToUpload = documentos.filter((item) => {
+        if (!item.selectedFile) {
+          return false
+        }
+
+        if (mode === 'failed') {
+          return item.status === 'ERROR'
+        }
+
+        return item.status !== 'UPLOADING'
+      })
+
+      const failedItems: UploadErrorItem[] = []
+
+      for (const item of itemsToUpload) {
+        const file = item.selectedFile
+        if (!file) {
+          continue
+        }
+
+        setDocumentos((prev) =>
+          prev.map((current) =>
+            current.id === item.id
+              ? { ...current, status: 'UPLOADING', errorMessage: undefined }
+              : current,
+          ),
+        )
+
+        try {
+          const buffer = await file.arrayBuffer()
+          const contenidoBase64 = await fileToBase64(file)
+          const checksum = await sha256Hex(buffer)
+
+          const uploaded = await uploadDocument({
+            tipoDocumentoTramiteId: item.id,
+            nombreArchivo: file.name,
+            tramiteId,
+            usuarioCargaId: null,
+            aspiranteCargaId: aspiranteId,
+            contenidoBase64,
+            mimeType: file.type || 'application/octet-stream',
+            tamanoBytes: file.size,
+            checksum,
+          })
+
+          setDocumentos((prev) =>
+            prev.map((current) =>
+              current.id === item.id
+                ? {
+                    ...current,
+                    status: 'UPLOADED',
+                    uploadedFileName: uploaded.nombreArchivo,
+                    selectedFile: null,
+                    errorMessage: undefined,
+                  }
+                : current,
+            ),
+          )
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Error desconocido'
+          failedItems.push({ id: item.id, nombre: item.nombre, errorMessage: message })
+          setDocumentos((prev) =>
+            prev.map((current) =>
+              current.id === item.id
+                ? { ...current, status: 'ERROR', errorMessage: message }
+                : current,
+            ),
+          )
+        }
+      }
+
+      return failedItems
+    },
+    [documentos],
+  )
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
+      if (validationErrors.documentos) {
+        setDocumentos((prev) =>
+          prev.map((item) => {
+            if (item.obligatorio && !item.selectedFile && !item.uploadedFileName) {
+              return {
+                ...item,
+                errorMessage: 'Documento obligatorio pendiente.',
+              }
+            }
+
+            return item
+          }),
+        )
+      }
       return
     }
 
-    if (!programaId) {
+    if (!programaId && !createdAspirante) {
       return
     }
 
     setIsSubmitting(true)
+    setUploadSummary({ status: 'idle', failedItems: [] })
+    setErrors((prev) => ({ ...prev, general: undefined }))
 
-    const payload: AspiranteCreateRequestDto = {
-      nombre: formState.nombre.trim(),
-      tipoDocumentoIdentificacionId: Number(formState.tipoDocumentoIdentificacionId),
-      numeroDocumento: formState.numeroDocumento.trim(),
-      emailPersonal: formState.emailPersonal.trim(),
-      numeroInscripcionUis: formState.numeroInscripcionUis.trim(),
-      telefono: formState.telefono.trim() || null,
-      observaciones: formState.observaciones.trim() || null,
-      programaId,
+    try {
+      let created = createdAspirante
+
+      if (!created) {
+        const payload: AspiranteCreateRequestDto = {
+          nombre: formState.nombre.trim(),
+          tipoDocumentoIdentificacionId: Number(formState.tipoDocumentoIdentificacionId),
+          numeroDocumento: formState.numeroDocumento.trim(),
+          emailPersonal: formState.emailPersonal.trim(),
+          numeroInscripcionUis: formState.numeroInscripcionUis.trim(),
+          telefono: formState.telefono.trim() || null,
+          observaciones: formState.observaciones.trim() || null,
+          programaId: programaId ?? 0,
+        }
+
+        created = await createAspirante(payload)
+        setCreatedAspirante(created)
+      }
+
+      const failedItems = await uploadSelectedDocuments(
+        created.id,
+        created.inscripcionAdmisionId,
+        'all',
+      )
+
+      const summary: UploadSummary = {
+        status: failedItems.length === 0 ? 'success' : 'partial',
+        failedItems,
+      }
+
+      setUploadSummary(summary)
+      onCreated?.({ created, uploadSummary: summary })
+
+      if (failedItems.length === 0) {
+        onClose()
+        resetForm()
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No fue posible crear el aspirante.'
+      setErrors((prev) => ({ ...prev, general: message }))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleRetryFailed = useCallback(async () => {
+    if (!createdAspirante) {
+      return
     }
 
-    const documentosPayload = documentos.map((item) => ({
-      id: item.id,
-      codigo: item.codigo,
-      nombre: item.nombre,
-      obligatorio: item.obligatorio,
-      seleccionado: true,
-      archivoNombre: documentFiles[item.id]?.name ?? null,
-      archivoTamano: documentFiles[item.id]?.size ?? null,
-    }))
+    setIsSubmitting(true)
+    try {
+      const failedItems = await uploadSelectedDocuments(
+        createdAspirante.id,
+        createdAspirante.inscripcionAdmisionId,
+        'failed',
+      )
 
-    const profilePayload = profileImage
-      ? { name: profileImage.name, size: profileImage.size, type: profileImage.type }
-      : null
+      const summary: UploadSummary = {
+        status: failedItems.length === 0 ? 'success' : 'partial',
+        failedItems,
+      }
+      setUploadSummary(summary)
+      onCreated?.({ created: createdAspirante, uploadSummary: summary })
 
-    console.log('Mock crear aspirante', {
-      payload,
-      perfil: profilePayload,
-      documentos: documentosPayload,
-    })
+      if (failedItems.length === 0) {
+        onClose()
+        resetForm()
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [createdAspirante, onClose, onCreated, resetForm, uploadSelectedDocuments])
 
-    onCreated?.(null)
-    onClose()
-    setIsSubmitting(false)
-  }
+  const isAspiranteCreated = createdAspirante != null
+  const hasUploadErrors = uploadSummary.failedItems.length > 0
 
   if (!open) {
     return null
@@ -305,6 +506,14 @@ export const CreateAspiranteModal = ({
         </header>
 
         <form className="create-aspirante-modal__form" onSubmit={handleSubmit}>
+          <h3 className="create-aspirante-modal__section-title create-aspirante-modal__field--full">
+            Datos del aspirante
+          </h3>
+          {isAspiranteCreated ? (
+            <p className="create-aspirante-modal__status create-aspirante-modal__field--full">
+              Aspirante creado. Puede cargar o reintentar documentos pendientes.
+            </p>
+          ) : null}
           <label className="create-aspirante-modal__field">
             <span>Nombre</span>
             <input
@@ -313,7 +522,7 @@ export const CreateAspiranteModal = ({
               placeholder="Nombre completo"
               value={formState.nombre}
               onChange={(event) => handleChange('nombre', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
             />
             {errors.nombre ? (
               <span className="create-aspirante-modal__error">{errors.nombre}</span>
@@ -328,7 +537,7 @@ export const CreateAspiranteModal = ({
                 onChange={(event) =>
                   handleChange('tipoDocumentoIdentificacionId', event.target.value)
                 }
-                disabled={isSubmitting || tiposLoading}
+                disabled={isSubmitting || tiposLoading || isAspiranteCreated}
               >
                 <option value="">Seleccione una opción</option>
                 {tiposDocumento.map((tipo) => (
@@ -368,7 +577,7 @@ export const CreateAspiranteModal = ({
               placeholder="Documento"
               value={formState.numeroDocumento}
               onChange={(event) => handleChange('numeroDocumento', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
             />
             {errors.numeroDocumento ? (
               <span className="create-aspirante-modal__error">
@@ -384,7 +593,7 @@ export const CreateAspiranteModal = ({
               placeholder="correo@dominio.com"
               value={formState.emailPersonal}
               onChange={(event) => handleChange('emailPersonal', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
             />
             {errors.emailPersonal ? (
               <span className="create-aspirante-modal__error">
@@ -400,7 +609,7 @@ export const CreateAspiranteModal = ({
               placeholder="Opcional"
               value={formState.telefono}
               onChange={(event) => handleChange('telefono', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
             />
           </label>
 
@@ -413,7 +622,7 @@ export const CreateAspiranteModal = ({
               onChange={(event) =>
                 handleChange('numeroInscripcionUis', event.target.value)
               }
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
             />
             {errors.numeroInscripcionUis ? (
               <span className="create-aspirante-modal__error">
@@ -432,7 +641,7 @@ export const CreateAspiranteModal = ({
                   const file = event.target.files?.[0] ?? null
                   setProfileImage(file)
                 }}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isAspiranteCreated}
               />
               {profilePreviewUrl ? (
                 <img
@@ -449,69 +658,27 @@ export const CreateAspiranteModal = ({
           </label>
 
           <div className="create-aspirante-modal__field create-aspirante-modal__field--full">
-            <span>Documentos requeridos</span>
-            {documentosLoading ? (
-              <p className="create-aspirante-modal__helper">Cargando documentos...</p>
-            ) : null}
-            {documentosError ? (
-              <p className="create-aspirante-modal__error">
-                {documentosError}{' '}
-                <button
-                  type="button"
-                  className="create-aspirante-modal__link"
-                  onClick={loadDocumentos}
-                  disabled={documentosLoading}
-                >
-                  Reintentar
-                </button>
-              </p>
-            ) : null}
-            {!documentosLoading && !documentosError ? (
-              <div className="create-aspirante-modal__documents">
-                {documentos.length === 0 ? (
-                  <p className="create-aspirante-modal__helper">
-                    No hay documentos configurados para este trámite.
-                  </p>
-                ) : (
-                  documentos.map((item) => {
-                    return (
-                      <div key={item.id} className="create-aspirante-modal__document">
-                        <div className="create-aspirante-modal__document-info">
-                          <span>{item.nombre}</span>
-                          <p>{item.descripcion}</p>
-                          {item.obligatorio ? (
-                            <span className="create-aspirante-modal__badge">
-                              Obligatorio
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="create-aspirante-modal__document-upload">
-                          <input
-                            type="file"
-                            disabled={isSubmitting}
-                            onChange={(event) => {
-                              const file = event.target.files?.[0] ?? null
-                              setDocumentFiles((prev) => ({
-                                ...prev,
-                                [item.id]: file,
-                              }))
-                              if (file) {
-                                setErrors((prev) => ({ ...prev, documentos: undefined }))
-                              }
-                            }}
-                          />
-                          {documentFiles[item.id] ? (
-                            <span className="create-aspirante-modal__helper">
-                              {documentFiles[item.id]?.name}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
-              </div>
-            ) : null}
+            <h3 className="create-aspirante-modal__section-title">Documentos</h3>
+            <p className="create-aspirante-modal__helper">
+              Adjunte los requisitos antes de enviar. Los obligatorios deben estar cargados.
+            </p>
+            <div className="create-aspirante-modal__documents">
+              {documentos.length === 0 ? (
+                <p className="create-aspirante-modal__helper">
+                  No hay documentos configurados para este trámite.
+                </p>
+              ) : (
+                documentos.map((item) => (
+                  <DocumentUploadCard
+                    key={item.id}
+                    item={item}
+                    onSelectFile={handleSelectFile}
+                    onRemoveFile={handleRemoveFile}
+                    disabled={isSubmitting}
+                  />
+                ))
+              )}
+            </div>
             {errors.documentos ? (
               <span className="create-aspirante-modal__error">{errors.documentos}</span>
             ) : null}
@@ -523,10 +690,26 @@ export const CreateAspiranteModal = ({
               placeholder="Notas adicionales"
               value={formState.observaciones}
               onChange={(event) => handleChange('observaciones', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isAspiranteCreated}
               rows={3}
             />
           </label>
+
+          {uploadSummary.status === 'partial' ? (
+            <div className="create-aspirante-modal__summary create-aspirante-modal__field--full">
+              <p className="create-aspirante-modal__summary-title">
+                Aspirante creado. Falló la carga de {uploadSummary.failedItems.length}{' '}
+                documento(s).
+              </p>
+              <ul className="create-aspirante-modal__summary-list">
+                {uploadSummary.failedItems.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.nombre}:</strong> {item.errorMessage}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {errors.general ? (
             <p className="create-aspirante-modal__error create-aspirante-modal__error--general">
@@ -543,12 +726,28 @@ export const CreateAspiranteModal = ({
             >
               Cancelar
             </button>
+            {hasUploadErrors ? (
+              <button
+                type="button"
+                className="create-aspirante-modal__button create-aspirante-modal__button--ghost"
+                onClick={handleRetryFailed}
+                disabled={isSubmitting}
+              >
+                Reintentar fallidos
+              </button>
+            ) : null}
             <button
               type="submit"
               className="create-aspirante-modal__button"
-              disabled={isSubmitting || !programaId}
+              disabled={isSubmitting || (!programaId && !isAspiranteCreated)}
             >
-              {isSubmitting ? 'Creando…' : 'Crear'}
+              {isSubmitting
+                ? isAspiranteCreated
+                  ? 'Cargando documentos…'
+                  : 'Creando…'
+                : isAspiranteCreated
+                  ? 'Cargar documentos'
+                  : 'Crear aspirante y cargar documentos'}
             </button>
           </footer>
         </form>

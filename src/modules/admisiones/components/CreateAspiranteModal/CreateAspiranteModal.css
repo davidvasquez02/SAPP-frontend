@@ -44,6 +44,21 @@
   gap: 1rem;
 }
 
+.create-aspirante-modal__section-title {
+  margin: 0.25rem 0 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.create-aspirante-modal__status {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.9rem;
+}
+
 .create-aspirante-modal__field {
   display: flex;
   flex-direction: column;
@@ -199,6 +214,23 @@
   cursor: pointer;
   padding: 0;
   font-size: 0.85rem;
+}
+
+.create-aspirante-modal__summary {
+  background: #fff7ed;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  color: #9a3412;
+}
+
+.create-aspirante-modal__summary-title {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.create-aspirante-modal__summary-list {
+  margin: 0;
+  padding-left: 1.1rem;
 }
 
 @media (max-width: 720px) {

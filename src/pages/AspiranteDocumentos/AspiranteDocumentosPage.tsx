@@ -7,7 +7,7 @@ import { useAuth } from '../../context/Auth'
 import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos/constants'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
-import type { DocumentUploadItem } from './types'
+import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
 import './AspiranteDocumentosPage.css'
 
 const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => {

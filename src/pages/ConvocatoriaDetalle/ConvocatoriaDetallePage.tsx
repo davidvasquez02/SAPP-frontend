@@ -116,9 +116,19 @@ const ConvocatoriaDetallePage = () => {
     )
   }
 
-  const handleCreated = useCallback(() => {
-    setSuccessMessage('Aspirante registrado (mock). Revisa la consola para ver el payload.')
-  }, [])
+  const handleCreated = useCallback(
+    (result: { uploadSummary: { failedItems: { id: number }[] } }) => {
+      if (result.uploadSummary.failedItems.length > 0) {
+        setSuccessMessage(
+          `Aspirante creado. Falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`
+        )
+      } else {
+        setSuccessMessage('Aspirante creado y documentos cargados correctamente.')
+      }
+      loadInscripciones()
+    },
+    [loadInscripciones],
+  )
 
   return (
     <ModuleLayout title="Admisiones">
