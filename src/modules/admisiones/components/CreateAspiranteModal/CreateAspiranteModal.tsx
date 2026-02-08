@@ -504,57 +504,62 @@ export const CreateAspiranteModal = ({
                     No hay documentos configurados para este trámite.
                   </p>
                 ) : (
-                  documentos.map((item) => (
-                    <div key={item.id} className="create-aspirante-modal__document">
-                      <div className="create-aspirante-modal__document-info">
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={Boolean(documentSelections[item.id])}
-                            disabled={item.obligatorio || isSubmitting}
-                            onChange={(event) => {
-                              const checked = event.target.checked
-                              setDocumentSelections((prev) => ({
-                                ...prev,
-                                [item.id]: checked,
-                              }))
-                              if (!checked) {
-                                setDocumentFiles((prev) => ({
+                  documentos.map((item) => {
+                    const isRequired = Boolean(item.obligatorio)
+                    const isSelected = documentSelections[item.id] ?? isRequired
+
+                    return (
+                      <div key={item.id} className="create-aspirante-modal__document">
+                        <div className="create-aspirante-modal__document-info">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isRequired || isSubmitting}
+                              onChange={(event) => {
+                                const checked = event.target.checked
+                                setDocumentSelections((prev) => ({
                                   ...prev,
-                                  [item.id]: null,
+                                  [item.id]: checked,
                                 }))
-                              }
+                                if (!checked) {
+                                  setDocumentFiles((prev) => ({
+                                    ...prev,
+                                    [item.id]: null,
+                                  }))
+                                }
+                              }}
+                            />
+                            <span>{item.nombre}</span>
+                          </label>
+                          <p>{item.descripcion}</p>
+                          {isRequired ? (
+                            <span className="create-aspirante-modal__badge">
+                              Obligatorio
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="create-aspirante-modal__document-upload">
+                          <input
+                            type="file"
+                            disabled={!isSelected || isSubmitting}
+                            onChange={(event) => {
+                              const file = event.target.files?.[0] ?? null
+                              setDocumentFiles((prev) => ({
+                                ...prev,
+                                [item.id]: file,
+                              }))
                             }}
                           />
-                          <span>{item.nombre}</span>
-                        </label>
-                        <p>{item.descripcion}</p>
-                        {item.obligatorio ? (
-                          <span className="create-aspirante-modal__badge">
-                            Obligatorio
-                          </span>
-                        ) : null}
+                          {documentFiles[item.id] ? (
+                            <span className="create-aspirante-modal__helper">
+                              {documentFiles[item.id]?.name}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
-                      <div className="create-aspirante-modal__document-upload">
-                        <input
-                          type="file"
-                          disabled={!documentSelections[item.id] || isSubmitting}
-                          onChange={(event) => {
-                            const file = event.target.files?.[0] ?? null
-                            setDocumentFiles((prev) => ({
-                              ...prev,
-                              [item.id]: file,
-                            }))
-                          }}
-                        />
-                        {documentFiles[item.id] ? (
-                          <span className="create-aspirante-modal__helper">
-                            {documentFiles[item.id]?.name}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             ) : null}
