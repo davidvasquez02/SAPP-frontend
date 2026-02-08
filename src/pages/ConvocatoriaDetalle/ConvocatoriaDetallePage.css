@@ -20,9 +20,41 @@
   font-size: 1.75rem;
 }
 
+.convocatoria-detalle__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.convocatoria-detalle__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.convocatoria-detalle__create-button {
+  padding: 0.6rem 1.5rem;
+  border-radius: 999px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.convocatoria-detalle__create-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .convocatoria-detalle__status {
   margin: 0;
   color: #4b5563;
+}
+
+.convocatoria-detalle__status--success {
+  color: #047857;
 }
 
 .convocatoria-detalle__status--error {
@@ -77,6 +109,16 @@
 }
 
 @media (min-width: 640px) {
+  .convocatoria-detalle__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .convocatoria-detalle__actions {
+    align-items: flex-end;
+  }
+
   .convocatoria-detalle__grid,
   .convocatoria-detalle__skeletons {
     grid-template-columns: repeat(2, minmax(0, 1fr));

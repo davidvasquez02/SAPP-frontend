@@ -1,27 +1,51 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { useAuth } from '../../context/Auth'
+import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
+import { CreateAspiranteModal } from '../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal'
 import StudentCard from '../../modules/admisiones/components/StudentCard/StudentCard'
 import { getMockStudentPhotoUrl } from '../../modules/admisiones/utils/mockStudentPhoto'
+import { resolveProgramaIdFromInscripciones } from '../../modules/admisiones/utils/resolveProgramaId'
 import './ConvocatoriaDetallePage.css'
 
 const ConvocatoriaDetallePage = () => {
   const { convocatoriaId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+  const { session } = useAuth()
   const [inscripciones, setInscripciones] = useState<InscripcionAdmisionDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const { periodoAcademico, periodoLabel, programaNombre } = useMemo(() => {
+  const { periodoAcademico, periodoLabel, programaNombre, programaId } = useMemo(() => {
     return (
       (location.state as
-        | { periodoAcademico?: string; periodoLabel?: string; programaNombre?: string }
+        | {
+            periodoAcademico?: string
+            periodoLabel?: string
+            programaNombre?: string
+            programaId?: number
+          }
         | null) ?? {}
     )
   }, [location.state])
+
+  const resolvedProgramaId = useMemo(() => {
+    if (typeof programaId === 'number') {
+      return programaId
+    }
+
+    return resolveProgramaIdFromInscripciones(inscripciones)
+  }, [inscripciones, programaId])
+
+  const canCreateAspirante =
+    session?.kind === 'SAPP' &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
 
   const periodoConvocatoria =
     periodoLabel ?? periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
@@ -92,6 +116,10 @@ const ConvocatoriaDetallePage = () => {
     )
   }
 
+  const handleCreated = useCallback(() => {
+    setSuccessMessage('Aspirante registrado (mock). Revisa la consola para ver el payload.')
+  }, [])
+
   return (
     <ModuleLayout title="Admisiones">
       <section className="convocatoria-detalle">
@@ -99,7 +127,33 @@ const ConvocatoriaDetallePage = () => {
           ← Volver
         </Link>
 
-        <h1 className="convocatoria-detalle__title">{pageTitle}</h1>
+        <header className="convocatoria-detalle__header">
+          <div>
+            <h1 className="convocatoria-detalle__title">{pageTitle}</h1>
+            {successMessage ? (
+              <p className="convocatoria-detalle__status convocatoria-detalle__status--success">
+                {successMessage}
+              </p>
+            ) : null}
+          </div>
+          {canCreateAspirante ? (
+            <div className="convocatoria-detalle__actions">
+              <button
+                type="button"
+                className="convocatoria-detalle__create-button"
+                onClick={() => setIsCreateModalOpen(true)}
+                disabled={!resolvedProgramaId || isLoading}
+              >
+                Crear aspirante
+              </button>
+              {!resolvedProgramaId && !isLoading && !error ? (
+                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
+                  No se pudo determinar el programa de la convocatoria.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </header>
 
         {isLoading ? (
           <div className="convocatoria-detalle__skeletons" aria-hidden="true">
@@ -144,6 +198,13 @@ const ConvocatoriaDetallePage = () => {
           </div>
         ) : null}
       </section>
+
+      <CreateAspiranteModal
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        programaId={resolvedProgramaId}
+        onCreated={handleCreated}
+      />
     </ModuleLayout>
   )
 }

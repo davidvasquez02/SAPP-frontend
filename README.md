@@ -20,6 +20,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias (`/sapp/convocatoriaAdmision`) and inscripciones, backed by the shared HTTP client wrapper.
+- **Aspirante creation flow (mock):** `CreateAspiranteModal` in the Admisiones module collects form data, profile image, and required documents from `/sapp/tramite/document?tipoTramiteId=1` (filtered to `ADMISION_COORDINACION`), logs the payload to the console, and does not call the backend yet.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
@@ -125,3 +126,4 @@ Mock data for the Admisiones module still lives in:
 - Grouped entrevista evaluation items by entrevistador with a summary section for consolidated results, keeping row-level editing intact.
 - Replaced the Admisiones home mock convocatorias with the real `/sapp/convocatoriaAdmision` service, including loading/error/empty states, dynamic program sections, and a “vigente vs anteriores” selector per program.
 - Added program name helpers to render the long-form program titles (Maestría/Doctorado) while keeping backend `programa` as a subtitle/badge when provided.
+- Added a “Crear aspirante” modal in Convocatoria detalle with profile image selection and a document attachment list (from `/sapp/tramite/document?tipoTramiteId=1` filtered to `ADMISION_COORDINACION`); submission is mocked and logs payloads to the console.
