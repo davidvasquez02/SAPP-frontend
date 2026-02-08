@@ -1,4 +1,9 @@
-export type UploadStatus = 'NOT_SELECTED' | 'READY_TO_UPLOAD' | 'UPLOADING' | 'UPLOADED' | 'ERROR'
+export type UploadStatus =
+  | 'NOT_SELECTED'
+  | 'READY_TO_UPLOAD'
+  | 'UPLOADING'
+  | 'UPLOADED'
+  | 'ERROR'
 
 export interface DocumentUploadItem {
   id: number

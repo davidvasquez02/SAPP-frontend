@@ -48,8 +48,8 @@
 - Updated the convocatoria detail grid so aspirante cards keep a consistent 4-column layout on wide screens with responsive breakpoints for smaller devices.
 - Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
-- Added a “Crear aspirante” modal in Convocatoria detalle that loads tipos de documento and admisión documentos on demand, validates inputs, and **mocks** submission by logging the full payload (form + profile image metadata + attached documents) to the console.
-- Updated the “Crear aspirante” modal so **all** listed documents are required (checkbox removed); validation now blocks submission until every file is attached.
+- Updated the “Crear aspirante” modal to post `/sapp/aspirante`, store `aspiranteId` + `inscripcionAdmisionId`, and sequentially upload selected documentos via `POST /sapp/document` with base64 + SHA-256 (retrying failed uploads without recreating the aspirante).
+- The modal now uses a temporary admisión aspirante document template to render requirements before `tramiteId` exists, keeping the modal open on partial failures and showing an upload summary.
 - Convocatoria detalle now resolves `programaId` from navigation state (preferred) or inscripciones (`programaAcademico` string mapper for DCC/MISI) to avoid prompting the user.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Replaced the inscripción detail cards with accordion windows tied to nested routes; child pages now render inside the accordion body while preserving deep links.
@@ -78,6 +78,7 @@
 - Confirm `programaAcademico` string patterns beyond DCC/MISI to keep `programaId` resolution accurate for new programs.
 - Confirm the backend contracts for `/sapp/tramite/document?tipoTramiteId=1` and the intended upload flow for aspirante documents + profile image.
 - Confirm whether the backend expects **all** documents in the admisión checklist to be required or if optional uploads should be reintroduced.
+- Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -94,6 +95,7 @@
 12. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
 13. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
 14. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
+15. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -124,6 +126,7 @@
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
 - **Student cards (Admisiones):** `src/modules/admisiones/components/StudentCard`
 - **Create aspirante modal:** `src/modules/admisiones/components/CreateAspiranteModal`
+- **Documento template (admisión aspirante):** `src/modules/documentos/templates/admisionAspiranteDocumentTemplate.ts`
 - **Mock photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
 - **Programa resolver:** `src/modules/admisiones/utils/resolveProgramaId.ts`
 - **Trámite documentos (admisión):** `src/modules/admisiones/api/tramiteDocumentoService.ts`, `src/modules/admisiones/api/tramiteDocumentoTypes.ts`
@@ -169,7 +172,7 @@
   - The frontend now expects `base64DocumentoContenido` or `contenidoBase64`, plus `mimeTypeDocumentoContenido` or `mimeType`, to open/download the uploaded document without additional endpoints.
 - **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`
   - Sends `{ documentoId, aprobado, observaciones }` to `PUT /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
-- **Document upload UI model:** `src/pages/AspiranteDocumentos/types.ts`
+- **Document upload UI model:** `src/modules/documentos/types/documentUploadTypes.ts`
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
   - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.

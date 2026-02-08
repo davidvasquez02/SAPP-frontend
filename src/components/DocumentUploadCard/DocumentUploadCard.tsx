@@ -1,18 +1,19 @@
 import type { ChangeEvent } from 'react'
-import type { DocumentUploadItem } from '../../pages/AspiranteDocumentos/types'
+import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
 import './DocumentUploadCard.css'
 
 interface DocumentUploadCardProps {
   item: DocumentUploadItem
   onSelectFile: (id: number, file: File | null) => void
-  onUpload: (id: number) => void
+  onUpload?: (id: number) => void
+  onRemoveFile?: (id: number) => void
   disabled?: boolean
 }
 
 const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
-  NOT_SELECTED: 'No cargado',
+  NOT_SELECTED: 'Pendiente',
   READY_TO_UPLOAD: 'Listo para subir',
-  UPLOADING: 'Cargando…',
+  UPLOADING: 'Subiendo…',
   UPLOADED: 'Cargado ✅',
   ERROR: 'Error ❌',
 }
@@ -88,17 +89,29 @@ export const DocumentUploadCard = ({
           />
           <span>Seleccionar archivo</span>
         </label>
-        <button
-          type="button"
-          className="document-upload-card__button"
-          onClick={() => onUpload(item.id)}
-          disabled={disabled || !item.selectedFile || item.status === 'UPLOADING'}
-        >
-          {getUploadButtonLabel(item.status)}
-        </button>
+        {item.selectedFile && onRemoveFile ? (
+          <button
+            type="button"
+            className="document-upload-card__button document-upload-card__button--ghost"
+            onClick={() => onRemoveFile(item.id)}
+            disabled={disabled}
+          >
+            Quitar archivo
+          </button>
+        ) : null}
+        {onUpload ? (
+          <button
+            type="button"
+            className="document-upload-card__button"
+            onClick={() => onUpload(item.id)}
+            disabled={disabled || !item.selectedFile || item.status === 'UPLOADING'}
+          >
+            {getUploadButtonLabel(item.status)}
+          </button>
+        ) : null}
       </div>
 
-      {item.status === 'ERROR' && item.errorMessage ? (
+      {item.errorMessage ? (
         <p className="document-upload-card__error">{item.errorMessage}</p>
       ) : null}
     </article>
