@@ -34,6 +34,7 @@ export const DocumentUploadCard = ({
   item,
   onSelectFile,
   onUpload,
+  onRemoveFile,
   disabled = false,
 }: DocumentUploadCardProps) => {
   const inputId = `document-upload-${item.id}`

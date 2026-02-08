@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Fixed `DocumentUploadCard` to pass through the optional `onRemoveFile` handler, preventing a runtime reference error when removing files.
 - SAPP login calls the backend (`POST /sapp/auth/login`) and returns the typed DTO, mapping it + JWT payload claims into `AuthSession`.
 - JWT payload decoding (base64url only, no signature validation) lives in `src/utils/jwt.ts` and is used to populate username, roles, `iat`, and `exp`.
 - SAPP login roles are now treated as `string[]` (response `data.roles` preferred, JWT roles fallback) and normalized to uppercase before storing in session.
@@ -151,6 +152,20 @@
 ## Recent Test Results + Logs
 - No tests run in this update.
 
+## Environment & Package Versions
+- **Node environment:** No Python venv/conda/poetry used; frontend runs with Node + npm.
+- **Package manager:** npm (lockfile: `package-lock.json`).
+- **Environment variables:** `VITE_API_BASE_URL` (defaults to `http://localhost:8080` if unset).
+- **Core package versions (from `package.json`):**
+  - react 19.2.0
+  - react-dom 19.2.0
+  - react-router-dom 7.9.2
+  - typescript 5.9.3
+  - vite (rolldown-vite) 7.2.5
+  - @vitejs/plugin-react-swc 4.2.2
+  - eslint 9.39.1
+- **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed.
+
 ## Schemas / Contracts (Expected Outputs)
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
@@ -198,20 +213,3 @@
   - Calls `GET /sapp/evaluacionAdmision/info?inscripcionId=...&etapa=...`, expects `{ ok, message, data: EvaluacionAdmisionItem[] }`, throws when `ok` is `false`, and returns `data ?? []`.
 - **Evaluación admisión DTO:** `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
   - `EvaluacionAdmisionItem`: `{ id, inscripcionId, etapaEvaluacion, aspecto, codigo, consideraciones, evaluador, fechaRegistro, observaciones, ponderacionId, puntajeAspirante, puntajeMax }`.
-
-## Environment & Package Versions
-- **Runtime:** Node.js (version not captured here; use `node -v`), npm.
-- **Frontend tooling:**
-  - React 19.2.0
-  - React DOM 19.2.0
-  - React Router DOM 7.9.2
-  - TypeScript 5.9.3
-  - Vite (rolldown-vite) 7.2.5
-  - @vitejs/plugin-react-swc 4.2.2
-  - ESLint 9.39.1
-- **Environment variables:** `VITE_API_BASE_URL` (defaults to `http://localhost:8080` if unset).
-- **Python envs (venv/conda/poetry):** Not used in this project.
-
-### Avoiding Duplicate Environments
-- Use the existing `package-lock.json` with `npm install`.
-- Reuse `node_modules` if already present; avoid creating separate JS package managers unless explicitly required.
