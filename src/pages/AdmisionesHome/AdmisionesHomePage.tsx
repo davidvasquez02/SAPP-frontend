@@ -91,6 +91,7 @@ const AdmisionesHomePage = () => {
     (convocatoria: ConvocatoriaAdmisionDto, programaNombre: string) => {
       navigate(`/admisiones/convocatoria/${convocatoria.id}`, {
         state: {
+          programaId: convocatoria.programaId,
           programaNombre,
           periodoLabel: convocatoria.periodo,
           periodoAcademico: convocatoria.periodo,

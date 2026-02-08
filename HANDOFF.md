@@ -48,6 +48,8 @@
 - Updated the convocatoria detail grid so aspirante cards keep a consistent 4-column layout on wide screens with responsive breakpoints for smaller devices.
 - Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
+- Added a “Crear aspirante” modal in Convocatoria detalle that loads tipos de documento and admisión documentos on demand, validates inputs, and **mocks** submission by logging the full payload (form + profile image metadata + selected documents) to the console.
+- Convocatoria detalle now resolves `programaId` from navigation state (preferred) or inscripciones (`programaAcademico` string mapper for DCC/MISI) to avoid prompting the user.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Replaced the inscripción detail cards with accordion windows tied to nested routes; child pages now render inside the accordion body while preserving deep links.
 - Added the reusable `InscripcionAccordionWindow` component for accordion-style windows in Admisiones.
@@ -72,6 +74,8 @@
 - Confirm save/update endpoint for evaluación de admisión and decide payload + response contract.
 - Replace the aspirante mock photo URLs with real backend-provided photo data (URL or base64).
 - Confirm whether entrevista “resumen” entries (codigo `ENTREV`) should be editable and define the desired backend payload.
+- Confirm `programaAcademico` string patterns beyond DCC/MISI to keep `programaId` resolution accurate for new programs.
+- Confirm the backend contracts for `/sapp/tramite/document?tipoTramiteId=1` and the intended upload flow for aspirante documents + profile image.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -85,6 +89,8 @@
 9. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
 10. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
 11. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
+12. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
+13. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -114,7 +120,10 @@
   - Periodo parsing helper: `src/modules/admisiones/utils/periodo.ts`
 - **Convocatoria detail (real inscripciones):** `src/pages/ConvocatoriaDetalle`
 - **Student cards (Admisiones):** `src/modules/admisiones/components/StudentCard`
+- **Create aspirante modal:** `src/modules/admisiones/components/CreateAspiranteModal`
 - **Mock photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
+- **Programa resolver:** `src/modules/admisiones/utils/resolveProgramaId.ts`
+- **Trámite documentos (admisión):** `src/modules/admisiones/api/tramiteDocumentoService.ts`, `src/modules/admisiones/api/tramiteDocumentoTypes.ts`
 - **Inscripcion detail placeholder:** `src/pages/InscripcionAdmisionDetalle`
 - **Accordion window component:** `src/modules/admisiones/components/InscripcionAccordionWindow`
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
@@ -170,6 +179,13 @@
   - `InscripcionAdmisionDto`: `{ id, aspiranteId, nombreAspirante, estado, fechaInscripcion, fechaResultado, puntajeTotal, posicion_admision, periodoAcademico, programaAcademico, observaciones }` from `GET /sapp/inscripcionAdmision/convocatoria/:convocatoriaId`.
 - **Inscripcion admision service:** `src/modules/admisiones/api/inscripcionAdmisionService.ts`
   - Uses `httpGet<ApiResponse<InscripcionAdmisionDto[]>>` and throws when `ok` is false.
+- **Aspirante create request/response:** `src/modules/admisiones/api/aspiranteCreateTypes.ts`
+  - `AspiranteCreateRequestDto` matches `/sapp/aspirante` body (no `programaId` in UI input; resolved from convocatoria).
+  - `AspiranteCreateResponseDto` returns `{ id, inscripcionAdmisionId, nombre, numeroDocumento, numeroInscripcionUis, emailPersonal, telefono, observaciones, tipoDocumentoIdentificacion, fechaRegistro, director, grupoInvestigacion }`.
+- **Aspirante create service:** `src/modules/admisiones/api/aspiranteService.ts`
+  - Posts to `/sapp/aspirante`, expects `{ ok, message, data }`, throws on `ok: false`, returns `data`.
+- **Trámite documentos (admisión) response:** `src/modules/admisiones/api/tramiteDocumentoService.ts`
+  - Calls `GET /sapp/tramite/document?tipoTramiteId=1` and filters results to `tipoTramite.nombre === "ADMISION_COORDINACION"`.
 - **Mock aspirante photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
   - DEV-only helper that returns stable placeholder URLs per aspiranteId (modulo selection). Swap with backend `fotoUrl` or `fotoBase64` when available (e.g., `data:image/jpeg;base64,${base64}`).
 - **Evaluación admisión response:** `src/modules/admisiones/api/evaluacionAdmisionService.ts`
