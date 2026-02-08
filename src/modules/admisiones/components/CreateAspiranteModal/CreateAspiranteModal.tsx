@@ -61,7 +61,6 @@ export const CreateAspiranteModal = ({
   const [documentosLoading, setDocumentosLoading] = useState(false)
   const [documentosError, setDocumentosError] = useState<string | null>(null)
   const [documentFiles, setDocumentFiles] = useState<Record<number, File | null>>({})
-  const [documentSelections, setDocumentSelections] = useState<Record<number, boolean>>({})
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
@@ -73,7 +72,6 @@ export const CreateAspiranteModal = ({
     setProfileImage(null)
     setProfilePreviewUrl(null)
     setDocumentFiles({})
-    setDocumentSelections({})
   }, [])
 
   const loadTiposDocumento = useCallback(async () => {
@@ -94,22 +92,6 @@ export const CreateAspiranteModal = ({
     }
   }, [])
 
-  const initializeDocumentSelections = useCallback((items: TramiteDocumentoDto[]) => {
-    setDocumentSelections((prev) => {
-      const next: Record<number, boolean> = { ...prev }
-
-      items.forEach((item) => {
-        if (item.obligatorio) {
-          next[item.id] = true
-        } else if (next[item.id] === undefined) {
-          next[item.id] = false
-        }
-      })
-
-      return next
-    })
-  }, [])
-
   const loadDocumentos = useCallback(async () => {
     setDocumentosLoading(true)
     setDocumentosError(null)
@@ -117,7 +99,6 @@ export const CreateAspiranteModal = ({
     try {
       const data = await getTramiteDocumentosAdmision()
       setDocumentos(data)
-      initializeDocumentSelections(data)
     } catch (err) {
       const message =
         err instanceof Error
@@ -127,7 +108,7 @@ export const CreateAspiranteModal = ({
     } finally {
       setDocumentosLoading(false)
     }
-  }, [initializeDocumentSelections])
+  }, [])
 
   useEffect(() => {
     if (!open) {
@@ -153,14 +134,6 @@ export const CreateAspiranteModal = ({
     documentos.length,
     documentosLoading,
   ])
-
-  useEffect(() => {
-    if (!open || documentos.length === 0) {
-      return
-    }
-
-    initializeDocumentSelections(documentos)
-  }, [documentos, initializeDocumentSelections, open])
 
   useEffect(() => {
     if (!open) {
@@ -242,14 +215,10 @@ export const CreateAspiranteModal = ({
       nextErrors.general = 'No se pudo determinar el programa de la convocatoria.'
     }
 
-    const missingDocument = documentos.find(
-      (item) =>
-        item.obligatorio &&
-        (!documentSelections[item.id] || !documentFiles[item.id])
-    )
+    const missingDocument = documentos.find((item) => !documentFiles[item.id])
 
     if (missingDocument) {
-      nextErrors.documentos = 'Adjunte los documentos obligatorios.'
+      nextErrors.documentos = 'Adjunte todos los documentos requeridos.'
     }
 
     return nextErrors
@@ -286,7 +255,7 @@ export const CreateAspiranteModal = ({
       codigo: item.codigo,
       nombre: item.nombre,
       obligatorio: item.obligatorio,
-      seleccionado: Boolean(documentSelections[item.id]),
+      seleccionado: true,
       archivoNombre: documentFiles[item.id]?.name ?? null,
       archivoTamano: documentFiles[item.id]?.size ?? null,
     }))
@@ -505,35 +474,12 @@ export const CreateAspiranteModal = ({
                   </p>
                 ) : (
                   documentos.map((item) => {
-                    const isRequired = Boolean(item.obligatorio)
-                    const isSelected = documentSelections[item.id] ?? isRequired
-
                     return (
                       <div key={item.id} className="create-aspirante-modal__document">
                         <div className="create-aspirante-modal__document-info">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={isRequired || isSubmitting}
-                              onChange={(event) => {
-                                const checked = event.target.checked
-                                setDocumentSelections((prev) => ({
-                                  ...prev,
-                                  [item.id]: checked,
-                                }))
-                                if (!checked) {
-                                  setDocumentFiles((prev) => ({
-                                    ...prev,
-                                    [item.id]: null,
-                                  }))
-                                }
-                              }}
-                            />
-                            <span>{item.nombre}</span>
-                          </label>
+                          <span>{item.nombre}</span>
                           <p>{item.descripcion}</p>
-                          {isRequired ? (
+                          {item.obligatorio ? (
                             <span className="create-aspirante-modal__badge">
                               Obligatorio
                             </span>
@@ -542,13 +488,16 @@ export const CreateAspiranteModal = ({
                         <div className="create-aspirante-modal__document-upload">
                           <input
                             type="file"
-                            disabled={!isSelected || isSubmitting}
+                            disabled={isSubmitting}
                             onChange={(event) => {
                               const file = event.target.files?.[0] ?? null
                               setDocumentFiles((prev) => ({
                                 ...prev,
                                 [item.id]: file,
                               }))
+                              if (file) {
+                                setErrors((prev) => ({ ...prev, documentos: undefined }))
+                              }
                             }}
                           />
                           {documentFiles[item.id] ? (

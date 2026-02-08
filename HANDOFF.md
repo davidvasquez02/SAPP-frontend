@@ -48,8 +48,8 @@
 - Updated the convocatoria detail grid so aspirante cards keep a consistent 4-column layout on wide screens with responsive breakpoints for smaller devices.
 - Added a DEV-only mock photo helper (`getMockStudentPhotoUrl`) that returns stable placeholder URLs per aspirante until the backend provides a real photo field or base64 payload.
 - Admisiones headers now use navigation state or fetched data to render contextual titles (Convocatoria - periodo, Inscripción - nombre) with safe fallbacks on refresh.
-- Added a “Crear aspirante” modal in Convocatoria detalle that loads tipos de documento and admisión documentos on demand, validates inputs, and **mocks** submission by logging the full payload (form + profile image metadata + selected documents) to the console.
-- Fixed the “Crear aspirante” modal to default required documents to selected when rendering, keeping checkbox/file inputs responsive even if selection state has not initialized yet.
+- Added a “Crear aspirante” modal in Convocatoria detalle that loads tipos de documento and admisión documentos on demand, validates inputs, and **mocks** submission by logging the full payload (form + profile image metadata + attached documents) to the console.
+- Updated the “Crear aspirante” modal so **all** listed documents are required (checkbox removed); validation now blocks submission until every file is attached.
 - Convocatoria detalle now resolves `programaId` from navigation state (preferred) or inscripciones (`programaAcademico` string mapper for DCC/MISI) to avoid prompting the user.
 - Added inscripcion detail navigation cards and protected placeholder pages for documentos cargados, hoja de vida, examen de conocimiento, and entrevistas.
 - Replaced the inscripción detail cards with accordion windows tied to nested routes; child pages now render inside the accordion body while preserving deep links.
@@ -77,6 +77,7 @@
 - Confirm whether entrevista “resumen” entries (codigo `ENTREV`) should be editable and define the desired backend payload.
 - Confirm `programaAcademico` string patterns beyond DCC/MISI to keep `programaId` resolution accurate for new programs.
 - Confirm the backend contracts for `/sapp/tramite/document?tipoTramiteId=1` and the intended upload flow for aspirante documents + profile image.
+- Confirm whether the backend expects **all** documents in the admisión checklist to be required or if optional uploads should be reintroduced.
 
 ## Next Steps
 1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
@@ -92,6 +93,7 @@
 11. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
 12. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
 13. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
+14. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
