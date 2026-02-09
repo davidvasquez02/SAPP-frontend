@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Inscripción documentos now shows both load status and validation status badges; approve/reject updates local validation state and enables “Continuar evaluación” once all required docs are approved.
 - Fixed `DocumentUploadCard` to pass through the optional `onRemoveFile` handler, preventing a runtime reference error when removing files.
 - SAPP login calls the backend (`POST /sapp/auth/login`) and returns the typed DTO, mapping it + JWT payload claims into `AuthSession`.
 - JWT payload decoding (base64url only, no signature validation) lives in `src/utils/jwt.ts` and is used to populate username, roles, `iat`, and `exp`.
@@ -66,6 +67,7 @@
 ## Open Challenges
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
+- Confirm the backend contract for document validation state (e.g., `validacionEstado` or `estadoDocumento`) so the UI can persist approvals across reloads.
 - Define environment variables and API base URL for production/staging.
 - Add automated tests (unit/integration) and CI checks.
 - Replace stub module services with real API calls once endpoints are available.
@@ -89,7 +91,7 @@
 5. Wire module pages to the new service stubs once backend endpoints are defined.
 6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
 7. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
-8. Validate `/sapp/document` approve/reject flows with real data and document states.
+8. Validate `/sapp/document` approve/reject flows with real data and document validation state fields.
 9. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
 10. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
 11. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
@@ -138,6 +140,7 @@
 - **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
 - **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`, `src/modules/admisiones/utils/groupByEvaluador.ts`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
+- **Documentos UI types:** `src/modules/documentos/types/ui.ts`
 - **Document view/download utilities:** `src/shared/files/base64FileUtils.ts`
 - **Document view/download UI:** `src/pages/InscripcionDocumentos`
 - **Shared components:** `src/components/*`
@@ -183,6 +186,8 @@
   - Expects `{ ok, message, data: DocumentChecklistItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array. Each DTO includes `documentoCargado` and `documentoUploadedResponse` (with `nombreArchivoDocumento`, `versionDocumento`, etc.).
 - **Documentos checklist (coordinación/secretaría):** `src/modules/documentos/api/documentosService.ts`
   - Expects `{ ok, message, data: DocumentoTramiteItemDto[] }` from `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...` and returns the typed `data` array for the coordinador screen.
+- **Documentos validación UI model:** `src/modules/documentos/types/ui.ts`
+  - `DocumentoTramiteUiItem` extends the checklist DTO with `validacionEstado: "SIN_VALIDAR" | "APROBADO" | "RECHAZADO"` and optional `validacionObservaciones`, maintained locally until the backend exposes a persisted field.
 - **Documentos base64 fields:** `DocumentoUploadedResponseDto`
   - The frontend now expects `base64DocumentoContenido` or `contenidoBase64`, plus `mimeTypeDocumentoContenido` or `mimeType`, to open/download the uploaded document without additional endpoints.
 - **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`

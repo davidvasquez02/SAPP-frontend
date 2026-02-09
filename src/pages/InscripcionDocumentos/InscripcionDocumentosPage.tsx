@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
+import type {
+  DocumentoTramiteUiItem,
+  DocumentoValidacionEstado,
+} from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
 
@@ -22,10 +26,38 @@ interface DocumentoActionState {
   downloading: boolean
 }
 
+const normalizeValidacionEstado = (value?: string | null): DocumentoValidacionEstado | null => {
+  if (!value) {
+    return null
+  }
+
+  const normalized = value.toUpperCase()
+  if (normalized === 'APROBADO' || normalized === 'RECHAZADO' || normalized === 'SIN_VALIDAR') {
+    return normalized
+  }
+
+  return null
+}
+
+const resolveValidacionEstado = (
+  documento: DocumentoTramiteItemDto,
+  previous?: DocumentoTramiteUiItem,
+): DocumentoValidacionEstado => {
+  const backendState = normalizeValidacionEstado(
+    (documento as Partial<Record<string, string | null>>).validacionEstado ??
+      (documento as Partial<Record<string, string | null>>).estadoDocumento ??
+      (documento as Partial<Record<string, string | null>>).estadoValidacion ??
+      (documento as Partial<Record<string, string | null>>).validacionEstadoDocumento,
+  )
+
+  return backendState ?? previous?.validacionEstado ?? 'SIN_VALIDAR'
+}
+
 const InscripcionDocumentosPage = () => {
-  const { inscripcionId } = useParams()
+  const { convocatoriaId, inscripcionId } = useParams()
+  const navigate = useNavigate()
   const { session, user } = useAuth()
-  const [documentos, setDocumentos] = useState<DocumentoTramiteItemDto[]>([])
+  const [documentos, setDocumentos] = useState<DocumentoTramiteUiItem[]>([])
   const [decisionStates, setDecisionStates] = useState<Record<number, DocumentoDecisionState>>(
     {},
   )
@@ -95,7 +127,22 @@ const InscripcionDocumentosPage = () => {
       setIsLoading(true)
       setErrorMessage(null)
       const data = await getDocumentosByTramite(tramiteId)
-      setDocumentos(data)
+      setDocumentos((prev) =>
+        data.map((documento) => {
+          const previous = prev.find(
+            (item) => item.idTipoDocumentoTramite === documento.idTipoDocumentoTramite,
+          )
+
+          return {
+            ...documento,
+            validacionEstado: resolveValidacionEstado(documento, previous),
+            validacionObservaciones:
+              previous?.validacionObservaciones ??
+              (documento as Partial<Record<string, string | null>>).observaciones ??
+              null,
+          }
+        }),
+      )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setErrorMessage(message)
@@ -151,8 +198,22 @@ const InscripcionDocumentosPage = () => {
         aprobado,
         observaciones: aprobado ? null : motivo,
       })
+      setDocumentos((prev) =>
+        prev.map((documento) =>
+          documento.documentoUploadedResponse?.idDocumento === id
+            ? {
+                ...documento,
+                validacionEstado: aprobado ? 'APROBADO' : 'RECHAZADO',
+                validacionObservaciones: aprobado ? null : motivo,
+              }
+            : documento,
+        ),
+      )
+      updateDecisionState(id, {
+        decision: null,
+        motivoRechazo: aprobado ? '' : motivo,
+      })
       window.alert(aprobado ? 'Documento aprobado.' : 'Documento rechazado.')
-      await fetchDocumentos()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)
@@ -211,6 +272,38 @@ const InscripcionDocumentosPage = () => {
     }
   }
 
+  const requiredDocs = useMemo(
+    () => documentos.filter((documento) => documento.obligatorioTipoDocumentoTramite),
+    [documentos],
+  )
+
+  const requiredApprovedCount = useMemo(
+    () =>
+      requiredDocs.filter(
+        (documento) =>
+          documento.documentoCargado && documento.validacionEstado === 'APROBADO',
+      ).length,
+    [requiredDocs],
+  )
+
+  const allRequiredApproved = useMemo(
+    () =>
+      requiredDocs.every(
+        (documento) =>
+          documento.documentoCargado && documento.validacionEstado === 'APROBADO',
+      ),
+    [requiredDocs],
+  )
+
+  const handleContinue = () => {
+    console.log('Continuar evaluación', { inscripcionId: tramiteId })
+    window.alert('Continuando a evaluación del aspirante (simulado).')
+
+    if (convocatoriaId && inscripcionId) {
+      navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`)
+    }
+  }
+
   return (
     <section className="inscripcion-documentos">
       <p className="inscripcion-documentos__subtitle">
@@ -240,6 +333,7 @@ const InscripcionDocumentosPage = () => {
             const decisionState = documentoId ? getDecisionState(documentoId) : null
             const isLoadingDecision = decisionState?.loading ?? false
             const actionState = documentoId ? getActionState(documentoId) : null
+            const validacionEstado = documento.validacionEstado
             const documentoResponse = documento.documentoUploadedResponse
             const base64 =
               documentoResponse?.base64DocumentoContenido ?? documentoResponse?.contenidoBase64
@@ -295,6 +389,27 @@ const InscripcionDocumentosPage = () => {
                   )}
                 </div>
                 <div>
+                  {uploaded ? (
+                    <span
+                      className={`inscripcion-documentos__badge ${
+                        validacionEstado === 'APROBADO'
+                          ? 'inscripcion-documentos__badge--validation-approved'
+                          : validacionEstado === 'RECHAZADO'
+                            ? 'inscripcion-documentos__badge--validation-rejected'
+                            : 'inscripcion-documentos__badge--validation-neutral'
+                      }`}
+                    >
+                      {validacionEstado === 'APROBADO'
+                        ? 'Aprobado'
+                        : validacionEstado === 'RECHAZADO'
+                          ? 'Rechazado'
+                          : 'Sin validar'}
+                    </span>
+                  ) : (
+                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--validation-pending">
+                      —
+                    </span>
+                  )}
                   <div className="inscripcion-documentos__decision-actions">
                     <button
                       type="button"
@@ -304,7 +419,9 @@ const InscripcionDocumentosPage = () => {
                           : 'inscripcion-documentos__decision-button'
                       }
                       onClick={() => documentoId && handleDecisionSelect(documentoId, 'APROBAR')}
-                      disabled={!uploaded || isLoadingDecision}
+                      disabled={
+                        !uploaded || isLoadingDecision || validacionEstado === 'APROBADO'
+                      }
                     >
                       Aprobar
                     </button>
@@ -316,7 +433,9 @@ const InscripcionDocumentosPage = () => {
                           : 'inscripcion-documentos__decision-button'
                       }
                       onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
-                      disabled={!uploaded || isLoadingDecision}
+                      disabled={
+                        !uploaded || isLoadingDecision || validacionEstado === 'RECHAZADO'
+                      }
                     >
                       Rechazar
                     </button>
@@ -398,6 +517,26 @@ const InscripcionDocumentosPage = () => {
               </div>
             )
           })}
+          <div className="inscripcion-documentos__footer">
+            <div>
+              <p className="inscripcion-documentos__footer-title">
+                Obligatorios aprobados: {requiredApprovedCount}/{requiredDocs.length}
+              </p>
+              {!allRequiredApproved ? (
+                <p className="inscripcion-documentos__footer-hint">
+                  Debes aprobar todos los documentos obligatorios para continuar.
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="inscripcion-documentos__continue-button"
+              disabled={!allRequiredApproved}
+              onClick={handleContinue}
+            >
+              Continuar evaluación
+            </button>
+          </div>
         </div>
       )}
     </section>
