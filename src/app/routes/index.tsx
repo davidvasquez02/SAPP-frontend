@@ -15,6 +15,7 @@ import {
 } from '../../pages'
 import RequireRoles from '../../routes/RequireRoles/RequireRoles'
 import { ROLES } from '../../auth/roleGuards'
+import RequireEvaluacionEnabled from '../../modules/admisiones/routes/RequireEvaluacionEnabled'
 import { aspiranteRoutes } from './aspiranteRoutes'
 import { AspiranteOnlyRoute } from './aspiranteOnlyRoute'
 import { creditosRoutes } from './creditosRoutes'
@@ -68,9 +69,30 @@ export const AppRoutes = () => {
             }
           >
             <Route path="documentos" element={<InscripcionDocumentosPage />} />
-            <Route path="hoja-vida" element={<InscripcionHojaVidaPage />} />
-            <Route path="examen" element={<InscripcionExamenPage />} />
-            <Route path="entrevistas" element={<InscripcionEntrevistasPage />} />
+            <Route
+              path="hoja-vida"
+              element={
+                <RequireEvaluacionEnabled etapa="HOJA_DE_VIDA">
+                  <InscripcionHojaVidaPage />
+                </RequireEvaluacionEnabled>
+              }
+            />
+            <Route
+              path="examen"
+              element={
+                <RequireEvaluacionEnabled etapa="EXAMEN_DE_CONOCIMIENTOS">
+                  <InscripcionExamenPage />
+                </RequireEvaluacionEnabled>
+              }
+            />
+            <Route
+              path="entrevistas"
+              element={
+                <RequireEvaluacionEnabled etapa="ENTREVISTA">
+                  <InscripcionEntrevistasPage />
+                </RequireEvaluacionEnabled>
+              }
+            />
           </Route>
           {solicitudesRoutes}
           {matriculaRoutes}

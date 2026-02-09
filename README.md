@@ -27,6 +27,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
 - **Admisiones module:** `src/modules/admisiones` defines convocatoria DTOs/services and program helpers; `src/pages/AdmisionesHome` renders program-specific selectors sourced from the backend, and `src/pages/ConvocatoriaDetalle` fetches real inscripciones for the selected convocatoria.
 - **Evaluación de admisión:** `src/modules/admisiones/api/evaluacionAdmisionService.ts` consume `/sapp/evaluacionAdmision/info`, `src/modules/admisiones/components/EvaluacionEtapaSection` renderiza tablas editables por etapa, y las páginas de hoja de vida/examen/entrevista usan la misma base con validación de puntajes.
+- **Gating de evaluación por etapa:** `src/modules/admisiones/api/evaluacionAdmisionAvailabilityService.ts` consulta disponibilidad por etapa con caché en memoria, `InscripcionAdmisionDetallePage` deshabilita las ventanas según disponibilidad y `RequireEvaluacionEnabled` protege accesos directos por URL.
 
 ## Tech Stack (Exact Versions)
 - **React:** 19.2.0
@@ -73,6 +74,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Se agregó un “probe” de disponibilidad por etapa para Hoja de Vida/Examen/Entrevistas, deshabilitando visualmente las ventanas cuando no hay evaluación y bloqueando navegación directa con un guard de ruta.
 - Inscripción documentos now derives validation from backend `estadoDocumento` (Por revisar/Aprobado/Rechazado), shows rejection reasons, refreshes the checklist after approve/reject, and gates “Continuar evaluación” on required docs being approved.
 - Fixed `DocumentUploadCard` to wire the optional `onRemoveFile` handler correctly, avoiding runtime errors when removing selected files.
 - Require all documents in the “Crear aspirante” modal: removed the optional-selection checkbox and validated that every listed file is attached before allowing submission.
