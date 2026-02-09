@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Added evaluación availability gating for Hoja de Vida/Examen/Entrevistas: availability probe with cache, disabled accordion windows with “Disponible cuando se inicie la evaluación.”, and route guard to redirect when stages are unavailable.
 - Inscripción documentos now shows load status and backend validation status (`estadoDocumento`) with rejection reasons (`observacionesDocumento`); approve/reject refreshes the checklist and enables “Continuar evaluación” once all required docs are approved.
 - Fixed `DocumentUploadCard` to pass through the optional `onRemoveFile` handler, preventing a runtime reference error when removing files.
 - SAPP login calls the backend (`POST /sapp/auth/login`) and returns the typed DTO, mapping it + JWT payload claims into `AuthSession`.
@@ -65,6 +66,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
 - Confirm whether `/sapp/document` may return additional validation states beyond `POR_REVISAR/APROBADO/RECHAZADO` and how they should map in the UI.
@@ -138,6 +140,7 @@
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
 - **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
+- **Evaluación admisión availability:** `src/modules/admisiones/api/evaluacionAdmisionAvailabilityService.ts`, `src/modules/admisiones/api/evaluacionAdmisionAvailabilityCache.ts`, `src/modules/admisiones/routes/RequireEvaluacionEnabled.tsx`
 - **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`, `src/modules/admisiones/utils/groupByEvaluador.ts`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
 - **Documentos UI types:** `src/modules/documentos/types/ui.ts`

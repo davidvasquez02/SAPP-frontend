@@ -7,6 +7,10 @@
   overflow: hidden;
 }
 
+.inscripcion-accordion-window.is-disabled {
+  opacity: 0.5;
+}
+
 .inscripcion-accordion-window__header {
   display: flex;
   align-items: center;
@@ -15,6 +19,11 @@
   padding: 1rem 1.25rem;
   background: #f8fafc;
   cursor: pointer;
+}
+
+.inscripcion-accordion-window.is-disabled .inscripcion-accordion-window__header {
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .inscripcion-accordion-window__header:focus-visible {
