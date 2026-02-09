@@ -26,31 +26,20 @@ interface DocumentoActionState {
   downloading: boolean
 }
 
-const normalizeValidacionEstado = (value?: string | null): DocumentoValidacionEstado | null => {
-  if (!value) {
-    return null
-  }
-
-  const normalized = value.toUpperCase()
-  if (normalized === 'APROBADO' || normalized === 'RECHAZADO' || normalized === 'SIN_VALIDAR') {
-    return normalized
-  }
-
-  return null
-}
-
 const resolveValidacionEstado = (
   documento: DocumentoTramiteItemDto,
-  previous?: DocumentoTramiteUiItem,
 ): DocumentoValidacionEstado => {
-  const backendState = normalizeValidacionEstado(
-    (documento as Partial<Record<string, string | null>>).validacionEstado ??
-      (documento as Partial<Record<string, string | null>>).estadoDocumento ??
-      (documento as Partial<Record<string, string | null>>).estadoValidacion ??
-      (documento as Partial<Record<string, string | null>>).validacionEstadoDocumento,
-  )
+  if (!documento.documentoCargado) {
+    return 'PENDIENTE'
+  }
 
-  return backendState ?? previous?.validacionEstado ?? 'SIN_VALIDAR'
+  const estado = documento.documentoUploadedResponse?.estadoDocumento?.toUpperCase()
+
+  if (estado === 'APROBADO' || estado === 'RECHAZADO' || estado === 'POR_REVISAR') {
+    return estado
+  }
+
+  return 'POR_REVISAR'
 }
 
 const InscripcionDocumentosPage = () => {
@@ -127,21 +116,13 @@ const InscripcionDocumentosPage = () => {
       setIsLoading(true)
       setErrorMessage(null)
       const data = await getDocumentosByTramite(tramiteId)
-      setDocumentos((prev) =>
-        data.map((documento) => {
-          const previous = prev.find(
-            (item) => item.idTipoDocumentoTramite === documento.idTipoDocumentoTramite,
-          )
-
-          return {
-            ...documento,
-            validacionEstado: resolveValidacionEstado(documento, previous),
-            validacionObservaciones:
-              previous?.validacionObservaciones ??
-              (documento as Partial<Record<string, string | null>>).observaciones ??
-              null,
-          }
-        }),
+      setDocumentos(
+        data.map((documento) => ({
+          ...documento,
+          validacionEstado: resolveValidacionEstado(documento),
+          validacionObservaciones:
+            documento.documentoUploadedResponse?.observacionesDocumento ?? null,
+        })),
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -198,20 +179,11 @@ const InscripcionDocumentosPage = () => {
         aprobado,
         observaciones: aprobado ? null : motivo,
       })
-      setDocumentos((prev) =>
-        prev.map((documento) =>
-          documento.documentoUploadedResponse?.idDocumento === id
-            ? {
-                ...documento,
-                validacionEstado: aprobado ? 'APROBADO' : 'RECHAZADO',
-                validacionObservaciones: aprobado ? null : motivo,
-              }
-            : documento,
-        ),
-      )
+      await fetchDocumentos()
       updateDecisionState(id, {
         decision: null,
-        motivoRechazo: aprobado ? '' : motivo,
+        motivoRechazo: '',
+        errorMotivo: null,
       })
       window.alert(aprobado ? 'Documento aprobado.' : 'Documento rechazado.')
     } catch (error) {
@@ -272,6 +244,14 @@ const InscripcionDocumentosPage = () => {
     }
   }
 
+  const getEstadoDocumento = useCallback((documento: DocumentoTramiteItemDto) => {
+    if (!documento.documentoCargado) {
+      return null
+    }
+
+    return documento.documentoUploadedResponse?.estadoDocumento?.toUpperCase() ?? 'POR_REVISAR'
+  }, [])
+
   const requiredDocs = useMemo(
     () => documentos.filter((documento) => documento.obligatorioTipoDocumentoTramite),
     [documentos],
@@ -281,18 +261,18 @@ const InscripcionDocumentosPage = () => {
     () =>
       requiredDocs.filter(
         (documento) =>
-          documento.documentoCargado && documento.validacionEstado === 'APROBADO',
+          documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
       ).length,
-    [requiredDocs],
+    [getEstadoDocumento, requiredDocs],
   )
 
   const allRequiredApproved = useMemo(
     () =>
       requiredDocs.every(
         (documento) =>
-          documento.documentoCargado && documento.validacionEstado === 'APROBADO',
+          documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
       ),
-    [requiredDocs],
+    [getEstadoDocumento, requiredDocs],
   )
 
   const handleContinue = () => {
@@ -300,7 +280,9 @@ const InscripcionDocumentosPage = () => {
     window.alert('Continuando a evaluación del aspirante (simulado).')
 
     if (convocatoriaId && inscripcionId) {
-      navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`)
+      navigate(
+        `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/hoja-vida`,
+      )
     }
   }
 
@@ -390,21 +372,29 @@ const InscripcionDocumentosPage = () => {
                 </div>
                 <div>
                   {uploaded ? (
-                    <span
-                      className={`inscripcion-documentos__badge ${
-                        validacionEstado === 'APROBADO'
-                          ? 'inscripcion-documentos__badge--validation-approved'
+                    <>
+                      <span
+                        className={`inscripcion-documentos__badge ${
+                          validacionEstado === 'APROBADO'
+                            ? 'inscripcion-documentos__badge--validation-approved'
+                            : validacionEstado === 'RECHAZADO'
+                              ? 'inscripcion-documentos__badge--validation-rejected'
+                              : 'inscripcion-documentos__badge--validation-neutral'
+                        }`}
+                      >
+                        {validacionEstado === 'APROBADO'
+                          ? 'Aprobado'
                           : validacionEstado === 'RECHAZADO'
-                            ? 'inscripcion-documentos__badge--validation-rejected'
-                            : 'inscripcion-documentos__badge--validation-neutral'
-                      }`}
-                    >
-                      {validacionEstado === 'APROBADO'
-                        ? 'Aprobado'
-                        : validacionEstado === 'RECHAZADO'
-                          ? 'Rechazado'
-                          : 'Sin validar'}
-                    </span>
+                            ? 'Rechazado'
+                            : 'Por revisar'}
+                      </span>
+                      {validacionEstado === 'RECHAZADO' &&
+                      documento.validacionObservaciones ? (
+                        <p className="inscripcion-documentos__validation-note">
+                          Motivo: {documento.validacionObservaciones}
+                        </p>
+                      ) : null}
+                    </>
                   ) : (
                     <span className="inscripcion-documentos__badge inscripcion-documentos__badge--validation-pending">
                       —
@@ -422,6 +412,9 @@ const InscripcionDocumentosPage = () => {
                       disabled={
                         !uploaded || isLoadingDecision || validacionEstado === 'APROBADO'
                       }
+                      aria-disabled={
+                        !uploaded || isLoadingDecision || validacionEstado === 'APROBADO'
+                      }
                     >
                       Aprobar
                     </button>
@@ -434,6 +427,9 @@ const InscripcionDocumentosPage = () => {
                       }
                       onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
                       disabled={
+                        !uploaded || isLoadingDecision || validacionEstado === 'RECHAZADO'
+                      }
+                      aria-disabled={
                         !uploaded || isLoadingDecision || validacionEstado === 'RECHAZADO'
                       }
                     >
@@ -470,6 +466,7 @@ const InscripcionDocumentosPage = () => {
                         className="inscripcion-documentos__decision-confirm"
                         onClick={() => documentoId && handleConfirmDecision(documentoId, false)}
                         disabled={isLoadingDecision}
+                        aria-disabled={isLoadingDecision}
                       >
                         {isLoadingDecision ? 'Enviando...' : 'Confirmar rechazo'}
                       </button>
@@ -482,6 +479,7 @@ const InscripcionDocumentosPage = () => {
                         className="inscripcion-documentos__decision-confirm"
                         onClick={() => documentoId && handleConfirmDecision(documentoId, true)}
                         disabled={isLoadingDecision}
+                        aria-disabled={isLoadingDecision}
                       >
                         {isLoadingDecision ? 'Enviando...' : 'Confirmar aprobación'}
                       </button>
@@ -498,6 +496,9 @@ const InscripcionDocumentosPage = () => {
                         handleViewDocumento(documentoId, base64, mimeType, filename)
                       }
                       disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={
+                        !uploaded || actionState?.viewing || actionState?.downloading
+                      }
                     >
                       {actionState?.viewing ? 'Abriendo...' : 'Ver'}
                     </button>
@@ -509,6 +510,9 @@ const InscripcionDocumentosPage = () => {
                         handleDownloadDocumento(documentoId, base64, mimeType, filename)
                       }
                       disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={
+                        !uploaded || actionState?.viewing || actionState?.downloading
+                      }
                     >
                       {actionState?.downloading ? 'Descargando...' : 'Descargar'}
                     </button>
@@ -524,7 +528,7 @@ const InscripcionDocumentosPage = () => {
               </p>
               {!allRequiredApproved ? (
                 <p className="inscripcion-documentos__footer-hint">
-                  Debes aprobar todos los documentos obligatorios para continuar.
+                  Aprueba todos los documentos obligatorios para continuar.
                 </p>
               ) : null}
             </div>
@@ -532,6 +536,7 @@ const InscripcionDocumentosPage = () => {
               type="button"
               className="inscripcion-documentos__continue-button"
               disabled={!allRequiredApproved}
+              aria-disabled={!allRequiredApproved}
               onClick={handleContinue}
             >
               Continuar evaluación

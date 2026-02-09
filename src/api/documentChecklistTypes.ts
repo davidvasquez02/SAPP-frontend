@@ -1,11 +1,12 @@
 export interface DocumentoUploadedResponseDto {
   aspiranteCargaDocumento: number
   base64DocumentoContenido: string
-  estadoDocumento: string
+  estadoDocumento?: string | null
   fechaCargaDocumento: string
   idDocumento: number
   mimeTypeDocumentoContenido: string
   nombreArchivoDocumento: string
+  observacionesDocumento?: string | null
   usuarioCargaDocumento: number | null
   versionDocumento: number
 }

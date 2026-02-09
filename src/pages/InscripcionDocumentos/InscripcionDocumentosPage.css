@@ -137,6 +137,12 @@
   color: #9ca3af;
 }
 
+.inscripcion-documentos__validation-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
 .inscripcion-documentos__file {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;

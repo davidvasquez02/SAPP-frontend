@@ -15,7 +15,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **HTTP client:** `src/shared/http/httpClient.ts` wraps `fetch`, automatically attaching the Bearer token from the session store (unless `auth: false` is passed) and handling 401/403 logout redirects.
 - **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos` defines shared checklist DTOs, the GET checklist service, and the approval/rejection service for `/sapp/document` using `PUT` and the standard `{ ok, message, data }` envelope.
-- **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), showing load + validation badges, local approve/reject state, required rejection notes, and a “Continuar evaluación” gate when all required docs are approved.
+- **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), showing load + backend validation badges (`estadoDocumento`), rejection reasons (`observacionesDocumento`), approve/reject actions that refresh the checklist, and a “Continuar evaluación” gate when all required docs are approved.
 - **Base64 file utilities:** `src/shared/files/base64FileUtils.ts` normalizes base64 payloads and supports blob creation, tab opening, and download handling for document previews.
 - **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
 - **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
@@ -73,7 +73,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
-- Added validation state badges (Sin validar/Aprobado/Rechazado) to inscripción documentos, kept them local after approve/reject, and gated “Continuar evaluación” on required docs being approved.
+- Inscripción documentos now derives validation from backend `estadoDocumento` (Por revisar/Aprobado/Rechazado), shows rejection reasons, refreshes the checklist after approve/reject, and gates “Continuar evaluación” on required docs being approved.
 - Fixed `DocumentUploadCard` to wire the optional `onRemoveFile` handler correctly, avoiding runtime errors when removing selected files.
 - Require all documents in the “Crear aspirante” modal: removed the optional-selection checkbox and validated that every listed file is attached before allowing submission.
 - Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
