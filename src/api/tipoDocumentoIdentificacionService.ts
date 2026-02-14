@@ -7,6 +7,7 @@ export const getTiposDocumentoIdentificacion = async (): Promise<
 > => {
   const payload = await httpGet<ApiResponse<TipoDocumentoIdentificacionDto[]>>(
     '/sapp/tipoDocumentoIdentificacion',
+    { auth: false },
   )
 
   if (!payload.ok) {
