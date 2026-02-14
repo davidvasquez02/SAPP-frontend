@@ -69,6 +69,7 @@ The aspirante login now also calls the backend directly:
 - Endpoint: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/aspirante/consultaInfo?numeroInscripcion=...&tipoDocumentoId=...&numeroDocumento=...`
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
+- The tipos de documento lookup (`GET /sapp/tipoDocumentoIdentificacion`) is treated as a **public** endpoint (`auth: false`) to avoid premature 401/403 redirects when entering the aspirante login screen.
 
 Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
@@ -133,3 +134,4 @@ Mock data for the Admisiones module still lives in:
 - Added program name helpers to render the long-form program titles (Maestría/Doctorado) while keeping backend `programa` as a subtitle/badge when provided.
 - Implemented the real “Crear aspirante” flow: POST `/sapp/aspirante`, then sequentially upload selected documentos via `/sapp/document` using base64 + SHA-256, with retry support for failed uploads and a success/partial summary.
 - Added a temporary document template for admisión aspirante requirements in the modal (ready to swap with a backend requirements endpoint when available).
+- Fixed aspirante entry authorization bug: `getTiposDocumentoIdentificacion` now calls the shared HTTP client with `auth: false`, preventing inherited Bearer tokens from triggering unauthorized redirects before aspirante validation.

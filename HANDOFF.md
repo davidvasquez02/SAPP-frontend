@@ -12,6 +12,7 @@
 - Added API response typing (`src/api/types.ts`) and login DTOs/mappers (`src/api/authTypes.ts`, `src/api/authMappers.ts`).
 - Updated aspirante login to capture número de inscripción, tipo de documento, and número de documento before starting the session.
 - Added tipos de documento DTOs/service (`src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`) to fetch `/sapp/tipoDocumentoIdentificacion` for the aspirante login combo.
+- Fixed aspirante pre-login authorization bug by marking `/sapp/tipoDocumentoIdentificacion` as a public request (`auth: false`) so entering “Soy aspirante” no longer forces auth redirects.
 - Replaced the aspirante mock auth flow with a real `/sapp/aspirante/consultaInfo` GET in `src/api/aspiranteAuthService.ts`, mapping the response into `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - Aspirante session now normalizes `numeroInscripcionUis` to a string and persists backend fields (nombre, director, grupoInvestigacion, telefono, fechaRegistro).
 - Aspirante layout header shows nombre, inscripción, grupo, director, teléfono, documento, and email from the persisted aspirante session.
@@ -68,6 +69,7 @@
 ## Open Challenges
 - Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
+- Confirm whether `/sapp/tipoDocumentoIdentificacion` should remain publicly accessible for aspirante onboarding in all environments (dev/stage/prod).
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
 - Confirm whether `/sapp/document` may return additional validation states beyond `POR_REVISAR/APROBADO/RECHAZADO` and how they should map in the UI.
 - Define environment variables and API base URL for production/staging.
@@ -86,9 +88,10 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
-1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
-2. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
-3. Add `.env.local` (or equivalent) for API base URLs.
+1. Validate aspirante entry flow end-to-end in staging (toggle “Soy aspirante” -> load tipos de documento -> submit consulta) and capture backend logs for 401/403 anomalies.
+2. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
+3. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
+4. Add `.env.local` (or equivalent) for API base URLs.
 4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
 5. Wire module pages to the new service stubs once backend endpoints are defined.
 6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
@@ -156,7 +159,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
-- No tests run in this update.
+- `npm run build` ❌ fails due to pre-existing TypeScript issues outside this fix (e.g., `FormEvent` type-only imports, duplicate object keys, union narrowing in aspirante/session pages).
+- `npm run lint` ❌ fails due to pre-existing ESLint issues outside this fix (`no-explicit-any`, React hooks purity/set-state-in-effect rules, unused vars).
 
 ## Environment & Package Versions
 - **Node environment:** No Python venv/conda/poetry used; frontend runs with Node + npm.
