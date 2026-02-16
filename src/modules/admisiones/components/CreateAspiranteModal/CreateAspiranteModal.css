@@ -100,6 +100,13 @@
   font-size: 0.85rem;
 }
 
+
+.create-aspirante-modal__docs-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
 .create-aspirante-modal__documents {
   display: flex;
   flex-direction: column;
