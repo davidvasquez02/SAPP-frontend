@@ -11,6 +11,10 @@ import type {
   AspiranteCreateRequestDto,
   AspiranteCreateResponseDto,
 } from '../../api/aspiranteCreateTypes'
+import {
+  mapTramiteDocsToDocumentUploadItems,
+} from '../../api/tramiteDocumentoMappers'
+import { getTramiteDocumentos } from '../../api/tramiteDocumentoService'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
 import { admisionAspiranteDocumentTemplate } from '../../../documentos/templates/admisionAspiranteDocumentTemplate'
 import './CreateAspiranteModal.css'
@@ -79,6 +83,8 @@ export const CreateAspiranteModal = ({
   const [tiposLoading, setTiposLoading] = useState(false)
   const [tiposError, setTiposError] = useState<string | null>(null)
   const [documentos, setDocumentos] = useState<DocumentUploadItem[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false)
+  const [docsError, setDocsError] = useState<string | null>(null)
   const [uploadSummary, setUploadSummary] = useState<UploadSummary>({
     status: 'idle',
     failedItems: [],
@@ -90,7 +96,7 @@ export const CreateAspiranteModal = ({
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
 
-  const buildDocumentItems = useCallback((): DocumentUploadItem[] => {
+  const buildTemplateFallbackDocumentItems = useCallback((): DocumentUploadItem[] => {
     return admisionAspiranteDocumentTemplate.map((item) => ({
       id: item.idTipoDocumentoTramite,
       codigo: item.codigoTipoDocumentoTramite,
@@ -102,6 +108,31 @@ export const CreateAspiranteModal = ({
     }))
   }, [])
 
+  const loadTramiteDocumentos = useCallback(async () => {
+    setIsLoadingDocs(true)
+    setDocsError(null)
+
+    try {
+      const docs = await getTramiteDocumentos()
+      const mappedDocs = mapTramiteDocsToDocumentUploadItems(docs)
+      setDocumentos(mappedDocs)
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'No fue posible cargar los documentos de admisiones.'
+      setDocsError(message)
+
+      if (import.meta.env.DEV) {
+        setDocumentos(buildTemplateFallbackDocumentItems())
+      } else {
+        setDocumentos([])
+      }
+    } finally {
+      setIsLoadingDocs(false)
+    }
+  }, [buildTemplateFallbackDocumentItems])
+
   const resetForm = useCallback(() => {
     setFormState(initialFormState)
     setErrors({})
@@ -110,8 +141,10 @@ export const CreateAspiranteModal = ({
     setCreatedAspirante(null)
     setProfileImage(null)
     setProfilePreviewUrl(null)
-    setDocumentos(buildDocumentItems())
-  }, [buildDocumentItems])
+    setDocumentos([])
+    setIsLoadingDocs(false)
+    setDocsError(null)
+  }, [])
 
   const loadTiposDocumento = useCallback(async () => {
     setTiposLoading(true)
@@ -141,8 +174,12 @@ export const CreateAspiranteModal = ({
 
     if (!shouldPreserveState) {
       resetForm()
-    } else if (documentos.length === 0) {
-      setDocumentos(buildDocumentItems())
+    } else if (documentos.length === 0 && !isLoadingDocs) {
+      loadTramiteDocumentos()
+    }
+
+    if (!shouldPreserveState) {
+      loadTramiteDocumentos()
     }
 
     if (tiposDocumento.length === 0 && !tiposLoading) {
@@ -155,7 +192,8 @@ export const CreateAspiranteModal = ({
     tiposDocumento.length,
     tiposLoading,
     documentos.length,
-    buildDocumentItems,
+    isLoadingDocs,
+    loadTramiteDocumentos,
     createdAspirante,
     uploadSummary.status,
   ])
@@ -475,6 +513,7 @@ export const CreateAspiranteModal = ({
 
   const isAspiranteCreated = createdAspirante != null
   const hasUploadErrors = uploadSummary.failedItems.length > 0
+  const isDocsEmptyState = !isLoadingDocs && !docsError && documentos.length === 0
 
   if (!open) {
     return null
@@ -663,9 +702,23 @@ export const CreateAspiranteModal = ({
               Adjunte los requisitos antes de enviar. Los obligatorios deben estar cargados.
             </p>
             <div className="create-aspirante-modal__documents">
-              {documentos.length === 0 ? (
+              {isLoadingDocs ? (
+                <p className="create-aspirante-modal__helper">Cargando documentos…</p>
+              ) : docsError ? (
+                <div className="create-aspirante-modal__docs-state">
+                  <p className="create-aspirante-modal__error">{docsError}</p>
+                  <button
+                    type="button"
+                    className="create-aspirante-modal__button create-aspirante-modal__button--ghost"
+                    onClick={loadTramiteDocumentos}
+                    disabled={isLoadingDocs || isSubmitting}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : documentos.length === 0 ? (
                 <p className="create-aspirante-modal__helper">
-                  No hay documentos configurados para este trámite.
+                  No hay documentos configurados para ADMISION_COORDINACION.
                 </p>
               ) : (
                 documentos.map((item) => (
@@ -681,6 +734,11 @@ export const CreateAspiranteModal = ({
             </div>
             {errors.documentos ? (
               <span className="create-aspirante-modal__error">{errors.documentos}</span>
+            ) : null}
+            {isDocsEmptyState ? (
+              <span className="create-aspirante-modal__error">
+                No es posible finalizar porque no hay documentos del trámite configurados.
+              </span>
             ) : null}
           </div>
 
@@ -739,7 +797,13 @@ export const CreateAspiranteModal = ({
             <button
               type="submit"
               className="create-aspirante-modal__button"
-              disabled={isSubmitting || (!programaId && !isAspiranteCreated)}
+              disabled={
+                isSubmitting ||
+                isLoadingDocs ||
+                (!programaId && !isAspiranteCreated) ||
+                (!!docsError && !import.meta.env.DEV) ||
+                isDocsEmptyState
+              }
             >
               {isSubmitting
                 ? isAspiranteCreated

@@ -1,6 +1,10 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+
+- ✅ Latest update: `CreateAspiranteModal` no longer defines required documents with hardcoded arrays in normal flow; it fetches trámite documents from backend, filters `ADMISION_COORDINACION`, and maps them to `DocumentUploadItem` via pure mappers in `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
+- ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
+- ✅ Sequential upload now consumes dynamic backend `tipoDocumentoTramiteId` values, so changes in backend configuration are reflected without frontend code edits.
 - Added evaluación availability gating for Hoja de Vida/Examen/Entrevistas: availability probe with cache, disabled accordion windows with “Disponible cuando se inicie la evaluación.”, and route guard to redirect when stages are unavailable.
 - Inscripción documentos now shows load status and backend validation status (`estadoDocumento`) with rejection reasons (`observacionesDocumento`); approve/reject refreshes the checklist and enables “Continuar evaluación” once all required docs are approved.
 - Fixed `DocumentUploadCard` to pass through the optional `onRemoveFile` handler, preventing a runtime reference error when removing files.
@@ -214,7 +218,7 @@
 - **Aspirante create service:** `src/modules/admisiones/api/aspiranteService.ts`
   - Posts to `/sapp/aspirante`, expects `{ ok, message, data }`, throws on `ok: false`, returns `data`.
 - **Trámite documentos (admisión) response:** `src/modules/admisiones/api/tramiteDocumentoService.ts`
-  - Calls `GET /sapp/tramite/document?tipoTramiteId=1` and filters results to `tipoTramite.nombre === "ADMISION_COORDINACION"`.
+  - Calls `GET /sapp/tramite/document?tipoTramiteId=1`, expects `{ ok, message, data }`, and returns typed data for UI-level filtering/mapping by `ADMISION_COORDINACION` (normalizing `tipoTramite.nombre`, `nombreTipoTramite`, or string `tipoTramite`).
 - **Mock aspirante photo helper:** `src/modules/admisiones/utils/mockStudentPhoto.ts`
   - DEV-only helper that returns stable placeholder URLs per aspiranteId (modulo selection). Swap with backend `fotoUrl` or `fotoBase64` when available (e.g., `data:image/jpeg;base64,${base64}`).
 - **Evaluación admisión response:** `src/modules/admisiones/api/evaluacionAdmisionService.ts`
