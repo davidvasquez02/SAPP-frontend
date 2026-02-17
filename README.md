@@ -74,6 +74,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Fixed an infinite request loop in `CreateAspiranteModal` when loading trámite documentos: the fetch now runs once per modal open, waits for the response, and no longer retriggers on each documentos-state update.
 - Se agregó un “probe” de disponibilidad por etapa para Hoja de Vida/Examen/Entrevistas, deshabilitando visualmente las ventanas cuando no hay evaluación y bloqueando navegación directa con un guard de ruta.
 - Inscripción documentos now derives validation from backend `estadoDocumento` (Por revisar/Aprobado/Rechazado), shows rejection reasons, refreshes the checklist after approve/reject, and gates “Continuar evaluación” on required docs being approved.
 - Fixed `DocumentUploadCard` to wire the optional `onRemoveFile` handler correctly, avoiding runtime errors when removing selected files.

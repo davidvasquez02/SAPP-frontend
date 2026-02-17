@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- ✅ Fixed infinite-loop requests in `CreateAspiranteModal`: trámite documentos are fetched once per modal-open cycle (using an open-transition guard) so the screen waits for a single response before rendering documents.
 - ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
 - ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
 - ✅ Sequential upload now consumes dynamic backend `tipoDocumentoTramiteId` values, so changes in backend configuration are reflected without frontend code edits.
@@ -160,7 +161,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
-- No tests run in this update.
+- `npm run build` ❌ fails due to pre-existing TypeScript issues unrelated to this fix (examples: `EvaluacionEtapaSection` null/undefined type mismatch, `AspiranteDocumentosPage` union property access, duplicate object keys in `InscripcionDocumentosPage`, and `FormEvent` type-only imports).
+- `npm run lint` ❌ fails due to pre-existing lint debt (`no-explicit-any` in module stubs, React hooks purity/set-state-in-effect rules, and unused vars in helper/stub files).
 
 ## Environment & Package Versions
 - **Node environment:** No Python venv/conda/poetry used; frontend runs with Node + npm.
@@ -174,7 +176,7 @@
   - vite (rolldown-vite) 7.2.5
   - @vitejs/plugin-react-swc 4.2.2
   - eslint 9.39.1
-- **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed.
+- **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
 - **Auth session contract:** `src/context/Auth/types.ts`

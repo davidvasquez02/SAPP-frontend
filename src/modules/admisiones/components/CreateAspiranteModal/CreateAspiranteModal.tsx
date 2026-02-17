@@ -94,6 +94,7 @@ export const CreateAspiranteModal = ({
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
+  const wasOpenRef = useRef(false)
 
   const loadTramiteDocumentos = useCallback(async () => {
     setIsLoadingDocs(true)
@@ -148,8 +149,15 @@ export const CreateAspiranteModal = ({
 
   useEffect(() => {
     if (!open) {
+      wasOpenRef.current = false
       return
     }
+
+    if (wasOpenRef.current) {
+      return
+    }
+
+    wasOpenRef.current = true
 
     const shouldPreserveState =
       createdAspirante != null && uploadSummary.status === 'partial'
