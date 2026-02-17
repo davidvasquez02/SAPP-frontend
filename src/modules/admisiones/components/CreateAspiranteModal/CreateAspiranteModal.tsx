@@ -16,7 +16,6 @@ import {
 } from '../../api/tramiteDocumentoMappers'
 import { getTramiteDocumentos } from '../../api/tramiteDocumentoService'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
-import { admisionAspiranteDocumentTemplate } from '../../../documentos/templates/admisionAspiranteDocumentTemplate'
 import './CreateAspiranteModal.css'
 
 interface CreateAspiranteModalProps {
@@ -96,18 +95,6 @@ export const CreateAspiranteModal = ({
   const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
 
-  const buildTemplateFallbackDocumentItems = useCallback((): DocumentUploadItem[] => {
-    return admisionAspiranteDocumentTemplate.map((item) => ({
-      id: item.idTipoDocumentoTramite,
-      codigo: item.codigoTipoDocumentoTramite,
-      nombre: item.nombreTipoDocumentoTramite,
-      descripcion: item.descripcionTipoDocumentoTramite ?? null,
-      obligatorio: item.obligatorioTipoDocumentoTramite,
-      status: 'NOT_SELECTED',
-      selectedFile: null,
-    }))
-  }, [])
-
   const loadTramiteDocumentos = useCallback(async () => {
     setIsLoadingDocs(true)
     setDocsError(null)
@@ -122,16 +109,11 @@ export const CreateAspiranteModal = ({
           ? err.message
           : 'No fue posible cargar los documentos de admisiones.'
       setDocsError(message)
-
-      if (import.meta.env.DEV) {
-        setDocumentos(buildTemplateFallbackDocumentItems())
-      } else {
-        setDocumentos([])
-      }
+      setDocumentos([])
     } finally {
       setIsLoadingDocs(false)
     }
-  }, [buildTemplateFallbackDocumentItems])
+  }, [])
 
   const resetForm = useCallback(() => {
     setFormState(initialFormState)
