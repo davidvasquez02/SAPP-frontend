@@ -2,7 +2,7 @@
 
 ## Current Status
 
-- ✅ Latest update: `CreateAspiranteModal` no longer defines required documents with hardcoded arrays in normal flow; it fetches trámite documents from backend, filters `ADMISION_COORDINACION`, and maps them to `DocumentUploadItem` via pure mappers in `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
+- ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
 - ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
 - ✅ Sequential upload now consumes dynamic backend `tipoDocumentoTramiteId` values, so changes in backend configuration are reflected without frontend code edits.
 - Added evaluación availability gating for Hoja de Vida/Examen/Entrevistas: availability probe with cache, disabled accordion windows with “Disponible cuando se inicie la evaluación.”, and route guard to redirect when stages are unavailable.
