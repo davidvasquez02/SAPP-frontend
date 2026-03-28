@@ -5,10 +5,53 @@
 }
 
 body {
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #ccc;
+  --surface: #ffffff;
+  --surface-container-low: #ffffff;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+  --radius-card: 2rem;
   margin: 0;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #f6f7fb;
-  color: #1f2937;
+  background-color: var(--app-background);
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+body.light {
+  --primary: #438213; /* Verde UIS */
+  --on-primary: #ffffff; /* Texto sobre verde */
+  --outline: #ccc; /* Bordes de inputs */
+  --surface: white;
+  --surface-container-low: white;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+}
+
+body.dark {
+  --primary: #499113; /* Verde UIS */
+  --on-primary: #ffffff; /* Texto sobre verde */
+  --outline: #ccc; /* Bordes de inputs */
+  --surface: #141316; /* Fondo oscuro primario */
+  --surface-container-low: #1c1b1e; /* oscuro secundario */
+  --inverse-primary: #304d30;
+  --app-background: #0f130f;
+  --text-primary: #ecf3e8;
+  --text-secondary: #b6c3b2;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
 }
 
 button,
@@ -16,4 +59,29 @@ input,
 select,
 textarea {
   font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--outline);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--surface), transparent 2%);
+  color: var(--text-primary);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 78%);
+}
+
+button {
+  color: inherit;
 }
