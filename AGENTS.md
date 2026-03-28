@@ -473,6 +473,26 @@ Al tocar código que usa la BD:
   - almacenar en backend en UTC / timestamptz;
   - mostrar siempre en zona horaria de Colombia y formato consistente.
 
+### 5.3. Identidad visual global obligatoria (SAPP Frontend)
+
+Estas reglas son **mandatorias** para cualquier cambio visual futuro en este repositorio:
+
+- Mantener estética limpia, moderna, sobria e institucional.
+- Usar como base los tokens de tema globales y la paleta UIS para modo claro/oscuro.
+- Compatibilidad con Beer.css:
+  - conservar y reutilizar variables semánticas: `--primary`, `--on-primary`, `--outline`, `--surface`, `--surface-container-low`, `--inverse-primary`.
+  - evitar hardcodear colores si existe token equivalente.
+- Modo claro y oscuro:
+  - los estilos nuevos deben funcionar con `body.light` y `body.dark`.
+  - componentes deben consumir variables CSS (no colores fijos) para fondo, texto, borde y estados de foco.
+- Patrones visuales base:
+  - contenedores principales tipo tarjeta con esquinas redondeadas amplias y sombra suave;
+  - botones primarios estilo pill (radio completo), usando `--primary` y `--on-primary`;
+  - formularios minimalistas, priorizando limpieza visual (ej. borde inferior o borde sutil según contexto);
+  - jerarquía tipográfica clara (títulos fuertes, texto secundario discreto);
+  - espaciado generoso (`padding`/`gap`/`margin`) para mantener aire visual.
+- Evitar estilos “recargados” o no institucionales (gradientes agresivos, sombras duras, colores saturados fuera de la paleta).
+
 ---
 
 ## 6. Seguridad, roles y permisos

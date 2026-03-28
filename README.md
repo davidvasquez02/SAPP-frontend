@@ -22,6 +22,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias (`/sapp/convocatoriaAdmision`) and inscripciones, backed by the shared HTTP client wrapper.
 - **Aspirante creation flow:** `CreateAspiranteModal` posts `/sapp/aspirante`, stores the returned `aspiranteId` + `inscripcionAdmisionId`, and then uploads selected documents **sequentially** via `POST /sapp/document` using base64 + SHA-256 helpers. The modal now loads trámite documents from backend (`GET /sapp/tramite/document?tipoTramiteId=1`) using `httpClient`, filters by `ADMISION_COORDINACION`, computes required items from backend `obligatorio`, preserves sequential uploads/retry behavior, and renders backend-driven loading/error/empty states with retry when the request fails.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
+- **Global theming:** `src/styles/globals.css` centraliza tokens de identidad visual UIS (compatibles con Beer.css) para `body.light` / `body.dark`, y los layouts/login consumen variables semánticas para mantener consistencia institucional.
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
 - **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
@@ -74,6 +75,9 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Adopted a global institutional design baseline using UIS palette tokens with dual theme support (`body.light`/`body.dark`) and Beer.css-compatible CSS variables (`--primary`, `--on-primary`, `--outline`, `--surface`, `--surface-container-low`, `--inverse-primary`).
+- Refreshed login and aspirante login visuals to match the institutional reference style: rounded cards, soft shadows, clean typography hierarchy, minimal inputs, and pill-shaped primary buttons.
+- Updated shared shell/layout/sidebar surfaces and action styles to consume theme variables instead of hardcoded colors for consistent light/dark behavior.
 - Fixed an infinite request loop in `CreateAspiranteModal` when loading trámite documentos: the fetch now runs once per modal open, waits for the response, and no longer retriggers on each documentos-state update.
 - Se agregó un “probe” de disponibilidad por etapa para Hoja de Vida/Examen/Entrevistas, deshabilitando visualmente las ventanas cuando no hay evaluación y bloqueando navegación directa con un guard de ruta.
 - Inscripción documentos now derives validation from backend `estadoDocumento` (Por revisar/Aprobado/Rechazado), shows rejection reasons, refreshes the checklist after approve/reject, and gates “Continuar evaluación” on required docs being approved.

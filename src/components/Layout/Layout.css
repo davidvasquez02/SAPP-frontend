@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: row;
-  background-color: #f5f7fb;
+  background-color: var(--app-background);
 }
 
 .app-shell__content {

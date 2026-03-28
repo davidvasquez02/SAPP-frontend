@@ -2,6 +2,9 @@
 
 ## Current Status
 
+- ✅ Implemented a global institutional visual baseline aligned with the UIS palette and login reference: centralized theme tokens in `src/styles/globals.css`, with Beer.css-compatible variables for `body.light` and `body.dark`.
+- ✅ `src/main.tsx` now sets initial theme class (`light`/`dark`) from `localStorage` (`sapp-theme`) with system dark-mode fallback.
+- ✅ Refreshed key shell surfaces (`Layout`, `ModuleLayout`, `AspiranteLayout`, `Sidebar`) and both login screens to consume semantic theme tokens (rounded cards, soft shadows, minimal fields, pill primary actions).
 - ✅ Fixed infinite-loop requests in `CreateAspiranteModal`: trámite documentos are fetched once per modal-open cycle (using an open-transition guard) so the screen waits for a single response before rendering documents.
 - ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
 - ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
@@ -91,21 +94,25 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
-1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
-2. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
-3. Add `.env.local` (or equivalent) for API base URLs.
-4. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
-5. Wire module pages to the new service stubs once backend endpoints are defined.
-6. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
-7. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
-8. Validate `/sapp/document` approve/reject flows with real data and document validation states (including unexpected values).
-9. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
-10. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
-11. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
-12. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
-13. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
-14. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
-15. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
+1. Add a visible theme switcher (light/dark) that updates `localStorage.sapp-theme` and reuses the new token system.
+2. Propagate the new design tokens to remaining page-specific CSS files with hardcoded colors to complete global consistency.
+3. Capture updated UI screenshots for docs once a browser-capable environment is available.
+4. Validate accessibility contrast for primary/secondary text in both themes.
+5. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
+6. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
+7. Add `.env.local` (or equivalent) for API base URLs.
+8. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
+9. Wire module pages to the new service stubs once backend endpoints are defined.
+10. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
+11. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
+12. Validate `/sapp/document` approve/reject flows with real data and document validation states (including unexpected values).
+13. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
+14. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
+15. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
+16. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
+17. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
+18. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
+19. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
