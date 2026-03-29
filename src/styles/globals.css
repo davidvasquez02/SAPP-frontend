@@ -29,11 +29,11 @@ body {
 }
 
 body.light {
-  --primary: #438213; /* Verde UIS */
-  --on-primary: #ffffff; /* Texto sobre verde */
-  --outline: #ccc; /* Bordes de inputs */
-  --surface: white;
-  --surface-container-low: white;
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #ccc;
+  --surface: #ffffff;
+  --surface-container-low: #ffffff;
   --inverse-primary: #b6ceb4;
   --app-background: #eef3ec;
   --text-primary: #1f2a1c;
@@ -42,16 +42,24 @@ body.light {
 }
 
 body.dark {
-  --primary: #499113; /* Verde UIS */
-  --on-primary: #ffffff; /* Texto sobre verde */
-  --outline: #ccc; /* Bordes de inputs */
-  --surface: #141316; /* Fondo oscuro primario */
-  --surface-container-low: #1c1b1e; /* oscuro secundario */
+  --primary: #499113;
+  --on-primary: #ffffff;
+  --outline: #ccc;
+  --surface: #141316;
+  --surface-container-low: #1c1b1e;
   --inverse-primary: #304d30;
   --app-background: #0f130f;
   --text-primary: #ecf3e8;
   --text-secondary: #b6c3b2;
   --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.light {
+  color-scheme: light;
+}
+
+body.dark {
+  color-scheme: dark;
 }
 
 button,
