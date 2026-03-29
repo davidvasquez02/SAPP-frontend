@@ -75,6 +75,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Fixed the theme baseline to avoid inverted light mode: default startup theme is now `light` (unless `sapp-theme` is already set), `body.light`/`body.dark` tokens were normalized to the UIS palette, and base text remains on `--text-primary` while `--on-primary` is reserved for text over primary surfaces (buttons).
 - Adopted a global institutional design baseline using UIS palette tokens with dual theme support (`body.light`/`body.dark`) and Beer.css-compatible CSS variables (`--primary`, `--on-primary`, `--outline`, `--surface`, `--surface-container-low`, `--inverse-primary`).
 - Refreshed login and aspirante login visuals to match the institutional reference style: rounded cards, soft shadows, clean typography hierarchy, minimal inputs, and pill-shaped primary buttons.
 - Updated shared shell/layout/sidebar surfaces and action styles to consume theme variables instead of hardcoded colors for consistent light/dark behavior.

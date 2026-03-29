@@ -2,8 +2,9 @@
 
 ## Current Status
 
+- ✅ Corrected theme usage across login/layout/cards/forms/tables: global text uses `--text-primary`/`--text-secondary`, while `--on-primary` is only used on primary surfaces (e.g., green buttons).
 - ✅ Implemented a global institutional visual baseline aligned with the UIS palette and login reference: centralized theme tokens in `src/styles/globals.css`, with Beer.css-compatible variables for `body.light` and `body.dark`.
-- ✅ `src/main.tsx` now sets initial theme class (`light`/`dark`) from `localStorage` (`sapp-theme`) with system dark-mode fallback.
+- ✅ `src/main.tsx` now sets initial theme class (`light`/`dark`) from `localStorage` (`sapp-theme`) and falls back to `light` by default to avoid inverted first render in modo claro.
 - ✅ Refreshed key shell surfaces (`Layout`, `ModuleLayout`, `AspiranteLayout`, `Sidebar`) and both login screens to consume semantic theme tokens (rounded cards, soft shadows, minimal fields, pill primary actions).
 - ✅ Fixed infinite-loop requests in `CreateAspiranteModal`: trámite documentos are fetched once per modal-open cycle (using an open-transition guard) so the screen waits for a single response before rendering documents.
 - ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
@@ -94,7 +95,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
-1. Add a visible theme switcher (light/dark) that updates `localStorage.sapp-theme` and reuses the new token system.
+1. Add a visible theme switcher (light/dark) that updates `localStorage.sapp-theme` using the corrected light-first default behavior.
 2. Propagate the new design tokens to remaining page-specific CSS files with hardcoded colors to complete global consistency.
 3. Capture updated UI screenshots for docs once a browser-capable environment is available.
 4. Validate accessibility contrast for primary/secondary text in both themes.

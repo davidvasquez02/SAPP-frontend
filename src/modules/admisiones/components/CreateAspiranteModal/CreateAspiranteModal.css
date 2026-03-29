@@ -19,7 +19,7 @@
   width: min(720px, 92vw);
   max-height: 90vh;
   overflow-y: auto;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 20px;
   padding: 1.5rem;
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
@@ -35,7 +35,7 @@
 
 .create-aspirante-modal__header p {
   margin: 0.4rem 0 0;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .create-aspirante-modal__form {
@@ -47,7 +47,7 @@
 .create-aspirante-modal__section-title {
   margin: 0.25rem 0 0;
   font-size: 1.1rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .create-aspirante-modal__status {
@@ -63,7 +63,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  color: #0f172a;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -71,7 +71,7 @@
 .create-aspirante-modal__field select,
 .create-aspirante-modal__field textarea {
   border-radius: 12px;
-  border: 1px solid #cbd5f5;
+  border: 1px solid var(--outline);
   padding: 0.65rem 0.75rem;
   font-size: 0.95rem;
   font-family: inherit;
@@ -92,11 +92,11 @@
   height: 120px;
   object-fit: cover;
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
 }
 
 .create-aspirante-modal__helper {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
@@ -120,8 +120,8 @@
   gap: 0.75rem;
   padding: 0.75rem;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  background: color-mix(in srgb, var(--surface), var(--outline) 10%);
 }
 
 .create-aspirante-modal__document-info {
@@ -139,7 +139,7 @@
 
 .create-aspirante-modal__document-info p {
   margin: 0;
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 400;
   font-size: 0.85rem;
 }
@@ -171,7 +171,7 @@
 
 .create-aspirante-modal__loading {
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .create-aspirante-modal__error {
@@ -196,8 +196,8 @@
 
 .create-aspirante-modal__button {
   border: none;
-  background: #2563eb;
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--on-primary);
   border-radius: 999px;
   padding: 0.6rem 1.4rem;
   font-weight: 600;
@@ -205,19 +205,19 @@
 }
 
 .create-aspirante-modal__button:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 .create-aspirante-modal__button--ghost {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: color-mix(in srgb, var(--surface), var(--outline) 24%);
+  color: var(--text-primary);
 }
 
 .create-aspirante-modal__link {
   border: none;
   background: transparent;
-  color: #1d4ed8;
+  color: var(--primary);
   cursor: pointer;
   padding: 0;
   font-size: 0.85rem;
