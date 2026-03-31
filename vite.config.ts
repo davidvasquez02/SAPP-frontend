@@ -8,7 +8,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://uisrooms.eisi.online',
+        target: 'https://sapp.eisi.online',
         changeOrigin: true,
         secure: false,
       },
