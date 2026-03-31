@@ -14,11 +14,9 @@ document.body.style.colorScheme = initialTheme
 window.localStorage.setItem('sapp-theme', initialTheme)
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
+  <BrowserRouter>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </BrowserRouter>,
 )
