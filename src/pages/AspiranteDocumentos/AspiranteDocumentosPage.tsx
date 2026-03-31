@@ -8,6 +8,7 @@ import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
 import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
+import type { AspiranteUser } from '../../context/Auth'
 import './AspiranteDocumentosPage.css'
 
 const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => {
@@ -44,7 +45,8 @@ const AspiranteDocumentosPage = () => {
 
     const fetchDocumentos = async () => {
       try {
-        const tramiteId = session.user.inscripcionAdmisionId
+        const aspiranteUser = session.user as AspiranteUser
+        const tramiteId = aspiranteUser.inscripcionAdmisionId
 
         if (tramiteId == null) {
           setErrorMessage('No se encontró inscripcionAdmisionId en la sesión del aspirante.')
@@ -102,6 +104,7 @@ const AspiranteDocumentosPage = () => {
         console.error('[AspiranteDocumentos] sesión de aspirante no disponible')
         return
       }
+      const aspiranteUser = session.user as AspiranteUser
 
       const item = items.find((current) => current.id === id)
 
@@ -116,7 +119,7 @@ const AspiranteDocumentosPage = () => {
       )
 
       try {
-        const tramiteId = session.user.inscripcionAdmisionId
+        const tramiteId = aspiranteUser.inscripcionAdmisionId
 
         if (tramiteId == null) {
           setItems((prev) =>
@@ -142,7 +145,7 @@ const AspiranteDocumentosPage = () => {
           nombreArchivo: item.selectedFile.name,
           tramiteId,
           usuarioCargaId: null,
-          aspiranteCargaId: session.user.id,
+          aspiranteCargaId: aspiranteUser.id,
           contenidoBase64,
           mimeType: item.selectedFile.type || 'application/octet-stream',
           tamanoBytes: item.selectedFile.size,
