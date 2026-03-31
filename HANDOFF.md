@@ -10,6 +10,7 @@
 - ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
 - ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
 - ✅ Sequential upload now consumes dynamic backend `tipoDocumentoTramiteId` values, so changes in backend configuration are reflected without frontend code edits.
+- ✅ Fixed TypeScript auth/document compile blockers on March 31, 2026: `AspiranteDocumentosPage` now safely reads `inscripcionAdmisionId` from an `AspiranteUser`-typed session user, and both login pages switched `FormEvent` to type-only imports required by `verbatimModuleSyntax`.
 - Added evaluación availability gating for Hoja de Vida/Examen/Entrevistas: availability probe with cache, disabled accordion windows with “Disponible cuando se inicie la evaluación.”, and route guard to redirect when stages are unavailable.
 - Inscripción documentos now shows load status and backend validation status (`estadoDocumento`) with rejection reasons (`observacionesDocumento`); approve/reject refreshes the checklist and enables “Continuar evaluación” once all required docs are approved.
 - Fixed `DocumentUploadCard` to pass through the optional `onRemoveFile` handler, preventing a runtime reference error when removing files.
@@ -169,7 +170,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
-- `npm run build` ❌ fails due to pre-existing TypeScript issues unrelated to this fix (examples: `EvaluacionEtapaSection` null/undefined type mismatch, `AspiranteDocumentosPage` union property access, duplicate object keys in `InscripcionDocumentosPage`, and `FormEvent` type-only imports).
+- `npm run build` ✅ passes on March 31, 2026 after fixing the reported `AspiranteDocumentosPage` union property access and `FormEvent` type-only imports.
 - `npm run lint` ❌ fails due to pre-existing lint debt (`no-explicit-any` in module stubs, React hooks purity/set-state-in-effect rules, and unused vars in helper/stub files).
 
 ## Environment & Package Versions
