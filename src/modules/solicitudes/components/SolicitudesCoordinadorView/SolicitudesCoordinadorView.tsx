@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import { fetchSolicitudesCoordinador } from '../../services/solicitudesMockService'
 import type { SolicitudCoordinadorDto } from '../../types'
 import './SolicitudesCoordinadorView.css'
 
 const SolicitudesCoordinadorView = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [rows, setRows] = useState<SolicitudCoordinadorDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +37,7 @@ const SolicitudesCoordinadorView = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [location.key])
 
   return (
     <section className="solicitudes-coordinador-view">
@@ -46,7 +49,7 @@ const SolicitudesCoordinadorView = () => {
       ) : rows.length === 0 ? (
         <p className="solicitudes-coordinador-view__status">No hay solicitudes para mostrar.</p>
       ) : (
-        <SolicitudesTable mode="COORDINADOR" rows={rows} />
+        <SolicitudesTable mode="COORDINADOR" rows={rows} onRowClick={(row) => navigate(`/solicitudes/${row.id}`)} />
       )}
     </section>
   )

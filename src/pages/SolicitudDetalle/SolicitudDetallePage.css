@@ -1,0 +1,108 @@
+.solicitud-detalle-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: 1.25rem;
+  box-shadow: 0 0.75rem 2rem color-mix(in srgb, var(--outline), transparent 80%);
+}
+
+.solicitud-detalle-page__back,
+.solicitud-detalle-page__save {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.solicitud-detalle-page__back {
+  background: color-mix(in srgb, var(--outline), transparent 75%);
+  color: var(--text-primary);
+}
+
+.solicitud-detalle-page__save {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.solicitud-detalle-page__header h2 {
+  margin: 0;
+}
+
+.solicitud-detalle-page__header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.solicitud-detalle-page__item {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--outline);
+  border-radius: 0.9rem;
+  background: var(--surface-container-low);
+}
+
+.solicitud-detalle-page__item dt {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.solicitud-detalle-page__item dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.solicitud-detalle-page__item--full {
+  grid-column: 1 / -1;
+}
+
+.solicitud-detalle-page__badge {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary), transparent 82%);
+}
+
+.solicitud-detalle-page__estado-editor {
+  border-top: 1px solid var(--outline);
+  padding-top: 1rem;
+}
+
+.solicitud-detalle-page__estado-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.solicitud-detalle-page__estado-controls select {
+  min-width: 180px;
+  border: 1px solid var(--outline);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.4rem 0.6rem;
+}
+
+.solicitud-detalle-page__status {
+  margin: 0;
+}
+
+.solicitud-detalle-page__status--error {
+  color: var(--danger, #b3261e);
+}
+
+.solicitud-detalle-page__success {
+  color: color-mix(in srgb, var(--primary), #000 20%);
+  margin: 0.75rem 0 0;
+}

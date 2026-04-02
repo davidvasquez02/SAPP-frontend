@@ -42,6 +42,13 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                 key={row.id}
                 className={isClickable ? 'solicitudes-table__row--clickable' : ''}
                 onClick={() => onRowClick?.(row)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    onRowClick?.(row)
+                  }
+                }}
+                role={isClickable ? 'button' : undefined}
+                tabIndex={isClickable ? 0 : undefined}
               >
                 <td>{row.id}</td>
                 {mode === 'COORDINADOR' && <td>{row.estudiante ?? '—'}</td>}
