@@ -14,7 +14,6 @@ import SolicitudDocumentosEditor, {
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
-import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
 import './SolicitudDetallePage.css'
 
 const formatDate = (value: string | null) => {
@@ -224,7 +223,7 @@ const SolicitudDetallePage = () => {
               <div className="solicitud-detalle-page__item">
                 <dt>Estado</dt>
                 <dd>
-                  <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} />
+                  <span className="solicitud-detalle-page__badge">{solicitud.estadoSigla}</span>
                 </dd>
               </div>
               <div className="solicitud-detalle-page__item">
@@ -321,7 +320,7 @@ const SolicitudDetallePage = () => {
               </section>
             )}
 
-            {isCoordinador && (
+            {isCoordinador && !isEstudiante && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
                   <h3>Cambiar estado</h3>
