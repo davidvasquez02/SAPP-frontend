@@ -16,6 +16,11 @@ export interface PersonaDto {
   telefono: string | null
 }
 
+export interface EstudianteDto {
+  id: number
+  [key: string]: unknown
+}
+
 export interface UserLoginResponseDto {
   id: number
   username: string
@@ -24,6 +29,7 @@ export interface UserLoginResponseDto {
   fechaCreacion: string
   lastLogin: string
   persona: PersonaDto
+  estudiante?: EstudianteDto | null
   roles: string[]
   token: string
 }

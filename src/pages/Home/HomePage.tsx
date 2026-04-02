@@ -1,5 +1,6 @@
 import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
+import { getEstudianteIdFromSession } from '../../modules/solicitudes/utils/getEstudianteId'
 import './HomePage.css'
 
 const HomePage = () => {
@@ -12,6 +13,7 @@ const HomePage = () => {
   const isUserSession = session?.kind === 'SAPP' && user && 'username' in user
   const roleCodes = isUserSession ? user.roles.join(', ') : ''
   const expiresAtDate = isUserSession && session.expiresAt ? new Date(session.expiresAt * 1000) : null
+  const estudianteId = isUserSession ? getEstudianteIdFromSession(session) : null
 
   return (
     <ModuleLayout title="Inicio">
@@ -33,6 +35,12 @@ const HomePage = () => {
               <dt>Expira</dt>
               <dd>{expiresAtDate ? expiresAtDate.toLocaleString('es-CO') : 'Sin expiración'}</dd>
             </div>
+            {import.meta.env.DEV && (
+              <div>
+                <dt>Estudiante ID (debug)</dt>
+                <dd>{estudianteId ?? 'No disponible'}</dd>
+              </div>
+            )}
           </dl>
         </section>
       )}

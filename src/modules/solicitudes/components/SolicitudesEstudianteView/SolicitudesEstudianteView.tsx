@@ -7,6 +7,7 @@ import SolicitudEstudianteForm, {
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import { fetchSolicitudesEstudiante, fetchTiposSolicitud } from '../../services/solicitudesMockService'
 import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
+import { getEstudianteIdFromSession } from '../../utils/getEstudianteId'
 import './SolicitudesEstudianteView.css'
 
 const parseTipo = (codigoNombre: string): { codigo: string; nombre: string } => {
@@ -20,7 +21,7 @@ const SolicitudesEstudianteView = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
-  const estudianteId = session?.kind === 'SAPP' ? session.user.id : 0
+  const estudianteId = getEstudianteIdFromSession(session)
   const codigoEstudianteUis = '20260001'
   const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>('LIST')
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
@@ -30,6 +31,17 @@ const SolicitudesEstudianteView = () => {
 
   useEffect(() => {
     let mounted = true
+
+    if (estudianteId === null) {
+      setLoading(false)
+      setError('No se encontró información del estudiante en la sesión.')
+      return () => {
+        mounted = false
+      }
+    }
+
+    setLoading(true)
+    setError(null)
 
     Promise.all([fetchTiposSolicitud(), fetchSolicitudesEstudiante(estudianteId)])
       .then(([tipos, solicitudes]) => {

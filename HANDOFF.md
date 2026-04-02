@@ -143,6 +143,7 @@
 - **Auth API (SAPP login):** `src/api/authService.ts`
 - **JWT payload + decoder:** `src/api/jwtPayloadTypes.ts`, `src/utils/jwt.ts`
 - **Auth DTOs/mappers:** `src/api/authTypes.ts`, `src/api/authMappers.ts`
+- **Estudiante ID helper (single source):** `src/modules/solicitudes/utils/getEstudianteId.ts`
 - **API config/types:** `src/api/config.ts`, `src/api/types.ts`
 - **Aspirante consulta info API:** `src/api/aspiranteAuthService.ts`, `src/api/aspiranteConsultaTypes.ts`, `src/api/aspiranteAuthMappers.ts`
 - **Tipos documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`
@@ -188,6 +189,11 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 2, 2026 after extending login/session contracts with optional `estudiante` and wiring solicitudes/home to consume `session.user.estudiante.id`.
+- Manual validation checklist for this update:
+  - Caso 1 (ESTUDIANTE con `data.estudiante`): localStorage `SAPP_AUTH_SESSION` should include `user.estudiante.id`.
+  - Caso 2 (COORDINADOR/DOCENTE/ADMIN sin `data.estudiante`): login/session remains valid, `user.estudiante` stays `null`.
+  - Caso 3 (ASPIRANTE): no behavior changes expected (`kind: "ASPIRANTE"` contract untouched).
 - Manual validation checklist for this update (pending browser walkthrough):
   - ESTUDIANTE `/solicitudes`: list should show at least one row without creating data first.
   - ESTUDIANTE `/solicitudes/:id` with estado `REGISTRADA`/`EN ESTUDIO`: “Editar solicitud” visible, save persists `tipoSolicitud` + `observaciones`.
@@ -223,9 +229,12 @@
 - **Solicitudes mocks/contracts:** `src/modules/solicitudes/types.ts` uses shared `ApiResponse<T>`; mock responses in `src/modules/solicitudes/mock/*.ts` follow `{ ok, message, data }`; student payload logged on submit is `{ tipoSolicitudId, observaciones, documentos[{ id, nombre, obligatorio, fileName }] }`.
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
+  - `AuthUser` (SAPP) now supports `estudiante?: { id: number; [key: string]: unknown } | null`.
 - **SAPP login output:** `src/api/authService.ts`
   - Expects backend response envelope `{ ok, message, data }` and maps `data` + decoded JWT payload into `AuthSession` (username, roles, iat/exp).
   - `data.roles` is now `string[]`; the mapper prefers response roles and falls back to JWT payload roles.
+  - `data.estudiante?: { id: number; [key: string]: unknown } | null` is persisted to `session.user.estudiante`.
+  - Student-scoped features should resolve identity via `getEstudianteIdFromSession(session)` and not via `session.user.id`.
   - JWT payload contract: `src/api/jwtPayloadTypes.ts` (supports `rolesUsuario`/`roles`, `nombreUsuario`/`sub`, `idUsuario`, `iat`, `exp`).
 - **Aspirante consulta info output:** `src/api/aspiranteAuthService.ts`
   - Calls `GET /sapp/aspirante/consultaInfo` with `{ numeroInscripcion, tipoDocumentoId, numeroDocumento }`, expects `{ ok, message, data: AspiranteConsultaInfoDto }` (including `nombre`, `director`, `grupoInvestigacion`, `telefono`, `numeroInscripcionUis`, `fechaRegistro`), and maps the response into `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`. `numeroInscripcionUis` is normalized to string on write.

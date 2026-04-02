@@ -7,6 +7,10 @@ export interface AuthUser {
   username: string
   roles: string[]
   persona: PersonaDto
+  estudiante?: {
+    id: number
+    [key: string]: unknown
+  } | null
   nombreCompleto?: string
   programa?: string
   email?: string
