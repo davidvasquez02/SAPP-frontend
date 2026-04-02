@@ -1,4 +1,5 @@
 import type { SolicitudCoordinadorDto } from '../../types'
+import StatusBadge from '../StatusBadge/StatusBadge'
 import './SolicitudCard.css'
 
 interface SolicitudCardProps {
@@ -35,9 +36,7 @@ const SolicitudCard = ({ solicitud, onClick }: SolicitudCardProps) => {
         <h3 className="solicitud-card__title">
           {solicitud.tipoSolicitudCodigo} — {solicitud.tipoSolicitud}
         </h3>
-        <span className={`solicitud-card__badge solicitud-card__badge--${solicitud.estadoSigla.toLowerCase()}`}>
-          {solicitud.estado}
-        </span>
+        <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} size="sm" />
       </header>
 
       <p className="solicitud-card__subtitle">

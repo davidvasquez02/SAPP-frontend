@@ -33,34 +33,10 @@
   color: var(--text-secondary);
 }
 
-.solicitud-card__badge {
-  border-radius: 999px;
-  padding: 0.15rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  align-self: flex-start;
-  white-space: nowrap;
-}
 
-.solicitud-card__badge--registrada {
-  background: color-mix(in srgb, #0b57d0, transparent 85%);
-  color: #0b57d0;
-}
 
-.solicitud-card__badge--en_estudio {
-  background: color-mix(in srgb, #b06000, transparent 85%);
-  color: #b06000;
-}
 
-.solicitud-card__badge--aprobada {
-  background: color-mix(in srgb, #1e8e3e, transparent 85%);
-  color: #1e8e3e;
-}
 
-.solicitud-card__badge--rechazada {
-  background: color-mix(in srgb, #b3261e, transparent 85%);
-  color: #b3261e;
-}
 
 .solicitud-card__meta {
   margin: 0;
