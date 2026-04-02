@@ -1,6 +1,6 @@
-import type { SolicitudDocumentoItem } from '../types'
+import type { SolicitudDocumentoRequirement } from '../types/solicitudDocumentosTypes'
 
-const documentosPorTipo: Record<number, SolicitudDocumentoItem[]> = {
+const documentosPorTipo: Record<number, SolicitudDocumentoRequirement[]> = {
   1: [
     { id: 101, nombre: 'Carta de solicitud', obligatorio: true },
     { id: 102, nombre: 'Cronograma actualizado', obligatorio: true },
@@ -18,6 +18,6 @@ const documentosPorTipo: Record<number, SolicitudDocumentoItem[]> = {
   ],
 }
 
-export function getMockDocumentosByTipo(tipoSolicitudId: number): SolicitudDocumentoItem[] {
+export function getMockDocumentosByTipo(tipoSolicitudId: number): SolicitudDocumentoRequirement[] {
   return documentosPorTipo[tipoSolicitudId] ?? []
 }

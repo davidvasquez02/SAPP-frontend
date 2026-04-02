@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import {
-  updateSolicitudEstudiante,
-} from '../../modules/solicitudes/services/solicitudesMockService'
+import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import { getSolicitudAcademicaById } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
+import SolicitudDocumentosEditor, {
+  type SolicitudDocumentosEditorHandle,
+} from '../../modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor'
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
@@ -31,6 +32,7 @@ const SolicitudDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
   const isEstudiante = !isCoordinador && hasAnyRole(roles, ['ESTUDIANTE'])
+  const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
@@ -138,7 +140,7 @@ const SolicitudDetallePage = () => {
     void loadDocumentos(parsedId)
   }, [isCoordinador, loadDocumentos, solicitudId])
 
-  const editableByEstudiante =
+  const editableSolicitud =
     isEstudiante &&
     (solicitud?.estadoSigla === 'REGISTRADA' || solicitud?.estadoSigla === 'EN ESTUDIO')
 
@@ -158,6 +160,11 @@ const SolicitudDetallePage = () => {
         tipoSolicitudId: draftTipoSolicitudId,
         observaciones: draftObservaciones.trim(),
       })
+
+      if (documentosEditorRef.current) {
+        await documentosEditorRef.current.commitChanges()
+      }
+
       setSolicitud(updated)
       setDraftTipoSolicitudId(updated.tipoSolicitudId)
       setDraftObservaciones(updated.observaciones ?? '')
@@ -237,7 +244,7 @@ const SolicitudDetallePage = () => {
               <section className="solicitud-detalle-page__estado-editor">
                 {!editMode ? (
                   <>
-                    {editableByEstudiante && (
+                    {editableSolicitud && (
                       <button
                         className="solicitud-detalle-page__save"
                         type="button"
@@ -250,6 +257,12 @@ const SolicitudDetallePage = () => {
                         Editar solicitud
                       </button>
                     )}
+
+                    <SolicitudDocumentosEditor
+                      solicitudId={solicitud.id}
+                      tipoSolicitudId={solicitud.tipoSolicitudId}
+                      editable={false}
+                    />
                   </>
                 ) : (
                   <div className="solicitud-detalle-page__student-editor">
@@ -281,6 +294,15 @@ const SolicitudDetallePage = () => {
                         onChange={(event) => setDraftObservaciones(event.target.value)}
                       />
                     </label>
+
+                    {draftTipoSolicitudId && (
+                      <SolicitudDocumentosEditor
+                        ref={documentosEditorRef}
+                        solicitudId={solicitud.id}
+                        tipoSolicitudId={draftTipoSolicitudId}
+                        editable={editableSolicitud}
+                      />
+                    )}
 
                     {formError && <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{formError}</p>}
 
