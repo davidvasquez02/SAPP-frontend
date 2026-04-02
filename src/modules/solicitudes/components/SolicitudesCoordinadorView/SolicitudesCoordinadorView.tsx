@@ -52,7 +52,7 @@ const SolicitudesCoordinadorView = () => {
       ) : rows.length === 0 ? (
         <p className="solicitudes-coordinador-view__status">No hay solicitudes para mostrar.</p>
       ) : (
-        <SolicitudesTable mode="COORDINADOR" rows={rows} onRowClick={(row) => navigate(`/solicitudes/${row.id}`)} />
+        <SolicitudesTable mode="COORDINADOR" rows={rows} onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)} />
       )}
     </section>
   )

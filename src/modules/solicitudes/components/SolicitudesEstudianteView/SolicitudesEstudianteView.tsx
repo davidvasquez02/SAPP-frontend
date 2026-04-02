@@ -8,14 +8,16 @@ import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import { createSolicitudAcademica, getSolicitudesAcademicasByEstudiante } from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
-import { getEstudianteId } from '../../utils/getEstudianteId'
 import './SolicitudesEstudianteView.css'
 
 const SolicitudesEstudianteView = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
-  const estudianteId = getEstudianteId(session)
+  const estudianteId =
+    session && session.kind === 'SAPP' && 'estudiante' in session.user
+      ? session.user.estudiante?.id ?? null
+      : null
   const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>('LIST')
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [rows, setRows] = useState<SolicitudEstudianteRowDto[]>([])
@@ -36,7 +38,7 @@ const SolicitudesEstudianteView = () => {
 
     if (estudianteId === null) {
       setLoading(false)
-      setError('No se encontró estudianteId en sesión.')
+      setError('No hay estudianteId en sesión')
       return () => {
         mounted = false
       }
@@ -96,7 +98,7 @@ const SolicitudesEstudianteView = () => {
 
   const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
     if (estudianteId === null) {
-      setFormError('No se encontró estudianteId en sesión.')
+      setFormError('No hay estudianteId en sesión')
       return
     }
 
@@ -153,7 +155,7 @@ const SolicitudesEstudianteView = () => {
         rows.length === 0 ? (
           <p className="solicitudes-estudiante-view__status">Aún no tienes solicitudes registradas.</p>
         ) : (
-          <SolicitudesTable mode="ESTUDIANTE" rows={rows} onRowClick={(row) => navigate(`/solicitudes/${row.id}`)} />
+          <SolicitudesTable mode="ESTUDIANTE" rows={rows} onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)} />
         )
       ) : loadingTipos ? (
         <p className="solicitudes-estudiante-view__status">Cargando tipos de solicitud...</p>

@@ -4,7 +4,7 @@ import './SolicitudesTable.css'
 interface SolicitudesTableProps {
   rows: SolicitudTableRow[]
   mode: 'ESTUDIANTE' | 'COORDINADOR'
-  onRowClick?: (row: SolicitudTableRow) => void
+  onRowClick?: (solicitudId: number) => void
 }
 
 const formatDate = (value: string | null) => {
@@ -41,10 +41,10 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
               <tr
                 key={row.id}
                 className={isClickable ? 'solicitudes-table__row--clickable' : ''}
-                onClick={() => onRowClick?.(row)}
+                onClick={() => onRowClick?.(row.id)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
-                    onRowClick?.(row)
+                    onRowClick?.(row.id)
                   }
                 }}
                 role={isClickable ? 'button' : undefined}

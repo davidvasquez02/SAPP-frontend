@@ -77,14 +77,15 @@ Mock data for the Admisiones module still lives in:
 
 ## Recent Decisions (Changelog-lite)
 - Integrated real Solicitudes API clients using the shared `httpClient` wrapper: `GET /sapp/tipoSolicitud`, `GET /sapp/solicitudesAcademicas`, `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...`, and `POST /sapp/solicitudesAcademicas`, all honoring the standard `{ ok, message, data }` envelope.
-- Added a 404-only fallback for student solicitudes list (`/sapp/solicitudesAcademicas/estudiante` -> `/solicitudesAcademicas/estudiante`) to tolerate backend path inconsistencies without changing the primary contract.
 - Migrated `/solicitudes` role views (coordinador + estudiante) from mock listing to backend data and kept loading/error/empty states with row-click navigation to detail.
 - Updated student solicitud creation flow to load real tipos on form mode, submit `estudianteId` from `session.user.estudiante.id`, and refresh the list after a successful POST.
-- Updated `SolicitudDetallePage` minimum-viable real-data behavior: it now resolves detail by loading role-scoped lists and searching by `solicitudId`; shows “Solicitud no encontrada o sin permisos” when absent.
+- Updated student solicitudes listing to always call `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...` (removed non-`/sapp` fallback path).
+- Added `getSolicitudAcademicaById(solicitudId)` service that calls `GET /sapp/solicitudesAcademicas/{id}` and throws `Solicitud no encontrada` when the envelope has `data: null`.
+- Updated `SolicitudDetallePage` to load detail directly by route param (`/solicitudes/:solicitudId`) through `GET /sapp/solicitudesAcademicas/{id}` and show `ID inválido` on malformed params.
 - Temporarily disabled coordinator state-change action in detail until a real update endpoint is available (read-only detail + existing documentos section remain).
 - Extended SAPP login contracts to persist `data.estudiante` in session (`session.user.estudiante`) with safe typing (`id: number` + additional unknown keys) so downstream modules can consume `estudiante.id` without using `any`.
 - Added `getEstudianteIdFromSession(session)` as the official resolver for student-scoped operations, avoiding fallback to `session.user.id` when backend identity differs from `estudiante.id`.
-- Updated the student solicitudes flow to read `estudianteId` only from `session.user.estudiante.id`; when absent, UI now shows “No se encontró información del estudiante en la sesión.” and skips data operations requiring `estudianteId`.
+- Updated the student solicitudes flow to read `estudianteId` only from `session.user.estudiante.id`; when absent, UI now shows “No hay estudianteId en sesión” and skips data operations requiring `estudianteId`.
 - Added a DEV-only “Estudiante ID (debug)” field in Home → Mi cuenta to validate login persistence safely without exposing sensitive data.
 - Updated solicitudes mock seed to guarantee a visible ESTUDIANTE row in `/solicitudes` (added fallback seed `id=10`, `estudianteId=2`, estado `REGISTRADA`) so the student table never renders empty in the default mock flow.
 - Added ESTUDIANTE edit flow in `SolicitudDetallePage`: editable fields are now limited to `tipoSolicitudId` and `observaciones`, with inline form actions (`Editar solicitud`, `Guardar cambios`, `Cancelar`) and mock persistence.
