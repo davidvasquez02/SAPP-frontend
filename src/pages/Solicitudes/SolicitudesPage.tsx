@@ -14,10 +14,10 @@ const SolicitudesPage = () => {
 
   return (
     <ModuleLayout title="Solicitudes">
-      {isCoord ? (
-        <SolicitudesCoordinadorView />
-      ) : isEstudiante ? (
+      {isEstudiante ? (
         <SolicitudesEstudianteView />
+      ) : isCoord ? (
+        <SolicitudesCoordinadorView />
       ) : (
         <p className="solicitudes-page__status">No tienes permisos.</p>
       )}
