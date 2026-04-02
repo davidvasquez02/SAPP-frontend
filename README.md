@@ -76,6 +76,11 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Updated solicitudes mock seed to guarantee a visible ESTUDIANTE row in `/solicitudes` (added fallback seed `id=10`, `estudianteId=2`, estado `REGISTRADA`) so the student table never renders empty in the default mock flow.
+- Added ESTUDIANTE edit flow in `SolicitudDetallePage`: editable fields are now limited to `tipoSolicitudId` and `observaciones`, with inline form actions (`Editar solicitud`, `Guardar cambios`, `Cancelar`) and mock persistence.
+- Enforced edit-state guard for estudiantes: edit UI is enabled only when `estadoSigla` is `REGISTRADA` or `EN ESTUDIO`; for `APROBADA`/`RECHAZADA`, no edit action is shown.
+- Added `updateSolicitudEstudianteMock` + async service `updateSolicitudEstudiante` to update `tipoSolicitudId`, `tipoSolicitudCodigo`, `tipoSolicitud`, and `observaciones` while preserving the rest of the solicitud payload.
+- Confirmed list/detail synchronization via shared in-memory solicitudes store; after saving from detail, returning to `/solicitudes` reflects updates through `fetchSolicitudesEstudiante()` re-fetch keyed by `location.key`.
 - Extended `SolicitudDetallePage` (mock flow) with a coordinator/admin-only “Documentos adjuntos” section that loads document lists by `solicitudId`, includes loading/error/empty states, and keeps state change controls intact.
 - Added mock document contracts/services for solicitudes: `SolicitudDocumentoAdjuntoDto`, `solicitudDocumentosById` seeded for IDs `1..4`, and async `fetchSolicitudDocumentos()` with 150ms delay to emulate backend behavior.
 - Added reusable `DocumentosAdjuntos` UI for solicitud detail with accessible actions to `Ver` (PDF-only open in new tab) and `Descargar` (all mime types), reusing shared base64 utilities in `src/shared/files/base64FileUtils.ts`.
