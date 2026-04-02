@@ -76,6 +76,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Extended the `/solicitudes` mock module with click-through row navigation (`/solicitudes/:solicitudId`), a dedicated detail page, and coordinator-only state transitions (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`) backed by a shared in-memory store so list/detail remain synchronized after updates.
 - Fixed TypeScript compilation blockers for auth/document pages: `AspiranteDocumentosPage` now casts `session.user` to `AspiranteUser` after the `session.kind === "ASPIRANTE"` guard before reading `inscripcionAdmisionId`, and both login pages now use `import type { FormEvent }` to comply with `verbatimModuleSyntax`.
 - Fixed the theme baseline to avoid inverted light mode: default startup theme is now `light` (unless `sapp-theme` is already set), `body.light`/`body.dark` tokens were normalized to the UIS palette, and base text remains on `--text-primary` while `--on-primary` is reserved for text over primary surfaces (buttons).
 - Adopted a global institutional design baseline using UIS palette tokens with dual theme support (`body.light`/`body.dark`) and Beer.css-compatible CSS variables (`--primary`, `--on-primary`, `--outline`, `--surface`, `--surface-container-low`, `--inverse-primary`).

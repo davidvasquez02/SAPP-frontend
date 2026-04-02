@@ -1,7 +1,12 @@
-import { solicitudesCoordinadorMockResponse } from '../mock/solicitudesCoordinador.mock'
-import { solicitudesEstudianteMockResponse } from '../mock/solicitudesEstudiante.mock'
 import { tipoSolicitudMockResponse } from '../mock/tipoSolicitud.mock'
-import type { SolicitudCoordinadorDto, SolicitudEstudianteRowDto, TipoSolicitudDto } from '../types'
+import {
+  getAllSolicitudesMock,
+  getSolicitudByIdMock,
+  getSolicitudesByEstudianteMock,
+  updateSolicitudEstadoMock,
+  type EstadoSolicitudEditable,
+} from '../mock/solicitudesStore.mock'
+import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../types'
 
 const wait = async (ms: number) => {
   await new Promise((resolve) => {
@@ -15,13 +20,28 @@ export async function fetchTiposSolicitud(): Promise<TipoSolicitudDto[]> {
 }
 
 export async function fetchSolicitudesCoordinador(): Promise<SolicitudCoordinadorDto[]> {
-  await wait(200)
-  return solicitudesCoordinadorMockResponse.data
+  await wait(180)
+  return getAllSolicitudesMock()
 }
 
-export async function fetchSolicitudesEstudiante(codigoEstudianteUis = '20260001'): Promise<SolicitudEstudianteRowDto[]> {
+export async function fetchSolicitudesEstudiante(estudianteId: number): Promise<SolicitudCoordinadorDto[]> {
+  await wait(220)
+  return getSolicitudesByEstudianteMock(estudianteId)
+}
+
+export async function fetchSolicitudDetalle(id: number): Promise<SolicitudCoordinadorDto> {
+  await wait(240)
+  const solicitud = getSolicitudByIdMock(id)
+  if (!solicitud) {
+    throw new Error('Solicitud no encontrada')
+  }
+  return solicitud
+}
+
+export async function updateSolicitudEstado(
+  id: number,
+  estadoSigla: EstadoSolicitudEditable,
+): Promise<SolicitudCoordinadorDto> {
   await wait(200)
-  return solicitudesEstudianteMockResponse.data.filter(
-    (solicitud) => solicitud.codigoEstudianteUis === codigoEstudianteUis,
-  )
+  return updateSolicitudEstadoMock({ id, estadoSigla })
 }

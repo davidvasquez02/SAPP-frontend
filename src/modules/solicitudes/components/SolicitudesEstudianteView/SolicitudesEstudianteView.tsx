@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../../context/Auth'
 import SolicitudEstudianteForm, {
   type SolicitudEstudiantePayload,
 } from '../SolicitudEstudianteForm/SolicitudEstudianteForm'
@@ -15,6 +17,11 @@ const parseTipo = (codigoNombre: string): { codigo: string; nombre: string } => 
 const getTodayDate = () => new Date().toISOString().slice(0, 10)
 
 const SolicitudesEstudianteView = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { session } = useAuth()
+  const estudianteId = session?.kind === 'SAPP' ? session.user.id : 0
+  const codigoEstudianteUis = '20260001'
   const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>('LIST')
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [rows, setRows] = useState<SolicitudEstudianteRowDto[]>([])
@@ -24,8 +31,7 @@ const SolicitudesEstudianteView = () => {
   useEffect(() => {
     let mounted = true
 
-
-    Promise.all([fetchTiposSolicitud(), fetchSolicitudesEstudiante()])
+    Promise.all([fetchTiposSolicitud(), fetchSolicitudesEstudiante(estudianteId)])
       .then(([tipos, solicitudes]) => {
         if (!mounted) {
           return
@@ -49,7 +55,7 @@ const SolicitudesEstudianteView = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [estudianteId, location.key])
 
   const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
     const selectedTipo = tiposSolicitud.find((tipo) => tipo.id === payload.tipoSolicitudId)
@@ -65,7 +71,7 @@ const SolicitudesEstudianteView = () => {
       fechaResolucion: null,
       observaciones: payload.observaciones || 'Solicitud registrada desde formulario.',
       programaAcademico: '61412 - MISI',
-      codigoEstudianteUis: '20260001',
+      codigoEstudianteUis,
     }
 
     setRows((current) => [newRow, ...current])
@@ -95,7 +101,7 @@ const SolicitudesEstudianteView = () => {
         rows.length === 0 ? (
           <p className="solicitudes-estudiante-view__status">Aún no tienes solicitudes registradas.</p>
         ) : (
-          <SolicitudesTable mode="ESTUDIANTE" rows={rows} />
+          <SolicitudesTable mode="ESTUDIANTE" rows={rows} onRowClick={(row) => navigate(`/solicitudes/${row.id}`)} />
         )
       ) : (
         <SolicitudEstudianteForm tipos={tiposSolicitud} onSubmit={handleRegisterSolicitud} />

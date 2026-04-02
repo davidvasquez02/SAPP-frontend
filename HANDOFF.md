@@ -2,6 +2,9 @@
 
 ## Current Status
 
+- ✅ Solicitudes now includes detail navigation from both role-based tables to `/solicitudes/:solicitudId`, with row click + Enter key accessibility.
+- ✅ Added shared in-memory solicitudes store (`src/modules/solicitudes/mock/solicitudesStore.mock.ts`) used by coordinator list, student list, and detalle APIs so state stays synchronized.
+- ✅ Added `SolicitudDetallePage` with loading/error/data states, read-only solicitud info, and coordinator-only mock status updates (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`).
 - ✅ Corrected theme usage across login/layout/cards/forms/tables: global text uses `--text-primary`/`--text-secondary`, while `--on-primary` is only used on primary surfaces (e.g., green buttons).
 - ✅ Implemented a global institutional visual baseline aligned with the UIS palette and login reference: centralized theme tokens in `src/styles/globals.css`, with Beer.css-compatible variables for `body.light` and `body.dark`.
 - ✅ `src/main.tsx` now sets initial theme class (`light`/`dark`) from `localStorage` (`sapp-theme`) and falls back to `light` by default to avoid inverted first render in modo claro.
