@@ -1,0 +1,23 @@
+.solicitudes-coordinador-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.solicitudes-coordinador-grid__status {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+}
+
+.solicitudes-coordinador-grid__status--error {
+  background: color-mix(in srgb, #b3261e, transparent 90%);
+  color: #b3261e;
+}
+
+.solicitudes-coordinador-grid__summary {
+  margin: 0 0 0.8rem;
+  color: var(--text-secondary);
+}

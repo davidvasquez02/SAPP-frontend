@@ -1,0 +1,123 @@
+.solicitud-estudiante-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.solicitud-estudiante-form__title {
+  margin: 0;
+}
+
+.solicitud-estudiante-form__subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.solicitud-estudiante-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 1rem;
+  background: var(--surface-container-low);
+}
+
+.solicitud-estudiante-form label,
+.solicitud-estudiante-form h4 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.solicitud-estudiante-form select,
+.solicitud-estudiante-form textarea,
+.solicitud-estudiante-form input[type='file'] {
+  font: inherit;
+  color: inherit;
+}
+
+.solicitud-estudiante-form select,
+.solicitud-estudiante-form textarea {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--surface);
+}
+
+.solicitud-estudiante-form__docs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.solicitud-estudiante-form__doc-item {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface);
+}
+
+.solicitud-estudiante-form__doc-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.solicitud-estudiante-form__badge {
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--inverse-primary), transparent 80%);
+  color: var(--inverse-primary);
+}
+
+.solicitud-estudiante-form__file-name,
+.solicitud-estudiante-form__help,
+.solicitud-estudiante-form__empty {
+  margin: 0.4rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.solicitud-estudiante-form__doc-error {
+  margin: 0.35rem 0 0;
+  color: #b3261e;
+  font-size: 0.85rem;
+}
+
+.solicitud-estudiante-form__submit {
+  align-self: flex-start;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.solicitud-estudiante-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.solicitud-estudiante-form__alert {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.7rem;
+  font-size: 0.9rem;
+}
+
+.solicitud-estudiante-form__alert--error {
+  background: color-mix(in srgb, #b3261e, transparent 88%);
+  color: #b3261e;
+}
+
+.solicitud-estudiante-form__alert--success {
+  background: color-mix(in srgb, #1e8e3e, transparent 88%);
+  color: #1e8e3e;
+}
