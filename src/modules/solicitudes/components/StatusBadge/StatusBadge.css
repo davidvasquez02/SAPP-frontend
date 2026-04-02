@@ -18,31 +18,31 @@
   font-size: 0.8rem;
 }
 
-.status-badge--registrada {
-  background: color-mix(in srgb, var(--primary), transparent 84%);
-  border-color: color-mix(in srgb, var(--primary), transparent 56%);
-  color: var(--primary);
+.status-badge.status-badge--registrada {
+  background: rgba(30, 136, 229, 0.14);
+  border-color: rgba(30, 136, 229, 0.45);
+  color: #1e88e5;
 }
 
-.status-badge--en-estudio {
-  background: color-mix(in srgb, #b06000, transparent 84%);
-  border-color: color-mix(in srgb, #b06000, transparent 52%);
+.status-badge.status-badge--en-estudio {
+  background: rgba(176, 96, 0, 0.14);
+  border-color: rgba(176, 96, 0, 0.45);
   color: #b06000;
 }
 
-.status-badge--aprobada {
-  background: color-mix(in srgb, #1e8e3e, transparent 84%);
-  border-color: color-mix(in srgb, #1e8e3e, transparent 52%);
+.status-badge.status-badge--aprobada {
+  background: rgba(30, 142, 62, 0.14);
+  border-color: rgba(30, 142, 62, 0.45);
   color: #1e8e3e;
 }
 
-.status-badge--rechazada {
-  background: color-mix(in srgb, var(--danger, #b3261e), transparent 84%);
-  border-color: color-mix(in srgb, var(--danger, #b3261e), transparent 52%);
-  color: var(--danger, #b3261e);
+.status-badge.status-badge--rechazada {
+  background: rgba(179, 38, 30, 0.14);
+  border-color: rgba(179, 38, 30, 0.45);
+  color: #b3261e;
 }
 
-.status-badge--unknown {
+.status-badge.status-badge--unknown {
   background: color-mix(in srgb, var(--outline), transparent 80%);
   border-color: color-mix(in srgb, var(--outline), transparent 45%);
   color: var(--text-secondary);

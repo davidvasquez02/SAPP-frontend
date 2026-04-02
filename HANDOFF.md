@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 2, 2026: verified/fixed Solicitudes estado badge regression where all chips appeared green; `StatusBadge.css` now uses stronger variant selectors and explicit rgba colors per estado, preventing override by generic/global styles.
+- April 2, 2026: `normalizeEstadoSolicitud` now supports common backend variants (`EN_ESTUDIO`, `APROBADO`, `RECHAZADO`) before rendering the badge, keeping colors consistent in table/card/detail views.
 - Solicitudes status badges are now centralized with `StatusBadge` + `normalizeEstadoSolicitud`, applied in table/detail/card views with differentiated colors for REGISTRADA, EN ESTUDIO, APROBADA, RECHAZADA, and UNKNOWN fallback.
 - ✅ Added ESTUDIANTE-side mock document replacement flow in `SolicitudDetallePage`: edit mode now renders required docs by `tipoSolicitudId`, supports replace/remove, commits selected files as base64 on save, and persists by `solicitudId` in localStorage (`sapp:solicitudes:docs:{id}`).
 - ✅ Added reusable `SolicitudDocumentosEditor` for both edit mode and read-only mode (outside edit), including required-doc warning (`Faltan documentos obligatorios por adjuntar.`) without blocking save by default.
