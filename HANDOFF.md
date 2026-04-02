@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Solicitudes module now consumes real backend APIs for tipos/list/create and role-based listings; mock services remain only for non-covered flows (e.g., edit-by-student and documentos adjuntos mock data).
 
 - ✅ Student solicitudes mock now guarantees at least one visible row for `estudianteId=2` by injecting a fallback seed (`id=10`, estado `REGISTRADA`) in the shared in-memory store when missing.
 - ✅ `SolicitudDetallePage` now supports ESTUDIANTE inline editing (mock) for `tipoSolicitudId` + `observaciones`, with `Guardar cambios` / `Cancelar` and success feedback `Cambios guardados (mock)`.
@@ -189,6 +190,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 2, 2026 after integrating real Solicitudes APIs (listado coordinador/estudiante + creación POST) and detail lookup by list filtering.
 - `npm run build` ✅ passes on April 2, 2026 after extending login/session contracts with optional `estudiante` and wiring solicitudes/home to consume `session.user.estudiante.id`.
 - Manual validation checklist for this update:
   - Caso 1 (ESTUDIANTE con `data.estudiante`): localStorage `SAPP_AUTH_SESSION` should include `user.estudiante.id`.
@@ -222,6 +224,11 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+- **Solicitudes API contracts (real):** `src/modules/solicitudes/api/types.ts`, `src/modules/solicitudes/api/tipoSolicitudService.ts`, `src/modules/solicitudes/api/solicitudesAcademicasService.ts`
+  - `GET /sapp/tipoSolicitud` => `{ ok, message, data: TipoSolicitudDto[] }`
+  - `GET /sapp/solicitudesAcademicas` => `{ ok, message, data: SolicitudAcademicaDto[] }`
+  - `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...` with 404 fallback to `/solicitudesAcademicas/estudiante?estudianteId=...`
+  - `POST /sapp/solicitudesAcademicas` with body `{ estudianteId, tipoSolicitudId, fechaResolucion: null, observaciones }` and envelope response.
 - **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`
   - `SolicitudDocumentoAdjuntoDto`: `{ idDocumento, nombreArchivo, mimeType, base64Contenido, descripcion?, obligatorio? }`
 - **Solicitudes documentos mock service:** `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`

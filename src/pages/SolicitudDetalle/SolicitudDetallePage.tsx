@@ -4,20 +4,17 @@ import { ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import {
-  fetchSolicitudDetalle,
-  fetchTiposSolicitud,
   updateSolicitudEstudiante,
-  updateSolicitudEstado,
 } from '../../modules/solicitudes/services/solicitudesMockService'
+import { getSolicitudesAcademicas, getSolicitudesAcademicasByEstudiante } from '../../modules/solicitudes/api/solicitudesAcademicasService'
+import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import type { SolicitudCoordinadorDto } from '../../modules/solicitudes/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
-import type { EstadoSolicitudEditable } from '../../modules/solicitudes/mock/solicitudesStore.mock'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
+import { getEstudianteId } from '../../modules/solicitudes/utils/getEstudianteId'
 import './SolicitudDetallePage.css'
-
-const ESTADOS_EDITABLES: EstadoSolicitudEditable[] = ['EN ESTUDIO', 'APROBADA', 'RECHAZADA']
 
 const formatDate = (value: string | null) => {
   if (!value) {
@@ -35,10 +32,10 @@ const SolicitudDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
   const isEstudiante = !isCoordinador && hasAnyRole(roles, ['ESTUDIANTE'])
+  const estudianteId = getEstudianteId(session)
 
   const [solicitud, setSolicitud] = useState<SolicitudCoordinadorDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
-  const [nextEstado, setNextEstado] = useState<EstadoSolicitudEditable>('EN ESTUDIO')
   const [editMode, setEditMode] = useState(false)
   const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
   const [draftObservaciones, setDraftObservaciones] = useState('')
@@ -64,18 +61,34 @@ const SolicitudDetallePage = () => {
     setLoading(true)
     setError(null)
 
-    fetchSolicitudDetalle(parsedId)
+    const loadSolicitud = async () => {
+      if (isCoordinador) {
+        const response = await getSolicitudesAcademicas()
+        return response.find((item) => item.id === parsedId) ?? null
+      }
+
+      if (isEstudiante && estudianteId !== null) {
+        const response = await getSolicitudesAcademicasByEstudiante(estudianteId)
+        return response.find((item) => item.id === parsedId) ?? null
+      }
+
+      return null
+    }
+
+    loadSolicitud()
       .then((response) => {
         if (!mounted) {
+          return
+        }
+        if (!response) {
+          setSolicitud(null)
+          setError('Solicitud no encontrada o sin permisos.')
           return
         }
         setSolicitud(response)
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
         setEditMode(false)
-        if (ESTADOS_EDITABLES.includes(response.estadoSigla as EstadoSolicitudEditable)) {
-          setNextEstado(response.estadoSigla as EstadoSolicitudEditable)
-        }
       })
       .catch((fetchError) => {
         if (!mounted) {
@@ -92,7 +105,7 @@ const SolicitudDetallePage = () => {
     return () => {
       mounted = false
     }
-  }, [solicitudId])
+  }, [estudianteId, isCoordinador, isEstudiante, solicitudId])
 
   useEffect(() => {
     if (!isEstudiante) {
@@ -101,7 +114,7 @@ const SolicitudDetallePage = () => {
     }
 
     let mounted = true
-    fetchTiposSolicitud()
+    getTiposSolicitud()
       .then((tipos) => {
         if (mounted) {
           setTiposSolicitud(tipos)
@@ -146,27 +159,6 @@ const SolicitudDetallePage = () => {
 
     void loadDocumentos(parsedId)
   }, [isCoordinador, loadDocumentos, solicitudId])
-
-  const handleSaveEstado = async () => {
-    if (!solicitud) {
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    setSuccessMessage(null)
-
-    try {
-      const updated = await updateSolicitudEstado(solicitud.id, nextEstado)
-      setSolicitud(updated)
-      setNextEstado(updated.estadoSigla as EstadoSolicitudEditable)
-      setSuccessMessage('Estado actualizado correctamente')
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'No fue posible actualizar el estado.')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const editableByEstudiante =
     isEstudiante &&
@@ -332,30 +324,9 @@ const SolicitudDetallePage = () => {
               <>
                 <section className="solicitud-detalle-page__estado-editor">
                   <h3>Cambiar estado</h3>
-                  <div className="solicitud-detalle-page__estado-controls">
-                    <select
-                      value={nextEstado}
-                      onChange={(event) => {
-                        setNextEstado(event.target.value as EstadoSolicitudEditable)
-                        setSuccessMessage(null)
-                      }}
-                    >
-                      {ESTADOS_EDITABLES.map((estado) => (
-                        <option key={estado} value={estado}>
-                          {estado}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      className="solicitud-detalle-page__save"
-                      onClick={handleSaveEstado}
-                      type="button"
-                      disabled={saving || solicitud.estadoSigla === nextEstado}
-                    >
-                      {saving ? 'Guardando...' : 'Guardar estado'}
-                    </button>
-                  </div>
-                  {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
+                  <p className="solicitud-detalle-page__status">
+                    Cambio de estado deshabilitado temporalmente hasta contar con endpoint real.
+                  </p>
                 </section>
 
                 <DocumentosAdjuntos
