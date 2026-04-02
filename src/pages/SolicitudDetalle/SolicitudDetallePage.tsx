@@ -22,6 +22,9 @@ import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/typ
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import './SolicitudDetallePage.css'
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback
+
 const formatDate = (value: string | null) => {
   if (!value) {
     return '—'
@@ -221,22 +224,17 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      const updated = await cambiarEstadoSolicitud(solicitud.id, estadoTarget)
+      await cambiarEstadoSolicitud(solicitud.id, estadoTarget)
 
-      if (updated) {
-        setSolicitud(updated)
-      } else {
+      try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
         setSolicitud(refreshed)
+        setUpdateSuccess('Estado actualizado correctamente')
+      } catch {
+        setUpdateError('Estado actualizado pero no se pudo recargar el detalle')
       }
-
-      setUpdateSuccess('Estado actualizado.')
     } catch (updateEstadoError) {
-      setUpdateError(
-        updateEstadoError instanceof Error
-          ? updateEstadoError.message
-          : 'No fue posible actualizar el estado de la solicitud.',
-      )
+      setUpdateError(getErrorMessage(updateEstadoError, 'No fue posible actualizar el estado de la solicitud.'))
     } finally {
       setIsUpdatingEstado(false)
     }
