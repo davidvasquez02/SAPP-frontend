@@ -1,11 +1,8 @@
 import type { ApiResponse } from '../../api/types'
+import type { SolicitudAcademicaDto, TipoSolicitudDto } from './api/types'
 
 export type { ApiResponse }
-
-export interface TipoSolicitudDto {
-  id: number
-  codigoNombre: string
-}
+export type { TipoSolicitudDto }
 
 export type SolicitudTableRow = {
   id: number
@@ -21,17 +18,9 @@ export type SolicitudTableRow = {
   codigoEstudianteUis?: string
 }
 
-export interface SolicitudCoordinadorDto extends SolicitudTableRow {
-  tipoSolicitudId: number
-  estadoId: number
-  estudianteId: number
-  estudiante: string
-  codigoEstudianteUis: string
-}
+export interface SolicitudCoordinadorDto extends SolicitudAcademicaDto {}
 
-export interface SolicitudEstudianteRowDto extends SolicitudTableRow {
-  codigoEstudianteUis?: string
-}
+export interface SolicitudEstudianteRowDto extends SolicitudTableRow {}
 
 export interface SolicitudDocumentoItem {
   id: number

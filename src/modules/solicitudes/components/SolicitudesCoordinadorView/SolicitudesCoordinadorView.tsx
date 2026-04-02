@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
-import { fetchSolicitudesCoordinador } from '../../services/solicitudesMockService'
 import type { SolicitudCoordinadorDto } from '../../types'
+import { getSolicitudesAcademicas } from '../../api/solicitudesAcademicasService'
 import './SolicitudesCoordinadorView.css'
 
 const SolicitudesCoordinadorView = () => {
@@ -15,18 +15,21 @@ const SolicitudesCoordinadorView = () => {
   useEffect(() => {
     let mounted = true
 
-    fetchSolicitudesCoordinador()
+    setLoading(true)
+    setError(null)
+
+    getSolicitudesAcademicas()
       .then((solicitudes) => {
         if (!mounted) {
           return
         }
         setRows(solicitudes)
       })
-      .catch(() => {
+      .catch((fetchError) => {
         if (!mounted) {
           return
         }
-        setError('No fue posible cargar el listado de solicitudes (mock).')
+        setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar el listado de solicitudes.')
       })
       .finally(() => {
         if (mounted) {

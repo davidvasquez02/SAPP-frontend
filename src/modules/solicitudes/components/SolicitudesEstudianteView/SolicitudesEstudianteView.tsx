@@ -5,36 +5,38 @@ import SolicitudEstudianteForm, {
   type SolicitudEstudiantePayload,
 } from '../SolicitudEstudianteForm/SolicitudEstudianteForm'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
-import { fetchSolicitudesEstudiante, fetchTiposSolicitud } from '../../services/solicitudesMockService'
+import { createSolicitudAcademica, getSolicitudesAcademicasByEstudiante } from '../../api/solicitudesAcademicasService'
+import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
-import { getEstudianteIdFromSession } from '../../utils/getEstudianteId'
+import { getEstudianteId } from '../../utils/getEstudianteId'
 import './SolicitudesEstudianteView.css'
-
-const parseTipo = (codigoNombre: string): { codigo: string; nombre: string } => {
-  const [codigo = '', nombre = codigoNombre] = codigoNombre.split(' - ')
-  return { codigo, nombre }
-}
-
-const getTodayDate = () => new Date().toISOString().slice(0, 10)
 
 const SolicitudesEstudianteView = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
-  const estudianteId = getEstudianteIdFromSession(session)
-  const codigoEstudianteUis = '20260001'
+  const estudianteId = getEstudianteId(session)
   const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>('LIST')
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [rows, setRows] = useState<SolicitudEstudianteRowDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingTipos, setLoadingTipos] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [formSuccess, setFormSuccess] = useState<string | null>(null)
+
+  const loadSolicitudes = async (targetEstudianteId: number) => {
+    const solicitudes = await getSolicitudesAcademicasByEstudiante(targetEstudianteId)
+    setRows(solicitudes)
+  }
 
   useEffect(() => {
     let mounted = true
 
     if (estudianteId === null) {
       setLoading(false)
-      setError('No se encontró información del estudiante en la sesión.')
+      setError('No se encontró estudianteId en sesión.')
       return () => {
         mounted = false
       }
@@ -43,25 +45,17 @@ const SolicitudesEstudianteView = () => {
     setLoading(true)
     setError(null)
 
-    Promise.all([fetchTiposSolicitud(), fetchSolicitudesEstudiante(estudianteId)])
-      .then(([tipos, solicitudes]) => {
-        if (!mounted) {
-          return
-        }
-
-        setTiposSolicitud(tipos)
-        setRows(solicitudes)
-      })
-      .catch(() => {
-        if (!mounted) {
-          return
-        }
-        setError('No fue posible cargar tus solicitudes (mock).')
-      })
+    loadSolicitudes(estudianteId).catch((fetchError) => {
+      if (!mounted) {
+        return
+      }
+      setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar tus solicitudes.')
+    })
       .finally(() => {
-        if (mounted) {
-          setLoading(false)
+        if (!mounted) {
+          return
         }
+        setLoading(false)
       })
 
     return () => {
@@ -69,25 +63,63 @@ const SolicitudesEstudianteView = () => {
     }
   }, [estudianteId, location.key])
 
-  const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
-    const selectedTipo = tiposSolicitud.find((tipo) => tipo.id === payload.tipoSolicitudId)
-    const parsedTipo = parseTipo(selectedTipo?.codigoNombre ?? 'NUEVA - Nueva solicitud')
-
-    const newRow: SolicitudEstudianteRowDto = {
-      id: rows.length > 0 ? Math.max(...rows.map((row) => row.id)) + 1 : 1,
-      tipoSolicitudCodigo: parsedTipo.codigo,
-      tipoSolicitud: parsedTipo.nombre,
-      estadoSigla: 'REGISTRADA',
-      estado: 'REGISTRADA',
-      fechaRegistro: getTodayDate(),
-      fechaResolucion: null,
-      observaciones: payload.observaciones || 'Solicitud registrada desde formulario.',
-      programaAcademico: '61412 - MISI',
-      codigoEstudianteUis,
+  useEffect(() => {
+    if (viewMode !== 'FORM') {
+      return
     }
 
-    setRows((current) => [newRow, ...current])
-    setViewMode('LIST')
+    let mounted = true
+    setLoadingTipos(true)
+    setFormError(null)
+
+    getTiposSolicitud()
+      .then((tipos) => {
+        if (mounted) {
+          setTiposSolicitud(tipos)
+        }
+      })
+      .catch((fetchError) => {
+        if (mounted) {
+          setFormError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar tipos de solicitud.')
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingTipos(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [viewMode])
+
+  const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
+    if (estudianteId === null) {
+      setFormError('No se encontró estudianteId en sesión.')
+      return
+    }
+
+    try {
+      setSaving(true)
+      setFormError(null)
+      setFormSuccess(null)
+
+      await createSolicitudAcademica({
+        estudianteId,
+        tipoSolicitudId: payload.tipoSolicitudId,
+        fechaResolucion: null,
+        observaciones: payload.observaciones || '',
+      })
+
+      await loadSolicitudes(estudianteId)
+      setFormSuccess('Solicitud registrada correctamente.')
+      setViewMode('LIST')
+    } catch (saveError) {
+      setFormError(saveError instanceof Error ? saveError.message : 'No fue posible registrar la solicitud.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -95,7 +127,15 @@ const SolicitudesEstudianteView = () => {
       <header className="solicitudes-estudiante-view__header">
         <h3>{viewMode === 'LIST' ? 'Mis solicitudes' : 'Nueva solicitud'}</h3>
         {viewMode === 'LIST' ? (
-          <button className="solicitudes-estudiante-view__primary" onClick={() => setViewMode('FORM')} type="button">
+          <button
+            className="solicitudes-estudiante-view__primary"
+            onClick={() => {
+              setFormError(null)
+              setFormSuccess(null)
+              setViewMode('FORM')
+            }}
+            type="button"
+          >
             Agregar solicitud
           </button>
         ) : (
@@ -115,8 +155,17 @@ const SolicitudesEstudianteView = () => {
         ) : (
           <SolicitudesTable mode="ESTUDIANTE" rows={rows} onRowClick={(row) => navigate(`/solicitudes/${row.id}`)} />
         )
+      ) : loadingTipos ? (
+        <p className="solicitudes-estudiante-view__status">Cargando tipos de solicitud...</p>
       ) : (
-        <SolicitudEstudianteForm tipos={tiposSolicitud} onSubmit={handleRegisterSolicitud} />
+        <>
+          {formError && (
+            <p className="solicitudes-estudiante-view__status solicitudes-estudiante-view__status--error">{formError}</p>
+          )}
+          {formSuccess && <p className="solicitudes-estudiante-view__status">{formSuccess}</p>}
+          <SolicitudEstudianteForm tipos={tiposSolicitud} onSubmit={handleRegisterSolicitud} />
+          {saving && <p className="solicitudes-estudiante-view__status">Registrando solicitud...</p>}
+        </>
       )}
     </section>
   )

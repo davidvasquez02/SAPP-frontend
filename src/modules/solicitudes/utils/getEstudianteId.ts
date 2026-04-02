@@ -9,7 +9,7 @@ const hasNumericId = (value: unknown): value is { id: number } => {
   return typeof maybeId === 'number'
 }
 
-export function getEstudianteIdFromSession(session: AuthSession | null): number | null {
+export function getEstudianteId(session: AuthSession | null): number | null {
   if (!session || session.kind !== 'SAPP') {
     return null
   }
@@ -17,3 +17,5 @@ export function getEstudianteIdFromSession(session: AuthSession | null): number 
   const user = session.user as AuthUser
   return hasNumericId(user.estudiante) ? user.estudiante.id : null
 }
+
+export const getEstudianteIdFromSession = getEstudianteId

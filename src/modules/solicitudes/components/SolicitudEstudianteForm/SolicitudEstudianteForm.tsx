@@ -68,23 +68,6 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
       return false
     }
 
-    let hasRequiredDocError = false
-    const updatedDraft = documentosDraft.map((documento) => {
-      if (documento.obligatorio && documento.file === null) {
-        hasRequiredDocError = true
-        return { ...documento, error: 'Este documento es obligatorio.' }
-      }
-
-      return { ...documento, error: null }
-    })
-
-    setDocumentosDraft(updatedDraft)
-
-    if (hasRequiredDocError) {
-      setErrorMsg('Adjunta todos los documentos obligatorios antes de registrar la solicitud.')
-      return false
-    }
-
     setErrorMsg(null)
     return true
   }
@@ -124,13 +107,12 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
         })
       }
 
-      console.log('Solicitud registrada (mock):', payload)
       setErrorMsg(null)
-      setSuccessMsg('Solicitud registrada (mock).')
+      setSuccessMsg('Solicitud registrada correctamente.')
       resetForm()
     } catch {
       setSuccessMsg(null)
-      setErrorMsg('No fue posible registrar la solicitud (mock). Intenta nuevamente.')
+      setErrorMsg('No fue posible registrar la solicitud. Intenta nuevamente.')
     } finally {
       setLoadingSubmit(false)
     }
