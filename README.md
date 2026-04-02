@@ -9,7 +9,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Session store:** A non-React session store (`src/modules/auth/session/sessionStore.ts`) keeps the token accessible for API clients and handles save/clear/get operations.
 - **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
 - **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
-- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload (string roles) into `AuthSession`.
+- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload (string roles) into `AuthSession`, including optional `data.estudiante` when backend authenticates an `ESTUDIANTE`.
 - **Aspirante auth:** `src/api/aspiranteAuthService.ts` fetches `/sapp/aspirante/consultaInfo` and maps the aspirante info into an `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
 - **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
 - **HTTP client:** `src/shared/http/httpClient.ts` wraps `fetch`, automatically attaching the Bearer token from the session store (unless `auth: false` is passed) and handling 401/403 logout redirects.
@@ -76,6 +76,10 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Extended SAPP login contracts to persist `data.estudiante` in session (`session.user.estudiante`) with safe typing (`id: number` + additional unknown keys) so downstream modules can consume `estudiante.id` without using `any`.
+- Added `getEstudianteIdFromSession(session)` as the official resolver for student-scoped operations, avoiding fallback to `session.user.id` when backend identity differs from `estudiante.id`.
+- Updated the student solicitudes flow to read `estudianteId` only from `session.user.estudiante.id`; when absent, UI now shows “No se encontró información del estudiante en la sesión.” and skips data operations requiring `estudianteId`.
+- Added a DEV-only “Estudiante ID (debug)” field in Home → Mi cuenta to validate login persistence safely without exposing sensitive data.
 - Updated solicitudes mock seed to guarantee a visible ESTUDIANTE row in `/solicitudes` (added fallback seed `id=10`, `estudianteId=2`, estado `REGISTRADA`) so the student table never renders empty in the default mock flow.
 - Added ESTUDIANTE edit flow in `SolicitudDetallePage`: editable fields are now limited to `tipoSolicitudId` and `observaciones`, with inline form actions (`Editar solicitud`, `Guardar cambios`, `Cancelar`) and mock persistence.
 - Enforced edit-state guard for estudiantes: edit UI is enabled only when `estadoSigla` is `REGISTRADA` or `EN ESTUDIO`; for `APROBADA`/`RECHAZADA`, no edit action is shown.

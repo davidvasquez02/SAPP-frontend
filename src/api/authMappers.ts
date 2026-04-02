@@ -39,6 +39,7 @@ export const mapLoginToUserSession = (dto: LoginResponseDto): AuthSession => {
       username,
       roles: normalizedRoles,
       persona: dto.persona,
+      estudiante: dto.estudiante ?? null,
       nombreCompleto: buildNombreCompleto(dto),
       email: dto.persona.emailInstitucional ?? dto.persona.emailPersonal ?? undefined,
       authId: dto.authId,
