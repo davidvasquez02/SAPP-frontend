@@ -8,6 +8,7 @@
 - ✅ Refreshed key shell surfaces (`Layout`, `ModuleLayout`, `AspiranteLayout`, `Sidebar`) and both login screens to consume semantic theme tokens (rounded cards, soft shadows, minimal fields, pill primary actions).
 - ✅ Fixed infinite-loop requests in `CreateAspiranteModal`: trámite documentos are fetched once per modal-open cycle (using an open-transition guard) so the screen waits for a single response before rendering documents.
 - ✅ Latest update: `CreateAspiranteModal` now relies on backend trámite documents only; hardcoded fallback requirements were removed, and the modal fetches `/sapp/tramite/document?tipoTramiteId=1`, filters `ADMISION_COORDINACION`, and maps to `DocumentUploadItem` via `src/modules/admisiones/api/tramiteDocumentoMappers.ts`.
+- ✅ Implemented `/solicitudes` as a role-based module: `COORDINADOR`/`ADMIN` users see a responsive card grid (4 mock records), `ESTUDIANTE` users see a validated form with dynamic document requirements by `tipoSolicitudId`, and other roles receive a no-permission message.
 - ✅ Added resilient UX states for trámite documents in the modal: `isLoadingDocs`, `docsError` with retry, and explicit empty-state messaging when no `ADMISION_COORDINACION` docs are configured.
 - ✅ Sequential upload now consumes dynamic backend `tipoDocumentoTramiteId` values, so changes in backend configuration are reflected without frontend code edits.
 - ✅ Fixed TypeScript auth/document compile blockers on March 31, 2026: `AspiranteDocumentosPage` now safely reads `inscripcionAdmisionId` from an `AspiranteUser`-typed session user, and both login pages switched `FormEvent` to type-only imports required by `verbatimModuleSyntax`.
@@ -115,6 +116,7 @@
 17. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
 18. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
 19. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
+20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -131,6 +133,7 @@
 - **Tipos documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts`, `src/api/tipoDocumentoIdentificacionService.ts`
 - **HTTP client:** `src/shared/http/httpClient.ts`
 - **Module service stubs:** `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, `src/api/creditosService.ts`
+- **Solicitudes module (nuevo):** `src/modules/solicitudes/types.ts`, `src/modules/solicitudes/mock/*`, `src/modules/solicitudes/services/solicitudesMockService.ts`, `src/modules/solicitudes/components/SolicitudEstudianteForm`, `src/modules/solicitudes/components/SolicitudCard`, `src/modules/solicitudes/components/SolicitudesCoordinadorGrid`, `src/pages/Solicitudes/SolicitudesPage.tsx`
 - **Document checklist DTO/service:** `src/api/documentChecklistTypes.ts`, `src/api/documentChecklistService.ts`
 - **Aspirante upload service:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
 - **Upload utilities:** `src/utils/fileToBase64.ts`, `src/utils/sha256.ts`
@@ -170,6 +173,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- Solicitudes role gating manual checklist completed in code review: coordinator-priority branching, student-only form fallback, and no-permission fallback are implemented in `src/pages/Solicitudes/SolicitudesPage.tsx` (pending interactive browser verification).
 - `npm run build` ✅ passes on March 31, 2026 after fixing the reported `AspiranteDocumentosPage` union property access and `FormEvent` type-only imports.
 - `npm run lint` ❌ fails due to pre-existing lint debt (`no-explicit-any` in module stubs, React hooks purity/set-state-in-effect rules, and unused vars in helper/stub files).
 
@@ -188,6 +192,7 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+- **Solicitudes mocks/contracts:** `src/modules/solicitudes/types.ts` uses shared `ApiResponse<T>`; mock responses in `src/modules/solicitudes/mock/*.ts` follow `{ ok, message, data }`; student payload logged on submit is `{ tipoSolicitudId, observaciones, documentos[{ id, nombre, obligatorio, fileName }] }`.
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
 - **SAPP login output:** `src/api/authService.ts`
