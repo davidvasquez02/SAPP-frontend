@@ -6,14 +6,13 @@ import { useAuth } from '../../context/Auth'
 import {
   updateSolicitudEstudiante,
 } from '../../modules/solicitudes/services/solicitudesMockService'
-import { getSolicitudesAcademicas, getSolicitudesAcademicasByEstudiante } from '../../modules/solicitudes/api/solicitudesAcademicasService'
+import { getSolicitudAcademicaById } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
-import type { SolicitudCoordinadorDto } from '../../modules/solicitudes/types'
+import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
-import { getEstudianteId } from '../../modules/solicitudes/utils/getEstudianteId'
 import './SolicitudDetallePage.css'
 
 const formatDate = (value: string | null) => {
@@ -32,9 +31,8 @@ const SolicitudDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
   const isEstudiante = !isCoordinador && hasAnyRole(roles, ['ESTUDIANTE'])
-  const estudianteId = getEstudianteId(session)
 
-  const [solicitud, setSolicitud] = useState<SolicitudCoordinadorDto | null>(null)
+  const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [editMode, setEditMode] = useState(false)
   const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
@@ -49,10 +47,9 @@ const SolicitudDetallePage = () => {
   const [docsError, setDocsError] = useState<string | null>(null)
 
   useEffect(() => {
-    const parsedId = Number(solicitudId)
-
-    if (!parsedId) {
-      setError('Solicitud no encontrada')
+    const parsedId = Number(solicitudId ?? '')
+    if (Number.isNaN(parsedId)) {
+      setError('ID inválido')
       setLoading(false)
       return
     }
@@ -61,28 +58,9 @@ const SolicitudDetallePage = () => {
     setLoading(true)
     setError(null)
 
-    const loadSolicitud = async () => {
-      if (isCoordinador) {
-        const response = await getSolicitudesAcademicas()
-        return response.find((item) => item.id === parsedId) ?? null
-      }
-
-      if (isEstudiante && estudianteId !== null) {
-        const response = await getSolicitudesAcademicasByEstudiante(estudianteId)
-        return response.find((item) => item.id === parsedId) ?? null
-      }
-
-      return null
-    }
-
-    loadSolicitud()
+    getSolicitudAcademicaById(parsedId)
       .then((response) => {
         if (!mounted) {
-          return
-        }
-        if (!response) {
-          setSolicitud(null)
-          setError('Solicitud no encontrada o sin permisos.')
           return
         }
         setSolicitud(response)
@@ -105,7 +83,7 @@ const SolicitudDetallePage = () => {
     return () => {
       mounted = false
     }
-  }, [estudianteId, isCoordinador, isEstudiante, solicitudId])
+  }, [solicitudId])
 
   useEffect(() => {
     if (!isEstudiante) {
