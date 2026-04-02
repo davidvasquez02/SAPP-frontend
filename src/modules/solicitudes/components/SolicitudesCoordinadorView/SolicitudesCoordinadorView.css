@@ -1,0 +1,22 @@
+.solicitudes-coordinador-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.solicitudes-coordinador-view h3 {
+  margin: 0;
+}
+
+.solicitudes-coordinador-view__status {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+}
+
+.solicitudes-coordinador-view__status--error {
+  background: color-mix(in srgb, #b3261e, transparent 90%);
+  color: #b3261e;
+}
