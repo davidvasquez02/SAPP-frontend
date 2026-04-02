@@ -2,9 +2,13 @@ export type EstadoSolicitud = 'REGISTRADA' | 'EN ESTUDIO' | 'APROBADA' | 'RECHAZ
 
 const ESTADO_MAP: Record<string, EstadoSolicitud> = {
   REGISTRADA: 'REGISTRADA',
+  REGISTRADO: 'REGISTRADA',
+  EN_ESTUDIO: 'EN ESTUDIO',
   'EN ESTUDIO': 'EN ESTUDIO',
   APROBADA: 'APROBADA',
+  APROBADO: 'APROBADA',
   RECHAZADA: 'RECHAZADA',
+  RECHAZADO: 'RECHAZADA',
 }
 
 export function normalizeEstadoSolicitud(value: string | null | undefined): EstadoSolicitud | 'UNKNOWN' {

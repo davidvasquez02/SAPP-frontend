@@ -76,6 +76,8 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 2, 2026: fixed solicitudes status badge colors so each estado is visually distinct (REGISTRADA azul, EN ESTUDIO ámbar, APROBADA verde, RECHAZADA rojo), and increased CSS specificity to prevent global framework styles from forcing all badges to green.
+- April 2, 2026: expanded `normalizeEstadoSolicitud` to accept backend variants (`EN_ESTUDIO`, `APROBADO`, `RECHAZADO`) so color mapping remains correct even when siglas arrive with underscores or masculine labels.
 - Standardized solicitud status rendering with a new `StatusBadge` component + `normalizeEstadoSolicitud` utility so REGISTRADA/EN ESTUDIO/APROBADA/RECHAZADA/UNKNOWN colors are consistent across table, detail, and card views.
 - Added ESTUDIANTE document editing in `SolicitudDetallePage` (mock-only): required docs are now rendered by `tipoSolicitudId`, students can replace/remove files in edit mode, and docs persist per `solicitudId` in localStorage via `sapp:solicitudes:docs:{id}`.
 - Added reusable `SolicitudDocumentosEditor` with read-only and editable modes, required-doc warning (non-blocking by default), and `Ver/Descargar` actions using shared base64 utilities.
