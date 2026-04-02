@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Solicitudes status badges are now centralized with `StatusBadge` + `normalizeEstadoSolicitud`, applied in table/detail/card views with differentiated colors for REGISTRADA, EN ESTUDIO, APROBADA, RECHAZADA, and UNKNOWN fallback.
 - ✅ Added ESTUDIANTE-side mock document replacement flow in `SolicitudDetallePage`: edit mode now renders required docs by `tipoSolicitudId`, supports replace/remove, commits selected files as base64 on save, and persists by `solicitudId` in localStorage (`sapp:solicitudes:docs:{id}`).
 - ✅ Added reusable `SolicitudDocumentosEditor` for both edit mode and read-only mode (outside edit), including required-doc warning (`Faltan documentos obligatorios por adjuntar.`) without blocking save by default.
 - ✅ Added persistent mock store `solicitudDocumentosStore.mock.ts` with in-memory cache + localStorage helpers (`load/save/upsert/remove/get`).
@@ -200,6 +201,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 2, 2026 after centralizing Solicitudes status badges (`StatusBadge`) and replacing legacy single-color badges in list/detail/card views.
 - `npm run build` ✅ passes on April 2, 2026 after integrating `SolicitudDocumentosEditor` + localStorage mock persistence for student document replacement in solicitud detail edit mode.
 - `npm run build` ✅ passes on April 2, 2026 after enforcing Solicitudes real endpoints for student list (`/sapp/solicitudesAcademicas/estudiante?estudianteId=...`) and detail (`/sapp/solicitudesAcademicas/{id}`), plus session-based `estudianteId` validation.
 - `npm run build` ✅ passes on April 2, 2026 after integrating real Solicitudes APIs (listado coordinador/estudiante + creación POST) and detail lookup by list filtering.

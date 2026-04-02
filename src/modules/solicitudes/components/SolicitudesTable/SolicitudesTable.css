@@ -27,15 +27,6 @@
   vertical-align: top;
 }
 
-.solicitudes-table__badge {
-  display: inline-flex;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--primary), transparent 82%);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
 
 .solicitudes-table__observaciones {
   max-width: 260px;

@@ -67,12 +67,6 @@
   grid-column: 1 / -1;
 }
 
-.solicitud-detalle-page__badge {
-  display: inline-flex;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--primary), transparent 82%);
-}
 
 .solicitud-detalle-page__estado-editor {
   border-top: 1px solid var(--outline);

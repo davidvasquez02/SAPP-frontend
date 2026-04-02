@@ -1,4 +1,5 @@
 import type { SolicitudTableRow } from '../../types'
+import StatusBadge from '../StatusBadge/StatusBadge'
 import './SolicitudesTable.css'
 
 interface SolicitudesTableProps {
@@ -59,7 +60,7 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                   <span>{row.tipoSolicitud}</span>
                 </td>
                 <td>
-                  <span className="solicitudes-table__badge">{row.estado}</span>
+                  <StatusBadge estado={row.estadoSigla || row.estado} size="sm" />
                 </td>
                 <td>{formatDate(row.fechaRegistro)}</td>
                 <td>{formatDate(row.fechaResolucion)}</td>
