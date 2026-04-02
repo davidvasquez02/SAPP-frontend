@@ -76,6 +76,9 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Added ESTUDIANTE document editing in `SolicitudDetallePage` (mock-only): required docs are now rendered by `tipoSolicitudId`, students can replace/remove files in edit mode, and docs persist per `solicitudId` in localStorage via `sapp:solicitudes:docs:{id}`.
+- Added reusable `SolicitudDocumentosEditor` with read-only and editable modes, required-doc warning (non-blocking by default), and `Ver/Descargar` actions using shared base64 utilities.
+- Added new solicitud-document contracts and store helpers: `SolicitudDocumentoRequirement` / `SolicitudDocumentoAdjunto` / `SolicitudDocumentoDraft`, plus CRUD helpers in `solicitudDocumentosStore.mock.ts` for load/save/upsert/remove/get.
 - Integrated real Solicitudes API clients using the shared `httpClient` wrapper: `GET /sapp/tipoSolicitud`, `GET /sapp/solicitudesAcademicas`, `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...`, and `POST /sapp/solicitudesAcademicas`, all honoring the standard `{ ok, message, data }` envelope.
 - Migrated `/solicitudes` role views (coordinador + estudiante) from mock listing to backend data and kept loading/error/empty states with row-click navigation to detail.
 - Updated student solicitud creation flow to load real tipos on form mode, submit `estudianteId` from `session.user.estudiante.id`, and refresh the list after a successful POST.

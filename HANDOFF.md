@@ -1,6 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- ✅ Added ESTUDIANTE-side mock document replacement flow in `SolicitudDetallePage`: edit mode now renders required docs by `tipoSolicitudId`, supports replace/remove, commits selected files as base64 on save, and persists by `solicitudId` in localStorage (`sapp:solicitudes:docs:{id}`).
+- ✅ Added reusable `SolicitudDocumentosEditor` for both edit mode and read-only mode (outside edit), including required-doc warning (`Faltan documentos obligatorios por adjuntar.`) without blocking save by default.
+- ✅ Added persistent mock store `solicitudDocumentosStore.mock.ts` with in-memory cache + localStorage helpers (`load/save/upsert/remove/get`).
 - Solicitudes module now consumes real backend APIs for tipos/list/create and role-based listings; mock services remain only for non-covered flows (e.g., edit-by-student and documentos adjuntos mock data).
 - ✅ Student solicitudes listing now uses only `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...` (fallback without `/sapp` removed).
 - ✅ `SolicitudesEstudianteView` now resolves student identity strictly from `session.user.estudiante?.id`; when missing, UI shows `No hay estudianteId en sesión` and skips API calls.
@@ -112,6 +115,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Replace the student document mock store (`solicitudDocumentosStore.mock.ts`) with a backend endpoint when documentos de solicitudes académicas API is available, preserving current local contract fields.
+2. Add component tests for `SolicitudDocumentosEditor` commit behavior (replace/remove), required warning visibility, and read-only rendering.
+3. Validate browser UX for large files / unsupported mime previews in `Ver` action and align product decision (preview vs download-only fallback).
 1. Add component/unit tests for `DocumentosAdjuntos` and for `SolicitudDetallePage` role-based visibility (coordinator/admin sees docs section, estudiante does not).
 2. Validate browser behavior for “Ver” on non-PDF mime types and decide if product wants preview enabled for additional formats.
 3. Replace `fetchSolicitudDocumentos` mock service with real API integration once endpoint/contract is available.
@@ -137,6 +143,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Solicitudes documentos (estudiante mock persistente):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`, `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`, `src/modules/solicitudes/components/SolicitudDocumentosEditor/*`
 - **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`, `src/modules/solicitudes/mock/solicitudDocumentos.mock.ts`, `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`, `src/modules/solicitudes/components/DocumentosAdjuntos/*`
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
 - **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
@@ -193,6 +200,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 2, 2026 after integrating `SolicitudDocumentosEditor` + localStorage mock persistence for student document replacement in solicitud detail edit mode.
 - `npm run build` ✅ passes on April 2, 2026 after enforcing Solicitudes real endpoints for student list (`/sapp/solicitudesAcademicas/estudiante?estudianteId=...`) and detail (`/sapp/solicitudesAcademicas/{id}`), plus session-based `estudianteId` validation.
 - `npm run build` ✅ passes on April 2, 2026 after integrating real Solicitudes APIs (listado coordinador/estudiante + creación POST) and detail lookup by list filtering.
 - `npm run build` ✅ passes on April 2, 2026 after extending login/session contracts with optional `estudiante` and wiring solicitudes/home to consume `session.user.estudiante.id`.
@@ -228,6 +236,13 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+- **Solicitudes documentos (nuevo contrato frontend, mock):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`
+  - `SolicitudDocumentoRequirement`: `{ id, nombre, obligatorio }`
+  - `SolicitudDocumentoAdjunto`: `{ requirementId, fileName, mimeType, base64, updatedAt }`
+  - `SolicitudDocumentoDraft`: `{ requirement, current, selectedFile, error? }`
+- **Solicitudes documentos store (mock persistente):** `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`
+  - localStorage key: `sapp:solicitudes:docs:${solicitudId}`
+  - helpers: `loadSolicitudDocs`, `saveSolicitudDocs`, `upsertSolicitudDoc`, `removeSolicitudDoc`, `getSolicitudDoc`.
 - **Solicitudes API contracts (real):** `src/modules/solicitudes/api/types.ts`, `src/modules/solicitudes/api/tipoSolicitudService.ts`, `src/modules/solicitudes/api/solicitudesAcademicasService.ts`
   - `GET /sapp/tipoSolicitud` => `{ ok, message, data: TipoSolicitudDto[] }`
   - `GET /sapp/solicitudesAcademicas` => `{ ok, message, data: SolicitudAcademicaDto[] }`

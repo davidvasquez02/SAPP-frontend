@@ -1,0 +1,83 @@
+.solicitud-documentos-editor {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.solicitud-documentos-editor__header h4,
+.solicitud-documentos-editor__header p {
+  margin: 0;
+}
+
+.solicitud-documentos-editor__header p,
+.solicitud-documentos-editor__status,
+.solicitud-documentos-editor__selected,
+.solicitud-documentos-editor__empty {
+  color: var(--text-secondary);
+}
+
+.solicitud-documentos-editor__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.solicitud-documentos-editor__item {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 0.95rem;
+  padding: 0.8rem;
+  background: var(--surface-container-low);
+}
+
+.solicitud-documentos-editor__title-row {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.solicitud-documentos-editor__badge {
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--inverse-primary), transparent 78%);
+  color: var(--inverse-primary);
+}
+
+.solicitud-documentos-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.solicitud-documentos-editor__actions button,
+.solicitud-documentos-editor__file-input-label {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+}
+
+.solicitud-documentos-editor__file-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.solicitud-documentos-editor__file-input-label input {
+  max-width: 220px;
+}
+
+.solicitud-documentos-editor__warning {
+  margin: 0;
+  color: #b3261e;
+  background: color-mix(in srgb, #b3261e, transparent 88%);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+}
