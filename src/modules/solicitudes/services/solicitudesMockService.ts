@@ -4,6 +4,7 @@ import {
   getSolicitudByIdMock,
   getSolicitudesByEstudianteMock,
   updateSolicitudEstadoMock,
+  updateSolicitudEstudianteMock,
   type EstadoSolicitudEditable,
 } from '../mock/solicitudesStore.mock'
 import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../types'
@@ -44,4 +45,12 @@ export async function updateSolicitudEstado(
 ): Promise<SolicitudCoordinadorDto> {
   await wait(200)
   return updateSolicitudEstadoMock({ id, estadoSigla })
+}
+
+export async function updateSolicitudEstudiante(
+  id: number,
+  payload: { tipoSolicitudId: number; observaciones: string },
+): Promise<SolicitudCoordinadorDto> {
+  await wait(220)
+  return updateSolicitudEstudianteMock({ id, ...payload })
 }

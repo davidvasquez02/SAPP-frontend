@@ -5,11 +5,14 @@ import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import {
   fetchSolicitudDetalle,
+  fetchTiposSolicitud,
+  updateSolicitudEstudiante,
   updateSolicitudEstado,
 } from '../../modules/solicitudes/services/solicitudesMockService'
 import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import type { SolicitudCoordinadorDto } from '../../modules/solicitudes/types'
+import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { EstadoSolicitudEditable } from '../../modules/solicitudes/mock/solicitudesStore.mock'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import './SolicitudDetallePage.css'
@@ -31,9 +34,15 @@ const SolicitudDetallePage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
+  const isEstudiante = !isCoordinador && hasAnyRole(roles, ['ESTUDIANTE'])
 
   const [solicitud, setSolicitud] = useState<SolicitudCoordinadorDto | null>(null)
+  const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [nextEstado, setNextEstado] = useState<EstadoSolicitudEditable>('EN ESTUDIO')
+  const [editMode, setEditMode] = useState(false)
+  const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
+  const [draftObservaciones, setDraftObservaciones] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -61,6 +70,9 @@ const SolicitudDetallePage = () => {
           return
         }
         setSolicitud(response)
+        setDraftTipoSolicitudId(response.tipoSolicitudId)
+        setDraftObservaciones(response.observaciones ?? '')
+        setEditMode(false)
         if (ESTADOS_EDITABLES.includes(response.estadoSigla as EstadoSolicitudEditable)) {
           setNextEstado(response.estadoSigla as EstadoSolicitudEditable)
         }
@@ -81,6 +93,30 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [solicitudId])
+
+  useEffect(() => {
+    if (!isEstudiante) {
+      setTiposSolicitud([])
+      return
+    }
+
+    let mounted = true
+    fetchTiposSolicitud()
+      .then((tipos) => {
+        if (mounted) {
+          setTiposSolicitud(tipos)
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setTiposSolicitud([])
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isEstudiante])
 
   const loadDocumentos = useCallback(async (parsedId: number) => {
     setDocsLoading(true)
@@ -130,6 +166,48 @@ const SolicitudDetallePage = () => {
     } finally {
       setSaving(false)
     }
+  }
+
+  const editableByEstudiante =
+    isEstudiante &&
+    (solicitud?.estadoSigla === 'REGISTRADA' || solicitud?.estadoSigla === 'EN ESTUDIO')
+
+  const handleGuardarEdicion = async () => {
+    if (!solicitud || draftTipoSolicitudId == null) {
+      setFormError('Debes seleccionar un tipo de solicitud.')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+    setFormError(null)
+    setSuccessMessage(null)
+
+    try {
+      const updated = await updateSolicitudEstudiante(solicitud.id, {
+        tipoSolicitudId: draftTipoSolicitudId,
+        observaciones: draftObservaciones.trim(),
+      })
+      setSolicitud(updated)
+      setDraftTipoSolicitudId(updated.tipoSolicitudId)
+      setDraftObservaciones(updated.observaciones ?? '')
+      setEditMode(false)
+      setSuccessMessage('Cambios guardados (mock)')
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No fue posible guardar los cambios.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancelarEdicion = () => {
+    if (!solicitud) {
+      return
+    }
+    setDraftTipoSolicitudId(solicitud.tipoSolicitudId)
+    setDraftObservaciones(solicitud.observaciones ?? '')
+    setFormError(null)
+    setEditMode(false)
   }
 
   return (
@@ -184,6 +262,71 @@ const SolicitudDetallePage = () => {
                 <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
               </div>
             </dl>
+
+            {isEstudiante && (
+              <section className="solicitud-detalle-page__estado-editor">
+                {!editMode ? (
+                  <>
+                    {editableByEstudiante && (
+                      <button
+                        className="solicitud-detalle-page__save"
+                        type="button"
+                        onClick={() => {
+                          setEditMode(true)
+                          setSuccessMessage(null)
+                          setFormError(null)
+                        }}
+                      >
+                        Editar solicitud
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="solicitud-detalle-page__student-editor">
+                    <h3>Editar solicitud</h3>
+                    <label className="solicitud-detalle-page__field">
+                      <span>Tipo de solicitud</span>
+                      <select
+                        value={draftTipoSolicitudId ?? ''}
+                        onChange={(event) => {
+                          setDraftTipoSolicitudId(Number(event.target.value))
+                          setFormError(null)
+                        }}
+                      >
+                        <option value="" disabled>
+                          Selecciona un tipo
+                        </option>
+                        {tiposSolicitud.map((tipo) => (
+                          <option key={tipo.id} value={tipo.id}>
+                            {tipo.codigoNombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="solicitud-detalle-page__field">
+                      <span>Observaciones</span>
+                      <textarea
+                        rows={4}
+                        value={draftObservaciones}
+                        onChange={(event) => setDraftObservaciones(event.target.value)}
+                      />
+                    </label>
+
+                    {formError && <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{formError}</p>}
+
+                    <div className="solicitud-detalle-page__estado-controls">
+                      <button className="solicitud-detalle-page__save" type="button" onClick={handleGuardarEdicion} disabled={saving}>
+                        {saving ? 'Guardando...' : 'Guardar cambios'}
+                      </button>
+                      <button className="solicitud-detalle-page__back" type="button" onClick={handleCancelarEdicion} disabled={saving}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
+              </section>
+            )}
 
             {isCoordinador && (
               <>

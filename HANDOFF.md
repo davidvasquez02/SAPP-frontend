@@ -2,6 +2,11 @@
 
 ## Current Status
 
+- ✅ Student solicitudes mock now guarantees at least one visible row for `estudianteId=2` by injecting a fallback seed (`id=10`, estado `REGISTRADA`) in the shared in-memory store when missing.
+- ✅ `SolicitudDetallePage` now supports ESTUDIANTE inline editing (mock) for `tipoSolicitudId` + `observaciones`, with `Guardar cambios` / `Cancelar` and success feedback `Cambios guardados (mock)`.
+- ✅ Student edit permissions are restricted by estado: edit action is available only for `REGISTRADA` and `EN ESTUDIO`; no student edit action for `APROBADA` / `RECHAZADA`.
+- ✅ Added student update path in solicitudes mocks/services: `updateSolicitudEstudianteMock` (store) + `updateSolicitudEstudiante` (async service) with tipo derivation (`tipoSolicitudCodigo` and `tipoSolicitud`) from catálogo.
+- ✅ List/detail sync confirmed by design: student list reads from the same store and re-fetches on navigation key changes, so edits in detail are reflected when returning to `/solicitudes`.
 - ✅ Solicitud detalle now includes a coordinator/admin-only “Documentos adjuntos” section sourced from mocks by `solicitudId`, with loading/error/empty states and retry support.
 - ✅ Added mock documentos store + service for solicitudes (`solicitudDocumentosById` for IDs 1,2,3,4 + `fetchSolicitudDocumentos` with 150ms delay) to emulate backend retrieval without breaking existing mock flows.
 - ✅ Added `DocumentosAdjuntos` component with `Ver` (PDF open in new tab) and `Descargar` (all mime types) actions reusing `src/shared/files/base64FileUtils.ts`; actions are disabled when file payload is incomplete.
@@ -183,6 +188,12 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- Manual validation checklist for this update (pending browser walkthrough):
+  - ESTUDIANTE `/solicitudes`: list should show at least one row without creating data first.
+  - ESTUDIANTE `/solicitudes/:id` with estado `REGISTRADA`/`EN ESTUDIO`: “Editar solicitud” visible, save persists `tipoSolicitud` + `observaciones`.
+  - ESTUDIANTE with estado `APROBADA`/`RECHAZADA`: edit action hidden.
+  - COORDINADOR/ADMIN detalle: keeps “Cambiar estado” + “Documentos adjuntos”, without student edit UI.
+- `npm run build` ✅ passes on April 2, 2026 after adding student edit flow and mock update service.
 - Manual validation target for this update:
   - Coordinator/Admin: `/solicitudes/1` should show “Documentos adjuntos” with working `Ver`/`Descargar`.
   - Estudiante: `/solicitudes/1` should not render the documentos section.

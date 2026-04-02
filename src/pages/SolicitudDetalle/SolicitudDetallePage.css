@@ -94,6 +94,41 @@
   padding: 0.4rem 0.6rem;
 }
 
+.solicitud-detalle-page__student-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.solicitud-detalle-page__student-editor h3 {
+  margin: 0;
+}
+
+.solicitud-detalle-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.solicitud-detalle-page__field span {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__field select,
+.solicitud-detalle-page__field textarea {
+  border: 1px solid var(--outline);
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+}
+
+.solicitud-detalle-page__field textarea {
+  resize: vertical;
+}
+
 .solicitud-detalle-page__status {
   margin: 0;
 }
