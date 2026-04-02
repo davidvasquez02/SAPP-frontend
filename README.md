@@ -55,6 +55,8 @@ npm run preview
 npm run lint
 ```
 
+No seed step is required for this frontend; it consumes backend data directly via the configured API base URL.
+
 ### Environment Variables
 ```env
 # .env.local
@@ -76,6 +78,9 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 2, 2026: implemented real coordinator/admin estado transitions in `SolicitudDetallePage` via new PUT service `cambiarEstadoSolicitud` (`EN ESTUDIO` / `APROBADA` / `RECHAZADA`), with loading/error/success UX and detail fallback refresh (`GET /sapp/solicitudesAcademicas/{id}`) when PUT returns `data: null`.
+- April 2, 2026: replaced the detail estado text chip with shared `StatusBadge` to preserve consistent color semantics in solicitud detail.
+- April 2, 2026: strengthened coordinator list refresh on return navigation by re-fetching in `SolicitudesCoordinadorView` when route location changes (including navigation state).
 - April 2, 2026: fixed solicitudes status badge colors so each estado is visually distinct (REGISTRADA azul, EN ESTUDIO ámbar, APROBADA verde, RECHAZADA rojo), and increased CSS specificity to prevent global framework styles from forcing all badges to green.
 - April 2, 2026: expanded `normalizeEstadoSolicitud` to accept backend variants (`EN_ESTUDIO`, `APROBADO`, `RECHAZADO`) so color mapping remains correct even when siglas arrive with underscores or masculine labels.
 - Standardized solicitud status rendering with a new `StatusBadge` component + `normalizeEstadoSolicitud` utility so REGISTRADA/EN ESTUDIO/APROBADA/RECHAZADA/UNKNOWN colors are consistent across table, detail, and card views.

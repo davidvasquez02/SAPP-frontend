@@ -40,7 +40,7 @@ const SolicitudesCoordinadorView = () => {
     return () => {
       mounted = false
     }
-  }, [location.key])
+  }, [location.key, location.state])
 
   return (
     <section className="solicitudes-coordinador-view">

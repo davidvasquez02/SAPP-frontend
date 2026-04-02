@@ -5,15 +5,21 @@ import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import { getSolicitudAcademicaById } from '../../modules/solicitudes/api/solicitudesAcademicasService'
+import {
+  cambiarEstadoSolicitud,
+  type SolicitudEstadoTarget,
+} from '../../modules/solicitudes/api/solicitudCambioEstadoService'
 import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
+import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
 import SolicitudDocumentosEditor, {
   type SolicitudDocumentosEditorHandle,
 } from '../../modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor'
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
+import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import './SolicitudDetallePage.css'
 
 const formatDate = (value: string | null) => {
@@ -47,6 +53,10 @@ const SolicitudDetallePage = () => {
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
+  const [estadoTarget, setEstadoTarget] = useState<SolicitudEstadoTarget>('EN_ESTUDIO')
+  const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
@@ -68,6 +78,14 @@ const SolicitudDetallePage = () => {
         setSolicitud(response)
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
+        const normalizedEstado = normalizeEstadoSolicitud(response.estadoSigla || response.estado)
+        if (normalizedEstado === 'APROBADA') {
+          setEstadoTarget('APROBADA')
+        } else if (normalizedEstado === 'RECHAZADA') {
+          setEstadoTarget('RECHAZADA')
+        } else {
+          setEstadoTarget('EN_ESTUDIO')
+        }
         setEditMode(false)
       })
       .catch((fetchError) => {
@@ -187,10 +205,51 @@ const SolicitudDetallePage = () => {
     setEditMode(false)
   }
 
+  const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
+  const isSameTargetAsCurrentEstado =
+    (estadoTarget === 'EN_ESTUDIO' && currentEstado === 'EN ESTUDIO') ||
+    (estadoTarget === 'APROBADA' && currentEstado === 'APROBADA') ||
+    (estadoTarget === 'RECHAZADA' && currentEstado === 'RECHAZADA')
+
+  const handleGuardarEstado = async () => {
+    if (!solicitud) {
+      return
+    }
+
+    setIsUpdatingEstado(true)
+    setUpdateError(null)
+    setUpdateSuccess(null)
+
+    try {
+      const updated = await cambiarEstadoSolicitud(solicitud.id, estadoTarget)
+
+      if (updated) {
+        setSolicitud(updated)
+      } else {
+        const refreshed = await getSolicitudAcademicaById(solicitud.id)
+        setSolicitud(refreshed)
+      }
+
+      setUpdateSuccess('Estado actualizado.')
+    } catch (updateEstadoError) {
+      setUpdateError(
+        updateEstadoError instanceof Error
+          ? updateEstadoError.message
+          : 'No fue posible actualizar el estado de la solicitud.',
+      )
+    } finally {
+      setIsUpdatingEstado(false)
+    }
+  }
+
   return (
     <ModuleLayout title="Detalle de solicitud">
       <section className="solicitud-detalle-page">
-        <button className="solicitud-detalle-page__back" onClick={() => navigate('/solicitudes')} type="button">
+        <button
+          className="solicitud-detalle-page__back"
+          onClick={() => navigate('/solicitudes', { state: { refreshAt: Date.now() } })}
+          type="button"
+        >
           Volver
         </button>
 
@@ -223,7 +282,7 @@ const SolicitudDetallePage = () => {
               <div className="solicitud-detalle-page__item">
                 <dt>Estado</dt>
                 <dd>
-                  <span className="solicitud-detalle-page__badge">{solicitud.estadoSigla}</span>
+                  <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} />
                 </dd>
               </div>
               <div className="solicitud-detalle-page__item">
@@ -324,9 +383,32 @@ const SolicitudDetallePage = () => {
               <>
                 <section className="solicitud-detalle-page__estado-editor">
                   <h3>Cambiar estado</h3>
-                  <p className="solicitud-detalle-page__status">
-                    Cambio de estado deshabilitado temporalmente hasta contar con endpoint real.
-                  </p>
+                  <div className="solicitud-detalle-page__estado-controls">
+                    <select
+                      value={estadoTarget}
+                      onChange={(event) => {
+                        setEstadoTarget(event.target.value as SolicitudEstadoTarget)
+                        setUpdateError(null)
+                        setUpdateSuccess(null)
+                      }}
+                    >
+                      <option value="EN_ESTUDIO">EN ESTUDIO</option>
+                      <option value="APROBADA">APROBADA</option>
+                      <option value="RECHAZADA">RECHAZADA</option>
+                    </select>
+                    <button
+                      className="solicitud-detalle-page__save"
+                      type="button"
+                      onClick={handleGuardarEstado}
+                      disabled={isUpdatingEstado || isSameTargetAsCurrentEstado}
+                    >
+                      {isUpdatingEstado ? 'Guardando...' : 'Guardar estado'}
+                    </button>
+                  </div>
+                  {updateError && (
+                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{updateError}</p>
+                  )}
+                  {updateSuccess && <p className="solicitud-detalle-page__success">{updateSuccess}</p>}
                 </section>
 
                 <DocumentosAdjuntos
