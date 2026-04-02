@@ -7,21 +7,30 @@ export interface TipoSolicitudDto {
   codigoNombre: string
 }
 
-export interface SolicitudCoordinadorDto {
+export type SolicitudTableRow = {
   id: number
-  tipoSolicitudId: number
   tipoSolicitudCodigo: string
   tipoSolicitud: string
-  estadoId: number
   estadoSigla: string
   estado: string
-  estudianteId: number
-  estudiante: string
-  codigoEstudianteUis: string
-  programaAcademico: string
   fechaRegistro: string
   fechaResolucion: string | null
   observaciones: string | null
+  programaAcademico: string
+  estudiante?: string
+  codigoEstudianteUis?: string
+}
+
+export interface SolicitudCoordinadorDto extends SolicitudTableRow {
+  tipoSolicitudId: number
+  estadoId: number
+  estudianteId: number
+  estudiante: string
+  codigoEstudianteUis: string
+}
+
+export interface SolicitudEstudianteRowDto extends SolicitudTableRow {
+  codigoEstudianteUis?: string
 }
 
 export interface SolicitudDocumentoItem {

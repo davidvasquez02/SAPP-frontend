@@ -241,3 +241,15 @@
   - Calls `GET /sapp/evaluacionAdmision/info?inscripcionId=...&etapa=...`, expects `{ ok, message, data: EvaluacionAdmisionItem[] }`, throws when `ok` is `false`, and returns `data ?? []`.
 - **Evaluación admisión DTO:** `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
   - `EvaluacionAdmisionItem`: `{ id, inscripcionId, etapaEvaluacion, aspecto, codigo, consideraciones, evaluador, fechaRegistro, observaciones, ponderacionId, puntajeAspirante, puntajeMax }`.
+
+
+## Update 2026-04-02 (Solicitudes UX/Table Refresh)
+- Added reusable `SolicitudesTable` component for both coordinator and student modes (extra student identity columns only for coordinator mode).
+- Introduced `SolicitudesCoordinadorView` and `SolicitudesEstudianteView` containers to keep `/solicitudes` role branches isolated and easier to maintain.
+- Student flow now defaults to LIST view (`Mis solicitudes`), supports `Agregar solicitud` -> FORM toggle, and returns to LIST with a newly inserted mock `REGISTRADA` row after successful submit.
+- Added student listing mock/service path: `src/modules/solicitudes/mock/solicitudesEstudiante.mock.ts` and `fetchSolicitudesEstudiante()` in `solicitudesMockService.ts`.
+- `/solicitudes` role priority enforced as: `COORDINADOR | ADMIN` > `ESTUDIANTE` > no-permission message.
+
+### Validation notes (manual + static)
+- Build/lint were not re-run in this update window; existing repo baseline still applies (see prior section with lint debt).
+- Manual code-path validation completed for role branching and LIST/FORM toggle behavior in the new containers.

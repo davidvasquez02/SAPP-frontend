@@ -3,7 +3,7 @@ import { getMockDocumentosByTipo } from '../../mock/documentosPorTipo.mock'
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import './SolicitudEstudianteForm.css'
 
-interface SolicitudEstudiantePayload {
+export interface SolicitudEstudiantePayload {
   tipoSolicitudId: number
   observaciones: string
   documentos: Array<{
