@@ -1,6 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 2, 2026: replaced the coordinator detalle estado mock with real backend transitions using `PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{id}`, `.../cambioEstadoAprobada/{id}`, and `.../cambioEstadoRechazada/{id}` via `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`.
+- April 2, 2026: `SolicitudDetallePage` now shows coordinator-only estado selector/actions (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`) with loading disable, backend error surface, and fallback detail re-fetch when PUT responds with `data: null`.
+- April 2, 2026: detail “Volver” navigation now sends refresh state and coordinator list re-fetch depends on route location updates to ensure `/solicitudes` reflects the latest estado after returning from detail.
 - April 2, 2026: verified/fixed Solicitudes estado badge regression where all chips appeared green; `StatusBadge.css` now uses stronger variant selectors and explicit rgba colors per estado, preventing override by generic/global styles.
 - April 2, 2026: `normalizeEstadoSolicitud` now supports common backend variants (`EN_ESTUDIO`, `APROBADO`, `RECHAZADO`) before rendering the badge, keeping colors consistent in table/card/detail views.
 - Solicitudes status badges are now centralized with `StatusBadge` + `normalizeEstadoSolicitud`, applied in table/detail/card views with differentiated colors for REGISTRADA, EN ESTUDIO, APROBADA, RECHAZADA, and UNKNOWN fallback.
@@ -203,6 +206,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 2, 2026 after integrating real coordinator estado PUT endpoints + detail fallback refresh path.
 - `npm run build` ✅ passes on April 2, 2026 after centralizing Solicitudes status badges (`StatusBadge`) and replacing legacy single-color badges in list/detail/card views.
 - `npm run build` ✅ passes on April 2, 2026 after integrating `SolicitudDocumentosEditor` + localStorage mock persistence for student document replacement in solicitud detail edit mode.
 - `npm run build` ✅ passes on April 2, 2026 after enforcing Solicitudes real endpoints for student list (`/sapp/solicitudesAcademicas/estudiante?estudianteId=...`) and detail (`/sapp/solicitudesAcademicas/{id}`), plus session-based `estudianteId` validation.
