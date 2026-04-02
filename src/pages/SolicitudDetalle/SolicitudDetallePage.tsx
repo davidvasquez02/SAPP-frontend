@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
@@ -7,8 +7,11 @@ import {
   fetchSolicitudDetalle,
   updateSolicitudEstado,
 } from '../../modules/solicitudes/services/solicitudesMockService'
+import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
+import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import type { SolicitudCoordinadorDto } from '../../modules/solicitudes/types'
 import type { EstadoSolicitudEditable } from '../../modules/solicitudes/mock/solicitudesStore.mock'
+import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import './SolicitudDetallePage.css'
 
 const ESTADOS_EDITABLES: EstadoSolicitudEditable[] = ['EN ESTUDIO', 'APROBADA', 'RECHAZADA']
@@ -35,6 +38,9 @@ const SolicitudDetallePage = () => {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
+  const [docsLoading, setDocsLoading] = useState(false)
+  const [docsError, setDocsError] = useState<string | null>(null)
 
   useEffect(() => {
     const parsedId = Number(solicitudId)
@@ -75,6 +81,35 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [solicitudId])
+
+  const loadDocumentos = useCallback(async (parsedId: number) => {
+    setDocsLoading(true)
+    setDocsError(null)
+
+    try {
+      const response = await fetchSolicitudDocumentos(parsedId)
+      setDocumentos(response)
+    } catch (documentsError) {
+      setDocsError(
+        documentsError instanceof Error ? documentsError.message : 'No fue posible cargar los documentos adjuntos.',
+      )
+    } finally {
+      setDocsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const parsedId = Number(solicitudId)
+
+    if (!isCoordinador || !parsedId) {
+      setDocumentos([])
+      setDocsError(null)
+      setDocsLoading(false)
+      return
+    }
+
+    void loadDocumentos(parsedId)
+  }, [isCoordinador, loadDocumentos, solicitudId])
 
   const handleSaveEstado = async () => {
     if (!solicitud) {
@@ -151,33 +186,47 @@ const SolicitudDetallePage = () => {
             </dl>
 
             {isCoordinador && (
-              <section className="solicitud-detalle-page__estado-editor">
-                <h3>Cambiar estado</h3>
-                <div className="solicitud-detalle-page__estado-controls">
-                  <select
-                    value={nextEstado}
-                    onChange={(event) => {
-                      setNextEstado(event.target.value as EstadoSolicitudEditable)
-                      setSuccessMessage(null)
-                    }}
-                  >
-                    {ESTADOS_EDITABLES.map((estado) => (
-                      <option key={estado} value={estado}>
-                        {estado}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    className="solicitud-detalle-page__save"
-                    onClick={handleSaveEstado}
-                    type="button"
-                    disabled={saving || solicitud.estadoSigla === nextEstado}
-                  >
-                    {saving ? 'Guardando...' : 'Guardar estado'}
-                  </button>
-                </div>
-                {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
-              </section>
+              <>
+                <section className="solicitud-detalle-page__estado-editor">
+                  <h3>Cambiar estado</h3>
+                  <div className="solicitud-detalle-page__estado-controls">
+                    <select
+                      value={nextEstado}
+                      onChange={(event) => {
+                        setNextEstado(event.target.value as EstadoSolicitudEditable)
+                        setSuccessMessage(null)
+                      }}
+                    >
+                      {ESTADOS_EDITABLES.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {estado}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="solicitud-detalle-page__save"
+                      onClick={handleSaveEstado}
+                      type="button"
+                      disabled={saving || solicitud.estadoSigla === nextEstado}
+                    >
+                      {saving ? 'Guardando...' : 'Guardar estado'}
+                    </button>
+                  </div>
+                  {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
+                </section>
+
+                <DocumentosAdjuntos
+                  documentos={documentos}
+                  isLoading={docsLoading}
+                  error={docsError}
+                  onRetry={() => {
+                    const parsedId = Number(solicitudId)
+                    if (parsedId) {
+                      void loadDocumentos(parsedId)
+                    }
+                  }}
+                />
+              </>
             )}
           </>
         )}
