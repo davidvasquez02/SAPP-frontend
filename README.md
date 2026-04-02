@@ -76,6 +76,9 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- Extended `SolicitudDetallePage` (mock flow) with a coordinator/admin-only “Documentos adjuntos” section that loads document lists by `solicitudId`, includes loading/error/empty states, and keeps state change controls intact.
+- Added mock document contracts/services for solicitudes: `SolicitudDocumentoAdjuntoDto`, `solicitudDocumentosById` seeded for IDs `1..4`, and async `fetchSolicitudDocumentos()` with 150ms delay to emulate backend behavior.
+- Added reusable `DocumentosAdjuntos` UI for solicitud detail with accessible actions to `Ver` (PDF-only open in new tab) and `Descargar` (all mime types), reusing shared base64 utilities in `src/shared/files/base64FileUtils.ts`.
 - Extended the `/solicitudes` mock module with click-through row navigation (`/solicitudes/:solicitudId`), a dedicated detail page, and coordinator-only state transitions (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`) backed by a shared in-memory store so list/detail remain synchronized after updates.
 - Fixed TypeScript compilation blockers for auth/document pages: `AspiranteDocumentosPage` now casts `session.user` to `AspiranteUser` after the `session.kind === "ASPIRANTE"` guard before reading `inscripcionAdmisionId`, and both login pages now use `import type { FormEvent }` to comply with `verbatimModuleSyntax`.
 - Fixed the theme baseline to avoid inverted light mode: default startup theme is now `light` (unless `sapp-theme` is already set), `body.light`/`body.dark` tokens were normalized to the UIS palette, and base text remains on `--text-primary` while `--on-primary` is reserved for text over primary surfaces (buttons).

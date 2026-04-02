@@ -1,0 +1,93 @@
+.documentos-adjuntos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--outline);
+}
+
+.documentos-adjuntos__header h3 {
+  margin: 0;
+}
+
+.documentos-adjuntos__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.documentos-adjuntos__status--error {
+  color: var(--danger, #b3261e);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.documentos-adjuntos__status--error p {
+  margin: 0;
+}
+
+.documentos-adjuntos__retry {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+}
+
+.documentos-adjuntos__table-wrapper {
+  overflow-x: auto;
+}
+
+.documentos-adjuntos__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline);
+  border-radius: 0.85rem;
+  overflow: hidden;
+}
+
+.documentos-adjuntos__table th,
+.documentos-adjuntos__table td {
+  text-align: left;
+  padding: 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+  vertical-align: top;
+}
+
+.documentos-adjuntos__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.documentos-adjuntos__filename {
+  margin: 0;
+  font-weight: 600;
+}
+
+.documentos-adjuntos__description {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.documentos-adjuntos__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.documentos-adjuntos__actions button {
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.documentos-adjuntos__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

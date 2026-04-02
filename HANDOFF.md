@@ -2,6 +2,9 @@
 
 ## Current Status
 
+- ✅ Solicitud detalle now includes a coordinator/admin-only “Documentos adjuntos” section sourced from mocks by `solicitudId`, with loading/error/empty states and retry support.
+- ✅ Added mock documentos store + service for solicitudes (`solicitudDocumentosById` for IDs 1,2,3,4 + `fetchSolicitudDocumentos` with 150ms delay) to emulate backend retrieval without breaking existing mock flows.
+- ✅ Added `DocumentosAdjuntos` component with `Ver` (PDF open in new tab) and `Descargar` (all mime types) actions reusing `src/shared/files/base64FileUtils.ts`; actions are disabled when file payload is incomplete.
 - ✅ Solicitudes now includes detail navigation from both role-based tables to `/solicitudes/:solicitudId`, with row click + Enter key accessibility.
 - ✅ Added shared in-memory solicitudes store (`src/modules/solicitudes/mock/solicitudesStore.mock.ts`) used by coordinator list, student list, and detalle APIs so state stays synchronized.
 - ✅ Added `SolicitudDetallePage` with loading/error/data states, read-only solicitud info, and coordinator-only mock status updates (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`).
@@ -100,6 +103,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Add component/unit tests for `DocumentosAdjuntos` and for `SolicitudDetallePage` role-based visibility (coordinator/admin sees docs section, estudiante does not).
+2. Validate browser behavior for “Ver” on non-PDF mime types and decide if product wants preview enabled for additional formats.
+3. Replace `fetchSolicitudDocumentos` mock service with real API integration once endpoint/contract is available.
 1. Add a visible theme switcher (light/dark) that updates `localStorage.sapp-theme` using the corrected light-first default behavior.
 2. Propagate the new design tokens to remaining page-specific CSS files with hardcoded colors to complete global consistency.
 3. Capture updated UI screenshots for docs once a browser-capable environment is available.
@@ -122,6 +128,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`, `src/modules/solicitudes/mock/solicitudDocumentos.mock.ts`, `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`, `src/modules/solicitudes/components/DocumentosAdjuntos/*`
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
 - **ProtectedRoute:** `src/app/routes/protectedRoute.tsx`
 - **Role guard helper:** `src/auth/roleGuards.ts`, `src/modules/auth/roles/roleUtils.ts`
@@ -176,6 +183,9 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- Manual validation target for this update:
+  - Coordinator/Admin: `/solicitudes/1` should show “Documentos adjuntos” with working `Ver`/`Descargar`.
+  - Estudiante: `/solicitudes/1` should not render the documentos section.
 - Solicitudes role gating manual checklist completed in code review: coordinator-priority branching, student-only form fallback, and no-permission fallback are implemented in `src/pages/Solicitudes/SolicitudesPage.tsx` (pending interactive browser verification).
 - `npm run build` ✅ passes on March 31, 2026 after fixing the reported `AspiranteDocumentosPage` union property access and `FormEvent` type-only imports.
 - `npm run lint` ❌ fails due to pre-existing lint debt (`no-explicit-any` in module stubs, React hooks purity/set-state-in-effect rules, and unused vars in helper/stub files).
@@ -195,6 +205,10 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+- **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`
+  - `SolicitudDocumentoAdjuntoDto`: `{ idDocumento, nombreArchivo, mimeType, base64Contenido, descripcion?, obligatorio? }`
+- **Solicitudes documentos mock service:** `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`
+  - `fetchSolicitudDocumentos(solicitudId)` resolves `SolicitudDocumentoAdjuntoDto[]`, returns `[]` if id is not configured, and simulates 150ms latency.
 - **Solicitudes mocks/contracts:** `src/modules/solicitudes/types.ts` uses shared `ApiResponse<T>`; mock responses in `src/modules/solicitudes/mock/*.ts` follow `{ ok, message, data }`; student payload logged on submit is `{ tipoSolicitudId, observaciones, documentos[{ id, nombre, obligatorio, fileName }] }`.
 - **Auth session contract:** `src/context/Auth/types.ts`
   - `AuthSession`: `{ kind: "SAPP" | "ASPIRANTE", accessToken: string, issuedAt?, expiresAt?, user: AuthUser | AspiranteUser }`
