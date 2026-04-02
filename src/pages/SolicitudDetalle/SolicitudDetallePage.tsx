@@ -31,7 +31,7 @@ const SolicitudDetallePage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
-  const isEstudiante = !isCoordinador && hasAnyRole(roles, ['ESTUDIANTE'])
+  const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
