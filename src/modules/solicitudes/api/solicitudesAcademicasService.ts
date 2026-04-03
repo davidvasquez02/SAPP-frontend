@@ -2,9 +2,31 @@ import { httpGet, httpPost } from '../../../shared/http/httpClient'
 import type { ApiResponse, CreateSolicitudRequestDto, SolicitudAcademicaDto } from './types'
 
 const ENDPOINT_BY_ESTUDIANTE = '/sapp/solicitudesAcademicas/estudiante'
+const ENDPOINT_SOLICITUDES = '/sapp/solicitudesAcademicas'
+
+export type SolicitudesFilter = {
+  estadoId?: number
+  tipoSolicitudId?: number
+}
 
 export async function getSolicitudesAcademicas(): Promise<SolicitudAcademicaDto[]> {
-  const response = await httpGet<ApiResponse<SolicitudAcademicaDto[]>>('/sapp/solicitudesAcademicas')
+  return getSolicitudesAcademicasFiltered({})
+}
+
+export async function getSolicitudesAcademicasFiltered(filters: SolicitudesFilter): Promise<SolicitudAcademicaDto[]> {
+  const params = new URLSearchParams()
+
+  if (filters.estadoId !== undefined) {
+    params.append('estadoId', String(filters.estadoId))
+  }
+
+  if (filters.tipoSolicitudId !== undefined) {
+    params.append('tipoSolicitudId', String(filters.tipoSolicitudId))
+  }
+
+  const queryString = params.toString()
+  const endpoint = queryString ? `${ENDPOINT_SOLICITUDES}?${queryString}` : ENDPOINT_SOLICITUDES
+  const response = await httpGet<ApiResponse<SolicitudAcademicaDto[]>>(endpoint)
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible cargar las solicitudes.')

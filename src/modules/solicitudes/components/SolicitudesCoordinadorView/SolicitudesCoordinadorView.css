@@ -20,3 +20,8 @@
   background: color-mix(in srgb, #b3261e, transparent 90%);
   color: #b3261e;
 }
+
+.solicitudes-coordinador-view__status--warning {
+  background: color-mix(in srgb, var(--inverse-primary), transparent 88%);
+  color: var(--text-primary);
+}
