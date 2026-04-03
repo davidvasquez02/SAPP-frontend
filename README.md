@@ -78,6 +78,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 3, 2026: coordinator `/solicitudes` now supports backend-driven filtering with `estadoId` and `tipoSolicitudId`; the view loads tipos from `GET /sapp/tipoSolicitud`, renders a new reusable `SolicitudesFiltersBar`, and requests `GET /sapp/solicitudesAcademicas` with query params only when selected (no `undefined` params). Student view remains unchanged.
 - April 2, 2026: adjusted Solicitudes estado-change API contract: `EN ESTUDIO` keeps `PUT /cambioEstadoEnEstudio/{id}` without body, while `APROBADA`/`RECHAZADA` now use batch body `{ solicitudesId: [id] }` on `PUT /cambioEstadoAprobada` and `PUT /cambioEstadoRechazada`; detail page now always re-fetches `GET /sapp/solicitudesAcademicas/{id}` after successful estado update and shows a dedicated refresh error if reload fails.
 - April 2, 2026: implemented real coordinator/admin estado transitions in `SolicitudDetallePage` via new PUT service `cambiarEstadoSolicitud` (`EN ESTUDIO` / `APROBADA` / `RECHAZADA`), with loading/error/success UX and detail fallback refresh (`GET /sapp/solicitudesAcademicas/{id}`) when PUT returns `data: null`.
 - April 2, 2026: replaced the detail estado text chip with shared `StatusBadge` to preserve consistent color semantics in solicitud detail.

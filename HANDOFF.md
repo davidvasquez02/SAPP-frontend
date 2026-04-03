@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 3, 2026: coordinator `/solicitudes` now includes backend filters (`estadoId`, `tipoSolicitudId`) with a reusable `SolicitudesFiltersBar`; changing filters triggers `GET /sapp/solicitudesAcademicas` with only defined query params, and “Limpiar filtros” resets to unfiltered list.
+- April 3, 2026: `SolicitudesCoordinadorView` now loads tipos from `GET /sapp/tipoSolicitud` for the tipo combo, keeps loading/error/empty states, and shows the filtered-empty message “No hay resultados con los filtros seleccionados.”.
 - April 2, 2026: backend contract update applied: `EN ESTUDIO` keeps URL id (`PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{id}`) while `APROBADA`/`RECHAZADA` now send batch body `{ solicitudesId: [id] }` without id in URL.
 - April 2, 2026: replaced the coordinator detalle estado mock with real backend transitions using `PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{id}`, `.../cambioEstadoAprobada` (body batch), and `.../cambioEstadoRechazada` (body batch) via `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`.
 - April 2, 2026: `SolicitudDetallePage` now shows coordinator-only estado selector/actions (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`) with loading disable, backend error surface, and forced detail re-fetch after every successful PUT plus a dedicated partial-success message when refresh fails.
@@ -207,6 +209,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 3, 2026 after adding coordinator filters (`estadoId` + `tipoSolicitudId`) and wiring filtered solicitudes service calls without undefined query params.
 - `npm run build` ✅ passes on April 2, 2026 after updating Solicitudes estado transitions to batch payloads for APROBADA/RECHAZADA and always reloading detalle after successful estado updates.
 - `npm run build` ✅ passes on April 2, 2026 after integrating real coordinator estado PUT endpoints + detail fallback refresh path.
 - `npm run build` ✅ passes on April 2, 2026 after centralizing Solicitudes status badges (`StatusBadge`) and replacing legacy single-color badges in list/detail/card views.
@@ -261,6 +264,7 @@
 - **Solicitudes API contracts (real):** `src/modules/solicitudes/api/types.ts`, `src/modules/solicitudes/api/tipoSolicitudService.ts`, `src/modules/solicitudes/api/solicitudesAcademicasService.ts`
   - `GET /sapp/tipoSolicitud` => `{ ok, message, data: TipoSolicitudDto[] }`
   - `GET /sapp/solicitudesAcademicas` => `{ ok, message, data: SolicitudAcademicaDto[] }`
+  - `GET /sapp/solicitudesAcademicas?estadoId={id}&tipoSolicitudId={id}` (params opcionales; frontend solo envía los definidos, con “Todos” = sin param).
   - `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...` (single supported endpoint for student list)
   - `GET /sapp/solicitudesAcademicas/{solicitudId}` => `{ ok, message, data: SolicitudAcademicaDto | null }` (frontend throws `Solicitud no encontrada` when `data` is null)
   - `POST /sapp/solicitudesAcademicas` with body `{ estudianteId, tipoSolicitudId, fechaResolucion: null, observaciones }` and envelope response.
