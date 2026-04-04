@@ -3,13 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import {
   cerrarConvocatoriaAdmision,
-  createConvocatoriaAdmision,
   getConvocatoriasAdmision,
 } from '../../modules/admisiones/api/convocatoriaAdmisionService'
-import type {
-  ConvocatoriaAdmisionDto,
-  CreateConvocatoriaRequest,
-} from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
+import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
 import { CreateConvocatoriaModal } from '../../modules/admisiones/components/CreateConvocatoriaModal'
 import './ConvocatoriasAdmisionConfigPage.css'
 
@@ -66,7 +62,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
 
-  const loadConvocatorias = useCallback(async (silent = false) => {
+  const loadConvocatorias = useCallback(async (silent = false): Promise<ConvocatoriaAdmisionDto[]> => {
     if (silent) {
       setIsRefreshing(true)
     } else {
@@ -78,6 +74,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
     try {
       const data = await getConvocatoriasAdmision()
       setConvocatorias(data)
+      return data
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -85,6 +82,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
           : 'No fue posible cargar las convocatorias.'
       setError(message)
       setConvocatorias([])
+      return []
     } finally {
       if (silent) {
         setIsRefreshing(false)
@@ -158,15 +156,6 @@ const ConvocatoriasAdmisionConfigPage = () => {
             : 'No fue posible cerrar la convocatoria.'
         setError(message)
       }
-    },
-    [loadConvocatorias]
-  )
-
-  const handleCreateConvocatoria = useCallback(
-    async (request: CreateConvocatoriaRequest) => {
-      await createConvocatoriaAdmision(request)
-      await loadConvocatorias(true)
-      setFeedback('Convocatoria creada correctamente.')
     },
     [loadConvocatorias]
   )
@@ -317,7 +306,8 @@ const ConvocatoriasAdmisionConfigPage = () => {
         open={isCreateModalOpen}
         convocatorias={convocatorias}
         onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateConvocatoria}
+        onRefreshConvocatorias={() => loadConvocatorias(true)}
+        onSuccess={(message) => setFeedback(message)}
       />
     </ModuleLayout>
   )

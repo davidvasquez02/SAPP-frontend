@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { createConvocatoriaAdmision } from '../../api/convocatoriaAdmisionService'
 import type {
   ConvocatoriaAdmisionDto,
   CreateConvocatoriaRequest,
 } from '../../api/convocatoriaAdmisionTypes'
+import type { PeriodoOption } from '../../mock/periodos.mock'
+import type { ProfesorOption } from '../../mock/profesores.mock'
+import { assignProfesoresToConvocatoria } from '../../services/convocatoriaProfesoresMockService'
+import { fetchPeriodos } from '../../services/periodosMockService'
+import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
 
 type ProgramaOption = {
@@ -11,40 +17,56 @@ type ProgramaOption = {
   programa: string
 }
 
+type PendingAssignment = {
+  convocatoriaId: number
+  profesoresId: number[]
+}
+
 type CreateConvocatoriaModalProps = {
   open: boolean
   convocatorias: ConvocatoriaAdmisionDto[]
   onClose: () => void
-  onSubmit: (request: CreateConvocatoriaRequest) => Promise<void>
+  onRefreshConvocatorias: () => Promise<ConvocatoriaAdmisionDto[]>
+  onSuccess: (message: string) => void
 }
 
 type FormState = {
   programaId: string
+  periodoId: string
   cupos: string
   fechaInicio: string
   fechaFin: string
   observaciones: string
+  profesorId: string
 }
 
-type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string }
+type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string; warning?: string }
 
 const initialFormState: FormState = {
   programaId: '',
+  periodoId: '',
   cupos: '1',
   fechaInicio: '',
   fechaFin: '',
   observaciones: '',
+  profesorId: '',
 }
 
 export const CreateConvocatoriaModal = ({
   open,
   convocatorias,
   onClose,
-  onSubmit,
+  onRefreshConvocatorias,
+  onSuccess,
 }: CreateConvocatoriaModalProps) => {
   const [formState, setFormState] = useState<FormState>(initialFormState)
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false)
+  const [periodos, setPeriodos] = useState<PeriodoOption[]>([])
+  const [profesores, setProfesores] = useState<ProfesorOption[]>([])
+  const [selectedProfesores, setSelectedProfesores] = useState<ProfesorOption[]>([])
+  const [pendingAssignment, setPendingAssignment] = useState<PendingAssignment | null>(null)
 
   const programas = useMemo<ProgramaOption[]>(() => {
     const grouped = new Map<number, string>()
@@ -65,12 +87,46 @@ export const CreateConvocatoriaModal = ({
       return
     }
 
-    setFormState((prev) => ({
-      ...initialFormState,
-      programaId: prev.programaId || (programas[0] ? String(programas[0].programaId) : ''),
-    }))
-    setErrors({})
-    setIsSubmitting(false)
+    let active = true
+
+    const loadOptions = async () => {
+      setIsLoadingOptions(true)
+      try {
+        const [periodosData, profesoresData] = await Promise.all([fetchPeriodos(), fetchProfesores()])
+
+        if (!active) {
+          return
+        }
+
+        setPeriodos(periodosData)
+        setProfesores(profesoresData)
+        setFormState((prev) => ({
+          ...initialFormState,
+          programaId: prev.programaId || (programas[0] ? String(programas[0].programaId) : ''),
+          periodoId: periodosData[0] ? String(periodosData[0].id) : '',
+        }))
+        setSelectedProfesores([])
+        setPendingAssignment(null)
+        setErrors({})
+      } catch {
+        if (!active) {
+          return
+        }
+
+        setErrors({ general: 'No fue posible cargar los catálogos de periodo/profesores.' })
+      } finally {
+        if (active) {
+          setIsLoadingOptions(false)
+          setIsSubmitting(false)
+        }
+      }
+    }
+
+    loadOptions()
+
+    return () => {
+      active = false
+    }
   }, [open, programas])
 
   useEffect(() => {
@@ -100,6 +156,10 @@ export const CreateConvocatoriaModal = ({
       nextErrors.programaId = 'Seleccione un programa.'
     }
 
+    if (!formState.periodoId) {
+      nextErrors.periodoId = 'Seleccione un periodo.'
+    }
+
     if (!Number.isFinite(cupos) || cupos <= 0) {
       nextErrors.cupos = 'Los cupos deben ser mayores a 0.'
     }
@@ -121,11 +181,91 @@ export const CreateConvocatoriaModal = ({
 
   const handleField = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
-    setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }))
+    setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined, warning: undefined }))
+  }
+
+  const handleAddProfesor = () => {
+    const selectedId = Number(formState.profesorId)
+    if (!selectedId) {
+      return
+    }
+
+    const profesor = profesores.find((item) => item.id === selectedId)
+    if (!profesor) {
+      return
+    }
+
+    setSelectedProfesores((prev) => {
+      if (prev.some((item) => item.id === profesor.id)) {
+        return prev
+      }
+
+      return [...prev, profesor]
+    })
+
+    setFormState((prev) => ({ ...prev, profesorId: '' }))
+  }
+
+  const handleRemoveProfesor = (profesorId: number) => {
+    setSelectedProfesores((prev) => prev.filter((item) => item.id !== profesorId))
+    setErrors((prev) => ({ ...prev, warning: undefined }))
+  }
+
+  const resolveCreatedConvocatoriaId = async (
+    request: CreateConvocatoriaRequest,
+    created?: ConvocatoriaAdmisionDto | void
+  ): Promise<number> => {
+    if (created && typeof created === 'object' && 'id' in created && created.id) {
+      return created.id
+    }
+
+    const updated = await onRefreshConvocatorias()
+
+    const match = updated
+      .filter(
+        (item) =>
+          item.programaId === request.programaId &&
+          item.periodoId === request.periodoId &&
+          item.fechaInicio.split(' ')[0] === request.fechaInicio &&
+          item.fechaFin.split(' ')[0] === request.fechaFin
+      )
+      .sort((a, b) => b.id - a.id)[0]
+
+    if (!match) {
+      throw new Error('Convocatoria creada, pero no se pudo resolver el identificador retornado.')
+    }
+
+    return match.id
+  }
+
+  const runAssignProfesores = async (convocatoriaId: number, profesoresId: number[]) => {
+    await assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })
+    setPendingAssignment(null)
   }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+
+    if (pendingAssignment) {
+      try {
+        setIsSubmitting(true)
+        await runAssignProfesores(pendingAssignment.convocatoriaId, pendingAssignment.profesoresId)
+        await onRefreshConvocatorias()
+        onSuccess('Convocatoria creada y profesores asignados correctamente (mock).')
+        onClose()
+      } catch (error) {
+        setErrors({
+          warning:
+            error instanceof Error
+              ? `Convocatoria creada, pero no se pudieron asignar profesores. ${error.message}`
+              : 'Convocatoria creada, pero no se pudieron asignar profesores.',
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
     const formErrors = validate()
 
     if (Object.keys(formErrors).length > 0) {
@@ -133,15 +273,42 @@ export const CreateConvocatoriaModal = ({
       return
     }
 
+    const payload: CreateConvocatoriaRequest = {
+      programaId: Number(formState.programaId),
+      periodoId: Number(formState.periodoId),
+      cupos: Number(formState.cupos),
+      fechaInicio: formState.fechaInicio,
+      fechaFin: formState.fechaFin,
+      observaciones: formState.observaciones.trim(),
+    }
+
     try {
       setIsSubmitting(true)
-      await onSubmit({
-        programaId: Number(formState.programaId),
-        cupos: Number(formState.cupos),
-        fechaInicio: formState.fechaInicio,
-        fechaFin: formState.fechaFin,
-        observaciones: formState.observaciones.trim(),
-      })
+      const created = await createConvocatoriaAdmision(payload)
+      const convocatoriaId = await resolveCreatedConvocatoriaId(payload, created)
+      const profesoresId = selectedProfesores.map((profesor) => profesor.id)
+
+      if (profesoresId.length > 0) {
+        try {
+          await runAssignProfesores(convocatoriaId, profesoresId)
+        } catch (error) {
+          setPendingAssignment({ convocatoriaId, profesoresId })
+          setErrors({
+            warning:
+              error instanceof Error
+                ? `Convocatoria creada, pero no se pudieron asignar profesores. ${error.message}`
+                : 'Convocatoria creada, pero no se pudieron asignar profesores.',
+          })
+          return
+        }
+      }
+
+      await onRefreshConvocatorias()
+      onSuccess(
+        profesoresId.length > 0
+          ? 'Convocatoria creada y profesores asignados correctamente (mock).'
+          : 'Convocatoria creada correctamente.'
+      )
       onClose()
     } catch (error) {
       setErrors({
@@ -154,6 +321,10 @@ export const CreateConvocatoriaModal = ({
       setIsSubmitting(false)
     }
   }
+
+  const availableProfesores = profesores.filter(
+    (profesor) => !selectedProfesores.some((selected) => selected.id === profesor.id)
+  )
 
   return (
     <div className="create-convocatoria-modal" role="dialog" aria-modal="true">
@@ -177,7 +348,7 @@ export const CreateConvocatoriaModal = ({
             <select
               value={formState.programaId}
               onChange={(event) => handleField('programaId', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
             >
               <option value="">Seleccione...</option>
               {programas.map((programa) => (
@@ -192,13 +363,32 @@ export const CreateConvocatoriaModal = ({
           </label>
 
           <label className="create-convocatoria-modal__field">
+            Período
+            <select
+              value={formState.periodoId}
+              onChange={(event) => handleField('periodoId', event.target.value)}
+              disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
+            >
+              <option value="">Seleccione...</option>
+              {periodos.map((periodo) => (
+                <option key={periodo.id} value={periodo.id}>
+                  {periodo.label}
+                </option>
+              ))}
+            </select>
+            {errors.periodoId ? (
+              <span className="create-convocatoria-modal__error">{errors.periodoId}</span>
+            ) : null}
+          </label>
+
+          <label className="create-convocatoria-modal__field">
             Cupos
             <input
               type="number"
               min={1}
               value={formState.cupos}
               onChange={(event) => handleField('cupos', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
             />
             {errors.cupos ? (
               <span className="create-convocatoria-modal__error">{errors.cupos}</span>
@@ -211,7 +401,7 @@ export const CreateConvocatoriaModal = ({
               type="date"
               value={formState.fechaInicio}
               onChange={(event) => handleField('fechaInicio', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
             />
             {errors.fechaInicio ? (
               <span className="create-convocatoria-modal__error">{errors.fechaInicio}</span>
@@ -224,7 +414,7 @@ export const CreateConvocatoriaModal = ({
               type="date"
               value={formState.fechaFin}
               onChange={(event) => handleField('fechaFin', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
             />
             {errors.fechaFin ? (
               <span className="create-convocatoria-modal__error">{errors.fechaFin}</span>
@@ -237,10 +427,63 @@ export const CreateConvocatoriaModal = ({
               rows={3}
               value={formState.observaciones}
               onChange={(event) => handleField('observaciones', event.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
               placeholder="Opcional"
             />
           </label>
+
+          <div className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
+            <span>Profesores (opcional)</span>
+            <div className="create-convocatoria-modal__profesor-picker">
+              <select
+                value={formState.profesorId}
+                onChange={(event) => handleField('profesorId', event.target.value)}
+                disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
+              >
+                <option value="">Seleccione profesor...</option>
+                {availableProfesores.map((profesor) => (
+                  <option key={profesor.id} value={profesor.id}>
+                    {profesor.nombre}
+                    {profesor.email ? ` (${profesor.email})` : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="create-convocatoria-modal__button create-convocatoria-modal__button--ghost"
+                onClick={handleAddProfesor}
+                disabled={!formState.profesorId || isSubmitting || Boolean(pendingAssignment)}
+              >
+                Agregar
+              </button>
+            </div>
+
+            <div className="create-convocatoria-modal__chips">
+              {selectedProfesores.length === 0 ? (
+                <span className="create-convocatoria-modal__hint">Aún no se han agregado profesores.</span>
+              ) : (
+                selectedProfesores.map((profesor) => (
+                  <div key={profesor.id} className="create-convocatoria-modal__chip">
+                    <div>
+                      <strong>{profesor.nombre}</strong>
+                      {profesor.email ? <small>{profesor.email}</small> : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveProfesor(profesor.id)}
+                      disabled={isSubmitting || Boolean(pendingAssignment)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {errors.warning ? (
+            <p className="create-convocatoria-modal__warning">{errors.warning}</p>
+          ) : null}
 
           {errors.general ? (
             <p className="create-convocatoria-modal__error create-convocatoria-modal__error--general">
@@ -258,7 +501,13 @@ export const CreateConvocatoriaModal = ({
               Cancelar
             </button>
             <button type="submit" className="create-convocatoria-modal__button" disabled={isSubmitting}>
-              {isSubmitting ? 'Creando...' : 'Crear convocatoria'}
+              {isSubmitting
+                ? pendingAssignment
+                  ? 'Reintentando...'
+                  : 'Creando...'
+                : pendingAssignment
+                  ? 'Reintentar asignación'
+                  : 'Crear convocatoria'}
             </button>
           </div>
         </form>
