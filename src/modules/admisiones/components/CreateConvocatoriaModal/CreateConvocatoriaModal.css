@@ -1,0 +1,119 @@
+.create-convocatoria-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-convocatoria-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: color-mix(in srgb, #020617, transparent 45%);
+}
+
+.create-convocatoria-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(680px, 92vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  background: var(--surface);
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px color-mix(in srgb, #020617, transparent 75%);
+}
+
+.create-convocatoria-modal__header h2 {
+  margin: 0;
+}
+
+.create-convocatoria-modal__header p {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+}
+
+.create-convocatoria-modal__form {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.create-convocatoria-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.create-convocatoria-modal__field input,
+.create-convocatoria-modal__field select,
+.create-convocatoria-modal__field textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  padding: 0.62rem 0.75rem;
+}
+
+.create-convocatoria-modal__field textarea {
+  resize: vertical;
+}
+
+.create-convocatoria-modal__field--full {
+  grid-column: 1 / -1;
+}
+
+.create-convocatoria-modal__error {
+  font-size: 0.86rem;
+  color: #b91c1c;
+  font-weight: 500;
+}
+
+.create-convocatoria-modal__error--general {
+  margin: 0;
+  grid-column: 1 / -1;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: #fee2e2;
+}
+
+.create-convocatoria-modal__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.create-convocatoria-modal__button {
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.56rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-convocatoria-modal__button--ghost {
+  background: color-mix(in srgb, var(--surface), var(--outline) 25%);
+  color: var(--text-primary);
+}
+
+.create-convocatoria-modal__button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .create-convocatoria-modal__form {
+    grid-template-columns: 1fr;
+  }
+}

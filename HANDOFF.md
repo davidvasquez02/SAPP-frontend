@@ -106,6 +106,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validate with backend the expected `POST /sapp/convocatoriaAdmision` behavior when creating convocatorias for programas not yet present in historical data (the UI currently derives selectable programs from existing convocatorias returned by GET).
 - Confirm and align real backend contracts for matrícula (`convocatoria vigente`, `catálogo de materias por estudiante/plan`, and `documentos requeridos + estados`) so `src/modules/matricula/services/matriculaMockService.ts` can be swapped without changing UI component contracts.
 - Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
@@ -127,6 +128,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Validate role gating end-to-end for `/admisiones/convocatorias` with real users (`ADMIN`/`COORDINADOR` allowed, `ESTUDIANTE`/`DOCENTE` blocked) and capture evidence in QA notes.
+2. Verify backend date formatting expectations for `fechaInicio`/`fechaFin` (`YYYY-MM-DD`) and confirm timezone handling in persisted values.
+3. Decide whether the program selector for new convocatorias should come from a dedicated catálogo endpoint (instead of deriving from existing convocatorias).
 1. Replace `src/modules/matricula/services/matriculaMockService.ts` with real API clients while keeping `MatriculaConvocatoria`, `MateriaDto`, and `DocumentoRequerido` as the boundary DTOs for UI stability.
 2. Add component tests for `MateriasSelector`, `MateriasSelectedTable`, and `DocumentosRequeridosTable` (duplicate prevention, remove flow, status badge rendering, file name capture on mock upload).
 3. Add an E2E/manual script for matrícula role gating (`ESTUDIANTE` sees flow, non-ESTUDIANTE sees unsupported-role message) and convocatoria-open/closed behavior.
@@ -158,6 +162,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Convocatorias config (nuevo):** `src/pages/ConvocatoriasAdmisionConfig/*`, `src/modules/admisiones/components/CreateConvocatoriaModal/*`, `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`, and route wiring in `src/app/routes/index.tsx` + `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
 - **Matrícula module (nuevo, mock-ready):** `src/modules/matricula/types.ts`, `src/modules/matricula/mock/*`, `src/modules/matricula/services/matriculaMockService.ts`, `src/modules/matricula/components/*`, `src/pages/Matricula/MatriculaPage.tsx`.
 - **Solicitudes documentos (estudiante mock persistente):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`, `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`, `src/modules/solicitudes/components/SolicitudDocumentosEditor/*`
 - **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`, `src/modules/solicitudes/mock/solicitudDocumentos.mock.ts`, `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`, `src/modules/solicitudes/components/DocumentosAdjuntos/*`
@@ -216,6 +221,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 4, 2026 after implementing Admisiones convocatorias configuration (new `/admisiones/convocatorias` page, create modal, close action, and route/role guards).
 - `npm run build` ✅ passes on April 4, 2026 after implementing the ESTUDIANTE matrícula mock module (`/matricula` with convocatoria gate + materias selector + documentos checklist + mock confirm action).
 - `npm run build` ✅ passes on April 4, 2026 after global UI consistency/responsive refinements (tokens + layout spacing + mobile sidebar + mobile-friendly solicitudes table).
 - `npm run lint` ❌ still fails on pre-existing repo lint debt unrelated to this visual pass (`no-explicit-any`, hooks purity/set-state-in-effect, unused vars).

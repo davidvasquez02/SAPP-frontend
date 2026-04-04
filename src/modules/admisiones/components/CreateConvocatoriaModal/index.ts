@@ -1,0 +1,1 @@
+export { CreateConvocatoriaModal } from './CreateConvocatoriaModal'
