@@ -369,12 +369,12 @@ export const CreateAspiranteModal = ({
             prev.map((current) =>
               current.id === item.id
                 ? {
-                    ...current,
-                    status: 'UPLOADED',
-                    uploadedFileName: uploaded.nombreArchivo,
-                    selectedFile: null,
-                    errorMessage: undefined,
-                  }
+                  ...current,
+                  status: 'UPLOADED',
+                  uploadedFileName: uploaded.nombreArchivo,
+                  selectedFile: null,
+                  errorMessage: undefined,
+                }
                 : current,
             ),
           )
@@ -513,7 +513,7 @@ export const CreateAspiranteModal = ({
     <div className="create-aspirante-modal" role="presentation">
       <div
         className="create-aspirante-modal__backdrop"
-        role="button"
+        role="bn"
         tabIndex={0}
         aria-label="Cerrar"
         onClick={onClose}

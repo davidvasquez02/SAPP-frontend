@@ -37,9 +37,9 @@ export async function cambiarEstadoSolicitud(
   const response = await httpPut<ApiResponse<unknown | null>>(path, {
     ...(body
       ? {
-          headers: { 'Content-Type': 'application/json' },
-          body,
-        }
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }
       : {}),
   })
 
