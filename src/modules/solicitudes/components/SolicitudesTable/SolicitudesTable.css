@@ -1,14 +1,14 @@
 .solicitudes-table__container {
   overflow-x: auto;
   border: 1px solid var(--outline);
-  border-radius: 1rem;
+  border-radius: var(--radius-md);
   background: var(--surface);
 }
 
 .solicitudes-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 840px;
 }
 
 .solicitudes-table thead th {
@@ -22,7 +22,7 @@
 
 .solicitudes-table th,
 .solicitudes-table td {
-  padding: 0.75rem;
+  padding: 0.8rem;
   border-bottom: 1px solid var(--outline);
   vertical-align: top;
 }
@@ -43,4 +43,53 @@
 
 .solicitudes-table__row--clickable:hover {
   background: color-mix(in srgb, var(--primary), transparent 95%);
+}
+
+@media (max-width: 768px) {
+  .solicitudes-table {
+    min-width: 0;
+  }
+
+  .solicitudes-table thead {
+    display: none;
+  }
+
+  .solicitudes-table tbody {
+    display: grid;
+    gap: 0.8rem;
+    padding: 0.8rem;
+  }
+
+  .solicitudes-table tr {
+    display: grid;
+    gap: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
+    background: var(--surface);
+  }
+
+  .solicitudes-table td {
+    display: grid;
+    grid-template-columns: minmax(115px, 38%) minmax(0, 1fr);
+    gap: 0.55rem;
+    border-bottom: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .solicitudes-table td::before {
+    content: attr(data-label);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+
+  .solicitudes-table__observaciones {
+    max-width: none;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+  }
 }

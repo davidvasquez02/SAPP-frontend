@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem 3rem 3rem;
+  padding: clamp(1rem, 2.2vw, 2rem);
 }
 
 .module-layout__header {
@@ -22,7 +22,7 @@
 
 .module-layout__title {
   margin: 0.25rem 0 0;
-  font-size: 1.5rem;
+  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
 }
 
 .module-layout__user {
@@ -46,14 +46,32 @@
 .module-layout__logout {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
   border-radius: 999px;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.05rem;
   background: var(--surface);
   cursor: pointer;
+  font-weight: 600;
 }
 
 .module-layout__content {
   background: var(--surface);
   border-radius: var(--radius-card);
-  padding: 2rem;
+  padding: clamp(1rem, 2.5vw, 2rem);
   box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 768px) {
+  .module-layout {
+    gap: 1rem;
+  }
+
+  .module-layout__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .module-layout__user {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+  }
 }

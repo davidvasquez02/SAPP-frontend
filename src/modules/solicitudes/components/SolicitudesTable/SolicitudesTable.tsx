@@ -51,21 +51,23 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                 role={isClickable ? 'button' : undefined}
                 tabIndex={isClickable ? 0 : undefined}
               >
-                <td>{row.id}</td>
-                {mode === 'COORDINADOR' && <td>{row.estudiante ?? '—'}</td>}
-                {mode === 'COORDINADOR' && <td>{row.codigoEstudianteUis ?? '—'}</td>}
-                <td>
+                <td data-label="ID">{row.id}</td>
+                {mode === 'COORDINADOR' && <td data-label="Estudiante">{row.estudiante ?? '—'}</td>}
+                {mode === 'COORDINADOR' && <td data-label="Código UIS">{row.codigoEstudianteUis ?? '—'}</td>}
+                <td data-label="Tipo">
                   <strong>{row.tipoSolicitudCodigo}</strong>
                   <br />
                   <span>{row.tipoSolicitud}</span>
                 </td>
-                <td>
+                <td data-label="Estado">
                   <StatusBadge estado={row.estadoSigla || row.estado} size="sm" />
                 </td>
-                <td>{formatDate(row.fechaRegistro)}</td>
-                <td>{formatDate(row.fechaResolucion)}</td>
-                <td>{row.programaAcademico}</td>
-                <td className="solicitudes-table__observaciones">{row.observaciones ?? 'Sin observaciones.'}</td>
+                <td data-label="Fecha registro">{formatDate(row.fechaRegistro)}</td>
+                <td data-label="Fecha resolución">{formatDate(row.fechaResolucion)}</td>
+                <td data-label="Programa">{row.programaAcademico}</td>
+                <td className="solicitudes-table__observaciones" data-label="Observaciones">
+                  {row.observaciones ?? 'Sin observaciones.'}
+                </td>
               </tr>
             )
           })}
