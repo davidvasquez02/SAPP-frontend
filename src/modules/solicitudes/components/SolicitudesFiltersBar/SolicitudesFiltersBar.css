@@ -1,9 +1,9 @@
 .solicitudes-filters-bar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
-  justify-content: space-between;
   align-items: flex-end;
+  justify-items: start;
   padding: 1.1rem 1.2rem;
   border-radius: 1.1rem;
   background: var(--surface-container-low);
@@ -15,8 +15,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
   gap: 0.9rem;
-  flex: 1;
-  min-width: min(100%, 480px);
+  width: 100%;
 }
 
 .solicitudes-filters-bar__field {
@@ -33,7 +32,8 @@
 .solicitudes-filters-bar__actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: flex-end;
   gap: 0.4rem;
 }
 
@@ -67,6 +67,7 @@
 
 @media (max-width: 900px) {
   .solicitudes-filters-bar {
+    grid-template-columns: 1fr;
     align-items: stretch;
   }
 
@@ -77,8 +78,9 @@
   .solicitudes-filters-bar__actions {
     width: 100%;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    flex-wrap: wrap;
   }
 }
 

@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 4, 2026: updated `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.css` so filter controls align left-to-right instead of center/spread, reducing empty gaps; layout now uses desktop grid (`filters + actions`) with responsive single-column fallback at <=900px and stacked actions at <=560px.
 - April 3, 2026: coordinator `/solicitudes` now includes backend filters (`estadoId`, `tipoSolicitudId`) with a reusable `SolicitudesFiltersBar`; changing filters triggers `GET /sapp/solicitudesAcademicas` with only defined query params, and “Limpiar filtros” resets to unfiltered list.
 - April 3, 2026: `SolicitudesCoordinadorView` now loads tipos from `GET /sapp/tipoSolicitud` for the tipo combo, keeps loading/error/empty states, and shows the filtered-empty message “No hay resultados con los filtros seleccionados.”.
 - April 2, 2026: backend contract update applied: `EN ESTUDIO` keeps URL id (`PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{id}`) while `APROBADA`/`RECHAZADA` now send batch body `{ solicitudesId: [id] }` without id in URL.
