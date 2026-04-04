@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { hasAnyRole, ROLES } from '../../auth/roleGuards'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { useAuth } from '../../context/Auth'
 import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
 import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
@@ -36,10 +38,13 @@ const getConvocatoriaVigente = (
 
 const AdmisionesHomePage = () => {
   const navigate = useNavigate()
+  const { session } = useAuth()
   const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([])
   const [selectedPrevious, setSelectedPrevious] = useState<Record<number, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const canManageConvocatorias =
+    session?.kind === 'SAPP' && hasAnyRole(session.user.roles, [ROLES.ADMIN, ROLES.COORDINACION])
 
   const loadConvocatorias = useCallback(async () => {
     setIsLoading(true)
@@ -132,6 +137,15 @@ const AdmisionesHomePage = () => {
       <section className="admisiones-home">
         <header className="admisiones-home__header">
           <h1 className="admisiones-home__title">Seleccione una convocatoria</h1>
+          {canManageConvocatorias ? (
+            <button
+              type="button"
+              className="admisiones-home__config-button"
+              onClick={() => navigate('/admisiones/convocatorias')}
+            >
+              Configurar convocatorias
+            </button>
+          ) : null}
         </header>
 
         {isLoading ? (

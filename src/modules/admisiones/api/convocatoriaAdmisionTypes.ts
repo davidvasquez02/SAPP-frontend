@@ -1,12 +1,26 @@
-export interface ConvocatoriaAdmisionDto {
+import type { ApiResponse } from '../../../api/types'
+
+export type ConvocatoriaAdmisionDto = {
   id: number
   programaId: number
   programa: string
   periodoId: number
   periodo: string
-  vigente: boolean
-  cupos: number | null
+  cupos: number
   fechaInicio: string
   fechaFin: string
   observaciones: string | null
+  vigente: boolean
 }
+
+export type CreateConvocatoriaRequest = {
+  cupos: number
+  fechaInicio: string
+  fechaFin: string
+  observaciones: string
+  programaId: number
+}
+
+export type ConvocatoriaAdmisionListResponse = ApiResponse<ConvocatoriaAdmisionDto[]>
+export type ConvocatoriaAdmisionCreateResponse = ApiResponse<ConvocatoriaAdmisionDto | null>
+export type ConvocatoriaAdmisionCloseResponse = ApiResponse<null>

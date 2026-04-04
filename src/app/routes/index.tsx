@@ -5,6 +5,7 @@ import {
   AdmisionesHomePage,
   AspiranteLoginPage,
   ConvocatoriaDetallePage,
+  ConvocatoriasAdmisionConfigPage,
   HomePage,
   InscripcionAdmisionDetallePage,
   InscripcionDocumentosPage,
@@ -47,8 +48,16 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones"
             element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]}>
                 <AdmisionesHomePage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/admisiones/convocatorias"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <ConvocatoriasAdmisionConfigPage />
               </RequireRoles>
             }
           />
