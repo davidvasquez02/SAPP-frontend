@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 4, 2026: reemplazado el flujo mock de periodos en creación de convocatoria por servicios reales `GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`, con helper `ensurePeriodoForAdmision` (match por `anioPeriodo`, fallback `periodoId=max+1`) y feedback de progreso en modal.
 - April 4, 2026: `CreateConvocatoriaModal` now executes a 2-step create flow in one submit action: (A) real `POST /sapp/convocatoriaAdmision` with mandatory `periodoId`, then (B) mock professor assignment using `assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })`; includes fallback ID resolution via refreshed GET when POST does not return `data.id`, plus in-modal retry state for partial failures.
 - April 4, 2026: added mock catalogs/services for Admisiones convocatoria creation: `fetchPeriodos()` (`periodos.mock.ts`) and `fetchProfesores()` (`profesores.mock.ts`), consumed only through service boundaries to ease future replacement by real endpoints.
 - April 4, 2026: `/matricula` no longer renders a generic placeholder for students; it now loads a mock convocatoria via `fetchMatriculaConvocatoria()` and conditionally renders (a) closed-state panel when `isOpen=false`, or (b) full mock enrollment flow when `isOpen=true`: search+dropdown subject picker, selected subjects table with remove action, required-documents checklist table with estado badges and mock upload filename capture, plus guarded `Confirmar matrícula` button (`disabled` until at least one subject is selected).
@@ -108,7 +109,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
-- Replace mock services `fetchPeriodos`, `fetchProfesores`, and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available, preserving current modal contracts and partial-failure UX.
+- Replace remaining mock services `fetchProfesores` and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available; periodo académico ya usa APIs reales.
 - Validate with backend the expected `POST /sapp/convocatoriaAdmision` behavior when creating convocatorias for programas not yet present in historical data (the UI currently derives selectable programs from existing convocatorias returned by GET).
 - Confirm and align real backend contracts for matrícula (`convocatoria vigente`, `catálogo de materias por estudiante/plan`, and `documentos requeridos + estados`) so `src/modules/matricula/services/matriculaMockService.ts` can be swapped without changing UI component contracts.
 - Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
@@ -168,7 +169,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
-- **Convocatoria create flow (periodo + profesores mock):** `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.css`, `src/modules/admisiones/services/periodosMockService.ts`, `src/modules/admisiones/services/profesoresMockService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/modules/admisiones/mock/periodos.mock.ts`, `src/modules/admisiones/mock/profesores.mock.ts`.
+- **Convocatoria create flow (ensure periodo + profesores mock):** `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.css`, `src/modules/admisiones/services/ensurePeriodoService.ts`, `src/modules/admisiones/api/periodoAcademicoService.ts`, `src/modules/admisiones/api/periodoAcademicoTypes.ts`, `src/modules/admisiones/utils/periodoLabel.ts`, `src/modules/admisiones/services/profesoresMockService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/modules/admisiones/mock/profesores.mock.ts`.
 - **Convocatorias config (nuevo):** `src/pages/ConvocatoriasAdmisionConfig/*`, `src/modules/admisiones/components/CreateConvocatoriaModal/*`, `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`, and route wiring in `src/app/routes/index.tsx` + `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
 - **Matrícula module (nuevo, mock-ready):** `src/modules/matricula/types.ts`, `src/modules/matricula/mock/*`, `src/modules/matricula/services/matriculaMockService.ts`, `src/modules/matricula/components/*`, `src/pages/Matricula/MatriculaPage.tsx`.
 - **Solicitudes documentos (estudiante mock persistente):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`, `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`, `src/modules/solicitudes/components/SolicitudDocumentosEditor/*`
@@ -228,6 +229,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 4, 2026 after implementing periodo libre (año/semestre), ensure de periodo académico por API (`GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`), y creación de convocatoria con `periodoId` asegurado en `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after adding required `periodoId` to convocatoria creation and integrating mock professor multi-assignment flow in `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after implementing Admisiones convocatorias configuration (new `/admisiones/convocatorias` page, create modal, close action, and route/role guards).
 - `npm run build` ✅ passes on April 4, 2026 after implementing the ESTUDIANTE matrícula mock module (`/matricula` with convocatoria gate + materias selector + documentos checklist + mock confirm action).

@@ -5,10 +5,9 @@ import type {
   ConvocatoriaAdmisionDto,
   CreateConvocatoriaRequest,
 } from '../../api/convocatoriaAdmisionTypes'
-import type { PeriodoOption } from '../../mock/periodos.mock'
 import type { ProfesorOption } from '../../mock/profesores.mock'
 import { assignProfesoresToConvocatoria } from '../../services/convocatoriaProfesoresMockService'
-import { fetchPeriodos } from '../../services/periodosMockService'
+import { ensurePeriodoForAdmision } from '../../services/ensurePeriodoService'
 import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
 
@@ -30,9 +29,12 @@ type CreateConvocatoriaModalProps = {
   onSuccess: (message: string) => void
 }
 
+type SubmitStep = 'idle' | 'verifying_periodo' | 'creating_periodo' | 'creating_convocatoria' | 'done'
+
 type FormState = {
   programaId: string
-  periodoId: string
+  anio: string
+  semestre: '1' | '2'
   cupos: string
   fechaInicio: string
   fechaFin: string
@@ -42,12 +44,22 @@ type FormState = {
 
 type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string; warning?: string }
 
+const nowYear = new Date().getFullYear()
+
+const getDefaultDatesForSemester = (anio: number, semestre: 1 | 2) =>
+  semestre === 1
+    ? { inicio: `${anio}-01-01`, fin: `${anio}-06-30` }
+    : { inicio: `${anio}-07-01`, fin: `${anio}-12-31` }
+
+const initialDates = getDefaultDatesForSemester(nowYear, 1)
+
 const initialFormState: FormState = {
   programaId: '',
-  periodoId: '',
+  anio: String(nowYear),
+  semestre: '1',
   cupos: '1',
-  fechaInicio: '',
-  fechaFin: '',
+  fechaInicio: initialDates.inicio,
+  fechaFin: initialDates.fin,
   observaciones: '',
   profesorId: '',
 }
@@ -63,10 +75,12 @@ export const CreateConvocatoriaModal = ({
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingOptions, setIsLoadingOptions] = useState(false)
-  const [periodos, setPeriodos] = useState<PeriodoOption[]>([])
   const [profesores, setProfesores] = useState<ProfesorOption[]>([])
   const [selectedProfesores, setSelectedProfesores] = useState<ProfesorOption[]>([])
   const [pendingAssignment, setPendingAssignment] = useState<PendingAssignment | null>(null)
+  const [datesTouched, setDatesTouched] = useState(false)
+  const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
+  const [submitNote, setSubmitNote] = useState<string | null>(null)
 
   const programas = useMemo<ProgramaOption[]>(() => {
     const grouped = new Map<number, string>()
@@ -92,28 +106,35 @@ export const CreateConvocatoriaModal = ({
     const loadOptions = async () => {
       setIsLoadingOptions(true)
       try {
-        const [periodosData, profesoresData] = await Promise.all([fetchPeriodos(), fetchProfesores()])
+        const profesoresData = await fetchProfesores()
 
         if (!active) {
           return
         }
 
-        setPeriodos(periodosData)
+        const nextYear = new Date().getFullYear()
+        const defaultDates = getDefaultDatesForSemester(nextYear, 1)
+
         setProfesores(profesoresData)
-        setFormState((prev) => ({
+        setFormState({
           ...initialFormState,
-          programaId: prev.programaId || (programas[0] ? String(programas[0].programaId) : ''),
-          periodoId: periodosData[0] ? String(periodosData[0].id) : '',
-        }))
+          programaId: programas[0] ? String(programas[0].programaId) : '',
+          anio: String(nextYear),
+          fechaInicio: defaultDates.inicio,
+          fechaFin: defaultDates.fin,
+        })
         setSelectedProfesores([])
         setPendingAssignment(null)
         setErrors({})
+        setDatesTouched(false)
+        setSubmitStep('idle')
+        setSubmitNote(null)
       } catch {
         if (!active) {
           return
         }
 
-        setErrors({ general: 'No fue posible cargar los catálogos de periodo/profesores.' })
+        setErrors({ general: 'No fue posible cargar el catálogo de profesores.' })
       } finally {
         if (active) {
           setIsLoadingOptions(false)
@@ -144,6 +165,21 @@ export const CreateConvocatoriaModal = ({
     return () => window.removeEventListener('keydown', onEsc)
   }, [isSubmitting, onClose, open])
 
+  useEffect(() => {
+    if (datesTouched) {
+      return
+    }
+
+    const anio = Number(formState.anio)
+    const semestre = formState.semestre === '2' ? 2 : 1
+    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+      return
+    }
+
+    const defaultDates = getDefaultDatesForSemester(anio, semestre)
+    setFormState((prev) => ({ ...prev, fechaInicio: defaultDates.inicio, fechaFin: defaultDates.fin }))
+  }, [datesTouched, formState.anio, formState.semestre])
+
   if (!open) {
     return null
   }
@@ -151,13 +187,14 @@ export const CreateConvocatoriaModal = ({
   const validate = (): FormErrors => {
     const nextErrors: FormErrors = {}
     const cupos = Number(formState.cupos)
+    const anio = Number(formState.anio)
 
     if (!formState.programaId) {
       nextErrors.programaId = 'Seleccione un programa.'
     }
 
-    if (!formState.periodoId) {
-      nextErrors.periodoId = 'Seleccione un periodo.'
+    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+      nextErrors.anio = 'Ingrese un año válido entre 2000 y 2100.'
     }
 
     if (!Number.isFinite(cupos) || cupos <= 0) {
@@ -182,6 +219,11 @@ export const CreateConvocatoriaModal = ({
   const handleField = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => ({ ...prev, [field]: undefined, general: undefined, warning: undefined }))
+  }
+
+  const handleDateField = (field: 'fechaInicio' | 'fechaFin', value: string) => {
+    setDatesTouched(true)
+    handleField(field, value)
   }
 
   const handleAddProfesor = () => {
@@ -273,17 +315,41 @@ export const CreateConvocatoriaModal = ({
       return
     }
 
-    const payload: CreateConvocatoriaRequest = {
-      programaId: Number(formState.programaId),
-      periodoId: Number(formState.periodoId),
-      cupos: Number(formState.cupos),
-      fechaInicio: formState.fechaInicio,
-      fechaFin: formState.fechaFin,
-      observaciones: formState.observaciones.trim(),
-    }
+    const anio = Number(formState.anio)
+    const semestre = formState.semestre === '2' ? 2 : 1
 
     try {
       setIsSubmitting(true)
+      setSubmitNote(null)
+      setSubmitStep('verifying_periodo')
+
+      const ensured = await ensurePeriodoForAdmision({
+        anio,
+        semestre,
+        fechaInicioDefault: formState.fechaInicio,
+        fechaFinDefault: formState.fechaFin,
+        descripcion: `Fechas admisiones ${anio}-${semestre} (auto)`,
+      })
+
+      if (ensured.existed) {
+        setSubmitNote(`Se usó el periodo existente ${ensured.label}.`)
+      } else {
+        setSubmitStep('creating_periodo')
+        setSubmitNote(`Se creó el periodo ${ensured.label} y se asociaron fechas para admisiones.`)
+      }
+
+      setSubmitStep('creating_convocatoria')
+
+      // TODO: separar fechas del periodo académico de fechas de convocatoria cuando UX lo requiera.
+      const payload: CreateConvocatoriaRequest = {
+        programaId: Number(formState.programaId),
+        periodoId: ensured.periodoId,
+        cupos: Number(formState.cupos),
+        fechaInicio: formState.fechaInicio,
+        fechaFin: formState.fechaFin,
+        observaciones: formState.observaciones.trim(),
+      }
+
       const created = await createConvocatoriaAdmision(payload)
       const convocatoriaId = await resolveCreatedConvocatoriaId(payload, created)
       const profesoresId = selectedProfesores.map((profesor) => profesor.id)
@@ -303,6 +369,7 @@ export const CreateConvocatoriaModal = ({
         }
       }
 
+      setSubmitStep('done')
       await onRefreshConvocatorias()
       onSuccess(
         profesoresId.length > 0
@@ -311,6 +378,7 @@ export const CreateConvocatoriaModal = ({
       )
       onClose()
     } catch (error) {
+      setSubmitStep('idle')
       setErrors({
         general:
           error instanceof Error
@@ -325,6 +393,8 @@ export const CreateConvocatoriaModal = ({
   const availableProfesores = profesores.filter(
     (profesor) => !selectedProfesores.some((selected) => selected.id === profesor.id)
   )
+
+  const periodoSeleccionado = `${formState.anio}-${formState.semestre}`
 
   return (
     <div className="create-convocatoria-modal" role="dialog" aria-modal="true">
@@ -363,23 +433,35 @@ export const CreateConvocatoriaModal = ({
           </label>
 
           <label className="create-convocatoria-modal__field">
-            Período
-            <select
-              value={formState.periodoId}
-              onChange={(event) => handleField('periodoId', event.target.value)}
-              disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
-            >
-              <option value="">Seleccione...</option>
-              {periodos.map((periodo) => (
-                <option key={periodo.id} value={periodo.id}>
-                  {periodo.label}
-                </option>
-              ))}
-            </select>
-            {errors.periodoId ? (
-              <span className="create-convocatoria-modal__error">{errors.periodoId}</span>
+            Año
+            <input
+              type="number"
+              min={2000}
+              max={2100}
+              value={formState.anio}
+              onChange={(event) => handleField('anio', event.target.value)}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
+            />
+            {errors.anio ? (
+              <span className="create-convocatoria-modal__error">{errors.anio}</span>
             ) : null}
           </label>
+
+          <label className="create-convocatoria-modal__field">
+            Semestre
+            <select
+              value={formState.semestre}
+              onChange={(event) => handleField('semestre', event.target.value as '1' | '2')}
+              disabled={isSubmitting || Boolean(pendingAssignment)}
+            >
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </label>
+
+          <p className="create-convocatoria-modal__field create-convocatoria-modal__hint-block">
+            Período seleccionado: <strong>{periodoSeleccionado}</strong>
+          </p>
 
           <label className="create-convocatoria-modal__field">
             Cupos
@@ -400,7 +482,7 @@ export const CreateConvocatoriaModal = ({
             <input
               type="date"
               value={formState.fechaInicio}
-              onChange={(event) => handleField('fechaInicio', event.target.value)}
+              onChange={(event) => handleDateField('fechaInicio', event.target.value)}
               disabled={isSubmitting || Boolean(pendingAssignment)}
             />
             {errors.fechaInicio ? (
@@ -413,7 +495,7 @@ export const CreateConvocatoriaModal = ({
             <input
               type="date"
               value={formState.fechaFin}
-              onChange={(event) => handleField('fechaFin', event.target.value)}
+              onChange={(event) => handleDateField('fechaFin', event.target.value)}
               disabled={isSubmitting || Boolean(pendingAssignment)}
             />
             {errors.fechaFin ? (
@@ -480,6 +562,17 @@ export const CreateConvocatoriaModal = ({
               )}
             </div>
           </div>
+
+          {isSubmitting ? (
+            <div className="create-convocatoria-modal__status create-convocatoria-modal__field--full" role="status">
+              <p>{submitStep === 'verifying_periodo' ? 'Verificando periodo…' : 'Verificando periodo...'}</p>
+              <p>{submitStep === 'creating_periodo' ? 'Creando periodo (si aplica)…' : 'Creando periodo (si aplica)...'}</p>
+              <p>{submitStep === 'creating_convocatoria' ? 'Creando convocatoria…' : 'Creando convocatoria...'}</p>
+              <p>{submitStep === 'done' ? 'Listo' : 'Listo'}</p>
+            </div>
+          ) : null}
+
+          {submitNote ? <p className="create-convocatoria-modal__note create-convocatoria-modal__field--full">{submitNote}</p> : null}
 
           {errors.warning ? (
             <p className="create-convocatoria-modal__warning">{errors.warning}</p>
