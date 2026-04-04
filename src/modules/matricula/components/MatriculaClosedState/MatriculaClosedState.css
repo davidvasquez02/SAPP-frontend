@@ -1,0 +1,39 @@
+.matricula-closed-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 15%);
+  border-radius: 16px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-container-low), transparent 20%);
+}
+
+.matricula-closed-state__icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--outline), transparent 70%);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.matricula-closed-state__icon::after {
+  content: '!';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.matricula-closed-state__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.matricula-closed-state__message {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+}
