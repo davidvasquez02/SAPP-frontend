@@ -19,6 +19,7 @@ export type CreateConvocatoriaRequest = {
   fechaFin: string
   observaciones: string
   programaId: number
+  periodoId: number
 }
 
 export type ConvocatoriaAdmisionListResponse = ApiResponse<ConvocatoriaAdmisionDto[]>

@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 4, 2026: `CreateConvocatoriaModal` now executes a 2-step create flow in one submit action: (A) real `POST /sapp/convocatoriaAdmision` with mandatory `periodoId`, then (B) mock professor assignment using `assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })`; includes fallback ID resolution via refreshed GET when POST does not return `data.id`, plus in-modal retry state for partial failures.
+- April 4, 2026: added mock catalogs/services for Admisiones convocatoria creation: `fetchPeriodos()` (`periodos.mock.ts`) and `fetchProfesores()` (`profesores.mock.ts`), consumed only through service boundaries to ease future replacement by real endpoints.
 - April 4, 2026: `/matricula` no longer renders a generic placeholder for students; it now loads a mock convocatoria via `fetchMatriculaConvocatoria()` and conditionally renders (a) closed-state panel when `isOpen=false`, or (b) full mock enrollment flow when `isOpen=true`: search+dropdown subject picker, selected subjects table with remove action, required-documents checklist table with estado badges and mock upload filename capture, plus guarded `Confirmar matrícula` button (`disabled` until at least one subject is selected).
 - April 4, 2026: updated `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.css` so filter controls align left-to-right instead of center/spread, reducing empty gaps; layout now uses desktop grid (`filters + actions`) with responsive single-column fallback at <=900px and stacked actions at <=560px.
 - April 3, 2026: coordinator `/solicitudes` now includes backend filters (`estadoId`, `tipoSolicitudId`) with a reusable `SolicitudesFiltersBar`; changing filters triggers `GET /sapp/solicitudesAcademicas` with only defined query params, and “Limpiar filtros” resets to unfiltered list.
@@ -106,6 +108,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Replace mock services `fetchPeriodos`, `fetchProfesores`, and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available, preserving current modal contracts and partial-failure UX.
 - Validate with backend the expected `POST /sapp/convocatoriaAdmision` behavior when creating convocatorias for programas not yet present in historical data (the UI currently derives selectable programs from existing convocatorias returned by GET).
 - Confirm and align real backend contracts for matrícula (`convocatoria vigente`, `catálogo de materias por estudiante/plan`, and `documentos requeridos + estados`) so `src/modules/matricula/services/matriculaMockService.ts` can be swapped without changing UI component contracts.
 - Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
@@ -128,6 +131,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Validate end-to-end in browser/network inspector that `POST /sapp/convocatoriaAdmision` now includes `periodoId` and that assignment mock receives the created `convocatoriaId`.
+2. Define real backend contract for convocatoria-profesor assignment (expected payload/response/errors) and swap `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts` with API client implementation.
+3. Confirm whether program options should continue to be derived from existing convocatorias or migrate to a dedicated catálogo endpoint.
 1. Validate role gating end-to-end for `/admisiones/convocatorias` with real users (`ADMIN`/`COORDINADOR` allowed, `ESTUDIANTE`/`DOCENTE` blocked) and capture evidence in QA notes.
 2. Verify backend date formatting expectations for `fechaInicio`/`fechaFin` (`YYYY-MM-DD`) and confirm timezone handling in persisted values.
 3. Decide whether the program selector for new convocatorias should come from a dedicated catálogo endpoint (instead of deriving from existing convocatorias).
@@ -162,6 +168,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Convocatoria create flow (periodo + profesores mock):** `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.css`, `src/modules/admisiones/services/periodosMockService.ts`, `src/modules/admisiones/services/profesoresMockService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/modules/admisiones/mock/periodos.mock.ts`, `src/modules/admisiones/mock/profesores.mock.ts`.
 - **Convocatorias config (nuevo):** `src/pages/ConvocatoriasAdmisionConfig/*`, `src/modules/admisiones/components/CreateConvocatoriaModal/*`, `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`, and route wiring in `src/app/routes/index.tsx` + `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
 - **Matrícula module (nuevo, mock-ready):** `src/modules/matricula/types.ts`, `src/modules/matricula/mock/*`, `src/modules/matricula/services/matriculaMockService.ts`, `src/modules/matricula/components/*`, `src/pages/Matricula/MatriculaPage.tsx`.
 - **Solicitudes documentos (estudiante mock persistente):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`, `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`, `src/modules/solicitudes/components/SolicitudDocumentosEditor/*`
@@ -221,6 +228,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 4, 2026 after adding required `periodoId` to convocatoria creation and integrating mock professor multi-assignment flow in `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after implementing Admisiones convocatorias configuration (new `/admisiones/convocatorias` page, create modal, close action, and route/role guards).
 - `npm run build` ✅ passes on April 4, 2026 after implementing the ESTUDIANTE matrícula mock module (`/matricula` with convocatoria gate + materias selector + documentos checklist + mock confirm action).
 - `npm run build` ✅ passes on April 4, 2026 after global UI consistency/responsive refinements (tokens + layout spacing + mobile sidebar + mobile-friendly solicitudes table).
