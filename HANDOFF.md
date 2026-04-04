@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 4, 2026: `/matricula` no longer renders a generic placeholder for students; it now loads a mock convocatoria via `fetchMatriculaConvocatoria()` and conditionally renders (a) closed-state panel when `isOpen=false`, or (b) full mock enrollment flow when `isOpen=true`: search+dropdown subject picker, selected subjects table with remove action, required-documents checklist table with estado badges and mock upload filename capture, plus guarded `Confirmar matrícula` button (`disabled` until at least one subject is selected).
 - April 4, 2026: updated `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.css` so filter controls align left-to-right instead of center/spread, reducing empty gaps; layout now uses desktop grid (`filters + actions`) with responsive single-column fallback at <=900px and stacked actions at <=560px.
 - April 3, 2026: coordinator `/solicitudes` now includes backend filters (`estadoId`, `tipoSolicitudId`) with a reusable `SolicitudesFiltersBar`; changing filters triggers `GET /sapp/solicitudesAcademicas` with only defined query params, and “Limpiar filtros” resets to unfiltered list.
 - April 3, 2026: `SolicitudesCoordinadorView` now loads tipos from `GET /sapp/tipoSolicitud` for the tipo combo, keeps loading/error/empty states, and shows the filtered-empty message “No hay resultados con los filtros seleccionados.”.
@@ -105,6 +106,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Confirm and align real backend contracts for matrícula (`convocatoria vigente`, `catálogo de materias por estudiante/plan`, and `documentos requeridos + estados`) so `src/modules/matricula/services/matriculaMockService.ts` can be swapped without changing UI component contracts.
 - Confirm `/sapp/evaluacionAdmision/info` contract for “empty data” vs `ok=false` to ensure availability gating matches backend semantics.
 - Confirm JWT payload contract fields with backend (e.g., `rolesUsuario`, `nombreUsuario`, `idUsuario`) and whether timestamps are always present.
 - Confirm backend response for uploaded document metadata (filename, version, dates) to extend UI details if needed.
@@ -125,6 +127,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Replace `src/modules/matricula/services/matriculaMockService.ts` with real API clients while keeping `MatriculaConvocatoria`, `MateriaDto`, and `DocumentoRequerido` as the boundary DTOs for UI stability.
+2. Add component tests for `MateriasSelector`, `MateriasSelectedTable`, and `DocumentosRequeridosTable` (duplicate prevention, remove flow, status badge rendering, file name capture on mock upload).
+3. Add an E2E/manual script for matrícula role gating (`ESTUDIANTE` sees flow, non-ESTUDIANTE sees unsupported-role message) and convocatoria-open/closed behavior.
 1. Replace the student document mock store (`solicitudDocumentosStore.mock.ts`) with a backend endpoint when documentos de solicitudes académicas API is available, preserving current local contract fields.
 2. Add component tests for `SolicitudDocumentosEditor` commit behavior (replace/remove), required warning visibility, and read-only rendering.
 3. Validate browser UX for large files / unsupported mime previews in `Ver` action and align product decision (preview vs download-only fallback).
@@ -153,6 +158,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Matrícula module (nuevo, mock-ready):** `src/modules/matricula/types.ts`, `src/modules/matricula/mock/*`, `src/modules/matricula/services/matriculaMockService.ts`, `src/modules/matricula/components/*`, `src/pages/Matricula/MatriculaPage.tsx`.
 - **Solicitudes documentos (estudiante mock persistente):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`, `src/modules/solicitudes/mock/solicitudDocumentosStore.mock.ts`, `src/modules/solicitudes/components/SolicitudDocumentosEditor/*`
 - **Solicitudes documentos adjuntos (mock):** `src/modules/solicitudes/types/documentosAdjuntos.ts`, `src/modules/solicitudes/mock/solicitudDocumentos.mock.ts`, `src/modules/solicitudes/services/solicitudDocumentosMockService.ts`, `src/modules/solicitudes/components/DocumentosAdjuntos/*`
 - **Routing:** `src/app/routes/index.tsx`, `src/app/routes/*Routes.tsx`
@@ -210,6 +216,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 4, 2026 after implementing the ESTUDIANTE matrícula mock module (`/matricula` with convocatoria gate + materias selector + documentos checklist + mock confirm action).
 - `npm run build` ✅ passes on April 4, 2026 after global UI consistency/responsive refinements (tokens + layout spacing + mobile sidebar + mobile-friendly solicitudes table).
 - `npm run lint` ❌ still fails on pre-existing repo lint debt unrelated to this visual pass (`no-explicit-any`, hooks purity/set-state-in-effect, unused vars).
 - `npm run build` ✅ passes on April 3, 2026 after adding coordinator filters (`estadoId` + `tipoSolicitudId`) and wiring filtered solicitudes service calls without undefined query params.
@@ -252,6 +259,10 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+- **Matrícula mock contracts (frontend boundary):** `src/modules/matricula/types.ts`, `src/modules/matricula/services/matriculaMockService.ts`
+  - `fetchMatriculaConvocatoria(): Promise<MatriculaConvocatoria>` where `{ isOpen, periodoLabel, fechaInicio, fechaFin, mensaje? }`.
+  - `fetchMateriasCatalogo(): Promise<MateriaDto[]>` where `MateriaDto = { id, nombre, codigo, nivel }`.
+  - `fetchDocumentosRequeridos(): Promise<DocumentoRequerido[]>` where `DocumentoRequerido = { id, nombre, obligatorio, estado, fechaRevision, observaciones }` and `estado ∈ { PENDIENTE, EN_REVISION, APROBADO, RECHAZADO }`.
 - **Solicitudes cambio de estado (real, actualizado):** `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`
   - `PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{solicitudId}` (sin body)
   - `PUT /sapp/solicitudesAcademicas/cambioEstadoAprobada` con body `{ solicitudesId: [solicitudId] }`

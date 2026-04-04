@@ -1,0 +1,109 @@
+.documentos-requeridos-table__wrapper {
+  overflow-x: auto;
+}
+
+.documentos-requeridos-table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+}
+
+.documentos-requeridos-table th,
+.documentos-requeridos-table td {
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+  text-align: left;
+  vertical-align: top;
+}
+
+.documentos-requeridos-table th {
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.documentos-requeridos-table__doc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.documentos-requeridos-table__badge {
+  width: fit-content;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+}
+
+.documentos-requeridos-table__badge.required {
+  color: #8c3f00;
+  background: rgba(176, 96, 0, 0.14);
+}
+
+.documentos-requeridos-table__badge.optional {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--outline), transparent 70%);
+}
+
+.documentos-requeridos-table__status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.documentos-requeridos-table__status.pendiente {
+  color: #6c727f;
+  background: rgba(108, 114, 127, 0.14);
+  border-color: rgba(108, 114, 127, 0.3);
+}
+
+.documentos-requeridos-table__status.revision {
+  color: #b06000;
+  background: rgba(176, 96, 0, 0.14);
+  border-color: rgba(176, 96, 0, 0.35);
+}
+
+.documentos-requeridos-table__status.aprobado {
+  color: #1e8e3e;
+  background: rgba(30, 142, 62, 0.14);
+  border-color: rgba(30, 142, 62, 0.35);
+}
+
+.documentos-requeridos-table__status.rechazado {
+  color: #b3261e;
+  background: rgba(179, 38, 30, 0.14);
+  border-color: rgba(179, 38, 30, 0.35);
+}
+
+.documentos-requeridos-table__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.documentos-requeridos-table__actions button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+
+.documentos-requeridos-table__actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.documentos-requeridos-table__file-name {
+  color: var(--text-secondary);
+}
+
+.documentos-requeridos-table__file-input {
+  display: none;
+}
