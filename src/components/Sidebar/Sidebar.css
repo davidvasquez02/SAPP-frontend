@@ -10,6 +10,9 @@
   display: flex;
   flex-direction: column;
   box-shadow: 8px 0 28px rgba(20, 34, 19, 0.2);
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
 }
 
 .sidebar__brand {
@@ -67,4 +70,36 @@
 
 .sidebar__logout:hover {
   background-color: color-mix(in srgb, var(--surface), var(--inverse-primary) 20%);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    position: static;
+    padding: 16px;
+    box-shadow: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  }
+
+  .sidebar__brand {
+    margin-bottom: 16px;
+    font-size: 18px;
+  }
+
+  .sidebar__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .sidebar__link {
+    text-align: center;
+    padding: 9px 10px;
+  }
+
+  .sidebar__footer {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
 }

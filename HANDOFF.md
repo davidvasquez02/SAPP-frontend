@@ -209,6 +209,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 4, 2026 after global UI consistency/responsive refinements (tokens + layout spacing + mobile sidebar + mobile-friendly solicitudes table).
+- `npm run lint` ❌ still fails on pre-existing repo lint debt unrelated to this visual pass (`no-explicit-any`, hooks purity/set-state-in-effect, unused vars).
 - `npm run build` ✅ passes on April 3, 2026 after adding coordinator filters (`estadoId` + `tipoSolicitudId`) and wiring filtered solicitudes service calls without undefined query params.
 - `npm run build` ✅ passes on April 2, 2026 after updating Solicitudes estado transitions to batch payloads for APROBADA/RECHAZADA and always reloading detalle after successful estado updates.
 - `npm run build` ✅ passes on April 2, 2026 after integrating real coordinator estado PUT endpoints + detail fallback refresh path.

@@ -1,41 +1,40 @@
 .home-page__welcome {
   margin: 0 0 0.5rem;
-  color: #111827;
+  color: var(--text-primary);
   font-size: 1.125rem;
   font-weight: 600;
 }
 
 .home-page__lead {
   margin: 0;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
 .home-page__session {
   margin-top: 1.5rem;
-  padding: 1rem;
-  border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  padding: 1.1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-container-low);
 }
 
 .home-page__session-title {
   margin: 0 0 0.75rem;
   font-size: 1rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .home-page__session-list {
   margin: 0;
   display: grid;
   gap: 0.75rem;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .home-page__session-list dt {
   font-weight: 600;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .home-page__session-list dd {

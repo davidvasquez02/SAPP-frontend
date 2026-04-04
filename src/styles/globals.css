@@ -7,14 +7,20 @@
 body {
   --primary: #438213;
   --on-primary: #ffffff;
-  --outline: #ccc;
+  --outline: #cfd8cc;
   --surface: #ffffff;
-  --surface-container-low: #ffffff;
+  --surface-container-low: #f9fbf8;
   --inverse-primary: #b6ceb4;
   --app-background: #eef3ec;
   --text-primary: #1f2a1c;
   --text-secondary: #5a6757;
+  --danger: #b42318;
+  --success: #067647;
+  --warning: #b54708;
+  --radius-sm: 0.8rem;
+  --radius-md: 1rem;
   --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+  --shadow-xs: 0 2px 8px rgba(32, 50, 35, 0.08);
   --radius-card: 2rem;
   margin: 0;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -31,9 +37,9 @@ body {
 body.light {
   --primary: #438213;
   --on-primary: #ffffff;
-  --outline: #ccc;
+  --outline: #cfd8cc;
   --surface: #ffffff;
-  --surface-container-low: #ffffff;
+  --surface-container-low: #f9fbf8;
   --inverse-primary: #b6ceb4;
   --app-background: #eef3ec;
   --text-primary: #1f2a1c;
@@ -44,7 +50,7 @@ body.light {
 body.dark {
   --primary: #499113;
   --on-primary: #ffffff;
-  --outline: #ccc;
+  --outline: #3a4238;
   --surface: #141316;
   --surface-container-low: #1c1b1e;
   --inverse-primary: #304d30;
@@ -77,9 +83,11 @@ input,
 select,
 textarea {
   border: 1px solid var(--outline);
-  border-radius: 0.9rem;
+  border-radius: var(--radius-sm);
+  min-height: 2.65rem;
   background: color-mix(in srgb, var(--surface), transparent 2%);
   color: var(--text-primary);
+  padding: 0.65rem 0.8rem;
 }
 
 input:focus,
@@ -92,4 +100,53 @@ textarea:focus {
 
 button {
   color: inherit;
+  border-radius: 999px;
+  min-height: 2.65rem;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 74%);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.01em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+table {
+  width: 100%;
+}
+
+/* Shared component skin */
+.module-layout__content,
+.solicitud-detalle-page,
+.solicitudes-filters-bar,
+.solicitud-estudiante-form__section,
+.solicitudes-table__container,
+.home-page__session {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  box-shadow: var(--shadow-xs);
+}
+
+@media (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
 }
