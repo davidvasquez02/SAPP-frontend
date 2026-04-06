@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Branding update completed on April 6, 2026: all visible instances of "SAPP Posgrados" were renamed to "SAPP" in shared UI shells and login; login now includes the full expanded name "Sistema de apoyo a procesos de posgrado" as context text.
 - April 4, 2026: reemplazado el flujo mock de periodos en creación de convocatoria por servicios reales `GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`, con helper `ensurePeriodoForAdmision` (match por `anioPeriodo`, fallback `periodoId=max+1`) y feedback de progreso en modal.
 - April 4, 2026: `CreateConvocatoriaModal` now executes a 2-step create flow in one submit action: (A) real `POST /sapp/convocatoriaAdmision` with mandatory `periodoId`, then (B) mock professor assignment using `assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })`; includes fallback ID resolution via refreshed GET when POST does not return `data.id`, plus in-modal retry state for partial failures.
 - April 4, 2026: added mock catalogs/services for Admisiones convocatoria creation: `fetchPeriodos()` (`periodos.mock.ts`) and `fetchProfesores()` (`profesores.mock.ts`), consumed only through service boundaries to ease future replacement by real endpoints.
@@ -229,6 +230,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after branding update (`SAPP Posgrados` → `SAPP`) and login subtitle expansion with full product meaning.
 - `npm run build` ✅ passes on April 4, 2026 after implementing periodo libre (año/semestre), ensure de periodo académico por API (`GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`), y creación de convocatoria con `periodoId` asegurado en `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after adding required `periodoId` to convocatoria creation and integrating mock professor multi-assignment flow in `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after implementing Admisiones convocatorias configuration (new `/admisiones/convocatorias` page, create modal, close action, and route/role guards).

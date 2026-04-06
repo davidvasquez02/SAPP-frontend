@@ -59,8 +59,10 @@ const LoginPage = () => {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="login-title">SAPP Posgrados</h1>
-        <p className="login-subtitle">Ingresa con tu usuario institucional.</p>
+        <h1 className="login-title">SAPP</h1>
+        <p className="login-subtitle">
+          Sistema de apoyo a procesos de posgrado. Ingresa con tu usuario institucional.
+        </p>
         <label className="login-toggle">
           <input
             type="checkbox"
