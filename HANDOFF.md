@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): optimized COORDINACIÓN/SECRETARÍA document review in `InscripcionDocumentosPage` to avoid full tab/route reloads after approve/reject. The page now uses local `loadDocumentos()` re-fetch only, sorts checklist rows by `codigoTipoDocumentoTramite`, derives UI state (`PENDIENTE/POR_REVISAR/APROBADO/RECHAZADO`) from backend fields, renders horizontal action clusters (`Ver/Descargar` + `Aprobar/Rechazar`), marks active decision buttons from backend status, and keeps decision actions disabled/gray when `documentoCargado=false`. Reject now uses inline motivo capture + explicit confirm.
 - April 6, 2026 (latest): fixed the coordinator flow in `InscripcionDocumentosPage` where “Continuar evaluación” still used a simulated alert. It now calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}` through `iniciarEvaluacion`, invalidates availability cache, and only then navigates to `/hoja-vida`; button shows `Iniciando evaluación...` and is disabled while request is in progress.
 - April 6, 2026 (latest): Admisiones inscripción detalle now gates evaluation by a new status probe (`GET /sapp/evaluacionAdmision/info?inscripcionId={id}` without etapa): if `ok:false` + `data:null`, Documentos shows a new CTA “Iniciar proceso de evaluación”; clicking it calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, invalidates the 30s availability cache, re-probes status, hides the CTA, and enables Hoja de vida/Examen/Entrevistas without manual refresh. Route guard now also blocks direct stage URLs unless status is STARTED.
 - April 6, 2026 (latest): fixed Admisiones convocatoria UX: when no open convocatoria exists for a programa, the most recent closed one is no longer shown as “vigente” and now appears under “Convocatorias anteriores”; in `ConvocatoriaDetalle`, aspirante creation is blocked when the selected convocatoria is closed after resolving its state from `GET /sapp/convocatoriaAdmision`.
@@ -140,6 +141,8 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Manual QA in browser for `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`: validate no route/tab reload after approve/reject, per-row `Procesando...` behavior, active state painting for APROBADO/RECHAZADO, and disabled gray decisions on `documentoCargado=false`.
+2. Validate rejection UX copy/product decision for inline modal/panel (current implementation is inline reason panel with `Confirmar rechazo`/`Cancelar`).
 1. Validate manually in browser that convocatoria rows marked “VIGENTE” switch automatically to “CERRADA” when date range is outside the current date and that filters use the same computed logic.
 2. Validate in browser (manual QA) that `Crear aspirante` remains disabled for closed convocatorias even on direct URL refresh (`/admisiones/convocatoria/:id`) and after closing a convocatoria from config.
 3. Verify backend payload keys for card fields (`numeroDocumento/cedula`, `emailPersonal/correo`, `telefono`, `posicionAdmision`) and align DTO naming once contract is finalized.
@@ -241,6 +244,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after implementing document review UX optimization in `InscripcionDocumentosPage` (no full reload, sorted checklist, immediate approve, inline reject confirm, active-state decision buttons, disabled pending decisions).
 - `npm run build` ✅ passes on April 6, 2026 after replacing the simulated “Continuar evaluación” alert with the real iniciar evaluación service call in `InscripcionDocumentosPage` (including in-flight button disable state).
 - `npm run build` ✅ passes on April 6, 2026 after adding evaluación start probe + CTA (`Iniciar proceso de evaluación`), new iniciar endpoint service, cache invalidation, and status-based route/window gating in inscripción detalle.
 - `npm run build` ✅ passes on April 6, 2026 after admisiones fix: closed latest convocatoria moves to “Convocatorias anteriores” and `Crear aspirante` is blocked when convocatoria is closed (state resolved from convocatoria list by id).

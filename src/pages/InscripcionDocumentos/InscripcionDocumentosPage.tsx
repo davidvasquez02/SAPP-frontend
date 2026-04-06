@@ -14,13 +14,9 @@ import type {
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
 
-type DocumentoDecision = 'APROBAR' | 'RECHAZAR' | null
-
-interface DocumentoDecisionState {
-  decision: DocumentoDecision
+interface RechazoState {
   motivoRechazo: string
   errorMotivo: string | null
-  loading: boolean
 }
 
 interface DocumentoActionState {
@@ -28,7 +24,7 @@ interface DocumentoActionState {
   downloading: boolean
 }
 
-const resolveValidacionEstado = (
+const getEstadoUi = (
   documento: DocumentoTramiteItemDto,
 ): DocumentoValidacionEstado => {
   if (!documento.documentoCargado) {
@@ -49,11 +45,10 @@ const InscripcionDocumentosPage = () => {
   const navigate = useNavigate()
   const { session, user } = useAuth()
   const [documentos, setDocumentos] = useState<DocumentoTramiteUiItem[]>([])
-  const [decisionStates, setDecisionStates] = useState<Record<number, DocumentoDecisionState>>(
-    {},
-  )
+  const [rechazoStates, setRechazoStates] = useState<Record<number, RechazoState>>({})
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [busyDocumentoId, setBusyDocumentoId] = useState<number | null>(null)
   const [isStartingEvaluacion, setIsStartingEvaluacion] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const tramiteId = useMemo(() => Number(inscripcionId), [inscripcionId])
@@ -65,15 +60,13 @@ const InscripcionDocumentosPage = () => {
     return hasAnyRole(user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA])
   }, [session, user])
 
-  const getDecisionState = useCallback(
-    (id: number): DocumentoDecisionState =>
-      decisionStates[id] ?? {
-        decision: null,
+  const getRechazoState = useCallback(
+    (id: number): RechazoState =>
+      rechazoStates[id] ?? {
         motivoRechazo: '',
         errorMotivo: null,
-        loading: false,
       },
-    [decisionStates],
+    [rechazoStates],
   )
 
   const getActionState = useCallback(
@@ -85,22 +78,118 @@ const InscripcionDocumentosPage = () => {
     [actionStates],
   )
 
-  const updateDecisionState = useCallback(
-    (id: number, updates: Partial<DocumentoDecisionState>) => {
-      setDecisionStates((prev) => ({
-        ...prev,
-        [id]: {
-          decision: null,
-          motivoRechazo: '',
-          errorMotivo: null,
-          loading: false,
-          ...prev[id],
-          ...updates,
-        },
-      }))
-    },
-    [],
+  const updateRechazoState = useCallback((id: number, updates: Partial<RechazoState>) => {
+    setRechazoStates((prev) => ({
+      ...prev,
+      [id]: {
+        motivoRechazo: '',
+        errorMotivo: null,
+        ...prev[id],
+        ...updates,
+      },
+    }))
+  }, [])
+
+  const closeRechazoPanel = useCallback((id: number) => {
+    setRechazoStates((prev) => {
+      if (!(id in prev)) {
+        return prev
+      }
+
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }, [])
+
+  const loadDocumentos = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setErrorMessage(null)
+      const data = await getDocumentosByTramite(tramiteId)
+      setDocumentos(
+        data.map((documento) => ({
+          ...documento,
+          validacionEstado: getEstadoUi(documento),
+          validacionObservaciones:
+            documento.documentoUploadedResponse?.observacionesDocumento ?? null,
+        })),
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setErrorMessage(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [tramiteId])
+
+  const sortedDocumentos = useMemo(
+    () =>
+      [...documentos].sort((a, b) =>
+        a.codigoTipoDocumentoTramite.localeCompare(b.codigoTipoDocumentoTramite),
+      ),
+    [documentos],
   )
+
+  const handleApprove = async (id: number) => {
+    setBusyDocumentoId(id)
+    try {
+      await aprobarRechazarDocumento({
+        documentoId: id,
+        aprobado: true,
+        observaciones: null,
+      })
+      await loadDocumentos()
+      closeRechazoPanel(id)
+      window.alert('Documento aprobado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
+
+  const handleMotivoChange = (id: number, value: string) => {
+    updateRechazoState(id, {
+      motivoRechazo: value,
+      errorMotivo: null,
+    })
+  }
+
+  const handleOpenRechazo = (id: number) => {
+    updateRechazoState(id, {
+      motivoRechazo: getRechazoState(id).motivoRechazo,
+      errorMotivo: null,
+    })
+  }
+
+  const handleConfirmReject = async (id: number) => {
+    const estado = getRechazoState(id)
+    const motivo = estado.motivoRechazo.trim()
+
+    if (!motivo) {
+      updateRechazoState(id, { errorMotivo: 'Debe ingresar el motivo del rechazo.' })
+      return
+    }
+
+    setBusyDocumentoId(id)
+    try {
+      await aprobarRechazarDocumento({
+        documentoId: id,
+        aprobado: false,
+        observaciones: motivo,
+      })
+      await loadDocumentos()
+      closeRechazoPanel(id)
+      window.alert('Documento rechazado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
 
   const updateActionState = useCallback((id: number, updates: Partial<DocumentoActionState>) => {
     setActionStates((prev) => ({
@@ -113,27 +202,6 @@ const InscripcionDocumentosPage = () => {
       },
     }))
   }, [])
-
-  const fetchDocumentos = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setErrorMessage(null)
-      const data = await getDocumentosByTramite(tramiteId)
-      setDocumentos(
-        data.map((documento) => ({
-          ...documento,
-          validacionEstado: resolveValidacionEstado(documento),
-          validacionObservaciones:
-            documento.documentoUploadedResponse?.observacionesDocumento ?? null,
-        })),
-      )
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setErrorMessage(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [tramiteId])
 
   useEffect(() => {
     if (!inscripcionId) {
@@ -148,54 +216,8 @@ const InscripcionDocumentosPage = () => {
       return
     }
 
-    void fetchDocumentos()
-  }, [fetchDocumentos, inscripcionId, tramiteId])
-
-  const handleDecisionSelect = (id: number, decision: DocumentoDecision) => {
-    updateDecisionState(id, {
-      decision: getDecisionState(id).decision === decision ? null : decision,
-      errorMotivo: null,
-    })
-  }
-
-  const handleMotivoChange = (id: number, value: string) => {
-    updateDecisionState(id, {
-      motivoRechazo: value,
-      errorMotivo: null,
-    })
-  }
-
-  const handleConfirmDecision = async (id: number, aprobado: boolean) => {
-    const estado = getDecisionState(id)
-    const motivo = estado.motivoRechazo.trim()
-
-    if (!aprobado && !motivo) {
-      updateDecisionState(id, { errorMotivo: 'Debe ingresar el motivo del rechazo.' })
-      return
-    }
-
-    updateDecisionState(id, { loading: true })
-
-    try {
-      await aprobarRechazarDocumento({
-        documentoId: id,
-        aprobado,
-        observaciones: aprobado ? null : motivo,
-      })
-      await fetchDocumentos()
-      updateDecisionState(id, {
-        decision: null,
-        motivoRechazo: '',
-        errorMotivo: null,
-      })
-      window.alert(aprobado ? 'Documento aprobado.' : 'Documento rechazado.')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      window.alert(message)
-    } finally {
-      updateDecisionState(id, { loading: false })
-    }
-  }
+    void loadDocumentos()
+  }, [inscripcionId, loadDocumentos, tramiteId])
 
   const handleViewDocumento = async (
     documentoId: number,
@@ -256,8 +278,8 @@ const InscripcionDocumentosPage = () => {
   }, [])
 
   const requiredDocs = useMemo(
-    () => documentos.filter((documento) => documento.obligatorioTipoDocumentoTramite),
-    [documentos],
+    () => sortedDocumentos.filter((documento) => documento.obligatorioTipoDocumentoTramite),
+    [sortedDocumentos],
   )
 
   const requiredApprovedCount = useMemo(
@@ -319,12 +341,12 @@ const InscripcionDocumentosPage = () => {
             <span>Validación</span>
             {canManageDocuments ? <span>Acciones</span> : null}
           </div>
-          {documentos.map((documento) => {
+          {sortedDocumentos.map((documento) => {
             const documentoId = documento.documentoUploadedResponse?.idDocumento
             const uploaded =
               documento.documentoCargado === true && documento.documentoUploadedResponse != null
-            const decisionState = documentoId ? getDecisionState(documentoId) : null
-            const isLoadingDecision = decisionState?.loading ?? false
+            const rechazoState = documentoId ? getRechazoState(documentoId) : null
+            const isLoadingDecision = documentoId != null && busyDocumentoId === documentoId
             const actionState = documentoId ? getActionState(documentoId) : null
             const validacionEstado = documento.validacionEstado
             const documentoResponse = documento.documentoUploadedResponse
@@ -408,125 +430,117 @@ const InscripcionDocumentosPage = () => {
                     </>
                   ) : (
                     <span className="inscripcion-documentos__badge inscripcion-documentos__badge--validation-pending">
-                      —
+                      Pendiente
                     </span>
                   )}
-                  <div className="inscripcion-documentos__decision-actions">
-                    <button
-                      type="button"
-                      className={
-                        decisionState?.decision === 'APROBAR'
-                          ? 'inscripcion-documentos__decision-button is-active is-approve'
-                          : 'inscripcion-documentos__decision-button'
-                      }
-                      onClick={() => documentoId && handleDecisionSelect(documentoId, 'APROBAR')}
-                      disabled={
-                        !uploaded || isLoadingDecision || validacionEstado === 'APROBADO'
-                      }
-                      aria-disabled={
-                        !uploaded || isLoadingDecision || validacionEstado === 'APROBADO'
-                      }
-                    >
-                      Aprobar
-                    </button>
-                    <button
-                      type="button"
-                      className={
-                        decisionState?.decision === 'RECHAZAR'
-                          ? 'inscripcion-documentos__decision-button is-active is-reject'
-                          : 'inscripcion-documentos__decision-button'
-                      }
-                      onClick={() => documentoId && handleDecisionSelect(documentoId, 'RECHAZAR')}
-                      disabled={
-                        !uploaded || isLoadingDecision || validacionEstado === 'RECHAZADO'
-                      }
-                      aria-disabled={
-                        !uploaded || isLoadingDecision || validacionEstado === 'RECHAZADO'
-                      }
-                    >
-                      Rechazar
-                    </button>
-                  </div>
-                  {!uploaded ? (
-                    <span className="inscripcion-documentos__hint">Pendiente por cargar</span>
-                  ) : null}
-                  {decisionState?.decision === 'RECHAZAR' ? (
-                    <div className="inscripcion-documentos__decision-panel">
-                      <label
-                        className="inscripcion-documentos__decision-label"
-                        htmlFor={`motivo-${documentoId}`}
-                      >
-                        Motivo del rechazo
-                      </label>
-                      <textarea
-                        id={`motivo-${documentoId}`}
-                        className="inscripcion-documentos__decision-textarea"
-                        value={decisionState.motivoRechazo}
-                        onChange={(event) =>
-                          documentoId && handleMotivoChange(documentoId, event.target.value)
-                        }
-                        rows={3}
-                      />
-                      {decisionState.errorMotivo ? (
-                        <span className="inscripcion-documentos__decision-error">
-                          {decisionState.errorMotivo}
-                        </span>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="inscripcion-documentos__decision-confirm"
-                        onClick={() => documentoId && handleConfirmDecision(documentoId, false)}
-                        disabled={isLoadingDecision}
-                        aria-disabled={isLoadingDecision}
-                      >
-                        {isLoadingDecision ? 'Enviando...' : 'Confirmar rechazo'}
-                      </button>
-                    </div>
-                  ) : null}
-                  {decisionState?.decision === 'APROBAR' ? (
-                    <div className="inscripcion-documentos__decision-panel">
-                      <button
-                        type="button"
-                        className="inscripcion-documentos__decision-confirm"
-                        onClick={() => documentoId && handleConfirmDecision(documentoId, true)}
-                        disabled={isLoadingDecision}
-                        aria-disabled={isLoadingDecision}
-                      >
-                        {isLoadingDecision ? 'Enviando...' : 'Confirmar aprobación'}
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
                 {canManageDocuments ? (
-                  <div className="inscripcion-documentos__file-actions">
-                    <button
-                      type="button"
-                      className="inscripcion-documentos__view-button"
-                      onClick={() =>
-                        documentoId &&
-                        handleViewDocumento(documentoId, base64, mimeType, filename)
-                      }
-                      disabled={!uploaded || actionState?.viewing || actionState?.downloading}
-                      aria-disabled={
-                        !uploaded || actionState?.viewing || actionState?.downloading
-                      }
-                    >
-                      {actionState?.viewing ? 'Abriendo...' : 'Ver'}
-                    </button>
-                    <button
-                      type="button"
-                      className="inscripcion-documentos__download-button"
-                      onClick={() =>
-                        documentoId &&
-                        handleDownloadDocumento(documentoId, base64, mimeType, filename)
-                      }
-                      disabled={!uploaded || actionState?.viewing || actionState?.downloading}
-                      aria-disabled={
-                        !uploaded || actionState?.viewing || actionState?.downloading
-                      }
-                    >
-                      {actionState?.downloading ? 'Descargando...' : 'Descargar'}
-                    </button>
+                  <div>
+                    <div className="inscripcion-documentos__actions-row">
+                      <div className="inscripcion-documentos__actions-group">
+                        <button
+                          type="button"
+                          className="inscripcion-documentos__view-button"
+                          onClick={() =>
+                            documentoId &&
+                            handleViewDocumento(documentoId, base64, mimeType, filename)
+                          }
+                          disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                          aria-disabled={
+                            !uploaded || actionState?.viewing || actionState?.downloading
+                          }
+                        >
+                          {actionState?.viewing ? 'Abriendo...' : 'Ver'}
+                        </button>
+                        <button
+                          type="button"
+                          className="inscripcion-documentos__download-button"
+                          onClick={() =>
+                            documentoId &&
+                            handleDownloadDocumento(documentoId, base64, mimeType, filename)
+                          }
+                          disabled={!uploaded || actionState?.viewing || actionState?.downloading}
+                          aria-disabled={
+                            !uploaded || actionState?.viewing || actionState?.downloading
+                          }
+                        >
+                          {actionState?.downloading ? 'Descargando...' : 'Descargar'}
+                        </button>
+                      </div>
+                      <div className="inscripcion-documentos__actions-group">
+                        <button
+                          type="button"
+                          className={`inscripcion-documentos__decision-button ${
+                            validacionEstado === 'APROBADO'
+                              ? 'is-active is-approve'
+                              : ''
+                          }`}
+                          onClick={() => documentoId && void handleApprove(documentoId)}
+                          disabled={!uploaded || isLoadingDecision}
+                          aria-disabled={!uploaded || isLoadingDecision}
+                        >
+                          Aprobar
+                        </button>
+                        <button
+                          type="button"
+                          className={`inscripcion-documentos__decision-button ${
+                            validacionEstado === 'RECHAZADO'
+                              ? 'is-active is-reject'
+                              : ''
+                          }`}
+                          onClick={() => documentoId && handleOpenRechazo(documentoId)}
+                          disabled={!uploaded || isLoadingDecision}
+                          aria-disabled={!uploaded || isLoadingDecision}
+                        >
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                    {rechazoState && documentoId ? (
+                      <div className="inscripcion-documentos__decision-panel">
+                        <label
+                          className="inscripcion-documentos__decision-label"
+                          htmlFor={`motivo-${documentoId}`}
+                        >
+                          Motivo del rechazo
+                        </label>
+                        <textarea
+                          id={`motivo-${documentoId}`}
+                          className="inscripcion-documentos__decision-textarea"
+                          value={rechazoState.motivoRechazo}
+                          onChange={(event) => handleMotivoChange(documentoId, event.target.value)}
+                          rows={3}
+                        />
+                        {rechazoState.errorMotivo ? (
+                          <span className="inscripcion-documentos__decision-error">
+                            {rechazoState.errorMotivo}
+                          </span>
+                        ) : null}
+                        <div className="inscripcion-documentos__actions-group">
+                          <button
+                            type="button"
+                            className="inscripcion-documentos__decision-confirm"
+                            onClick={() => void handleConfirmReject(documentoId)}
+                            disabled={isLoadingDecision}
+                            aria-disabled={isLoadingDecision}
+                          >
+                            {isLoadingDecision ? 'Procesando...' : 'Confirmar rechazo'}
+                          </button>
+                          <button
+                            type="button"
+                            className="inscripcion-documentos__view-button"
+                            onClick={() => closeRechazoPanel(documentoId)}
+                            disabled={isLoadingDecision}
+                            aria-disabled={isLoadingDecision}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                    {isLoadingDecision ? (
+                      <p className="inscripcion-documentos__processing">Procesando...</p>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
