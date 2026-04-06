@@ -74,3 +74,13 @@
   background: color-mix(in srgb, var(--primary), transparent 55%);
   cursor: not-allowed;
 }
+
+.inscripcion-detalle__inline-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.inscripcion-detalle__inline-status--warning {
+  color: #b45309;
+}
