@@ -19,7 +19,6 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
     <div className="module-layout">
       <header className="module-layout__header">
         <div>
-          <p className="module-layout__eyebrow">SAPP</p>
           <h2 className="module-layout__title">{title}</h2>
         </div>
         <div className="module-layout__user">
@@ -27,9 +26,6 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
             <p className="module-layout__user-name">{displayName}</p>
             <p className="module-layout__user-role">{roleLabel}</p>
           </div>
-          <button type="button" className="module-layout__logout" onClick={logout}>
-            Cerrar sesión
-          </button>
         </div>
       </header>
       <main className="module-layout__content">{children}</main>

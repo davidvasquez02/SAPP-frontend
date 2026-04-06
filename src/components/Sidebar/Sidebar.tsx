@@ -61,7 +61,6 @@ const Sidebar = () => {
         ) : null}
       </nav>
       <div className="sidebar__footer">
-        <p className="sidebar__user">{displayName}</p>
         <button
           type="button"
           className="sidebar__logout"
