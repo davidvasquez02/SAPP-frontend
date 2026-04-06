@@ -207,7 +207,7 @@ const InscripcionAdmisionDetallePage = () => {
 
     if (!isEnConstruccion) {
       if (import.meta.env.DEV) {
-        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoPorVal', {
           reason: 'not_en_construccion',
           inscripcionId: parsedInscripcionId,
         })
@@ -217,7 +217,7 @@ const InscripcionAdmisionDetallePage = () => {
 
     if (alreadyTriggered) {
       if (import.meta.env.DEV) {
-        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoPorVal', {
           reason: 'already_triggered',
           inscripcionId: parsedInscripcionId,
         })
@@ -231,21 +231,21 @@ const InscripcionAdmisionDetallePage = () => {
     void (async () => {
       try {
         if (import.meta.env.DEV) {
-          console.debug('[INSCRIPCION_ESTADO] calling PUT cambioEstadoVal', {
+          console.debug('[INSCRIPCION_ESTADO] calling PUT cambioEstadoPorVal', {
             inscripcionId: parsedInscripcionId,
           })
         }
         await cambiarEstadoInscripcionVal(parsedInscripcionId)
         didCambioEstadoValRef.current[parsedInscripcionId] = true
         if (import.meta.env.DEV) {
-          console.debug('[INSCRIPCION_ESTADO] cambioEstadoVal OK', {
+          console.debug('[INSCRIPCION_ESTADO] cambioEstadoPorVal OK', {
             inscripcionId: parsedInscripcionId,
           })
         }
         await reloadInscripcionDetalle()
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.error('[INSCRIPCION_ESTADO] cambioEstadoVal ERROR', {
+          console.error('[INSCRIPCION_ESTADO] cambioEstadoPorVal ERROR', {
             inscripcionId: parsedInscripcionId,
             error: error instanceof Error ? error.message : String(error),
           })

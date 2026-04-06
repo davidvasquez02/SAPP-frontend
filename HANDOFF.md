@@ -1,9 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
+- April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
 - April 6, 2026 (latest): refactored `InscripcionDocumentosPage` validation table layout and behavior to match UX contract: `Validación` column always renders `Aprobar/Rechazar`, active filled button reflects backend status (`APROBADO` or `RECHAZADO`), rejection reason is hidden by default and only appears when entering reject mode, and `Acciones` now only shows horizontal `Ver/Descargar`. Approve/reject actions call `PUT /sapp/document` and re-fetch only `loadDocumentos()` (no route reload).
-- ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
+- ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
 - ✅ La actualización de estado se ejecuta en paralelo (no bloquea la carga de documentos) y muestra feedback inline: “Actualizando estado...” o warning no intrusivo si falla.
 - ✅ Después de PUT exitoso, el frontend refresca el estado de inscripción recargando el registro desde `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` + filtro por `inscripcionId`.
 - April 6, 2026 (latest): optimized COORDINACIÓN/SECRETARÍA document review in `InscripcionDocumentosPage` to avoid full tab/route reloads after approve/reject. The page now uses local `loadDocumentos()` re-fetch only, sorts checklist rows by `codigoTipoDocumentoTramite`, derives UI state (`PENDIENTE/POR_REVISAR/APROBADO/RECHAZADO`) from backend fields, renders horizontal action clusters (`Ver/Descargar` + `Aprobar/Rechazar`), marks active decision buttons from backend status, and keeps decision actions disabled/gray when `documentoCargado=false`. Reject now uses inline motivo capture + explicit confirm.
@@ -122,7 +122,7 @@
 
 ## Open Challenges
 - Verificar con backend si existe endpoint de detalle directo por inscripción (ej. `GET /sapp/inscripcionAdmision/{id}`) para evitar recargar la lista completa de la convocatoria al refrescar el estado.
-- Confirmar contrato exacto de respuesta de `cambioEstadoVal` (si retorna `data.estado` definitivo) para evitar roundtrip adicional cuando sea posible.
+- Confirmar contrato exacto de respuesta de `cambioEstadoPorVal` (si retorna `data.estado` definitivo) para evitar roundtrip adicional cuando sea posible.
 - Confirm with backend the canonical date format/timezone for `convocatoriaAdmision.fechaInicio` and `fechaFin` to avoid edge-case mismatches around day boundaries when frontend computes vigencia.
 - Decide whether cupo validation should also be enforced server-side with a specific error code/message when `POST /sapp/aspirante` exceeds `convocatoria.cupos` (frontend now blocks known overflow only when `cupos` is available in navigation state).
 - Replace remaining mock services `fetchProfesores` and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available; periodo académico ya usa APIs reales.
@@ -255,9 +255,9 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
-- `npm run build` ✅ passes on April 6, 2026 after refactoring `cambioEstadoVal` trigger to run only on `DOCUMENTOS` open transition with per-inscripción once guard + DEV-only diagnostics.
+- `npm run build` ✅ passes on April 6, 2026 after refactoring `cambioEstadoPorVal` trigger to run only on `DOCUMENTOS` open transition with per-inscripción once guard + DEV-only diagnostics.
 - `npm run build` ✅ passes on April 6, 2026 after implementing the new documentos validation UX split (`Validación` buttons + reject-mode note + `Acciones` only Ver/Descargar) and list-only refresh behavior in `InscripcionDocumentosPage` + `ValidationButtons` component.
-- `npm run build` ✅ passes on April 6, 2026 after implementing `cambioEstadoVal` on expand (once-only guard + non-blocking UX + refresh estado inscripción).
+- `npm run build` ✅ passes on April 6, 2026 after implementing `cambioEstadoPorVal` on expand (once-only guard + non-blocking UX + refresh estado inscripción).
 - `npm run build` ✅ passes on April 6, 2026 after implementing document review UX optimization in `InscripcionDocumentosPage` (no full reload, sorted checklist, immediate approve, inline reject confirm, active-state decision buttons, disabled pending decisions).
 - `npm run build` ✅ passes on April 6, 2026 after replacing the simulated “Continuar evaluación” alert with the real iniciar evaluación service call in `InscripcionDocumentosPage` (including in-flight button disable state).
 - `npm run build` ✅ passes on April 6, 2026 after adding evaluación start probe + CTA (`Iniciar proceso de evaluación`), new iniciar endpoint service, cache invalidation, and status-based route/window gating in inscripción detalle.
