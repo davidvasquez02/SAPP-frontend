@@ -5,7 +5,7 @@ export async function cambiarEstadoInscripcionVal(
   inscripcionId: number,
 ): Promise<void> {
   const response = await httpPut<ApiResponse<unknown>>(
-    `/sapp/inscripcionAdmision/cambioEstadoVal/${inscripcionId}`,
+    `/sapp/inscripcionAdmision/cambioEstadoPorVal/${inscripcionId}`,
   )
 
   if (!response.ok) {
