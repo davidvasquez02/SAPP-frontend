@@ -1,31 +1,12 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  getEvaluacionAvailability,
-  type EvaluacionAvailability,
-} from '../api/evaluacionAdmisionAvailabilityService'
+import { getEvaluacionEstado } from '../api/evaluacionAdmisionEstadoService'
 import type { EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
 
 interface RequireEvaluacionEnabledProps {
   etapa: EtapaEvaluacion
   children: ReactNode
-}
-
-const resolveEtapaAvailability = (
-  availability: EvaluacionAvailability,
-  etapa: EtapaEvaluacion,
-) => {
-  switch (etapa) {
-    case 'HOJA_DE_VIDA':
-      return availability.hojaDeVida
-    case 'EXAMEN_DE_CONOCIMIENTOS':
-      return availability.examen
-    case 'ENTREVISTA':
-      return availability.entrevistas
-    default:
-      return false
-  }
 }
 
 const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledProps) => {
@@ -49,13 +30,13 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
       }
     }
 
-    getEvaluacionAvailability(parsedInscripcionId)
-      .then((availability) => {
+    getEvaluacionEstado(parsedInscripcionId)
+      .then((estado) => {
         if (!isMounted) {
           return
         }
 
-        const enabled = resolveEtapaAvailability(availability, etapa)
+        const enabled = estado.status === 'STARTED'
         if (!enabled) {
           navigate(fallbackPath, { replace: true })
         }
