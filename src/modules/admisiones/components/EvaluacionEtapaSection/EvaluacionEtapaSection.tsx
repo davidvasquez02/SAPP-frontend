@@ -20,6 +20,20 @@ interface EvaluacionEtapaSectionProps {
   onSaveItem: (updated: EvaluacionAdmisionItem) => Promise<void>
 }
 
+const parseConsideraciones = (value: string): string => {
+  const trimmed = value.trim()
+
+  if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) {
+    return value
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(trimmed), null, 2)
+  } catch {
+    return value
+  }
+}
+
 const EvaluacionEtapaSection = ({
   title,
   etapa,
@@ -48,12 +62,12 @@ const EvaluacionEtapaSection = ({
           <table className="evaluacion-etapa-section__table">
             <thead>
               <tr>
+                <th>Código</th>
                 <th>Aspecto</th>
                 <th>Consideraciones</th>
-                <th>Evaluador</th>
-                <th>Puntaje</th>
-                <th>Máximo</th>
                 <th>Observaciones</th>
+                <th className="evaluacion-etapa-section__th-max">Puntaje máx.</th>
+                <th className="evaluacion-etapa-section__th-nota">Nota</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -69,25 +83,37 @@ const EvaluacionEtapaSection = ({
 
                 return (
                   <tr key={item.id}>
+                    <td className="evaluacion-etapa-section__cell-code">{item.codigo || '-'}</td>
                     <td>{item.aspecto}</td>
                     <td>
                       {item.consideraciones ? (
-                        <span
-                          className="evaluacion-etapa-section__text-ellipsis"
-                          title={item.consideraciones}
-                        >
-                          {item.consideraciones}
-                        </span>
+                        <pre className="evaluacion-etapa-section__consideraciones">
+                          {parseConsideraciones(item.consideraciones)}
+                        </pre>
                       ) : (
                         <span className="evaluacion-etapa-section__text-muted">-</span>
                       )}
                     </td>
-                    <td>{item.evaluador || '-'}</td>
                     <td>
                       {isEditing ? (
-                        <div className="evaluacion-etapa-section__field">
+                        <textarea
+                          className="evaluacion-etapa-section__textarea"
+                          rows={2}
+                          value={observacionesValue}
+                          onChange={(event) =>
+                            onChangeDraft(item.id, { observaciones: event.target.value })
+                          }
+                        />
+                      ) : (
+                        <span>{item.observaciones || '-'}</span>
+                      )}
+                    </td>
+                    <td className="evaluacion-etapa-section__cell-max">{item.puntajeMax}</td>
+                    <td className="evaluacion-etapa-section__cell-nota">
+                      {isEditing ? (
+                        <div className="evaluacion-etapa-section__field evaluacion-etapa-section__nota-field">
                           <input
-                            className="evaluacion-etapa-section__input"
+                            className="evaluacion-etapa-section__input evaluacion-etapa-section__nota-input"
                             type="number"
                             min={0}
                             max={item.puntajeMax}
@@ -104,22 +130,9 @@ const EvaluacionEtapaSection = ({
                           )}
                         </div>
                       ) : (
-                        <span>{item.puntajeAspirante ?? '-'}</span>
-                      )}
-                    </td>
-                    <td>{item.puntajeMax}</td>
-                    <td>
-                      {isEditing ? (
-                        <textarea
-                          className="evaluacion-etapa-section__textarea"
-                          rows={2}
-                          value={observacionesValue}
-                          onChange={(event) =>
-                            onChangeDraft(item.id, { observaciones: event.target.value })
-                          }
-                        />
-                      ) : (
-                        <span>{item.observaciones || '-'}</span>
+                        <span className="evaluacion-etapa-section__nota-value">
+                          {item.puntajeAspirante ?? '-'}
+                        </span>
                       )}
                     </td>
                     <td>
