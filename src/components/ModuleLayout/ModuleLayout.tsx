@@ -7,7 +7,7 @@ type ModuleLayoutProps = {
 }
 
 const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const displayName = user
     ? 'username' in user
       ? user.nombreCompleto || user.username
