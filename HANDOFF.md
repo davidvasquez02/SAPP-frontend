@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): updated Admisiones convocatoria state handling so “VIGENTE/CERRADA” is derived from `fechaInicio` + `fechaFin` in frontend (`isConvocatoriaVigente`) instead of trusting only backend `vigente`; passed `cupos` through navigation state to convocatoria detail and blocked “Crear aspirante” when `inscripciones.length >= cupos` with visible alert/error messaging.
+- April 6, 2026 (latest): updated admisión student cards to render additional identity/contact fields when present in API payload (`cedula|numeroDocumento`, `correo|emailPersonal`, `telefono`, `posicionAdmision|posicion_admision`) while preserving graceful fallback (`—`) if backend does not send them yet.
 - Branding update completed on April 6, 2026: all visible instances of "SAPP Posgrados" were renamed to "SAPP" in shared UI shells and login; login now includes the full expanded name "Sistema de apoyo a procesos de posgrado" as context text.
 - April 4, 2026: reemplazado el flujo mock de periodos en creación de convocatoria por servicios reales `GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`, con helper `ensurePeriodoForAdmision` (match por `anioPeriodo`, fallback `periodoId=max+1`) y feedback de progreso en modal.
 - April 4, 2026: `CreateConvocatoriaModal` now executes a 2-step create flow in one submit action: (A) real `POST /sapp/convocatoriaAdmision` with mandatory `periodoId`, then (B) mock professor assignment using `assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })`; includes fallback ID resolution via refreshed GET when POST does not return `data.id`, plus in-modal retry state for partial failures.
@@ -110,6 +112,8 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Confirm with backend the canonical date format/timezone for `convocatoriaAdmision.fechaInicio` and `fechaFin` to avoid edge-case mismatches around day boundaries when frontend computes vigencia.
+- Decide whether cupo validation should also be enforced server-side with a specific error code/message when `POST /sapp/aspirante` exceeds `convocatoria.cupos` (frontend now blocks known overflow only when `cupos` is available in navigation state).
 - Replace remaining mock services `fetchProfesores` and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available; periodo académico ya usa APIs reales.
 - Validate with backend the expected `POST /sapp/convocatoriaAdmision` behavior when creating convocatorias for programas not yet present in historical data (the UI currently derives selectable programs from existing convocatorias returned by GET).
 - Confirm and align real backend contracts for matrícula (`convocatoria vigente`, `catálogo de materias por estudiante/plan`, and `documentos requeridos + estados`) so `src/modules/matricula/services/matriculaMockService.ts` can be swapped without changing UI component contracts.
@@ -133,6 +137,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Validate manually in browser that convocatoria rows marked “VIGENTE” switch automatically to “CERRADA” when date range is outside the current date and that filters use the same computed logic.
+2. Confirm all navigation paths to `/admisiones/convocatoria/:id` include `cupos` (currently from home and config list) or add a dedicated convocatoria-by-id fetch in detail to guarantee cupo checks even on page refresh/direct URL.
+3. Verify backend payload keys for card fields (`numeroDocumento/cedula`, `emailPersonal/correo`, `telefono`, `posicionAdmision`) and align DTO naming once contract is finalized.
 1. Validate end-to-end in browser/network inspector that `POST /sapp/convocatoriaAdmision` now includes `periodoId` and that assignment mock receives the created `convocatoriaId`.
 2. Define real backend contract for convocatoria-profesor assignment (expected payload/response/errors) and swap `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts` with API client implementation.
 3. Confirm whether program options should continue to be derived from existing convocatorias or migrate to a dedicated catálogo endpoint.
@@ -230,6 +237,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after admisiones updates (computed vigencia by dates, cupo overflow guard for creating aspirantes, and extra aspirante fields in student cards).
 - `npm run build` ✅ passes on April 6, 2026 after branding update (`SAPP Posgrados` → `SAPP`) and login subtitle expansion with full product meaning.
 - `npm run build` ✅ passes on April 4, 2026 after implementing periodo libre (año/semestre), ensure de periodo académico por API (`GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`), y creación de convocatoria con `periodoId` asegurado en `CreateConvocatoriaModal`.
 - `npm run build` ✅ passes on April 4, 2026 after adding required `periodoId` to convocatoria creation and integrating mock professor multi-assignment flow in `CreateConvocatoriaModal`.

@@ -7,6 +7,7 @@ import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocato
 import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
 import { parsePeriodo } from '../../modules/admisiones/utils/periodo'
+import { isConvocatoriaVigente } from '../../modules/admisiones/utils/convocatoriaEstado'
 import './AdmisionesHomePage.css'
 
 const sortByPeriodoDesc = (
@@ -30,7 +31,7 @@ const getConvocatoriaVigente = (
     return null
   }
 
-  const vigentes = convocatorias.filter((convocatoria) => convocatoria.vigente)
+  const vigentes = convocatorias.filter((convocatoria) => isConvocatoriaVigente(convocatoria))
   const candidates = vigentes.length > 0 ? vigentes : convocatorias
 
   return [...candidates].sort(sortByPeriodoDesc)[0] ?? null
@@ -100,6 +101,7 @@ const AdmisionesHomePage = () => {
           programaNombre,
           periodoLabel: convocatoria.periodo,
           periodoAcademico: convocatoria.periodo,
+          cupos: convocatoria.cupos,
         },
       })
     },
@@ -202,7 +204,9 @@ const AdmisionesHomePage = () => {
                     <div className="admisiones-home__card-header">
                       <div>
                         <span className="admisiones-home__card-title">
-                          Convocatoria vigente
+                          {convocatoriaVigente && isConvocatoriaVigente(convocatoriaVigente)
+                            ? 'Convocatoria vigente'
+                            : 'Convocatoria más reciente'}
                         </span>
                         <span className="admisiones-home__card-meta">
                           {convocatoriaVigente
@@ -210,7 +214,11 @@ const AdmisionesHomePage = () => {
                             : 'No disponible'}
                         </span>
                       </div>
-                      <span className="admisiones-home__pill">Vigente</span>
+                      <span className="admisiones-home__pill">
+                        {convocatoriaVigente && isConvocatoriaVigente(convocatoriaVigente)
+                          ? 'Vigente'
+                          : 'Cerrada'}
+                      </span>
                     </div>
 
                     {convocatoriaVigente ? (

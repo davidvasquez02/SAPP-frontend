@@ -13,7 +13,13 @@ export interface InscripcionAdmisionDto {
   fechaResultado: string | null
   puntajeTotal: number | null
   posicion_admision: number | null
+  posicionAdmision?: number | null
   periodoAcademico: string
   programaAcademico: string
+  numeroDocumento?: string | null
+  cedula?: string | null
+  emailPersonal?: string | null
+  correo?: string | null
+  telefono?: string | null
   observaciones: string | null
 }
