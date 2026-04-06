@@ -23,7 +23,7 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar__brand">SAPP Posgrados</div>
+      <div className="sidebar__brand">SAPP</div>
       <nav className="sidebar__nav">
         <NavLink
           to="/solicitudes"

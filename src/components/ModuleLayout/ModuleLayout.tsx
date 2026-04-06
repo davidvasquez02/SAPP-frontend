@@ -19,7 +19,7 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
     <div className="module-layout">
       <header className="module-layout__header">
         <div>
-          <p className="module-layout__eyebrow">SAPP Posgrados</p>
+          <p className="module-layout__eyebrow">SAPP</p>
           <h2 className="module-layout__title">{title}</h2>
         </div>
         <div className="module-layout__user">
