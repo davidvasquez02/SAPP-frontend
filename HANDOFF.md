@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): fixed Admisiones convocatoria UX: when no open convocatoria exists for a programa, the most recent closed one is no longer shown as “vigente” and now appears under “Convocatorias anteriores”; in `ConvocatoriaDetalle`, aspirante creation is blocked when the selected convocatoria is closed after resolving its state from `GET /sapp/convocatoriaAdmision`.
 - April 6, 2026 (latest): updated Admisiones convocatoria state handling so “VIGENTE/CERRADA” is derived from `fechaInicio` + `fechaFin` in frontend (`isConvocatoriaVigente`) instead of trusting only backend `vigente`; passed `cupos` through navigation state to convocatoria detail and blocked “Crear aspirante” when `inscripciones.length >= cupos` with visible alert/error messaging.
 - April 6, 2026 (latest): updated admisión student cards to render additional identity/contact fields when present in API payload (`cedula|numeroDocumento`, `correo|emailPersonal`, `telefono`, `posicionAdmision|posicion_admision`) while preserving graceful fallback (`—`) if backend does not send them yet.
 - Branding update completed on April 6, 2026: all visible instances of "SAPP Posgrados" were renamed to "SAPP" in shared UI shells and login; login now includes the full expanded name "Sistema de apoyo a procesos de posgrado" as context text.
@@ -138,7 +139,7 @@
 
 ## Next Steps
 1. Validate manually in browser that convocatoria rows marked “VIGENTE” switch automatically to “CERRADA” when date range is outside the current date and that filters use the same computed logic.
-2. Confirm all navigation paths to `/admisiones/convocatoria/:id` include `cupos` (currently from home and config list) or add a dedicated convocatoria-by-id fetch in detail to guarantee cupo checks even on page refresh/direct URL.
+2. Validate in browser (manual QA) that `Crear aspirante` remains disabled for closed convocatorias even on direct URL refresh (`/admisiones/convocatoria/:id`) and after closing a convocatoria from config.
 3. Verify backend payload keys for card fields (`numeroDocumento/cedula`, `emailPersonal/correo`, `telefono`, `posicionAdmision`) and align DTO naming once contract is finalized.
 1. Validate end-to-end in browser/network inspector that `POST /sapp/convocatoriaAdmision` now includes `periodoId` and that assignment mock receives the created `convocatoriaId`.
 2. Define real backend contract for convocatoria-profesor assignment (expected payload/response/errors) and swap `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts` with API client implementation.
@@ -237,6 +238,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after admisiones fix: closed latest convocatoria moves to “Convocatorias anteriores” and `Crear aspirante` is blocked when convocatoria is closed (state resolved from convocatoria list by id).
 - `npm run build` ✅ passes on April 6, 2026 after admisiones updates (computed vigencia by dates, cupo overflow guard for creating aspirantes, and extra aspirante fields in student cards).
 - `npm run build` ✅ passes on April 6, 2026 after branding update (`SAPP Posgrados` → `SAPP`) and login subtitle expansion with full product meaning.
 - `npm run build` ✅ passes on April 4, 2026 after implementing periodo libre (año/semestre), ensure de periodo académico por API (`GET /sapp/periodoAcademico` + `POST /sapp/periodoAcademicoFecha`), y creación de convocatoria con `periodoId` asegurado en `CreateConvocatoriaModal`.

@@ -27,14 +27,9 @@ const sortByPeriodoDesc = (
 const getConvocatoriaVigente = (
   convocatorias: ConvocatoriaAdmisionDto[]
 ): ConvocatoriaAdmisionDto | null => {
-  if (convocatorias.length === 0) {
-    return null
-  }
-
   const vigentes = convocatorias.filter((convocatoria) => isConvocatoriaVigente(convocatoria))
-  const candidates = vigentes.length > 0 ? vigentes : convocatorias
 
-  return [...candidates].sort(sortByPeriodoDesc)[0] ?? null
+  return [...vigentes].sort(sortByPeriodoDesc)[0] ?? null
 }
 
 const AdmisionesHomePage = () => {
@@ -204,20 +199,16 @@ const AdmisionesHomePage = () => {
                     <div className="admisiones-home__card-header">
                       <div>
                         <span className="admisiones-home__card-title">
-                          {convocatoriaVigente && isConvocatoriaVigente(convocatoriaVigente)
-                            ? 'Convocatoria vigente'
-                            : 'Convocatoria más reciente'}
+                          Convocatoria vigente
                         </span>
                         <span className="admisiones-home__card-meta">
                           {convocatoriaVigente
                             ? convocatoriaVigente.periodo
-                            : 'No disponible'}
+                            : 'No hay convocatoria vigente'}
                         </span>
                       </div>
                       <span className="admisiones-home__pill">
-                        {convocatoriaVigente && isConvocatoriaVigente(convocatoriaVigente)
-                          ? 'Vigente'
-                          : 'Cerrada'}
+                        {convocatoriaVigente ? 'Vigente' : 'Cerrada'}
                       </span>
                     </div>
 
