@@ -8,6 +8,11 @@ interface StudentCardProps {
 }
 
 const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
+  const posicionAdmision = inscripcion.posicionAdmision ?? inscripcion.posicion_admision ?? null
+  const cedula = inscripcion.cedula ?? inscripcion.numeroDocumento ?? '—'
+  const correo = inscripcion.correo ?? inscripcion.emailPersonal ?? '—'
+  const telefono = inscripcion.telefono ?? '—'
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -54,6 +59,28 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
             <span className="student-card__value">
               {inscripcion.puntajeTotal ?? '—'}
             </span>
+          </div>
+        </div>
+
+        <div className="student-card__meta">
+          <div>
+            <span className="student-card__label">Cédula</span>
+            <span className="student-card__value">{cedula || '—'}</span>
+          </div>
+          <div>
+            <span className="student-card__label">Posición admisión</span>
+            <span className="student-card__value">{posicionAdmision ?? '—'}</span>
+          </div>
+        </div>
+
+        <div className="student-card__meta">
+          <div>
+            <span className="student-card__label">Correo</span>
+            <span className="student-card__value">{correo || '—'}</span>
+          </div>
+          <div>
+            <span className="student-card__label">Teléfono</span>
+            <span className="student-card__value">{telefono || '—'}</span>
           </div>
         </div>
 

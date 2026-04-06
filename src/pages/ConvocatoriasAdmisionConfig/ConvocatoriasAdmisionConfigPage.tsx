@@ -7,6 +7,7 @@ import {
 } from '../../modules/admisiones/api/convocatoriaAdmisionService'
 import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
 import { CreateConvocatoriaModal } from '../../modules/admisiones/components/CreateConvocatoriaModal'
+import { isConvocatoriaVigente } from '../../modules/admisiones/utils/convocatoriaEstado'
 import './ConvocatoriasAdmisionConfigPage.css'
 
 type VigenteFilter = 'TODOS' | 'VIGENTE' | 'CERRADA'
@@ -104,9 +105,9 @@ const ConvocatoriasAdmisionConfigPage = () => {
   const filteredConvocatorias = useMemo(() => {
     return convocatorias.filter((convocatoria) => {
       const matchesPeriodo = periodoFilter === 'TODOS' || convocatoria.periodo === periodoFilter
+      const isVigente = isConvocatoriaVigente(convocatoria)
       const matchesVigente =
-        vigenteFilter === 'TODOS' ||
-        (vigenteFilter === 'VIGENTE' ? convocatoria.vigente : !convocatoria.vigente)
+        vigenteFilter === 'TODOS' || (vigenteFilter === 'VIGENTE' ? isVigente : !isVigente)
 
       return matchesPeriodo && matchesVigente
     })
@@ -248,8 +249,11 @@ const ConvocatoriasAdmisionConfigPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {section.items.map((item) => (
-                        <tr key={item.id}>
+                      {section.items.map((item) => {
+                        const convocatoriaVigente = isConvocatoriaVigente(item)
+
+                        return (
+                          <tr key={item.id}>
                           <td>{item.periodo}</td>
                           <td>{item.cupos}</td>
                           <td>{formatFecha(item.fechaInicio)}</td>
@@ -257,12 +261,12 @@ const ConvocatoriasAdmisionConfigPage = () => {
                           <td>
                             <span
                               className={`convocatorias-config__badge ${
-                                item.vigente
+                                convocatoriaVigente
                                   ? 'convocatorias-config__badge--vigente'
                                   : 'convocatorias-config__badge--cerrada'
                               }`}
                             >
-                              {item.vigente ? 'VIGENTE' : 'CERRADA'}
+                              {convocatoriaVigente ? 'VIGENTE' : 'CERRADA'}
                             </span>
                           </td>
                           <td>
@@ -275,11 +279,21 @@ const ConvocatoriasAdmisionConfigPage = () => {
                               <button
                                 type="button"
                                 className="convocatorias-config__action convocatorias-config__action--ghost"
-                                onClick={() => navigate(`/admisiones/convocatoria/${item.id}`)}
+                                onClick={() =>
+                                  navigate(`/admisiones/convocatoria/${item.id}`, {
+                                    state: {
+                                      programaId: item.programaId,
+                                      programaNombre: resolveProgramaLabel(item.programa),
+                                      periodoLabel: item.periodo,
+                                      periodoAcademico: item.periodo,
+                                      cupos: item.cupos,
+                                    },
+                                  })
+                                }
                               >
                                 Ver inscripciones
                               </button>
-                              {item.vigente ? (
+                              {convocatoriaVigente ? (
                                 <button
                                   type="button"
                                   className="convocatorias-config__action"
@@ -291,8 +305,9 @@ const ConvocatoriasAdmisionConfigPage = () => {
                               ) : null}
                             </div>
                           </td>
-                        </tr>
-                      ))}
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

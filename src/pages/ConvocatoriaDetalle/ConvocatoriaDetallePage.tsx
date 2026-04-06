@@ -22,7 +22,7 @@ const ConvocatoriaDetallePage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  const { periodoAcademico, periodoLabel, programaNombre, programaId } = useMemo(() => {
+  const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } = useMemo(() => {
     return (
       (location.state as
         | {
@@ -30,6 +30,7 @@ const ConvocatoriaDetallePage = () => {
             periodoLabel?: string
             programaNombre?: string
             programaId?: number
+            cupos?: number
           }
         | null) ?? {}
     )
@@ -54,6 +55,9 @@ const ConvocatoriaDetallePage = () => {
     : periodoConvocatoria
       ? `Convocatoria - ${periodoConvocatoria}`
       : 'Convocatoria'
+  const cuposConvocatoria = typeof cupos === 'number' ? cupos : null
+  const cuposExcedidos =
+    typeof cuposConvocatoria === 'number' && inscripciones.length >= cuposConvocatoria
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {
@@ -130,6 +134,17 @@ const ConvocatoriaDetallePage = () => {
     [loadInscripciones],
   )
 
+  const handleOpenCreateAspirante = useCallback(() => {
+    if (cuposExcedidos) {
+      window.alert(
+        `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`
+      )
+      return
+    }
+
+    setIsCreateModalOpen(true)
+  }, [cuposConvocatoria, cuposExcedidos])
+
   return (
     <ModuleLayout title="Admisiones">
       <section className="convocatoria-detalle">
@@ -151,14 +166,19 @@ const ConvocatoriaDetallePage = () => {
               <button
                 type="button"
                 className="convocatoria-detalle__create-button"
-                onClick={() => setIsCreateModalOpen(true)}
-                disabled={!resolvedProgramaId || isLoading}
+                onClick={handleOpenCreateAspirante}
+                disabled={!resolvedProgramaId || isLoading || cuposExcedidos}
               >
                 Crear aspirante
               </button>
               {!resolvedProgramaId && !isLoading && !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   No se pudo determinar el programa de la convocatoria.
+                </p>
+              ) : null}
+              {cuposExcedidos ? (
+                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
+                  Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden registrar más aspirantes.
                 </p>
               ) : null}
             </div>
