@@ -35,6 +35,7 @@ const INSCRIPCION_SECTIONS = [
 ] as const
 
 type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
+type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 
@@ -72,7 +73,8 @@ const InscripcionAdmisionDetallePage = () => {
   )
   const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
   const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
-  const didTriggerCambioEstadoValRef = useRef(false)
+  const didCambioEstadoValRef = useRef<Record<number, boolean>>({})
+  const prevActiveRef = useRef<ActiveWindow>(null)
 
   const nombreAspirante = routeState?.nombreAspirante
   const pageTitle = nombreAspirante
@@ -91,6 +93,21 @@ const InscripcionAdmisionDetallePage = () => {
     INSCRIPCION_SECTIONS.find((section) =>
       location.pathname.endsWith(`/${section.pathSuffix}`),
     )?.key ?? null
+  const activeWindow: ActiveWindow = useMemo(() => {
+    if (activeKey === 'documentos') {
+      return 'DOCUMENTOS'
+    }
+    if (activeKey === 'hoja-vida') {
+      return 'HOJA_VIDA'
+    }
+    if (activeKey === 'examen') {
+      return 'EXAMEN'
+    }
+    if (activeKey === 'entrevistas') {
+      return 'ENTREVISTAS'
+    }
+    return null
+  }, [activeKey])
 
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
@@ -114,7 +131,6 @@ const InscripcionAdmisionDetallePage = () => {
   }, [convocatoriaId, inscripcionId, parsedConvocatoriaId, parsedInscripcionId])
 
   useEffect(() => {
-    didTriggerCambioEstadoValRef.current = false
     setInscripcionEstado(routeState?.inscripcionEstado ?? null)
     setInscripcionEstadoWarning(null)
     setIsUpdatingInscripcionEstado(false)
@@ -159,32 +175,87 @@ const InscripcionAdmisionDetallePage = () => {
     void loadEvaluacionEstado()
   }, [loadEvaluacionEstado])
 
-  const triggerCambioEstadoInscripcionVal = useCallback(() => {
-    if (
-      !inscripcionId ||
-      Number.isNaN(parsedInscripcionId) ||
-      didTriggerCambioEstadoValRef.current ||
-      !isEstadoEnConstruccion(inscripcionEstado)
-    ) {
+  useEffect(() => {
+    const previousActiveWindow = prevActiveRef.current
+    prevActiveRef.current = activeWindow
+
+    const isOpeningDocs =
+      activeWindow === 'DOCUMENTOS' && previousActiveWindow !== 'DOCUMENTOS'
+
+    if (!isOpeningDocs) {
       return
     }
 
-    didTriggerCambioEstadoValRef.current = true
+    const hasValidInscripcionId = !Number.isNaN(parsedInscripcionId)
+    const isEnConstruccion = isEstadoEnConstruccion(inscripcionEstado)
+    const alreadyTriggered = hasValidInscripcionId
+      ? Boolean(didCambioEstadoValRef.current[parsedInscripcionId])
+      : false
+
+    if (import.meta.env.DEV) {
+      console.debug('[INSCRIPCION_ESTADO] open DOCUMENTOS detected', {
+        inscripcionId: hasValidInscripcionId ? parsedInscripcionId : null,
+        estado: inscripcionEstado,
+        isEnConstruccion,
+        alreadyTriggered,
+      })
+    }
+
+    if (!hasValidInscripcionId) {
+      return
+    }
+
+    if (!isEnConstruccion) {
+      if (import.meta.env.DEV) {
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
+          reason: 'not_en_construccion',
+          inscripcionId: parsedInscripcionId,
+        })
+      }
+      return
+    }
+
+    if (alreadyTriggered) {
+      if (import.meta.env.DEV) {
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
+          reason: 'already_triggered',
+          inscripcionId: parsedInscripcionId,
+        })
+      }
+      return
+    }
+
     setInscripcionEstadoWarning(null)
     setIsUpdatingInscripcionEstado(true)
 
     void (async () => {
       try {
+        if (import.meta.env.DEV) {
+          console.debug('[INSCRIPCION_ESTADO] calling PUT cambioEstadoVal', {
+            inscripcionId: parsedInscripcionId,
+          })
+        }
         await cambiarEstadoInscripcionVal(parsedInscripcionId)
+        didCambioEstadoValRef.current[parsedInscripcionId] = true
+        if (import.meta.env.DEV) {
+          console.debug('[INSCRIPCION_ESTADO] cambioEstadoVal OK', {
+            inscripcionId: parsedInscripcionId,
+          })
+        }
         await reloadInscripcionDetalle()
-      } catch {
-        didTriggerCambioEstadoValRef.current = false
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('[INSCRIPCION_ESTADO] cambioEstadoVal ERROR', {
+            inscripcionId: parsedInscripcionId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
         setInscripcionEstadoWarning('No se pudo actualizar el estado de la inscripción.')
       } finally {
         setIsUpdatingInscripcionEstado(false)
       }
     })()
-  }, [inscripcionEstado, inscripcionId, parsedInscripcionId, reloadInscripcionDetalle])
+  }, [activeWindow, inscripcionEstado, parsedInscripcionId, reloadInscripcionDetalle])
 
   const handleIniciarEvaluacion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
@@ -236,12 +307,8 @@ const InscripcionAdmisionDetallePage = () => {
       }
 
       navigate(`${basePath}/${section.pathSuffix}`)
-
-      if (sectionKey === 'documentos') {
-        triggerCambioEstadoInscripcionVal()
-      }
     },
-    [activeKey, basePath, navigate, sectionAvailability, triggerCambioEstadoInscripcionVal],
+    [activeKey, basePath, navigate, sectionAvailability],
   )
 
   const outlet = <Outlet />

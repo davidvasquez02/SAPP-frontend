@@ -3,7 +3,7 @@ import type { ApiResponse } from './types'
 
 export async function cambiarEstadoInscripcionVal(
   inscripcionId: number,
-): Promise<void | unknown> {
+): Promise<void> {
   const response = await httpPut<ApiResponse<unknown>>(
     `/sapp/inscripcionAdmision/cambioEstadoVal/${inscripcionId}`,
   )
@@ -11,6 +11,4 @@ export async function cambiarEstadoInscripcionVal(
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible actualizar el estado de la inscripción.')
   }
-
-  return response.data
 }

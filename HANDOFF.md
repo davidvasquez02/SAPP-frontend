@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
 - April 6, 2026 (latest): refactored `InscripcionDocumentosPage` validation table layout and behavior to match UX contract: `Validación` column always renders `Aprobar/Rechazar`, active filled button reflects backend status (`APROBADO` or `RECHAZADO`), rejection reason is hidden by default and only appears when entering reject mode, and `Acciones` now only shows horizontal `Ver/Descargar`. Approve/reject actions call `PUT /sapp/document` and re-fetch only `loadDocumentos()` (no route reload).
 - ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
 - ✅ La actualización de estado se ejecuta en paralelo (no bloquea la carga de documentos) y muestra feedback inline: “Actualizando estado...” o warning no intrusivo si falla.
@@ -254,6 +255,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after refactoring `cambioEstadoVal` trigger to run only on `DOCUMENTOS` open transition with per-inscripción once guard + DEV-only diagnostics.
 - `npm run build` ✅ passes on April 6, 2026 after implementing the new documentos validation UX split (`Validación` buttons + reject-mode note + `Acciones` only Ver/Descargar) and list-only refresh behavior in `InscripcionDocumentosPage` + `ValidationButtons` component.
 - `npm run build` ✅ passes on April 6, 2026 after implementing `cambioEstadoVal` on expand (once-only guard + non-blocking UX + refresh estado inscripción).
 - `npm run build` ✅ passes on April 6, 2026 after implementing document review UX optimization in `InscripcionDocumentosPage` (no full reload, sorted checklist, immediate approve, inline reject confirm, active-state decision buttons, disabled pending decisions).
