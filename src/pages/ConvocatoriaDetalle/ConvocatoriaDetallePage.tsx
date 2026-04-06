@@ -3,10 +3,13 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
+import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
 import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { CreateAspiranteModal } from '../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal'
 import StudentCard from '../../modules/admisiones/components/StudentCard/StudentCard'
+import { isConvocatoriaVigente } from '../../modules/admisiones/utils/convocatoriaEstado'
 import { getMockStudentPhotoUrl } from '../../modules/admisiones/utils/mockStudentPhoto'
 import { resolveProgramaIdFromInscripciones } from '../../modules/admisiones/utils/resolveProgramaId'
 import './ConvocatoriaDetallePage.css'
@@ -21,6 +24,7 @@ const ConvocatoriaDetallePage = () => {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [convocatoria, setConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null)
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } = useMemo(() => {
     return (
@@ -58,6 +62,7 @@ const ConvocatoriaDetallePage = () => {
   const cuposConvocatoria = typeof cupos === 'number' ? cupos : null
   const cuposExcedidos =
     typeof cuposConvocatoria === 'number' && inscripciones.length >= cuposConvocatoria
+  const convocatoriaCerrada = convocatoria ? !isConvocatoriaVigente(convocatoria) : false
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {
@@ -76,8 +81,14 @@ const ConvocatoriaDetallePage = () => {
     setError(null)
 
     try {
-      const data = await getInscripcionesByConvocatoria(convocatoriaIdNumber)
+      const [data, convocatorias] = await Promise.all([
+        getInscripcionesByConvocatoria(convocatoriaIdNumber),
+        getConvocatoriasAdmision(),
+      ])
       setInscripciones(data)
+      setConvocatoria(
+        convocatorias.find((item) => item.id === convocatoriaIdNumber) ?? null
+      )
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
@@ -135,6 +146,11 @@ const ConvocatoriaDetallePage = () => {
   )
 
   const handleOpenCreateAspirante = useCallback(() => {
+    if (convocatoriaCerrada) {
+      window.alert('No es posible crear aspirantes: la convocatoria está cerrada.')
+      return
+    }
+
     if (cuposExcedidos) {
       window.alert(
         `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`
@@ -143,7 +159,7 @@ const ConvocatoriaDetallePage = () => {
     }
 
     setIsCreateModalOpen(true)
-  }, [cuposConvocatoria, cuposExcedidos])
+  }, [convocatoriaCerrada, cuposConvocatoria, cuposExcedidos])
 
   return (
     <ModuleLayout title="Admisiones">
@@ -167,7 +183,7 @@ const ConvocatoriaDetallePage = () => {
                 type="button"
                 className="convocatoria-detalle__create-button"
                 onClick={handleOpenCreateAspirante}
-                disabled={!resolvedProgramaId || isLoading || cuposExcedidos}
+                disabled={!resolvedProgramaId || isLoading || cuposExcedidos || convocatoriaCerrada}
               >
                 Crear aspirante
               </button>
@@ -179,6 +195,11 @@ const ConvocatoriaDetallePage = () => {
               {cuposExcedidos ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden registrar más aspirantes.
+                </p>
+              ) : null}
+              {convocatoriaCerrada ? (
+                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
+                  La convocatoria está cerrada. No se pueden registrar nuevos aspirantes.
                 </p>
               ) : null}
             </div>
