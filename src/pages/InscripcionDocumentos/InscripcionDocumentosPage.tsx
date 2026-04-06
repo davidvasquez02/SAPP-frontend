@@ -4,6 +4,8 @@ import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
+import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
+import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
 import type {
   DocumentoTramiteUiItem,
@@ -52,6 +54,7 @@ const InscripcionDocumentosPage = () => {
   )
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isStartingEvaluacion, setIsStartingEvaluacion] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const tramiteId = useMemo(() => Number(inscripcionId), [inscripcionId])
   const canManageDocuments = useMemo(() => {
@@ -275,14 +278,22 @@ const InscripcionDocumentosPage = () => {
     [getEstadoDocumento, requiredDocs],
   )
 
-  const handleContinue = () => {
-    console.log('Continuar evaluación', { inscripcionId: tramiteId })
-    window.alert('Continuando a evaluación del aspirante (simulado).')
+  const handleContinue = async () => {
+    if (!convocatoriaId || !inscripcionId || Number.isNaN(tramiteId)) {
+      window.alert('No se encontró una inscripción válida para iniciar evaluación.')
+      return
+    }
 
-    if (convocatoriaId && inscripcionId) {
-      navigate(
-        `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/hoja-vida`,
-      )
+    setIsStartingEvaluacion(true)
+    try {
+      await iniciarEvaluacion(tramiteId)
+      invalidateEvaluacionAvailabilityCache(tramiteId)
+      navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/hoja-vida`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      setIsStartingEvaluacion(false)
     }
   }
 
@@ -535,11 +546,11 @@ const InscripcionDocumentosPage = () => {
             <button
               type="button"
               className="inscripcion-documentos__continue-button"
-              disabled={!allRequiredApproved}
-              aria-disabled={!allRequiredApproved}
-              onClick={handleContinue}
+              disabled={!allRequiredApproved || isStartingEvaluacion}
+              aria-disabled={!allRequiredApproved || isStartingEvaluacion}
+              onClick={() => void handleContinue()}
             >
-              Continuar evaluación
+              {isStartingEvaluacion ? 'Iniciando evaluación...' : 'Continuar evaluación'}
             </button>
           </div>
         </div>

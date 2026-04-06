@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): fixed the coordinator flow in `InscripcionDocumentosPage` where “Continuar evaluación” still used a simulated alert. It now calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}` through `iniciarEvaluacion`, invalidates availability cache, and only then navigates to `/hoja-vida`; button shows `Iniciando evaluación...` and is disabled while request is in progress.
 - April 6, 2026 (latest): Admisiones inscripción detalle now gates evaluation by a new status probe (`GET /sapp/evaluacionAdmision/info?inscripcionId={id}` without etapa): if `ok:false` + `data:null`, Documentos shows a new CTA “Iniciar proceso de evaluación”; clicking it calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, invalidates the 30s availability cache, re-probes status, hides the CTA, and enables Hoja de vida/Examen/Entrevistas without manual refresh. Route guard now also blocks direct stage URLs unless status is STARTED.
 - April 6, 2026 (latest): fixed Admisiones convocatoria UX: when no open convocatoria exists for a programa, the most recent closed one is no longer shown as “vigente” and now appears under “Convocatorias anteriores”; in `ConvocatoriaDetalle`, aspirante creation is blocked when the selected convocatoria is closed after resolving its state from `GET /sapp/convocatoriaAdmision`.
 - April 6, 2026 (latest): updated Admisiones convocatoria state handling so “VIGENTE/CERRADA” is derived from `fechaInicio` + `fechaFin` in frontend (`isConvocatoriaVigente`) instead of trusting only backend `vigente`; passed `cupos` through navigation state to convocatoria detail and blocked “Crear aspirante” when `inscripciones.length >= cupos` with visible alert/error messaging.
@@ -240,6 +241,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after replacing the simulated “Continuar evaluación” alert with the real iniciar evaluación service call in `InscripcionDocumentosPage` (including in-flight button disable state).
 - `npm run build` ✅ passes on April 6, 2026 after adding evaluación start probe + CTA (`Iniciar proceso de evaluación`), new iniciar endpoint service, cache invalidation, and status-based route/window gating in inscripción detalle.
 - `npm run build` ✅ passes on April 6, 2026 after admisiones fix: closed latest convocatoria moves to “Convocatorias anteriores” and `Crear aspirante` is blocked when convocatoria is closed (state resolved from convocatoria list by id).
 - `npm run build` ✅ passes on April 6, 2026 after admisiones updates (computed vigencia by dates, cupo overflow guard for creating aspirantes, and extra aspirante fields in student cards).
