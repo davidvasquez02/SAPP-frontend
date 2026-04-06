@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): Admisiones evaluación UI (Hoja de vida y Examen) was upgraded for COORDINADOR with full-width responsive layout. `EvaluacionEtapaSection` removed the `Evaluador` column, reordered table columns to keep `Nota` as the final emphasized field (right aligned / stronger weight), and upgraded `Consideraciones` rendering to full callout blocks with JSON pretty-print fallback when payload looks like JSON text.
+- April 6, 2026 (latest): Hoja de vida now includes inline PDF preview in `EvaluacionEtapaPage` by loading checklist docs from `GET /sapp/document?codigoTipoTramite=1002&tramiteId={inscripcionId}` (through shared `getDocumentosByTramite`), locating a probable HV document via name/code heuristics (`HOJA DE VIDA`, `HOJA`, `HV`), and rendering `iframe` preview + `Abrir`/`Descargar`. If no file matches or file has no base64 payload, the page shows a clear fallback message.
 - April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
 - April 6, 2026 (latest): refactored `InscripcionDocumentosPage` validation table layout and behavior to match UX contract: `Validación` column always renders `Aprobar/Rechazar`, active filled button reflects backend status (`APROBADO` or `RECHAZADO`), rejection reason is hidden by default and only appears when entering reject mode, and `Acciones` now only shows horizontal `Ver/Descargar`. Approve/reject actions call `PUT /sapp/document` and re-fetch only `loadDocumentos()` (no route reload).
 - ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
@@ -121,6 +123,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Confirmar con backend un identificador canónico para documento de Hoja de Vida (ideal: `codigoTipoDocumentoTramite` fijo) para reemplazar la heurística textual actual (`HOJA DE VIDA`/`HOJA`/`HV`) y evitar falsos positivos/negativos.
 - Verificar con backend si existe endpoint de detalle directo por inscripción (ej. `GET /sapp/inscripcionAdmision/{id}`) para evitar recargar la lista completa de la convocatoria al refrescar el estado.
 - Confirmar contrato exacto de respuesta de `cambioEstadoPorVal` (si retorna `data.estado` definitivo) para evitar roundtrip adicional cuando sea posible.
 - Confirm with backend the canonical date format/timezone for `convocatoriaAdmision.fechaInicio` and `fechaFin` to avoid edge-case mismatches around day boundaries when frontend computes vigencia.
@@ -148,6 +151,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
+2. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
+3. Si backend entrega código fijo de HV, reemplazar heurística por match determinístico y documentarlo en este handoff.
 1. QA manual: abrir/cerrar “Documentos cargados” varias veces con una inscripción en `EN CONSTRUCCION` y confirmar en Network que solo sale un PUT exitoso por sesión de pantalla.
 2. QA manual: forzar error del PUT y validar que al volver a abrir la ventana se reintenta (flag frontend vuelve a `false` en catch).
 3. Evaluar optimización: reemplazar recarga por lista completa con endpoint de detalle si backend lo habilita.
@@ -255,6 +261,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after Admisiones evaluación UI changes (full-width layout + tabla reordenada + consideraciones callout/JSON + visor PDF hoja de vida).
+- `npm run lint` ⚠️ fails on April 6, 2026 due to pre-existing repo-wide ESLint errors outside this change scope (e.g., explicit `any` in `src/api/*Service.ts`, react-hooks purity/set-state-in-effect warnings in solicitudes/protected routes, and context export fast-refresh rule); no new lint errors were introduced by touched admisiones files.
 - `npm run build` ✅ passes on April 6, 2026 after refactoring `cambioEstadoPorVal` trigger to run only on `DOCUMENTOS` open transition with per-inscripción once guard + DEV-only diagnostics.
 - `npm run build` ✅ passes on April 6, 2026 after implementing the new documentos validation UX split (`Validación` buttons + reject-mode note + `Acciones` only Ver/Descargar) and list-only refresh behavior in `InscripcionDocumentosPage` + `ValidationButtons` component.
 - `npm run build` ✅ passes on April 6, 2026 after implementing `cambioEstadoPorVal` on expand (once-only guard + non-blocking UX + refresh estado inscripción).

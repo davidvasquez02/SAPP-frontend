@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../../../components'
+import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
 import EvaluacionEtapaSection, {
   type EvaluacionDraft,
 } from '../../components/EvaluacionEtapaSection/EvaluacionEtapaSection'
+import { getDocumentosByTramite } from '../../../documentos/api/documentosService'
+import type { DocumentoTramiteItemDto } from '../../../documentos/api/types'
 import type {
   EvaluacionAdmisionItem,
   EtapaEvaluacion,
@@ -16,6 +19,12 @@ interface EvaluacionEtapaPageProps {
   title: string
   etapa: EtapaEvaluacion
   embedded?: boolean
+}
+
+interface HojaVidaPreviewDocument {
+  base64: string
+  mimeType: string
+  filename: string
 }
 
 const buildValidationMessage = (
@@ -46,7 +55,12 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [editingRowId, setEditingRowId] = useState<number | null>(null)
   const [errorsByRow, setErrorsByRow] = useState<Record<number, string | null>>({})
   const [savingRowId, setSavingRowId] = useState<number | null>(null)
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [hojaVidaPreviewDoc, setHojaVidaPreviewDoc] = useState<HojaVidaPreviewDocument | null>(null)
+  const [hojaVidaDocStatus, setHojaVidaDocStatus] = useState<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
+  const [hojaVidaDocMessage, setHojaVidaDocMessage] = useState<string | null>(null)
   const isEntrevista = etapa === 'ENTREVISTA'
+  const isHojaDeVida = etapa === 'HOJA_DE_VIDA'
 
   const inscripcionIdNumber = useMemo(
     () => (inscripcionId ? Number(inscripcionId) : NaN),
@@ -80,6 +94,92 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
 
     loadEvaluacion()
   }, [etapa, inscripcionId, inscripcionIdNumber])
+
+  useEffect(() => {
+    if (!isHojaDeVida) {
+      return
+    }
+
+    const resolveHojaVidaDocumento = (
+      documentos: DocumentoTramiteItemDto[],
+    ): HojaVidaPreviewDocument | null => {
+      const target = documentos.find((doc) => {
+        const uploaded = doc.documentoUploadedResponse
+        if (!uploaded) {
+          return false
+        }
+
+        const candidateText = `${doc.nombreTipoDocumentoTramite} ${doc.descripcionTipoDocumentoTramite} ${doc.codigoTipoDocumentoTramite}`.toUpperCase()
+        return candidateText.includes('HOJA DE VIDA') || candidateText.includes(' HOJA ') || candidateText.includes('HV')
+      })
+
+      if (!target?.documentoUploadedResponse) {
+        return null
+      }
+
+      const uploaded = target.documentoUploadedResponse
+      const base64 = uploaded.base64DocumentoContenido || uploaded.contenidoBase64
+      const mimeType = uploaded.mimeTypeDocumentoContenido || uploaded.mimeType || 'application/pdf'
+
+      if (!base64) {
+        return null
+      }
+
+      return {
+        base64,
+        mimeType,
+        filename: uploaded.nombreArchivoDocumento || 'hoja-de-vida.pdf',
+      }
+    }
+
+    const loadHojaVidaDoc = async () => {
+      if (Number.isNaN(inscripcionIdNumber)) {
+        setHojaVidaDocStatus('error')
+        setHojaVidaDocMessage('Inscripción inválida para cargar documento de hoja de vida.')
+        return
+      }
+
+      setHojaVidaDocStatus('loading')
+      setHojaVidaDocMessage(null)
+      setHojaVidaPreviewDoc(null)
+
+      try {
+        const documentos = await getDocumentosByTramite(inscripcionIdNumber)
+        const documentoHojaVida = resolveHojaVidaDocumento(documentos)
+
+        if (!documentoHojaVida) {
+          setHojaVidaDocStatus('missing')
+          setHojaVidaDocMessage('No se encontró documento de hoja de vida para previsualizar.')
+          return
+        }
+
+        setHojaVidaPreviewDoc(documentoHojaVida)
+        setHojaVidaDocStatus('ready')
+      } catch (errorResponse) {
+        setHojaVidaDocStatus('error')
+        setHojaVidaDocMessage(
+          errorResponse instanceof Error
+            ? errorResponse.message
+            : 'No fue posible cargar el documento de hoja de vida.',
+        )
+      }
+    }
+
+    loadHojaVidaDoc()
+  }, [inscripcionIdNumber, isHojaDeVida])
+
+  useEffect(() => {
+    if (!hojaVidaPreviewDoc) {
+      setPdfViewerUrl(null)
+      return
+    }
+
+    const blob = base64ToBlob(hojaVidaPreviewDoc.base64, hojaVidaPreviewDoc.mimeType)
+    const url = URL.createObjectURL(blob)
+    setPdfViewerUrl(url)
+
+    return () => URL.revokeObjectURL(url)
+  }, [hojaVidaPreviewDoc])
 
   const saveEvaluacionItem = async (updated: EvaluacionAdmisionItem): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 500))
@@ -201,19 +301,84 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       )}
 
       {!loading && !error && !isEntrevista && (
-        <EvaluacionEtapaSection
-          title={`Componentes de ${title.toLowerCase()}`}
-          etapa={etapa}
-          items={items}
-          drafts={drafts}
-          editingRowId={editingRowId}
-          errorsByRow={errorsByRow}
-          savingRowId={savingRowId}
-          onEditRow={handleEditRow}
-          onCancelEdit={handleCancelEdit}
-          onChangeDraft={handleChangeDraft}
-          onSaveItem={handleSaveItem}
-        />
+        <div
+          className={`evaluacion-etapa-page__content-grid ${
+            isHojaDeVida ? 'evaluacion-etapa-page__content-grid--hoja-vida' : ''
+          }`}
+        >
+          <div className="evaluacion-etapa-page__main-panel">
+            <EvaluacionEtapaSection
+              title={`Componentes de ${title.toLowerCase()}`}
+              etapa={etapa}
+              items={items}
+              drafts={drafts}
+              editingRowId={editingRowId}
+              errorsByRow={errorsByRow}
+              savingRowId={savingRowId}
+              onEditRow={handleEditRow}
+              onCancelEdit={handleCancelEdit}
+              onChangeDraft={handleChangeDraft}
+              onSaveItem={handleSaveItem}
+            />
+          </div>
+          {isHojaDeVida && (
+            <aside className="evaluacion-etapa-page__pdf-panel" aria-label="Documento hoja de vida">
+              <div className="evaluacion-etapa-page__pdf-toolbar">
+                <h3 className="evaluacion-etapa-page__pdf-title">Hoja de vida (PDF)</h3>
+                <div className="evaluacion-etapa-page__pdf-actions">
+                  <button
+                    type="button"
+                    className="evaluacion-etapa-page__pdf-action"
+                    disabled={!hojaVidaPreviewDoc}
+                    onClick={() => {
+                      if (!hojaVidaPreviewDoc) return
+                      openBase64InNewTab(
+                        hojaVidaPreviewDoc.base64,
+                        hojaVidaPreviewDoc.mimeType,
+                        hojaVidaPreviewDoc.filename,
+                      )
+                    }}
+                  >
+                    Abrir
+                  </button>
+                  <button
+                    type="button"
+                    className="evaluacion-etapa-page__pdf-action"
+                    disabled={!hojaVidaPreviewDoc}
+                    onClick={() => {
+                      if (!hojaVidaPreviewDoc) return
+                      downloadBase64File(
+                        hojaVidaPreviewDoc.base64,
+                        hojaVidaPreviewDoc.mimeType,
+                        hojaVidaPreviewDoc.filename,
+                      )
+                    }}
+                  >
+                    Descargar
+                  </button>
+                </div>
+              </div>
+              {hojaVidaDocStatus === 'loading' && (
+                <p className="evaluacion-etapa-page__pdf-message">Cargando documento...</p>
+              )}
+              {hojaVidaDocStatus === 'missing' && (
+                <p className="evaluacion-etapa-page__pdf-message">{hojaVidaDocMessage}</p>
+              )}
+              {hojaVidaDocStatus === 'error' && (
+                <p className="evaluacion-etapa-page__pdf-message evaluacion-etapa-page__pdf-message--error">
+                  {hojaVidaDocMessage || 'No fue posible cargar el documento.'}
+                </p>
+              )}
+              {hojaVidaDocStatus === 'ready' && pdfViewerUrl && (
+                <iframe
+                  src={pdfViewerUrl}
+                  title="Hoja de vida"
+                  className="evaluacion-etapa-page__pdf-viewer"
+                />
+              )}
+            </aside>
+          )}
+        </div>
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length === 0 && (
         <p className="evaluacion-etapa-page__status">No hay evaluaciones de entrevista.</p>

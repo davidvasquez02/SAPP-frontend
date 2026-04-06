@@ -2,16 +2,16 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  max-width: 1100px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .evaluacion-etapa-page--embedded {
-  max-width: 100%;
   width: 100%;
 }
 
 .evaluacion-etapa-page__back {
-  color: #1d4ed8;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -29,22 +29,101 @@
 .evaluacion-etapa-page__title {
   margin: 0;
   font-size: 1.8rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .evaluacion-etapa-page__meta {
   margin: 0;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
 .evaluacion-etapa-page__status {
   margin: 0;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .evaluacion-etapa-page__status--error {
-  color: #b91c1c;
+  color: #b42318;
+}
+
+.evaluacion-etapa-page__content-grid {
+  width: 100%;
+}
+
+.evaluacion-etapa-page__content-grid--hoja-vida {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.evaluacion-etapa-page__main-panel {
+  min-width: 0;
+}
+
+.evaluacion-etapa-page__pdf-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 16px;
+  padding: 0.85rem;
+  background: var(--surface-container-low, var(--surface));
+}
+
+.evaluacion-etapa-page__pdf-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.evaluacion-etapa-page__pdf-title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-page__pdf-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.evaluacion-etapa-page__pdf-action {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.evaluacion-etapa-page__pdf-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.evaluacion-etapa-page__pdf-viewer {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.evaluacion-etapa-page__pdf-message {
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.evaluacion-etapa-page__pdf-message--error {
+  color: #b42318;
 }
 
 .evaluacion-etapa-page__groups {
@@ -54,16 +133,16 @@
 }
 
 .evaluacion-etapa-page__summary {
-  border: 1px solid #e5e7eb;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
   border-radius: 12px;
   padding: 1.25rem;
-  background: #f9fafb;
+  background: var(--surface-container-low, var(--surface));
 }
 
 .evaluacion-etapa-page__summary-title {
   margin: 0 0 1rem;
   font-size: 1.15rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .evaluacion-etapa-page__summary-grid {
@@ -75,22 +154,32 @@
 .evaluacion-etapa-page__summary-label {
   margin: 0 0 0.25rem;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .evaluacion-etapa-page__summary-value {
   margin: 0;
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .evaluacion-etapa-page__group {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
   padding-top: 1.5rem;
 }
 
 .evaluacion-etapa-page__group-title {
   margin: 0 0 0.75rem;
   font-size: 1.2rem;
-  color: #111827;
+  color: var(--text-primary);
+}
+
+@media (max-width: 1024px) {
+  .evaluacion-etapa-page__content-grid--hoja-vida {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluacion-etapa-page__pdf-viewer {
+    min-height: 45vh;
+  }
 }
