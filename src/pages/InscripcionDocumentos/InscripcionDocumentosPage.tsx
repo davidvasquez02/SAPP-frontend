@@ -2,39 +2,34 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
-import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
+import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
+import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
-import type {
-  DocumentoTramiteUiItem,
-  DocumentoValidacionEstado,
-} from '../../modules/documentos/types/ui'
+import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
+import type { DocumentoTramiteUiItem, DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
-
-interface RechazoState {
-  motivoRechazo: string
-  errorMotivo: string | null
-}
 
 interface DocumentoActionState {
   viewing: boolean
   downloading: boolean
 }
 
-const getEstadoUi = (
-  documento: DocumentoTramiteItemDto,
-): DocumentoValidacionEstado => {
+const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEstado => {
   if (!documento.documentoCargado) {
     return 'PENDIENTE'
   }
 
   const estado = documento.documentoUploadedResponse?.estadoDocumento?.toUpperCase()
 
-  if (estado === 'APROBADO' || estado === 'RECHAZADO' || estado === 'POR_REVISAR') {
-    return estado
+  if (estado === 'APROBADO') {
+    return 'APROBADO'
+  }
+
+  if (estado === 'RECHAZADO') {
+    return 'RECHAZADO'
   }
 
   return 'POR_REVISAR'
@@ -45,12 +40,15 @@ const InscripcionDocumentosPage = () => {
   const navigate = useNavigate()
   const { session, user } = useAuth()
   const [documentos, setDocumentos] = useState<DocumentoTramiteUiItem[]>([])
-  const [rechazoStates, setRechazoStates] = useState<Record<number, RechazoState>>({})
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [busyDocumentoId, setBusyDocumentoId] = useState<number | null>(null)
   const [isStartingEvaluacion, setIsStartingEvaluacion] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [rejectingDocId, setRejectingDocId] = useState<number | null>(null)
+  const [rejectNotes, setRejectNotes] = useState<Record<number, string>>({})
+  const [rejectErrors, setRejectErrors] = useState<Record<number, string | null>>({})
+
   const tramiteId = useMemo(() => Number(inscripcionId), [inscripcionId])
   const canManageDocuments = useMemo(() => {
     if (!session || session.kind !== 'SAPP' || !user || !('username' in user)) {
@@ -59,15 +57,6 @@ const InscripcionDocumentosPage = () => {
 
     return hasAnyRole(user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA])
   }, [session, user])
-
-  const getRechazoState = useCallback(
-    (id: number): RechazoState =>
-      rechazoStates[id] ?? {
-        motivoRechazo: '',
-        errorMotivo: null,
-      },
-    [rechazoStates],
-  )
 
   const getActionState = useCallback(
     (id: number): DocumentoActionState =>
@@ -78,30 +67,6 @@ const InscripcionDocumentosPage = () => {
     [actionStates],
   )
 
-  const updateRechazoState = useCallback((id: number, updates: Partial<RechazoState>) => {
-    setRechazoStates((prev) => ({
-      ...prev,
-      [id]: {
-        motivoRechazo: '',
-        errorMotivo: null,
-        ...prev[id],
-        ...updates,
-      },
-    }))
-  }, [])
-
-  const closeRechazoPanel = useCallback((id: number) => {
-    setRechazoStates((prev) => {
-      if (!(id in prev)) {
-        return prev
-      }
-
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-  }, [])
-
   const loadDocumentos = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -111,8 +76,7 @@ const InscripcionDocumentosPage = () => {
         data.map((documento) => ({
           ...documento,
           validacionEstado: getEstadoUi(documento),
-          validacionObservaciones:
-            documento.documentoUploadedResponse?.observacionesDocumento ?? null,
+          validacionObservaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
         })),
       )
     } catch (error) {
@@ -130,66 +94,6 @@ const InscripcionDocumentosPage = () => {
       ),
     [documentos],
   )
-
-  const handleApprove = async (id: number) => {
-    setBusyDocumentoId(id)
-    try {
-      await aprobarRechazarDocumento({
-        documentoId: id,
-        aprobado: true,
-        observaciones: null,
-      })
-      await loadDocumentos()
-      closeRechazoPanel(id)
-      window.alert('Documento aprobado.')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      window.alert(message)
-    } finally {
-      setBusyDocumentoId(null)
-    }
-  }
-
-  const handleMotivoChange = (id: number, value: string) => {
-    updateRechazoState(id, {
-      motivoRechazo: value,
-      errorMotivo: null,
-    })
-  }
-
-  const handleOpenRechazo = (id: number) => {
-    updateRechazoState(id, {
-      motivoRechazo: getRechazoState(id).motivoRechazo,
-      errorMotivo: null,
-    })
-  }
-
-  const handleConfirmReject = async (id: number) => {
-    const estado = getRechazoState(id)
-    const motivo = estado.motivoRechazo.trim()
-
-    if (!motivo) {
-      updateRechazoState(id, { errorMotivo: 'Debe ingresar el motivo del rechazo.' })
-      return
-    }
-
-    setBusyDocumentoId(id)
-    try {
-      await aprobarRechazarDocumento({
-        documentoId: id,
-        aprobado: false,
-        observaciones: motivo,
-      })
-      await loadDocumentos()
-      closeRechazoPanel(id)
-      window.alert('Documento rechazado.')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      window.alert(message)
-    } finally {
-      setBusyDocumentoId(null)
-    }
-  }
 
   const updateActionState = useCallback((id: number, updates: Partial<DocumentoActionState>) => {
     setActionStates((prev) => ({
@@ -218,6 +122,76 @@ const InscripcionDocumentosPage = () => {
 
     void loadDocumentos()
   }, [inscripcionId, loadDocumentos, tramiteId])
+
+  const handleApprove = async (id: number, disabled: boolean) => {
+    if (disabled) {
+      return
+    }
+
+    setBusyDocumentoId(id)
+    try {
+      await aprobarRechazarDocumento({
+        documentoId: id,
+        aprobado: true,
+        observaciones: null,
+      })
+      await loadDocumentos()
+      setRejectingDocId((prev) => (prev === id ? null : prev))
+      setRejectErrors((prev) => ({ ...prev, [id]: null }))
+      window.alert('Documento aprobado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
+
+  const handleRejectStart = (id: number, disabled: boolean, previousNote: string) => {
+    if (disabled) {
+      return
+    }
+
+    setRejectingDocId(id)
+    setRejectNotes((prev) => ({
+      ...prev,
+      [id]: prev[id] ?? previousNote,
+    }))
+    setRejectErrors((prev) => ({ ...prev, [id]: null }))
+  }
+
+  const handleRejectCancel = (id: number) => {
+    setRejectingDocId((prev) => (prev === id ? null : prev))
+    setRejectErrors((prev) => ({ ...prev, [id]: null }))
+  }
+
+  const handleRejectConfirm = async (id: number, note: string) => {
+    const trimmed = note.trim()
+
+    if (!trimmed) {
+      setRejectErrors((prev) => ({ ...prev, [id]: 'Debe ingresar el motivo del rechazo.' }))
+      return
+    }
+
+    setBusyDocumentoId(id)
+    try {
+      await aprobarRechazarDocumento({
+        documentoId: id,
+        aprobado: false,
+        observaciones: trimmed,
+      })
+      setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
+      setRejectErrors((prev) => ({ ...prev, [id]: null }))
+      setRejectingDocId(null)
+      await loadDocumentos()
+      window.alert('Documento rechazado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      window.alert(message)
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
 
   const handleViewDocumento = async (
     documentoId: number,
@@ -256,11 +230,7 @@ const InscripcionDocumentosPage = () => {
     updateActionState(documentoId, { downloading: true })
     try {
       await new Promise((resolve) => setTimeout(resolve, 0))
-      downloadBase64File(
-        base64,
-        mimeType ?? 'application/pdf',
-        filename ?? 'documento.pdf',
-      )
+      downloadBase64File(base64, mimeType ?? 'application/pdf', filename ?? 'documento.pdf')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)
@@ -285,8 +255,7 @@ const InscripcionDocumentosPage = () => {
   const requiredApprovedCount = useMemo(
     () =>
       requiredDocs.filter(
-        (documento) =>
-          documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
+        (documento) => documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
       ).length,
     [getEstadoDocumento, requiredDocs],
   )
@@ -294,8 +263,7 @@ const InscripcionDocumentosPage = () => {
   const allRequiredApproved = useMemo(
     () =>
       requiredDocs.every(
-        (documento) =>
-          documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
+        (documento) => documento.documentoCargado && getEstadoDocumento(documento) === 'APROBADO',
       ),
     [getEstadoDocumento, requiredDocs],
   )
@@ -335,17 +303,15 @@ const InscripcionDocumentosPage = () => {
         <div className="inscripcion-documentos__table">
           <div className="inscripcion-documentos__table-header">
             <span>Documento</span>
-            <span>Código</span>
-            <span>Requisito</span>
             <span>Estado</span>
             <span>Validación</span>
+            <span>Observaciones</span>
             {canManageDocuments ? <span>Acciones</span> : null}
           </div>
           {sortedDocumentos.map((documento) => {
             const documentoId = documento.documentoUploadedResponse?.idDocumento
             const uploaded =
               documento.documentoCargado === true && documento.documentoUploadedResponse != null
-            const rechazoState = documentoId ? getRechazoState(documentoId) : null
             const isLoadingDecision = documentoId != null && busyDocumentoId === documentoId
             const actionState = documentoId ? getActionState(documentoId) : null
             const validacionEstado = documento.validacionEstado
@@ -359,6 +325,14 @@ const InscripcionDocumentosPage = () => {
             const filename =
               documentoResponse?.nombreArchivoDocumento ??
               `documento_${documento.idTipoDocumentoTramite}.pdf`
+            const disableValidation = !uploaded || isLoadingDecision
+            const isRejectMode = documentoId != null && rejectingDocId === documentoId
+            const currentRejectNote =
+              documentoId != null
+                ? rejectNotes[documentoId] ?? documento.validacionObservaciones ?? ''
+                : ''
+            const currentRejectError = documentoId != null ? rejectErrors[documentoId] : null
+            const canOpenActions = uploaded && Boolean(base64) && Boolean(mimeType)
 
             return (
               <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row">
@@ -371,21 +345,11 @@ const InscripcionDocumentosPage = () => {
                       {documento.descripcionTipoDocumentoTramite}
                     </p>
                   ) : null}
+                  <p className="inscripcion-documentos__meta-line">
+                    Código: {documento.codigoTipoDocumentoTramite} ·{' '}
+                    {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
+                  </p>
                 </div>
-                <span className="inscripcion-documentos__code">
-                  {documento.codigoTipoDocumentoTramite}
-                </span>
-                <span>
-                  {documento.obligatorioTipoDocumentoTramite ? (
-                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--required">
-                      Obligatorio
-                    </span>
-                  ) : (
-                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--optional">
-                      Opcional
-                    </span>
-                  )}
-                </span>
                 <div>
                   {uploaded ? (
                     <>
@@ -403,144 +367,59 @@ const InscripcionDocumentosPage = () => {
                     </span>
                   )}
                 </div>
+                <ValidationButtons
+                  estadoUi={validacionEstado}
+                  disabled={disableValidation}
+                  onApprove={() => documentoId && void handleApprove(documentoId, disableValidation)}
+                  onRejectStart={() =>
+                    documentoId &&
+                    handleRejectStart(documentoId, disableValidation, documento.validacionObservaciones ?? '')
+                  }
+                  isRejectMode={isRejectMode}
+                  onRejectCancel={() => documentoId && handleRejectCancel(documentoId)}
+                  onRejectConfirm={(note) => documentoId && void handleRejectConfirm(documentoId, note)}
+                  rejectNote={currentRejectNote}
+                  setRejectNote={(note) =>
+                    documentoId &&
+                    setRejectNotes((prev) => ({
+                      ...prev,
+                      [documentoId]: note,
+                    }))
+                  }
+                  rejectError={currentRejectError}
+                  textareaId={documentoId ? `motivo-${documentoId}` : undefined}
+                />
                 <div>
-                  {uploaded ? (
-                    <>
-                      <span
-                        className={`inscripcion-documentos__badge ${
-                          validacionEstado === 'APROBADO'
-                            ? 'inscripcion-documentos__badge--validation-approved'
-                            : validacionEstado === 'RECHAZADO'
-                              ? 'inscripcion-documentos__badge--validation-rejected'
-                              : 'inscripcion-documentos__badge--validation-neutral'
-                        }`}
-                      >
-                        {validacionEstado === 'APROBADO'
-                          ? 'Aprobado'
-                          : validacionEstado === 'RECHAZADO'
-                            ? 'Rechazado'
-                            : 'Por revisar'}
-                      </span>
-                      {validacionEstado === 'RECHAZADO' &&
-                      documento.validacionObservaciones ? (
-                        <p className="inscripcion-documentos__validation-note">
-                          Motivo: {documento.validacionObservaciones}
-                        </p>
-                      ) : null}
-                    </>
+                  {isRejectMode && currentRejectNote.trim() ? (
+                    <p className="inscripcion-documentos__validation-note">{currentRejectNote.trim()}</p>
                   ) : (
-                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--validation-pending">
-                      Pendiente
-                    </span>
+                    <span className="inscripcion-documentos__observaciones-placeholder">—</span>
                   )}
                 </div>
                 {canManageDocuments ? (
-                  <div>
-                    <div className="inscripcion-documentos__actions-row">
-                      <div className="inscripcion-documentos__actions-group">
-                        <button
-                          type="button"
-                          className="inscripcion-documentos__view-button"
-                          onClick={() =>
-                            documentoId &&
-                            handleViewDocumento(documentoId, base64, mimeType, filename)
-                          }
-                          disabled={!uploaded || actionState?.viewing || actionState?.downloading}
-                          aria-disabled={
-                            !uploaded || actionState?.viewing || actionState?.downloading
-                          }
-                        >
-                          {actionState?.viewing ? 'Abriendo...' : 'Ver'}
-                        </button>
-                        <button
-                          type="button"
-                          className="inscripcion-documentos__download-button"
-                          onClick={() =>
-                            documentoId &&
-                            handleDownloadDocumento(documentoId, base64, mimeType, filename)
-                          }
-                          disabled={!uploaded || actionState?.viewing || actionState?.downloading}
-                          aria-disabled={
-                            !uploaded || actionState?.viewing || actionState?.downloading
-                          }
-                        >
-                          {actionState?.downloading ? 'Descargando...' : 'Descargar'}
-                        </button>
-                      </div>
-                      <div className="inscripcion-documentos__actions-group">
-                        <button
-                          type="button"
-                          className={`inscripcion-documentos__decision-button ${
-                            validacionEstado === 'APROBADO'
-                              ? 'is-active is-approve'
-                              : ''
-                          }`}
-                          onClick={() => documentoId && void handleApprove(documentoId)}
-                          disabled={!uploaded || isLoadingDecision}
-                          aria-disabled={!uploaded || isLoadingDecision}
-                        >
-                          Aprobar
-                        </button>
-                        <button
-                          type="button"
-                          className={`inscripcion-documentos__decision-button ${
-                            validacionEstado === 'RECHAZADO'
-                              ? 'is-active is-reject'
-                              : ''
-                          }`}
-                          onClick={() => documentoId && handleOpenRechazo(documentoId)}
-                          disabled={!uploaded || isLoadingDecision}
-                          aria-disabled={!uploaded || isLoadingDecision}
-                        >
-                          Rechazar
-                        </button>
-                      </div>
-                    </div>
-                    {rechazoState && documentoId ? (
-                      <div className="inscripcion-documentos__decision-panel">
-                        <label
-                          className="inscripcion-documentos__decision-label"
-                          htmlFor={`motivo-${documentoId}`}
-                        >
-                          Motivo del rechazo
-                        </label>
-                        <textarea
-                          id={`motivo-${documentoId}`}
-                          className="inscripcion-documentos__decision-textarea"
-                          value={rechazoState.motivoRechazo}
-                          onChange={(event) => handleMotivoChange(documentoId, event.target.value)}
-                          rows={3}
-                        />
-                        {rechazoState.errorMotivo ? (
-                          <span className="inscripcion-documentos__decision-error">
-                            {rechazoState.errorMotivo}
-                          </span>
-                        ) : null}
-                        <div className="inscripcion-documentos__actions-group">
-                          <button
-                            type="button"
-                            className="inscripcion-documentos__decision-confirm"
-                            onClick={() => void handleConfirmReject(documentoId)}
-                            disabled={isLoadingDecision}
-                            aria-disabled={isLoadingDecision}
-                          >
-                            {isLoadingDecision ? 'Procesando...' : 'Confirmar rechazo'}
-                          </button>
-                          <button
-                            type="button"
-                            className="inscripcion-documentos__view-button"
-                            onClick={() => closeRechazoPanel(documentoId)}
-                            disabled={isLoadingDecision}
-                            aria-disabled={isLoadingDecision}
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : null}
-                    {isLoadingDecision ? (
-                      <p className="inscripcion-documentos__processing">Procesando...</p>
-                    ) : null}
+                  <div className="inscripcion-documentos__docActions">
+                    <button
+                      type="button"
+                      className="inscripcion-documentos__view-button"
+                      onClick={() =>
+                        documentoId && handleViewDocumento(documentoId, base64, mimeType, filename)
+                      }
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                    >
+                      {actionState?.viewing ? 'Abriendo...' : 'Ver'}
+                    </button>
+                    <button
+                      type="button"
+                      className="inscripcion-documentos__download-button"
+                      onClick={() =>
+                        documentoId && handleDownloadDocumento(documentoId, base64, mimeType, filename)
+                      }
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                    >
+                      {actionState?.downloading ? 'Descargando...' : 'Descargar'}
+                    </button>
                   </div>
                 ) : null}
               </div>
