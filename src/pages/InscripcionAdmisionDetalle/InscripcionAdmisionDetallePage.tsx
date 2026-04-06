@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
-import type { EvaluacionAvailability } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityService'
-import { getEvaluacionAvailability } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityService'
+import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
+import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
+import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import './InscripcionAdmisionDetallePage.css'
 
 const INSCRIPCION_SECTIONS = [
@@ -37,8 +38,11 @@ const InscripcionAdmisionDetallePage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const [availability, setAvailability] = useState<EvaluacionAvailability | null>(null)
-  const [loadingAvailability, setLoadingAvailability] = useState(true)
+  const [evaluacionStatus, setEvaluacionStatus] = useState<
+    'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
+  >('LOADING')
+  const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
+  const [starting, setStarting] = useState(false)
 
   const nombreAspirante = (
     location.state as { nombreAspirante?: string } | null
@@ -57,53 +61,68 @@ const InscripcionAdmisionDetallePage = () => {
       location.pathname.endsWith(`/${section.pathSuffix}`),
     )?.key ?? null
 
-  useEffect(() => {
-    let isMounted = true
+  const loadEvaluacionEstado = useCallback(async () => {
     const parsedInscripcionId = Number(inscripcionId)
 
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
-      setAvailability(null)
-      setLoadingAvailability(false)
+      setEvaluacionStatus('ERROR')
+      setEvaluacionMsg('No se encontró una inscripción válida para consultar la evaluación.')
       return
     }
 
-    setLoadingAvailability(true)
-    getEvaluacionAvailability(parsedInscripcionId)
-      .then((response) => {
-        if (!isMounted) {
-          return
-        }
-        setAvailability(response)
-      })
-      .finally(() => {
-        if (!isMounted) {
-          return
-        }
-        setLoadingAvailability(false)
-      })
+    setEvaluacionStatus('LOADING')
+    setEvaluacionMsg(null)
 
-    return () => {
-      isMounted = false
+    try {
+      const estado = await getEvaluacionEstado(parsedInscripcionId)
+      if (estado.status === 'NOT_STARTED') {
+        setEvaluacionStatus('NOT_STARTED')
+        setEvaluacionMsg(estado.message)
+        return
+      }
+
+      setEvaluacionStatus('STARTED')
+      setEvaluacionMsg(null)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setEvaluacionStatus('ERROR')
+      setEvaluacionMsg(message)
     }
   }, [inscripcionId])
 
-  const availabilityFlags = useMemo(
-    () =>
-      availability ?? {
-        hojaDeVida: false,
-        examen: false,
-        entrevistas: false,
-      },
-    [availability],
-  )
+  useEffect(() => {
+    void loadEvaluacionEstado()
+  }, [loadEvaluacionEstado])
 
-  const isLoading = loadingAvailability || availability === null
+  const handleIniciarEvaluacion = useCallback(async () => {
+    const parsedInscripcionId = Number(inscripcionId)
+    if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
+      setEvaluacionMsg('No se encontró una inscripción válida para iniciar evaluación.')
+      setEvaluacionStatus('ERROR')
+      return
+    }
+
+    setStarting(true)
+    setEvaluacionMsg(null)
+    try {
+      await iniciarEvaluacion(parsedInscripcionId)
+      invalidateEvaluacionAvailabilityCache(parsedInscripcionId)
+      await loadEvaluacionEstado()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setEvaluacionStatus('ERROR')
+      setEvaluacionMsg(message)
+    } finally {
+      setStarting(false)
+    }
+  }, [inscripcionId, loadEvaluacionEstado])
+
 
   const sectionAvailability: Record<InscripcionSectionKey, boolean> = {
     documentos: true,
-    'hoja-vida': !isLoading && availabilityFlags.hojaDeVida,
-    examen: !isLoading && availabilityFlags.examen,
-    entrevistas: !isLoading && availabilityFlags.entrevistas,
+    'hoja-vida': evaluacionStatus === 'STARTED',
+    examen: evaluacionStatus === 'STARTED',
+    entrevistas: evaluacionStatus === 'STARTED',
   }
 
   const handleToggle = (sectionKey: InscripcionSectionKey) => {
@@ -142,6 +161,14 @@ const InscripcionAdmisionDetallePage = () => {
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
         <p className="inscripcion-detalle__subtitle">Seleccione una opción</p>
+        {evaluacionStatus === 'ERROR' && evaluacionMsg ? (
+          <p className="inscripcion-detalle__alert inscripcion-detalle__alert--error">
+            {evaluacionMsg}
+          </p>
+        ) : null}
+        {evaluacionStatus === 'NOT_STARTED' && evaluacionMsg ? (
+          <p className="inscripcion-detalle__alert">{evaluacionMsg}</p>
+        ) : null}
 
         <div className="inscripcion-detalle__windows">
           {INSCRIPCION_SECTIONS.map((section) => {
@@ -158,7 +185,29 @@ const InscripcionAdmisionDetallePage = () => {
                 isDisabled={!isEnabled}
                 onToggle={() => handleToggle(section.key)}
               >
-                {isOpen ? outlet : null}
+                {isOpen ? (
+                  <>
+                    {outlet}
+                    {section.key === 'documentos' && evaluacionStatus === 'NOT_STARTED' ? (
+                      <div className="inscripcion-detalle__start-eval">
+                        <p className="inscripcion-detalle__start-eval-text">
+                          Habilita Hoja de vida, Examen y Entrevistas.
+                        </p>
+                        <button
+                          type="button"
+                          className="inscripcion-detalle__start-eval-button"
+                          onClick={() => void handleIniciarEvaluacion()}
+                          disabled={starting}
+                          aria-disabled={starting}
+                        >
+                          {starting
+                            ? 'Iniciando proceso...'
+                            : 'Iniciar proceso de evaluación'}
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
               </InscripcionAccordionWindow>
             )
           })}

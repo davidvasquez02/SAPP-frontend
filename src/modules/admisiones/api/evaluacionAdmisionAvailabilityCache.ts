@@ -28,3 +28,7 @@ export const setCachedEvaluacionAvailability = (
 ) => {
   availabilityCache.set(inscripcionId, { value, ts: Date.now() })
 }
+
+export const invalidateEvaluacionAvailabilityCache = (inscripcionId: number) => {
+  availabilityCache.delete(inscripcionId)
+}

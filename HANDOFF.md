@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 6, 2026 (latest): Admisiones inscripción detalle now gates evaluation by a new status probe (`GET /sapp/evaluacionAdmision/info?inscripcionId={id}` without etapa): if `ok:false` + `data:null`, Documentos shows a new CTA “Iniciar proceso de evaluación”; clicking it calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, invalidates the 30s availability cache, re-probes status, hides the CTA, and enables Hoja de vida/Examen/Entrevistas without manual refresh. Route guard now also blocks direct stage URLs unless status is STARTED.
 - April 6, 2026 (latest): fixed Admisiones convocatoria UX: when no open convocatoria exists for a programa, the most recent closed one is no longer shown as “vigente” and now appears under “Convocatorias anteriores”; in `ConvocatoriaDetalle`, aspirante creation is blocked when the selected convocatoria is closed after resolving its state from `GET /sapp/convocatoriaAdmision`.
 - April 6, 2026 (latest): updated Admisiones convocatoria state handling so “VIGENTE/CERRADA” is derived from `fechaInicio` + `fechaFin` in frontend (`isConvocatoriaVigente`) instead of trusting only backend `vigente`; passed `cupos` through navigation state to convocatoria detail and blocked “Crear aspirante” when `inscripciones.length >= cupos` with visible alert/error messaging.
 - April 6, 2026 (latest): updated admisión student cards to render additional identity/contact fields when present in API payload (`cedula|numeroDocumento`, `correo|emailPersonal`, `telefono`, `posicionAdmision|posicion_admision`) while preserving graceful fallback (`—`) if backend does not send them yet.
@@ -222,6 +223,7 @@
 - **Inscripcion child pages:** `src/pages/InscripcionDocumentos`, `src/pages/InscripcionHojaVida`, `src/pages/InscripcionExamen`, `src/pages/InscripcionEntrevistas`
 - **Evaluación admisión (UI):** `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/modules/admisiones/components/EvaluacionEtapaSection`
 - **Evaluación admisión (API/types):** `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
+- **Evaluación admisión (estado/inicio):** `src/modules/admisiones/api/evaluacionAdmisionEstadoService.ts`, `src/modules/admisiones/api/iniciarEvaluacionService.ts`, `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
 - **Evaluación admisión availability:** `src/modules/admisiones/api/evaluacionAdmisionAvailabilityService.ts`, `src/modules/admisiones/api/evaluacionAdmisionAvailabilityCache.ts`, `src/modules/admisiones/routes/RequireEvaluacionEnabled.tsx`
 - **Evaluación admisión (util):** `src/modules/admisiones/utils/groupByEtapa.ts`, `src/modules/admisiones/utils/groupByEvaluador.ts`
 - **Documentos module (coordinación/secretaría):** `src/modules/documentos/constants.ts`, `src/modules/documentos/api/types.ts`, `src/modules/documentos/api/documentosService.ts`, `src/modules/documentos/api/aprobacionDocumentosService.ts`
@@ -238,6 +240,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after adding evaluación start probe + CTA (`Iniciar proceso de evaluación`), new iniciar endpoint service, cache invalidation, and status-based route/window gating in inscripción detalle.
 - `npm run build` ✅ passes on April 6, 2026 after admisiones fix: closed latest convocatoria moves to “Convocatorias anteriores” and `Crear aspirante` is blocked when convocatoria is closed (state resolved from convocatoria list by id).
 - `npm run build` ✅ passes on April 6, 2026 after admisiones updates (computed vigencia by dates, cupo overflow guard for creating aspirantes, and extra aspirante fields in student cards).
 - `npm run build` ✅ passes on April 6, 2026 after branding update (`SAPP Posgrados` → `SAPP`) and login subtitle expansion with full product meaning.
