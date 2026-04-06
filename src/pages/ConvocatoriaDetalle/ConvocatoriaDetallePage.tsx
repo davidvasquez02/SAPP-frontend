@@ -126,6 +126,7 @@ const ConvocatoriaDetallePage = () => {
           nombreAspirante: inscripcion.nombreAspirante,
           periodoAcademico: inscripcion.periodoAcademico,
           inscripcionId: inscripcion.id,
+          inscripcionEstado: inscripcion.estado,
         },
       }
     )

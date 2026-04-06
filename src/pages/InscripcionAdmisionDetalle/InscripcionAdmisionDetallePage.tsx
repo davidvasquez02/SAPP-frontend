@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
+import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
+import {
+  getInscripcionByConvocatoriaAndId,
+} from '../../modules/admisiones/api/inscripcionAdmisionService'
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
@@ -34,6 +38,14 @@ type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 
+const normalizeEstado = (estado?: string | null) =>
+  (estado ?? '').trim().toUpperCase().replace(/\s+/g, '_')
+
+const isEstadoEnConstruccion = (estado?: string | null) => {
+  const normalized = normalizeEstado(estado)
+  return normalized === 'EN_CONSTRUCCION'
+}
+
 const InscripcionAdmisionDetallePage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
@@ -44,12 +56,31 @@ const InscripcionAdmisionDetallePage = () => {
   const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
 
-  const nombreAspirante = (
-    location.state as { nombreAspirante?: string } | null
-  )?.nombreAspirante
+  const routeState = useMemo(
+    () =>
+      (location.state as
+        | {
+            nombreAspirante?: string
+            inscripcionEstado?: string
+          }
+        | null) ?? null,
+    [location.state],
+  )
+
+  const [inscripcionEstado, setInscripcionEstado] = useState<string | null>(
+    routeState?.inscripcionEstado ?? null,
+  )
+  const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
+  const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
+  const didTriggerCambioEstadoValRef = useRef(false)
+
+  const nombreAspirante = routeState?.nombreAspirante
   const pageTitle = nombreAspirante
     ? `Inscripción - ${nombreAspirante}`
     : 'Inscripción'
+
+  const parsedInscripcionId = useMemo(() => Number(inscripcionId), [inscripcionId])
+  const parsedConvocatoriaId = useMemo(() => Number(convocatoriaId), [convocatoriaId])
 
   const basePath =
     convocatoriaId && inscripcionId
@@ -61,9 +92,43 @@ const InscripcionAdmisionDetallePage = () => {
       location.pathname.endsWith(`/${section.pathSuffix}`),
     )?.key ?? null
 
-  const loadEvaluacionEstado = useCallback(async () => {
-    const parsedInscripcionId = Number(inscripcionId)
+  const reloadInscripcionDetalle = useCallback(async () => {
+    if (
+      !convocatoriaId ||
+      !inscripcionId ||
+      Number.isNaN(parsedConvocatoriaId) ||
+      Number.isNaN(parsedInscripcionId)
+    ) {
+      return
+    }
 
+    try {
+      const inscripcion = await getInscripcionByConvocatoriaAndId(
+        parsedConvocatoriaId,
+        parsedInscripcionId,
+      )
+      setInscripcionEstado(inscripcion.estado ?? null)
+    } catch {
+      // Silenciamos el error para no interrumpir la navegación de ventanas.
+    }
+  }, [convocatoriaId, inscripcionId, parsedConvocatoriaId, parsedInscripcionId])
+
+  useEffect(() => {
+    didTriggerCambioEstadoValRef.current = false
+    setInscripcionEstado(routeState?.inscripcionEstado ?? null)
+    setInscripcionEstadoWarning(null)
+    setIsUpdatingInscripcionEstado(false)
+  }, [inscripcionId, routeState?.inscripcionEstado])
+
+  useEffect(() => {
+    if (inscripcionEstado) {
+      return
+    }
+
+    void reloadInscripcionDetalle()
+  }, [inscripcionEstado, reloadInscripcionDetalle])
+
+  const loadEvaluacionEstado = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
       setEvaluacionStatus('ERROR')
       setEvaluacionMsg('No se encontró una inscripción válida para consultar la evaluación.')
@@ -88,14 +153,40 @@ const InscripcionAdmisionDetallePage = () => {
       setEvaluacionStatus('ERROR')
       setEvaluacionMsg(message)
     }
-  }, [inscripcionId])
+  }, [inscripcionId, parsedInscripcionId])
 
   useEffect(() => {
     void loadEvaluacionEstado()
   }, [loadEvaluacionEstado])
 
+  const triggerCambioEstadoInscripcionVal = useCallback(() => {
+    if (
+      !inscripcionId ||
+      Number.isNaN(parsedInscripcionId) ||
+      didTriggerCambioEstadoValRef.current ||
+      !isEstadoEnConstruccion(inscripcionEstado)
+    ) {
+      return
+    }
+
+    didTriggerCambioEstadoValRef.current = true
+    setInscripcionEstadoWarning(null)
+    setIsUpdatingInscripcionEstado(true)
+
+    void (async () => {
+      try {
+        await cambiarEstadoInscripcionVal(parsedInscripcionId)
+        await reloadInscripcionDetalle()
+      } catch {
+        didTriggerCambioEstadoValRef.current = false
+        setInscripcionEstadoWarning('No se pudo actualizar el estado de la inscripción.')
+      } finally {
+        setIsUpdatingInscripcionEstado(false)
+      }
+    })()
+  }, [inscripcionEstado, inscripcionId, parsedInscripcionId, reloadInscripcionDetalle])
+
   const handleIniciarEvaluacion = useCallback(async () => {
-    const parsedInscripcionId = Number(inscripcionId)
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
       setEvaluacionMsg('No se encontró una inscripción válida para iniciar evaluación.')
       setEvaluacionStatus('ERROR')
@@ -115,8 +206,7 @@ const InscripcionAdmisionDetallePage = () => {
     } finally {
       setStarting(false)
     }
-  }, [inscripcionId, loadEvaluacionEstado])
-
+  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId])
 
   const sectionAvailability: Record<InscripcionSectionKey, boolean> = {
     documentos: true,
@@ -125,27 +215,34 @@ const InscripcionAdmisionDetallePage = () => {
     entrevistas: evaluacionStatus === 'STARTED',
   }
 
-  const handleToggle = (sectionKey: InscripcionSectionKey) => {
-    if (!basePath) {
-      return
-    }
+  const handleToggle = useCallback(
+    (sectionKey: InscripcionSectionKey) => {
+      if (!basePath) {
+        return
+      }
 
-    if (!sectionAvailability[sectionKey]) {
-      return
-    }
+      if (!sectionAvailability[sectionKey]) {
+        return
+      }
 
-    if (activeKey === sectionKey) {
-      navigate(basePath)
-      return
-    }
+      if (activeKey === sectionKey) {
+        navigate(basePath)
+        return
+      }
 
-    const section = INSCRIPCION_SECTIONS.find((item) => item.key === sectionKey)
-    if (!section) {
-      return
-    }
+      const section = INSCRIPCION_SECTIONS.find((item) => item.key === sectionKey)
+      if (!section) {
+        return
+      }
 
-    navigate(`${basePath}/${section.pathSuffix}`)
-  }
+      navigate(`${basePath}/${section.pathSuffix}`)
+
+      if (sectionKey === 'documentos') {
+        triggerCambioEstadoInscripcionVal()
+      }
+    },
+    [activeKey, basePath, navigate, sectionAvailability, triggerCambioEstadoInscripcionVal],
+  )
 
   const outlet = <Outlet />
 
@@ -187,6 +284,21 @@ const InscripcionAdmisionDetallePage = () => {
               >
                 {isOpen ? (
                   <>
+                    {section.key === 'documentos' ? (
+                      <>
+                        {isUpdatingInscripcionEstado ? (
+                          <p className="inscripcion-detalle__inline-status">
+                            Actualizando estado...
+                          </p>
+                        ) : null}
+                        {inscripcionEstadoWarning ? (
+                          <p className="inscripcion-detalle__inline-status inscripcion-detalle__inline-status--warning">
+                            {inscripcionEstadoWarning}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : null}
+
                     {outlet}
                     {section.key === 'documentos' && evaluacionStatus === 'NOT_STARTED' ? (
                       <div className="inscripcion-detalle__start-eval">

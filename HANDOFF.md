@@ -1,6 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
+- ✅ La actualización de estado se ejecuta en paralelo (no bloquea la carga de documentos) y muestra feedback inline: “Actualizando estado...” o warning no intrusivo si falla.
+- ✅ Después de PUT exitoso, el frontend refresca el estado de inscripción recargando el registro desde `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` + filtro por `inscripcionId`.
 - April 6, 2026 (latest): optimized COORDINACIÓN/SECRETARÍA document review in `InscripcionDocumentosPage` to avoid full tab/route reloads after approve/reject. The page now uses local `loadDocumentos()` re-fetch only, sorts checklist rows by `codigoTipoDocumentoTramite`, derives UI state (`PENDIENTE/POR_REVISAR/APROBADO/RECHAZADO`) from backend fields, renders horizontal action clusters (`Ver/Descargar` + `Aprobar/Rechazar`), marks active decision buttons from backend status, and keeps decision actions disabled/gray when `documentoCargado=false`. Reject now uses inline motivo capture + explicit confirm.
 - April 6, 2026 (latest): fixed the coordinator flow in `InscripcionDocumentosPage` where “Continuar evaluación” still used a simulated alert. It now calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}` through `iniciarEvaluacion`, invalidates availability cache, and only then navigates to `/hoja-vida`; button shows `Iniciando evaluación...` and is disabled while request is in progress.
 - April 6, 2026 (latest): Admisiones inscripción detalle now gates evaluation by a new status probe (`GET /sapp/evaluacionAdmision/info?inscripcionId={id}` without etapa): if `ok:false` + `data:null`, Documentos shows a new CTA “Iniciar proceso de evaluación”; clicking it calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, invalidates the 30s availability cache, re-probes status, hides the CTA, and enables Hoja de vida/Examen/Entrevistas without manual refresh. Route guard now also blocks direct stage URLs unless status is STARTED.
@@ -116,6 +119,8 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Verificar con backend si existe endpoint de detalle directo por inscripción (ej. `GET /sapp/inscripcionAdmision/{id}`) para evitar recargar la lista completa de la convocatoria al refrescar el estado.
+- Confirmar contrato exacto de respuesta de `cambioEstadoVal` (si retorna `data.estado` definitivo) para evitar roundtrip adicional cuando sea posible.
 - Confirm with backend the canonical date format/timezone for `convocatoriaAdmision.fechaInicio` and `fechaFin` to avoid edge-case mismatches around day boundaries when frontend computes vigencia.
 - Decide whether cupo validation should also be enforced server-side with a specific error code/message when `POST /sapp/aspirante` exceeds `convocatoria.cupos` (frontend now blocks known overflow only when `cupos` is available in navigation state).
 - Replace remaining mock services `fetchProfesores` and `assignProfesoresToConvocatoria` with real endpoints once backend contracts are available; periodo académico ya usa APIs reales.
@@ -141,6 +146,9 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. QA manual: abrir/cerrar “Documentos cargados” varias veces con una inscripción en `EN CONSTRUCCION` y confirmar en Network que solo sale un PUT exitoso por sesión de pantalla.
+2. QA manual: forzar error del PUT y validar que al volver a abrir la ventana se reintenta (flag frontend vuelve a `false` en catch).
+3. Evaluar optimización: reemplazar recarga por lista completa con endpoint de detalle si backend lo habilita.
 1. Manual QA in browser for `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`: validate no route/tab reload after approve/reject, per-row `Procesando...` behavior, active state painting for APROBADO/RECHAZADO, and disabled gray decisions on `documentoCargado=false`.
 2. Validate rejection UX copy/product decision for inline modal/panel (current implementation is inline reason panel with `Confirmar rechazo`/`Cancelar`).
 1. Validate manually in browser that convocatoria rows marked “VIGENTE” switch automatically to “CERRADA” when date range is outside the current date and that filters use the same computed logic.
@@ -183,6 +191,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Cambio de estado al expandir documentos (nuevo):** `src/modules/admisiones/api/inscripcionCambioEstadoService.ts`, `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`, `src/modules/admisiones/api/inscripcionAdmisionService.ts`, `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
 - **Convocatoria create flow (ensure periodo + profesores mock):** `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.css`, `src/modules/admisiones/services/ensurePeriodoService.ts`, `src/modules/admisiones/api/periodoAcademicoService.ts`, `src/modules/admisiones/api/periodoAcademicoTypes.ts`, `src/modules/admisiones/utils/periodoLabel.ts`, `src/modules/admisiones/services/profesoresMockService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/modules/admisiones/mock/profesores.mock.ts`.
 - **Convocatorias config (nuevo):** `src/pages/ConvocatoriasAdmisionConfig/*`, `src/modules/admisiones/components/CreateConvocatoriaModal/*`, `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`, and route wiring in `src/app/routes/index.tsx` + `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
 - **Matrícula module (nuevo, mock-ready):** `src/modules/matricula/types.ts`, `src/modules/matricula/mock/*`, `src/modules/matricula/services/matriculaMockService.ts`, `src/modules/matricula/components/*`, `src/pages/Matricula/MatriculaPage.tsx`.
@@ -244,6 +253,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 6, 2026 after implementing `cambioEstadoVal` on expand (once-only guard + non-blocking UX + refresh estado inscripción).
 - `npm run build` ✅ passes on April 6, 2026 after implementing document review UX optimization in `InscripcionDocumentosPage` (no full reload, sorted checklist, immediate approve, inline reject confirm, active-state decision buttons, disabled pending decisions).
 - `npm run build` ✅ passes on April 6, 2026 after replacing the simulated “Continuar evaluación” alert with the real iniciar evaluación service call in `InscripcionDocumentosPage` (including in-flight button disable state).
 - `npm run build` ✅ passes on April 6, 2026 after adding evaluación start probe + CTA (`Iniciar proceso de evaluación`), new iniciar endpoint service, cache invalidation, and status-based route/window gating in inscripción detalle.
