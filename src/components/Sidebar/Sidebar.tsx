@@ -4,7 +4,7 @@ import { hasAnyRole, ROLES } from '../../auth/roleGuards'
 import './Sidebar.css'
 
 const Sidebar = () => {
-  const { session, user, logout } = useAuth()
+  const { session, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -12,11 +12,6 @@ const Sidebar = () => {
     navigate('/login', { replace: true })
   }
 
-  const displayName = user
-    ? 'username' in user
-      ? user.nombreCompleto || user.username
-      : user.numeroInscripcionUis || user.numeroDocumento
-    : 'Usuario'
   const canSeeAdmisiones =
     session?.kind === 'SAPP' &&
     hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
