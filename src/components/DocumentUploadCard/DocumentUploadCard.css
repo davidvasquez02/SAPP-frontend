@@ -1,11 +1,11 @@
 .document-upload-card {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 20px;
+  padding: 1.1rem;
   background: var(--surface);
   display: grid;
-  gap: 0.75rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  gap: 0.9rem;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--outline), transparent 84%);
 }
 
 .document-upload-card__header {
@@ -29,7 +29,7 @@
 
 .document-upload-card__badge {
   align-self: flex-start;
-  padding: 0.25rem 0.6rem;
+  padding: 0.28rem 0.72rem;
   border-radius: 999px;
   font-size: 0.7rem;
   letter-spacing: 0.04em;
@@ -37,12 +37,12 @@
 }
 
 .document-upload-card__badge--required {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
 }
 
 .document-upload-card__badge--optional {
-  background: #dbeafe;
+  background: color-mix(in srgb, var(--inverse-primary), var(--surface) 82%);
   color: var(--primary);
 }
 
@@ -61,35 +61,35 @@
 }
 
 .document-upload-card__status {
-  padding: 0.2rem 0.6rem;
+  padding: 0.22rem 0.62rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 .document-upload-card__status--not_selected {
-  background: #f1f5f9;
+  background: color-mix(in srgb, var(--outline), var(--surface) 76%);
   color: var(--text-secondary);
 }
 
 .document-upload-card__status--ready_to_upload {
-  background: #fef3c7;
-  color: #b45309;
+  background: color-mix(in srgb, #f59e0b, var(--surface) 84%);
+  color: #92400e;
 }
 
 .document-upload-card__status--uploading {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: color-mix(in srgb, var(--primary), var(--surface) 84%);
+  color: var(--primary);
 }
 
 .document-upload-card__status--uploaded {
-  background: #dcfce7;
-  color: #15803d;
+  background: color-mix(in srgb, #22c55e, var(--surface) 84%);
+  color: #166534;
 }
 
 .document-upload-card__status--error {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
 }
 
 .document-upload-card__filename {
@@ -113,7 +113,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.8rem;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px dashed var(--outline);
   color: var(--text-primary);
   background: color-mix(in srgb, var(--surface), var(--outline) 10%);
@@ -127,12 +127,17 @@
 
 .document-upload-card__button {
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: 999px;
   border: none;
   background: var(--primary);
   color: var(--on-primary);
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.document-upload-card__button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .document-upload-card__button--ghost {
