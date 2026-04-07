@@ -8,34 +8,91 @@
 .aspirante-layout__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: clamp(1rem, 2.5vw, 2rem);
+  padding: clamp(1.2rem, 2.2vw, 1.8rem);
+  border-radius: 1.5rem;
   background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
   box-shadow: var(--shadow-soft);
-  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+}
+
+.aspirante-layout__identity {
+  display: grid;
+  gap: 0.9rem;
 }
 
 .aspirante-layout__eyebrow {
   margin: 0;
   font-weight: 700;
+  letter-spacing: 0.03em;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-secondary), var(--primary) 20%);
+}
+
+.aspirante-layout__name {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 700;
   color: var(--text-primary);
 }
 
+.aspirante-layout__meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
 .aspirante-layout__meta {
-  margin: 0.35rem 0 0;
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+  background: var(--surface-container-low);
   color: var(--text-secondary);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.aspirante-layout__meta-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--text-secondary), var(--primary) 24%);
 }
 
 .aspirante-layout__logout {
   border: none;
   border-radius: 999px;
-  padding: 0.6rem 1.2rem;
+  padding: 0.65rem 1.2rem;
   background: var(--primary);
   color: var(--on-primary);
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.aspirante-layout__logout:hover {
+  filter: brightness(0.97);
+}
+
+.aspirante-layout__logout:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--inverse-primary), transparent 45%);
+  outline-offset: 2px;
 }
 
 .aspirante-layout__content {
-  padding: 2rem;
+  padding: 0 clamp(1rem, 2.5vw, 2rem) clamp(1rem, 2.5vw, 2rem);
+}
+
+@media (max-width: 720px) {
+  .aspirante-layout__header {
+    flex-direction: column;
+  }
+
+  .aspirante-layout__logout {
+    align-self: flex-start;
+  }
 }
