@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 7, 2026 (latest): adjusted inscripción-detail state transition in secretaría/coordinación flow. When opening **Documentos cargados**, frontend now calls `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` (endpoint swap from `cambioEstadoPorVal`) and only triggers it when previous estado normalizes to `POR_VALIDAR_DOCUMENTOS`.
 - April 6, 2026 (latest): Admisiones evaluación UI (Hoja de vida y Examen) was upgraded for COORDINADOR with full-width responsive layout. `EvaluacionEtapaSection` removed the `Evaluador` column, reordered table columns to keep `Nota` as the final emphasized field (right aligned / stronger weight), and upgraded `Consideraciones` rendering to full callout blocks with JSON pretty-print fallback when payload looks like JSON text.
 - April 6, 2026 (latest): Hoja de vida now includes inline PDF preview in `EvaluacionEtapaPage` by loading checklist docs from `GET /sapp/document?codigoTipoTramite=1002&tramiteId={inscripcionId}` (through shared `getDocumentosByTramite`), locating a probable HV document via name/code heuristics (`HOJA DE VIDA`, `HOJA`, `HV`), and rendering `iframe` preview + `Abrir`/`Descargar`. If no file matches or file has no base64 payload, the page shows a clear fallback message.
 - April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
@@ -261,6 +262,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 7, 2026 after changing inscripción-detail documentos transition to `cambioEstadoVal` + `POR_VALIDAR_DOCUMENTOS` gate.
 - `npm run build` ✅ passes on April 6, 2026 after Admisiones evaluación UI changes (full-width layout + tabla reordenada + consideraciones callout/JSON + visor PDF hoja de vida).
 - `npm run lint` ⚠️ fails on April 6, 2026 due to pre-existing repo-wide ESLint errors outside this change scope (e.g., explicit `any` in `src/api/*Service.ts`, react-hooks purity/set-state-in-effect warnings in solicitudes/protected routes, and context export fast-refresh rule); no new lint errors were introduced by touched admisiones files.
 - `npm run build` ✅ passes on April 6, 2026 after refactoring `cambioEstadoPorVal` trigger to run only on `DOCUMENTOS` open transition with per-inscripción once guard + DEV-only diagnostics.
