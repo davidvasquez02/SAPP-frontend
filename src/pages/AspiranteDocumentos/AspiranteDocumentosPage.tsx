@@ -31,6 +31,7 @@ const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): Document
 const AspiranteDocumentosPage = () => {
   const { session } = useAuth()
   const hasFetchedRef = useRef(false)
+  const hasLoggedRequiredCompletedRef = useRef(false)
   const [items, setItems] = useState<DocumentUploadItem[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -82,6 +83,23 @@ const AspiranteDocumentosPage = () => {
   const progresoObligatorios = obligatoriosTotales
     ? Math.round((obligatoriosCargados / obligatoriosTotales) * 100)
     : 100
+
+  useEffect(() => {
+    const allRequiredUploaded =
+      obligatoriosTotales > 0 && obligatoriosCargados === obligatoriosTotales
+
+    if (allRequiredUploaded && !hasLoggedRequiredCompletedRef.current) {
+      console.log(
+        '[AspiranteDocumentos] mock-event: último documento obligatorio cargado, checklist completo.',
+      )
+      hasLoggedRequiredCompletedRef.current = true
+      return
+    }
+
+    if (!allRequiredUploaded) {
+      hasLoggedRequiredCompletedRef.current = false
+    }
+  }, [obligatoriosCargados, obligatoriosTotales])
 
   const handleSelectFile = useCallback((id: number, file: File | null) => {
     setItems((prev) =>

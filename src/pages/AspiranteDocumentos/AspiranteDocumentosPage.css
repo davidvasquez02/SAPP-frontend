@@ -1,40 +1,41 @@
 .aspirante-documentos {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .aspirante-documentos__header {
   display: grid;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  gap: 0.9rem;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--outline), transparent 78%);
 }
 
 .aspirante-documentos__title {
   margin: 0;
-  font-size: 1.6rem;
-  color: #0f172a;
+  font-size: 1.5rem;
+  color: var(--text-primary);
 }
 
 .aspirante-documentos__summary {
   margin: 0.25rem 0 0;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
 .aspirante-documentos__progress {
   position: relative;
   height: 0.6rem;
-  background: #e2e8f0;
+  background: color-mix(in srgb, var(--outline), transparent 48%);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .aspirante-documentos__progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  background: var(--primary);
   transition: width 0.3s ease;
 }
 
@@ -47,13 +48,13 @@
   margin: 0;
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
+  border: 1px solid color-mix(in srgb, #ef4444, transparent 72%);
 }
 
 .aspirante-documentos__empty {
   margin: 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }

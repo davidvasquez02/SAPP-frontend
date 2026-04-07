@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 7, 2026 (latest): aspirante document upload screen (`/aspirante/documentos`) was visually aligned with the institutional SAPP style system. The page header and cards now use semantic theme tokens (`--surface`, `--outline`, `--primary`, etc.), rounded card containers, softer shadows, and pill-style actions compatible with light/dark modes.
+- April 7, 2026 (latest): added a mock completion event for aspirante required documents. When the **last required document** is successfully uploaded (required progress reaches 100%), frontend logs: `[AspiranteDocumentos] mock-event: último documento obligatorio cargado, checklist completo.` The trigger is guarded to avoid duplicate logs while checklist remains complete.
 - April 7, 2026 (latest): adjusted inscripción-detail state transition in secretaría/coordinación flow. When opening **Documentos cargados**, frontend now calls `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` (endpoint swap from `cambioEstadoPorVal`) and only triggers it when previous estado normalizes to `POR_VALIDAR_DOCUMENTOS`.
 - April 6, 2026 (latest): Admisiones evaluación UI (Hoja de vida y Examen) was upgraded for COORDINADOR with full-width responsive layout. `EvaluacionEtapaSection` removed the `Evaluador` column, reordered table columns to keep `Nota` as the final emphasized field (right aligned / stronger weight), and upgraded `Consideraciones` rendering to full callout blocks with JSON pretty-print fallback when payload looks like JSON text.
 - April 6, 2026 (latest): Hoja de vida now includes inline PDF preview in `EvaluacionEtapaPage` by loading checklist docs from `GET /sapp/document?codigoTipoTramite=1002&tramiteId={inscripcionId}` (through shared `getDocumentosByTramite`), locating a probable HV document via name/code heuristics (`HOJA DE VIDA`, `HOJA`, `HV`), and rendering `iframe` preview + `Abrir`/`Descargar`. If no file matches or file has no base64 payload, the page shows a clear fallback message.
@@ -262,6 +264,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 7, 2026 after aspirante documentos visual integration + required-doc completion mock event logging.
 - `npm run build` ✅ passes on April 7, 2026 after changing inscripción-detail documentos transition to `cambioEstadoVal` + `POR_VALIDAR_DOCUMENTOS` gate.
 - `npm run build` ✅ passes on April 6, 2026 after Admisiones evaluación UI changes (full-width layout + tabla reordenada + consideraciones callout/JSON + visor PDF hoja de vida).
 - `npm run lint` ⚠️ fails on April 6, 2026 due to pre-existing repo-wide ESLint errors outside this change scope (e.g., explicit `any` in `src/api/*Service.ts`, react-hooks purity/set-state-in-effect warnings in solicitudes/protected routes, and context export fast-refresh rule); no new lint errors were introduced by touched admisiones files.
