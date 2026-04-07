@@ -25,6 +25,12 @@ const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): Document
     uploadedFileName: isUploaded
       ? documento.documentoUploadedResponse?.nombreArchivoDocumento
       : undefined,
+    uploadedBase64: isUploaded
+      ? documento.documentoUploadedResponse?.base64DocumentoContenido
+      : undefined,
+    uploadedMimeType: isUploaded
+      ? documento.documentoUploadedResponse?.mimeTypeDocumentoContenido
+      : undefined,
   }
 }
 

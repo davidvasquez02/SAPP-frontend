@@ -14,5 +14,7 @@ export interface DocumentUploadItem {
   status: UploadStatus
   selectedFile: File | null
   uploadedFileName?: string
+  uploadedBase64?: string
+  uploadedMimeType?: string
   errorMessage?: string
 }
