@@ -42,9 +42,9 @@ const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? '').trim().toUpperCase().replace(/\s+/g, '_')
 
-const isEstadoEnConstruccion = (estado?: string | null) => {
+const isEstadoPorValidarDocumentos = (estado?: string | null) => {
   const normalized = normalizeEstado(estado)
-  return normalized === 'EN_CONSTRUCCION'
+  return normalized === 'POR_VALIDAR_DOCUMENTOS'
 }
 
 const InscripcionAdmisionDetallePage = () => {
@@ -187,7 +187,7 @@ const InscripcionAdmisionDetallePage = () => {
     }
 
     const hasValidInscripcionId = !Number.isNaN(parsedInscripcionId)
-    const isEnConstruccion = isEstadoEnConstruccion(inscripcionEstado)
+    const isPorValidarDocumentos = isEstadoPorValidarDocumentos(inscripcionEstado)
     const alreadyTriggered = hasValidInscripcionId
       ? Boolean(didCambioEstadoValRef.current[parsedInscripcionId])
       : false
@@ -196,7 +196,7 @@ const InscripcionAdmisionDetallePage = () => {
       console.debug('[INSCRIPCION_ESTADO] open DOCUMENTOS detected', {
         inscripcionId: hasValidInscripcionId ? parsedInscripcionId : null,
         estado: inscripcionEstado,
-        isEnConstruccion,
+        isPorValidarDocumentos,
         alreadyTriggered,
       })
     }
@@ -205,10 +205,10 @@ const InscripcionAdmisionDetallePage = () => {
       return
     }
 
-    if (!isEnConstruccion) {
+    if (!isPorValidarDocumentos) {
       if (import.meta.env.DEV) {
-        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoPorVal', {
-          reason: 'not_en_construccion',
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
+          reason: 'not_por_validar_documentos',
           inscripcionId: parsedInscripcionId,
         })
       }
@@ -217,7 +217,7 @@ const InscripcionAdmisionDetallePage = () => {
 
     if (alreadyTriggered) {
       if (import.meta.env.DEV) {
-        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoPorVal', {
+        console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
           reason: 'already_triggered',
           inscripcionId: parsedInscripcionId,
         })
@@ -231,21 +231,21 @@ const InscripcionAdmisionDetallePage = () => {
     void (async () => {
       try {
         if (import.meta.env.DEV) {
-          console.debug('[INSCRIPCION_ESTADO] calling PUT cambioEstadoPorVal', {
+          console.debug('[INSCRIPCION_ESTADO] calling PUT cambioEstadoVal', {
             inscripcionId: parsedInscripcionId,
           })
         }
         await cambiarEstadoInscripcionVal(parsedInscripcionId)
         didCambioEstadoValRef.current[parsedInscripcionId] = true
         if (import.meta.env.DEV) {
-          console.debug('[INSCRIPCION_ESTADO] cambioEstadoPorVal OK', {
+          console.debug('[INSCRIPCION_ESTADO] cambioEstadoVal OK', {
             inscripcionId: parsedInscripcionId,
           })
         }
         await reloadInscripcionDetalle()
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.error('[INSCRIPCION_ESTADO] cambioEstadoPorVal ERROR', {
+          console.error('[INSCRIPCION_ESTADO] cambioEstadoVal ERROR', {
             inscripcionId: parsedInscripcionId,
             error: error instanceof Error ? error.message : String(error),
           })
