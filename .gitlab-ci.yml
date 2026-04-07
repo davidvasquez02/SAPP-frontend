@@ -9,16 +9,17 @@ variables:
 include:
   - project: "infraestructure/gitlab-ci-templates"
     file: "/build/react-build.yml"
-    ref: v4.0.5
+    ref: v4.0.6
   - project: "infraestructure/gitlab-ci-templates"
     file: "/docker/docker-push.yml"
-    ref: v4.0.5
+    ref: v4.0.6
   - project: "infraestructure/gitlab-ci-templates"
     file: "/deploy/trigger-infra.yml"
-    ref: v4.0.5
+    ref: v4.0.6
 
 react_build:
   variables:
+    IMAGE: "node:24-alpine" 
     BUILD_DIR: "dist"
 
 trigger_deploy:

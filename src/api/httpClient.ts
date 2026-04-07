@@ -10,7 +10,7 @@ export async function request<T>(input: RequestInfo, init: RequestOptions = {}):
   const headers = new Headers(init.headers)
 
   if (!skipAuth && session?.accessToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${session.accessToken}`)
+    //  headers.set('Authorization', `Bearer ${session.accessToken}`)
   }
 
   const response = await fetch(input, {
