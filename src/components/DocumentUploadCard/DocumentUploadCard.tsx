@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react'
 import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
+import { openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './DocumentUploadCard.css'
 
 interface DocumentUploadCardProps {
@@ -12,10 +13,18 @@ interface DocumentUploadCardProps {
 
 const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
   NOT_SELECTED: 'Pendiente',
-  READY_TO_UPLOAD: 'Listo para subir',
+  READY_TO_UPLOAD: 'Archivo seleccionado',
   UPLOADING: 'Subiendo…',
   UPLOADED: 'Cargado ✅',
   ERROR: 'Error ❌',
+}
+
+const getStatusLabel = (item: DocumentUploadItem): string => {
+  if (item.status === 'READY_TO_UPLOAD' && item.selectedFile) {
+    return item.selectedFile.name
+  }
+
+  return STATUS_LABELS[item.status]
 }
 
 const getUploadButtonLabel = (status: DocumentUploadItem['status']): string => {
@@ -41,6 +50,8 @@ export const DocumentUploadCard = ({
   const statusClass = `document-upload-card__status document-upload-card__status--${item.status.toLowerCase()}`
   const uploadedFileName = item.status === 'UPLOADED' ? item.uploadedFileName : undefined
   const fileName = item.selectedFile?.name ?? uploadedFileName
+  const canOpenUploadedFile =
+    item.status === 'UPLOADED' && item.uploadedBase64 != null && item.uploadedMimeType != null
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -70,7 +81,7 @@ export const DocumentUploadCard = ({
       ) : null}
 
       <div className="document-upload-card__status-row">
-        <span className={statusClass}>{STATUS_LABELS[item.status]}</span>
+        <span className={statusClass}>{getStatusLabel(item)}</span>
         {fileName ? (
           <span className="document-upload-card__filename">Archivo: {fileName}</span>
         ) : (
@@ -108,6 +119,16 @@ export const DocumentUploadCard = ({
             disabled={disabled || !item.selectedFile || item.status === 'UPLOADING'}
           >
             {getUploadButtonLabel(item.status)}
+          </button>
+        ) : null}
+        {canOpenUploadedFile ? (
+          <button
+            type="button"
+            className="document-upload-card__button document-upload-card__button--ghost"
+            onClick={() => openBase64InNewTab(item.uploadedBase64!, item.uploadedMimeType!, item.uploadedFileName)}
+            disabled={disabled}
+          >
+            Ver documento
           </button>
         ) : null}
       </div>

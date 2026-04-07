@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 7, 2026 (latest): aspirante upload cards now display the selected filename directly in the status chip (replacing “Listo para subir”) and expose a new “Ver documento” action after successful upload to open the stored base64 file in a new tab.
 - April 7, 2026 (latest): aspirante document upload screen (`/aspirante/documentos`) was visually aligned with the institutional SAPP style system. The page header and cards now use semantic theme tokens (`--surface`, `--outline`, `--primary`, etc.), rounded card containers, softer shadows, and pill-style actions compatible with light/dark modes.
 - April 7, 2026 (latest): added a mock completion event for aspirante required documents. When the **last required document** is successfully uploaded (required progress reaches 100%), frontend logs: `[AspiranteDocumentos] mock-event: último documento obligatorio cargado, checklist completo.` The trigger is guarded to avoid duplicate logs while checklist remains complete.
 - April 7, 2026 (latest): adjusted inscripción-detail state transition in secretaría/coordinación flow. When opening **Documentos cargados**, frontend now calls `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` (endpoint swap from `cambioEstadoPorVal`) and only triggers it when previous estado normalizes to `POR_VALIDAR_DOCUMENTOS`.
