@@ -80,6 +80,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 8, 2026: se corrigió el guardado de investigación en `/aspirante/documentos` para normalizar `session.user.id` a número (`Number(...)`) antes de validar y ejecutar `PUT /sapp/aspirante`; con esto se evita omitir la llamada cuando el backend/session serializa el id como string.
 - April 8, 2026: en `/aspirante/documentos`, el botón **Agregar información** de la tarjeta de investigación dejó de ser mock; ahora ejecuta `PUT /sapp/aspirante` con payload `{ id, grupoInvestigacionId, directorId }`, maneja estado de guardado (`Guardando información...`), y mantiene bloqueados los combos después de una actualización exitosa.
 - April 8, 2026: en `/aspirante/documentos`, la tarjeta de investigación dejó de usar catálogos mock hardcodeados y ahora consume APIs reales: `GET /sapp/gruposInvestigacion` para cargar grupos y `GET /sapp/gruposInvestigacionDocentes?grupoId={id}&query=` para poblar directores según grupo seleccionado.
 - April 8, 2026: en `/aspirante/documentos` la tarjeta de **Información de investigación** ahora incluye botón **“Agregar información”** con comportamiento mockeado; al registrar la información se deshabilitan ambos combos (`Grupo de investigación` y `Director del grupo de investigación`) para simular estado bloqueado tras guardado.
