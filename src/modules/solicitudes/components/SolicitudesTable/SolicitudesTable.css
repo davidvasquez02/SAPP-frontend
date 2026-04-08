@@ -29,7 +29,12 @@
 
 
 .solicitudes-table__observaciones {
+  width: 260px;
+  min-width: 260px;
   max-width: 260px;
+}
+
+.solicitudes-table__observaciones-text {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -88,7 +93,12 @@
   }
 
   .solicitudes-table__observaciones {
+    width: auto;
+    min-width: 0;
     max-width: none;
+  }
+
+  .solicitudes-table__observaciones-text {
     -webkit-line-clamp: unset;
     line-clamp: unset;
   }

@@ -73,7 +73,9 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                 <td data-label="Fecha resolución">{formatDate(row.fechaResolucion)}</td>
                 <td data-label="Programa">{row.programaAcademico}</td>
                 <td className="solicitudes-table__observaciones" data-label="Observaciones">
-                  {getCellText(row.observaciones, 'Sin observaciones.')}
+                  <span className="solicitudes-table__observaciones-text">
+                    {getCellText(row.observaciones, 'Sin observaciones.')}
+                  </span>
                 </td>
               </tr>
             )

@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 8, 2026 (latest): fixed visual misalignment in `/solicitudes` table for **Observaciones** column. The line-clamp styling was moved from the `<td>` to an inner `<span>` so the cell keeps native `table-cell` behavior; column width is now fixed to 260px on desktop, which keeps observation content blocks uniform and row separators aligned across all columns.
 - April 8, 2026 (latest): fixed admin/coordinator solicitudes table layout on missing description text. `SolicitudesTable` now normalizes empty textual fields and shows explicit fallbacks (`Sin descripción.` / `Sin observaciones.`), preventing row desalignment when backend returns blank strings; the **ID** column was also removed from the table per UX decision.
 - April 8, 2026 (latest): fixed investigación save trigger in `/aspirante/documentos` by normalizing aspirante id from session (`Number(session.user.id)`) before validation. This prevents false client-side validation failures when `id` arrives as string and guarantees `PUT /sapp/aspirante` is fired after clicking **Agregar información** with valid selections.
 - April 8, 2026 (latest): `/aspirante/documentos` investigación card now persists data with backend. Clicking **Agregar información** executes `PUT /sapp/aspirante` with `{ id, grupoInvestigacionId, directorId }` using new `updateAspiranteInvestigacion` service; button shows `Guardando información...`, and combos stay disabled only after successful save.
@@ -271,6 +272,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 8, 2026 after fixing `/solicitudes` Observaciones column alignment (uniform width + aligned row separators) by moving clamp styles to inner content instead of the `<td>`.
 - `npm run build` ✅ passes on April 8, 2026 after fixing admin `/solicitudes` table alignment for empty description/observations and removing the ID column in `SolicitudesTable`.
 - `npm run build` ✅ passes on April 8, 2026 after wiring investigación save to real backend update (`PUT /sapp/aspirante`) with loading/error handling on “Agregar información”.
 - `npm run build` ✅ passes on April 8, 2026 after wiring investigación combos to real catalog endpoints (`gruposInvestigacion` + `gruposInvestigacionDocentes`).
