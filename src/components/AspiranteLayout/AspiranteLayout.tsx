@@ -37,42 +37,42 @@ const AspiranteLayout = () => {
         <div className="aspirante-layout__identity">
           <p className="aspirante-layout__eyebrow">SAPP – Aspirantes</p>
           <h1 className="aspirante-layout__name">{nombre ?? 'Aspirante'}</h1>
-          <div className="aspirante-layout__meta-grid">
-            <p className="aspirante-layout__meta">
-              <span className="aspirante-layout__meta-label">Inscripción</span>
-              <span>{numeroInscripcion}</span>
-            </p>
-            <p className="aspirante-layout__meta">
-              <span className="aspirante-layout__meta-label">Documento</span>
-              <span>
+          <dl className="aspirante-layout__meta-list">
+            <div className="aspirante-layout__meta-item">
+              <dt className="aspirante-layout__meta-label">Inscripción</dt>
+              <dd className="aspirante-layout__meta-value">{numeroInscripcion}</dd>
+            </div>
+            <div className="aspirante-layout__meta-item">
+              <dt className="aspirante-layout__meta-label">Documento</dt>
+              <dd className="aspirante-layout__meta-value">
                 {tipoDocumento} {numeroDocumento}
-              </span>
-            </p>
+              </dd>
+            </div>
             {grupoInvestigacion ? (
-              <p className="aspirante-layout__meta">
-                <span className="aspirante-layout__meta-label">Grupo</span>
-                <span>{grupoInvestigacion}</span>
-              </p>
+              <div className="aspirante-layout__meta-item">
+                <dt className="aspirante-layout__meta-label">Grupo</dt>
+                <dd className="aspirante-layout__meta-value">{grupoInvestigacion}</dd>
+              </div>
             ) : null}
             {director ? (
-              <p className="aspirante-layout__meta">
-                <span className="aspirante-layout__meta-label">Director</span>
-                <span>{director}</span>
-              </p>
+              <div className="aspirante-layout__meta-item">
+                <dt className="aspirante-layout__meta-label">Director</dt>
+                <dd className="aspirante-layout__meta-value">{director}</dd>
+              </div>
             ) : null}
             {telefono ? (
-              <p className="aspirante-layout__meta">
-                <span className="aspirante-layout__meta-label">Teléfono</span>
-                <span>{telefono}</span>
-              </p>
+              <div className="aspirante-layout__meta-item">
+                <dt className="aspirante-layout__meta-label">Teléfono</dt>
+                <dd className="aspirante-layout__meta-value">{telefono}</dd>
+              </div>
             ) : null}
             {emailPersonal ? (
-              <p className="aspirante-layout__meta">
-                <span className="aspirante-layout__meta-label">Email</span>
-                <span>{emailPersonal}</span>
-              </p>
+              <div className="aspirante-layout__meta-item">
+                <dt className="aspirante-layout__meta-label">Email</dt>
+                <dd className="aspirante-layout__meta-value">{emailPersonal}</dd>
+              </div>
             ) : null}
-          </div>
+          </dl>
         </div>
         <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
           Cerrar sesión
