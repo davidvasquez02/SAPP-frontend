@@ -50,6 +50,26 @@ const AspiranteDocumentosPage = () => {
   const hasFetchedRef = useRef(false)
   const [items, setItems] = useState<DocumentUploadItem[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [grupoInvestigacionId, setGrupoInvestigacionId] = useState('')
+  const [directorGrupoId, setDirectorGrupoId] = useState('')
+
+  const gruposInvestigacion = useMemo(
+    () => [
+      { id: 'griasis', nombre: 'GRIASIS - Grupo de Investigación en Sistemas e Informática' },
+      { id: 'nuevastecsw', nombre: 'NUEVASTECSW - Nuevas Tecnologías de Software' },
+      { id: 'gti', nombre: 'GTI - Gestión de Tecnología e Innovación' },
+    ],
+    [],
+  )
+
+  const directoresGrupo = useMemo(
+    () => [
+      { id: 'dir-1', nombre: 'Dr. Carlos Andrés Gómez' },
+      { id: 'dir-2', nombre: 'Dra. María Fernanda Rojas' },
+      { id: 'dir-3', nombre: 'Dr. Juan Camilo Suárez' },
+    ],
+    [],
+  )
 
   useEffect(() => {
     if (!session || session.kind !== 'ASPIRANTE') {
@@ -257,6 +277,45 @@ const AspiranteDocumentosPage = () => {
           ))
         )}
       </div>
+
+      <section className="aspirante-documentos__investigacion-card" aria-label="Información de investigación">
+        <h2 className="aspirante-documentos__investigacion-title">Información de investigación</h2>
+        <p className="aspirante-documentos__investigacion-helper">
+          Seleccione su grupo de investigación y el director del grupo.
+        </p>
+
+        <div className="aspirante-documentos__investigacion-grid">
+          <label className="aspirante-documentos__field">
+            <span>Grupo de investigación</span>
+            <select
+              value={grupoInvestigacionId}
+              onChange={(event) => setGrupoInvestigacionId(event.target.value)}
+            >
+              <option value="">Seleccione un grupo</option>
+              {gruposInvestigacion.map((grupo) => (
+                <option key={grupo.id} value={grupo.id}>
+                  {grupo.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="aspirante-documentos__field">
+            <span>Director del grupo de investigación</span>
+            <select
+              value={directorGrupoId}
+              onChange={(event) => setDirectorGrupoId(event.target.value)}
+            >
+              <option value="">Seleccione un director</option>
+              {directoresGrupo.map((director) => (
+                <option key={director.id} value={director.id}>
+                  {director.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
     </section>
   )
 }

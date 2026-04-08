@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 8, 2026 (latest): in `/aspirante/documentos`, a new card **“Información de investigación”** was added below the document checklist with two select combos: **Grupo de investigación** and **Director del grupo de investigación**. The UI follows existing SAPP visual tokens and supports light/dark themes.
 - April 8, 2026 (latest): aspirante document upload flow now triggers backend state transition automatically when the user uploads the **last required document**. In `AspiranteDocumentosPage`, after a successful `POST /sapp/document`, frontend checks required-doc completion transition (`incomplete -> complete`) and fires `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` in background (no UI feedback/toast). Initial checklist load no longer triggers this event.
 - April 7, 2026 (latest): aspirante upload cards now display the selected filename directly in the status chip (replacing “Listo para subir”) and expose a new “Ver documento” action after successful upload to open the stored base64 file in a new tab.
 - April 7, 2026 (latest): aspirante document upload screen (`/aspirante/documentos`) was visually aligned with the institutional SAPP style system. The page header and cards now use semantic theme tokens (`--surface`, `--outline`, `--primary`, etc.), rounded card containers, softer shadows, and pill-style actions compatible with light/dark modes.
@@ -265,6 +266,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 8, 2026 after adding the new investigación card and both combos in aspirante documentos (`/aspirante/documentos`).
 - `npm run build` ✅ passes on April 7, 2026 after aspirante documentos visual integration + required-doc completion mock event logging.
 - `npm run build` ✅ passes on April 7, 2026 after changing inscripción-detail documentos transition to `cambioEstadoVal` + `POR_VALIDAR_DOCUMENTOS` gate.
 - `npm run build` ✅ passes on April 6, 2026 after Admisiones evaluación UI changes (full-width layout + tabla reordenada + consideraciones callout/JSON + visor PDF hoja de vida).
