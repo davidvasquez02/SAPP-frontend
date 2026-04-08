@@ -81,6 +81,16 @@
     font-size: 0.92rem;
 }
 
+.aspirante-documentos__investigacion-error {
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+    color: #991b1b;
+    border: 1px solid color-mix(in srgb, #ef4444, transparent 72%);
+    font-size: 0.88rem;
+}
+
 .aspirante-documentos__investigacion-grid {
     display: grid;
     gap: 1rem;
@@ -107,6 +117,39 @@
 .aspirante-documentos__field select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 75%);
+}
+
+.aspirante-documentos__field select:disabled {
+    opacity: 0.72;
+    cursor: not-allowed;
+}
+
+.aspirante-documentos__investigacion-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.aspirante-documentos__investigacion-add-button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.72rem 1.2rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.aspirante-documentos__investigacion-add-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+.aspirante-documentos__investigacion-add-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 @media (min-width: 760px) {

@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 8, 2026 (latest): investigación card in `/aspirante/documentos` now loads catalog data from backend endpoints (`GET /sapp/gruposInvestigacion` and `GET /sapp/gruposInvestigacionDocentes?grupoId={id}&query=`) instead of static frontend mocks; docentes list refreshes when `grupoId` changes.
+- April 8, 2026 (latest): `/aspirante/documentos` investigación card now has a mock **“Agregar información”** button. Once both combos are selected and the action is triggered, frontend marks the info as added and disables both combos to prevent additional edits in the same session state.
 - April 8, 2026 (latest): in `/aspirante/documentos`, a new card **“Información de investigación”** was added below the document checklist with two select combos: **Grupo de investigación** and **Director del grupo de investigación**. The UI follows existing SAPP visual tokens and supports light/dark themes.
 - April 8, 2026 (latest): aspirante document upload flow now triggers backend state transition automatically when the user uploads the **last required document**. In `AspiranteDocumentosPage`, after a successful `POST /sapp/document`, frontend checks required-doc completion transition (`incomplete -> complete`) and fires `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` in background (no UI feedback/toast). Initial checklist load no longer triggers this event.
 - April 7, 2026 (latest): aspirante upload cards now display the selected filename directly in the status chip (replacing “Listo para subir”) and expose a new “Ver documento” action after successful upload to open the stored base64 file in a new tab.
@@ -266,6 +268,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 8, 2026 after wiring investigación combos to real catalog endpoints (`gruposInvestigacion` + `gruposInvestigacionDocentes`) and keeping mock save/lock behavior.
+- `npm run build` ✅ passes on April 8, 2026 after adding mock `Agregar información` action in aspirante documentos and disabling investigación combos after submit.
 - `npm run build` ✅ passes on April 8, 2026 after adding the new investigación card and both combos in aspirante documentos (`/aspirante/documentos`).
 - `npm run build` ✅ passes on April 7, 2026 after aspirante documentos visual integration + required-doc completion mock event logging.
 - `npm run build` ✅ passes on April 7, 2026 after changing inscripción-detail documentos transition to `cambioEstadoVal` + `POR_VALIDAR_DOCUMENTOS` gate.

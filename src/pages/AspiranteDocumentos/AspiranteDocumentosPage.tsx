@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getChecklistDocumentos } from '../../api/documentChecklistService'
 import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
+import { getDocentesGrupoInvestigacion, getGruposInvestigacion } from '../../api/gruposInvestigacionService'
+import type {
+  GrupoInvestigacionDocenteDto,
+  GrupoInvestigacionDto,
+} from '../../api/gruposInvestigacionTypes'
 import { uploadDocument } from '../../api/documentUploadService'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
@@ -52,24 +57,85 @@ const AspiranteDocumentosPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [grupoInvestigacionId, setGrupoInvestigacionId] = useState('')
   const [directorGrupoId, setDirectorGrupoId] = useState('')
+  const [infoInvestigacionAgregada, setInfoInvestigacionAgregada] = useState(false)
+  const [gruposInvestigacion, setGruposInvestigacion] = useState<GrupoInvestigacionDto[]>([])
+  const [directoresGrupo, setDirectoresGrupo] = useState<GrupoInvestigacionDocenteDto[]>([])
+  const [isLoadingGrupos, setIsLoadingGrupos] = useState(false)
+  const [isLoadingDocentes, setIsLoadingDocentes] = useState(false)
+  const [investigacionErrorMessage, setInvestigacionErrorMessage] = useState<string | null>(null)
 
-  const gruposInvestigacion = useMemo(
-    () => [
-      { id: 'griasis', nombre: 'GRIASIS - Grupo de Investigación en Sistemas e Informática' },
-      { id: 'nuevastecsw', nombre: 'NUEVASTECSW - Nuevas Tecnologías de Software' },
-      { id: 'gti', nombre: 'GTI - Gestión de Tecnología e Innovación' },
-    ],
-    [],
-  )
+  useEffect(() => {
+    let isMounted = true
 
-  const directoresGrupo = useMemo(
-    () => [
-      { id: 'dir-1', nombre: 'Dr. Carlos Andrés Gómez' },
-      { id: 'dir-2', nombre: 'Dra. María Fernanda Rojas' },
-      { id: 'dir-3', nombre: 'Dr. Juan Camilo Suárez' },
-    ],
-    [],
-  )
+    const fetchGrupos = async () => {
+      setIsLoadingGrupos(true)
+      setInvestigacionErrorMessage(null)
+
+      try {
+        const grupos = await getGruposInvestigacion()
+        if (!isMounted) {
+          return
+        }
+        setGruposInvestigacion(grupos)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+        const message = error instanceof Error ? error.message : 'Error consultando grupos de investigación.'
+        setInvestigacionErrorMessage(message)
+      } finally {
+        if (isMounted) {
+          setIsLoadingGrupos(false)
+        }
+      }
+    }
+
+    void fetchGrupos()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!grupoInvestigacionId) {
+      setDirectoresGrupo([])
+      setDirectorGrupoId('')
+      return
+    }
+
+    let isMounted = true
+    const fetchDocentesGrupo = async () => {
+      setIsLoadingDocentes(true)
+      setInvestigacionErrorMessage(null)
+      setDirectorGrupoId('')
+
+      try {
+        const docentes = await getDocentesGrupoInvestigacion(Number(grupoInvestigacionId))
+        if (!isMounted) {
+          return
+        }
+        setDirectoresGrupo(docentes)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+        const message = error instanceof Error ? error.message : 'Error consultando docentes del grupo.'
+        setInvestigacionErrorMessage(message)
+        setDirectoresGrupo([])
+      } finally {
+        if (isMounted) {
+          setIsLoadingDocentes(false)
+        }
+      }
+    }
+
+    void fetchDocentesGrupo()
+
+    return () => {
+      isMounted = false
+    }
+  }, [grupoInvestigacionId])
 
   useEffect(() => {
     if (!session || session.kind !== 'ASPIRANTE') {
@@ -242,6 +308,13 @@ const AspiranteDocumentosPage = () => {
     [items, session],
   )
 
+  const handleAgregarInformacionInvestigacion = useCallback(() => {
+    setInfoInvestigacionAgregada(true)
+  }, [])
+
+  const investigacionListaParaAgregar =
+    grupoInvestigacionId.trim().length > 0 && directorGrupoId.trim().length > 0
+
   return (
     <section className="aspirante-documentos">
       <header className="aspirante-documentos__header">
@@ -289,12 +362,21 @@ const AspiranteDocumentosPage = () => {
             <span>Grupo de investigación</span>
             <select
               value={grupoInvestigacionId}
-              onChange={(event) => setGrupoInvestigacionId(event.target.value)}
+              onChange={(event) => {
+                setGrupoInvestigacionId(event.target.value)
+                setInfoInvestigacionAgregada(false)
+              }}
+              disabled={infoInvestigacionAgregada || isLoadingGrupos}
             >
               <option value="">Seleccione un grupo</option>
+              {isLoadingGrupos ? (
+                <option value="" disabled>
+                  Cargando grupos...
+                </option>
+              ) : null}
               {gruposInvestigacion.map((grupo) => (
-                <option key={grupo.id} value={grupo.id}>
-                  {grupo.nombre}
+                <option key={grupo.id} value={String(grupo.id)}>
+                  {grupo.codigoNombre}
                 </option>
               ))}
             </select>
@@ -304,16 +386,39 @@ const AspiranteDocumentosPage = () => {
             <span>Director del grupo de investigación</span>
             <select
               value={directorGrupoId}
-              onChange={(event) => setDirectorGrupoId(event.target.value)}
+              onChange={(event) => {
+                setDirectorGrupoId(event.target.value)
+                setInfoInvestigacionAgregada(false)
+              }}
+              disabled={infoInvestigacionAgregada || !grupoInvestigacionId || isLoadingDocentes}
             >
               <option value="">Seleccione un director</option>
+              {isLoadingDocentes ? (
+                <option value="" disabled>
+                  Cargando directores...
+                </option>
+              ) : null}
               {directoresGrupo.map((director) => (
-                <option key={director.id} value={director.id}>
-                  {director.nombre}
+                <option key={director.id} value={String(director.id)}>
+                  {director.nombre.trim().replace(/\s+/g, ' ')}
                 </option>
               ))}
             </select>
           </label>
+        </div>
+        {investigacionErrorMessage ? (
+          <p className="aspirante-documentos__investigacion-error">{investigacionErrorMessage}</p>
+        ) : null}
+
+        <div className="aspirante-documentos__investigacion-actions">
+          <button
+            type="button"
+            className="aspirante-documentos__investigacion-add-button"
+            onClick={handleAgregarInformacionInvestigacion}
+            disabled={infoInvestigacionAgregada || !investigacionListaParaAgregar}
+          >
+            {infoInvestigacionAgregada ? 'Información agregada' : 'Agregar información'}
+          </button>
         </div>
       </section>
     </section>
