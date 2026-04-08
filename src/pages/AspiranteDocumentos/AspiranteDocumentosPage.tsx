@@ -4,6 +4,7 @@ import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
 import { uploadDocument } from '../../api/documentUploadService'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
+import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
 import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos/constants'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
@@ -34,10 +35,19 @@ const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): Document
   }
 }
 
+const areRequiredDocumentsComplete = (documentos: Pick<DocumentUploadItem, 'obligatorio' | 'status'>[]) => {
+  const obligatorios = documentos.filter((documento) => documento.obligatorio)
+
+  if (obligatorios.length === 0) {
+    return false
+  }
+
+  return obligatorios.every((documento) => documento.status === 'UPLOADED')
+}
+
 const AspiranteDocumentosPage = () => {
   const { session } = useAuth()
   const hasFetchedRef = useRef(false)
-  const hasLoggedRequiredCompletedRef = useRef(false)
   const [items, setItems] = useState<DocumentUploadItem[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -89,23 +99,6 @@ const AspiranteDocumentosPage = () => {
   const progresoObligatorios = obligatoriosTotales
     ? Math.round((obligatoriosCargados / obligatoriosTotales) * 100)
     : 100
-
-  useEffect(() => {
-    const allRequiredUploaded =
-      obligatoriosTotales > 0 && obligatoriosCargados === obligatoriosTotales
-
-    if (allRequiredUploaded && !hasLoggedRequiredCompletedRef.current) {
-      console.log(
-        '[AspiranteDocumentos] mock-event: último documento obligatorio cargado, checklist completo.',
-      )
-      hasLoggedRequiredCompletedRef.current = true
-      return
-    }
-
-    if (!allRequiredUploaded) {
-      hasLoggedRequiredCompletedRef.current = false
-    }
-  }, [obligatoriosCargados, obligatoriosTotales])
 
   const handleSelectFile = useCallback((id: number, file: File | null) => {
     setItems((prev) =>
@@ -176,6 +169,12 @@ const AspiranteDocumentosPage = () => {
           checksum,
         })
 
+        const checklistWasComplete = areRequiredDocumentsComplete(items)
+        const optimisticItems = items.map((current) =>
+          current.id === id ? { ...current, status: 'UPLOADED' as const } : current,
+        )
+        const checklistIsComplete = areRequiredDocumentsComplete(optimisticItems)
+
         setItems((prev) =>
           prev.map((current) =>
             current.id === id
@@ -189,6 +188,16 @@ const AspiranteDocumentosPage = () => {
               : current,
           ),
         )
+
+        if (!checklistWasComplete && checklistIsComplete) {
+          void cambiarEstadoInscripcionVal(tramiteId).catch((stateError) => {
+            const stateMessage = stateError instanceof Error ? stateError.message : String(stateError)
+            console.warn(
+              '[AspiranteDocumentos] no fue posible ejecutar cambioEstadoVal tras completar checklist:',
+              stateMessage,
+            )
+          })
+        }
 
         try {
           const documentos = await getChecklistDocumentos({
