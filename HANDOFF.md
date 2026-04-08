@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 8, 2026 (latest): `/aspirante/documentos` now maps backend document validation state directly from `documentoUploadedResponse.estadoDocumento`. Rows in `RECHAZADO` display rejection notes (`observacionesDocumento`) and are treated as pending until the aspirante uploads a replacement; `APROBADO` shows an approved state chip.
 - April 8, 2026 (latest): fixed visual misalignment in `/solicitudes` table for **Observaciones** column. The line-clamp styling was moved from the `<td>` to an inner `<span>` so the cell keeps native `table-cell` behavior; column width is now fixed to 260px on desktop, which keeps observation content blocks uniform and row separators aligned across all columns.
 - April 8, 2026 (latest): fixed admin/coordinator solicitudes table layout on missing description text. `SolicitudesTable` now normalizes empty textual fields and shows explicit fallbacks (`Sin descripción.` / `Sin observaciones.`), preventing row desalignment when backend returns blank strings; the **ID** column was also removed from the table per UX decision.
 - April 8, 2026 (latest): fixed investigación save trigger in `/aspirante/documentos` by normalizing aspirante id from session (`Number(session.user.id)`) before validation. This prevents false client-side validation failures when `id` arrives as string and guarantees `PUT /sapp/aspirante` is fired after clicking **Agregar información** with valid selections.
@@ -133,6 +134,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validar manualmente en navegador el flujo aspirante de documento **RECHAZADO**: debe mostrarse observación, permitir “Subir nuevamente”, y reflejar estado actualizado tras refrescar checklist.
 - Confirmar con backend un identificador canónico para documento de Hoja de Vida (ideal: `codigoTipoDocumentoTramite` fijo) para reemplazar la heurística textual actual (`HOJA DE VIDA`/`HOJA`/`HV`) y evitar falsos positivos/negativos.
 - Verificar con backend si existe endpoint de detalle directo por inscripción (ej. `GET /sapp/inscripcionAdmision/{id}`) para evitar recargar la lista completa de la convocatoria al refrescar el estado.
 - Confirmar contrato exacto de respuesta de `cambioEstadoVal` (si retorna `data.estado` definitivo) para evitar roundtrip adicional cuando sea posible.
@@ -161,6 +163,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
 1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
 2. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
 3. Si backend entrega código fijo de HV, reemplazar heurística por match determinístico y documentarlo en este handoff.
@@ -272,6 +275,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 8, 2026 after adding backend-driven state handling in aspirante checklist (`APROBADO`/`RECHAZADO`) with re-upload requirement for rejected docs.
 - `npm run build` ✅ passes on April 8, 2026 after fixing `/solicitudes` Observaciones column alignment (uniform width + aligned row separators) by moving clamp styles to inner content instead of the `<td>`.
 - `npm run build` ✅ passes on April 8, 2026 after fixing admin `/solicitudes` table alignment for empty description/observations and removing the ID column in `SolicitudesTable`.
 - `npm run build` ✅ passes on April 8, 2026 after wiring investigación save to real backend update (`PUT /sapp/aspirante`) with loading/error handling on “Agregar información”.

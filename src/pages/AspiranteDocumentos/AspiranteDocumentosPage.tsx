@@ -19,7 +19,18 @@ import type { AspiranteUser } from '../../context/Auth'
 import './AspiranteDocumentosPage.css'
 
 const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => {
-  const isUploaded = documento.documentoCargado === true && documento.documentoUploadedResponse != null
+  const uploaded = documento.documentoUploadedResponse
+  const isUploaded = documento.documentoCargado === true && uploaded != null
+  const estadoDocumento = uploaded?.estadoDocumento?.toUpperCase() ?? null
+
+  const status: DocumentUploadItem['status'] =
+    !isUploaded
+      ? 'NOT_SELECTED'
+      : estadoDocumento === 'APROBADO'
+        ? 'APPROVED'
+        : estadoDocumento === 'RECHAZADO'
+          ? 'REJECTED'
+          : 'UPLOADED'
 
   return {
     id: documento.idTipoDocumentoTramite,
@@ -27,17 +38,16 @@ const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): Document
     nombre: documento.nombreTipoDocumentoTramite,
     descripcion: documento.descripcionTipoDocumentoTramite,
     obligatorio: documento.obligatorioTipoDocumentoTramite,
-    status: isUploaded ? 'UPLOADED' : 'NOT_SELECTED',
+    status,
     selectedFile: null,
-    uploadedFileName: isUploaded
-      ? documento.documentoUploadedResponse?.nombreArchivoDocumento
-      : undefined,
-    uploadedBase64: isUploaded
-      ? documento.documentoUploadedResponse?.base64DocumentoContenido
-      : undefined,
-    uploadedMimeType: isUploaded
-      ? documento.documentoUploadedResponse?.mimeTypeDocumentoContenido
-      : undefined,
+    uploadedFileName: isUploaded ? uploaded?.nombreArchivoDocumento : undefined,
+    uploadedBase64: isUploaded ? uploaded?.base64DocumentoContenido : undefined,
+    uploadedMimeType: isUploaded ? uploaded?.mimeTypeDocumentoContenido : undefined,
+    backendEstadoDocumento: estadoDocumento ?? undefined,
+    rejectionReason:
+      estadoDocumento === 'RECHAZADO'
+        ? uploaded?.observacionesDocumento ?? 'Documento rechazado. Debe cargar una nueva versión.'
+        : undefined,
   }
 }
 
@@ -48,7 +58,7 @@ const areRequiredDocumentsComplete = (documentos: Pick<DocumentUploadItem, 'obli
     return false
   }
 
-  return obligatorios.every((documento) => documento.status === 'UPLOADED')
+  return obligatorios.every((documento) => documento.status === 'UPLOADED' || documento.status === 'APPROVED')
 }
 
 const AspiranteDocumentosPage = () => {
@@ -181,7 +191,10 @@ const AspiranteDocumentosPage = () => {
     [items],
   )
   const obligatoriosCargados = useMemo(
-    () => items.filter((item) => item.obligatorio && item.status === 'UPLOADED').length,
+    () =>
+      items.filter(
+        (item) => item.obligatorio && (item.status === 'UPLOADED' || item.status === 'APPROVED'),
+      ).length,
     [items],
   )
   const progresoObligatorios = obligatoriosTotales
@@ -197,6 +210,7 @@ const AspiranteDocumentosPage = () => {
               selectedFile: file,
               status: file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
               errorMessage: undefined,
+              rejectionReason: undefined,
             }
           : item,
       ),
@@ -272,6 +286,8 @@ const AspiranteDocumentosPage = () => {
                   uploadedFileName: uploaded.nombreArchivo,
                   selectedFile: null,
                   errorMessage: undefined,
+                  backendEstadoDocumento: undefined,
+                  rejectionReason: undefined,
                 }
               : current,
           ),

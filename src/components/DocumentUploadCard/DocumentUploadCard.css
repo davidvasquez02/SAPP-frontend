@@ -155,3 +155,24 @@
   color: #b91c1c;
   font-size: 0.85rem;
 }
+
+
+.document-upload-card__status--approved {
+  background: color-mix(in srgb, #22c55e, var(--surface) 84%);
+  color: #166534;
+}
+
+.document-upload-card__status--rejected {
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
+}
+
+.document-upload-card__warning {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #ef4444, var(--surface) 90%);
+  color: #991b1b;
+  border: 1px solid color-mix(in srgb, #ef4444, transparent 70%);
+  font-size: 0.85rem;
+}

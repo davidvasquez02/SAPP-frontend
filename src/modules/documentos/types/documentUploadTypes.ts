@@ -3,6 +3,8 @@ export type UploadStatus =
   | 'READY_TO_UPLOAD'
   | 'UPLOADING'
   | 'UPLOADED'
+  | 'APPROVED'
+  | 'REJECTED'
   | 'ERROR'
 
 export interface DocumentUploadItem {
@@ -16,5 +18,7 @@ export interface DocumentUploadItem {
   uploadedFileName?: string
   uploadedBase64?: string
   uploadedMimeType?: string
+  backendEstadoDocumento?: string
+  rejectionReason?: string
   errorMessage?: string
 }
