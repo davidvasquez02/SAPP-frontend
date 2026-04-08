@@ -63,7 +63,6 @@ export const DocumentUploadCard = ({
       <header className="document-upload-card__header">
         <div>
           <h3 className="document-upload-card__title">{item.nombre}</h3>
-          <p className="document-upload-card__code">Código: {item.codigo}</p>
         </div>
         <span
           className={

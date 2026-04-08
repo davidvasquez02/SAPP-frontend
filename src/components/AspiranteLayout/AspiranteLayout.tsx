@@ -43,9 +43,9 @@ const AspiranteLayout = () => {
               <dd className="aspirante-layout__meta-value">{numeroInscripcion}</dd>
             </div>
             <div className="aspirante-layout__meta-item">
-              <dt className="aspirante-layout__meta-label">Documento</dt>
+              <dt className="aspirante-layout__meta-label">{tipoDocumento} </dt>
               <dd className="aspirante-layout__meta-value">
-                {tipoDocumento} {numeroDocumento}
+                {numeroDocumento}
               </dd>
             </div>
             {grupoInvestigacion ? (

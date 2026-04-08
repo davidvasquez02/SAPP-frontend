@@ -1,77 +1,75 @@
 .module-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: clamp(1rem, 2.2vw, 2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: clamp(1rem, 2.2vw, 2rem);
 }
 
 .module-layout__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .module-layout__eyebrow {
-  margin: 0;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
 }
 
 .module-layout__title {
-  margin: 0.25rem 0 0;
-  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+    margin: 0.25rem 0 0;
+    font-size: clamp(1.2rem, 2.2vw, 1.65rem);
 }
 
 .module-layout__user {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: right;
 }
 
 .module-layout__user-name {
-  margin: 0;
-  font-weight: 600;
+    margin: 0;
+    font-weight: 600;
 }
 
 .module-layout__user-role {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 .module-layout__logout {
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
-  border-radius: 999px;
-  padding: 0.55rem 1.05rem;
-  background: var(--surface);
-  cursor: pointer;
-  font-weight: 600;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+    border-radius: 999px;
+    padding: 0.55rem 1.05rem;
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 600;
 }
 
 .module-layout__content {
-  background: var(--surface);
-  border-radius: var(--radius-card);
-  padding: clamp(1rem, 2.5vw, 2rem);
-  box-shadow: var(--shadow-soft);
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    padding: clamp(1rem, 2.5vw, 2rem);
+    box-shadow: var(--shadow-soft);
 }
 
 @media (max-width: 768px) {
-  .module-layout {
-    gap: 1rem;
-  }
-
-  .module-layout__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .module-layout__user {
-    width: 100%;
-    justify-content: space-between;
-    text-align: left;
-  }
+    .module-layout {
+        gap: 1rem;
+    }
+    .module-layout__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .module-layout__user {
+        width: 100%;
+        justify-content: space-between;
+        text-align: left;
+    }
 }
