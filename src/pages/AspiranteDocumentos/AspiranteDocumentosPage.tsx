@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getChecklistDocumentos } from '../../api/documentChecklistService'
 import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
 import { getDocentesGrupoInvestigacion, getGruposInvestigacion } from '../../api/gruposInvestigacionService'
+import { updateAspiranteInvestigacion } from '../../api/aspiranteService'
 import type {
   GrupoInvestigacionDocenteDto,
   GrupoInvestigacionDto,
@@ -63,6 +64,7 @@ const AspiranteDocumentosPage = () => {
   const [isLoadingGrupos, setIsLoadingGrupos] = useState(false)
   const [isLoadingDocentes, setIsLoadingDocentes] = useState(false)
   const [investigacionErrorMessage, setInvestigacionErrorMessage] = useState<string | null>(null)
+  const [isSavingInvestigacion, setIsSavingInvestigacion] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -308,9 +310,48 @@ const AspiranteDocumentosPage = () => {
     [items, session],
   )
 
-  const handleAgregarInformacionInvestigacion = useCallback(() => {
-    setInfoInvestigacionAgregada(true)
-  }, [])
+  const handleAgregarInformacionInvestigacion = useCallback(async () => {
+    if (!session || session.kind !== 'ASPIRANTE') {
+      setInvestigacionErrorMessage('No se encontró la sesión del aspirante.')
+      return
+    }
+
+    const aspiranteUser = session.user as AspiranteUser
+    const aspiranteId = aspiranteUser.id
+    const grupoId = Number(grupoInvestigacionId)
+    const directorId = Number(directorGrupoId)
+
+    if (!Number.isFinite(aspiranteId) || aspiranteId <= 0) {
+      setInvestigacionErrorMessage('No se encontró el id del aspirante para guardar la información.')
+      return
+    }
+
+    if (!Number.isFinite(grupoId) || grupoId <= 0 || !Number.isFinite(directorId) || directorId <= 0) {
+      setInvestigacionErrorMessage('Seleccione un grupo de investigación y un director válidos.')
+      return
+    }
+
+    setIsSavingInvestigacion(true)
+    setInvestigacionErrorMessage(null)
+
+    try {
+      await updateAspiranteInvestigacion({
+        id: aspiranteId,
+        grupoInvestigacionId: grupoId,
+        directorId,
+      })
+      setInfoInvestigacionAgregada(true)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'No fue posible actualizar la información de investigación.'
+      setInvestigacionErrorMessage(message)
+      setInfoInvestigacionAgregada(false)
+    } finally {
+      setIsSavingInvestigacion(false)
+    }
+  }, [directorGrupoId, grupoInvestigacionId, session])
 
   const investigacionListaParaAgregar =
     grupoInvestigacionId.trim().length > 0 && directorGrupoId.trim().length > 0
@@ -365,8 +406,9 @@ const AspiranteDocumentosPage = () => {
               onChange={(event) => {
                 setGrupoInvestigacionId(event.target.value)
                 setInfoInvestigacionAgregada(false)
+                setInvestigacionErrorMessage(null)
               }}
-              disabled={infoInvestigacionAgregada || isLoadingGrupos}
+              disabled={infoInvestigacionAgregada || isLoadingGrupos || isSavingInvestigacion}
             >
               <option value="">Seleccione un grupo</option>
               {isLoadingGrupos ? (
@@ -389,8 +431,14 @@ const AspiranteDocumentosPage = () => {
               onChange={(event) => {
                 setDirectorGrupoId(event.target.value)
                 setInfoInvestigacionAgregada(false)
+                setInvestigacionErrorMessage(null)
               }}
-              disabled={infoInvestigacionAgregada || !grupoInvestigacionId || isLoadingDocentes}
+              disabled={
+                infoInvestigacionAgregada ||
+                !grupoInvestigacionId ||
+                isLoadingDocentes ||
+                isSavingInvestigacion
+              }
             >
               <option value="">Seleccione un director</option>
               {isLoadingDocentes ? (
@@ -414,10 +462,16 @@ const AspiranteDocumentosPage = () => {
           <button
             type="button"
             className="aspirante-documentos__investigacion-add-button"
-            onClick={handleAgregarInformacionInvestigacion}
-            disabled={infoInvestigacionAgregada || !investigacionListaParaAgregar}
+            onClick={() => {
+              void handleAgregarInformacionInvestigacion()
+            }}
+            disabled={infoInvestigacionAgregada || !investigacionListaParaAgregar || isSavingInvestigacion}
           >
-            {infoInvestigacionAgregada ? 'Información agregada' : 'Agregar información'}
+            {infoInvestigacionAgregada
+              ? 'Información agregada'
+              : isSavingInvestigacion
+                ? 'Guardando información...'
+                : 'Agregar información'}
           </button>
         </div>
       </section>
