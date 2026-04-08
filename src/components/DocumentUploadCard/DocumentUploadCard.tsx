@@ -15,7 +15,9 @@ const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
   NOT_SELECTED: 'Pendiente',
   READY_TO_UPLOAD: 'Archivo seleccionado',
   UPLOADING: 'Subiendo…',
-  UPLOADED: 'Cargado ✅',
+  UPLOADED: 'En revisión',
+  APPROVED: 'Aprobado ✅',
+  REJECTED: 'Rechazado ❌',
   ERROR: 'Error ❌',
 }
 
@@ -32,8 +34,12 @@ const getUploadButtonLabel = (status: DocumentUploadItem['status']): string => {
     return 'Subiendo…'
   }
 
-  if (status === 'UPLOADED') {
+  if (status === 'UPLOADED' || status === 'APPROVED') {
     return 'Reemplazar / Subir de nuevo'
+  }
+
+  if (status === 'REJECTED') {
+    return 'Subir nuevamente'
   }
 
   return 'Subir'
@@ -48,10 +54,15 @@ export const DocumentUploadCard = ({
 }: DocumentUploadCardProps) => {
   const inputId = `document-upload-${item.id}`
   const statusClass = `document-upload-card__status document-upload-card__status--${item.status.toLowerCase()}`
-  const uploadedFileName = item.status === 'UPLOADED' ? item.uploadedFileName : undefined
+  const uploadedFileName =
+    item.status === 'UPLOADED' || item.status === 'APPROVED' || item.status === 'REJECTED'
+      ? item.uploadedFileName
+      : undefined
   const fileName = item.selectedFile?.name ?? uploadedFileName
   const canOpenUploadedFile =
-    item.status === 'UPLOADED' && item.uploadedBase64 != null && item.uploadedMimeType != null
+    (item.status === 'UPLOADED' || item.status === 'APPROVED' || item.status === 'REJECTED') &&
+    item.uploadedBase64 != null &&
+    item.uploadedMimeType != null
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -131,6 +142,11 @@ export const DocumentUploadCard = ({
           </button>
         ) : null}
       </div>
+
+
+      {item.status === 'REJECTED' && item.rejectionReason ? (
+        <p className="document-upload-card__warning">Observación: {item.rejectionReason}</p>
+      ) : null}
 
       {item.errorMessage ? (
         <p className="document-upload-card__error">{item.errorMessage}</p>

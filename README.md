@@ -80,6 +80,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 8, 2026: en `/aspirante/documentos` se ajustó el checklist para respetar `documentoUploadedResponse.estadoDocumento` del backend: `APROBADO` se muestra como validado, `RECHAZADO` se marca con observación visible y obliga al aspirante a cargar una nueva versión (`Subir nuevamente`) para continuar con los requisitos obligatorios.
 - April 8, 2026: en `/solicitudes` se corrigió el descuadre visual de la columna **Observaciones** en desktop. La celda volvió a comportarse como `table-cell` (se movió el clamp de texto a un `span` interno), se fijó ancho consistente de columna (260px) y se alinearon nuevamente las líneas separadoras horizontales entre filas.
 - April 8, 2026: en el listado admin/coordinación de `/solicitudes` se eliminó la columna **ID** de la tabla y se robusteció el render de celdas textuales para evitar descuadres cuando backend retorna descripción/observaciones vacías (`null`, `undefined` o `""`); ahora se muestran fallbacks `Sin descripción.` y `Sin observaciones.`.
 - April 8, 2026: se corrigió el guardado de investigación en `/aspirante/documentos` para normalizar `session.user.id` a número (`Number(...)`) antes de validar y ejecutar `PUT /sapp/aspirante`; con esto se evita omitir la llamada cuando el backend/session serializa el id como string.
