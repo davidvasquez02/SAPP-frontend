@@ -317,7 +317,7 @@ const AspiranteDocumentosPage = () => {
     }
 
     const aspiranteUser = session.user as AspiranteUser
-    const aspiranteId = aspiranteUser.id
+    const aspiranteId = Number(aspiranteUser.id)
     const grupoId = Number(grupoInvestigacionId)
     const directorId = Number(directorGrupoId)
 

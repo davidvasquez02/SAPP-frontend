@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 8, 2026 (latest): fixed investigación save trigger in `/aspirante/documentos` by normalizing aspirante id from session (`Number(session.user.id)`) before validation. This prevents false client-side validation failures when `id` arrives as string and guarantees `PUT /sapp/aspirante` is fired after clicking **Agregar información** with valid selections.
 - April 8, 2026 (latest): `/aspirante/documentos` investigación card now persists data with backend. Clicking **Agregar información** executes `PUT /sapp/aspirante` with `{ id, grupoInvestigacionId, directorId }` using new `updateAspiranteInvestigacion` service; button shows `Guardando información...`, and combos stay disabled only after successful save.
 - April 8, 2026 (latest): investigación card in `/aspirante/documentos` now loads catalog data from backend endpoints (`GET /sapp/gruposInvestigacion` and `GET /sapp/gruposInvestigacionDocentes?grupoId={id}&query=`) instead of static frontend mocks; docentes list refreshes when `grupoId` changes.
 - April 8, 2026 (latest): in `/aspirante/documentos`, a new card **“Información de investigación”** was added below the document checklist with two select combos: **Grupo de investigación** and **Director del grupo de investigación**. The UI follows existing SAPP visual tokens and supports light/dark themes.
