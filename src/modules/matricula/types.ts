@@ -60,3 +60,18 @@ export type MatriculaAcademicaVigenteDto = {
   observaciones: string | null
   asignaturas: MatriculaAsignaturaVigenteDto[]
 }
+
+export type MatriculaVigenteValidationResult =
+  | {
+      status: 'EXISTS'
+      message: string
+      matricula: MatriculaAcademicaVigenteDto
+    }
+  | {
+      status: 'CAN_CREATE'
+      message: string
+    }
+  | {
+      status: 'NO_ACTIVE_PERIOD'
+      message: string
+    }

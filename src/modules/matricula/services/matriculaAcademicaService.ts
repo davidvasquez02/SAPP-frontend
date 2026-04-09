@@ -3,6 +3,7 @@ import type {
   MateriaDto,
   MatriculaAcademicaCreatePayload,
   MatriculaAcademicaVigenteDto,
+  MatriculaVigenteValidationResult,
 } from '../types'
 
 type ApiResponse<T> = {
@@ -54,4 +55,45 @@ export const getMatriculaVigenteByEstudiante = async (estudianteId: number): Pro
   }
 
   return response.data[0] ?? null
+}
+
+export const getMatriculaVigenteValidationByEstudiante = async (
+  estudianteId: number,
+): Promise<MatriculaVigenteValidationResult> => {
+  const response = await httpGet<ApiResponse<MatriculaAcademicaVigenteDto[] | boolean>>(
+    `/sapp/matriculaAcademica/vigente/estudiante/${estudianteId}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible consultar la matrícula vigente.')
+  }
+
+  if (Array.isArray(response.data)) {
+    const matricula = response.data[0]
+    if (!matricula) {
+      throw new Error('La respuesta de matrícula vigente no contiene datos válidos.')
+    }
+
+    return {
+      status: 'EXISTS',
+      message: response.message || 'El estudiante ya tiene matrícula en el periodo vigente.',
+      matricula,
+    }
+  }
+
+  if (response.data === true) {
+    return {
+      status: 'CAN_CREATE',
+      message: response.message || 'El estudiante puede crear matrícula en el periodo vigente.',
+    }
+  }
+
+  if (response.data === false) {
+    return {
+      status: 'NO_ACTIVE_PERIOD',
+      message: response.message || 'No hay un periodo de matrículas vigente.',
+    }
+  }
+
+  throw new Error('Formato de respuesta no soportado al consultar matrícula vigente.')
 }

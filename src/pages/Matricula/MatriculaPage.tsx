@@ -14,7 +14,7 @@ import {
 import {
   crearMatriculaAcademica,
   getAsignaturasPorPrograma,
-  getMatriculaVigenteByEstudiante,
+  getMatriculaVigenteValidationByEstudiante,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type { DocumentoRequerido, MateriaDto, MateriaSeleccionada, MatriculaConvocatoria } from '../../modules/matricula/types'
 import './MatriculaPage.css'
@@ -32,6 +32,8 @@ const MatriculaPage = () => {
   const [selectedMaterias, setSelectedMaterias] = useState<MateriaSeleccionada[]>([])
   const [errorConvocatoria, setErrorConvocatoria] = useState<string | null>(null)
   const [errorForm, setErrorForm] = useState<string | null>(null)
+  const [matriculaValidationMessage, setMatriculaValidationMessage] = useState<string | null>(null)
+  const [canCreateMatricula, setCanCreateMatricula] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [periodoId, setPeriodoId] = useState<number>(1)
 
@@ -56,6 +58,11 @@ const MatriculaPage = () => {
       setErrorConvocatoria(null)
 
       try {
+        const matriculaValidation = await getMatriculaVigenteValidationByEstudiante(estudianteId)
+        if (cancelled) {
+          return
+        }
+
         const convocatoriaResult = await fetchMatriculaConvocatoria()
         if (cancelled) {
           return
@@ -83,37 +90,46 @@ const MatriculaPage = () => {
         setMateriasCatalogo(materiasResult)
         setDocumentos(documentosResult)
 
-        const matriculaVigente = await getMatriculaVigenteByEstudiante(estudianteId)
-        if (!matriculaVigente || cancelled) {
+        if (matriculaValidation.status === 'EXISTS') {
+          setCanCreateMatricula(false)
+          setMatriculaValidationMessage('El estudiante ya tiene matrícula para el periodo vigente.')
+          setPeriodoId(matriculaValidation.matricula.periodoId)
+          setConvocatoria((current) =>
+            current
+              ? {
+                  ...current,
+                  periodoLabel: matriculaValidation.matricula.periodoAcademico,
+                }
+              : current,
+          )
+
+          const selectedFromMatricula = matriculaValidation.matricula.asignaturas
+            .map((asignatura) => {
+              const materiaCatalogo = materiasResult.find((item) => item.id === asignatura.asignaturaId)
+              if (!materiaCatalogo) {
+                return null
+              }
+
+              return {
+                ...materiaCatalogo,
+                grupo: asignatura.grupo,
+                addedAt: new Date().toISOString(),
+              } satisfies MateriaSeleccionada
+            })
+            .filter((item): item is MateriaSeleccionada => item !== null)
+
+          setSelectedMaterias(selectedFromMatricula)
           return
         }
 
-        setPeriodoId(matriculaVigente.periodoId)
-        setConvocatoria((current) =>
-          current
-            ? {
-                ...current,
-                periodoLabel: matriculaVigente.periodoAcademico,
-              }
-            : current,
-        )
+        if (matriculaValidation.status === 'NO_ACTIVE_PERIOD') {
+          setCanCreateMatricula(false)
+          setMatriculaValidationMessage(matriculaValidation.message)
+          return
+        }
 
-        const selectedFromMatricula = matriculaVigente.asignaturas
-          .map((asignatura) => {
-            const materiaCatalogo = materiasResult.find((item) => item.id === asignatura.asignaturaId)
-            if (!materiaCatalogo) {
-              return null
-            }
-
-            return {
-              ...materiaCatalogo,
-              grupo: asignatura.grupo,
-              addedAt: new Date().toISOString(),
-            } satisfies MateriaSeleccionada
-          })
-          .filter((item): item is MateriaSeleccionada => item !== null)
-
-        setSelectedMaterias(selectedFromMatricula)
+        setCanCreateMatricula(true)
+        setMatriculaValidationMessage(null)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'No fue posible cargar la información de matrícula.'
 
@@ -155,6 +171,11 @@ const MatriculaPage = () => {
       return
     }
 
+    if (!canCreateMatricula) {
+      setErrorForm(matriculaValidationMessage || 'No es posible crear matrícula en este momento.')
+      return
+    }
+
     const hasInvalidGrupo = selectedMaterias.some((materia) => !materia.grupo.trim())
     if (hasInvalidGrupo) {
       setErrorForm('Debes asignar un grupo para cada materia antes de confirmar.')
@@ -174,14 +195,16 @@ const MatriculaPage = () => {
         })),
       })
 
-      const matriculaVigente = await getMatriculaVigenteByEstudiante(estudianteId)
-      if (matriculaVigente) {
-        setPeriodoId(matriculaVigente.periodoId)
+      const matriculaValidation = await getMatriculaVigenteValidationByEstudiante(estudianteId)
+      if (matriculaValidation.status === 'EXISTS') {
+        setCanCreateMatricula(false)
+        setMatriculaValidationMessage('El estudiante ya tiene matrícula para el periodo vigente.')
+        setPeriodoId(matriculaValidation.matricula.periodoId)
         setConvocatoria((current) =>
           current
             ? {
                 ...current,
-                periodoLabel: matriculaVigente.periodoAcademico,
+                periodoLabel: matriculaValidation.matricula.periodoAcademico,
               }
             : current,
         )
@@ -226,6 +249,7 @@ const MatriculaPage = () => {
               <p className="matricula-page__description">Agrega las materias que cursarás en este periodo.</p>
               {loadingForm ? <p className="matricula-page__status">Cargando materias...</p> : null}
               {errorForm ? <p className="matricula-page__error">{errorForm}</p> : null}
+              {matriculaValidationMessage ? <p className="matricula-page__status">{matriculaValidationMessage}</p> : null}
               {!loadingForm && !errorForm ? (
                 <>
                   <MateriasSelector materias={materiasCatalogo} selected={selectedMaterias} onAdd={handleAddMateria} />
@@ -253,7 +277,7 @@ const MatriculaPage = () => {
               <button
                 type="button"
                 className="matricula-page__confirm"
-                disabled={selectedMaterias.length === 0 || isSubmitting}
+                disabled={selectedMaterias.length === 0 || isSubmitting || !canCreateMatricula}
                 onClick={() => void handleConfirmMatricula()}
               >
                 {isSubmitting ? 'Confirmando...' : 'Confirmar matrícula'}
