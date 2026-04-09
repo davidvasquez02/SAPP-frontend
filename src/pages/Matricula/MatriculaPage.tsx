@@ -37,6 +37,52 @@ const MatriculaPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [periodoId, setPeriodoId] = useState<number>(1)
 
+  const applyMatriculaValidation = (
+    validation: Awaited<ReturnType<typeof getMatriculaVigenteValidationByEstudiante>>,
+    materias: MateriaDto[],
+  ) => {
+    if (validation.status === 'EXISTS') {
+      setCanCreateMatricula(false)
+      setMatriculaValidationMessage('El estudiante ya tiene matrícula para el periodo vigente.')
+      setPeriodoId(validation.matricula.periodoId)
+      setConvocatoria((current) =>
+        current
+          ? {
+              ...current,
+              periodoLabel: validation.matricula.periodoAcademico,
+            }
+          : current,
+      )
+
+      const selectedFromMatricula = validation.matricula.asignaturas
+        .map((asignatura) => {
+          const materiaCatalogo = materias.find((item) => item.id === asignatura.asignaturaId)
+          if (!materiaCatalogo) {
+            return null
+          }
+
+          return {
+            ...materiaCatalogo,
+            grupo: asignatura.grupo,
+            addedAt: new Date().toISOString(),
+          } satisfies MateriaSeleccionada
+        })
+        .filter((item): item is MateriaSeleccionada => item !== null)
+
+      setSelectedMaterias(selectedFromMatricula)
+      return
+    }
+
+    if (validation.status === 'NO_ACTIVE_PERIOD') {
+      setCanCreateMatricula(false)
+      setMatriculaValidationMessage(validation.message)
+      return
+    }
+
+    setCanCreateMatricula(true)
+    setMatriculaValidationMessage(null)
+  }
+
   const estudianteId = useMemo(() => {
     if (session?.kind !== 'SAPP') {
       return null
@@ -90,46 +136,7 @@ const MatriculaPage = () => {
         setMateriasCatalogo(materiasResult)
         setDocumentos(documentosResult)
 
-        if (matriculaValidation.status === 'EXISTS') {
-          setCanCreateMatricula(false)
-          setMatriculaValidationMessage('El estudiante ya tiene matrícula para el periodo vigente.')
-          setPeriodoId(matriculaValidation.matricula.periodoId)
-          setConvocatoria((current) =>
-            current
-              ? {
-                  ...current,
-                  periodoLabel: matriculaValidation.matricula.periodoAcademico,
-                }
-              : current,
-          )
-
-          const selectedFromMatricula = matriculaValidation.matricula.asignaturas
-            .map((asignatura) => {
-              const materiaCatalogo = materiasResult.find((item) => item.id === asignatura.asignaturaId)
-              if (!materiaCatalogo) {
-                return null
-              }
-
-              return {
-                ...materiaCatalogo,
-                grupo: asignatura.grupo,
-                addedAt: new Date().toISOString(),
-              } satisfies MateriaSeleccionada
-            })
-            .filter((item): item is MateriaSeleccionada => item !== null)
-
-          setSelectedMaterias(selectedFromMatricula)
-          return
-        }
-
-        if (matriculaValidation.status === 'NO_ACTIVE_PERIOD') {
-          setCanCreateMatricula(false)
-          setMatriculaValidationMessage(matriculaValidation.message)
-          return
-        }
-
-        setCanCreateMatricula(true)
-        setMatriculaValidationMessage(null)
+        applyMatriculaValidation(matriculaValidation, materiasResult)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'No fue posible cargar la información de matrícula.'
 
@@ -171,11 +178,6 @@ const MatriculaPage = () => {
       return
     }
 
-    if (!canCreateMatricula) {
-      setErrorForm(matriculaValidationMessage || 'No es posible crear matrícula en este momento.')
-      return
-    }
-
     const hasInvalidGrupo = selectedMaterias.some((materia) => !materia.grupo.trim())
     if (hasInvalidGrupo) {
       setErrorForm('Debes asignar un grupo para cada materia antes de confirmar.')
@@ -185,6 +187,14 @@ const MatriculaPage = () => {
     try {
       setIsSubmitting(true)
       setErrorForm(null)
+
+      const latestValidation = await getMatriculaVigenteValidationByEstudiante(estudianteId)
+      applyMatriculaValidation(latestValidation, materiasCatalogo)
+
+      if (latestValidation.status !== 'CAN_CREATE') {
+        setErrorForm(latestValidation.message || 'No es posible crear matrícula en este momento.')
+        return
+      }
 
       await crearMatriculaAcademica({
         estudianteId,
@@ -196,19 +206,7 @@ const MatriculaPage = () => {
       })
 
       const matriculaValidation = await getMatriculaVigenteValidationByEstudiante(estudianteId)
-      if (matriculaValidation.status === 'EXISTS') {
-        setCanCreateMatricula(false)
-        setMatriculaValidationMessage('El estudiante ya tiene matrícula para el periodo vigente.')
-        setPeriodoId(matriculaValidation.matricula.periodoId)
-        setConvocatoria((current) =>
-          current
-            ? {
-                ...current,
-                periodoLabel: matriculaValidation.matricula.periodoAcademico,
-              }
-            : current,
-        )
-      }
+      applyMatriculaValidation(matriculaValidation, materiasCatalogo)
 
       window.alert('Matrícula registrada correctamente.')
     } catch (error) {
