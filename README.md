@@ -76,10 +76,15 @@ The aspirante login now also calls the backend directly:
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
 
+Mock data for Coordinación > Estudiantes lives in:
+- `src/modules/estudiantes/mock/estudiantes.mock.ts`
+- `src/modules/estudiantes/services/estudiantesMockService.ts`
+
 Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 9, 2026: se creó el módulo **Estudiantes** para coordinación con flujo completamente mockeado: selector de programa, listado tipo tarjetas y navegación a detalle (`/coordinacion/estudiantes` y `/coordinacion/estudiantes/:estudianteId`).
 - April 9, 2026: en tarjetas de aspirantes de coordinación (`StudentCard`) se corrigió el render de campos largos (correo/teléfono) para evitar traslape entre columnas (`overflow-wrap:anywhere`, `word-break`, columnas con `min-width:0`) y se normalizó la visualización del estado reemplazando `_` por espacios.
 - April 8, 2026: en `/aspirante/documentos` se ajustó el checklist para respetar `documentoUploadedResponse.estadoDocumento` del backend: `APROBADO` se muestra como validado, `RECHAZADO` se marca con observación visible y obliga al aspirante a cargar una nueva versión (`Subir nuevamente`) para continuar con los requisitos obligatorios.
 - April 8, 2026: en `/solicitudes` se corrigió el descuadre visual de la columna **Observaciones** en desktop. La celda volvió a comportarse como `table-cell` (se movió el clamp de texto a un `span` interno), se fijó ancho consistente de columna (260px) y se alinearon nuevamente las líneas separadoras horizontales entre filas.

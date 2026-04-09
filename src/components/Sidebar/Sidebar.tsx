@@ -46,6 +46,16 @@ const Sidebar = () => {
         </NavLink>
         {canSeeAdmisiones ? (
           <NavLink
+            to="/coordinacion/estudiantes"
+            className={({ isActive }) =>
+              `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+            }
+          >
+            Estudiantes
+          </NavLink>
+        ) : null}
+        {canSeeAdmisiones ? (
+          <NavLink
             to="/admisiones"
             className={({ isActive }) =>
               `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
