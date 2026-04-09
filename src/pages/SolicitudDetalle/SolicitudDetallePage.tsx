@@ -56,7 +56,7 @@ const SolicitudDetallePage = () => {
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
-  const [estadoTarget, setEstadoTarget] = useState<SolicitudEstadoTarget>('EN_ESTUDIO')
+  const [estadoTarget, setEstadoTarget] = useState<SolicitudEstadoTarget>('EN_REVISION')
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
@@ -87,7 +87,7 @@ const SolicitudDetallePage = () => {
         } else if (normalizedEstado === 'RECHAZADA') {
           setEstadoTarget('RECHAZADA')
         } else {
-          setEstadoTarget('EN_ESTUDIO')
+          setEstadoTarget('EN_REVISION')
         }
         setEditMode(false)
       })
@@ -210,7 +210,7 @@ const SolicitudDetallePage = () => {
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
   const isSameTargetAsCurrentEstado =
-    (estadoTarget === 'EN_ESTUDIO' && currentEstado === 'EN ESTUDIO') ||
+    (estadoTarget === 'EN_REVISION' && currentEstado === 'EN REVISION') ||
     (estadoTarget === 'APROBADA' && currentEstado === 'APROBADA') ||
     (estadoTarget === 'RECHAZADA' && currentEstado === 'RECHAZADA')
 
@@ -390,7 +390,7 @@ const SolicitudDetallePage = () => {
                         setUpdateSuccess(null)
                       }}
                     >
-                      <option value="EN_ESTUDIO">EN ESTUDIO</option>
+                      <option value="EN_REVISION">EN REVISION</option>
                       <option value="APROBADA">APROBADA</option>
                       <option value="RECHAZADA">RECHAZADA</option>
                     </select>
