@@ -8,15 +8,21 @@ interface EstudianteCardProps {
 }
 
 const getEstadoLabel = (estado: EstudianteCoordinacion['estadoAcademico']) => {
-  if (estado === 'EN_TRABAJO_DE_GRADO') {
+  const normalized = estado?.trim().toUpperCase()
+
+  if (normalized === 'EN_TRABAJO_DE_GRADO') {
     return 'En trabajo de grado'
   }
 
-  if (estado === 'EN_ESPERA_CANDIDATURA') {
+  if (normalized === 'EN_ESPERA_CANDIDATURA') {
     return 'En espera candidatura'
   }
 
-  return 'Activo'
+  if (normalized === 'ACTIVO' || normalized === '1') {
+    return 'Activo'
+  }
+
+  return estado.replaceAll('_', ' ').toLowerCase()
 }
 
 const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
