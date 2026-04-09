@@ -24,6 +24,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Aspirante creation flow:** `CreateAspiranteModal` posts `/sapp/aspirante`, stores the returned `aspiranteId` + `inscripcionAdmisionId`, and then uploads selected documents **sequentially** via `POST /sapp/document` using base64 + SHA-256 helpers. The modal now loads trámite documents from backend (`GET /sapp/tramite/document?tipoTramiteId=1`) using `httpClient`, filters by `ADMISION_COORDINACION`, computes required items from backend `obligatorio`, preserves sequential uploads/retry behavior, and renders backend-driven loading/error/empty states with retry when the request fails.
 - **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
 - **Matrícula estudiante (API real):** `src/pages/Matricula/MatriculaPage.tsx` y `src/modules/matricula/services/matriculaAcademicaService.ts` ahora consumen `GET /sapp/asignaturas?programaId=1`, permiten definir `grupo` por materia seleccionada, crean matrícula con `POST /sapp/matriculaAcademica` y reconsultan la vigente con `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para refrescar periodo/estado.
+- **Coordinación > Estudiantes (lista API real):** `src/modules/estudiantes/services/estudiantesMockService.ts` ahora consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`, normaliza el contrato backend (`estudiante/persona/programaCodigoNombre`) al tipo UI `EstudianteCoordinacion` y mantiene caché en memoria por `estudiante.id` para reutilizar los datos en el detalle.
 - **Global theming:** `src/styles/globals.css` centraliza tokens de identidad visual UIS (compatibles con Beer.css) para `body.light` / `body.dark`, y los layouts/login consumen variables semánticas para mantener consistencia institucional.
 - **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
 - **Solicitudes module (mock-ready):** `src/modules/solicitudes` now includes typed DTOs, role-targeted UI components (student form + coordinator cards), and async mock services that preserve the `{ ok, message, data }` envelope contract for future API replacement.
@@ -78,14 +79,15 @@ The aspirante login now also calls the backend directly:
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
 
-Coordinación > Estudiantes usa endpoint real para el catálogo de programas:
-- Endpoint: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/programaAcademico`
-- Contrato esperado actual: `{ ok, message, data }` con `data[]` incluyendo `id`, `nombre` (ej. `MISI`, `DCC`) y `codigoNombre` (ej. `61412 - MISI`).
-- Regla de filtrado aplicada en frontend: solo se muestran
+Coordinación > Estudiantes usa endpoints reales para catálogo y listado:
+- Programas: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/programaAcademico`
+- Estudiantes por programa: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/estudiantes/consulta?programaId={id}&egresados=false`
+- Contrato esperado actual: `{ ok, message, data }` con `data[]` de estudiantes incluyendo `estudiante`, `persona`, `nombreCompleto`, `programaId`, `programaCodigoNombre`.
+- Regla de filtrado de programas en frontend: solo se muestran
   - `Maestría en Ingeniería de Sistemas e Informática`
   - `Doctorado en Ciencias de la Computación`
 
-Mock data for Coordinación > Estudiantes (listado/detalle) still lives in:
+Mock data de estudiantes se conserva únicamente como fallback para detalle cuando no hay cache de la lista en memoria:
 - `src/modules/estudiantes/mock/estudiantes.mock.ts`
 - `src/modules/estudiantes/services/estudiantesMockService.ts`
 
@@ -93,6 +95,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 9, 2026: en **Coordinación > Estudiantes**, el listado dejó de usar `estudiantesMock` y ahora consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`; se agregó normalización de estados/correos/campos nulos y caché en memoria para que el detalle reutilice el estudiante consultado desde el listado.
 - April 9, 2026: en `/matricula` (rol `ESTUDIANTE`) se reemplazó la carga mock de materias por integración real a `GET /sapp/asignaturas?programaId=1`; además, cada materia seleccionada ahora exige `grupo`, la confirmación ejecuta `POST /sapp/matriculaAcademica` con `{ estudianteId, periodoId, asignaturas[] }`, y tras crear se consulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para mantener sincronizado el periodo vigente en pantalla.
 - April 9, 2026: en `/solicitudes/:solicitudId` (detalle coordinador), el cambio de estado dejó de usar endpoints separados (`cambioEstadoEnEstudio`, `cambioEstadoAprobada`, `cambioEstadoRechazada`) y migró al endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`; además, la opción de UI para coordinación quedó alineada a `EN REVISION`, `APROBADA`, `RECHAZADA`.
 - April 9, 2026: en **Coordinación > Estudiantes**, el selector de programa dejó de consumir `programasMock` y ahora carga catálogo real desde `GET /sapp/programaAcademico`, filtrando únicamente los dos programas oficiales definidos para coordinación: **Maestría en Ingeniería de Sistemas e Informática** y **Doctorado en Ciencias de la Computación**.

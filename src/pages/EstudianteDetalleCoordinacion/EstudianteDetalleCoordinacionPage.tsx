@@ -15,7 +15,13 @@ const formatDate = (value: string) => {
 }
 
 const formatEstado = (estado: EstudianteCoordinacion['estadoAcademico']) => {
-  return estado.replaceAll('_', ' ').toLowerCase()
+  const normalized = estado.trim().toUpperCase()
+
+  if (normalized === '1') {
+    return 'activo'
+  }
+
+  return normalized.replaceAll('_', ' ').toLowerCase()
 }
 
 const EstudianteDetalleCoordinacionPage = () => {

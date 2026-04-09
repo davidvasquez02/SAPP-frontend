@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Coordinación > Estudiantes list endpoint integration is active in frontend service layer (`/sapp/estudiantes/consulta`). Program selector already uses `/sapp/programaAcademico`; both are now backend-driven for the list screen.
 - April 9, 2026 (latest): `/matricula` para rol `ESTUDIANTE` ya consume asignaturas reales desde `GET /sapp/asignaturas?programaId=1` (antes mock), mantiene selector sin duplicados y ahora exige `grupo` por materia seleccionada antes de confirmar.
 - April 9, 2026 (latest): confirmación de matrícula en frontend integrada a `POST /sapp/matriculaAcademica` con payload `{ estudianteId, periodoId, asignaturas: [{ asignaturaId, grupo }] }`; al completar, se reconsulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para sincronizar periodo académico vigente en UI.
 - April 9, 2026 (latest): en `SolicitudDetallePage` (coordinador/admin), el cambio de estado ahora usa endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=...` con `siglaEstado ∈ { EN_REVISION, APROBADA, RECHAZADA }`. Se removió el contrato de endpoints separados y se alineó la opción visible “EN REVISION” en el selector.
@@ -171,6 +172,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Manual QA in browser for `/coordinacion/estudiantes`: validate network call includes `egresados=false`, cards render null-safe values, and detail navigation works from in-memory cache after selecting a card.
 1. QA manual en `/solicitudes/:id` con rol COORDINADOR/ADMIN: probar transición a `EN REVISION`, `APROBADA`, `RECHAZADA`; verificar request en Network (`siglaEstado`) y recarga de detalle sin errores.
 1. Completar integración real del módulo estudiantes: mantener `GET /sapp/programaAcademico` ya activo para catálogo y reemplazar mocks restantes con endpoints de estudiantes (`GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
 1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
