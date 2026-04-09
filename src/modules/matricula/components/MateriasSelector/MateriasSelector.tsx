@@ -27,7 +27,8 @@ const MateriasSelector = ({ materias, selected, onAdd }: MateriasSelectorProps) 
         return true
       }
 
-      return materia.nombre.toLowerCase().includes(term) || materia.codigo.includes(term)
+      const codigo = materia.codigo?.toLowerCase() ?? ''
+      return materia.nombre.toLowerCase().includes(term) || codigo.includes(term)
     })
   }, [materias, query, selectedIds])
 
@@ -73,7 +74,7 @@ const MateriasSelector = ({ materias, selected, onAdd }: MateriasSelectorProps) 
                   }}
                 >
                   <span>{materia.nombre}</span>
-                  <small>{materia.codigo}</small>
+                  <small>{materia.codigo ?? 'Sin código'}</small>
                 </button>
               </li>
             ))

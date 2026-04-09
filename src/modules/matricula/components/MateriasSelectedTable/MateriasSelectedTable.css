@@ -37,3 +37,13 @@
   background: color-mix(in srgb, var(--surface-container-low), transparent 30%);
   color: var(--text-secondary);
 }
+
+.materias-selected-table td input {
+  width: 100%;
+  min-width: 4.5rem;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.35rem 0.5rem;
+}
