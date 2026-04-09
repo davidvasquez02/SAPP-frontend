@@ -6,6 +6,8 @@ import {
   AspiranteLoginPage,
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
+  EstudianteDetalleCoordinacionPage,
+  EstudiantesCoordinacionPage,
   HomePage,
   InscripcionAdmisionDetallePage,
   InscripcionDocumentosPage,
@@ -103,6 +105,22 @@ export const AppRoutes = () => {
               }
             />
           </Route>
+          <Route
+            path="/coordinacion/estudiantes"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <EstudiantesCoordinacionPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/estudiantes/:estudianteId"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <EstudianteDetalleCoordinacionPage />
+              </RequireRoles>
+            }
+          />
           {solicitudesRoutes}
           {matriculaRoutes}
           {creditosRoutes}

@@ -1,0 +1,84 @@
+.estudiante-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 920px;
+}
+
+.estudiante-detalle__back {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.estudiante-detalle__back:hover {
+  text-decoration: underline;
+}
+
+.estudiante-detalle__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.estudiante-detalle__status--error {
+  color: #b91c1c;
+}
+
+.estudiante-detalle__card {
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.08);
+  padding: 1.2rem 1.5rem;
+}
+
+.estudiante-detalle__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.1rem;
+}
+
+.estudiante-detalle__title {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.estudiante-detalle__subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.estudiante-detalle__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.estudiante-detalle__grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.estudiante-detalle__label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.estudiante-detalle__value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.estudiante-detalle__value--break {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 780px) {
+  .estudiante-detalle__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

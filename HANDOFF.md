@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 9, 2026 (latest): se agregó el nuevo módulo **Estudiantes** para coordinación con datos mock: selección de programa (`MISI`, `MDCC`, `DCC`), listado en tarjetas y pantalla de detalle por estudiante; rutas nuevas `/coordinacion/estudiantes` y `/coordinacion/estudiantes/:estudianteId` con guard `ADMIN/COORDINACION`.
 - Student cards en Admisiones (coordinación) ahora muestran correctamente campos largos (correo/teléfono) sin superposición visual y el estado se presenta legible con espacios en lugar de `_`.
 - April 9, 2026 (latest): fixed Admisiones student cards in coordinación so long field values (email/phone) no longer overlap between columns (`min-width:0` + wrapping styles), and normalized estado display by replacing underscores with spaces.
 - April 8, 2026 (latest): `/aspirante/documentos` now maps backend document validation state directly from `documentoUploadedResponse.estadoDocumento`. Rows in `RECHAZADO` display rejection notes (`observacionesDocumento`) and are treated as pending until the aspirante uploads a replacement; `APROBADO` shows an approved state chip.
@@ -165,6 +166,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. Reemplazar `src/modules/estudiantes/services/estudiantesMockService.ts` por cliente real (`GET programas` + `GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
 1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
 1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
 2. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
@@ -214,6 +216,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Módulo Estudiantes coordinación (nuevo):** `src/modules/estudiantes/types.ts`, `src/modules/estudiantes/mock/estudiantes.mock.ts`, `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/estudiantes/components/EstudianteCard/*`, `src/pages/EstudiantesCoordinacion/*`, `src/pages/EstudianteDetalleCoordinacion/*`, y wiring en `src/app/routes/index.tsx` + `src/components/Sidebar/Sidebar.tsx`.
 - **Aspirante investigación update (nuevo):** `src/api/aspiranteService.ts`, `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`.
 - **Cambio de estado al expandir documentos (nuevo):** `src/modules/admisiones/api/inscripcionCambioEstadoService.ts`, `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`, `src/modules/admisiones/api/inscripcionAdmisionService.ts`, `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
 - **Convocatoria create flow (ensure periodo + profesores mock):** `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.css`, `src/modules/admisiones/services/ensurePeriodoService.ts`, `src/modules/admisiones/api/periodoAcademicoService.ts`, `src/modules/admisiones/api/periodoAcademicoTypes.ts`, `src/modules/admisiones/utils/periodoLabel.ts`, `src/modules/admisiones/services/profesoresMockService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/modules/admisiones/mock/profesores.mock.ts`.
