@@ -1,7 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- April 9, 2026 (latest): se agregó el nuevo módulo **Estudiantes** para coordinación con datos mock: selección de programa (`MISI`, `MDCC`, `DCC`), listado en tarjetas y pantalla de detalle por estudiante; rutas nuevas `/coordinacion/estudiantes` y `/coordinacion/estudiantes/:estudianteId` con guard `ADMIN/COORDINACION`.
+- April 9, 2026 (latest): en **Estudiantes (coordinación)** el combo de programas ya no usa catálogo mock local; ahora consume `GET /sapp/programaAcademico` con contrato `{ ok, message, data[] }` (`id`, `nombre`, `codigoNombre`), mapea `nombre` corto (`MISI`/`DCC`) a nombre largo institucional y filtra estrictamente dos programas permitidos para coordinación. El listado/detalle de estudiantes continúa mock por ahora.
 - Student cards en Admisiones (coordinación) ahora muestran correctamente campos largos (correo/teléfono) sin superposición visual y el estado se presenta legible con espacios en lugar de `_`.
 - April 9, 2026 (latest): fixed Admisiones student cards in coordinación so long field values (email/phone) no longer overlap between columns (`min-width:0` + wrapping styles), and normalized estado display by replacing underscores with spaces.
 - April 8, 2026 (latest): `/aspirante/documentos` now maps backend document validation state directly from `documentoUploadedResponse.estadoDocumento`. Rows in `RECHAZADO` display rejection notes (`observacionesDocumento`) and are treated as pending until the aspirante uploads a replacement; `APROBADO` shows an approved state chip.
@@ -137,6 +137,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validar con backend el shape final de `GET /sapp/programaAcademico` (campos `id/codigo/nombre`) para eliminar fallback defensivo de mapeo en frontend y estabilizar el contrato tipado.
 - Validar manualmente en navegador el flujo aspirante de documento **RECHAZADO**: debe mostrarse observación, permitir “Subir nuevamente”, y reflejar estado actualizado tras refrescar checklist.
 - Confirmar con backend un identificador canónico para documento de Hoja de Vida (ideal: `codigoTipoDocumentoTramite` fijo) para reemplazar la heurística textual actual (`HOJA DE VIDA`/`HOJA`/`HV`) y evitar falsos positivos/negativos.
 - Verificar con backend si existe endpoint de detalle directo por inscripción (ej. `GET /sapp/inscripcionAdmision/{id}`) para evitar recargar la lista completa de la convocatoria al refrescar el estado.
@@ -166,7 +167,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
-1. Reemplazar `src/modules/estudiantes/services/estudiantesMockService.ts` por cliente real (`GET programas` + `GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
+1. Completar integración real del módulo estudiantes: mantener `GET /sapp/programaAcademico` ya activo para catálogo y reemplazar mocks restantes con endpoints de estudiantes (`GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
 1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
 1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
 2. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
