@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Student cards en Admisiones (coordinación) ahora muestran correctamente campos largos (correo/teléfono) sin superposición visual y el estado se presenta legible con espacios en lugar de `_`.
+- April 9, 2026 (latest): fixed Admisiones student cards in coordinación so long field values (email/phone) no longer overlap between columns (`min-width:0` + wrapping styles), and normalized estado display by replacing underscores with spaces.
 - April 8, 2026 (latest): `/aspirante/documentos` now maps backend document validation state directly from `documentoUploadedResponse.estadoDocumento`. Rows in `RECHAZADO` display rejection notes (`observacionesDocumento`) and are treated as pending until the aspirante uploads a replacement; `APROBADO` shows an approved state chip.
 - April 8, 2026 (latest): fixed visual misalignment in `/solicitudes` table for **Observaciones** column. The line-clamp styling was moved from the `<td>` to an inner `<span>` so the cell keeps native `table-cell` behavior; column width is now fixed to 260px on desktop, which keeps observation content blocks uniform and row separators aligned across all columns.
 - April 8, 2026 (latest): fixed admin/coordinator solicitudes table layout on missing description text. `SolicitudesTable` now normalizes empty textual fields and shows explicit fallbacks (`Sin descripción.` / `Sin observaciones.`), preventing row desalignment when backend returns blank strings; the **ID** column was also removed from the table per UX decision.

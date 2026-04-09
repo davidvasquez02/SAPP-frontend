@@ -12,6 +12,7 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
   const cedula = inscripcion.cedula ?? inscripcion.numeroDocumento ?? '—'
   const correo = inscripcion.correo ?? inscripcion.emailPersonal ?? '—'
   const telefono = inscripcion.telefono ?? '—'
+  const estadoNormalizado = (inscripcion.estado || '—').replaceAll('_', ' ')
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -42,7 +43,7 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
 
         <div className="student-card__badges">
           <span className="student-card__badge student-card__badge--state">
-            {inscripcion.estado}
+            {estadoNormalizado}
           </span>
           <span className="student-card__badge">{inscripcion.programaAcademico}</span>
         </div>
