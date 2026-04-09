@@ -2,6 +2,7 @@
 
 ## Current Status
 - Coordinación > Estudiantes list endpoint integration is active in frontend service layer (`/sapp/estudiantes/consulta`). Program selector already uses `/sapp/programaAcademico`; both are now backend-driven for the list screen.
+- April 9, 2026 (latest): `/matricula` ahora revalida elegibilidad inmediatamente antes de confirmar (`GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`) para bloquear condiciones de carrera/estado stale. También se robusteció el parser del contrato para soportar `data` como `boolean`, string (`"true"`/`"false"`), objeto único o arreglo.
 - April 9, 2026 (latest): `/matricula` ahora valida primero `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para decidir si el estudiante puede confirmar matrícula. Reglas aplicadas en UI: `data[]` => matrícula existente (bloquea creación), `data=false` => no hay periodo vigente (bloquea creación), `data=true` => habilita creación.
 - April 9, 2026 (latest): `/matricula` para rol `ESTUDIANTE` ya consume asignaturas reales desde `GET /sapp/asignaturas?programaId=1` (antes mock), mantiene selector sin duplicados y ahora exige `grupo` por materia seleccionada antes de confirmar.
 - April 9, 2026 (latest): confirmación de matrícula en frontend integrada a `POST /sapp/matriculaAcademica` con payload `{ estudianteId, periodoId, asignaturas: [{ asignaturaId, grupo }] }`; al completar, se reconsulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para sincronizar periodo académico vigente en UI.
@@ -295,6 +296,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 9, 2026 after hardening matrícula eligibility flow with pre-submit revalidation + tolerant response parsing (`data[] | object | true/false | "true"/"false"`) for `/sapp/matriculaAcademica/vigente/estudiante/{id}`.
 - `npm run build` ✅ passes on April 9, 2026 after adding matrícula eligibility gating with `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` (`data[]|true|false` handling) and disabling confirm action when creation is not allowed.
 - `npm run build` ✅ passes on April 9, 2026 after replacing matrícula materias mock with real asignaturas endpoint, adding per-materia `grupo`, and wiring create/reload matrícula flows (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`).
 - `npm run build` ✅ passes on April 9, 2026 after updating Solicitudes coordinator detail to unified estado endpoint (`PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`) and normalizing UI/estado badge to `EN REVISION`.

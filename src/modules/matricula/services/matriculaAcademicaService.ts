@@ -60,7 +60,7 @@ export const getMatriculaVigenteByEstudiante = async (estudianteId: number): Pro
 export const getMatriculaVigenteValidationByEstudiante = async (
   estudianteId: number,
 ): Promise<MatriculaVigenteValidationResult> => {
-  const response = await httpGet<ApiResponse<MatriculaAcademicaVigenteDto[] | boolean>>(
+  const response = await httpGet<ApiResponse<MatriculaAcademicaVigenteDto[] | MatriculaAcademicaVigenteDto | boolean | string>>(
     `/sapp/matriculaAcademica/vigente/estudiante/${estudianteId}`,
   )
 
@@ -81,14 +81,22 @@ export const getMatriculaVigenteValidationByEstudiante = async (
     }
   }
 
-  if (response.data === true) {
+  if (typeof response.data === 'object' && response.data !== null) {
+    return {
+      status: 'EXISTS',
+      message: response.message || 'El estudiante ya tiene matrícula en el periodo vigente.',
+      matricula: response.data,
+    }
+  }
+
+  if (response.data === true || response.data === 'true') {
     return {
       status: 'CAN_CREATE',
       message: response.message || 'El estudiante puede crear matrícula en el periodo vigente.',
     }
   }
 
-  if (response.data === false) {
+  if (response.data === false || response.data === 'false') {
     return {
       status: 'NO_ACTIVE_PERIOD',
       message: response.message || 'No hay un periodo de matrículas vigente.',
