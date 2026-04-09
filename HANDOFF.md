@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 9, 2026 (latest): en `SolicitudDetallePage` (coordinador/admin), el cambio de estado ahora usa endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=...` con `siglaEstado ∈ { EN_REVISION, APROBADA, RECHAZADA }`. Se removió el contrato de endpoints separados y se alineó la opción visible “EN REVISION” en el selector.
 - April 9, 2026 (latest): en **Estudiantes (coordinación)** el combo de programas ya no usa catálogo mock local; ahora consume `GET /sapp/programaAcademico` con contrato `{ ok, message, data[] }` (`id`, `nombre`, `codigoNombre`), mapea `nombre` corto (`MISI`/`DCC`) a nombre largo institucional y filtra estrictamente dos programas permitidos para coordinación. El listado/detalle de estudiantes continúa mock por ahora.
 - Student cards en Admisiones (coordinación) ahora muestran correctamente campos largos (correo/teléfono) sin superposición visual y el estado se presenta legible con espacios en lugar de `_`.
 - April 9, 2026 (latest): fixed Admisiones student cards in coordinación so long field values (email/phone) no longer overlap between columns (`min-width:0` + wrapping styles), and normalized estado display by replacing underscores with spaces.
@@ -137,6 +138,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validación manual pendiente en navegador para detalle coordinador `/solicitudes/:id`: confirmar que `EN REVISION`, `APROBADA` y `RECHAZADA` disparan `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...` con query param correcto y que el badge recargado refleje el estado final.
 - Validar con backend el shape final de `GET /sapp/programaAcademico` (campos `id/codigo/nombre`) para eliminar fallback defensivo de mapeo en frontend y estabilizar el contrato tipado.
 - Validar manualmente en navegador el flujo aspirante de documento **RECHAZADO**: debe mostrarse observación, permitir “Subir nuevamente”, y reflejar estado actualizado tras refrescar checklist.
 - Confirmar con backend un identificador canónico para documento de Hoja de Vida (ideal: `codigoTipoDocumentoTramite` fijo) para reemplazar la heurística textual actual (`HOJA DE VIDA`/`HOJA`/`HV`) y evitar falsos positivos/negativos.
@@ -167,6 +169,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. QA manual en `/solicitudes/:id` con rol COORDINADOR/ADMIN: probar transición a `EN REVISION`, `APROBADA`, `RECHAZADA`; verificar request en Network (`siglaEstado`) y recarga de detalle sin errores.
 1. Completar integración real del módulo estudiantes: mantener `GET /sapp/programaAcademico` ya activo para catálogo y reemplazar mocks restantes con endpoints de estudiantes (`GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
 1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
 1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
@@ -281,6 +284,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 9, 2026 after updating Solicitudes coordinator detail to unified estado endpoint (`PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`) and normalizing UI/estado badge to `EN REVISION`.
+- `npm run lint` ❌ fails on April 9, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, and unused vars in other modules).
 - `npm run build` ✅ passes on April 8, 2026 after adding backend-driven state handling in aspirante checklist (`APROBADO`/`RECHAZADO`) with re-upload requirement for rejected docs.
 - `npm run build` ✅ passes on April 8, 2026 after fixing `/solicitudes` Observaciones column alignment (uniform width + aligned row separators) by moving clamp styles to inner content instead of the `<td>`.
 - `npm run build` ✅ passes on April 8, 2026 after fixing admin `/solicitudes` table alignment for empty description/observations and removing the ID column in `SolicitudesTable`.
@@ -351,9 +356,9 @@
   - `fetchMateriasCatalogo(): Promise<MateriaDto[]>` where `MateriaDto = { id, nombre, codigo, nivel }`.
   - `fetchDocumentosRequeridos(): Promise<DocumentoRequerido[]>` where `DocumentoRequerido = { id, nombre, obligatorio, estado, fechaRevision, observaciones }` and `estado ∈ { PENDIENTE, EN_REVISION, APROBADO, RECHAZADO }`.
 - **Solicitudes cambio de estado (real, actualizado):** `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`
-  - `PUT /sapp/solicitudesAcademicas/cambioEstadoEnEstudio/{solicitudId}` (sin body)
-  - `PUT /sapp/solicitudesAcademicas/cambioEstadoAprobada` con body `{ solicitudesId: [solicitudId] }`
-  - `PUT /sapp/solicitudesAcademicas/cambioEstadoRechazada` con body `{ solicitudesId: [solicitudId] }`
+  - `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado={SIGLA}`
+  - `SIGLA` habilitadas por backend (referencia): `APROBADA`, `RECHAZADA`, `DEVUELTA`, `EN_REVISION`, `ENVIADA`, `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT`.
+  - En la UI de coordinador actualmente solo se exponen `EN_REVISION`, `APROBADA`, `RECHAZADA`.
   - Frontend usa envelope `{ ok, message, data }`, propaga `message` en error, y recarga detalle con `GET /sapp/solicitudesAcademicas/{id}` tras PUT exitoso.
 - **Solicitudes documentos (nuevo contrato frontend, mock):** `src/modules/solicitudes/types/solicitudDocumentosTypes.ts`
   - `SolicitudDocumentoRequirement`: `{ id, nombre, obligatorio }`

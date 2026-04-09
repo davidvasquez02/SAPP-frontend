@@ -8,7 +8,7 @@ interface StatusBadgeProps {
 
 const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, string> = {
   REGISTRADA: 'registrada',
-  'EN ESTUDIO': 'en-estudio',
+  'EN REVISION': 'en-estudio',
   APROBADA: 'aprobada',
   RECHAZADA: 'rechazada',
   UNKNOWN: 'unknown',
