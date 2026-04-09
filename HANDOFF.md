@@ -2,6 +2,7 @@
 
 ## Current Status
 - Coordinación > Estudiantes list endpoint integration is active in frontend service layer (`/sapp/estudiantes/consulta`). Program selector already uses `/sapp/programaAcademico`; both are now backend-driven for the list screen.
+- April 9, 2026 (latest): `/matricula` ahora valida primero `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para decidir si el estudiante puede confirmar matrícula. Reglas aplicadas en UI: `data[]` => matrícula existente (bloquea creación), `data=false` => no hay periodo vigente (bloquea creación), `data=true` => habilita creación.
 - April 9, 2026 (latest): `/matricula` para rol `ESTUDIANTE` ya consume asignaturas reales desde `GET /sapp/asignaturas?programaId=1` (antes mock), mantiene selector sin duplicados y ahora exige `grupo` por materia seleccionada antes de confirmar.
 - April 9, 2026 (latest): confirmación de matrícula en frontend integrada a `POST /sapp/matriculaAcademica` con payload `{ estudianteId, periodoId, asignaturas: [{ asignaturaId, grupo }] }`; al completar, se reconsulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para sincronizar periodo académico vigente en UI.
 - April 9, 2026 (latest): en `SolicitudDetallePage` (coordinador/admin), el cambio de estado ahora usa endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=...` con `siglaEstado ∈ { EN_REVISION, APROBADA, RECHAZADA }`. Se removió el contrato de endpoints separados y se alineó la opción visible “EN REVISION” en el selector.
@@ -141,6 +142,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validar manualmente en navegador `/matricula` con los 3 escenarios del backend para `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`: (1) `data[]`, (2) `data=false`, (3) `data=true`, confirmando habilitación/bloqueo del botón `Confirmar matrícula` y mensaje visible en UI.
 - Validación manual pendiente en navegador para detalle coordinador `/solicitudes/:id`: confirmar que `EN REVISION`, `APROBADA` y `RECHAZADA` disparan `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...` con query param correcto y que el badge recargado refleje el estado final.
 - Validar con backend el shape final de `GET /sapp/programaAcademico` (campos `id/codigo/nombre`) para eliminar fallback defensivo de mapeo en frontend y estabilizar el contrato tipado.
 - Validar manualmente en navegador el flujo aspirante de documento **RECHAZADO**: debe mostrarse observación, permitir “Subir nuevamente”, y reflejar estado actualizado tras refrescar checklist.
@@ -172,6 +174,10 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+1. QA manual en `/matricula` (rol ESTUDIANTE) con backend real:
+   - Caso A (`data[]`): debe cargar asignaturas de matrícula existente y dejar `Confirmar matrícula` deshabilitado.
+   - Caso B (`data=false`): debe mostrar mensaje de periodo no vigente y bloquear creación.
+   - Caso C (`data=true`): debe permitir confirmar y luego pasar a estado bloqueado tras crear matrícula.
 1. Manual QA in browser for `/coordinacion/estudiantes`: validate network call includes `egresados=false`, cards render null-safe values, and detail navigation works from in-memory cache after selecting a card.
 1. QA manual en `/solicitudes/:id` con rol COORDINADOR/ADMIN: probar transición a `EN REVISION`, `APROBADA`, `RECHAZADA`; verificar request en Network (`siglaEstado`) y recarga de detalle sin errores.
 1. Completar integración real del módulo estudiantes: mantener `GET /sapp/programaAcademico` ya activo para catálogo y reemplazar mocks restantes con endpoints de estudiantes (`GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
@@ -289,6 +295,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 9, 2026 after adding matrícula eligibility gating with `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` (`data[]|true|false` handling) and disabling confirm action when creation is not allowed.
 - `npm run build` ✅ passes on April 9, 2026 after replacing matrícula materias mock with real asignaturas endpoint, adding per-materia `grupo`, and wiring create/reload matrícula flows (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`).
 - `npm run build` ✅ passes on April 9, 2026 after updating Solicitudes coordinator detail to unified estado endpoint (`PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`) and normalizing UI/estado badge to `EN REVISION`.
 - `npm run lint` ❌ fails on April 9, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, and unused vars in other modules).
