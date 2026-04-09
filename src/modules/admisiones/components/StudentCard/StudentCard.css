@@ -80,6 +80,13 @@
   grid-template-columns: 1fr;
 }
 
+.student-card__meta > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .student-card__label {
   display: block;
   font-size: 0.75rem;
@@ -87,9 +94,13 @@
 }
 
 .student-card__value {
+  display: block;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-primary);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .student-card__footer {
