@@ -2,15 +2,20 @@ import { useEffect, useMemo, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
+import type { AuthUser } from '../../context/Auth/types'
 import DocumentosRequeridosTable from '../../modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable'
 import MatriculaClosedState from '../../modules/matricula/components/MatriculaClosedState/MatriculaClosedState'
 import MateriasSelectedTable from '../../modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable'
 import MateriasSelector from '../../modules/matricula/components/MateriasSelector/MateriasSelector'
 import {
   fetchDocumentosRequeridos,
-  fetchMateriasCatalogo,
   fetchMatriculaConvocatoria,
 } from '../../modules/matricula/services/matriculaMockService'
+import {
+  crearMatriculaAcademica,
+  getAsignaturasPorPrograma,
+  getMatriculaVigenteByEstudiante,
+} from '../../modules/matricula/services/matriculaAcademicaService'
 import type { DocumentoRequerido, MateriaDto, MateriaSeleccionada, MatriculaConvocatoria } from '../../modules/matricula/types'
 import './MatriculaPage.css'
 
@@ -27,9 +32,19 @@ const MatriculaPage = () => {
   const [selectedMaterias, setSelectedMaterias] = useState<MateriaSeleccionada[]>([])
   const [errorConvocatoria, setErrorConvocatoria] = useState<string | null>(null)
   const [errorForm, setErrorForm] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [periodoId, setPeriodoId] = useState<number>(1)
+
+  const estudianteId = useMemo(() => {
+    if (session?.kind !== 'SAPP') {
+      return null
+    }
+
+    return (session.user as AuthUser).estudiante?.id ?? null
+  }, [session])
 
   useEffect(() => {
-    if (!isEstudiante) {
+    if (!isEstudiante || !estudianteId) {
       return
     }
 
@@ -57,7 +72,7 @@ const MatriculaPage = () => {
         setErrorForm(null)
 
         const [materiasResult, documentosResult] = await Promise.all([
-          fetchMateriasCatalogo(),
+          getAsignaturasPorPrograma(1),
           fetchDocumentosRequeridos(),
         ])
 
@@ -67,6 +82,38 @@ const MatriculaPage = () => {
 
         setMateriasCatalogo(materiasResult)
         setDocumentos(documentosResult)
+
+        const matriculaVigente = await getMatriculaVigenteByEstudiante(estudianteId)
+        if (!matriculaVigente || cancelled) {
+          return
+        }
+
+        setPeriodoId(matriculaVigente.periodoId)
+        setConvocatoria((current) =>
+          current
+            ? {
+                ...current,
+                periodoLabel: matriculaVigente.periodoAcademico,
+              }
+            : current,
+        )
+
+        const selectedFromMatricula = matriculaVigente.asignaturas
+          .map((asignatura) => {
+            const materiaCatalogo = materiasResult.find((item) => item.id === asignatura.asignaturaId)
+            if (!materiaCatalogo) {
+              return null
+            }
+
+            return {
+              ...materiaCatalogo,
+              grupo: asignatura.grupo,
+              addedAt: new Date().toISOString(),
+            } satisfies MateriaSeleccionada
+          })
+          .filter((item): item is MateriaSeleccionada => item !== null)
+
+        setSelectedMaterias(selectedFromMatricula)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'No fue posible cargar la información de matrícula.'
 
@@ -90,7 +137,7 @@ const MatriculaPage = () => {
     return () => {
       cancelled = true
     }
-  }, [isEstudiante])
+  }, [estudianteId, isEstudiante])
 
   const handleAddMateria = (materia: MateriaDto) => {
     setSelectedMaterias((current) => {
@@ -98,12 +145,55 @@ const MatriculaPage = () => {
         return current
       }
 
-      return [...current, { ...materia, addedAt: new Date().toISOString() }]
+      return [...current, { ...materia, grupo: '', addedAt: new Date().toISOString() }]
     })
   }
 
-  const handleConfirmMatricula = () => {
-    window.alert('Matrícula confirmada (mock)')
+  const handleConfirmMatricula = async () => {
+    if (!estudianteId) {
+      setErrorForm('No fue posible identificar el estudiante autenticado.')
+      return
+    }
+
+    const hasInvalidGrupo = selectedMaterias.some((materia) => !materia.grupo.trim())
+    if (hasInvalidGrupo) {
+      setErrorForm('Debes asignar un grupo para cada materia antes de confirmar.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setErrorForm(null)
+
+      await crearMatriculaAcademica({
+        estudianteId,
+        periodoId,
+        asignaturas: selectedMaterias.map((materia) => ({
+          asignaturaId: materia.id,
+          grupo: materia.grupo.trim(),
+        })),
+      })
+
+      const matriculaVigente = await getMatriculaVigenteByEstudiante(estudianteId)
+      if (matriculaVigente) {
+        setPeriodoId(matriculaVigente.periodoId)
+        setConvocatoria((current) =>
+          current
+            ? {
+                ...current,
+                periodoLabel: matriculaVigente.periodoAcademico,
+              }
+            : current,
+        )
+      }
+
+      window.alert('Matrícula registrada correctamente.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No fue posible registrar la matrícula.'
+      setErrorForm(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isEstudiante) {
@@ -141,6 +231,11 @@ const MatriculaPage = () => {
                   <MateriasSelector materias={materiasCatalogo} selected={selectedMaterias} onAdd={handleAddMateria} />
                   <MateriasSelectedTable
                     selected={selectedMaterias}
+                    onGrupoChange={(id, grupo) =>
+                      setSelectedMaterias((current) =>
+                        current.map((item) => (item.id === id ? { ...item, grupo } : item)),
+                      )
+                    }
                     onRemove={(id) => setSelectedMaterias((current) => current.filter((item) => item.id !== id))}
                   />
                 </>
@@ -158,10 +253,10 @@ const MatriculaPage = () => {
               <button
                 type="button"
                 className="matricula-page__confirm"
-                disabled={selectedMaterias.length === 0}
-                onClick={handleConfirmMatricula}
+                disabled={selectedMaterias.length === 0 || isSubmitting}
+                onClick={() => void handleConfirmMatricula()}
               >
-                Confirmar matrícula
+                {isSubmitting ? 'Confirmando...' : 'Confirmar matrícula'}
               </button>
             </div>
           </>

@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 9, 2026 (latest): `/matricula` para rol `ESTUDIANTE` ya consume asignaturas reales desde `GET /sapp/asignaturas?programaId=1` (antes mock), mantiene selector sin duplicados y ahora exige `grupo` por materia seleccionada antes de confirmar.
+- April 9, 2026 (latest): confirmación de matrícula en frontend integrada a `POST /sapp/matriculaAcademica` con payload `{ estudianteId, periodoId, asignaturas: [{ asignaturaId, grupo }] }`; al completar, se reconsulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para sincronizar periodo académico vigente en UI.
 - April 9, 2026 (latest): en `SolicitudDetallePage` (coordinador/admin), el cambio de estado ahora usa endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=...` con `siglaEstado ∈ { EN_REVISION, APROBADA, RECHAZADA }`. Se removió el contrato de endpoints separados y se alineó la opción visible “EN REVISION” en el selector.
 - April 9, 2026 (latest): en **Estudiantes (coordinación)** el combo de programas ya no usa catálogo mock local; ahora consume `GET /sapp/programaAcademico` con contrato `{ ok, message, data[] }` (`id`, `nombre`, `codigoNombre`), mapea `nombre` corto (`MISI`/`DCC`) a nombre largo institucional y filtra estrictamente dos programas permitidos para coordinación. El listado/detalle de estudiantes continúa mock por ahora.
 - Student cards en Admisiones (coordinación) ahora muestran correctamente campos largos (correo/teléfono) sin superposición visual y el estado se presenta legible con espacios en lugar de `_`.
@@ -220,6 +222,7 @@
 20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+- **Matrícula estudiante (API real):** `src/pages/Matricula/MatriculaPage.tsx`, `src/modules/matricula/services/matriculaAcademicaService.ts`, `src/modules/matricula/components/MateriasSelectedTable/*`, `src/modules/matricula/components/MateriasSelector/*`, `src/modules/matricula/types.ts`.
 - **Módulo Estudiantes coordinación (nuevo):** `src/modules/estudiantes/types.ts`, `src/modules/estudiantes/mock/estudiantes.mock.ts`, `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/estudiantes/components/EstudianteCard/*`, `src/pages/EstudiantesCoordinacion/*`, `src/pages/EstudianteDetalleCoordinacion/*`, y wiring en `src/app/routes/index.tsx` + `src/components/Sidebar/Sidebar.tsx`.
 - **Aspirante investigación update (nuevo):** `src/api/aspiranteService.ts`, `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`.
 - **Cambio de estado al expandir documentos (nuevo):** `src/modules/admisiones/api/inscripcionCambioEstadoService.ts`, `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`, `src/modules/admisiones/api/inscripcionAdmisionService.ts`, `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
@@ -284,6 +287,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 9, 2026 after replacing matrícula materias mock with real asignaturas endpoint, adding per-materia `grupo`, and wiring create/reload matrícula flows (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`).
 - `npm run build` ✅ passes on April 9, 2026 after updating Solicitudes coordinator detail to unified estado endpoint (`PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`) and normalizing UI/estado badge to `EN REVISION`.
 - `npm run lint` ❌ fails on April 9, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, and unused vars in other modules).
 - `npm run build` ✅ passes on April 8, 2026 after adding backend-driven state handling in aspirante checklist (`APROBADO`/`RECHAZADO`) with re-upload requirement for rejected docs.
