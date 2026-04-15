@@ -1,4 +1,5 @@
 .app-shell {
+  --sidebar-collapsed-width: 84px;
   min-height: 100vh;
   display: flex;
   flex-direction: row;
@@ -9,7 +10,7 @@
   flex: 1;
   min-width: 0;
   padding: clamp(1rem, 2.2vw, 2rem);
-  margin-left: 260px;
+  margin-left: var(--sidebar-collapsed-width);
 }
 
 @media (max-width: 900px) {

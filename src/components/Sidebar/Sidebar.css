@@ -1,12 +1,14 @@
 .sidebar {
-  width: 260px;
+  --sidebar-collapsed-width: 84px;
+  --sidebar-expanded-width: 260px;
+  width: var(--sidebar-collapsed-width);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--primary), #0b1d0a 25%) 0%,
     color-mix(in srgb, var(--primary), #162415 36%) 100%
   );
   color: var(--on-primary);
-  padding: 28px 20px;
+  padding: 28px 12px;
   display: flex;
   flex-direction: column;
   box-shadow: 8px 0 28px rgba(20, 34, 19, 0.2);
@@ -15,18 +17,48 @@
   left: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.25s ease, padding 0.25s ease;
+  z-index: 20;
+}
+
+.sidebar:hover,
+.sidebar:focus-within {
+  width: var(--sidebar-expanded-width);
+  padding-inline: 20px;
 }
 
 .sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 32px;
+  min-height: 32px;
+}
+
+.sidebar__brand-icon,
+.sidebar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  min-width: 26px;
+  font-size: 16px;
 }
 
 .sidebar__nav {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.sidebar__link,
+.sidebar__logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sidebar__link {
@@ -46,6 +78,20 @@
   font-weight: 600;
 }
 
+.sidebar__label {
+  white-space: nowrap;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.18s ease;
+}
+
+.sidebar:hover .sidebar__label,
+.sidebar:focus-within .sidebar__label {
+  opacity: 1;
+  width: auto;
+}
+
 .sidebar__footer {
   margin-top: auto;
   padding-top: 20px;
@@ -55,12 +101,8 @@
   gap: 12px;
 }
 
-.sidebar__user {
-  margin: 0;
-  font-size: 14px;
-}
-
 .sidebar__logout {
+  width: 100%;
   background-color: var(--surface);
   color: var(--primary);
   border: none;
@@ -68,6 +110,7 @@
   padding: 8px 12px;
   cursor: pointer;
   font-weight: 600;
+  text-align: left;
 }
 
 .sidebar__logout:hover {
@@ -75,7 +118,9 @@
 }
 
 @media (max-width: 900px) {
-  .sidebar {
+  .sidebar,
+  .sidebar:hover,
+  .sidebar:focus-within {
     width: 100%;
     min-height: auto;
     position: static;
@@ -97,13 +142,21 @@
     gap: 8px;
   }
 
-  .sidebar__link {
-    text-align: center;
+  .sidebar__link,
+  .sidebar__logout {
+    justify-content: center;
     padding: 9px 10px;
   }
 
   .sidebar__footer {
     margin-top: 16px;
     padding-top: 14px;
+  }
+
+  .sidebar__label,
+  .sidebar:hover .sidebar__label,
+  .sidebar:focus-within .sidebar__label {
+    opacity: 1;
+    width: auto;
   }
 }
