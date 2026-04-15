@@ -1,4 +1,4 @@
-import { httpGet } from '../../../shared/http/httpClient'
+import { httpGet, httpPut } from '../../../shared/http/httpClient'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
 import type { ApiResponse } from './types'
 
@@ -15,4 +15,23 @@ export const getEvaluacionAdmisionInfo = async (
   }
 
   return response.data ?? []
+}
+
+export interface RegistroPuntajeUpdateItem {
+  id: number
+  puntajeAspirante: number | null
+  observaciones: string | null
+}
+
+export const updateEvaluacionRegistroPuntaje = async (
+  updates: RegistroPuntajeUpdateItem[],
+): Promise<void> => {
+  const response = await httpPut<ApiResponse<unknown>>(
+    '/sapp/evaluacionAdmision/registroPuntaje',
+    updates,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'Error al actualizar puntajes de evaluación')
+  }
 }
