@@ -95,6 +95,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 15, 2026: en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` se retiró la columna **Acción** y la edición por fila; ahora la tabla mantiene campos de **Observaciones** y **Nota** siempre habilitados, marca filas modificadas en memoria y ejecuta actualización masiva con `PUT /sapp/evaluacionAdmision/registroPuntaje` al pulsar **Actualizar**.
 - April 15, 2026: se actualizó el sidebar global para mostrar íconos semánticos por opción (Solicitudes, Matrícula, Créditos, Estudiantes, Admisiones y Cerrar sesión) y mejorar el escaneo visual del menú.
 - April 15, 2026: el sidebar desktop quedó en modo colapsado por defecto (84px) y ahora se expande automáticamente al pasar el mouse o enfocar elementos (`:hover` / `:focus-within`), liberando más espacio horizontal para el contenido principal.
 - April 9, 2026: se reforzó la validación de elegibilidad en `/matricula` justo antes del `POST /sapp/matriculaAcademica` (re-validación en tiempo real con `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`) para bloquear confirmación si backend responde que ya existe matrícula vigente o que `data=false` (sin periodo vigente), evitando confirmaciones con estado desactualizado en frontend.

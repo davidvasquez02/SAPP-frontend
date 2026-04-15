@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../../../components'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
-import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
+import {
+  getEvaluacionAdmisionInfo,
+  updateEvaluacionRegistroPuntaje,
+} from '../../api/evaluacionAdmisionService'
 import EvaluacionEtapaSection, {
   type EvaluacionDraft,
 } from '../../components/EvaluacionEtapaSection/EvaluacionEtapaSection'
@@ -52,9 +55,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<number, EvaluacionDraft>>({})
-  const [editingRowId, setEditingRowId] = useState<number | null>(null)
+  const [modifiedByRow, setModifiedByRow] = useState<Record<number, boolean>>({})
   const [errorsByRow, setErrorsByRow] = useState<Record<number, string | null>>({})
-  const [savingRowId, setSavingRowId] = useState<number | null>(null)
+  const [savingBulk, setSavingBulk] = useState(false)
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
   const [hojaVidaPreviewDoc, setHojaVidaPreviewDoc] = useState<HojaVidaPreviewDocument | null>(null)
   const [hojaVidaDocStatus, setHojaVidaDocStatus] = useState<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
@@ -81,6 +84,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       try {
         const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
         setItems(data)
+        setDrafts({})
+        setModifiedByRow({})
+        setErrorsByRow({})
       } catch (errorResponse) {
         const message =
           errorResponse instanceof Error
@@ -181,77 +187,95 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     return () => URL.revokeObjectURL(url)
   }, [hojaVidaPreviewDoc])
 
-  const saveEvaluacionItem = async (updated: EvaluacionAdmisionItem): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
-    window.alert('Guardado (mock).')
+  const normalizeObservaciones = (value: string | null | undefined): string | null => {
+    if (!value) return null
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
   }
 
-  const handleEditRow = (item: EvaluacionAdmisionItem) => {
-    setEditingRowId(item.id)
-    setDrafts((prev) => ({
-      ...prev,
-      [item.id]: {
-        puntajeAspirante: item.puntajeAspirante ?? undefined,
-        observaciones: item.observaciones ?? '',
-      },
-    }))
-    setErrorsByRow((prev) => ({
-      ...prev,
-      [item.id]: buildValidationMessage(item.puntajeAspirante ?? undefined, item.puntajeMax),
-    }))
-  }
-
-  const handleCancelEdit = (id: number) => {
-    setEditingRowId(null)
-    setDrafts((prev) => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
-    setErrorsByRow((prev) => {
-      const next = { ...prev }
-      delete next[id]
-      return next
-    })
+  const isDraftModified = (item: EvaluacionAdmisionItem, draft: EvaluacionDraft): boolean => {
+    const puntajeFromDraft = draft.puntajeAspirante ?? item.puntajeAspirante
+    const observacionesFromDraft = draft.observaciones ?? item.observaciones ?? ''
+    return (
+      puntajeFromDraft !== item.puntajeAspirante ||
+      normalizeObservaciones(observacionesFromDraft) !== normalizeObservaciones(item.observaciones)
+    )
   }
 
   const handleChangeDraft = (id: number, changes: EvaluacionDraft) => {
-    setDrafts((prev) => ({
-      ...prev,
-      [id]: {
+    const item = items.find((current) => current.id === id)
+    if (!item) return
+
+    setDrafts((prev) => {
+      const nextDraft = {
         ...prev[id],
         ...changes,
-      },
-    }))
+      }
+
+      setModifiedByRow((prevModified) => ({
+        ...prevModified,
+        [id]: isDraftModified(item, nextDraft),
+      }))
+
+      return {
+        ...prev,
+        [id]: nextDraft,
+      }
+    })
 
     if (Object.prototype.hasOwnProperty.call(changes, 'puntajeAspirante')) {
-      const item = items.find((current) => current.id === id)
-      if (item) {
-        const validation = buildValidationMessage(changes.puntajeAspirante, item.puntajeMax)
-        setErrorsByRow((prev) => ({
-          ...prev,
-          [id]: validation,
-        }))
-      }
+      const puntajeForValidation = changes.puntajeAspirante ?? drafts[id]?.puntajeAspirante
+      const validation = buildValidationMessage(puntajeForValidation, item.puntajeMax)
+      setErrorsByRow((prev) => ({
+        ...prev,
+        [id]: validation,
+      }))
     }
   }
 
-  const handleSaveItem = async (updated: EvaluacionAdmisionItem) => {
-    if (errorsByRow[updated.id]) {
+  const handleSaveBulk = async () => {
+    const changedItems = items.filter((item) => modifiedByRow[item.id])
+    if (changedItems.length === 0) return
+
+    const hasValidationErrors = changedItems.some((item) => Boolean(errorsByRow[item.id]))
+    if (hasValidationErrors) {
+      window.alert('Hay filas con errores de validación. Revise los puntajes antes de actualizar.')
       return
     }
 
-    setSavingRowId(updated.id)
+    const payload = changedItems.map((item) => {
+      const draft = drafts[item.id]
+      return {
+        id: item.id,
+        puntajeAspirante: draft?.puntajeAspirante ?? item.puntajeAspirante,
+        observaciones: normalizeObservaciones(draft?.observaciones ?? item.observaciones ?? ''),
+      }
+    })
+
+    setSavingBulk(true)
     try {
-      await saveEvaluacionItem(updated)
-      handleCancelEdit(updated.id)
+      await updateEvaluacionRegistroPuntaje(payload)
+      setItems((prev) =>
+        prev.map((item) => {
+          const changed = payload.find((update) => update.id === item.id)
+          if (!changed) return item
+          return {
+            ...item,
+            puntajeAspirante: changed.puntajeAspirante,
+            observaciones: changed.observaciones,
+          }
+        }),
+      )
+      setDrafts({})
+      setModifiedByRow({})
+      setErrorsByRow({})
+      window.alert('Registros actualizados correctamente.')
     } catch (errorResponse) {
       const message =
-        errorResponse instanceof Error ? errorResponse.message : 'No fue posible guardar.'
+        errorResponse instanceof Error ? errorResponse.message : 'No fue posible actualizar.'
       window.alert(message)
     } finally {
-      setSavingRowId(null)
+      setSavingBulk(false)
     }
   }
 
@@ -312,13 +336,11 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               etapa={etapa}
               items={items}
               drafts={drafts}
-              editingRowId={editingRowId}
               errorsByRow={errorsByRow}
-              savingRowId={savingRowId}
-              onEditRow={handleEditRow}
-              onCancelEdit={handleCancelEdit}
+              modifiedByRow={modifiedByRow}
+              isSavingBulk={savingBulk}
               onChangeDraft={handleChangeDraft}
-              onSaveItem={handleSaveItem}
+              onSaveBulk={handleSaveBulk}
             />
           </div>
           {isHojaDeVida && (
@@ -424,13 +446,8 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 etapa={etapa}
                 items={grupo.items}
                 drafts={drafts}
-                editingRowId={editingRowId}
                 errorsByRow={errorsByRow}
-                savingRowId={savingRowId}
-                onEditRow={handleEditRow}
-                onCancelEdit={handleCancelEdit}
                 onChangeDraft={handleChangeDraft}
-                onSaveItem={handleSaveItem}
               />
             </div>
           ))}

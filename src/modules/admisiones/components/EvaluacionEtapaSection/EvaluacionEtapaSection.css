@@ -38,6 +38,10 @@
   font-size: 0.95rem;
 }
 
+.evaluacion-etapa-section__row--modified td {
+  background: color-mix(in srgb, var(--primary), transparent 94%);
+}
+
 .evaluacion-etapa-section__table th {
   background: color-mix(in srgb, var(--surface), var(--outline) 7%);
   font-weight: 600;
@@ -145,6 +149,11 @@
 .evaluacion-etapa-section__button--secondary {
   background: color-mix(in srgb, var(--surface), var(--outline) 45%);
   color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (max-width: 768px) {

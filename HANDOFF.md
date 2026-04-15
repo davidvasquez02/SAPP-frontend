@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 15, 2026 (latest): en evaluación de **Hoja de vida** (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida`) se eliminó la columna Acción/Editar por fila; los campos `observaciones` y `puntajeAspirante` ahora están siempre habilitados, se rastrean cambios por `id` en frontend y el botón final **Actualizar** envía únicamente filas modificadas al endpoint real `PUT /sapp/evaluacionAdmision/registroPuntaje`.
 - April 15, 2026 (latest): sidebar de la app actualizado con iconografía por opción (Solicitudes, Matrícula, Créditos, Estudiantes, Admisiones) y CTA de salida con icono, mejorando escaneo visual de navegación.
 - April 15, 2026 (latest): sidebar desktop ahora inicia colapsado (84px) y se expande automáticamente con `:hover` / `:focus-within`; el contenido principal usa margen fijo colapsado para ganar espacio útil en pantalla.
 - Coordinación > Estudiantes list endpoint integration is active in frontend service layer (`/sapp/estudiantes/consulta`). Program selector already uses `/sapp/programaAcademico`; both are now backend-driven for the list screen.
@@ -298,6 +299,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 15, 2026 after refactoring Hoja de vida evaluation editing to always-enabled fields + bulk update (`PUT /sapp/evaluacionAdmision/registroPuntaje`) with modified-row tracking.
+- `npm run lint` ❌ fails on April 15, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, unused vars in other modules).
 - `npm run build` ✅ passes on April 9, 2026 after hardening matrícula eligibility flow with pre-submit revalidation + tolerant response parsing (`data[] | object | true/false | "true"/"false"`) for `/sapp/matriculaAcademica/vigente/estudiante/{id}`.
 - `npm run build` ✅ passes on April 9, 2026 after adding matrícula eligibility gating with `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` (`data[]|true|false` handling) and disabling confirm action when creation is not allowed.
 - `npm run build` ✅ passes on April 9, 2026 after replacing matrícula materias mock with real asignaturas endpoint, adding per-materia `grupo`, and wiring create/reload matrícula flows (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`).
