@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 15, 2026 (latest): sidebar de la app actualizado con iconografía por opción (Solicitudes, Matrícula, Créditos, Estudiantes, Admisiones) y CTA de salida con icono, mejorando escaneo visual de navegación.
+- April 15, 2026 (latest): sidebar desktop ahora inicia colapsado (84px) y se expande automáticamente con `:hover` / `:focus-within`; el contenido principal usa margen fijo colapsado para ganar espacio útil en pantalla.
 - Coordinación > Estudiantes list endpoint integration is active in frontend service layer (`/sapp/estudiantes/consulta`). Program selector already uses `/sapp/programaAcademico`; both are now backend-driven for the list screen.
 - April 9, 2026 (latest): `/matricula` ahora revalida elegibilidad inmediatamente antes de confirmar (`GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`) para bloquear condiciones de carrera/estado stale. También se robusteció el parser del contrato para soportar `data` como `boolean`, string (`"true"`/`"false"`), objeto único o arreglo.
 - April 9, 2026 (latest): `/matricula` ahora valida primero `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para decidir si el estudiante puede confirmar matrícula. Reglas aplicadas en UI: `data[]` => matrícula existente (bloquea creación), `data=false` => no hay periodo vigente (bloquea creación), `data=true` => habilita creación.
