@@ -62,7 +62,6 @@ const EvaluacionEtapaSection = ({
           <table className="evaluacion-etapa-section__table">
             <thead>
               <tr>
-                <th>Código</th>
                 <th>Aspecto</th>
                 <th>Consideraciones</th>
                 <th>Observaciones</th>
@@ -83,7 +82,6 @@ const EvaluacionEtapaSection = ({
 
                 return (
                   <tr key={item.id}>
-                    <td className="evaluacion-etapa-section__cell-code">{item.codigo || '-'}</td>
                     <td>{item.aspecto}</td>
                     <td>
                       {item.consideraciones ? (
