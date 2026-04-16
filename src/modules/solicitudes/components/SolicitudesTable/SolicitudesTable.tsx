@@ -62,8 +62,6 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                 {mode === 'COORDINADOR' && <td data-label="Estudiante">{row.estudiante ?? '—'}</td>}
                 {mode === 'COORDINADOR' && <td data-label="Código UIS">{row.codigoEstudianteUis ?? '—'}</td>}
                 <td data-label="Tipo">
-                  <strong>{row.tipoSolicitudCodigo}</strong>
-                  <br />
                   <span>{getCellText(row.tipoSolicitud, 'Sin descripción.')}</span>
                 </td>
                 <td data-label="Estado">
