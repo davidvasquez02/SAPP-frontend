@@ -97,6 +97,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 16, 2026: se corrigió un crash en `/solicitudes` (coordinación) cuando backend retorna tipos con `codigoNombre` nulo/indefinido; `formatTipoSolicitudLabel` ahora es null-safe y el filtro muestra fallback `Sin tipo de solicitud` si no hay etiqueta utilizable.
 - April 16, 2026: en `/solicitudes` (coordinación) se ajustó UX del listado: la columna de tipo ya no muestra el código, el combo de filtro de tipo también muestra solo nombre, se ajustaron márgenes de la barra de filtros, se aplica orden descendente por `fechaRegistro`, y se agregó paginación local de 10 registros por página.
 - April 16, 2026: en `/solicitudes/:solicitudId` (coordinación/admin) la sección **Documentos adjuntos** dejó de depender del mock y ahora consulta `GET /sapp/document?tramiteId={id}&codigoTipoTramiteId={codigo}` para cargar archivos reales según el tipo de trámite de la solicitud.
 - April 15, 2026: en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` se retiró la columna **Acción** y la edición por fila; ahora la tabla mantiene campos de **Observaciones** y **Nota** siempre habilitados, marca filas modificadas en memoria y ejecuta actualización masiva con `PUT /sapp/evaluacionAdmision/registroPuntaje` al pulsar **Actualizar**.

@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 16, 2026 (latest): fix de estabilidad en `/solicitudes` (COORDINADOR) para evitar `TypeError: Cannot read properties of undefined (reading 'trim')` cuando `tipoSolicitud.codigoNombre` llega nulo/undefined desde backend; se robusteció `formatTipoSolicitudLabel` y el `<select>` usa fallback visible `Sin tipo de solicitud`.
 - April 16, 2026 (latest): `/solicitudes` en vista COORDINADOR ahora ordena por `fechaRegistro` descendente y pagina localmente en bloques de 10 filas; se agregó paginador (Anterior/Siguiente + indicador de página) y se reinicia a página 1 cuando cambian filtros o se recarga lista.
 - April 16, 2026 (latest): en listado/filtro de tipo de solicitud para coordinación se removió el prefijo de código en UI (ej. `1002 - ...` → solo nombre legible), manteniendo el `tipoSolicitudId` como valor interno del filtro.
 - April 16, 2026 (latest): `SolicitudDetallePage` (COORDINADOR/ADMIN) migra documentos adjuntos de mock a API real mediante `GET /sapp/document?tramiteId={solicitudId}&codigoTipoTramiteId={tipoSolicitudCodigo}`; los adjuntos se mapean desde `documentoUploadedResponse` y continúan usando acciones `Ver`/`Descargar`.
@@ -306,6 +307,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 16, 2026 after hardening `tipoSolicitudLabel` + coordinator filter fallback for null/undefined `codigoNombre` values (`/solicitudes`).
 - `npm run build` ✅ passes on April 15, 2026 after refactoring Hoja de vida evaluation editing to always-enabled fields + bulk update (`PUT /sapp/evaluacionAdmision/registroPuntaje`) with modified-row tracking.
 - `npm run lint` ❌ fails on April 15, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, unused vars in other modules).
 - `npm run build` ✅ passes on April 9, 2026 after hardening matrícula eligibility flow with pre-submit revalidation + tolerant response parsing (`data[] | object | true/false | "true"/"false"`) for `/sapp/matriculaAcademica/vigente/estudiante/{id}`.

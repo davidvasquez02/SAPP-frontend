@@ -4,7 +4,7 @@ export type { ApiResponse }
 
 export interface TipoSolicitudDto {
   id: number
-  codigoNombre: string
+  codigoNombre: string | null
 }
 
 export interface SolicitudAcademicaDto {

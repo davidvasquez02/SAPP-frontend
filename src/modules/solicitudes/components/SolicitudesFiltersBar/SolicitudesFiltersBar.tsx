@@ -75,11 +75,15 @@ const SolicitudesFiltersBar = ({
             }
           >
             <option value="">Todos</option>
-            {tiposSolicitud.map((tipo) => (
-              <option key={tipo.id} value={tipo.id}>
-                {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.codigoNombre}
-              </option>
-            ))}
+            {tiposSolicitud.map((tipo) => {
+              const formattedLabel = formatTipoSolicitudLabel(tipo.codigoNombre)
+
+              return (
+                <option key={tipo.id} value={tipo.id}>
+                  {formattedLabel || tipo.codigoNombre || 'Sin tipo de solicitud'}
+                </option>
+              )
+            })}
           </select>
         </label>
       </div>
