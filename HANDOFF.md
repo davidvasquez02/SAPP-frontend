@@ -1,6 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 16, 2026 (latest): `/solicitudes` en vista COORDINADOR ahora ordena por `fechaRegistro` descendente y pagina localmente en bloques de 10 filas; se agregó paginador (Anterior/Siguiente + indicador de página) y se reinicia a página 1 cuando cambian filtros o se recarga lista.
+- April 16, 2026 (latest): en listado/filtro de tipo de solicitud para coordinación se removió el prefijo de código en UI (ej. `1002 - ...` → solo nombre legible), manteniendo el `tipoSolicitudId` como valor interno del filtro.
+- April 16, 2026 (latest): `SolicitudDetallePage` (COORDINADOR/ADMIN) migra documentos adjuntos de mock a API real mediante `GET /sapp/document?tramiteId={solicitudId}&codigoTipoTramiteId={tipoSolicitudCodigo}`; los adjuntos se mapean desde `documentoUploadedResponse` y continúan usando acciones `Ver`/`Descargar`.
 - April 15, 2026 (latest): en evaluación de **Hoja de vida** (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida`) se eliminó la columna Acción/Editar por fila; los campos `observaciones` y `puntajeAspirante` ahora están siempre habilitados, se rastrean cambios por `id` en frontend y el botón final **Actualizar** envía únicamente filas modificadas al endpoint real `PUT /sapp/evaluacionAdmision/registroPuntaje`.
 - April 15, 2026 (latest): sidebar de la app actualizado con iconografía por opción (Solicitudes, Matrícula, Créditos, Estudiantes, Admisiones) y CTA de salida con icono, mejorando escaneo visual de navegación.
 - April 15, 2026 (latest): sidebar desktop ahora inicia colapsado (84px) y se expande automáticamente con `:hover` / `:focus-within`; el contenido principal usa margen fijo colapsado para ganar espacio útil en pantalla.
@@ -146,6 +149,8 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validar manualmente en navegador `/solicitudes` (coordinación) que la paginación de 10 elementos se mantenga correcta al aplicar/quitar filtros (`estado`, `tipo`) y al volver desde detalle (refresh por `location.state`).
+- Confirmar con backend que el query param oficial para checklist de solicitudes académicas es `codigoTipoTramiteId` (además o en lugar de `codigoTipoTramite`) para estandarizar clientes existentes que consumen `/sapp/document`.
 - Validar manualmente en navegador `/matricula` con los 3 escenarios del backend para `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`: (1) `data[]`, (2) `data=false`, (3) `data=true`, confirmando habilitación/bloqueo del botón `Confirmar matrícula` y mensaje visible en UI.
 - Validación manual pendiente en navegador para detalle coordinador `/solicitudes/:id`: confirmar que `EN REVISION`, `APROBADA` y `RECHAZADA` disparan `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...` con query param correcto y que el badge recargado refleje el estado final.
 - Validar con backend el shape final de `GET /sapp/programaAcademico` (campos `id/codigo/nombre`) para eliminar fallback defensivo de mapeo en frontend y estabilizar el contrato tipado.
@@ -178,6 +183,8 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- Ejecutar validación E2E manual del flujo de coordinación en solicitudes: listar → filtrar → paginar → entrar a detalle → verificar carga de documentos por API real → volver al listado conservando re-fetch.
+- Si backend exige `codigoTipoTramite` (sin sufijo `Id`) para algunos entornos, añadir fallback no disruptivo en `getSolicitudDocumentosAdjuntos` o alinear contrato único con backend antes de merge a ramas de release.
 1. QA manual en `/matricula` (rol ESTUDIANTE) con backend real:
    - Caso A (`data[]`): debe cargar asignaturas de matrícula existente y dejar `Confirmar matrícula` deshabilitado.
    - Caso B (`data=false`): debe mostrar mensaje de periodo no vigente y bloquear creación.

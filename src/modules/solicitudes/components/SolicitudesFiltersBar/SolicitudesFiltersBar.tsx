@@ -1,4 +1,5 @@
 import type { TipoSolicitudDto } from '../../api/types'
+import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import './SolicitudesFiltersBar.css'
 
 type SolicitudesFiltersValue = {
@@ -76,7 +77,7 @@ const SolicitudesFiltersBar = ({
             <option value="">Todos</option>
             {tiposSolicitud.map((tipo) => (
               <option key={tipo.id} value={tipo.id}>
-                {tipo.codigoNombre}
+                {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.codigoNombre}
               </option>
             ))}
           </select>

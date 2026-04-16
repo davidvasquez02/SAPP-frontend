@@ -7,6 +7,17 @@ import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
 import './SolicitudesCoordinadorView.css'
 
+const PAGE_SIZE = 10
+
+const parseDateToEpoch = (value: string | null) => {
+  if (!value) {
+    return 0
+  }
+
+  const epoch = Date.parse(value)
+  return Number.isNaN(epoch) ? 0 : epoch
+}
+
 const SolicitudesCoordinadorView = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -17,6 +28,7 @@ const SolicitudesCoordinadorView = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tiposError, setTiposError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     let mounted = true
@@ -58,7 +70,11 @@ const SolicitudesCoordinadorView = () => {
         if (!mounted) {
           return
         }
-        setRows(solicitudes)
+        const sortedRows = [...solicitudes].sort(
+          (left, right) => parseDateToEpoch(right.fechaRegistro) - parseDateToEpoch(left.fechaRegistro),
+        )
+        setRows(sortedRows)
+        setCurrentPage(1)
       })
       .catch((fetchError) => {
         if (!mounted) {
@@ -76,6 +92,11 @@ const SolicitudesCoordinadorView = () => {
       mounted = false
     }
   }, [estadoId, tipoSolicitudId, location.key, location.state])
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const startIndex = (safeCurrentPage - 1) * PAGE_SIZE
+  const paginatedRows = rows.slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
     <section className="solicitudes-coordinador-view">
@@ -100,7 +121,32 @@ const SolicitudesCoordinadorView = () => {
       ) : rows.length === 0 ? (
         <p className="solicitudes-coordinador-view__status">No hay resultados con los filtros seleccionados.</p>
       ) : (
-        <SolicitudesTable mode="COORDINADOR" rows={rows} onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)} />
+        <>
+          <SolicitudesTable
+            mode="COORDINADOR"
+            rows={paginatedRows}
+            onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+          />
+          <footer className="solicitudes-coordinador-view__pagination" aria-label="Paginación de solicitudes">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={safeCurrentPage <= 1}
+            >
+              Anterior
+            </button>
+            <span>
+              Página {safeCurrentPage} de {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={safeCurrentPage >= totalPages}
+            >
+              Siguiente
+            </button>
+          </footer>
+        </>
       )}
     </section>
   )

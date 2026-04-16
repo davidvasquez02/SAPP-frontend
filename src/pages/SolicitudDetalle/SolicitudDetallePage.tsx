@@ -10,7 +10,7 @@ import {
   type SolicitudEstadoTarget,
 } from '../../modules/solicitudes/api/solicitudCambioEstadoService'
 import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
-import { fetchSolicitudDocumentos } from '../../modules/solicitudes/services/solicitudDocumentosMockService'
+import { getSolicitudDocumentosAdjuntos } from '../../modules/solicitudes/api/solicitudDocumentosService'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
 import SolicitudDocumentosEditor, {
@@ -32,6 +32,11 @@ const formatDate = (value: string | null) => {
 
   const [year, month, day] = value.split('-')
   return `${day}/${month}/${year}`
+}
+
+const parseCodigoTipoTramiteId = (value: string): number | null => {
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? null : parsed
 }
 
 const SolicitudDetallePage = () => {
@@ -132,12 +137,12 @@ const SolicitudDetallePage = () => {
     }
   }, [isEstudiante])
 
-  const loadDocumentos = useCallback(async (parsedId: number) => {
+  const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramiteId: number) => {
     setDocsLoading(true)
     setDocsError(null)
 
     try {
-      const response = await fetchSolicitudDocumentos(parsedId)
+      const response = await getSolicitudDocumentosAdjuntos({ tramiteId, codigoTipoTramiteId })
       setDocumentos(response)
     } catch (documentsError) {
       setDocsError(
@@ -149,17 +154,23 @@ const SolicitudDetallePage = () => {
   }, [])
 
   useEffect(() => {
-    const parsedId = Number(solicitudId)
-
-    if (!isCoordinador || !parsedId) {
+    if (!isCoordinador || !solicitud) {
       setDocumentos([])
       setDocsError(null)
       setDocsLoading(false)
       return
     }
 
-    void loadDocumentos(parsedId)
-  }, [isCoordinador, loadDocumentos, solicitudId])
+    const codigoTipoTramiteId = parseCodigoTipoTramiteId(solicitud.tipoSolicitudCodigo)
+    if (codigoTipoTramiteId == null) {
+      setDocumentos([])
+      setDocsLoading(false)
+      setDocsError('No fue posible determinar el código del tipo de trámite para consultar los documentos.')
+      return
+    }
+
+    void loadDocumentos(solicitud.id, codigoTipoTramiteId)
+  }, [isCoordinador, loadDocumentos, solicitud])
 
   const editableSolicitud =
     isEstudiante &&
@@ -414,9 +425,9 @@ const SolicitudDetallePage = () => {
                   isLoading={docsLoading}
                   error={docsError}
                   onRetry={() => {
-                    const parsedId = Number(solicitudId)
-                    if (parsedId) {
-                      void loadDocumentos(parsedId)
+                    const codigoTipoTramiteId = parseCodigoTipoTramiteId(solicitud.tipoSolicitudCodigo)
+                    if (codigoTipoTramiteId != null) {
+                      void loadDocumentos(solicitud.id, codigoTipoTramiteId)
                     }
                   }}
                 />
