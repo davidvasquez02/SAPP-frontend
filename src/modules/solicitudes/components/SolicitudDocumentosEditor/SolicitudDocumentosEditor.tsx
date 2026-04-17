@@ -18,6 +18,7 @@ interface SolicitudDocumentosEditorProps {
   codigoTipoTramite: string
   usuarioCargaId: number | null
   editable: boolean
+  showSaveButton?: boolean
   onDocsChanged?: () => void
   onDocsCommitted?: () => void
 }
@@ -28,12 +29,13 @@ const dateFormatter = new Intl.DateTimeFormat('es-CO', {
 })
 
 const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, SolicitudDocumentosEditorProps>(
-  ({ solicitudId, codigoTipoTramite, usuarioCargaId, editable, onDocsChanged, onDocsCommitted }, ref) => {
+  ({ solicitudId, codigoTipoTramite, usuarioCargaId, editable, showSaveButton = editable, onDocsChanged, onDocsCommitted }, ref) => {
     const [requirements, setRequirements] = useState<DocumentChecklistItemDto[]>([])
     const [selectedFiles, setSelectedFiles] = useState<Record<number, File | null>>({})
     const [isLoading, setIsLoading] = useState(false)
     const [loadError, setLoadError] = useState<string | null>(null)
     const [uploadError, setUploadError] = useState<string | null>(null)
+    const [isSavingDocs, setIsSavingDocs] = useState(false)
 
     const loadRequirements = async () => {
       const codigoTipoTramiteAsNumber = Number(codigoTipoTramite)
@@ -71,34 +73,39 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
     })
 
     const commitChanges = async (): Promise<void> => {
+      setIsSavingDocs(true)
       setUploadError(null)
-      const entries = Object.entries(selectedFiles)
-      for (const [idAsString, file] of entries) {
-        if (!file) {
-          continue
+      try {
+        const entries = Object.entries(selectedFiles)
+        for (const [idAsString, file] of entries) {
+          if (!file) {
+            continue
+          }
+
+          const tipoDocumentoTramiteId = Number(idAsString)
+          const buffer = await file.arrayBuffer()
+          const contenidoBase64 = await fileToBase64(file)
+          const checksum = await sha256Hex(buffer)
+
+          await uploadDocument({
+            tipoDocumentoTramiteId,
+            nombreArchivo: file.name,
+            tramiteId: solicitudId,
+            usuarioCargaId,
+            aspiranteCargaId: null,
+            contenidoBase64,
+            mimeType: file.type || 'application/octet-stream',
+            tamanoBytes: file.size,
+            checksum,
+          })
         }
 
-        const tipoDocumentoTramiteId = Number(idAsString)
-        const buffer = await file.arrayBuffer()
-        const contenidoBase64 = await fileToBase64(file)
-        const checksum = await sha256Hex(buffer)
-
-        await uploadDocument({
-          tipoDocumentoTramiteId,
-          nombreArchivo: file.name,
-          tramiteId: solicitudId,
-          usuarioCargaId,
-          aspiranteCargaId: null,
-          contenidoBase64,
-          mimeType: file.type || 'application/octet-stream',
-          tamanoBytes: file.size,
-          checksum,
-        })
+        setSelectedFiles({})
+        await loadRequirements()
+        onDocsCommitted?.()
+      } finally {
+        setIsSavingDocs(false)
       }
-
-      setSelectedFiles({})
-      await loadRequirements()
-      onDocsCommitted?.()
     }
 
     useImperativeHandle(ref, () => ({
@@ -212,6 +219,22 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
         )}
 
         {uploadError && <p className="solicitud-documentos-editor__warning">{uploadError}</p>}
+        {editable && showSaveButton && (
+          <div className="solicitud-documentos-editor__footer">
+            <button
+              type="button"
+              className="solicitud-documentos-editor__save-button"
+              disabled={isSavingDocs}
+              onClick={() => {
+                void commitChanges().catch((error) => {
+                  setUploadError(error instanceof Error ? error.message : 'No fue posible guardar los documentos.')
+                })
+              }}
+            >
+              {isSavingDocs ? 'Guardando...' : 'Guardar documentos'}
+            </button>
+          </div>
+        )}
         {hasMissingRequired && editable && (
           <p className="solicitud-documentos-editor__warning">Faltan documentos obligatorios por adjuntar.</p>
         )}

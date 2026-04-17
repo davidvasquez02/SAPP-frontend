@@ -81,3 +81,24 @@
   border-radius: 0.75rem;
   padding: 0.55rem 0.7rem;
 }
+
+.solicitud-documentos-editor__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.solicitud-documentos-editor__save-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.48rem 1rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.solicitud-documentos-editor__save-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

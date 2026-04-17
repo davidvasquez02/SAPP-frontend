@@ -1,7 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) ahora muestra el listado de **Documentos adjuntos** usando el mismo servicio del detalle de coordinación (`getSolicitudDocumentosAdjuntos` -> `GET /sapp/document?tramiteId={id}&codigoTipoTramite={tipoTramiteCodigo}`), con estados de carga/error/reintento.
+- April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) eliminó la duplicidad de secciones de documentos y ahora deja una sola experiencia unificada basada en `SolicitudDocumentosEditor` (sin tabla extra de `DocumentosAdjuntos` en esa vista).
+- April 17, 2026 (latest): `SolicitudDocumentosEditor` para ESTUDIANTE ahora permite guardar reemplazos directamente en la misma sección con botón `Guardar documentos` (subida real a backend vía `POST /sapp/document`), manteniendo formato visual consistente con otros flujos de documentos.
 - April 17, 2026 (latest): `SolicitudDocumentosEditor` dejó de depender del store mock local y ahora consulta checklist real (`getChecklistDocumentos`) + reemplaza archivos con `uploadDocument` (`POST /sapp/document`), calculando `checksum` SHA-256 y refrescando el checklist/documentos al guardar.
 - Solicitudes (estudiante) quedó ajustado para crear solicitud y, en el mismo submit, subir documentos secuencialmente al endpoint `/sapp/document` usando `tramiteId = solicitud.id`, `usuarioCargaId = session.user.id` y `aspiranteCargaId = null`; si falla algún archivo se reporta error parcial manteniendo la solicitud creada.
 - April 17, 2026 (latest): en los listados de `/solicitudes` se ajustó la columna **Estado** para evitar badges desbordados con etiquetas largas. Ahora el badge en tabla usa ancho fijo en desktop (`9.5rem`) y ajuste de texto (multilínea) con `overflow-wrap`; en mobile conserva ancho fluido para no romper el layout tipo tarjeta.
@@ -157,6 +158,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Validar manualmente en navegador `/solicitudes/:id` (rol ESTUDIANTE) que la sección única de documentos no duplique registros, y que `Reemplazar` + `Guardar documentos` refresque correctamente el archivo cargado/fecha sin necesidad de recargar página.
 - Verificar contrato backend de `POST /sapp/solicitudesAcademicas`: idealmente debe retornar `id` de la solicitud creada de forma determinística. Hoy el frontend tiene fallback por diff en listado cuando `data.id` no viene informado.
 - Validar manualmente en navegador `/solicitudes` (coordinación) que la paginación de 10 elementos se mantenga correcta al aplicar/quitar filtros (`estado`, `tipo`) y al volver desde detalle (refresh por `location.state`).
 - Confirmar con backend si el endpoint `/sapp/document` seguirá aceptando `codigoTipoTramiteId` como alias legado o si se debe migrar el resto de clientes a `codigoTipoTramite` exclusivamente.
@@ -192,6 +194,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- QA manual dirigida del ajuste en detalle de solicitud de estudiante: confirmar eliminación de duplicado visual y flujo de actualización de documento (`Reemplazar` → `Guardar documentos` → `Ver/Descargar` archivo nuevo).
 - Ejecutar validación E2E manual del flujo de coordinación en solicitudes: listar → filtrar → paginar → entrar a detalle → verificar carga de documentos por API real → volver al listado conservando re-fetch.
 - Si backend exige `codigoTipoTramite` (sin sufijo `Id`) para algunos entornos, añadir fallback no disruptivo en `getSolicitudDocumentosAdjuntos` o alinear contrato único con backend antes de merge a ramas de release.
 1. QA manual en `/matricula` (rol ESTUDIANTE) con backend real:
