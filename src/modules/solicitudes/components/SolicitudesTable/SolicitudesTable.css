@@ -27,6 +27,15 @@
   vertical-align: top;
 }
 
+.solicitudes-table td[data-label='Estado'] .status-badge {
+  width: 9.5rem;
+  max-width: 9.5rem;
+  min-height: 1.8rem;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
 
 .solicitudes-table__observaciones {
   width: 260px;
@@ -96,6 +105,11 @@
     width: auto;
     min-width: 0;
     max-width: none;
+  }
+
+  .solicitudes-table td[data-label='Estado'] .status-badge {
+    width: 100%;
+    max-width: 100%;
   }
 
   .solicitudes-table__observaciones-text {
