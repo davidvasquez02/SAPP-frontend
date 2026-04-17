@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { useAuth } from '../../context/Auth'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
 import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
 import {
@@ -48,6 +50,7 @@ const isEstadoPorValidarDocumentos = (estado?: string | null) => {
 }
 
 const InscripcionAdmisionDetallePage = () => {
+  const { session } = useAuth()
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -108,6 +111,10 @@ const InscripcionAdmisionDetallePage = () => {
     }
     return null
   }, [activeKey])
+
+  const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
+  const isProfesorOnly =
+    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
 
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
@@ -174,6 +181,16 @@ const InscripcionAdmisionDetallePage = () => {
   useEffect(() => {
     void loadEvaluacionEstado()
   }, [loadEvaluacionEstado])
+
+  useEffect(() => {
+    if (!isProfesorOnly || !basePath) {
+      return
+    }
+
+    if (activeKey !== 'entrevistas') {
+      navigate(`${basePath}/entrevistas`, { replace: true })
+    }
+  }, [activeKey, basePath, isProfesorOnly, navigate])
 
   useEffect(() => {
     const previousActiveWindow = prevActiveRef.current
@@ -312,6 +329,9 @@ const InscripcionAdmisionDetallePage = () => {
   )
 
   const outlet = <Outlet />
+  const sectionsToRender = isProfesorOnly
+    ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
+    : INSCRIPCION_SECTIONS
 
   return (
     <ModuleLayout title="Admisiones">
@@ -335,7 +355,7 @@ const InscripcionAdmisionDetallePage = () => {
         ) : null}
 
         <div className="inscripcion-detalle__windows">
-          {INSCRIPCION_SECTIONS.map((section) => {
+          {sectionsToRender.map((section) => {
             const isOpen = activeKey === section.key
             const isEnabled = sectionAvailability[section.key]
             const subtitle = isEnabled ? undefined : DISABLED_MESSAGE
