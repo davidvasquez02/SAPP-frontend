@@ -321,13 +321,8 @@ const SolicitudDetallePage = () => {
                       solicitudId={solicitud.id}
                       codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
                       usuarioCargaId={usuarioSappId}
-                      editable={false}
-                    />
-                    <DocumentosAdjuntos
-                      documentos={documentos}
-                      isLoading={docsLoading}
-                      error={docsError}
-                      onRetry={() => {
+                      editable={editableSolicitud}
+                      onDocsCommitted={() => {
                         const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
                         if (codigoTipoTramite) {
                           void loadDocumentos(solicitud.id, codigoTipoTramite)
@@ -373,6 +368,7 @@ const SolicitudDetallePage = () => {
                         codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
                         usuarioCargaId={usuarioSappId}
                         editable={editableSolicitud}
+                        showSaveButton={false}
                         onDocsCommitted={() => {
                           const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
                           if (codigoTipoTramite) {
