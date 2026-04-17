@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../context/Auth'
+import { uploadDocument } from '../../../../api/documentUploadService'
+import { fileToBase64 } from '../../../../utils/fileToBase64'
+import { sha256Hex } from '../../../../utils/sha256'
 import SolicitudEstudianteForm, {
   type SolicitudEstudiantePayload,
 } from '../SolicitudEstudianteForm/SolicitudEstudianteForm'
@@ -27,6 +30,8 @@ const SolicitudesEstudianteView = () => {
   const [error, setError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
+
+  const usuarioSappId = session && session.kind === 'SAPP' ? session.user.id : null
 
   const loadSolicitudes = async (targetEstudianteId: number) => {
     const solicitudes = await getSolicitudesAcademicasByEstudiante(targetEstudianteId)
@@ -97,8 +102,8 @@ const SolicitudesEstudianteView = () => {
   }, [viewMode])
 
   const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
-    if (estudianteId === null) {
-      setFormError('No hay estudianteId en sesión')
+    if (estudianteId === null || usuarioSappId === null) {
+      setFormError('No hay información de usuario en sesión')
       return
     }
 
@@ -106,16 +111,64 @@ const SolicitudesEstudianteView = () => {
       setSaving(true)
       setFormError(null)
       setFormSuccess(null)
+      const existingIds = new Set(rows.map((row) => row.id))
 
-      await createSolicitudAcademica({
+      const createdSolicitud = await createSolicitudAcademica({
         estudianteId,
         tipoSolicitudId: payload.tipoSolicitudId,
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
       })
 
-      await loadSolicitudes(estudianteId)
-      setFormSuccess('Solicitud registrada correctamente.')
+      const refreshedSolicitudes = await getSolicitudesAcademicasByEstudiante(estudianteId)
+      setRows(refreshedSolicitudes)
+
+      const inferredSolicitudId =
+        createdSolicitud?.id ??
+        refreshedSolicitudes.find((solicitud) => !existingIds.has(solicitud.id))?.id ??
+        refreshedSolicitudes[0]?.id
+
+      if (!inferredSolicitudId) {
+        throw new Error('Se creó la solicitud pero no fue posible determinar el trámite para cargar documentos.')
+      }
+
+      const documentosSeleccionados = payload.documentos.filter((documento) => documento.file)
+      const failedUploads: string[] = []
+
+      for (const documento of documentosSeleccionados) {
+        const file = documento.file
+        if (!file) {
+          continue
+        }
+
+        try {
+          const buffer = await file.arrayBuffer()
+          const contenidoBase64 = await fileToBase64(file)
+          const checksum = await sha256Hex(buffer)
+
+          await uploadDocument({
+            tipoDocumentoTramiteId: documento.id,
+            nombreArchivo: file.name,
+            tramiteId: inferredSolicitudId,
+            usuarioCargaId: usuarioSappId,
+            aspiranteCargaId: null,
+            contenidoBase64,
+            mimeType: file.type || 'application/octet-stream',
+            tamanoBytes: file.size,
+            checksum,
+          })
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Error desconocido'
+          failedUploads.push(`${documento.nombre}: ${message}`)
+        }
+      }
+
+      if (failedUploads.length > 0) {
+        const failedDetails = failedUploads.join(' | ')
+        throw new Error(`La solicitud se creó, pero falló la carga de algunos documentos. ${failedDetails}`)
+      }
+
+      setFormSuccess('Solicitud y documentos registrados correctamente.')
       setViewMode('LIST')
     } catch (saveError) {
       setFormError(saveError instanceof Error ? saveError.message : 'No fue posible registrar la solicitud.')

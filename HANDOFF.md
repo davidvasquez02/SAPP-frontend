@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- Solicitudes (estudiante) quedó ajustado para crear solicitud y, en el mismo submit, subir documentos secuencialmente al endpoint `/sapp/document` usando `tramiteId = solicitud.id`, `usuarioCargaId = session.user.id` y `aspiranteCargaId = null`; si falla algún archivo se reporta error parcial manteniendo la solicitud creada.
 - April 17, 2026 (latest): en los listados de `/solicitudes` se ajustó la columna **Estado** para evitar badges desbordados con etiquetas largas. Ahora el badge en tabla usa ancho fijo en desktop (`9.5rem`) y ajuste de texto (multilínea) con `overflow-wrap`; en mobile conserva ancho fluido para no romper el layout tipo tarjeta.
 - April 17, 2026 (latest): fix de contrato en creación de solicitudes de estudiante. `getTiposSolicitud` ahora normaliza el payload para soportar backend con `tramiteId` (además de `tipoTramiteId`), y completa `tipoTramiteId` antes de llamar `GET /sapp/tramite/document?tipoTramiteId=...`. Con esto se elimina el mensaje de error de falta de `tipoTramiteId` al elegir tipo.
 - April 17, 2026 (latest): en `SolicitudEstudianteForm` (`/solicitudes`, rol ESTUDIANTE) se reemplazó la carga mock de requisitos por consulta real `GET /sapp/tramite/document?tipoTramiteId={tipoTramiteId}` tomando `tipoTramiteId` directamente del tipo seleccionado (`GET /sapp/tipoSolicitud`). La UI de documentos ahora reutiliza `DocumentUploadCard`, igualando el look & feel de la pantalla de carga de documentos del aspirante.
@@ -154,6 +155,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- Verificar contrato backend de `POST /sapp/solicitudesAcademicas`: idealmente debe retornar `id` de la solicitud creada de forma determinística. Hoy el frontend tiene fallback por diff en listado cuando `data.id` no viene informado.
 - Validar manualmente en navegador `/solicitudes` (coordinación) que la paginación de 10 elementos se mantenga correcta al aplicar/quitar filtros (`estado`, `tipo`) y al volver desde detalle (refresh por `location.state`).
 - Confirmar con backend si el endpoint `/sapp/document` seguirá aceptando `codigoTipoTramiteId` como alias legado o si se debe migrar el resto de clientes a `codigoTipoTramite` exclusivamente.
 - Validar manualmente en navegador `/matricula` con los 3 escenarios del backend para `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`: (1) `data[]`, (2) `data=false`, (3) `data=true`, confirmando habilitación/bloqueo del botón `Confirmar matrícula` y mensaje visible en UI.
@@ -311,6 +313,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 17, 2026 after implementing solicitud-estudiante sequential upload flow (create solicitud -> upload each selected document with checksum/base64) and required-doc validation.
+- `npm run lint` ❌ still fails on April 17, 2026 due to pre-existing repository-wide ESLint debt (unrelated to this change).
 - `npm run lint` ❌ fails on April 17, 2026 after the estado-badge width/wrapping update due to **pre-existing** repo-wide ESLint debt unrelated to this UI change (e.g., `no-explicit-any` in `src/api/*Service.ts`, `react-hooks/purity` in `protectedRoute.tsx`, `react-hooks/set-state-in-effect` in Admisiones/Solicitudes, and `react-refresh/only-export-components` in `AuthContext.tsx`).
 - `npm run build` ✅ passes on April 17, 2026 after adding `tramiteId -> tipoTramiteId` normalization in `getTiposSolicitud` and keeping the student request-document fetch flow stable.
 - `npm run build` ✅ passes on April 17, 2026 after wiring solicitudes-estudiante document requirements to `GET /sapp/tramite/document?tipoTramiteId=...` and rendering cards with the aspirante upload style.

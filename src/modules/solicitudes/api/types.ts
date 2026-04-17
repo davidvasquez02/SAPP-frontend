@@ -34,3 +34,8 @@ export interface CreateSolicitudRequestDto {
   fechaResolucion: string | null
   observaciones: string
 }
+
+export interface CreateSolicitudResponseDto {
+  id: number
+  tipoTramiteCodigo?: string | null
+}
