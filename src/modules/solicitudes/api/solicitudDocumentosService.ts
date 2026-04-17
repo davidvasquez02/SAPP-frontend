@@ -21,14 +21,14 @@ const buildDocumentoAdjunto = (item: DocumentChecklistItemDto): SolicitudDocumen
 
 export const getSolicitudDocumentosAdjuntos = async ({
   tramiteId,
-  codigoTipoTramiteId,
+  codigoTipoTramite,
 }: {
   tramiteId: number
-  codigoTipoTramiteId: number
+  codigoTipoTramite: string
 }): Promise<SolicitudDocumentoAdjuntoDto[]> => {
   const qs = new URLSearchParams({
     tramiteId: String(tramiteId),
-    codigoTipoTramiteId: String(codigoTipoTramiteId),
+    codigoTipoTramite,
   })
 
   const response = await httpGet<ApiResponse<DocumentChecklistItemDto[]>>(`/sapp/document?${qs.toString()}`)

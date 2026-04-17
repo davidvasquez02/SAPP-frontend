@@ -34,11 +34,6 @@ const formatDate = (value: string | null) => {
   return `${day}/${month}/${year}`
 }
 
-const parseCodigoTipoTramiteId = (value: string): number | null => {
-  const parsed = Number(value)
-  return Number.isNaN(parsed) ? null : parsed
-}
-
 const SolicitudDetallePage = () => {
   const navigate = useNavigate()
   const { solicitudId } = useParams<{ solicitudId: string }>()
@@ -131,12 +126,12 @@ const SolicitudDetallePage = () => {
     }
   }, [isEstudiante])
 
-  const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramiteId: number) => {
+  const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramite: string) => {
     setDocsLoading(true)
     setDocsError(null)
 
     try {
-      const response = await getSolicitudDocumentosAdjuntos({ tramiteId, codigoTipoTramiteId })
+      const response = await getSolicitudDocumentosAdjuntos({ tramiteId, codigoTipoTramite })
       setDocumentos(response)
     } catch (documentsError) {
       setDocsError(
@@ -155,15 +150,15 @@ const SolicitudDetallePage = () => {
       return
     }
 
-    const codigoTipoTramiteId = parseCodigoTipoTramiteId(solicitud.tipoSolicitudCodigo)
-    if (codigoTipoTramiteId == null) {
+    const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
+    if (!codigoTipoTramite) {
       setDocumentos([])
       setDocsLoading(false)
       setDocsError('No fue posible determinar el código del tipo de trámite para consultar los documentos.')
       return
     }
 
-    void loadDocumentos(solicitud.id, codigoTipoTramiteId)
+    void loadDocumentos(solicitud.id, codigoTipoTramite)
   }, [isCoordinador, loadDocumentos, solicitud])
 
   const editableSolicitud =
@@ -418,9 +413,9 @@ const SolicitudDetallePage = () => {
                   isLoading={docsLoading}
                   error={docsError}
                   onRetry={() => {
-                    const codigoTipoTramiteId = parseCodigoTipoTramiteId(solicitud.tipoSolicitudCodigo)
-                    if (codigoTipoTramiteId != null) {
-                      void loadDocumentos(solicitud.id, codigoTipoTramiteId)
+                    const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
+                    if (codigoTipoTramite) {
+                      void loadDocumentos(solicitud.id, codigoTipoTramite)
                     }
                   }}
                 />
