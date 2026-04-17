@@ -1,5 +1,10 @@
 import { httpGet, httpPost } from '../../../shared/http/httpClient'
-import type { ApiResponse, CreateSolicitudRequestDto, SolicitudAcademicaDto } from './types'
+import type {
+  ApiResponse,
+  CreateSolicitudRequestDto,
+  CreateSolicitudResponseDto,
+  SolicitudAcademicaDto,
+} from './types'
 
 const ENDPOINT_BY_ESTUDIANTE = '/sapp/solicitudesAcademicas/estudiante'
 const ENDPOINT_SOLICITUDES = '/sapp/solicitudesAcademicas'
@@ -61,12 +66,12 @@ export async function getSolicitudAcademicaById(solicitudId: number): Promise<So
   return response.data
 }
 
-export async function createSolicitudAcademica(req: CreateSolicitudRequestDto): Promise<unknown> {
-  const response = await httpPost<ApiResponse<unknown>>('/sapp/solicitudesAcademicas', req)
+export async function createSolicitudAcademica(req: CreateSolicitudRequestDto): Promise<CreateSolicitudResponseDto | null> {
+  const response = await httpPost<ApiResponse<CreateSolicitudResponseDto>>('/sapp/solicitudesAcademicas', req)
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible registrar la solicitud.')
   }
 
-  return response.data
+  return response.data ?? null
 }

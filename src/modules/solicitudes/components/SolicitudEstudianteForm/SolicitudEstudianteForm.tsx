@@ -14,7 +14,7 @@ export interface SolicitudEstudiantePayload {
     id: number
     nombre: string
     obligatorio: boolean
-    fileName: string | null
+    file: File | null
   }>
 }
 
@@ -130,6 +130,18 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
       setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
       return false
     }
+    const missingRequired = documentosDraft.some((documento) => documento.obligatorio && !documento.file)
+    if (missingRequired) {
+      setDocumentosDraft((current) =>
+        current.map((documento) =>
+          documento.obligatorio && !documento.file
+            ? { ...documento, error: 'Este documento es obligatorio.' }
+            : documento,
+        ),
+      )
+      setErrorMsg('Adjunta todos los documentos obligatorios antes de registrar la solicitud.')
+      return false
+    }
 
     setErrorMsg(null)
     return true
@@ -156,7 +168,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
         id: documento.id,
         nombre: documento.nombre,
         obligatorio: documento.obligatorio,
-        fileName: documento.file?.name ?? null,
+        file: documento.file,
       })),
     }
 
