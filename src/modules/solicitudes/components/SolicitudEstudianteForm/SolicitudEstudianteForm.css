@@ -30,8 +30,7 @@
 }
 
 .solicitud-estudiante-form select,
-.solicitud-estudiante-form textarea,
-.solicitud-estudiante-form input[type='file'] {
+.solicitud-estudiante-form textarea {
   font: inherit;
   color: inherit;
 }
@@ -46,36 +45,10 @@
 
 .solicitud-estudiante-form__docs-list {
   margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0.8rem;
 }
 
-.solicitud-estudiante-form__doc-item {
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  background: var(--surface);
-}
-
-.solicitud-estudiante-form__doc-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.solicitud-estudiante-form__badge {
-  border-radius: 999px;
-  padding: 0.1rem 0.6rem;
-  font-size: 0.75rem;
-  background: color-mix(in srgb, var(--inverse-primary), transparent 80%);
-  color: var(--inverse-primary);
-}
-
-.solicitud-estudiante-form__file-name,
 .solicitud-estudiante-form__help,
 .solicitud-estudiante-form__empty {
   margin: 0.4rem 0 0;
