@@ -4,3 +4,6 @@ export const hasAnyRole = (userRoles: string[], requiredRoles: string[]): boolea
   const normalizedUserRoles = new Set(normalizeRoles(userRoles))
   return normalizeRoles(requiredRoles).some((role) => normalizedUserRoles.has(role))
 }
+
+export const isProfesor = (roles: string[]): boolean =>
+  hasAnyRole(roles, ['PROFESOR', 'DOCENTE'])

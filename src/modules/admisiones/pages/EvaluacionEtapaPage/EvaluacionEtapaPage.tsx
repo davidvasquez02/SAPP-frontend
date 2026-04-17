@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../../../components'
+import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
+import { useAuth } from '../../../../context/Auth'
+import type { AuthUser } from '../../../../context/Auth/types'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import {
   getEvaluacionAdmisionInfo,
@@ -49,7 +52,11 @@ const buildValidationMessage = (
   return null
 }
 
+const normalizeWhitespaceUpper = (value: string | null | undefined): string =>
+  (value ?? '').trim().toUpperCase().replace(/\s+/g, ' ')
+
 const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapaPageProps) => {
+  const { session } = useAuth()
   const { convocatoriaId, inscripcionId } = useParams()
   const [items, setItems] = useState<EvaluacionAdmisionItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,42 +71,65 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [hojaVidaDocMessage, setHojaVidaDocMessage] = useState<string | null>(null)
   const isEntrevista = etapa === 'ENTREVISTA'
   const isHojaDeVida = etapa === 'HOJA_DE_VIDA'
-
   const inscripcionIdNumber = useMemo(
     () => (inscripcionId ? Number(inscripcionId) : NaN),
     [inscripcionId],
   )
+  const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
+  const isProfesorOnly =
+    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
 
-  useEffect(() => {
-    const loadEvaluacion = async () => {
-      if (!inscripcionId || Number.isNaN(inscripcionIdNumber)) {
-        setError('Inscripción inválida.')
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      try {
-        const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
-        setItems(data)
-        setDrafts({})
-        setModifiedByRow({})
-        setErrorsByRow({})
-      } catch (errorResponse) {
-        const message =
-          errorResponse instanceof Error
-            ? errorResponse.message
-            : 'No fue posible cargar la evaluación.'
-        setError(message)
-      } finally {
-        setLoading(false)
-      }
+  const nombreProfesor = useMemo(() => {
+    if (session?.kind !== 'SAPP') {
+      return ''
     }
 
-    loadEvaluacion()
-  }, [etapa, inscripcionId, inscripcionIdNumber])
+    const { persona } = session.user as AuthUser
+    return [persona.nombre1, persona.nombre2, persona.apellido1, persona.apellido2]
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }, [session])
+
+  const shouldIncludeByProfesor = useCallback((item: EvaluacionAdmisionItem) => {
+    if (!isProfesorOnly || !isEntrevista) {
+      return true
+    }
+
+    return normalizeWhitespaceUpper(item.evaluador) === normalizeWhitespaceUpper(nombreProfesor)
+  }, [isEntrevista, isProfesorOnly, nombreProfesor])
+
+  const loadEvaluacion = useCallback(async () => {
+    if (!inscripcionId || Number.isNaN(inscripcionIdNumber)) {
+      setError('Inscripción inválida.')
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
+      setItems(data.filter(shouldIncludeByProfesor))
+      setDrafts({})
+      setModifiedByRow({})
+      setErrorsByRow({})
+    } catch (errorResponse) {
+      const message =
+        errorResponse instanceof Error
+          ? errorResponse.message
+          : 'No fue posible cargar la evaluación.'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }, [etapa, inscripcionId, inscripcionIdNumber, shouldIncludeByProfesor])
+
+  useEffect(() => {
+    void loadEvaluacion()
+  }, [loadEvaluacion])
 
   useEffect(() => {
     if (!isHojaDeVida) {
@@ -255,21 +285,8 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     setSavingBulk(true)
     try {
       await updateEvaluacionRegistroPuntaje(payload)
-      setItems((prev) =>
-        prev.map((item) => {
-          const changed = payload.find((update) => update.id === item.id)
-          if (!changed) return item
-          return {
-            ...item,
-            puntajeAspirante: changed.puntajeAspirante,
-            observaciones: changed.observaciones,
-          }
-        }),
-      )
-      setDrafts({})
-      setModifiedByRow({})
-      setErrorsByRow({})
-      window.alert('Registros actualizados correctamente.')
+      window.alert('Calificación guardada')
+      await loadEvaluacion()
     } catch (errorResponse) {
       const message =
         errorResponse instanceof Error ? errorResponse.message : 'No fue posible actualizar.'
@@ -403,7 +420,11 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
         </div>
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length === 0 && (
-        <p className="evaluacion-etapa-page__status">No hay evaluaciones de entrevista.</p>
+        <p className="evaluacion-etapa-page__status">
+          {isProfesorOnly
+            ? 'No tienes aspectos asignados para esta entrevista.'
+            : 'No hay evaluaciones de entrevista.'}
+        </p>
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length > 0 && (
         <div className="evaluacion-etapa-page__groups">

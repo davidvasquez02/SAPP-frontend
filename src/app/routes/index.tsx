@@ -3,6 +3,7 @@ import { AspiranteLayout, Layout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import {
   AdmisionesHomePage,
+  AdmisionesMisEntrevistasPage,
   AspiranteLoginPage,
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
@@ -17,7 +18,7 @@ import {
   LoginPage,
 } from '../../pages'
 import RequireRoles from '../../routes/RequireRoles/RequireRoles'
-import { ROLES } from '../../auth/roleGuards'
+import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
 import RequireEvaluacionEnabled from '../../modules/admisiones/routes/RequireEvaluacionEnabled'
 import { aspiranteRoutes } from './aspiranteRoutes'
 import { AspiranteOnlyRoute } from './aspiranteOnlyRoute'
@@ -29,6 +30,10 @@ import { solicitudesRoutes } from './solicitudesRoutes'
 export const AppRoutes = () => {
   const { isAuthenticated, session } = useAuth()
   const loginRedirect = session?.kind === 'ASPIRANTE' ? '/aspirante/documentos' : '/'
+  const sappRoles = session?.kind === 'SAPP' ? session.user.roles : []
+  const isProfesorOnly = isProfesor(sappRoles)
+  const canManageAdmisiones =
+    session?.kind === 'SAPP' && hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
 
   return (
     <Routes>
@@ -50,8 +55,12 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]}>
-                <AdmisionesHomePage />
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.PROFESOR, ROLES.DOCENTE]}>
+                {isProfesorOnly && !canManageAdmisiones ? (
+                  <AdmisionesMisEntrevistasPage />
+                ) : (
+                  <AdmisionesHomePage />
+                )}
               </RequireRoles>
             }
           />
@@ -74,7 +83,7 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId"
             element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN, ROLES.PROFESOR, ROLES.DOCENTE]}>
                 <InscripcionAdmisionDetallePage />
               </RequireRoles>
             }

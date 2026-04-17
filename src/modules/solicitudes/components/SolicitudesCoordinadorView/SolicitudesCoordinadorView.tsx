@@ -9,6 +9,10 @@ import './SolicitudesCoordinadorView.css'
 
 const PAGE_SIZE = 10
 
+interface SolicitudesCoordinadorViewProps {
+  readOnly?: boolean
+}
+
 const parseDateToEpoch = (value: string | null) => {
   if (!value) {
     return 0
@@ -18,7 +22,7 @@ const parseDateToEpoch = (value: string | null) => {
   return Number.isNaN(epoch) ? 0 : epoch
 }
 
-const SolicitudesCoordinadorView = () => {
+const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [estadoId, setEstadoId] = useState<number | null>(null)
@@ -101,6 +105,11 @@ const SolicitudesCoordinadorView = () => {
   return (
     <section className="solicitudes-coordinador-view">
       <h3>Solicitudes</h3>
+      {readOnly ? (
+        <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">
+          Vista de solo lectura.
+        </p>
+      ) : null}
       <SolicitudesFiltersBar
         estadoId={estadoId}
         tipoSolicitudId={tipoSolicitudId}

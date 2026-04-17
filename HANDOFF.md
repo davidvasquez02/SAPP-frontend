@@ -1,6 +1,9 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 17, 2026 (latest): se implementó rol `PROFESOR` con alias `DOCENTE` en utilitarios de rol, guards y sidebar. Profesor ya navega a `Solicitudes` (vista coordinación en solo lectura) y `Admisiones` (flujo dedicado `Mis entrevistas` con asignaciones mock por `username/userId`).
+- April 17, 2026 (latest): en detalle de inscripción de admisiones, `PROFESOR/DOCENTE` queda restringido solo a `ENTREVISTAS`; accesos directos a `/documentos`, `/hoja-vida` y `/examen` ahora redirigen automáticamente a `/entrevistas`.
+- April 17, 2026 (latest): evaluación de entrevista ahora filtra aspectos por evaluador para profesor (match tolerante por nombre normalizado desde sesión), muestra mensaje explícito cuando no hay aspectos asignados, y guarda notas reales con `POST /sapp/evaluacionAdmision/registroPuntaje` + recarga de datos tras guardar.
 - April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) corrige la regla de edición de documentos para usar estado **normalizado** (`normalizeEstadoSolicitud`) y habilitar reemplazo/carga en la lista actual para `ENVIADA`, `EN_REVISION`, `DEVUELTA` y `RECHAZADA` (evita falsos bloqueos cuando backend retorna `EN REVISION` con espacios).
 - April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) eliminó la duplicidad de secciones de documentos y ahora deja una sola experiencia unificada basada en `SolicitudDocumentosEditor` (sin tabla extra de `DocumentosAdjuntos` en esa vista).
 - April 17, 2026 (latest): `SolicitudDocumentosEditor` para ESTUDIANTE ahora permite guardar reemplazos directamente en la misma sección con botón `Guardar documentos` (subida real a backend vía `POST /sapp/document`), manteniendo formato visual consistente con otros flujos de documentos.
@@ -159,6 +162,8 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+- QA manual pendiente para perfil `PROFESOR/DOCENTE`: validar que sidebar solo expone `Solicitudes` + `Admisiones`, que `/admisiones` lista asignaciones mock propias y que la redirección forzada a `/entrevistas` funciona para deep-links a otras etapas de inscripción.
+- Confirmar con backend la regla definitiva de matching `evaluador` vs usuario autenticado (actualmente se usa nombre completo normalizado de `persona` en sesión).
 - Validar manualmente en navegador `/solicitudes/:id` (rol ESTUDIANTE) que la sección única de documentos no duplique registros, y que `Reemplazar` + `Guardar documentos` refresque correctamente el archivo cargado/fecha sin necesidad de recargar página.
 - Verificar contrato backend de `POST /sapp/solicitudesAcademicas`: idealmente debe retornar `id` de la solicitud creada de forma determinística. Hoy el frontend tiene fallback por diff en listado cuando `data.id` no viene informado.
 - Validar manualmente en navegador `/solicitudes` (coordinación) que la paginación de 10 elementos se mantenga correcta al aplicar/quitar filtros (`estado`, `tipo`) y al volver desde detalle (refresh por `location.state`).
@@ -195,6 +200,8 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- Ejecutar QA manual con dos usuarios: `PROFESOR/DOCENTE` y `COORDINADOR`, verificando que el flujo coordinador no cambió y que el profesor solo puede editar `ENTREVISTAS`.
+- Reemplazar `src/modules/admisiones/mock/profesorAsignaciones.mock.ts` por endpoint real de asignaciones cuando backend lo publique (mantener mismo contrato `AsignacionEntrevista`).
 - QA manual dirigida del ajuste en detalle de solicitud de estudiante: confirmar eliminación de duplicado visual y flujo de actualización de documento (`Reemplazar` → `Guardar documentos` → `Ver/Descargar` archivo nuevo).
 - Ejecutar validación E2E manual del flujo de coordinación en solicitudes: listar → filtrar → paginar → entrar a detalle → verificar carga de documentos por API real → volver al listado conservando re-fetch.
 - Si backend exige `codigoTipoTramite` (sin sufijo `Id`) para algunos entornos, añadir fallback no disruptivo en `getSolicitudDocumentosAdjuntos` o alinear contrato único con backend antes de merge a ramas de release.

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
-import { hasAnyRole, ROLES } from '../../auth/roleGuards'
+import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
 import './Sidebar.css'
 
 interface SidebarItem {
@@ -16,13 +16,20 @@ const Sidebar = () => {
 
   const canSeeAdmisiones =
     session?.kind === 'SAPP' &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN, ROLES.PROFESOR, ROLES.DOCENTE])
+  const canSeeGestionEstudiantes =
+    session?.kind === 'SAPP' &&
     hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+  const isProfesorOnly =
+    session?.kind === 'SAPP' &&
+    isProfesor(session.user.roles) &&
+    !hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
 
   const sidebarItems: SidebarItem[] = [
     { to: '/solicitudes', label: 'Solicitudes', icon: '📝' },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓' },
-    { to: '/creditos', label: 'Créditos', icon: '💳' },
-    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeAdmisiones },
+    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
+    { to: '/creditos', label: 'Créditos', icon: '💳', visible: !isProfesorOnly },
+    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
     { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
   ]
 

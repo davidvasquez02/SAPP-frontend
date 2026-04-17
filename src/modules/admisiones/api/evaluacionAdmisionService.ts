@@ -1,4 +1,4 @@
-import { httpGet, httpPut } from '../../../shared/http/httpClient'
+import { httpGet, httpPost } from '../../../shared/http/httpClient'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
 import type { ApiResponse } from './types'
 
@@ -26,7 +26,7 @@ export interface RegistroPuntajeUpdateItem {
 export const updateEvaluacionRegistroPuntaje = async (
   updates: RegistroPuntajeUpdateItem[],
 ): Promise<void> => {
-  const response = await httpPut<ApiResponse<unknown>>(
+  const response = await httpPost<ApiResponse<unknown>>(
     '/sapp/evaluacionAdmision/registroPuntaje',
     updates,
   )
