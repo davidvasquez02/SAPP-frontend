@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 17, 2026 (latest): fix de contrato en creación de solicitudes de estudiante. `getTiposSolicitud` ahora normaliza el payload para soportar backend con `tramiteId` (además de `tipoTramiteId`), y completa `tipoTramiteId` antes de llamar `GET /sapp/tramite/document?tipoTramiteId=...`. Con esto se elimina el mensaje de error de falta de `tipoTramiteId` al elegir tipo.
 - April 17, 2026 (latest): en `SolicitudEstudianteForm` (`/solicitudes`, rol ESTUDIANTE) se reemplazó la carga mock de requisitos por consulta real `GET /sapp/tramite/document?tipoTramiteId={tipoTramiteId}` tomando `tipoTramiteId` directamente del tipo seleccionado (`GET /sapp/tipoSolicitud`). La UI de documentos ahora reutiliza `DocumentUploadCard`, igualando el look & feel de la pantalla de carga de documentos del aspirante.
 - April 17, 2026 (latest): se alineó todo el módulo de `solicitudes` al catálogo oficial de estados backend (IDs 1..8). `StatusBadge`, filtros de coordinación y selector de cambio de estado en detalle ahora usan un único catálogo (`ENVIADA`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `DEVUELTA`, `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT`). Además, el formulario de creación aclara que el estado inicial es **ENVIADA A COMITE ASESOR DE POSGRADOS**.
 - April 16, 2026 (latest): fix de estabilidad en `/solicitudes` (COORDINADOR) para evitar `TypeError: Cannot read properties of undefined (reading 'trim')` cuando `tipoSolicitud.codigoNombre` llega nulo/undefined desde backend; se robusteció `formatTipoSolicitudLabel` y el `<select>` usa fallback visible `Sin tipo de solicitud`.
@@ -309,6 +310,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 17, 2026 after adding `tramiteId -> tipoTramiteId` normalization in `getTiposSolicitud` and keeping the student request-document fetch flow stable.
 - `npm run build` ✅ passes on April 17, 2026 after wiring solicitudes-estudiante document requirements to `GET /sapp/tramite/document?tipoTramiteId=...` and rendering cards with the aspirante upload style.
 - `npm run build` ✅ passes on April 16, 2026 after hardening `tipoSolicitudLabel` + coordinator filter fallback for null/undefined `codigoNombre` values (`/solicitudes`).
 - `npm run build` ✅ passes on April 15, 2026 after refactoring Hoja de vida evaluation editing to always-enabled fields + bulk update (`PUT /sapp/evaluacionAdmision/registroPuntaje`) with modified-row tracking.
