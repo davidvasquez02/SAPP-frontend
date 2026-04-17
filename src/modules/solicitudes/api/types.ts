@@ -5,6 +5,8 @@ export type { ApiResponse }
 export interface TipoSolicitudDto {
   id: number
   codigoNombre: string | null
+  tipoTramiteId?: number | null
+  nombre?: string | null
 }
 
 export interface SolicitudAcademicaDto {
