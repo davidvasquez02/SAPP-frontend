@@ -18,28 +18,35 @@
   font-size: 0.8rem;
 }
 
-.status-badge.status-badge--registrada {
-  background: rgba(30, 136, 229, 0.14);
-  border-color: rgba(30, 136, 229, 0.45);
-  color: #1e88e5;
+.status-badge.status-badge--enviada {
+  background: color-mix(in srgb, var(--inverse-primary), transparent 86%);
+  border-color: color-mix(in srgb, var(--inverse-primary), transparent 55%);
+  color: var(--inverse-primary);
 }
 
-.status-badge.status-badge--en-estudio {
-  background: rgba(176, 96, 0, 0.14);
-  border-color: rgba(176, 96, 0, 0.45);
+.status-badge.status-badge--en-revision,
+.status-badge.status-badge--en-firma {
+  background: color-mix(in srgb, #b06000, transparent 86%);
+  border-color: color-mix(in srgb, #b06000, transparent 58%);
   color: #b06000;
 }
 
 .status-badge.status-badge--aprobada {
-  background: rgba(30, 142, 62, 0.14);
-  border-color: rgba(30, 142, 62, 0.45);
+  background: color-mix(in srgb, #1e8e3e, transparent 86%);
+  border-color: color-mix(in srgb, #1e8e3e, transparent 58%);
   color: #1e8e3e;
 }
 
 .status-badge.status-badge--rechazada {
-  background: rgba(179, 38, 30, 0.14);
-  border-color: rgba(179, 38, 30, 0.45);
+  background: color-mix(in srgb, #b3261e, transparent 86%);
+  border-color: color-mix(in srgb, #b3261e, transparent 58%);
   color: #b3261e;
+}
+
+.status-badge.status-badge--devuelta {
+  background: color-mix(in srgb, var(--outline), transparent 86%);
+  border-color: color-mix(in srgb, var(--outline), transparent 58%);
+  color: var(--text-secondary);
 }
 
 .status-badge.status-badge--unknown {
