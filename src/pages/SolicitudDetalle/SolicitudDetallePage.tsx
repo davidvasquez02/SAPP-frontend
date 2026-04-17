@@ -41,6 +41,7 @@ const SolicitudDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
+  const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
@@ -143,7 +144,7 @@ const SolicitudDetallePage = () => {
   }, [])
 
   useEffect(() => {
-    if (!isCoordinador || !solicitud) {
+    if (!(isCoordinador || isEstudiante) || !solicitud) {
       setDocumentos([])
       setDocsError(null)
       setDocsLoading(false)
@@ -159,7 +160,7 @@ const SolicitudDetallePage = () => {
     }
 
     void loadDocumentos(solicitud.id, codigoTipoTramite)
-  }, [isCoordinador, loadDocumentos, solicitud])
+  }, [isCoordinador, isEstudiante, loadDocumentos, solicitud])
 
   const editableSolicitud =
     isEstudiante &&
@@ -191,6 +192,10 @@ const SolicitudDetallePage = () => {
       setDraftObservaciones(updated.observaciones ?? '')
       setEditMode(false)
       setSuccessMessage('Cambios guardados (mock)')
+      const codigoTipoTramite = updated.tipoTramiteCodigo?.trim()
+      if (codigoTipoTramite) {
+        await loadDocumentos(updated.id, codigoTipoTramite)
+      }
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No fue posible guardar los cambios.')
     } finally {
@@ -314,8 +319,20 @@ const SolicitudDetallePage = () => {
 
                     <SolicitudDocumentosEditor
                       solicitudId={solicitud.id}
-                      tipoSolicitudId={solicitud.tipoSolicitudId}
+                      codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
+                      usuarioCargaId={usuarioSappId}
                       editable={false}
+                    />
+                    <DocumentosAdjuntos
+                      documentos={documentos}
+                      isLoading={docsLoading}
+                      error={docsError}
+                      onRetry={() => {
+                        const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
+                        if (codigoTipoTramite) {
+                          void loadDocumentos(solicitud.id, codigoTipoTramite)
+                        }
+                      }}
                     />
                   </>
                 ) : (
@@ -353,8 +370,15 @@ const SolicitudDetallePage = () => {
                       <SolicitudDocumentosEditor
                         ref={documentosEditorRef}
                         solicitudId={solicitud.id}
-                        tipoSolicitudId={draftTipoSolicitudId}
+                        codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
+                        usuarioCargaId={usuarioSappId}
                         editable={editableSolicitud}
+                        onDocsCommitted={() => {
+                          const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
+                          if (codigoTipoTramite) {
+                            void loadDocumentos(solicitud.id, codigoTipoTramite)
+                          }
+                        }}
                       />
                     )}
 
