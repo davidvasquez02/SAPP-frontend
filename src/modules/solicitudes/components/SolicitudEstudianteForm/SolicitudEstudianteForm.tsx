@@ -53,10 +53,10 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
       current.map((documento) =>
         documento.id === documentoId
           ? {
-              ...documento,
-              file,
-              error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
-            }
+            ...documento,
+            file,
+            error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
+          }
           : documento,
       ),
     )
@@ -147,7 +147,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
           <option value="">Selecciona una opción</option>
           {tipos.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>
-              {tipo.codigoNombre}
+              {tipo.nombre}
             </option>
           ))}
         </select>
