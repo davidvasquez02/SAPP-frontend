@@ -16,6 +16,7 @@ export interface SolicitudAcademicaDto {
   tipoSolicitudId: number
   tipoSolicitudCodigo: string
   tipoSolicitud: string
+  tipoTramiteCodigo?: string | null
   estadoId: number
   estadoSigla: string
   estado: string
