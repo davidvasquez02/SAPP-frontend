@@ -19,7 +19,7 @@ import SolicitudDocumentosEditor, {
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
-import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
+import { ESTADOS_SOLICITUD_CATALOG, normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -87,13 +87,7 @@ const SolicitudDetallePage = () => {
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
         const normalizedEstado = normalizeEstadoSolicitud(response.estadoSigla || response.estado)
-        if (normalizedEstado === 'APROBADA') {
-          setEstadoTarget('APROBADA')
-        } else if (normalizedEstado === 'RECHAZADA') {
-          setEstadoTarget('RECHAZADA')
-        } else {
-          setEstadoTarget('EN_REVISION')
-        }
+        setEstadoTarget(normalizedEstado === 'UNKNOWN' ? 'EN_REVISION' : normalizedEstado)
         setEditMode(false)
       })
       .catch((fetchError) => {
@@ -174,7 +168,7 @@ const SolicitudDetallePage = () => {
 
   const editableSolicitud =
     isEstudiante &&
-    (solicitud?.estadoSigla === 'REGISTRADA' || solicitud?.estadoSigla === 'EN ESTUDIO')
+    ['ENVIADA', 'EN_REVISION', 'REGISTRADA', 'EN ESTUDIO'].includes(solicitud?.estadoSigla ?? '')
 
   const handleGuardarEdicion = async () => {
     if (!solicitud || draftTipoSolicitudId == null) {
@@ -220,10 +214,7 @@ const SolicitudDetallePage = () => {
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
-  const isSameTargetAsCurrentEstado =
-    (estadoTarget === 'EN_REVISION' && currentEstado === 'EN REVISION') ||
-    (estadoTarget === 'APROBADA' && currentEstado === 'APROBADA') ||
-    (estadoTarget === 'RECHAZADA' && currentEstado === 'RECHAZADA')
+  const isSameTargetAsCurrentEstado = currentEstado !== 'UNKNOWN' && estadoTarget === currentEstado
 
   const handleGuardarEstado = async () => {
     if (!solicitud) {
@@ -401,9 +392,11 @@ const SolicitudDetallePage = () => {
                         setUpdateSuccess(null)
                       }}
                     >
-                      <option value="EN_REVISION">EN REVISION</option>
-                      <option value="APROBADA">APROBADA</option>
-                      <option value="RECHAZADA">RECHAZADA</option>
+                      {ESTADOS_SOLICITUD_CATALOG.map((estado) => (
+                        <option key={estado.id} value={estado.sigla}>
+                          {estado.label}
+                        </option>
+                      ))}
                     </select>
                     <button
                       className="solicitud-detalle-page__save"

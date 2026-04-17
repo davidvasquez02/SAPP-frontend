@@ -1,4 +1,4 @@
-import { normalizeEstadoSolicitud } from '../../utils/estadoSolicitud'
+import { getEstadoSolicitudLabel, normalizeEstadoSolicitud } from '../../utils/estadoSolicitud'
 import './StatusBadge.css'
 
 interface StatusBadgeProps {
@@ -7,19 +7,24 @@ interface StatusBadgeProps {
 }
 
 const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, string> = {
-  REGISTRADA: 'registrada',
-  'EN REVISION': 'en-estudio',
+  ENVIADA: 'enviada',
+  EN_REVISION: 'en-revision',
   APROBADA: 'aprobada',
   RECHAZADA: 'rechazada',
+  DEVUELTA: 'devuelta',
+  PFIR_DIR_TG: 'en-firma',
+  PFIR_COOR_POS: 'en-firma',
+  PFIR_CAR_CONT: 'en-firma',
   UNKNOWN: 'unknown',
 }
 
 const StatusBadge = ({ estado, size = 'md' }: StatusBadgeProps) => {
   const normalized = normalizeEstadoSolicitud(estado)
-  const label = normalized === 'UNKNOWN' ? 'DESCONOCIDO' : normalized
 
   return (
-    <span className={`status-badge status-badge--${size} status-badge--${STATE_CLASSNAME[normalized]}`}>{label}</span>
+    <span className={`status-badge status-badge--${size} status-badge--${STATE_CLASSNAME[normalized]}`}>
+      {getEstadoSolicitudLabel(estado)}
+    </span>
   )
 }
 

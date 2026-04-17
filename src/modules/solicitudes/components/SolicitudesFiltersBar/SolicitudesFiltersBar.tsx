@@ -1,5 +1,6 @@
 import type { TipoSolicitudDto } from '../../api/types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
+import { ESTADOS_SOLICITUD_CATALOG } from '../../utils/estadoSolicitud'
 import './SolicitudesFiltersBar.css'
 
 type SolicitudesFiltersValue = {
@@ -13,12 +14,8 @@ interface SolicitudesFiltersBarProps extends SolicitudesFiltersValue {
   disabled?: boolean
 }
 
-const ESTADOS = [
-  { id: 1, label: 'REGISTRADA' },
-  { id: 2, label: 'EN ESTUDIO' },
-  { id: 3, label: 'APROBADA' },
-  { id: 4, label: 'RECHAZADA' },
-] as const
+const ESTADOS = ESTADOS_SOLICITUD_CATALOG
+
 
 const parseNullableNumber = (value: string): number | null => {
   if (!value) {

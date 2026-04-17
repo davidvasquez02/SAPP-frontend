@@ -1,7 +1,8 @@
 import { httpPut } from '../../../shared/http/httpClient'
 import type { ApiResponse } from './types'
+import type { EstadoSolicitudSigla } from '../utils/estadoSolicitud'
 
-export type SolicitudEstadoTarget = 'EN_REVISION' | 'APROBADA' | 'RECHAZADA'
+export type SolicitudEstadoTarget = EstadoSolicitudSigla
 
 export async function cambiarEstadoSolicitud(
   solicitudId: number,

@@ -122,7 +122,8 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
     <form className="solicitud-estudiante-form" onSubmit={handleSubmit}>
       <h3 className="solicitud-estudiante-form__title">Registro de solicitud</h3>
       <p className="solicitud-estudiante-form__subtitle">
-        Selecciona el tipo de trámite y adjunta los soportes requeridos.
+        Selecciona el tipo de trámite y adjunta los soportes requeridos. El estado inicial de la solicitud será
+        ENVIADA A COMITE ASESOR DE POSGRADOS.
       </p>
 
       {errorMsg && <p className="solicitud-estudiante-form__alert solicitud-estudiante-form__alert--error">{errorMsg}</p>}
