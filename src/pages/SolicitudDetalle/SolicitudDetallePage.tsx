@@ -164,7 +164,9 @@ const SolicitudDetallePage = () => {
 
   const editableSolicitud =
     isEstudiante &&
-    ['ENVIADA', 'EN_REVISION', 'REGISTRADA', 'EN ESTUDIO'].includes(solicitud?.estadoSigla ?? '')
+    ['ENVIADA', 'EN_REVISION', 'DEVUELTA', 'RECHAZADA'].includes(
+      normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado),
+    )
 
   const handleGuardarEdicion = async () => {
     if (!solicitud || draftTipoSolicitudId == null) {

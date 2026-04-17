@@ -97,6 +97,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) se habilitó edición/reemplazo de documentos en la lista actual cuando el estado normalizado es `ENVIADA`, `EN_REVISION`, `DEVUELTA` o `RECHAZADA`; la validación ahora usa `normalizeEstadoSolicitud(...)` para evitar bloqueos por variantes como `EN REVISION` con espacio.
 - April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) se eliminó la duplicidad visual de documentos (se retiró la tabla extra de **Documentos adjuntos**) y se dejó una sola sección de documentos basada en `SolicitudDocumentosEditor`, alineada con el estilo institucional de carga de archivos.
 - April 17, 2026: en el mismo detalle de estudiante, los documentos ahora pueden actualizarse directamente desde la sección única mediante acción **Guardar documentos** (reemplazo + subida a backend con `POST /sapp/document`) sin depender del bloque duplicado.
 - April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) el detalle migró de persistencia mock local de documentos a checklist/document upload real (`GET /sapp/document` + `POST /sapp/document`) dentro de un único componente de edición/consulta.
