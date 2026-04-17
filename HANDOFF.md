@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) corrige la regla de edición de documentos para usar estado **normalizado** (`normalizeEstadoSolicitud`) y habilitar reemplazo/carga en la lista actual para `ENVIADA`, `EN_REVISION`, `DEVUELTA` y `RECHAZADA` (evita falsos bloqueos cuando backend retorna `EN REVISION` con espacios).
 - April 17, 2026 (latest): `SolicitudDetallePage` (ESTUDIANTE) eliminó la duplicidad de secciones de documentos y ahora deja una sola experiencia unificada basada en `SolicitudDocumentosEditor` (sin tabla extra de `DocumentosAdjuntos` en esa vista).
 - April 17, 2026 (latest): `SolicitudDocumentosEditor` para ESTUDIANTE ahora permite guardar reemplazos directamente en la misma sección con botón `Guardar documentos` (subida real a backend vía `POST /sapp/document`), manteniendo formato visual consistente con otros flujos de documentos.
 - April 17, 2026 (latest): `SolicitudDocumentosEditor` dejó de depender del store mock local y ahora consulta checklist real (`getChecklistDocumentos`) + reemplaza archivos con `uploadDocument` (`POST /sapp/document`), calculando `checksum` SHA-256 y refrescando el checklist/documentos al guardar.
