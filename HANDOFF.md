@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 17, 2026 (latest): en los listados de `/solicitudes` se ajustó la columna **Estado** para evitar badges desbordados con etiquetas largas. Ahora el badge en tabla usa ancho fijo en desktop (`9.5rem`) y ajuste de texto (multilínea) con `overflow-wrap`; en mobile conserva ancho fluido para no romper el layout tipo tarjeta.
 - April 17, 2026 (latest): se alineó todo el módulo de `solicitudes` al catálogo oficial de estados backend (IDs 1..8). `StatusBadge`, filtros de coordinación y selector de cambio de estado en detalle ahora usan un único catálogo (`ENVIADA`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `DEVUELTA`, `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT`). Además, el formulario de creación aclara que el estado inicial es **ENVIADA A COMITE ASESOR DE POSGRADOS**.
 - April 16, 2026 (latest): fix de estabilidad en `/solicitudes` (COORDINADOR) para evitar `TypeError: Cannot read properties of undefined (reading 'trim')` cuando `tipoSolicitud.codigoNombre` llega nulo/undefined desde backend; se robusteció `formatTipoSolicitudLabel` y el `<select>` usa fallback visible `Sin tipo de solicitud`.
 - April 16, 2026 (latest): `/solicitudes` en vista COORDINADOR ahora ordena por `fechaRegistro` descendente y pagina localmente en bloques de 10 filas; se agregó paginador (Anterior/Siguiente + indicador de página) y se reinicia a página 1 cuando cambian filtros o se recarga lista.
@@ -308,6 +309,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run lint` ❌ fails on April 17, 2026 after the estado-badge width/wrapping update due to **pre-existing** repo-wide ESLint debt unrelated to this UI change (e.g., `no-explicit-any` in `src/api/*Service.ts`, `react-hooks/purity` in `protectedRoute.tsx`, `react-hooks/set-state-in-effect` in Admisiones/Solicitudes, and `react-refresh/only-export-components` in `AuthContext.tsx`).
 - `npm run build` ✅ passes on April 16, 2026 after hardening `tipoSolicitudLabel` + coordinator filter fallback for null/undefined `codigoNombre` values (`/solicitudes`).
 - `npm run build` ✅ passes on April 15, 2026 after refactoring Hoja de vida evaluation editing to always-enabled fields + bulk update (`PUT /sapp/evaluacionAdmision/registroPuntaje`) with modified-row tracking.
 - `npm run lint` ❌ fails on April 15, 2026 due to pre-existing repo-wide lint debt unrelated to this change (`no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`, unused vars in other modules).
