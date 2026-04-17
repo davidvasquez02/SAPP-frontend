@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getMockDocumentosByTipo } from '../../mock/documentosPorTipo.mock'
+import { DocumentUploadCard } from '../../../../components'
+import { getDocumentosPorTipoTramite } from '../../../../api/tramiteDocumentService'
+import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
+import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
+import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import './SolicitudEstudianteForm.css'
 
 export interface SolicitudEstudiantePayload {
@@ -19,44 +23,99 @@ interface SolicitudEstudianteFormProps {
   onSubmit?: (payload: SolicitudEstudiantePayload) => Promise<void> | void
 }
 
-const buildDraft = (tipoSolicitudId: number | null): SolicitudDocumentoDraft[] => {
-  if (tipoSolicitudId === null) {
-    return []
-  }
+const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumentoDraft => ({
+  id: documento.id,
+  nombre: documento.nombre,
+  obligatorio: documento.obligatorio,
+  file: null,
+  error: null,
+})
 
-  return getMockDocumentosByTipo(tipoSolicitudId).map((documento) => ({
-    ...documento,
-    file: null,
-    error: null,
-  }))
-}
+const mapDraftToCardItem = (documento: SolicitudDocumentoDraft): DocumentUploadItem => ({
+  id: documento.id,
+  codigo: '',
+  nombre: documento.nombre,
+  obligatorio: documento.obligatorio,
+  status: documento.file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
+  selectedFile: documento.file,
+  errorMessage: documento.error ?? undefined,
+})
 
 const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormProps) => {
   const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
   const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
+  const [loadingDocumentos, setLoadingDocumentos] = useState(false)
+  const [documentosError, setDocumentosError] = useState<string | null>(null)
   const [observaciones, setObservaciones] = useState('')
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  useEffect(() => {
-    setDocumentosDraft(buildDraft(tipoSolicitudId))
-  }, [tipoSolicitudId])
-
+  const selectedTipo = useMemo(() => tipos.find((tipo) => tipo.id === tipoSolicitudId) ?? null, [tipoSolicitudId, tipos])
   const selectedTipoLabel = useMemo(
-    () => tipos.find((tipo) => tipo.id === tipoSolicitudId)?.codigoNombre ?? '',
-    [tipoSolicitudId, tipos],
+    () =>
+      formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.nombre?.trim() || selectedTipo?.codigoNombre || '',
+    [selectedTipo],
   )
+
+  useEffect(() => {
+    if (selectedTipo == null) {
+      setDocumentosDraft([])
+      setDocumentosError(null)
+      setLoadingDocumentos(false)
+      return
+    }
+
+    const tipoTramiteId = selectedTipo.tipoTramiteId
+    if (tipoTramiteId == null || Number.isNaN(tipoTramiteId)) {
+      setDocumentosDraft([])
+      setDocumentosError('El tipo de solicitud seleccionado no tiene tipoTramiteId para consultar documentos.')
+      setLoadingDocumentos(false)
+      return
+    }
+
+    let mounted = true
+    setLoadingDocumentos(true)
+    setDocumentosError(null)
+
+    getDocumentosPorTipoTramite(tipoTramiteId)
+      .then((documentos) => {
+        if (!mounted) {
+          return
+        }
+        setDocumentosDraft(documentos.map(mapDocumentoToDraft))
+      })
+      .catch((documentsError) => {
+        if (!mounted) {
+          return
+        }
+        setDocumentosDraft([])
+        setDocumentosError(
+          documentsError instanceof Error
+            ? documentsError.message
+            : 'No fue posible cargar documentos del tipo de trámite seleccionado.',
+        )
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingDocumentos(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [selectedTipo])
 
   const handleFileChange = (documentoId: number, file: File | null) => {
     setDocumentosDraft((current) =>
       current.map((documento) =>
         documento.id === documentoId
           ? {
-            ...documento,
-            file,
-            error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
-          }
+              ...documento,
+              file,
+              error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
+            }
           : documento,
       ),
     )
@@ -65,6 +124,10 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
   const validate = (): boolean => {
     if (tipoSolicitudId === null) {
       setErrorMsg('Debes seleccionar un tipo de trámite.')
+      return false
+    }
+    if (documentosError) {
+      setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
       return false
     }
 
@@ -147,7 +210,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
           <option value="">Selecciona una opción</option>
           {tipos.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>
-              {tipo.nombre}
+              {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.nombre || tipo.codigoNombre || `Tipo #${tipo.id}`}
             </option>
           ))}
         </select>
@@ -157,29 +220,23 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
         <h4>Documentos</h4>
         {selectedTipoLabel && <p className="solicitud-estudiante-form__help">Requisitos para: {selectedTipoLabel}</p>}
 
-        {documentosDraft.length === 0 ? (
+        {loadingDocumentos ? (
+          <p className="solicitud-estudiante-form__empty">Cargando documentos requeridos...</p>
+        ) : documentosError ? (
+          <p className="solicitud-estudiante-form__doc-error">{documentosError}</p>
+        ) : documentosDraft.length === 0 ? (
           <p className="solicitud-estudiante-form__empty">Selecciona un tipo de trámite para cargar documentos.</p>
         ) : (
-          <ul className="solicitud-estudiante-form__docs-list">
+          <div className="solicitud-estudiante-form__docs-list">
             {documentosDraft.map((documento) => (
-              <li key={documento.id} className="solicitud-estudiante-form__doc-item">
-                <div className="solicitud-estudiante-form__doc-header">
-                  <span>{documento.nombre}</span>
-                  {documento.obligatorio && <span className="solicitud-estudiante-form__badge">Obligatorio</span>}
-                </div>
-                <input
-                  type="file"
-                  onChange={(event) => {
-                    handleFileChange(documento.id, event.target.files?.[0] ?? null)
-                  }}
-                />
-                <p className="solicitud-estudiante-form__file-name">
-                  {documento.file ? `Archivo: ${documento.file.name}` : 'Sin archivo seleccionado'}
-                </p>
-                {documento.error && <p className="solicitud-estudiante-form__doc-error">{documento.error}</p>}
-              </li>
+              <DocumentUploadCard
+                key={documento.id}
+                item={mapDraftToCardItem(documento)}
+                onSelectFile={handleFileChange}
+                onRemoveFile={(documentoId) => handleFileChange(documentoId, null)}
+              />
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
