@@ -1,12 +1,9 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import { getMockDocumentosByTipo } from '../../mock/documentosPorTipo.mock'
-import {
-  getSolicitudDoc,
-  removeSolicitudDoc,
-  upsertSolicitudDoc,
-} from '../../mock/solicitudDocumentosStore.mock'
-import type { SolicitudDocumentoDraft } from '../../types/solicitudDocumentosTypes'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { getChecklistDocumentos } from '../../../../api/documentChecklistService'
+import type { DocumentChecklistItemDto } from '../../../../api/documentChecklistTypes'
+import { uploadDocument } from '../../../../api/documentUploadService'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
+import { sha256Hex } from '../../../../utils/sha256'
 import { downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import './SolicitudDocumentosEditor.css'
 
@@ -18,9 +15,11 @@ export interface SolicitudDocumentosEditorHandle {
 
 interface SolicitudDocumentosEditorProps {
   solicitudId: number
-  tipoSolicitudId: number
+  codigoTipoTramite: string
+  usuarioCargaId: number | null
   editable: boolean
   onDocsChanged?: () => void
+  onDocsCommitted?: () => void
 }
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
@@ -29,66 +28,77 @@ const dateFormatter = new Intl.DateTimeFormat('es-CO', {
 })
 
 const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, SolicitudDocumentosEditorProps>(
-  ({ solicitudId, tipoSolicitudId, editable, onDocsChanged }, ref) => {
-    const requirements = useMemo(() => getMockDocumentosByTipo(tipoSolicitudId), [tipoSolicitudId])
-    const [drafts, setDrafts] = useState<SolicitudDocumentoDraft[]>([])
-    const [removedRequirementIds, setRemovedRequirementIds] = useState<number[]>([])
+  ({ solicitudId, codigoTipoTramite, usuarioCargaId, editable, onDocsChanged, onDocsCommitted }, ref) => {
+    const [requirements, setRequirements] = useState<DocumentChecklistItemDto[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<Record<number, File | null>>({})
+    const [isLoading, setIsLoading] = useState(false)
+    const [loadError, setLoadError] = useState<string | null>(null)
+    const [uploadError, setUploadError] = useState<string | null>(null)
 
-    useEffect(() => {
-      setDrafts((previous) =>
-        requirements.map((requirement) => {
-          const previousDraft = previous.find((draft) => draft.requirement.id === requirement.id)
-          const removed = removedRequirementIds.includes(requirement.id)
-          const current = removed ? null : getSolicitudDoc(solicitudId, requirement.id)
-
-          return {
-            requirement,
-            current,
-            selectedFile: previousDraft?.selectedFile ?? null,
-            error: null,
-          }
-        }),
-      )
-    }, [removedRequirementIds, requirements, solicitudId])
-
-    const hasMissingRequired = drafts.some((draft) => {
-      if (!draft.requirement.obligatorio) {
-        return false
+    const loadRequirements = async () => {
+      const codigoTipoTramiteAsNumber = Number(codigoTipoTramite)
+      if (!Number.isFinite(codigoTipoTramiteAsNumber)) {
+        setRequirements([])
+        setLoadError('No fue posible determinar el tipo de trámite para cargar documentos.')
+        return
       }
 
-      const isRemoved = removedRequirementIds.includes(draft.requirement.id)
-      return !draft.selectedFile && (!draft.current || isRemoved)
+      setIsLoading(true)
+      setLoadError(null)
+      try {
+        const response = await getChecklistDocumentos({
+          codigoTipoTramite: codigoTipoTramiteAsNumber,
+          tramiteId: solicitudId,
+        })
+        setRequirements(response)
+      } catch (error) {
+        setLoadError(error instanceof Error ? error.message : 'No fue posible cargar el checklist de documentos.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    useEffect(() => {
+      void loadRequirements()
+    }, [codigoTipoTramite, solicitudId])
+
+    const hasMissingRequired = requirements.some((requirement) => {
+      if (!requirement.obligatorioTipoDocumentoTramite) {
+        return false
+      }
+      const hasUploadedFile = requirement.documentoCargado && requirement.documentoUploadedResponse != null
+      return !hasUploadedFile && !selectedFiles[requirement.idTipoDocumentoTramite]
     })
 
     const commitChanges = async (): Promise<void> => {
-      for (const requirementId of removedRequirementIds) {
-        removeSolicitudDoc(solicitudId, requirementId)
-      }
-
-      for (const draft of drafts) {
-        if (!draft.selectedFile) {
+      setUploadError(null)
+      const entries = Object.entries(selectedFiles)
+      for (const [idAsString, file] of entries) {
+        if (!file) {
           continue
         }
 
-        const base64 = await fileToBase64(draft.selectedFile)
-        upsertSolicitudDoc(solicitudId, {
-          requirementId: draft.requirement.id,
-          fileName: draft.selectedFile.name,
-          mimeType: draft.selectedFile.type || 'application/octet-stream',
-          base64,
-          updatedAt: new Date().toISOString(),
+        const tipoDocumentoTramiteId = Number(idAsString)
+        const buffer = await file.arrayBuffer()
+        const contenidoBase64 = await fileToBase64(file)
+        const checksum = await sha256Hex(buffer)
+
+        await uploadDocument({
+          tipoDocumentoTramiteId,
+          nombreArchivo: file.name,
+          tramiteId: solicitudId,
+          usuarioCargaId,
+          aspiranteCargaId: null,
+          contenidoBase64,
+          mimeType: file.type || 'application/octet-stream',
+          tamanoBytes: file.size,
+          checksum,
         })
       }
 
-      setRemovedRequirementIds([])
-      setDrafts(
-        requirements.map((requirement) => ({
-          requirement,
-          current: getSolicitudDoc(solicitudId, requirement.id),
-          selectedFile: null,
-          error: null,
-        })),
-      )
+      setSelectedFiles({})
+      await loadRequirements()
+      onDocsCommitted?.()
     }
 
     useImperativeHandle(ref, () => ({
@@ -97,7 +107,13 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
           throw new Error('Faltan documentos obligatorios por adjuntar.')
         }
 
-        await commitChanges()
+        try {
+          await commitChanges()
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'No fue posible guardar los documentos.'
+          setUploadError(message)
+          throw error
+        }
       },
     }))
 
@@ -108,29 +124,33 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
           <p>Requisitos según el tipo de solicitud seleccionado.</p>
         </div>
 
-        {drafts.length === 0 ? (
+        {isLoading ? (
+          <p className="solicitud-documentos-editor__empty">Cargando documentos...</p>
+        ) : loadError ? (
+          <p className="solicitud-documentos-editor__warning">{loadError}</p>
+        ) : requirements.length === 0 ? (
           <p className="solicitud-documentos-editor__empty">No hay documentos configurados para este tipo de solicitud.</p>
         ) : (
           <ul className="solicitud-documentos-editor__list">
-            {drafts.map((draft) => {
-              const isRemoved = removedRequirementIds.includes(draft.requirement.id)
-              const current = isRemoved ? null : draft.current
+            {requirements.map((requirement) => {
+              const current = requirement.documentoUploadedResponse
+              const selectedFile = selectedFiles[requirement.idTipoDocumentoTramite]
 
               return (
-                <li key={draft.requirement.id} className="solicitud-documentos-editor__item">
+                <li key={requirement.idTipoDocumentoTramite} className="solicitud-documentos-editor__item">
                   <div className="solicitud-documentos-editor__title-row">
-                    <strong>{draft.requirement.nombre}</strong>
-                    {draft.requirement.obligatorio && <span className="solicitud-documentos-editor__badge">Obligatorio</span>}
+                    <strong>{requirement.nombreTipoDocumentoTramite}</strong>
+                    {requirement.obligatorioTipoDocumentoTramite && <span className="solicitud-documentos-editor__badge">Obligatorio</span>}
                   </div>
 
                   <p className="solicitud-documentos-editor__status">
                     {current
-                      ? `Cargado: ${current.fileName} (${dateFormatter.format(new Date(current.updatedAt))})`
+                      ? `Cargado: ${current.nombreArchivoDocumento} (${dateFormatter.format(new Date(current.fechaCargaDocumento))})`
                       : 'Pendiente'}
                   </p>
 
-                  {draft.selectedFile && (
-                    <p className="solicitud-documentos-editor__selected">Archivo listo para guardar: {draft.selectedFile.name}</p>
+                  {selectedFile && (
+                    <p className="solicitud-documentos-editor__selected">Archivo listo para guardar: {selectedFile.name}</p>
                   )}
 
                   <div className="solicitud-documentos-editor__actions">
@@ -138,15 +158,27 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                       <>
                         <button
                           type="button"
-                          aria-label={`Ver ${current.fileName}`}
-                          onClick={() => openBase64InNewTab(current.base64, current.mimeType, current.fileName)}
+                          aria-label={`Ver ${current.nombreArchivoDocumento}`}
+                          onClick={() =>
+                            openBase64InNewTab(
+                              current.base64DocumentoContenido,
+                              current.mimeTypeDocumentoContenido,
+                              current.nombreArchivoDocumento,
+                            )
+                          }
                         >
                           Ver
                         </button>
                         <button
                           type="button"
-                          aria-label={`Descargar ${current.fileName}`}
-                          onClick={() => downloadBase64File(current.base64, current.mimeType, current.fileName)}
+                          aria-label={`Descargar ${current.nombreArchivoDocumento}`}
+                          onClick={() =>
+                            downloadBase64File(
+                              current.base64DocumentoContenido,
+                              current.mimeTypeDocumentoContenido,
+                              current.nombreArchivoDocumento,
+                            )
+                          }
                         >
                           Descargar
                         </button>
@@ -155,47 +187,21 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
 
                     {editable && (
                       <>
-                        <label className="solicitud-documentos-editor__file-input-label" aria-label={`Reemplazar ${draft.requirement.nombre}`}>
+                        <label className="solicitud-documentos-editor__file-input-label" aria-label={`Reemplazar ${requirement.nombreTipoDocumentoTramite}`}>
                           Reemplazar
                           <input
                             type="file"
                             disabled={!editable}
                             onChange={(event) => {
                               const file = event.target.files?.[0] ?? null
-                              setDrafts((previous) =>
-                                previous.map((item) =>
-                                  item.requirement.id === draft.requirement.id
-                                    ? {
-                                        ...item,
-                                        selectedFile: file,
-                                      }
-                                    : item,
-                                ),
-                              )
+                              setSelectedFiles((prev) => ({
+                                ...prev,
+                                [requirement.idTipoDocumentoTramite]: file,
+                              }))
                               onDocsChanged?.()
                             }}
                           />
                         </label>
-
-                        {current && (
-                          <button
-                            type="button"
-                            aria-label={`Quitar documento ${current.fileName}`}
-                            onClick={() => {
-                              setRemovedRequirementIds((prev) => Array.from(new Set([...prev, draft.requirement.id])))
-                              setDrafts((previous) =>
-                                previous.map((item) =>
-                                  item.requirement.id === draft.requirement.id
-                                    ? { ...item, current: null, selectedFile: null }
-                                    : item,
-                                ),
-                              )
-                              onDocsChanged?.()
-                            }}
-                          >
-                            Quitar
-                          </button>
-                        )}
                       </>
                     )}
                   </div>
@@ -205,6 +211,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
           </ul>
         )}
 
+        {uploadError && <p className="solicitud-documentos-editor__warning">{uploadError}</p>}
         {hasMissingRequired && editable && (
           <p className="solicitud-documentos-editor__warning">Faltan documentos obligatorios por adjuntar.</p>
         )}

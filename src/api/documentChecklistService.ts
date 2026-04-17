@@ -3,7 +3,7 @@ import type { DocumentChecklistItemDto } from './documentChecklistTypes'
 import type { ApiResponse } from './types'
 
 interface ChecklistParams {
-  codigoTipoTramite: number
+  codigoTipoTramite: string | number
   tramiteId: number
 }
 
