@@ -1,5 +1,5 @@
 export { AdmisionesHomePage } from './AdmisionesHome'
-export { default as AdmisionesMisEntrevistasPage } from './AdmisionesMisEntrevistas'
+export { AdmisionesProfesorPage } from './AdmisionesProfesor'
 export { AdmisionesPage } from './AdmisionesPage'
 export { AspiranteDocumentosPage } from './AspiranteDocumentos'
 export { AspiranteLoginPage } from './AspiranteLogin'

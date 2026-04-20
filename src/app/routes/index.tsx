@@ -3,7 +3,7 @@ import { AspiranteLayout, Layout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import {
   AdmisionesHomePage,
-  AdmisionesMisEntrevistasPage,
+  AdmisionesProfesorPage,
   AspiranteLoginPage,
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
@@ -57,7 +57,7 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.PROFESOR, ROLES.DOCENTE]}>
                 {isProfesorOnly && !canManageAdmisiones ? (
-                  <AdmisionesMisEntrevistasPage />
+                  <AdmisionesProfesorPage />
                 ) : (
                   <AdmisionesHomePage />
                 )}

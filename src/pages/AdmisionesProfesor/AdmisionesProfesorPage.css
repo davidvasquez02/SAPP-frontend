@@ -1,0 +1,140 @@
+.admisiones-profesor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admisiones-profesor__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admisiones-profesor__title {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--text-primary);
+}
+
+.admisiones-profesor__subtitle,
+.admisiones-profesor__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.admisiones-profesor__program {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.admisiones-profesor__program-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.admisiones-profesor__cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.admisiones-profesor__card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+}
+
+.admisiones-profesor__card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 40%);
+  outline-offset: 2px;
+}
+
+.admisiones-profesor__card-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.admisiones-profesor__card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.admisiones-profesor__card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.admisiones-profesor__card-pill {
+  width: fit-content;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary), transparent 84%);
+  color: var(--primary);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admisiones-profesor__card-details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.admisiones-profesor__card-details div {
+  min-width: 0;
+}
+
+.admisiones-profesor__card-details dt {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.admisiones-profesor__card-details dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.admisiones-profesor__card-footer {
+  margin-top: auto;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  color: var(--primary);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+.admisiones-profesor__error {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #dc2626, transparent 88%);
+  border: 1px solid color-mix(in srgb, #dc2626, transparent 70%);
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.admisiones-profesor__error button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+}
