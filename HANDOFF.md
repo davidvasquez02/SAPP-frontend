@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): en `InscripcionDocumentosPage` (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`) el refresh tras **Aprobar/Rechazar** ahora es silencioso y no bloqueante: se eliminó el popup de éxito y la tabla ya no se reemplaza temporalmente por “Cargando documentos...”; la lista visible se mantiene hasta recibir la nueva respuesta, evitando el parpadeo de estado vacío.
 - April 20, 2026 (latest): se ajustó `DocumentUploadCard` para previsualización de foto (`previewAsImage`) en `/aspirante/documentos`: la imagen ahora queda alineada a la izquierda y el recuadro punteado ya no ocupa todo el ancho de la tarjeta, sino que se ajusta al contenido de la imagen.
 - April 20, 2026 (latest): en `CreateAspiranteModal` (coordinación), se removió el campo **Foto de perfil**. El flujo de creación de admitido ya no pide foto en esa etapa y mantiene el registro + carga secuencial de documentos del trámite de coordinación.
 - April 20, 2026 (latest): en `/aspirante/documentos`, cuando el checklist trae `codigoTipoDocumentoTramite = ANX-4` (`Foto`, trámite `ADMISION_ASPIRANTE`), la tarjeta ahora usa selector `image/*` y muestra previsualización inline de la imagen (seleccionada o ya cargada).
@@ -329,6 +330,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- 2026-04-20: `npm run lint` ⚠️ (falla por errores preexistentes del repositorio fuera del alcance de este ajuste; se validó archivo tocado con `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`).
 - `npm run build` ✅ passes on April 20, 2026 after left-aligning the ANX-4 photo preview and constraining the preview frame to image content width in `DocumentUploadCard`.
 - `npm run build` ✅ passes on April 20, 2026 after removing profile-photo input from coordinación create-aspirante modal and adding ANX-4 image preview behavior in aspirante document upload cards.
 - `npm run lint` ❌ fails on April 20, 2026 due to **pre-existing** repo-wide ESLint debt (12 errors, 2 warnings), including `no-explicit-any` stubs, `react-hooks/purity`, `react-hooks/set-state-in-effect`, and `react-refresh/only-export-components`; no new lint errors tied to this ANX-4/photo change were introduced.

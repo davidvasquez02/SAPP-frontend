@@ -67,25 +67,35 @@ const InscripcionDocumentosPage = () => {
     [actionStates],
   )
 
-  const loadDocumentos = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setErrorMessage(null)
-      const data = await getDocumentosByTramite(tramiteId)
-      setDocumentos(
-        data.map((documento) => ({
+  const loadDocumentos = useCallback(
+    async ({ showLoader }: { showLoader?: boolean } = {}) => {
+      const shouldShowLoader = showLoader ?? false
+
+      try {
+        if (shouldShowLoader) {
+          setIsLoading(true)
+        }
+
+        setErrorMessage(null)
+        const data = await getDocumentosByTramite(tramiteId)
+        const mappedDocumentos = data.map((documento) => ({
           ...documento,
           validacionEstado: getEstadoUi(documento),
           validacionObservaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
-        })),
-      )
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setErrorMessage(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [tramiteId])
+        }))
+
+        setDocumentos(mappedDocumentos)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setErrorMessage(message)
+      } finally {
+        if (shouldShowLoader) {
+          setIsLoading(false)
+        }
+      }
+    },
+    [tramiteId],
+  )
 
   const sortedDocumentos = useMemo(
     () =>
@@ -120,7 +130,7 @@ const InscripcionDocumentosPage = () => {
       return
     }
 
-    void loadDocumentos()
+    void loadDocumentos({ showLoader: true })
   }, [inscripcionId, loadDocumentos, tramiteId])
 
   const handleApprove = async (id: number, disabled: boolean) => {
@@ -138,7 +148,6 @@ const InscripcionDocumentosPage = () => {
       await loadDocumentos()
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
-      window.alert('Documento aprobado.')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)
@@ -184,7 +193,6 @@ const InscripcionDocumentosPage = () => {
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
       await loadDocumentos()
-      window.alert('Documento rechazado.')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)

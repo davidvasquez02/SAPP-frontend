@@ -99,6 +99,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 20, 2026: en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` se ajustó el refresh al aprobar/rechazar para que sea silencioso (sin popup de éxito) y sin vaciar la lista durante la recarga; la tabla se mantiene visible y se actualiza cuando llega la nueva data en memoria.
 - April 20, 2026: en la tarjeta de carga de **Foto** (`DocumentUploadCard` con `previewAsImage`) se ajustó la previsualización para alinearla a la izquierda y evitar que el contenedor se extienda al ancho completo; ahora el borde punteado se adapta al contenido real de la imagen.
 - April 20, 2026: en el flujo de **Crear aspirante** (coordinación) se eliminó el campo de “Foto de perfil” del modal para no exigir esa carga durante la creación inicial del aspirante.
 - April 20, 2026: en `/aspirante/documentos`, cuando el checklist devuelve `codigoTipoDocumentoTramite = ANX-4` (Foto), la tarjeta se renderiza como carga de imagen con previsualización inline y selector restringido a `image/*`.
