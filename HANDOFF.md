@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): en `ENTREVISTAS` (detalle de inscripción de admisiones), el flujo de `PROFESOR/DOCENTE` ahora replica el patrón de coordinación para captura masiva: se rastrean filas modificadas por `id` mientras el usuario edita `puntajeAspirante`/`observaciones` y se habilita un botón único al final **Enviar calificaciones** que hace `POST /sapp/evaluacionAdmision/registroPuntaje` con solo los cambios.
 - April 20, 2026 (latest): solicitudes ahora consume `GET /sapp/estadosSolicitud` como fuente única del catálogo de estados (filtros coordinación, selector en detalle y labels de badges). Se agregó cache en runtime con fallback al catálogo local (8 siglas oficiales) para evitar ruptura visual si falla la carga del endpoint.
 - April 20, 2026 (latest): `/admisiones` para `PROFESOR/DOCENTE` dejó de usar asignaciones mock y ahora consulta endpoints reales bajo `/api/sapp`: `GET /api/sapp/convocatoriaAdmision` (filtra `vigente=true`) + `GET /api/sapp/inscripcionAdmision/convocatoria/{id}` por cada convocatoria activa. La UI separa dos listas/cards por programa (MISI y DCC), muestra datos clave del aspirante y navega directo a `/admisiones/convocatoria/{convocatoriaId}/inscripcion/{inscripcionId}/entrevistas`.
 - April 20, 2026 (latest): fix puntual para el detalle de inscripción en admisiones cuando se inicia evaluación desde la misma pantalla (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/*`). Además del polling ya existente, ahora el `Outlet` se remonta con `componentReloadVersion` al detectar `STARTED`, forzando recarga de componentes hijos y eliminación del estado visual bloqueado/mensaje stale sin refresh manual.
@@ -338,6 +339,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- 2026-04-20: `npm run build` ✅ (pasa con el ajuste de entrevistas para `PROFESOR/DOCENTE`: botón global **Enviar calificaciones** + envío batch de filas modificadas por `POST /sapp/evaluacionAdmision/registroPuntaje`).
+- 2026-04-20: `npm run lint` ❌ (falla por deuda ESLint preexistente repo-wide; errores fuera del alcance en `src/api/*Service.ts`, `protectedRoute.tsx`, `AuthContext.tsx`, `RequireEvaluacionEnabled.tsx`, `SolicitudesCoordinadorView.tsx`, etc. El cambio actual no introduce reglas nuevas en esos archivos).
 - 2026-04-20: `npm run lint` ❌ (deuda ESLint preexistente repo-wide; se confirma warning nuevo en archivo tocado: `react-hooks/exhaustive-deps` por objeto `sectionAvailability` recreado por render en `InscripcionAdmisionDetallePage.tsx`; no bloquea runtime fix de recarga/remount tras iniciar evaluación).
 - 2026-04-20: `npm run build` ✅ (pasa tras ajustar el trigger de `cambioEstadoVal` en detalle de inscripción para estado `EN_CONSTRUCCION` al abrir Documentos).
 - 2026-04-20: `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` ✅ (sin errores; queda 1 warning preexistente de `react-hooks/exhaustive-deps` en el mismo archivo).
