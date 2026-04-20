@@ -61,6 +61,7 @@ const InscripcionAdmisionDetallePage = () => {
   >('LOADING')
   const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
+  const [componentReloadVersion, setComponentReloadVersion] = useState(0)
 
   const routeState = useMemo(
     () =>
@@ -173,6 +174,7 @@ const InscripcionAdmisionDetallePage = () => {
 
       setEvaluacionStatus('STARTED')
       setEvaluacionMsg(null)
+      setComponentReloadVersion((prev) => prev + 1)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setEvaluacionStatus('ERROR')
@@ -309,6 +311,7 @@ const InscripcionAdmisionDetallePage = () => {
       if (isStarted) {
         setEvaluacionStatus('STARTED')
         setEvaluacionMsg(null)
+        setComponentReloadVersion((prev) => prev + 1)
       } else {
         await loadEvaluacionEstado()
       }
@@ -411,7 +414,7 @@ const InscripcionAdmisionDetallePage = () => {
                       </>
                     ) : null}
 
-                    {outlet}
+                    <div key={componentReloadVersion}>{outlet}</div>
                     {section.key === 'documentos' && evaluacionStatus === 'NOT_STARTED' ? (
                       <div className="inscripcion-detalle__start-eval">
                         <p className="inscripcion-detalle__start-eval-text">
