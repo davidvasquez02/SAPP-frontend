@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): en `ConvocatoriaDetallePage` (`/admisiones/convocatoria/:convocatoriaId`) la grilla de aspirantes dejó de usar fotos mock remotas y ahora carga la foto real por cada aspirante consultando `GET /sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` y filtrando `codigoTipoDocumentoTramite = ANX-4`. Se agregó servicio genérico reutilizable (`src/modules/documentos/api/documentoFotoService.ts`) para resolver imágenes por tipo/código/trámite y, cuando no existe foto, se usa placeholder local de perfil vacío (`getMockStudentPhotoUrl`).
 - April 20, 2026 (latest): en `InscripcionDocumentosPage` (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`) el refresh tras **Aprobar/Rechazar** ahora es silencioso y no bloqueante: se eliminó el popup de éxito y la tabla ya no se reemplaza temporalmente por “Cargando documentos...”; la lista visible se mantiene hasta recibir la nueva respuesta, evitando el parpadeo de estado vacío.
 - April 20, 2026 (latest): se ajustó `DocumentUploadCard` para previsualización de foto (`previewAsImage`) en `/aspirante/documentos`: la imagen ahora queda alineada a la izquierda y el recuadro punteado ya no ocupa todo el ancho de la tarjeta, sino que se ajusta al contenido de la imagen.
 - April 20, 2026 (latest): en `CreateAspiranteModal` (coordinación), se removió el campo **Foto de perfil**. El flujo de creación de admitido ya no pide foto en esa etapa y mantiene el registro + carga secuencial de documentos del trámite de coordinación.
@@ -196,7 +197,7 @@
 - Confirm the backend response and state transitions for `/sapp/document` approve/reject, especially error messaging and allowed document states.
 - Define the data contracts for documentos/hoja de vida/examen/entrevistas once those features are scoped.
 - Confirm save/update endpoint for evaluación de admisión and decide payload + response contract.
-- Replace the aspirante mock photo URLs with real backend-provided photo data (URL or base64).
+- Validar manualmente en navegador que, en `/admisiones/convocatoria/:convocatoriaId`, las tarjetas de aspirante muestran foto ANX-4 cuando existe y placeholder vacío cuando no existe (incluyendo errores de red por aspirante).
 - Confirm whether entrevista “resumen” entries (codigo `ENTREV`) should be editable and define the desired backend payload.
 - Confirm `programaAcademico` string patterns beyond DCC/MISI to keep `programaId` resolution accurate for new programs.
 - Confirm the backend contracts for `/sapp/tramite/document?tipoTramiteId=1` and the intended upload flow for aspirante documents + profile image.
@@ -204,6 +205,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- QA manual en `/admisiones/convocatoria/:convocatoriaId`: confirmar en Network una consulta `/sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` por tarjeta y validar fallback visual de avatar vacío cuando `ANX-4` no viene cargado.
 - Ejecutar QA manual con dos usuarios: `PROFESOR/DOCENTE` y `COORDINADOR`, verificando que el flujo coordinador no cambió y que el profesor solo puede editar `ENTREVISTAS`.
 - Reemplazar `src/modules/admisiones/mock/profesorAsignaciones.mock.ts` por endpoint real de asignaciones cuando backend lo publique (mantener mismo contrato `AsignacionEntrevista`).
 - QA manual dirigida del ajuste en detalle de solicitud de estudiante: confirmar eliminación de duplicado visual y flujo de actualización de documento (`Reemplazar` → `Guardar documentos` → `Ver/Descargar` archivo nuevo).
@@ -331,6 +333,7 @@
 
 ## Recent Test Results + Logs
 - 2026-04-20: `npm run lint` ⚠️ (falla por errores preexistentes del repositorio fuera del alcance de este ajuste; se validó archivo tocado con `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`).
+- `npm run build` ✅ passes on April 20, 2026 after replacing admisiones aspirante card photos with backend ANX-4 fetch (`codigoTipoTramite=1002`) and generic document-photo service helpers.
 - `npm run build` ✅ passes on April 20, 2026 after left-aligning the ANX-4 photo preview and constraining the preview frame to image content width in `DocumentUploadCard`.
 - `npm run build` ✅ passes on April 20, 2026 after removing profile-photo input from coordinación create-aspirante modal and adding ANX-4 image preview behavior in aspirante document upload cards.
 - `npm run lint` ❌ fails on April 20, 2026 due to **pre-existing** repo-wide ESLint debt (12 errors, 2 warnings), including `no-explicit-any` stubs, `react-hooks/purity`, `react-hooks/set-state-in-effect`, and `react-refresh/only-export-components`; no new lint errors tied to this ANX-4/photo change were introduced.
