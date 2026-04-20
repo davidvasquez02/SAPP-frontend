@@ -12,13 +12,16 @@ import {
 import EvaluacionEtapaSection, {
   type EvaluacionDraft,
 } from '../../components/EvaluacionEtapaSection/EvaluacionEtapaSection'
-import { getDocumentosByTramite } from '../../../documentos/api/documentosService'
-import type { DocumentoTramiteItemDto } from '../../../documentos/api/types'
+import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
 import type {
   EvaluacionAdmisionItem,
   EtapaEvaluacion,
 } from '../../types/evaluacionAdmisionTypes'
 import { groupByEvaluador } from '../../utils/groupByEvaluador'
+import {
+  CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
+  CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
+} from '../../../documentos/constants'
 import './EvaluacionEtapaPage.css'
 
 interface EvaluacionEtapaPageProps {
@@ -136,37 +139,11 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       return
     }
 
-    const resolveHojaVidaDocumento = (
-      documentos: DocumentoTramiteItemDto[],
-    ): HojaVidaPreviewDocument | null => {
-      const target = documentos.find((doc) => {
-        const uploaded = doc.documentoUploadedResponse
-        if (!uploaded) {
-          return false
-        }
-
-        const candidateText = `${doc.nombreTipoDocumentoTramite} ${doc.descripcionTipoDocumentoTramite} ${doc.codigoTipoDocumentoTramite}`.toUpperCase()
-        return candidateText.includes('HOJA DE VIDA') || candidateText.includes(' HOJA ') || candidateText.includes('HV')
-      })
-
-      if (!target?.documentoUploadedResponse) {
-        return null
-      }
-
-      const uploaded = target.documentoUploadedResponse
-      const base64 = uploaded.base64DocumentoContenido || uploaded.contenidoBase64
-      const mimeType = uploaded.mimeTypeDocumentoContenido || uploaded.mimeType || 'application/pdf'
-
-      if (!base64) {
-        return null
-      }
-
-      return {
-        base64,
-        mimeType,
-        filename: uploaded.nombreArchivoDocumento || 'hoja-de-vida.pdf',
-      }
-    }
+    const resolveHojaVidaDocumento = (base64: string, mimeType: string, filename: string): HojaVidaPreviewDocument => ({
+      base64,
+      mimeType,
+      filename,
+    })
 
     const loadHojaVidaDoc = async () => {
       if (Number.isNaN(inscripcionIdNumber)) {
@@ -180,16 +157,23 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       setHojaVidaPreviewDoc(null)
 
       try {
-        const documentos = await getDocumentosByTramite(inscripcionIdNumber)
-        const documentoHojaVida = resolveHojaVidaDocumento(documentos)
+        const documentos = await getDocumentosByTramiteParams({
+          tramiteId: inscripcionIdNumber,
+          codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
+          codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
+        })
+        const uploaded = documentos[0]?.documentoUploadedResponse
+        const base64 = uploaded?.base64DocumentoContenido || uploaded?.contenidoBase64
+        const mimeType = uploaded?.mimeTypeDocumentoContenido || uploaded?.mimeType || 'application/pdf'
+        const filename = uploaded?.nombreArchivoDocumento || 'hoja-de-vida.pdf'
 
-        if (!documentoHojaVida) {
+        if (!uploaded || !base64) {
           setHojaVidaDocStatus('missing')
           setHojaVidaDocMessage('No se encontró documento de hoja de vida para previsualizar.')
           return
         }
 
-        setHojaVidaPreviewDoc(documentoHojaVida)
+        setHojaVidaPreviewDoc(resolveHojaVidaDocumento(base64, mimeType, filename))
         setHojaVidaDocStatus('ready')
       } catch (errorResponse) {
         setHojaVidaDocStatus('error')
