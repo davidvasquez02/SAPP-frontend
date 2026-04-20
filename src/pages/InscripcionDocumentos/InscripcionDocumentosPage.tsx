@@ -354,7 +354,6 @@ const InscripcionDocumentosPage = () => {
                     </p>
                   ) : null}
                   <p className="inscripcion-documentos__meta-line">
-                    Código: {documento.codigoTipoDocumentoTramite} ·{' '}
                     {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
                   </p>
                 </div>
