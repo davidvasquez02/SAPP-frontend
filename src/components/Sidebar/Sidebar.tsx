@@ -44,10 +44,7 @@ const Sidebar = () => {
       aria-label="Navegación principal"
     >
       <div className="sidebar__brand" title="SAPP">
-        <span className="sidebar__brand-icon" aria-hidden="true">
-          🧭
-        </span>
-        <span className="sidebar__label">SAPP</span>
+        <span className="sidebar__label_title">SAPP</span>
       </div>
 
       <nav className="sidebar__nav">
