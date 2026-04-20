@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): en `InscripcionAdmisionDetallePage`, al abrir el desplegable **Documentos cargados** se mantiene el llamado a `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` pero ahora solo cuando el estado actual de la inscripción normaliza a `EN_CONSTRUCCION` (también cubre `EN CONSTRUCCION` con espacio). Ya no se dispara para `POR_VALIDAR_DOCUMENTOS`.
 - April 20, 2026 (latest): en `ConvocatoriaDetallePage` (`/admisiones/convocatoria/:convocatoriaId`) la grilla de aspirantes dejó de usar fotos mock remotas y ahora carga la foto real por cada aspirante consultando `GET /sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` y filtrando `codigoTipoDocumentoTramite = ANX-4`. Se agregó servicio genérico reutilizable (`src/modules/documentos/api/documentoFotoService.ts`) para resolver imágenes por tipo/código/trámite y, cuando no existe foto, se usa placeholder local de perfil vacío (`getMockStudentPhotoUrl`).
 - April 20, 2026 (latest): en `InscripcionDocumentosPage` (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`) el refresh tras **Aprobar/Rechazar** ahora es silencioso y no bloqueante: se eliminó el popup de éxito y la tabla ya no se reemplaza temporalmente por “Cargando documentos...”; la lista visible se mantiene hasta recibir la nueva respuesta, evitando el parpadeo de estado vacío.
 - April 20, 2026 (latest): se ajustó `DocumentUploadCard` para previsualización de foto (`previewAsImage`) en `/aspirante/documentos`: la imagen ahora queda alineada a la izquierda y el recuadro punteado ya no ocupa todo el ancho de la tarjeta, sino que se ajusta al contenido de la imagen.
@@ -332,6 +333,9 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- 2026-04-20: `npm run build` ✅ (pasa tras ajustar el trigger de `cambioEstadoVal` en detalle de inscripción para estado `EN_CONSTRUCCION` al abrir Documentos).
+- 2026-04-20: `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` ✅ (sin errores; queda 1 warning preexistente de `react-hooks/exhaustive-deps` en el mismo archivo).
+- 2026-04-20: `npm run lint` ❌ (falla por deuda ESLint preexistente del repositorio fuera del alcance de este ajuste: `no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, etc.).
 - 2026-04-20: `npm run lint` ⚠️ (falla por errores preexistentes del repositorio fuera del alcance de este ajuste; se validó archivo tocado con `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`).
 - `npm run build` ✅ passes on April 20, 2026 after replacing admisiones aspirante card photos with backend ANX-4 fetch (`codigoTipoTramite=1002`) and generic document-photo service helpers.
 - `npm run build` ✅ passes on April 20, 2026 after left-aligning the ANX-4 photo preview and constraining the preview frame to image content width in `DocumentUploadCard`.
