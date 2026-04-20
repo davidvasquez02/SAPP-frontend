@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
+import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
@@ -16,6 +17,9 @@ interface DocumentoActionState {
   viewing: boolean
   downloading: boolean
 }
+
+const EVALUACION_RETRY_ATTEMPTS = 5
+const EVALUACION_RETRY_DELAY_MS = 500
 
 const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEstado => {
   if (!documento.documentoCargado) {
@@ -286,6 +290,18 @@ const InscripcionDocumentosPage = () => {
     try {
       await iniciarEvaluacion(tramiteId)
       invalidateEvaluacionAvailabilityCache(tramiteId)
+      for (let attempt = 0; attempt < EVALUACION_RETRY_ATTEMPTS; attempt += 1) {
+        const estado = await getEvaluacionEstado(tramiteId)
+        if (estado.status === 'STARTED') {
+          break
+        }
+
+        if (attempt < EVALUACION_RETRY_ATTEMPTS - 1) {
+          await new Promise((resolve) => {
+            window.setTimeout(resolve, EVALUACION_RETRY_DELAY_MS)
+          })
+        }
+      }
       navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/hoja-vida`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

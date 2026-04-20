@@ -40,6 +40,8 @@ type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
+const EVALUACION_RETRY_ATTEMPTS = 5
+const EVALUACION_RETRY_DELAY_MS = 500
 
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? '').trim().toUpperCase().replace(/\s+/g, '_')
@@ -178,6 +180,23 @@ const InscripcionAdmisionDetallePage = () => {
     }
   }, [inscripcionId, parsedInscripcionId])
 
+  const waitForEvaluacionStarted = useCallback(async () => {
+    for (let attempt = 0; attempt < EVALUACION_RETRY_ATTEMPTS; attempt += 1) {
+      const estado = await getEvaluacionEstado(parsedInscripcionId)
+      if (estado.status === 'STARTED') {
+        return true
+      }
+
+      if (attempt < EVALUACION_RETRY_ATTEMPTS - 1) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, EVALUACION_RETRY_DELAY_MS)
+        })
+      }
+    }
+
+    return false
+  }, [parsedInscripcionId])
+
   useEffect(() => {
     void loadEvaluacionEstado()
   }, [loadEvaluacionEstado])
@@ -286,7 +305,13 @@ const InscripcionAdmisionDetallePage = () => {
     try {
       await iniciarEvaluacion(parsedInscripcionId)
       invalidateEvaluacionAvailabilityCache(parsedInscripcionId)
-      await loadEvaluacionEstado()
+      const isStarted = await waitForEvaluacionStarted()
+      if (isStarted) {
+        setEvaluacionStatus('STARTED')
+        setEvaluacionMsg(null)
+      } else {
+        await loadEvaluacionEstado()
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setEvaluacionStatus('ERROR')
@@ -294,7 +319,7 @@ const InscripcionAdmisionDetallePage = () => {
     } finally {
       setStarting(false)
     }
-  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId])
+  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId, waitForEvaluacionStarted])
 
   const sectionAvailability: Record<InscripcionSectionKey, boolean> = {
     documentos: true,
