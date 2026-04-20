@@ -14,7 +14,7 @@ export interface EstadoSolicitudCatalogItem {
   label: string
 }
 
-export const ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
+export const DEFAULT_ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
   { id: 1, sigla: 'ENVIADA', label: 'ENVIADA A COMITE ASESOR DE POSGRADOS' },
   { id: 2, sigla: 'EN_REVISION', label: 'EN REVISION POR COMITE ASESOR DE POSGRADOS' },
   { id: 3, sigla: 'APROBADA', label: 'APROBADA' },
@@ -25,7 +25,8 @@ export const ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
   { id: 8, sigla: 'PFIR_CAR_CONT', label: 'POR FIRMA CARTA CONTRAPRESTACION' },
 ]
 
-const ESTADO_BY_SIGLA = new Map(ESTADOS_SOLICITUD_CATALOG.map((estado) => [estado.sigla, estado]))
+let estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
+let estadoBySigla = new Map(estadosSolicitudCatalog.map((estado) => [estado.sigla, estado]))
 
 const ESTADO_SIGLA_MAP: Record<string, EstadoSolicitudSigla> = {
   ENVIADA: 'ENVIADA',
@@ -45,6 +46,24 @@ const ESTADO_SIGLA_MAP: Record<string, EstadoSolicitudSigla> = {
   PFIR_CAR_CONT: 'PFIR_CAR_CONT',
 }
 
+export const ESTADOS_SOLICITUD_SIGLAS = Object.freeze(
+  DEFAULT_ESTADOS_SOLICITUD_CATALOG.map((estado) => estado.sigla),
+) as ReadonlyArray<EstadoSolicitudSigla>
+
+export function setEstadoSolicitudCatalog(items: EstadoSolicitudCatalogItem[]): void {
+  if (items.length === 0) {
+    estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
+  } else {
+    estadosSolicitudCatalog = [...items].sort((left, right) => left.id - right.id)
+  }
+
+  estadoBySigla = new Map(estadosSolicitudCatalog.map((estado) => [estado.sigla, estado]))
+}
+
+export function getEstadoSolicitudCatalog(): EstadoSolicitudCatalogItem[] {
+  return [...estadosSolicitudCatalog]
+}
+
 export function normalizeEstadoSolicitud(value: string | null | undefined): EstadoSolicitudSigla | 'UNKNOWN' {
   if (!value) {
     return 'UNKNOWN'
@@ -60,5 +79,5 @@ export function getEstadoSolicitudLabel(value: string | null | undefined): strin
     return 'DESCONOCIDO'
   }
 
-  return ESTADO_BY_SIGLA.get(sigla)?.label ?? sigla
+  return estadoBySigla.get(sigla)?.label ?? sigla
 }

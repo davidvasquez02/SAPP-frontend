@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ModuleLayout } from '../../components'
 import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import SolicitudesCoordinadorView from '../../modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView'
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
+import { getEstadosSolicitudCatalog } from '../../modules/solicitudes/api/estadoSolicitudService'
 import './SolicitudesPage.css'
 
 const SolicitudesPage = () => {
@@ -13,6 +14,13 @@ const SolicitudesPage = () => {
   const isProfesorRole = isProfesor(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const canUseCoordinadorList = isCoord || isProfesorRole
+
+
+  useEffect(() => {
+    getEstadosSolicitudCatalog().catch(() => {
+      // fallback al catálogo local
+    })
+  }, [])
 
   return (
     <ModuleLayout title="Solicitudes">

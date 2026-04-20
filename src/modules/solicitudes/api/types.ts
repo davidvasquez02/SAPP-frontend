@@ -10,6 +10,13 @@ export interface TipoSolicitudDto {
   nombre?: string | null
 }
 
+
+export interface EstadoSolicitudDto {
+  id: number
+  nombre: string
+  sigla: string
+}
+
 export interface SolicitudAcademicaDto {
   id: number
   estudianteId: number
