@@ -1,6 +1,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): fix puntual para el detalle de inscripción en admisiones cuando se inicia evaluación desde la misma pantalla (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/*`). Además del polling ya existente, ahora el `Outlet` se remonta con `componentReloadVersion` al detectar `STARTED`, forzando recarga de componentes hijos y eliminación del estado visual bloqueado/mensaje stale sin refresh manual.
 - April 20, 2026 (latest): fix para admisiones (secretaría/coordinación) en el CTA de **Continuar/Iniciar evaluación**. Se detectó condición de carrera: después de `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, la pantalla podía navegar/recargar antes de que `GET /sapp/evaluacionAdmision/info` devolviera `STARTED`, dejando UI gris con mensaje persistente “No se ha iniciado proceso de evaluación.”. Se implementó polling corto (5 intentos, 500ms) en `InscripcionDocumentosPage` e `InscripcionAdmisionDetallePage` antes de habilitar navegación/estado final.
 - April 20, 2026 (latest): ajuste de flujo de estados en admisiones. En `AspiranteDocumentosPage`, al completar el último documento obligatorio se llama `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` (estado destino: **POR VALIDAR DOCUMENTOS**). En `InscripcionAdmisionDetallePage`, al abrir **Documentos cargados** se mantiene `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}`, pero solo si el estado actual normaliza a `POR_VALIDAR_DOCUMENTOS`.
 - April 20, 2026 (latest): en `ConvocatoriaDetallePage` (`/admisiones/convocatoria/:convocatoriaId`) la grilla de aspirantes dejó de usar fotos mock remotas y ahora carga la foto real por cada aspirante consultando `GET /sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` y filtrando `codigoTipoDocumentoTramite = ANX-4`. Se agregó servicio genérico reutilizable (`src/modules/documentos/api/documentoFotoService.ts`) para resolver imágenes por tipo/código/trámite y, cuando no existe foto, se usa placeholder local de perfil vacío (`getMockStudentPhotoUrl`).
@@ -207,6 +208,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- QA manual dirigida (alta prioridad): reproducir el caso reportado en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` y confirmar que después de **Iniciar proceso de evaluación** desaparece el mensaje “No se ha iniciado proceso de evaluación.”, se habilitan las ventanas bloqueadas y los componentes cargan estado actualizado sin F5.
 - QA manual en `/admisiones/convocatoria/:convocatoriaId`: confirmar en Network una consulta `/sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` por tarjeta y validar fallback visual de avatar vacío cuando `ANX-4` no viene cargado.
 - Ejecutar QA manual con dos usuarios: `PROFESOR/DOCENTE` y `COORDINADOR`, verificando que el flujo coordinador no cambió y que el profesor solo puede editar `ENTREVISTAS`.
 - Reemplazar `src/modules/admisiones/mock/profesorAsignaciones.mock.ts` por endpoint real de asignaciones cuando backend lo publique (mantener mismo contrato `AsignacionEntrevista`).
@@ -334,6 +336,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- 2026-04-20: `npm run lint` ❌ (deuda ESLint preexistente repo-wide; se confirma warning nuevo en archivo tocado: `react-hooks/exhaustive-deps` por objeto `sectionAvailability` recreado por render en `InscripcionAdmisionDetallePage.tsx`; no bloquea runtime fix de recarga/remount tras iniciar evaluación).
 - 2026-04-20: `npm run build` ✅ (pasa tras ajustar el trigger de `cambioEstadoVal` en detalle de inscripción para estado `EN_CONSTRUCCION` al abrir Documentos).
 - 2026-04-20: `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` ✅ (sin errores; queda 1 warning preexistente de `react-hooks/exhaustive-deps` en el mismo archivo).
 - 2026-04-20: `npm run lint` ❌ (falla por deuda ESLint preexistente del repositorio fuera del alcance de este ajuste: `no-explicit-any`, `react-hooks/purity`, `react-hooks/set-state-in-effect`, etc.).
