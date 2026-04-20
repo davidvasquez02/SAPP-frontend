@@ -91,8 +91,6 @@ export const CreateAspiranteModal = ({
   const [createdAspirante, setCreatedAspirante] = useState<AspiranteCreateResponseDto | null>(
     null,
   )
-  const [profileImage, setProfileImage] = useState<File | null>(null)
-  const [profilePreviewUrl, setProfilePreviewUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const wasOpenRef = useRef(false)
 
@@ -122,8 +120,6 @@ export const CreateAspiranteModal = ({
     setIsSubmitting(false)
     setUploadSummary({ status: 'idle', failedItems: [] })
     setCreatedAspirante(null)
-    setProfileImage(null)
-    setProfilePreviewUrl(null)
     setDocumentos([])
     setIsLoadingDocs(false)
     setDocsError(null)
@@ -206,20 +202,6 @@ export const CreateAspiranteModal = ({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [open, onClose])
-
-  useEffect(() => {
-    if (!profileImage) {
-      setProfilePreviewUrl(null)
-      return
-    }
-
-    const url = URL.createObjectURL(profileImage)
-    setProfilePreviewUrl(url)
-
-    return () => {
-      URL.revokeObjectURL(url)
-    }
-  }, [profileImage])
 
   const formTitleId = useMemo(() => 'create-aspirante-title', [])
 
@@ -658,32 +640,6 @@ export const CreateAspiranteModal = ({
                 {errors.numeroInscripcionUis}
               </span>
             ) : null}
-          </label>
-
-          <label className="create-aspirante-modal__field create-aspirante-modal__field--full">
-            <span>Foto de perfil</span>
-            <div className="create-aspirante-modal__upload">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null
-                  setProfileImage(file)
-                }}
-                disabled={isSubmitting || isAspiranteCreated}
-              />
-              {profilePreviewUrl ? (
-                <img
-                  className="create-aspirante-modal__preview"
-                  src={profilePreviewUrl}
-                  alt="Vista previa del perfil"
-                />
-              ) : (
-                <span className="create-aspirante-modal__helper">
-                  Seleccione una imagen para previsualizar.
-                </span>
-              )}
-            </div>
           </label>
 
           <div className="create-aspirante-modal__field create-aspirante-modal__field--full">

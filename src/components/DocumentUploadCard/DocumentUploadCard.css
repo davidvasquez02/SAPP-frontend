@@ -176,3 +176,22 @@
   border: 1px solid color-mix(in srgb, #ef4444, transparent 70%);
   font-size: 0.85rem;
 }
+
+.document-upload-card__image-preview {
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface), var(--outline) 8%);
+  padding: 0.75rem;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__image-preview img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 10px;
+}

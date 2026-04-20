@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
 import { openBase64InNewTab } from '../../shared/files/base64FileUtils'
@@ -9,6 +10,8 @@ interface DocumentUploadCardProps {
   onUpload?: (id: number) => void
   onRemoveFile?: (id: number) => void
   disabled?: boolean
+  fileAccept?: string
+  previewAsImage?: boolean
 }
 
 const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
@@ -51,7 +54,10 @@ export const DocumentUploadCard = ({
   onUpload,
   onRemoveFile,
   disabled = false,
+  fileAccept,
+  previewAsImage = false,
 }: DocumentUploadCardProps) => {
+  const [selectedPreviewDataUrl, setSelectedPreviewDataUrl] = useState<string | null>(null)
   const inputId = `document-upload-${item.id}`
   const statusClass = `document-upload-card__status document-upload-card__status--${item.status.toLowerCase()}`
   const uploadedFileName =
@@ -63,9 +69,25 @@ export const DocumentUploadCard = ({
     (item.status === 'UPLOADED' || item.status === 'APPROVED' || item.status === 'REJECTED') &&
     item.uploadedBase64 != null &&
     item.uploadedMimeType != null
+  const uploadedPreviewUrl = useMemo(() => {
+    if (!previewAsImage || !item.uploadedBase64 || !item.uploadedMimeType?.startsWith('image/')) {
+      return null
+    }
+    return `data:${item.uploadedMimeType};base64,${item.uploadedBase64}`
+  }, [item.uploadedBase64, item.uploadedMimeType, previewAsImage])
+  const previewUrl = item.selectedFile ? selectedPreviewDataUrl : uploadedPreviewUrl
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
+    if (previewAsImage && file?.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setSelectedPreviewDataUrl(typeof reader.result === 'string' ? reader.result : null)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setSelectedPreviewDataUrl(null)
+    }
     onSelectFile(item.id, file)
   }
 
@@ -106,10 +128,11 @@ export const DocumentUploadCard = ({
           <input
             id={inputId}
             type="file"
+            accept={fileAccept}
             onChange={handleChange}
             disabled={disabled}
           />
-          <span>Seleccionar archivo</span>
+          <span>{previewAsImage ? 'Seleccionar foto' : 'Seleccionar archivo'}</span>
         </label>
         {item.selectedFile && onRemoveFile ? (
           <button
@@ -138,10 +161,20 @@ export const DocumentUploadCard = ({
             onClick={() => openBase64InNewTab(item.uploadedBase64!, item.uploadedMimeType!, item.uploadedFileName)}
             disabled={disabled}
           >
-            Ver documento
+            {previewAsImage ? 'Ver foto' : 'Ver documento'}
           </button>
         ) : null}
       </div>
+
+      {previewAsImage ? (
+        <div className="document-upload-card__image-preview">
+          {previewUrl ? (
+            <img src={previewUrl} alt={`Vista previa de ${item.nombre}`} />
+          ) : (
+            <span>Seleccione una foto para previsualizar.</span>
+          )}
+        </div>
+      ) : null}
 
 
       {item.status === 'REJECTED' && item.rejectionReason ? (

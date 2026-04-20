@@ -403,6 +403,8 @@ const AspiranteDocumentosPage = () => {
               onSelectFile={handleSelectFile}
               onUpload={handleUpload}
               disabled={item.status === 'UPLOADING'}
+              fileAccept={item.codigo === 'ANX-4' ? 'image/*' : undefined}
+              previewAsImage={item.codigo === 'ANX-4'}
             />
           ))
         )}
