@@ -1,6 +1,8 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 20, 2026 (latest): en `CreateAspiranteModal` (coordinación), se removió el campo **Foto de perfil**. El flujo de creación de admitido ya no pide foto en esa etapa y mantiene el registro + carga secuencial de documentos del trámite de coordinación.
+- April 20, 2026 (latest): en `/aspirante/documentos`, cuando el checklist trae `codigoTipoDocumentoTramite = ANX-4` (`Foto`, trámite `ADMISION_ASPIRANTE`), la tarjeta ahora usa selector `image/*` y muestra previsualización inline de la imagen (seleccionada o ya cargada).
 - April 17, 2026 (latest): se implementó rol `PROFESOR` con alias `DOCENTE` en utilitarios de rol, guards y sidebar. Profesor ya navega a `Solicitudes` (vista coordinación en solo lectura) y `Admisiones` (flujo dedicado `Mis entrevistas` con asignaciones mock por `username/userId`).
 - April 17, 2026 (latest): en detalle de inscripción de admisiones, `PROFESOR/DOCENTE` queda restringido solo a `ENTREVISTAS`; accesos directos a `/documentos`, `/hoja-vida` y `/examen` ahora redirigen automáticamente a `/entrevistas`.
 - April 17, 2026 (latest): evaluación de entrevista ahora filtra aspectos por evaluador para profesor (match tolerante por nombre normalizado desde sesión), muestra mensaje explícito cuando no hay aspectos asignados, y guarda notas reales con `POST /sapp/evaluacionAdmision/registroPuntaje` + recarga de datos tras guardar.
@@ -326,6 +328,8 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+- `npm run build` ✅ passes on April 20, 2026 after removing profile-photo input from coordinación create-aspirante modal and adding ANX-4 image preview behavior in aspirante document upload cards.
+- `npm run lint` ❌ fails on April 20, 2026 due to **pre-existing** repo-wide ESLint debt (12 errors, 2 warnings), including `no-explicit-any` stubs, `react-hooks/purity`, `react-hooks/set-state-in-effect`, and `react-refresh/only-export-components`; no new lint errors tied to this ANX-4/photo change were introduced.
 - `npm run build` ✅ passes on April 17, 2026 after implementing solicitud-estudiante sequential upload flow (create solicitud -> upload each selected document with checksum/base64) and required-doc validation.
 - `npm run lint` ❌ still fails on April 17, 2026 due to pre-existing repository-wide ESLint debt (unrelated to this change).
 - `npm run lint` ❌ fails on April 17, 2026 after the estado-badge width/wrapping update due to **pre-existing** repo-wide ESLint debt unrelated to this UI change (e.g., `no-explicit-any` in `src/api/*Service.ts`, `react-hooks/purity` in `protectedRoute.tsx`, `react-hooks/set-state-in-effect` in Admisiones/Solicitudes, and `react-refresh/only-export-components` in `AuthContext.tsx`).
@@ -458,6 +462,10 @@
 - **Documentos aprobación/rechazo:** `src/modules/documentos/api/aprobacionDocumentosService.ts`
   - Sends `{ documentoId, aprobado, observaciones }` to `PUT /sapp/document` and expects `{ ok, message, data }`. Throws when `ok` is `false` to surface the backend `message` in the UI.
 - **Document upload UI model:** `src/modules/documentos/types/documentUploadTypes.ts`
+- **ANX-4 Foto UX rule (frontend):**
+  - Trigger: checklist item with `codigoTipoDocumentoTramite = "ANX-4"` in aspirante documents flow.
+  - Expected UI output: `DocumentUploadCard` rendered in image mode (`fileAccept = "image/*"`, button label “Seleccionar foto”, inline preview box).
+  - Upload contract/output unchanged: `POST /sapp/document` with `{ tipoDocumentoTramiteId, nombreArchivo, tramiteId, aspiranteCargaId, contenidoBase64, mimeType, tamanoBytes, checksum }`, then checklist refresh via `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...`.
   - `DocumentUploadItem`: `{ id, codigo, nombre, obligatorio, status, selectedFile, uploadedFileName?, errorMessage? }`
 - **Document upload request/response:** `src/api/documentUploadService.ts`, `src/api/documentUploadTypes.ts`
   - `uploadDocument(req)` posts JSON to `/sapp/document` and expects `{ ok, message, data }` where `data` includes `id`, `nombreArchivo`, `tamanoBytes`, `checksum`, `version`, `estado`, etc.
