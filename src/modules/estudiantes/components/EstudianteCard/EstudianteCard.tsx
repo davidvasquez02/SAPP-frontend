@@ -41,6 +41,21 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
       onClick={onClick}
       onKeyDown={handleKeyDown}
     >
+      <div className="estudiante-card__media">
+        {estudiante.fotoUrl ? (
+          <img
+            className="estudiante-card__photo"
+            src={estudiante.fotoUrl}
+            alt={`Foto de ${estudiante.nombreCompleto}`}
+            loading="lazy"
+          />
+        ) : (
+          <div className="estudiante-card__photo-placeholder" aria-hidden="true">
+            <span>Sin foto</span>
+          </div>
+        )}
+      </div>
+
       <header className="estudiante-card__header">
         <h2 className="estudiante-card__title">{estudiante.nombreCompleto}</h2>
         <span className="estudiante-card__badge">{getEstadoLabel(estudiante.estadoAcademico)}</span>
