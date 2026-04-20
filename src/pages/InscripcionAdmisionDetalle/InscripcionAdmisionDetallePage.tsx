@@ -44,9 +44,9 @@ const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? '').trim().toUpperCase().replace(/\s+/g, '_')
 
-const isEstadoPorValidarDocumentos = (estado?: string | null) => {
+const isEstadoEnConstruccion = (estado?: string | null) => {
   const normalized = normalizeEstado(estado)
-  return normalized === 'POR_VALIDAR_DOCUMENTOS'
+  return normalized === 'EN_CONSTRUCCION'
 }
 
 const InscripcionAdmisionDetallePage = () => {
@@ -204,7 +204,7 @@ const InscripcionAdmisionDetallePage = () => {
     }
 
     const hasValidInscripcionId = !Number.isNaN(parsedInscripcionId)
-    const isPorValidarDocumentos = isEstadoPorValidarDocumentos(inscripcionEstado)
+    const isEnConstruccion = isEstadoEnConstruccion(inscripcionEstado)
     const alreadyTriggered = hasValidInscripcionId
       ? Boolean(didCambioEstadoValRef.current[parsedInscripcionId])
       : false
@@ -213,7 +213,7 @@ const InscripcionAdmisionDetallePage = () => {
       console.debug('[INSCRIPCION_ESTADO] open DOCUMENTOS detected', {
         inscripcionId: hasValidInscripcionId ? parsedInscripcionId : null,
         estado: inscripcionEstado,
-        isPorValidarDocumentos,
+        isEnConstruccion,
         alreadyTriggered,
       })
     }
@@ -222,10 +222,10 @@ const InscripcionAdmisionDetallePage = () => {
       return
     }
 
-    if (!isPorValidarDocumentos) {
+    if (!isEnConstruccion) {
       if (import.meta.env.DEV) {
         console.debug('[INSCRIPCION_ESTADO] skip cambioEstadoVal', {
-          reason: 'not_por_validar_documentos',
+          reason: 'not_en_construccion',
           inscripcionId: parsedInscripcionId,
         })
       }
