@@ -99,6 +99,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 20, 2026: en la tarjeta de carga de **Foto** (`DocumentUploadCard` con `previewAsImage`) se ajustó la previsualización para alinearla a la izquierda y evitar que el contenedor se extienda al ancho completo; ahora el borde punteado se adapta al contenido real de la imagen.
 - April 20, 2026: en el flujo de **Crear aspirante** (coordinación) se eliminó el campo de “Foto de perfil” del modal para no exigir esa carga durante la creación inicial del aspirante.
 - April 20, 2026: en `/aspirante/documentos`, cuando el checklist devuelve `codigoTipoDocumentoTramite = ANX-4` (Foto), la tarjeta se renderiza como carga de imagen con previsualización inline y selector restringido a `image/*`.
 - April 17, 2026: se habilitó el rol `PROFESOR` (con alias `DOCENTE`) en navegación y guards para `Solicitudes` + `Admisiones`; `/solicitudes` ahora reutiliza la vista de coordinación en modo solo lectura para profesor, `/admisiones` muestra flujo alterno **Mis entrevistas** con asignaciones mock por usuario y, en detalle de inscripción, profesor queda restringido a la etapa `ENTREVISTAS` (redirección automática desde `/documentos`, `/hoja-vida`, `/examen` hacia `/entrevistas`). Además, la persistencia de entrevista usa `POST /sapp/evaluacionAdmision/registroPuntaje` y refresca la data tras guardar.
