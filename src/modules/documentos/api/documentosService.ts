@@ -5,16 +5,22 @@ import type { ApiResponse, DocumentoTramiteItemDto } from './types'
 interface DocumentosByTramiteParams {
   tramiteId: number
   codigoTipoTramite: string | number
+  codigoTipoDocumentoTramite?: string
 }
 
 export const getDocumentosByTramiteParams = async ({
   tramiteId,
   codigoTipoTramite,
+  codigoTipoDocumentoTramite,
 }: DocumentosByTramiteParams): Promise<DocumentoTramiteItemDto[]> => {
   const qs = new URLSearchParams({
     codigoTipoTramite: String(codigoTipoTramite),
     tramiteId: String(tramiteId),
   })
+
+  if (codigoTipoDocumentoTramite) {
+    qs.set('codigoTipoDocumentoTramite', codigoTipoDocumentoTramite)
+  }
 
   const response = await httpGet<ApiResponse<DocumentoTramiteItemDto[]>>(
     `/sapp/document?${qs.toString()}`,
