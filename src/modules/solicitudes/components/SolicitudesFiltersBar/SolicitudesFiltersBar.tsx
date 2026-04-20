@@ -1,6 +1,6 @@
 import type { TipoSolicitudDto } from '../../api/types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
-import { ESTADOS_SOLICITUD_CATALOG } from '../../utils/estadoSolicitud'
+import type { EstadoSolicitudCatalogItem } from '../../utils/estadoSolicitud'
 import './SolicitudesFiltersBar.css'
 
 type SolicitudesFiltersValue = {
@@ -9,12 +9,11 @@ type SolicitudesFiltersValue = {
 }
 
 interface SolicitudesFiltersBarProps extends SolicitudesFiltersValue {
+  estadosCatalog: EstadoSolicitudCatalogItem[]
   tiposSolicitud: TipoSolicitudDto[]
   onChange: (next: SolicitudesFiltersValue) => void
   disabled?: boolean
 }
-
-const ESTADOS = ESTADOS_SOLICITUD_CATALOG
 
 
 const parseNullableNumber = (value: string): number | null => {
@@ -29,6 +28,7 @@ const parseNullableNumber = (value: string): number | null => {
 const SolicitudesFiltersBar = ({
   estadoId,
   tipoSolicitudId,
+  estadosCatalog,
   tiposSolicitud,
   onChange,
   disabled = false,
@@ -51,7 +51,7 @@ const SolicitudesFiltersBar = ({
             }
           >
             <option value="">Todos</option>
-            {ESTADOS.map((estado) => (
+            {estadosCatalog.map((estado) => (
               <option key={estado.id} value={estado.id}>
                 {estado.label}
               </option>

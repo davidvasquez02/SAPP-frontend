@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../../types'
+import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
+import { DEFAULT_ESTADOS_SOLICITUD_CATALOG, type EstadoSolicitudCatalogItem } from '../../utils/estadoSolicitud'
 import { getSolicitudesAcademicasFiltered } from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
@@ -28,6 +30,7 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
   const [estadoId, setEstadoId] = useState<number | null>(null)
   const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
+  const [estadosCatalog, setEstadosCatalog] = useState<EstadoSolicitudCatalogItem[]>(DEFAULT_ESTADOS_SOLICITUD_CATALOG)
   const [rows, setRows] = useState<SolicitudCoordinadorDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,20 +42,23 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
 
     setTiposError(null)
 
-    getTiposSolicitud()
-      .then((tipos) => {
+    Promise.all([getTiposSolicitud(), getEstadosSolicitudCatalog()])
+      .then(([tipos, estados]) => {
         if (!mounted) {
           return
         }
 
         setTiposSolicitud(tipos)
+        if (estados.length > 0) {
+          setEstadosCatalog(estados)
+        }
       })
       .catch((fetchError) => {
         if (!mounted) {
           return
         }
 
-        setTiposError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar los tipos de solicitud.')
+        setTiposError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar catálogos de solicitudes.')
       })
 
     return () => {
@@ -113,6 +119,7 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
       <SolicitudesFiltersBar
         estadoId={estadoId}
         tipoSolicitudId={tipoSolicitudId}
+        estadosCatalog={estadosCatalog}
         tiposSolicitud={tiposSolicitud}
         disabled={loading}
         onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {

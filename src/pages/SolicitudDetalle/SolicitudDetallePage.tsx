@@ -19,7 +19,8 @@ import SolicitudDocumentosEditor, {
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
-import { ESTADOS_SOLICITUD_CATALOG, normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
+import { getEstadosSolicitudCatalog } from '../../modules/solicitudes/api/estadoSolicitudService'
+import { DEFAULT_ESTADOS_SOLICITUD_CATALOG, normalizeEstadoSolicitud, type EstadoSolicitudCatalogItem } from '../../modules/solicitudes/utils/estadoSolicitud'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -46,6 +47,7 @@ const SolicitudDetallePage = () => {
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
+  const [estadosCatalog, setEstadosCatalog] = useState<EstadoSolicitudCatalogItem[]>(DEFAULT_ESTADOS_SOLICITUD_CATALOG)
   const [editMode, setEditMode] = useState(false)
   const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
   const [draftObservaciones, setDraftObservaciones] = useState('')
@@ -126,6 +128,25 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [isEstudiante])
+
+
+  useEffect(() => {
+    let mounted = true
+
+    getEstadosSolicitudCatalog()
+      .then((estados) => {
+        if (mounted && estados.length > 0) {
+          setEstadosCatalog(estados)
+        }
+      })
+      .catch(() => {
+        // fallback al catálogo por defecto
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramite: string) => {
     setDocsLoading(true)
@@ -409,7 +430,7 @@ const SolicitudDetallePage = () => {
                         setUpdateSuccess(null)
                       }}
                     >
-                      {ESTADOS_SOLICITUD_CATALOG.map((estado) => (
+                      {estadosCatalog.map((estado) => (
                         <option key={estado.id} value={estado.sigla}>
                           {estado.label}
                         </option>
