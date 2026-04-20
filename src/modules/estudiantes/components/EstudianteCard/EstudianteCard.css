@@ -20,6 +20,30 @@
   outline-offset: 2px;
 }
 
+.estudiante-card__media {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  background: color-mix(in srgb, var(--surface-container-low), var(--outline) 16%);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+}
+
+.estudiante-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.estudiante-card__photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .estudiante-card__header {
   padding: 1rem 1.25rem 0.75rem;
   display: flex;
