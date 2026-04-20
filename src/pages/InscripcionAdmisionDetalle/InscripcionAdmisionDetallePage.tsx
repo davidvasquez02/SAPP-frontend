@@ -10,7 +10,12 @@ import {
 } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
+import {
+  calcularPuntajes,
+  finalizarEvaluacion,
+} from '../../modules/admisiones/api/finalizarEvaluacionService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
+import { validateEvaluacionCompleta } from '../../modules/admisiones/utils/validateEvaluacionCompleta'
 import './InscripcionAdmisionDetallePage.css'
 
 const INSCRIPCION_SECTIONS = [
@@ -61,6 +66,9 @@ const InscripcionAdmisionDetallePage = () => {
   >('LOADING')
   const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
+  const [finalizing, setFinalizing] = useState(false)
+  const [finalizeError, setFinalizeError] = useState<string[] | null>(null)
+  const [finalizeSuccess, setFinalizeSuccess] = useState<string | null>(null)
   const [componentReloadVersion, setComponentReloadVersion] = useState(0)
 
   const routeState = useMemo(
@@ -118,6 +126,7 @@ const InscripcionAdmisionDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isProfesorOnly =
     isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
+  const canFinalizeInscripcion = hasAnyRole(roles, ['ADMIN', 'COORDINADOR'])
 
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
@@ -324,12 +333,57 @@ const InscripcionAdmisionDetallePage = () => {
     }
   }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId, waitForEvaluacionStarted])
 
-  const sectionAvailability: Record<InscripcionSectionKey, boolean> = {
-    documentos: true,
-    'hoja-vida': evaluacionStatus === 'STARTED',
-    examen: evaluacionStatus === 'STARTED',
-    entrevistas: evaluacionStatus === 'STARTED',
-  }
+  const handleFinalizarInscripcion = useCallback(async () => {
+    if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
+      setFinalizeError(['No se encontró una inscripción válida para finalizar.'])
+      return
+    }
+
+    const shouldContinue = window.confirm(
+      '¿Deseas calcular puntajes y finalizar esta inscripción? Esta acción bloqueará/confirmará el proceso.',
+    )
+    if (!shouldContinue) {
+      return
+    }
+
+    setFinalizing(true)
+    setFinalizeError(null)
+    setFinalizeSuccess(null)
+
+    try {
+      const validation = await validateEvaluacionCompleta(parsedInscripcionId)
+      if (!validation.ok) {
+        setFinalizeError(validation.reasons)
+        return
+      }
+
+      await calcularPuntajes(parsedInscripcionId)
+      await finalizarEvaluacion(parsedInscripcionId)
+      invalidateEvaluacionAvailabilityCache(parsedInscripcionId)
+      await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
+      setFinalizeSuccess('Inscripción finalizada correctamente.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setFinalizeError([message])
+    } finally {
+      setFinalizing(false)
+    }
+  }, [
+    inscripcionId,
+    loadEvaluacionEstado,
+    parsedInscripcionId,
+    reloadInscripcionDetalle,
+  ])
+
+  const sectionAvailability = useMemo<Record<InscripcionSectionKey, boolean>>(
+    () => ({
+      documentos: true,
+      'hoja-vida': evaluacionStatus === 'STARTED',
+      examen: evaluacionStatus === 'STARTED',
+      entrevistas: evaluacionStatus === 'STARTED',
+    }),
+    [evaluacionStatus],
+  )
 
   const handleToggle = useCallback(
     (sectionKey: InscripcionSectionKey) => {
@@ -373,6 +427,9 @@ const InscripcionAdmisionDetallePage = () => {
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
         <p className="inscripcion-detalle__subtitle">Seleccione una opción</p>
+        {inscripcionEstado ? (
+          <p className="inscripcion-detalle__state">Estado de inscripción: {inscripcionEstado}</p>
+        ) : null}
         {evaluacionStatus === 'ERROR' && evaluacionMsg ? (
           <p className="inscripcion-detalle__alert inscripcion-detalle__alert--error">
             {evaluacionMsg}
@@ -439,6 +496,44 @@ const InscripcionAdmisionDetallePage = () => {
             )
           })}
         </div>
+
+        {canFinalizeInscripcion ? (
+          <section className="inscripcion-detalle__finalize">
+            <p className="inscripcion-detalle__finalize-text">
+              Finaliza la evaluación y calcula puntajes finales.
+            </p>
+            <button
+              type="button"
+              className="inscripcion-detalle__finalize-button"
+              onClick={() => void handleFinalizarInscripcion()}
+              disabled={finalizing || evaluacionStatus !== 'STARTED'}
+              title={
+                evaluacionStatus !== 'STARTED'
+                  ? 'Debe iniciar evaluación primero'
+                  : undefined
+              }
+            >
+              {finalizing ? 'Finalizando…' : 'Finalizar inscripción'}
+            </button>
+            {finalizeError ? (
+              <div className="inscripcion-detalle__inline-status inscripcion-detalle__inline-status--error">
+                <p className="inscripcion-detalle__error-title">
+                  No se pudo finalizar la inscripción:
+                </p>
+                <ul className="inscripcion-detalle__error-list">
+                  {finalizeError.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {finalizeSuccess ? (
+              <p className="inscripcion-detalle__inline-status inscripcion-detalle__inline-status--success">
+                {finalizeSuccess}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
       </section>
     </ModuleLayout>
   )
