@@ -10,7 +10,7 @@ import type {
 import { uploadDocument } from '../../api/documentUploadService'
 import { DocumentUploadCard } from '../../components'
 import { useAuth } from '../../context/Auth'
-import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
+import { cambiarEstadoInscripcionPorVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
 import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos/constants'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
@@ -294,10 +294,10 @@ const AspiranteDocumentosPage = () => {
         )
 
         if (!checklistWasComplete && checklistIsComplete) {
-          void cambiarEstadoInscripcionVal(tramiteId).catch((stateError) => {
+          void cambiarEstadoInscripcionPorVal(tramiteId).catch((stateError) => {
             const stateMessage = stateError instanceof Error ? stateError.message : String(stateError)
             console.warn(
-              '[AspiranteDocumentos] no fue posible ejecutar cambioEstadoVal tras completar checklist:',
+              '[AspiranteDocumentos] no fue posible ejecutar cambioEstadoPorVal tras completar checklist:',
               stateMessage,
             )
           })
