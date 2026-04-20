@@ -468,10 +468,30 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 items={grupo.items}
                 drafts={drafts}
                 errorsByRow={errorsByRow}
+                modifiedByRow={modifiedByRow}
+                isSavingBulk={savingBulk}
                 onChangeDraft={handleChangeDraft}
               />
             </div>
           ))}
+          <div className="evaluacion-etapa-page__interview-footer">
+            <button
+              type="button"
+              className="evaluacion-etapa-section__button"
+              disabled={
+                !Object.values(modifiedByRow).some(Boolean) ||
+                Object.entries(errorsByRow).some(
+                  ([id, errorMessage]) => modifiedByRow[Number(id)] && Boolean(errorMessage),
+                ) ||
+                savingBulk
+              }
+              onClick={() => {
+                void handleSaveBulk()
+              }}
+            >
+              {savingBulk ? 'Enviando calificaciones...' : 'Enviar calificaciones'}
+            </button>
+          </div>
         </div>
       )}
     </section>
