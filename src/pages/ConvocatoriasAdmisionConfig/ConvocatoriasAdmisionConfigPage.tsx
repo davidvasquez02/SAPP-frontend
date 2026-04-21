@@ -267,7 +267,6 @@ const ConvocatoriasAdmisionConfigPage = () => {
               >
                 <header className="convocatorias-config__section-header">
                   <h2>{section.programaLabel}</h2>
-                  <p>{section.programaRaw}</p>
                 </header>
 
                 <div className="convocatorias-config__table-wrap">
@@ -295,11 +294,10 @@ const ConvocatoriasAdmisionConfigPage = () => {
                             <td>{formatFecha(item.fechaFin)}</td>
                             <td>
                               <span
-                                className={`convocatorias-config__badge ${
-                                  convocatoriaVigente
-                                    ? "convocatorias-config__badge--vigente"
-                                    : "convocatorias-config__badge--cerrada"
-                                }`}
+                                className={`convocatorias-config__badge ${convocatoriaVigente
+                                  ? "convocatorias-config__badge--vigente"
+                                  : "convocatorias-config__badge--cerrada"
+                                  }`}
                               >
                                 {convocatoriaVigente ? "VIGENTE" : "CERRADA"}
                               </span>
