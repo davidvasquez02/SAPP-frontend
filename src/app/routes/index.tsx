@@ -1,6 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { AspiranteLayout, Layout } from '../../components'
-import { useAuth } from '../../context/Auth'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { AspiranteLayout, Layout } from "../../components";
+import { useAuth } from "../../context/Auth";
 import {
   AdmisionesHomePage,
   AdmisionesProfesorPage,
@@ -8,6 +8,7 @@ import {
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
   ConfigFechasAdmisionesPage,
+  ConfiguracionModulePage,
   EstudianteDetalleCoordinacionPage,
   EstudiantesCoordinacionPage,
   HomePage,
@@ -17,31 +18,37 @@ import {
   InscripcionExamenPage,
   InscripcionHojaVidaPage,
   LoginPage,
-} from '../../pages'
-import RequireRoles from '../../routes/RequireRoles/RequireRoles'
-import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
-import RequireEvaluacionEnabled from '../../modules/admisiones/routes/RequireEvaluacionEnabled'
-import { aspiranteRoutes } from './aspiranteRoutes'
-import { AspiranteOnlyRoute } from './aspiranteOnlyRoute'
-import { creditosRoutes } from './creditosRoutes'
-import { matriculaRoutes } from './matriculaRoutes'
-import { ProtectedRoute } from './protectedRoute'
-import { solicitudesRoutes } from './solicitudesRoutes'
+} from "../../pages";
+import RequireRoles from "../../routes/RequireRoles/RequireRoles";
+import { hasAnyRole, isProfesor, ROLES } from "../../auth/roleGuards";
+import RequireEvaluacionEnabled from "../../modules/admisiones/routes/RequireEvaluacionEnabled";
+import { aspiranteRoutes } from "./aspiranteRoutes";
+import { AspiranteOnlyRoute } from "./aspiranteOnlyRoute";
+import { creditosRoutes } from "./creditosRoutes";
+import { matriculaRoutes } from "./matriculaRoutes";
+import { ProtectedRoute } from "./protectedRoute";
+import { solicitudesRoutes } from "./solicitudesRoutes";
 
 export const AppRoutes = () => {
-  const { isAuthenticated, session } = useAuth()
-  const loginRedirect = session?.kind === 'ASPIRANTE' ? '/aspirante/documentos' : '/'
-  const sappRoles = session?.kind === 'SAPP' ? session.user.roles : []
-  const isProfesorOnly = isProfesor(sappRoles)
+  const { isAuthenticated, session } = useAuth();
+  const loginRedirect =
+    session?.kind === "ASPIRANTE" ? "/aspirante/documentos" : "/";
+  const sappRoles = session?.kind === "SAPP" ? session.user.roles : [];
+  const isProfesorOnly = isProfesor(sappRoles);
   const canManageAdmisiones =
-    session?.kind === 'SAPP' && hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
+    session?.kind === "SAPP" &&
+    hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]);
 
   return (
     <Routes>
       <Route
         path="/login"
         element={
-          isAuthenticated ? <Navigate to={loginRedirect} replace /> : <LoginPage />
+          isAuthenticated ? (
+            <Navigate to={loginRedirect} replace />
+          ) : (
+            <LoginPage />
+          )
         }
       />
       <Route path="/login/aspirante" element={<AspiranteLoginPage />} />
@@ -56,7 +63,15 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.PROFESOR, ROLES.DOCENTE]}>
+              <RequireRoles
+                allowedRoles={[
+                  ROLES.ADMIN,
+                  ROLES.COORDINACION,
+                  ROLES.SECRETARIA,
+                  ROLES.PROFESOR,
+                  ROLES.DOCENTE,
+                ]}
+              >
                 {isProfesorOnly && !canManageAdmisiones ? (
                   <AdmisionesProfesorPage />
                 ) : (
@@ -84,7 +99,9 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatoria/:convocatoriaId"
             element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}>
+              <RequireRoles
+                allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}
+              >
                 <ConvocatoriaDetallePage />
               </RequireRoles>
             }
@@ -92,7 +109,15 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId"
             element={
-              <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN, ROLES.PROFESOR, ROLES.DOCENTE]}>
+              <RequireRoles
+                allowedRoles={[
+                  ROLES.COORDINACION,
+                  ROLES.SECRETARIA,
+                  ROLES.ADMIN,
+                  ROLES.PROFESOR,
+                  ROLES.DOCENTE,
+                ]}
+              >
                 <InscripcionAdmisionDetallePage />
               </RequireRoles>
             }
@@ -124,6 +149,14 @@ export const AppRoutes = () => {
             />
           </Route>
           <Route
+            path="/configuracion"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <ConfiguracionModulePage />
+              </RequireRoles>
+            }
+          />
+          <Route
             path="/coordinacion/estudiantes"
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
@@ -146,5 +179,5 @@ export const AppRoutes = () => {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
-}
+  );
+};

@@ -1,6 +1,37 @@
+# Update — 2026-04-21 (configuración + matrícula UX)
+
+## Current Status
+
+- ✅ Nuevo módulo de configuración creado en `/configuracion` con vista inicial orientada a escalabilidad: primero periodos académicos y luego convocatorias.
+- ✅ Sidebar actualizado: entrada **Configuración** al final, visible para roles `ADMIN` y `COORDINACION`.
+- ✅ Listado de matrículas (coordinador/admin) actualizado: se eliminó la columna `ID` y se alineó el estilo de tabla con el patrón visual institucional del resto de pantallas.
+
+## Paths / Artifacts
+
+- Nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.tsx`
+- Estilos nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.css`
+- Export página: `src/pages/ConfiguracionModule/index.ts`
+- Rutas: `src/app/routes/index.tsx`
+- Sidebar: `src/components/Sidebar/Sidebar.tsx`
+- Matrícula listado/estilos: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css`
+
+## Next Steps
+
+1. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN`.
+2. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
+3. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
+
+## Recent Tests + Logs
+
+- `npm run build` → esperado como validación principal de compilación tras cambios de rutas/páginas/estilos.
+- Nota: en este entorno no se tomó screenshot automático (no hay herramienta de browser_container disponible).
+
+---
+
 # Handoff — SAPP Frontend
 
 ## Current Status
+
 - April 21, 2026 (latest): se implementó el módulo **Configuración de fechas — Admisiones** en `/admisiones/configuracion/fechas` con guard de roles (`ADMIN`, `COORDINADOR`). La pantalla carga periodos reales por `GET /api/sapp/periodoAcademico`, permite guardar fechas con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`) y mantiene una tabla local editable/persistente en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) al no existir endpoint GET de configuraciones guardadas.
 - April 21, 2026 (latest): `/matricula` ahora tiene vista de gestión para `COORDINADOR/ADMIN` consumiendo `GET /sapp/matriculaAcademica`, con filtros de programa/periodo/estado + búsqueda libre (nombre/código/programa), tabla de resultados y panel de detalle por matrícula (incluye asignaturas). Se conservaron intactos los flujos de `ESTUDIANTE` (validación vigente + creación).
 - April 20, 2026 (latest): en la etapa `HOJA_DE_VIDA` del detalle de inscripción de admisiones (coordinación), el visor PDF lateral ahora consume el endpoint específico `GET /sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`. Se eliminó la heurística por texto para identificar “hoja de vida” y se toma directamente el primer documento retornado con base64 para `ANX-2`.
@@ -58,7 +89,7 @@
 - April 7, 2026 (latest): adjusted inscripción-detail state transition in secretaría/coordinación flow. When opening **Documentos cargados**, frontend now calls `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` (endpoint swap from `cambioEstadoPorVal`) and only triggers it when previous estado normalizes to `POR_VALIDAR_DOCUMENTOS`.
 - April 6, 2026 (latest): Admisiones evaluación UI (Hoja de vida y Examen) was upgraded for COORDINADOR with full-width responsive layout. `EvaluacionEtapaSection` removed the `Evaluador` column, reordered table columns to keep `Nota` as the final emphasized field (right aligned / stronger weight), and upgraded `Consideraciones` rendering to full callout blocks with JSON pretty-print fallback when payload looks like JSON text.
 - April 6, 2026 (latest): Hoja de vida now includes inline PDF preview in `EvaluacionEtapaPage` by loading checklist docs from `GET /sapp/document?codigoTipoTramite=1002&tramiteId={inscripcionId}` (through shared `getDocumentosByTramite`), locating a probable HV document via name/code heuristics (`HOJA DE VIDA`, `HOJA`, `HV`), and rendering `iframe` preview + `Abrir`/`Descargar`. If no file matches or file has no base64 payload, the page shows a clear fallback message.
-- April 6, 2026 (latest): inscripción detalle now detects *real* Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
+- April 6, 2026 (latest): inscripción detalle now detects _real_ Documentos window opens via transition tracking (`prevActiveRef`) and executes `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` only on first successful open per inscripción (`didCambioEstadoValRef` keyed by id). If PUT fails, the flag is not set and the next open retries. Added DEV-only logs (`[INSCRIPCION_ESTADO]`) for open detection, skip reasons (`not_en_construccion` / `already_triggered`), call start, success, and error.
 - April 6, 2026 (latest): refactored `InscripcionDocumentosPage` validation table layout and behavior to match UX contract: `Validación` column always renders `Aprobar/Rechazar`, active filled button reflects backend status (`APROBADO` or `RECHAZADO`), rejection reason is hidden by default and only appears when entering reject mode, and `Acciones` now only shows horizontal `Ver/Descargar`. Approve/reject actions call `PUT /sapp/document` and re-fetch only `loadDocumentos()` (no route reload).
 - ✅ Admisiones detalle de inscripción ahora dispara `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` al expandir “Documentos cargados” solo cuando el estado está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`, con guard frontend para evitar llamadas repetidas en abrir/cerrar.
 - ✅ La actualización de estado se ejecuta en paralelo (no bloquea la carga de documentos) y muestra feedback inline: “Actualizando estado...” o warning no intrusivo si falla.
@@ -178,6 +209,7 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
+
 - Ejecutar QA manual del nuevo módulo `/admisiones/configuracion/fechas` con usuarios reales `ADMIN/COORDINADOR`: validar carga de periodos (`GET /api/sapp/periodoAcademico`), guardado (`POST /api/sapp/periodoAcademicoFecha`) y persistencia local tras refresh.
 - Ejecutar QA manual en `/matricula` con `COORDINADOR/ADMIN` para validar que el backend entregue valores consistentes de `programaAcademico`, `periodoAcademico` y `estado` (los filtros dependen de coincidencia exacta de estos strings).
 - QA manual pendiente para perfil `PROFESOR/DOCENTE`: validar que sidebar solo expone `Solicitudes` + `Admisiones`, que `/admisiones` lista asignaciones mock propias y que la redirección forzada a `/entrevistas` funciona para deep-links a otras etapas de inscripción.
@@ -218,9 +250,11 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+
 1. QA manual de seguridad y acceso: confirmar que `ESTUDIANTE` no puede entrar a `/admisiones/configuracion/fechas` y que `ADMIN/COORDINADOR` sí pueden operar el formulario completo.
 2. Si backend expone un `GET /api/sapp/periodoAcademicoFecha`, reemplazar el store local temporal por fuente backend y conservar `localStorage` solo como caché opcional.
-1. QA manual en `/matricula` con rol `COORDINADOR` y `ADMIN`: validar filtros combinados (programa+periodo+estado+búsqueda), conteo de registros y apertura de detalle con asignaturas por matrícula.
+3. QA manual en `/matricula` con rol `COORDINADOR` y `ADMIN`: validar filtros combinados (programa+periodo+estado+búsqueda), conteo de registros y apertura de detalle con asignaturas por matrícula.
+
 - QA manual dirigida (alta prioridad): reproducir el caso reportado en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` y confirmar que después de **Iniciar proceso de evaluación** desaparece el mensaje “No se ha iniciado proceso de evaluación.”, se habilitan las ventanas bloqueadas y los componentes cargan estado actualizado sin F5.
 - QA manual en `/admisiones/convocatoria/:convocatoriaId`: confirmar en Network una consulta `/sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` por tarjeta y validar fallback visual de avatar vacío cuando `ANX-4` no viene cargado.
 - Ejecutar QA manual con dos usuarios: `PROFESOR/DOCENTE` y `COORDINADOR`, verificando que el flujo coordinador no cambió y que el profesor solo puede editar `ENTREVISTAS`.
@@ -228,6 +262,7 @@
 - QA manual dirigida del ajuste en detalle de solicitud de estudiante: confirmar eliminación de duplicado visual y flujo de actualización de documento (`Reemplazar` → `Guardar documentos` → `Ver/Descargar` archivo nuevo).
 - Ejecutar validación E2E manual del flujo de coordinación en solicitudes: listar → filtrar → paginar → entrar a detalle → verificar carga de documentos por API real → volver al listado conservando re-fetch.
 - Si backend exige `codigoTipoTramite` (sin sufijo `Id`) para algunos entornos, añadir fallback no disruptivo en `getSolicitudDocumentosAdjuntos` o alinear contrato único con backend antes de merge a ramas de release.
+
 1. QA manual en `/matricula` (rol ESTUDIANTE) con backend real:
    - Caso A (`data[]`): debe cargar asignaturas de matrícula existente y dejar `Confirmar matrícula` deshabilitado.
    - Caso B (`data=false`): debe mostrar mensaje de periodo no vigente y bloquear creación.
@@ -237,53 +272,54 @@
 1. Completar integración real del módulo estudiantes: mantener `GET /sapp/programaAcademico` ya activo para catálogo y reemplazar mocks restantes con endpoints de estudiantes (`GET estudiantes?programaId=` + `GET estudiante/{id}`) manteniendo los contratos de `src/modules/estudiantes/types.ts`.
 1. QA manual en `/aspirante/documentos`: verificar que documentos con `estadoDocumento=RECHAZADO` muestren observación y que al subir reemplazo cambien a estado en revisión/aprobado según respuesta backend.
 1. QA manual en navegador para `/admisiones/convocatoria/:convId/inscripcion/:inscId/hoja-vida` y `/examen`: validar tabla full-width, ausencia de columna evaluador, nota destacada editable, y render completo de consideraciones (incluyendo JSON formateado).
-2. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
-3. QA manual: validar en Network/UX que hoja de vida usa `codigoTipoDocumentoTramite=ANX-2` + `codigoTipoTramite=1001` y que el mensaje fallback aparece cuando el backend no retorna archivo/base64.
+1. QA manual de visor PDF en Hoja de vida: confirmar split desktop 60/40, stack móvil, acciones Abrir/Descargar, y fallback “No se encontró documento de hoja de vida para previsualizar.” cuando aplique.
+1. QA manual: validar en Network/UX que hoja de vida usa `codigoTipoDocumentoTramite=ANX-2` + `codigoTipoTramite=1001` y que el mensaje fallback aparece cuando el backend no retorna archivo/base64.
 1. QA manual: abrir/cerrar “Documentos cargados” varias veces con una inscripción en `EN CONSTRUCCION` y confirmar en Network que solo sale un PUT exitoso por sesión de pantalla.
-2. QA manual: forzar error del PUT y validar que al volver a abrir la ventana se reintenta (flag frontend vuelve a `false` en catch).
-3. Evaluar optimización: reemplazar recarga por lista completa con endpoint de detalle si backend lo habilita.
+1. QA manual: forzar error del PUT y validar que al volver a abrir la ventana se reintenta (flag frontend vuelve a `false` en catch).
+1. Evaluar optimización: reemplazar recarga por lista completa con endpoint de detalle si backend lo habilita.
 1. Manual QA in browser for `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`: validate no route/tab reload after approve/reject, per-row `Procesando...` behavior, active state painting for APROBADO/RECHAZADO, and disabled gray decisions on `documentoCargado=false`.
-2. Validate rejection UX copy/product decision for inline modal/panel (current implementation is inline reason panel with `Confirmar rechazo`/`Cancelar`).
+1. Validate rejection UX copy/product decision for inline modal/panel (current implementation is inline reason panel with `Confirmar rechazo`/`Cancelar`).
 1. Validate manually in browser that convocatoria rows marked “VIGENTE” switch automatically to “CERRADA” when date range is outside the current date and that filters use the same computed logic.
-2. Validate in browser (manual QA) that `Crear aspirante` remains disabled for closed convocatorias even on direct URL refresh (`/admisiones/convocatoria/:id`) and after closing a convocatoria from config.
-3. Verify backend payload keys for card fields (`numeroDocumento/cedula`, `emailPersonal/correo`, `telefono`, `posicionAdmision`) and align DTO naming once contract is finalized.
+1. Validate in browser (manual QA) that `Crear aspirante` remains disabled for closed convocatorias even on direct URL refresh (`/admisiones/convocatoria/:id`) and after closing a convocatoria from config.
+1. Verify backend payload keys for card fields (`numeroDocumento/cedula`, `emailPersonal/correo`, `telefono`, `posicionAdmision`) and align DTO naming once contract is finalized.
 1. Validate end-to-end in browser/network inspector that `POST /sapp/convocatoriaAdmision` now includes `periodoId` and that assignment mock receives the created `convocatoriaId`.
-2. Define real backend contract for convocatoria-profesor assignment (expected payload/response/errors) and swap `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts` with API client implementation.
-3. Confirm whether program options should continue to be derived from existing convocatorias or migrate to a dedicated catálogo endpoint.
+1. Define real backend contract for convocatoria-profesor assignment (expected payload/response/errors) and swap `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts` with API client implementation.
+1. Confirm whether program options should continue to be derived from existing convocatorias or migrate to a dedicated catálogo endpoint.
 1. Validate role gating end-to-end for `/admisiones/convocatorias` with real users (`ADMIN`/`COORDINADOR` allowed, `ESTUDIANTE`/`DOCENTE` blocked) and capture evidence in QA notes.
-2. Verify backend date formatting expectations for `fechaInicio`/`fechaFin` (`YYYY-MM-DD`) and confirm timezone handling in persisted values.
-3. Decide whether the program selector for new convocatorias should come from a dedicated catálogo endpoint (instead of deriving from existing convocatorias).
+1. Verify backend date formatting expectations for `fechaInicio`/`fechaFin` (`YYYY-MM-DD`) and confirm timezone handling in persisted values.
+1. Decide whether the program selector for new convocatorias should come from a dedicated catálogo endpoint (instead of deriving from existing convocatorias).
 1. Replace `src/modules/matricula/services/matriculaMockService.ts` with real API clients while keeping `MatriculaConvocatoria`, `MateriaDto`, and `DocumentoRequerido` as the boundary DTOs for UI stability.
-2. Add component tests for `MateriasSelector`, `MateriasSelectedTable`, and `DocumentosRequeridosTable` (duplicate prevention, remove flow, status badge rendering, file name capture on mock upload).
-3. Add an E2E/manual script for matrícula role gating (`ESTUDIANTE` sees flow, non-ESTUDIANTE sees unsupported-role message) and convocatoria-open/closed behavior.
+1. Add component tests for `MateriasSelector`, `MateriasSelectedTable`, and `DocumentosRequeridosTable` (duplicate prevention, remove flow, status badge rendering, file name capture on mock upload).
+1. Add an E2E/manual script for matrícula role gating (`ESTUDIANTE` sees flow, non-ESTUDIANTE sees unsupported-role message) and convocatoria-open/closed behavior.
 1. Replace the student document mock store (`solicitudDocumentosStore.mock.ts`) with a backend endpoint when documentos de solicitudes académicas API is available, preserving current local contract fields.
-2. Add component tests for `SolicitudDocumentosEditor` commit behavior (replace/remove), required warning visibility, and read-only rendering.
-3. Validate browser UX for large files / unsupported mime previews in `Ver` action and align product decision (preview vs download-only fallback).
+1. Add component tests for `SolicitudDocumentosEditor` commit behavior (replace/remove), required warning visibility, and read-only rendering.
+1. Validate browser UX for large files / unsupported mime previews in `Ver` action and align product decision (preview vs download-only fallback).
 1. Add component/unit tests for `DocumentosAdjuntos` and for `SolicitudDetallePage` role-based visibility (coordinator/admin sees docs section, estudiante does not).
-2. Validate browser behavior for “Ver” on non-PDF mime types and decide if product wants preview enabled for additional formats.
-3. Replace `fetchSolicitudDocumentos` mock service with real API integration once endpoint/contract is available.
+1. Validate browser behavior for “Ver” on non-PDF mime types and decide if product wants preview enabled for additional formats.
+1. Replace `fetchSolicitudDocumentos` mock service with real API integration once endpoint/contract is available.
 1. Add a visible theme switcher (light/dark) that updates `localStorage.sapp-theme` using the corrected light-first default behavior.
-2. Propagate the new design tokens to remaining page-specific CSS files with hardcoded colors to complete global consistency.
-3. Capture updated UI screenshots for docs once a browser-capable environment is available.
-4. Validate accessibility contrast for primary/secondary text in both themes.
-5. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
-6. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
-7. Add `.env.local` (or equivalent) for API base URLs.
-8. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
-9. Wire module pages to the new service stubs once backend endpoints are defined.
-10. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
-11. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
-12. Validate `/sapp/document` approve/reject flows with real data and document validation states (including unexpected values).
-13. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
-14. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
-15. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
-16. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
-17. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
-18. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
-19. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
-20. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
+1. Propagate the new design tokens to remaining page-specific CSS files with hardcoded colors to complete global consistency.
+1. Capture updated UI screenshots for docs once a browser-capable environment is available.
+1. Validate accessibility contrast for primary/secondary text in both themes.
+1. Validate JWT claims with real backend tokens (roles/username/id) and adjust the mapper if the payload schema changes.
+1. Align aspirante document response metadata (e.g., version/estado) for richer UI display if needed.
+1. Add `.env.local` (or equivalent) for API base URLs.
+1. Add test scaffolding (Vitest + React Testing Library) and baseline coverage.
+1. Wire module pages to the new service stubs once backend endpoints are defined.
+1. Validate the `/sapp/document` upload flow with real backend data (errors, size limits, and metadata display).
+1. Define the inscripcion detail endpoint contract and replace the placeholder detail page.
+1. Validate `/sapp/document` approve/reject flows with real data and document validation states (including unexpected values).
+1. Validate the evaluación de admisión screens with real data (hoja de vida, examen, entrevista) once backend is available.
+1. Replace the evaluación de admisión mock save with the real endpoint once available, including optimistic updates and error handling rules.
+1. Swap the student card mock photo helper for the real backend field once the API delivers photo URLs or base64 content.
+1. Validate the `/sapp/aspirante` creation flow with real backend responses (currently mocked) and expand `programaId` inference if additional program codes appear.
+1. Implement the real upload flow for aspirante profile image + document attachments once endpoints are available.
+1. Reconfirm server-side validation messaging for missing admisión documents to align the frontend error copy.
+1. Swap the admisión aspirante document template with a live backend checklist endpoint and validate the ID mapping.
+1. Replace `src/modules/solicitudes/services/solicitudesMockService.ts` with real API clients (`GET tipos`, `GET solicitudes`, `POST solicitud`) while preserving current DTO contracts in `src/modules/solicitudes/types.ts`.
 
 ## Key Paths / Artifacts / Datasets
+
 - **Matrícula estudiante (API real):** `src/pages/Matricula/MatriculaPage.tsx`, `src/modules/matricula/services/matriculaAcademicaService.ts`, `src/modules/matricula/components/MateriasSelectedTable/*`, `src/modules/matricula/components/MateriasSelector/*`, `src/modules/matricula/types.ts`.
 - **Módulo Estudiantes coordinación (nuevo):** `src/modules/estudiantes/types.ts`, `src/modules/estudiantes/mock/estudiantes.mock.ts`, `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/estudiantes/components/EstudianteCard/*`, `src/pages/EstudiantesCoordinacion/*`, `src/pages/EstudianteDetalleCoordinacion/*`, y wiring en `src/app/routes/index.tsx` + `src/components/Sidebar/Sidebar.tsx`.
 - **Aspirante investigación update (nuevo):** `src/api/aspiranteService.ts`, `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`.
@@ -349,6 +385,7 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
+
 - 2026-04-21: `npx eslint src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/modules/configFechas/api/*.ts src/modules/configFechas/storage/configFechasStorage.ts src/app/routes/index.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx` ✅ (sin errores en los archivos tocados para el módulo de configuración de fechas).
 - 2026-04-21: `npm run build` ❌ (falla por errores TypeScript preexistentes fuera del alcance en admisiones; el ajuste de matrícula compila en los archivos tocados y se validó adicionalmente con eslint dirigido).
 - 2026-04-20: `npx eslint src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/modules/estudiantes/services/estudiantesMockService.ts src/modules/estudiantes/mock/estudiantes.mock.ts src/modules/estudiantes/types.ts` ✅ (sin errores en los archivos tocados para soporte de foto en cards de estudiantes).
@@ -428,6 +465,7 @@
 - `npm run lint` ❌ fails due to pre-existing lint debt (`no-explicit-any` in module stubs, React hooks purity/set-state-in-effect rules, and unused vars in helper/stub files).
 
 ## Environment & Package Versions
+
 - **Node environment:** No Python venv/conda/poetry used; frontend runs with Node + npm.
 - **Package manager:** npm (lockfile: `package-lock.json`).
 - **Environment variables:** `VITE_API_BASE_URL` (defaults to `http://localhost:8080` if unset).
@@ -442,6 +480,7 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
+
 - **Matrícula mock contracts (frontend boundary):** `src/modules/matricula/types.ts`, `src/modules/matricula/services/matriculaMockService.ts`
   - `fetchMatriculaConvocatoria(): Promise<MatriculaConvocatoria>` where `{ isOpen, periodoLabel, fechaInicio, fechaFin, mensaje? }`.
   - `fetchMateriasCatalogo(): Promise<MateriaDto[]>` where `MateriaDto = { id, nombre, codigo, nivel }`.
@@ -526,8 +565,8 @@
 - **Evaluación admisión DTO:** `src/modules/admisiones/types/evaluacionAdmisionTypes.ts`
   - `EvaluacionAdmisionItem`: `{ id, inscripcionId, etapaEvaluacion, aspecto, codigo, consideraciones, evaluador, fechaRegistro, observaciones, ponderacionId, puntajeAspirante, puntajeMax }`.
 
-
 ## Update 2026-04-02 (Solicitudes UX/Table Refresh)
+
 - Added reusable `SolicitudesTable` component for both coordinator and student modes (extra student identity columns only for coordinator mode).
 - Introduced `SolicitudesCoordinadorView` and `SolicitudesEstudianteView` containers to keep `/solicitudes` role branches isolated and easier to maintain.
 - Student flow now defaults to LIST view (`Mis solicitudes`), supports `Agregar solicitud` -> FORM toggle, and returns to LIST with a newly inserted mock `REGISTRADA` row after successful submit.
@@ -535,5 +574,6 @@
 - `/solicitudes` role priority enforced as: `COORDINADOR | ADMIN` > `ESTUDIANTE` > no-permission message.
 
 ### Validation notes (manual + static)
+
 - Build/lint were not re-run in this update window; existing repo baseline still applies (see prior section with lint debt).
 - Manual code-path validation completed for role branching and LIST/FORM toggle behavior in the new containers.

@@ -1,9 +1,11 @@
 # SAPP Frontend
 
 ## Purpose & Scope
+
 This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gestión de Solicitudes de Posgrados) at EISI–UIS. The UI centralizes workflows such as admisiones, matrícula académica/financiera, solicitudes, exámenes de candidatura, trabajos de grado, and notificaciones.
 
 ## Architecture (Brief)
+
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
 - **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
 - **Session store:** A non-React session store (`src/modules/auth/session/sessionStore.ts`) keeps the token accessible for API clients and handles save/clear/get operations.
@@ -43,6 +45,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 - **Gating de evaluación por etapa:** `src/modules/admisiones/api/evaluacionAdmisionAvailabilityService.ts` consulta disponibilidad por etapa con caché en memoria, `InscripcionAdmisionDetallePage` deshabilita las ventanas según disponibilidad y `RequireEvaluacionEnabled` protege accesos directos por URL.
 
 ## Tech Stack (Exact Versions)
+
 - **React:** 19.2.0
 - **React DOM:** 19.2.0
 - **React Router DOM:** 7.9.2
@@ -54,12 +57,14 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 > Full dependency list: see `package.json`.
 
 ## How to Run
+
 ```bash
 npm install
 npm run dev
 ```
 
 Other useful commands:
+
 ```bash
 npm run build
 npm run preview
@@ -69,23 +74,28 @@ npm run lint
 No seed step is required for this frontend; it consumes backend data directly via the configured API base URL.
 
 ### Environment Variables
+
 ```env
 # .env.local
 VITE_API_BASE_URL=http://localhost:8080
 ```
 
 ### Seeds / Mock Data
+
 There are no seed scripts. The SAPP login calls the backend directly:
+
 - Endpoint: `POST ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/auth/login`
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the response into an `AuthSession`, stores the JWT as `accessToken`, and decodes the payload for username, roles, and `iat/exp`.
 
 The aspirante login now also calls the backend directly:
+
 - Endpoint: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/aspirante/consultaInfo?numeroInscripcion=...&tipoDocumentoId=...&numeroDocumento=...`
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
 
 Coordinación > Estudiantes usa endpoints reales para catálogo y listado:
+
 - Programas: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/programaAcademico`
 - Estudiantes por programa: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/estudiantes/consulta?programaId={id}&egresados=false`
 - Contrato esperado actual: `{ ok, message, data }` con `data[]` de estudiantes incluyendo `estudiante`, `persona`, `nombreCompleto`, `programaId`, `programaCodigoNombre`.
@@ -94,13 +104,18 @@ Coordinación > Estudiantes usa endpoints reales para catálogo y listado:
   - `Doctorado en Ciencias de la Computación`
 
 Mock data de estudiantes se conserva únicamente como fallback para detalle cuando no hay cache de la lista en memoria:
+
 - `src/modules/estudiantes/mock/estudiantes.mock.ts`
 - `src/modules/estudiantes/services/estudiantesMockService.ts`
 
 Mock data for the Admisiones module still lives in:
+
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+
+- April 21, 2026: se creó el nuevo módulo **Configuración** (`/configuracion`) para `ADMIN/COORDINACION`, agregado al final del sidebar. La pantalla muestra primero una vista de **Períodos académicos** y después **Convocatorias de admisión**, con acciones directas para gestionar cada configuración.
+- April 21, 2026: en `/matricula` para coordinación/admin se retiró la columna **ID** del listado y se homologó el estilo de tabla con el patrón visual usado en otras pantallas (fondo de superficie, espaciado mayor y hover institucional).
 - April 21, 2026: se agregó la nueva ruta protegida `/admisiones/configuracion/fechas` (solo `ADMIN/COORDINADOR`) con pantalla **Configuración de fechas — Admisiones**. La vista consume periodos reales (`GET /api/sapp/periodoAcademico`), guarda configuración con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`), y mantiene tabla local en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) para listar/editar sin endpoint backend de consulta.
 - April 21, 2026: en `/matricula`, para roles `COORDINADOR/ADMIN`, se habilitó el listado real de matrículas desde `GET /sapp/matriculaAcademica` con filtros por **programa**, **periodo**, **estado** y **búsqueda por estudiante/código**; además, cada registro ahora permite abrir un detalle en la misma pantalla (datos generales + asignaturas registradas). El flujo de `ESTUDIANTE` se mantiene sin cambios funcionales.
 - April 20, 2026: en **Coordinación > Estudiantes** (`/coordinacion/estudiantes`) las tarjetas del listado ahora muestran foto del estudiante cuando el backend la envía en `estudiante.foto` (`contenidoBase64` + `mimeType`) desde `GET /sapp/estudiantes/consulta`. Se normaliza a Data URL en el servicio y se mantiene placeholder institucional “Sin foto” cuando `foto` es `null`.

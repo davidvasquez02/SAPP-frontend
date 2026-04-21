@@ -1,48 +1,88 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/Auth'
-import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
-import './Sidebar.css'
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/Auth";
+import { hasAnyRole, isProfesor, ROLES } from "../../auth/roleGuards";
+import "./Sidebar.css";
 
 interface SidebarItem {
-  to: string
-  label: string
-  icon: string
-  visible?: boolean
+  to: string;
+  label: string;
+  icon: string;
+  visible?: boolean;
 }
 
 const Sidebar = () => {
-  const { session, logout } = useAuth()
-  const navigate = useNavigate()
+  const { session, logout } = useAuth();
+  const navigate = useNavigate();
 
   const canSeeAdmisiones =
-    session?.kind === 'SAPP' &&
-    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN, ROLES.PROFESOR, ROLES.DOCENTE])
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [
+      ROLES.COORDINACION,
+      ROLES.SECRETARIA,
+      ROLES.ADMIN,
+      ROLES.PROFESOR,
+      ROLES.DOCENTE,
+    ]);
   const canSeeGestionEstudiantes =
-    session?.kind === 'SAPP' &&
-    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [
+      ROLES.COORDINACION,
+      ROLES.SECRETARIA,
+      ROLES.ADMIN,
+    ]);
+  const canSeeConfiguracion =
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.ADMIN]);
   const isProfesorOnly =
-    session?.kind === 'SAPP' &&
+    session?.kind === "SAPP" &&
     isProfesor(session.user.roles) &&
-    !hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+    !hasAnyRole(session.user.roles, [
+      ROLES.COORDINACION,
+      ROLES.SECRETARIA,
+      ROLES.ADMIN,
+    ]);
 
   const sidebarItems: SidebarItem[] = [
-    { to: '/solicitudes', label: 'Solicitudes', icon: '📝' },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
-    { to: '/creditos', label: 'Créditos', icon: '💳', visible: !isProfesorOnly },
-    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
-    { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
-  ]
+    { to: "/solicitudes", label: "Solicitudes", icon: "📝" },
+    {
+      to: "/matricula",
+      label: "Matrícula",
+      icon: "🎓",
+      visible: !isProfesorOnly,
+    },
+    {
+      to: "/creditos",
+      label: "Créditos",
+      icon: "💳",
+      visible: !isProfesorOnly,
+    },
+    {
+      to: "/coordinacion/estudiantes",
+      label: "Estudiantes",
+      icon: "👥",
+      visible: canSeeGestionEstudiantes,
+    },
+    {
+      to: "/admisiones",
+      label: "Admisiones",
+      icon: "📋",
+      visible: canSeeAdmisiones,
+    },
+    {
+      to: "/configuracion",
+      label: "Configuración",
+      icon: "⚙️",
+      visible: canSeeConfiguracion,
+    },
+  ];
 
   const handleLogout = () => {
-    logout()
-    navigate('/login', { replace: true })
-  }
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
-    <aside
-      className="sidebar"
-      aria-label="Navegación principal"
-    >
+    <aside className="sidebar" aria-label="Navegación principal">
       <div className="sidebar__brand" title="SAPP">
         <span className="sidebar__label_title">SAPP</span>
       </div>
@@ -55,7 +95,7 @@ const Sidebar = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+                `sidebar__link${isActive ? " sidebar__link--active" : ""}`
               }
               title={item.label}
             >
@@ -81,7 +121,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;
