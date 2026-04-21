@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 
 ## Recent Decisions (Changelog-lite)
 
+- April 21, 2026: fix en `/admisiones/configuracion/fechas` para evitar llamadas infinitas a `GET /api/sapp/periodoAcademico`. La carga inicial de periodos quedó desacoplada del callback dependiente de `periodos`, eliminando el ciclo de re-render/re-fetch en la pantalla de configuración de fechas.
 - April 21, 2026: se creó el nuevo módulo **Configuración** (`/configuracion`) para `ADMIN/COORDINACION`, agregado al final del sidebar. La pantalla muestra primero una vista de **Períodos académicos** y después **Convocatorias de admisión**, con acciones directas para gestionar cada configuración.
 - April 21, 2026: en `/matricula` para coordinación/admin se retiró la columna **ID** del listado y se homologó el estilo de tabla con el patrón visual usado en otras pantallas (fondo de superficie, espaciado mayor y hover institucional).
 - April 21, 2026: se agregó la nueva ruta protegida `/admisiones/configuracion/fechas` (solo `ADMIN/COORDINADOR`) con pantalla **Configuración de fechas — Admisiones**. La vista consume periodos reales (`GET /api/sapp/periodoAcademico`), guarda configuración con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`), y mantiene tabla local en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) para listar/editar sin endpoint backend de consulta.

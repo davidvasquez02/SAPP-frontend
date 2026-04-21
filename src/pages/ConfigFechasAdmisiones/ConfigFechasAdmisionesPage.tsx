@@ -120,10 +120,29 @@ const ConfigFechasAdmisionesPage = () => {
         })
 
         setPeriodos(sorted)
-        setConfigs(loadConfigs())
+        const storedConfigs = loadConfigs()
+        setConfigs(storedConfigs)
 
         if (sorted.length > 0) {
-          applyPeriodoValues(sorted[0].id)
+          const firstPeriodo = sorted[0]
+          const localConfig = getConfigByPeriodo(firstPeriodo.id)
+
+          if (localConfig) {
+            setForm({
+              periodoId: firstPeriodo.id,
+              fechaInicio: localConfig.fechaInicio,
+              fechaFin: localConfig.fechaFin,
+              descripcion: localConfig.descripcion,
+            })
+          } else {
+            const defaults = getDefaultDatesByPeriodo(firstPeriodo)
+            setForm({
+              periodoId: firstPeriodo.id,
+              fechaInicio: defaults.fechaInicio,
+              fechaFin: defaults.fechaFin,
+              descripcion: '',
+            })
+          }
         }
       } catch (requestError) {
         setError(
@@ -137,7 +156,7 @@ const ConfigFechasAdmisionesPage = () => {
     }
 
     fetchPeriodos()
-  }, [applyPeriodoValues])
+  }, [])
 
   const handlePeriodoChange = (periodoId: number) => {
     setError(null)
