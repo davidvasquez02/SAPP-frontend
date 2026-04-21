@@ -84,6 +84,11 @@ The aspirante login now also calls the backend directly:
 - Response envelope: `{ ok, message, data }`
 - The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
 
+Coordinación > Matrículas usa endpoint real para listado/detalle en coordinación:
+- Matrículas académicas: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/matriculaAcademica`
+- Query params soportados por frontend: `periodoId`, `programaId`, `estado`, `matriculaId`
+- Contrato esperado actual: `{ ok, message, data }` con `data[]` de matrículas incluyendo `programaAcademico`, `periodoAcademico`, `estado`, y `asignaturas[]`.
+
 Coordinación > Estudiantes usa endpoints reales para catálogo y listado:
 - Programas: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/programaAcademico`
 - Estudiantes por programa: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/estudiantes/consulta?programaId={id}&egresados=false`
@@ -100,6 +105,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 21, 2026: **Coordinación > Matrículas** (`/coordinacion/estudiantes`) ahora consulta `GET /sapp/matriculaAcademica` con filtros opcionales `periodoId`, `programaId`, `estado`, `matriculaId`; el listado se agrupa por `programaAcademico` y al cargar la pantalla se autoselecciona una matrícula para mostrar su detalle (estudiante, periodo, estado, fechas y asignaturas) sin navegación adicional.
 - April 20, 2026: en **Coordinación > Estudiantes** (`/coordinacion/estudiantes`) las tarjetas del listado ahora muestran foto del estudiante cuando el backend la envía en `estudiante.foto` (`contenidoBase64` + `mimeType`) desde `GET /sapp/estudiantes/consulta`. Se normaliza a Data URL en el servicio y se mantiene placeholder institucional “Sin foto” cuando `foto` es `null`.
 - April 20, 2026: en la etapa `HOJA_DE_VIDA` de coordinación (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida`), el visor PDF lateral dejó de buscar por heurística y ahora consulta explícitamente `GET /sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`; con esto el panel carga directamente el documento oficial de hoja de vida de la inscripción.
 - April 20, 2026: en el detalle de inscripción de admisiones (`/admisiones/convocatoria/:convId/inscripcion/:inscId`) se agregó la acción **Finalizar inscripción** para `ADMIN/COORDINADOR`: valida en tiempo real las tres etapas (`HOJA_DE_VIDA`, `EXAMEN_DE_CONOCIMIENTOS`, `ENTREVISTA`) contra `GET /sapp/evaluacionAdmision/info`, exige puntajes diligenciados y en rango `[0, puntajeMax]`, y solo si pasa ejecuta secuencialmente `PUT /sapp/evaluacionAdmision/calcularPuntajes/{inscripcionId}` + `PUT /sapp/evaluacionAdmision/finalizarEvaluacion/{inscripcionId}`. Tras finalizar, invalida caché de availability, recarga estado/detalle y muestra feedback de éxito/error en la misma pantalla.
