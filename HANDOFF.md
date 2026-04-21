@@ -2,6 +2,8 @@
 
 ## Current Status
 
+- ✅ Hotfix aplicado en `/admisiones/configuracion/fechas`: se corrigió un loop de consumo infinito de `GET /api/sapp/periodoAcademico` causado por una dependencia circular entre `useEffect` y `applyPeriodoValues`.
+- ✅ La inicialización del formulario en carga de periodos ahora se resuelve dentro del primer fetch (config local o defaults por semestre), evitando retriggers del request.
 - ✅ Nuevo módulo de configuración creado en `/configuracion` con vista inicial orientada a escalabilidad: primero periodos académicos y luego convocatorias.
 - ✅ Sidebar actualizado: entrada **Configuración** al final, visible para roles `ADMIN` y `COORDINACION`.
 - ✅ Listado de matrículas (coordinador/admin) actualizado: se eliminó la columna `ID` y se alineó el estilo de tabla con el patrón visual institucional del resto de pantallas.
@@ -14,16 +16,18 @@
 - Rutas: `src/app/routes/index.tsx`
 - Sidebar: `src/components/Sidebar/Sidebar.tsx`
 - Matrícula listado/estilos: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css`
+- Hotfix loop periodos: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`
 
 ## Next Steps
 
-1. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN`.
+1. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN` verificando explícitamente que `GET /api/sapp/periodoAcademico` se ejecute una vez por carga de pantalla.
 2. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
 3. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
 
 ## Recent Tests + Logs
 
-- `npm run build` → esperado como validación principal de compilación tras cambios de rutas/páginas/estilos.
+- `npx eslint src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx README.md HANDOFF.md` → validación rápida de lint sobre archivos tocados por el hotfix de loop.
+- `npm run build` → esperado como validación principal de compilación tras cambios de rutas/páginas/estilos y fix de ciclo de requests.
 - Nota: en este entorno no se tomó screenshot automático (no hay herramienta de browser_container disponible).
 
 ---
