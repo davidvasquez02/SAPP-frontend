@@ -11,14 +11,24 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
+  validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
-import type { MatriculaAcademicaListadoDto } from '../../modules/matricula/types'
+import type {
+  MatriculaAcademicaListadoDto,
+  MatriculaAsignaturaValidacionDecision,
+  MatriculaAsignaturaValidacionPayload,
+} from '../../modules/matricula/types'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './MatriculaDetalleCoordinacionPage.css'
 
 interface DocumentoActionState {
   viewing: boolean
   downloading: boolean
+}
+
+type AsignaturaDecisionState = {
+  decision: MatriculaAsignaturaValidacionDecision | ''
+  observaciones: string
 }
 
 const formatDateTime = (value: string | null) => {
@@ -78,6 +88,8 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [rejectErrors, setRejectErrors] = useState<Record<number, string | null>>({})
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
+  const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
+  const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
 
   const getActionState = useCallback(
     (id: number): DocumentoActionState =>
@@ -120,8 +132,27 @@ const MatriculaDetalleCoordinacionPage = () => {
       if (!selected) {
         setError('No se encontró la matrícula seleccionada.')
         setMatricula(null)
+        setAsignaturasDecision({})
       } else {
         setMatricula(selected)
+        setAsignaturasDecision(
+          selected.asignaturas.reduce<Record<number, AsignaturaDecisionState>>((acc, asignatura) => {
+            const estado = asignatura.estado.toUpperCase()
+            let decision: MatriculaAsignaturaValidacionDecision | '' = ''
+            if (estado === 'APROBADA') {
+              decision = 'APROBADA'
+            } else if (estado === 'RECHAZADA') {
+              decision = 'RECHAZADA'
+            }
+
+            acc[asignatura.id] = {
+              decision,
+              observaciones: asignatura.observaciones ?? '',
+            }
+
+            return acc
+          }, {}),
+        )
       }
 
       setDocumentos(documentosData)
@@ -304,6 +335,58 @@ const MatriculaDetalleCoordinacionPage = () => {
     }
   }
 
+  const updateAsignaturaDecision = (
+    asignaturaId: number,
+    updates: Partial<AsignaturaDecisionState>,
+  ) => {
+    setAsignaturasDecision((prev) => ({
+      ...prev,
+      [asignaturaId]: {
+        decision: '',
+        observaciones: '',
+        ...prev[asignaturaId],
+        ...updates,
+      },
+    }))
+  }
+
+  const handleGuardarValidacionAsignaturas = async () => {
+    if (!matricula) {
+      return
+    }
+
+    const payload: MatriculaAsignaturaValidacionPayload[] = matricula.asignaturas
+      .map((asignatura) => {
+        const current = asignaturasDecision[asignatura.id]
+        if (!current?.decision) {
+          return null
+        }
+
+        return {
+          matriculaAsignaturaId: asignatura.id,
+          estado: current.decision,
+          observaciones: current.observaciones.trim() || null,
+        }
+      })
+      .filter((item): item is MatriculaAsignaturaValidacionPayload => item !== null)
+
+    if (payload.length === 0) {
+      window.alert('Debe seleccionar al menos una asignatura para aprobar o rechazar.')
+      return
+    }
+
+    setIsSavingAsignaturas(true)
+    try {
+      await validarAsignaturasMatriculaAcademica(matricula.id, payload)
+      await loadDetalle()
+      window.alert('La validación de asignaturas fue guardada correctamente.')
+    } catch (requestError) {
+      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+    } finally {
+      setIsSavingAsignaturas(false)
+    }
+  }
+
   if (!canManageMatriculas) {
     return (
       <ModuleLayout title="Matrícula">
@@ -362,6 +445,8 @@ const MatriculaDetalleCoordinacionPage = () => {
                       <th>Asignatura</th>
                       <th>Grupo</th>
                       <th>Estado</th>
+                      <th>Validación coordinación</th>
+                      <th>Comentarios</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -371,10 +456,59 @@ const MatriculaDetalleCoordinacionPage = () => {
                         <td>{asignatura.asignaturaNombre}</td>
                         <td>{asignatura.grupo}</td>
                         <td>{asignatura.estado}</td>
+                        <td>
+                          <div className="matricula-detalle__decision-group">
+                            <label>
+                              <input
+                                type="radio"
+                                name={`decision-asig-${asignatura.id}`}
+                                checked={asignaturasDecision[asignatura.id]?.decision === 'APROBADA'}
+                                onChange={() =>
+                                  updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
+                                }
+                              />
+                              Aprobar
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                name={`decision-asig-${asignatura.id}`}
+                                checked={asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'}
+                                onChange={() =>
+                                  updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
+                                }
+                              />
+                              Rechazar
+                            </label>
+                          </div>
+                        </td>
+                        <td>
+                          <textarea
+                            className="matricula-detalle__asignatura-comments"
+                            value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
+                            onChange={(event) =>
+                              updateAsignaturaDecision(asignatura.id, {
+                                observaciones: event.target.value,
+                              })
+                            }
+                            placeholder="Observaciones de validación"
+                            rows={2}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="matricula-detalle__asignatura-actions">
+                <button
+                  type="button"
+                  className="matricula-detalle__approve-button"
+                  onClick={() => void handleGuardarValidacionAsignaturas()}
+                  disabled={isSavingAsignaturas}
+                >
+                  {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
+                </button>
               </div>
             </article>
 

@@ -54,6 +54,14 @@ export type MatriculaAsignaturaVigenteDto = {
   observaciones: string | null
 }
 
+export type MatriculaAsignaturaValidacionDecision = 'APROBADA' | 'RECHAZADA'
+
+export type MatriculaAsignaturaValidacionPayload = {
+  matriculaAsignaturaId: number
+  estado: MatriculaAsignaturaValidacionDecision
+  observaciones: string | null
+}
+
 export type MatriculaAcademicaVigenteDto = {
   id: number
   estudianteId: number

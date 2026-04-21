@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`) se habilitó validación de asignaturas en tabla. Cada fila ahora incluye decisión `Aprobar/Rechazar` + textarea de observaciones y acción de guardado por lote usando `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con payload `asignaturas[]` (`{ matriculaAsignaturaId, estado, observaciones }`).
 - April 21, 2026 (latest): hotfix en `/matricula` (rol `ESTUDIANTE`) para upload de documentos. `MatriculaPage` ahora envía `usuarioCargaId` con el usuario autenticado (`session.user.id` normalizado a `number`) en cada `POST /sapp/document`; antes se enviaba `null`.
 - April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) al confirmar matrícula se ejecuta carga secuencial automática de documentos usando el `tramiteId` devuelto por la validación de matrícula vigente inmediatamente después de crear (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` + `POST /sapp/document` por archivo). La UI ahora muestra estado por documento (`READY_TO_UPLOAD`, `UPLOADING`, `UPLOADED`, `ERROR`) durante el proceso.
 - April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) el bloque **Cargue de documentos** ahora usa endpoints reales: `GET /sapp/tramite/document?tipoTramiteId=2` para requisitos iniciales y, si `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` retorna matrícula existente, se consulta `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` para mostrar estados/observaciones reales de documentos cargados.
@@ -16,6 +17,10 @@
 
 ## Paths / Artifacts
 
+- Validación de asignaturas (detalle coordinación): `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`
+- Estilos tabla/controles validación asignaturas: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.css`
+- Servicio endpoint validación asignaturas: `src/modules/matricula/services/matriculaAcademicaService.ts`
+- Tipos payload validación asignaturas: `src/modules/matricula/types.ts`
 - Matrícula estudiante (documentos endpoint real): `src/pages/Matricula/MatriculaPage.tsx`
 - Nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.tsx`
 - Estilos nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.css`
@@ -27,13 +32,16 @@
 
 ## Next Steps
 
-1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
-1. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN` verificando explícitamente que `GET /api/sapp/periodoAcademico` se ejecute una vez por carga de pantalla.
-2. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
-3. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
+1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar flujo completo de **validación de asignaturas** (selección aprobar/rechazar, envío de observaciones, persistencia tras refresh y manejo de errores del endpoint).
+2. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
+3. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN` verificando explícitamente que `GET /api/sapp/periodoAcademico` se ejecute una vez por carga de pantalla.
+4. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
+5. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
 
 ## Recent Tests + Logs
 
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores en el flujo nuevo de validación de asignaturas.
+- `npm run build` → ❌ falla por errores TypeScript preexistentes fuera del alcance del cambio (`evaluacionAdmisionService`, `finalizarEvaluacionService`, `InscripcionAdmisionDetallePage`).
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores luego del hotfix `usuarioCargaId` en upload de matrícula.
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/matricula/types.ts` → ✅ sin errores para los archivos tocados del flujo secuencial de documentos.
 - `npm run lint -- src/pages/Matricula/MatriculaPage.tsx` → ⚠️ comando ejecutado, pero el repo tiene errores de lint preexistentes en archivos no tocados (auth, solicitudes, servicios legacy con `any`).

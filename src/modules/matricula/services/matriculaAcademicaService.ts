@@ -5,6 +5,7 @@ import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../constants'
 import type {
   MateriaDto,
   MatriculaAcademicaCreatePayload,
+  MatriculaAsignaturaValidacionPayload,
   MatriculaAcademicaListadoDto,
   MatriculaAcademicaVigenteDto,
   MatriculaVigenteValidationResult,
@@ -126,6 +127,22 @@ export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<vo
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible aprobar la matrícula académica.')
+  }
+}
+
+export const validarAsignaturasMatriculaAcademica = async (
+  matriculaId: number,
+  payload: MatriculaAsignaturaValidacionPayload[],
+): Promise<void> => {
+  const response = await httpPut<ApiResponse<unknown>>(
+    `/sapp/matriculaAcademica/${matriculaId}/validarAsignaturas`,
+    {
+      asignaturas: payload,
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible validar las asignaturas de la matrícula.')
   }
 }
 
