@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): hotfix en `/matricula` (rol `ESTUDIANTE`) para upload de documentos. `MatriculaPage` ahora envía `usuarioCargaId` con el usuario autenticado (`session.user.id` normalizado a `number`) en cada `POST /sapp/document`; antes se enviaba `null`.
 - April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) al confirmar matrícula se ejecuta carga secuencial automática de documentos usando el `tramiteId` devuelto por la validación de matrícula vigente inmediatamente después de crear (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` + `POST /sapp/document` por archivo). La UI ahora muestra estado por documento (`READY_TO_UPLOAD`, `UPLOADING`, `UPLOADED`, `ERROR`) durante el proceso.
 - April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) el bloque **Cargue de documentos** ahora usa endpoints reales: `GET /sapp/tramite/document?tipoTramiteId=2` para requisitos iniciales y, si `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` retorna matrícula existente, se consulta `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` para mostrar estados/observaciones reales de documentos cargados.
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
@@ -33,7 +34,7 @@
 
 ## Recent Tests + Logs
 
-- `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores para el archivo actualizado del flujo de matrícula estudiante.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores luego del hotfix `usuarioCargaId` en upload de matrícula.
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/matricula/types.ts` → ✅ sin errores para los archivos tocados del flujo secuencial de documentos.
 - `npm run lint -- src/pages/Matricula/MatriculaPage.tsx` → ⚠️ comando ejecutado, pero el repo tiene errores de lint preexistentes en archivos no tocados (auth, solicitudes, servicios legacy con `any`).
 - Nota: en este entorno no se tomó screenshot automático (no hay herramienta de browser_container disponible).
