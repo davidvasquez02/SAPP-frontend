@@ -1,7 +1,6 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
-- April 21, 2026 (latest): **Coordinación > Matrículas** (`/coordinacion/estudiantes`) ahora consume `GET /sapp/matriculaAcademica` con filtros `periodoId`, `programaId`, `estado` y `matriculaId`; el resultado se agrupa por `programaAcademico` y la vista autoselecciona la primera matrícula para mostrar detalle inmediato (estudiante, periodo, estado, fechas y asignaturas).
 - April 20, 2026 (latest): en la etapa `HOJA_DE_VIDA` del detalle de inscripción de admisiones (coordinación), el visor PDF lateral ahora consume el endpoint específico `GET /sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`. Se eliminó la heurística por texto para identificar “hoja de vida” y se toma directamente el primer documento retornado con base64 para `ANX-2`.
 - April 20, 2026 (latest): en **Coordinación > Estudiantes** (`/coordinacion/estudiantes`) se actualizó el card UI para renderizar foto desde el nuevo contrato de `GET /sapp/estudiantes/consulta` (`data[].estudiante.foto`). El mapeo frontend transforma `mimeType + contenidoBase64` a `data:{mime};base64,...` (`fotoUrl`) y el card muestra placeholder “Sin foto” cuando el backend responde `foto: null`.
 - April 20, 2026 (latest): en `InscripcionAdmisionDetallePage` se agregó el bloque final **Finalizar inscripción** (visible para `ADMIN/COORDINADOR`), con confirmación de acción y validación previa de completitud de calificaciones por etapa (`HOJA_DE_VIDA`, `EXAMEN_DE_CONOCIMIENTOS`, `ENTREVISTA`) usando `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa={etapa}`. Si la validación pasa, ejecuta en secuencia `PUT /sapp/evaluacionAdmision/calcularPuntajes/{id}` y luego `PUT /sapp/evaluacionAdmision/finalizarEvaluacion/{id}`; al terminar invalida caché (`evaluacionAdmisionAvailabilityCache`), recarga estado de evaluación + detalle de inscripción y muestra mensaje de éxito/errores por etapa en UI.
@@ -177,7 +176,6 @@
 - Updated entrevista evaluations to render grouped by entrevistador (sorted A–Z), with a read-only resumen section for the consolidated `ENTREV` item and shared draft/edit state across groups.
 
 ## Open Challenges
-- Ejecutar validación E2E/manual del nuevo listado de coordinación de matrículas para confirmar correspondencia exacta entre filtros frontend y backend (`periodoId`, `programaId`, `estado`, `matriculaId`), especialmente prioridad de `matriculaId` cuando se envía junto a otros parámetros.
 - QA manual pendiente para perfil `PROFESOR/DOCENTE`: validar que sidebar solo expone `Solicitudes` + `Admisiones`, que `/admisiones` lista asignaciones mock propias y que la redirección forzada a `/entrevistas` funciona para deep-links a otras etapas de inscripción.
 - Confirmar con backend la regla definitiva de matching `evaluador` vs usuario autenticado (actualmente se usa nombre completo normalizado de `persona` en sesión).
 - Validar manualmente en navegador `/solicitudes/:id` (rol ESTUDIANTE) que la sección única de documentos no duplique registros, y que `Reemplazar` + `Guardar documentos` refresque correctamente el archivo cargado/fecha sin necesidad de recargar página.
@@ -216,7 +214,6 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
-- QA manual de `/coordinacion/estudiantes` con datos reales: verificar agrupación por `programaAcademico`, selección automática de primer registro al cargar, y render del detalle de asignaturas por matrícula.
 - QA manual dirigida (alta prioridad): reproducir el caso reportado en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` y confirmar que después de **Iniciar proceso de evaluación** desaparece el mensaje “No se ha iniciado proceso de evaluación.”, se habilitan las ventanas bloqueadas y los componentes cargan estado actualizado sin F5.
 - QA manual en `/admisiones/convocatoria/:convocatoriaId`: confirmar en Network una consulta `/sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` por tarjeta y validar fallback visual de avatar vacío cuando `ANX-4` no viene cargado.
 - Ejecutar QA manual con dos usuarios: `PROFESOR/DOCENTE` y `COORDINADOR`, verificando que el flujo coordinador no cambió y que el profesor solo puede editar `ENTREVISTAS`.
@@ -345,7 +342,6 @@
 - **Datasets/Artifacts:** None bundled in repo.
 
 ## Recent Test Results + Logs
-- 2026-04-21: `npm run build` ❌ (falla por errores TypeScript preexistentes fuera del alcance en `src/modules/admisiones/api/finalizarEvaluacionService.ts` y `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`; el cambio de matrículas no añade errores nuevos).
 - 2026-04-20: `npx eslint src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/modules/estudiantes/services/estudiantesMockService.ts src/modules/estudiantes/mock/estudiantes.mock.ts src/modules/estudiantes/types.ts` ✅ (sin errores en los archivos tocados para soporte de foto en cards de estudiantes).
 - 2026-04-20: `npm run build` ❌ (falla por errores TypeScript preexistentes fuera del alcance de este ajuste en `src/modules/admisiones/api/finalizarEvaluacionService.ts` e `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`).
 - 2026-04-20: `npm run build` ✅ (pasa con el ajuste de entrevistas para `PROFESOR/DOCENTE`: botón global **Enviar calificaciones** + envío batch de filas modificadas por `POST /sapp/evaluacionAdmision/registroPuntaje`).
@@ -437,10 +433,6 @@
 - **Avoid duplicate envs:** reuse the existing `node_modules` in this repo; only run `npm install` if dependencies are missing or lockfile changed. Do not create Python virtual environments (`venv`/`conda`/`poetry`) for this project.
 
 ## Schemas / Contracts (Expected Outputs)
-- **Matrícula coordinación (real, listado + filtros):** `src/modules/matricula/services/coordinacionMatriculasService.ts`
-  - `GET /sapp/matriculaAcademica?periodoId=&programaId=&estado=&matriculaId=` (todos opcionales).
-  - Respuesta esperada: `{ ok, message, data: MatriculaCoordinacionItem[] }`.
-  - `MatriculaCoordinacionItem` incluye `id`, `estudianteId`, `codigoEstudianteUis`, `estudianteNombreCompleto`, `programaAcademico`, `periodoId`, `periodoAcademico`, `estado`, `fechaSolicitud`, `fechaRevision`, `observaciones`, `asignaturas[]`.
 - **Matrícula mock contracts (frontend boundary):** `src/modules/matricula/types.ts`, `src/modules/matricula/services/matriculaMockService.ts`
   - `fetchMatriculaConvocatoria(): Promise<MatriculaConvocatoria>` where `{ isOpen, periodoLabel, fechaInicio, fechaFin, mensaje? }`.
   - `fetchMateriasCatalogo(): Promise<MateriaDto[]>` where `MateriaDto = { id, nombre, codigo, nivel }`.

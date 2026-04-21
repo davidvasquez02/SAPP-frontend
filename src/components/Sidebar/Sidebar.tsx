@@ -29,7 +29,7 @@ const Sidebar = () => {
     { to: '/solicitudes', label: 'Solicitudes', icon: '📝' },
     { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     { to: '/creditos', label: 'Créditos', icon: '💳', visible: !isProfesorOnly },
-    { to: '/coordinacion/estudiantes', label: 'Matrículas coordinación', icon: '👥', visible: canSeeGestionEstudiantes },
+    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
     { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
   ]
 
