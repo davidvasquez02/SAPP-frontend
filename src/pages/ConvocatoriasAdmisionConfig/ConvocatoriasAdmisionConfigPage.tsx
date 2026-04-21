@@ -169,13 +169,22 @@ const ConvocatoriasAdmisionConfigPage = () => {
             <h1>Configuración de convocatorias de admisión</h1>
             <p>Gestione convocatorias por programa, periodo y estado de vigencia.</p>
           </div>
-          <button
-            type="button"
-            className="convocatorias-config__new-button"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Nueva convocatoria
-          </button>
+          <div className="convocatorias-config__header-actions">
+            <button
+              type="button"
+              className="convocatorias-config__new-button convocatorias-config__new-button--ghost"
+              onClick={() => navigate('/admisiones/configuracion/fechas')}
+            >
+              Configurar fechas de semestre
+            </button>
+            <button
+              type="button"
+              className="convocatorias-config__new-button"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Nueva convocatoria
+            </button>
+          </div>
         </header>
 
         <div className="convocatorias-config__filters">
