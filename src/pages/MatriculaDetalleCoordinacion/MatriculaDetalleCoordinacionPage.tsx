@@ -4,13 +4,12 @@ import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
-import { getDocumentosByTramiteParams } from '../../modules/documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
 import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
 import type { DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
-import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../../modules/matricula/constants'
 import {
   aprobarMatriculaAcademica,
+  getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type { MatriculaAcademicaListadoDto } from '../../modules/matricula/types'
@@ -114,10 +113,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     try {
       const [matriculasData, documentosData] = await Promise.all([
         getMatriculasAcademicas(),
-        getDocumentosByTramiteParams({
-          tramiteId: parsedMatriculaId,
-          codigoTipoTramite: CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA,
-        }),
+        getDocumentosMatriculaAcademica(parsedMatriculaId),
       ])
 
       const selected = matriculasData.find((item) => item.id === parsedMatriculaId)

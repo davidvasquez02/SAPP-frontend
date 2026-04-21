@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
 - April 21, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga de foto por documento ANX-4 en segundo request; ahora cada card usa directamente `inscripcion.foto` (base64 + mimeType) del endpoint de inscripciones.
 - April 21, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` se agregaron pestañas **Matrículas**, **Admisión** y **Solicitudes**; cada una consulta listados por estudiante y carga documentos asociados con `GET /sapp/document` por trámite.
 - ✅ Hotfix aplicado en `/admisiones/configuracion/fechas`: se corrigió un loop de consumo infinito de `GET /api/sapp/periodoAcademico` causado por una dependencia circular entre `useEffect` y `applyPeriodoValues`.
@@ -39,6 +40,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
 - April 21, 2026 (latest): se implementó el módulo **Configuración de fechas — Admisiones** en `/admisiones/configuracion/fechas` con guard de roles (`ADMIN`, `COORDINADOR`). La pantalla carga periodos reales por `GET /api/sapp/periodoAcademico`, permite guardar fechas con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`) y mantiene una tabla local editable/persistente en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) al no existir endpoint GET de configuraciones guardadas.
 - April 21, 2026 (latest): `/matricula` ahora tiene vista de gestión para `COORDINADOR/ADMIN` consumiendo `GET /sapp/matriculaAcademica`, con filtros de programa/periodo/estado + búsqueda libre (nombre/código/programa), tabla de resultados y panel de detalle por matrícula (incluye asignaturas). Se conservaron intactos los flujos de `ESTUDIANTE` (validación vigente + creación).
 - April 20, 2026 (latest): en la etapa `HOJA_DE_VIDA` del detalle de inscripción de admisiones (coordinación), el visor PDF lateral ahora consume el endpoint específico `GET /sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`. Se eliminó la heurística por texto para identificar “hoja de vida” y se toma directamente el primer documento retornado con base64 para `ANX-2`.

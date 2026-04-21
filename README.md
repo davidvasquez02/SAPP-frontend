@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 
 ## Recent Decisions (Changelog-lite)
 
+- April 21, 2026: en `/matricula/:matriculaId` (vista `COORDINACION/ADMIN`) se unificó la carga de documentos para usar el mismo endpoint/servicio de matrícula que usa el detalle del estudiante (`getDocumentosMatriculaAcademica` -> `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), evitando divergencias de checklist entre vistas.
 - April 21, 2026: en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga manual/fallback de foto por aspirante; ahora la tarjeta usa directamente `inscripcion.foto` (base64 + mimeType) retornado por el endpoint de inscripciones, mostrando placeholder cuando no hay imagen.
 - April 21, 2026: en `/coordinacion/estudiantes/:estudianteId` se agregó un bloque de 3 pestañas (**Matrículas**, **Admisión**, **Solicitudes**) que consulta cada listado por estudiante y renderiza también los documentos asociados de cada trámite con `GET /sapp/document`.
 - April 21, 2026: en `/matricula` para `COORDINACION/ADMIN` el botón **Ver detalle** ahora navega a una pantalla separada (`/matricula/:matriculaId`) con resumen de matrícula, tabla de asignaturas y checklist de documentos del trámite. Desde ese detalle se puede **ver/descargar**, **aprobar/rechazar** documentos (patrón igual a admisiones) y ejecutar **Aprobar matrícula** cuando todos los documentos obligatorios están aprobados.
