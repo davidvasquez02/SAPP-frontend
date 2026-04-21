@@ -62,7 +62,7 @@
 .matricula-detalle__table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 680px;
+  min-width: 980px;
 }
 
 .matricula-detalle__table th,
@@ -70,6 +70,37 @@
   border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
   text-align: left;
   padding: 0.7rem;
+  vertical-align: top;
+}
+
+.matricula-detalle__decision-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.matricula-detalle__decision-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.matricula-detalle__asignatura-comments {
+  width: 100%;
+  min-height: 64px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.matricula-detalle__asignatura-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .matricula-detalle__documents {
