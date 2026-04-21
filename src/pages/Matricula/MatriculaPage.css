@@ -90,14 +90,21 @@
   width: 100%;
   border-collapse: collapse;
   min-width: 760px;
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .matricula-page__table th,
 .matricula-page__table td {
-  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 55%);
-  padding: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+  padding: 0.7rem;
   text-align: left;
   vertical-align: top;
+}
+
+.matricula-page__table tbody tr:hover {
+  background: color-mix(in srgb, var(--surface-container-low), var(--primary) 8%);
 }
 
 .matricula-page__detail-button {

@@ -1,77 +1,86 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { hasAnyRole, ROLES } from '../../auth/roleGuards'
-import { useNavigate } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
-import { useAuth } from '../../context/Auth'
-import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
-import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
-import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
-import { parsePeriodo } from '../../modules/admisiones/utils/periodo'
-import { isConvocatoriaVigente } from '../../modules/admisiones/utils/convocatoriaEstado'
-import './AdmisionesHomePage.css'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { hasAnyRole, ROLES } from "../../auth/roleGuards";
+import { useNavigate } from "react-router-dom";
+import { ModuleLayout } from "../../components";
+import { useAuth } from "../../context/Auth";
+import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
+import { getProgramaNombreLargo } from "../../modules/admisiones/utils/programNames";
+import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
+import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import "./AdmisionesHomePage.css";
 
 const sortByPeriodoDesc = (
   a: ConvocatoriaAdmisionDto,
-  b: ConvocatoriaAdmisionDto
+  b: ConvocatoriaAdmisionDto,
 ): number => {
-  const periodoA = parsePeriodo(a.periodo)
-  const periodoB = parsePeriodo(b.periodo)
+  const periodoA = parsePeriodo(a.periodo);
+  const periodoB = parsePeriodo(b.periodo);
 
   if (periodoA.anio !== periodoB.anio) {
-    return periodoB.anio - periodoA.anio
+    return periodoB.anio - periodoA.anio;
   }
 
-  return periodoB.semestre - periodoA.semestre
-}
+  return periodoB.semestre - periodoA.semestre;
+};
 
 const getConvocatoriaVigente = (
-  convocatorias: ConvocatoriaAdmisionDto[]
+  convocatorias: ConvocatoriaAdmisionDto[],
 ): ConvocatoriaAdmisionDto | null => {
-  const vigentes = convocatorias.filter((convocatoria) => isConvocatoriaVigente(convocatoria))
+  const vigentes = convocatorias.filter((convocatoria) =>
+    isConvocatoriaVigente(convocatoria),
+  );
 
-  return [...vigentes].sort(sortByPeriodoDesc)[0] ?? null
-}
+  return [...vigentes].sort(sortByPeriodoDesc)[0] ?? null;
+};
 
 const AdmisionesHomePage = () => {
-  const navigate = useNavigate()
-  const { session } = useAuth()
-  const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([])
-  const [selectedPrevious, setSelectedPrevious] = useState<Record<number, string>>({})
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>(
+    [],
+  );
+  const [selectedPrevious, setSelectedPrevious] = useState<
+    Record<number, string>
+  >({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const canManageConvocatorias =
-    session?.kind === 'SAPP' && hasAnyRole(session.user.roles, [ROLES.ADMIN, ROLES.COORDINACION])
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [ROLES.ADMIN, ROLES.COORDINACION]);
 
   const loadConvocatorias = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const data = await getConvocatoriasAdmision()
-      setConvocatorias(data)
+      const data = await getConvocatoriasAdmision();
+      setConvocatorias(data);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'No fue posible cargar las convocatorias.'
-      setError(message)
-      setConvocatorias([])
+        err instanceof Error
+          ? err.message
+          : "No fue posible cargar las convocatorias.";
+      setError(message);
+      setConvocatorias([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadConvocatorias()
-  }, [loadConvocatorias])
+    loadConvocatorias();
+  }, [loadConvocatorias]);
 
   const programas = useMemo(() => {
     const grouped = new Map<
       number,
       {
-        programaId: number
-        programa: string
-        convocatorias: ConvocatoriaAdmisionDto[]
+        programaId: number;
+        programa: string;
+        convocatorias: ConvocatoriaAdmisionDto[];
       }
-    >()
+    >();
 
     convocatorias.forEach((convocatoria) => {
       if (!grouped.has(convocatoria.programaId)) {
@@ -79,14 +88,16 @@ const AdmisionesHomePage = () => {
           programaId: convocatoria.programaId,
           programa: convocatoria.programa,
           convocatorias: [],
-        })
+        });
       }
 
-      grouped.get(convocatoria.programaId)?.convocatorias.push(convocatoria)
-    })
+      grouped.get(convocatoria.programaId)?.convocatorias.push(convocatoria);
+    });
 
-    return Array.from(grouped.values()).sort((a, b) => a.programaId - b.programaId)
-  }, [convocatorias])
+    return Array.from(grouped.values()).sort(
+      (a, b) => a.programaId - b.programaId,
+    );
+  }, [convocatorias]);
 
   const handleNavigate = useCallback(
     (convocatoria: ConvocatoriaAdmisionDto, programaNombre: string) => {
@@ -98,47 +109,51 @@ const AdmisionesHomePage = () => {
           periodoAcademico: convocatoria.periodo,
           cupos: convocatoria.cupos,
         },
-      })
+      });
     },
-    [navigate]
-  )
+    [navigate],
+  );
 
   const handlePreviousChange = useCallback(
     (
       programaId: number,
       programaNombre: string,
       anteriores: ConvocatoriaAdmisionDto[],
-      value: string
+      value: string,
     ) => {
-      setSelectedPrevious((prev) => ({ ...prev, [programaId]: value }))
+      setSelectedPrevious((prev) => ({ ...prev, [programaId]: value }));
 
       if (!value) {
-        return
+        return;
       }
 
-      const selectedId = Number(value)
-      const selected = anteriores.find((convocatoria) => convocatoria.id === selectedId)
+      const selectedId = Number(value);
+      const selected = anteriores.find(
+        (convocatoria) => convocatoria.id === selectedId,
+      );
 
       if (!selected) {
-        return
+        return;
       }
 
-      handleNavigate(selected, programaNombre)
-      setSelectedPrevious((prev) => ({ ...prev, [programaId]: '' }))
+      handleNavigate(selected, programaNombre);
+      setSelectedPrevious((prev) => ({ ...prev, [programaId]: "" }));
     },
-    [handleNavigate]
-  )
+    [handleNavigate],
+  );
 
   return (
     <ModuleLayout title="Admisiones">
       <section className="admisiones-home">
         <header className="admisiones-home__header">
-          <h1 className="admisiones-home__title">Seleccione una convocatoria</h1>
+          <h1 className="admisiones-home__title">
+            Seleccione una convocatoria
+          </h1>
           {canManageConvocatorias ? (
             <button
               type="button"
               className="admisiones-home__config-button"
-              onClick={() => navigate('/admisiones/convocatorias')}
+              onClick={() => navigate("/configuracion")}
             >
               Configurar convocatorias
             </button>
@@ -163,23 +178,30 @@ const AdmisionesHomePage = () => {
         ) : null}
 
         {!isLoading && !error && convocatorias.length === 0 ? (
-          <p className="admisiones-home__status">No hay convocatorias disponibles.</p>
+          <p className="admisiones-home__status">
+            No hay convocatorias disponibles.
+          </p>
         ) : null}
 
         {!isLoading && !error && convocatorias.length > 0 ? (
           <div className="admisiones-home__programs">
             {programas.map((programa) => {
-              const convocatoriaVigente = getConvocatoriaVigente(programa.convocatorias)
+              const convocatoriaVigente = getConvocatoriaVigente(
+                programa.convocatorias,
+              );
               const anteriores = convocatoriaVigente
                 ? programa.convocatorias.filter(
-                    (convocatoria) => convocatoria.id !== convocatoriaVigente.id
+                    (convocatoria) =>
+                      convocatoria.id !== convocatoriaVigente.id,
                   )
-                : programa.convocatorias
-              const anterioresOrdenadas = [...anteriores].sort(sortByPeriodoDesc)
+                : programa.convocatorias;
+              const anterioresOrdenadas = [...anteriores].sort(
+                sortByPeriodoDesc,
+              );
               const programaNombre = getProgramaNombreLargo(
                 programa.programaId,
-                programa.programa
-              )
+                programa.programa,
+              );
 
               return (
                 <section
@@ -187,7 +209,9 @@ const AdmisionesHomePage = () => {
                   className="admisiones-home__program"
                 >
                   <div className="admisiones-home__program-header">
-                    <h2 className="admisiones-home__program-title">{programaNombre}</h2>
+                    <h2 className="admisiones-home__program-title">
+                      {programaNombre}
+                    </h2>
                     {programa.programa ? (
                       <p className="admisiones-home__program-subtitle">
                         {programa.programa}
@@ -204,21 +228,21 @@ const AdmisionesHomePage = () => {
                         <span className="admisiones-home__card-meta">
                           {convocatoriaVigente
                             ? convocatoriaVigente.periodo
-                            : 'No hay convocatoria vigente'}
+                            : "No hay convocatoria vigente"}
                         </span>
                       </div>
                       <span className="admisiones-home__pill">
-                        {convocatoriaVigente ? 'Vigente' : 'Cerrada'}
+                        {convocatoriaVigente ? "Vigente" : "Cerrada"}
                       </span>
                     </div>
 
                     {convocatoriaVigente ? (
                       <div className="admisiones-home__card-details">
                         <span>
-                          Cupos:{' '}
-                          {typeof convocatoriaVigente.cupos === 'number'
+                          Cupos:{" "}
+                          {typeof convocatoriaVigente.cupos === "number"
                             ? convocatoriaVigente.cupos
-                            : 'Por definir'}
+                            : "Por definir"}
                         </span>
                         <span>Inicio: {convocatoriaVigente.fechaInicio}</span>
                         <span>Fin: {convocatoriaVigente.fechaFin}</span>
@@ -243,9 +267,10 @@ const AdmisionesHomePage = () => {
                   </div>
 
                   <div className="admisiones-home__previous">
-                    <label className="admisiones-home__card-title" htmlFor={`prev-${
-                      programa.programaId
-                    }`}>
+                    <label
+                      className="admisiones-home__card-title"
+                      htmlFor={`prev-${programa.programaId}`}
+                    >
                       Convocatorias anteriores
                     </label>
 
@@ -257,13 +282,13 @@ const AdmisionesHomePage = () => {
                       <select
                         id={`prev-${programa.programaId}`}
                         className="admisiones-home__select"
-                        value={selectedPrevious[programa.programaId] ?? ''}
+                        value={selectedPrevious[programa.programaId] ?? ""}
                         onChange={(event) =>
                           handlePreviousChange(
                             programa.programaId,
                             programaNombre,
                             anterioresOrdenadas,
-                            event.target.value
+                            event.target.value,
                           )
                         }
                       >
@@ -277,13 +302,13 @@ const AdmisionesHomePage = () => {
                     )}
                   </div>
                 </section>
-              )
+              );
             })}
           </div>
         ) : null}
       </section>
     </ModuleLayout>
-  )
-}
+  );
+};
 
-export default AdmisionesHomePage
+export default AdmisionesHomePage;
