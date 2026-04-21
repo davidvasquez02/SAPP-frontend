@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ModuleLayout } from '../../components'
-import { hasAnyRole } from '../../auth/roleGuards'
+import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import type { AuthUser } from '../../context/Auth/types'
 import DocumentosRequeridosTable from '../../modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable'
@@ -15,14 +15,42 @@ import {
   crearMatriculaAcademica,
   getAsignaturasPorPrograma,
   getMatriculaVigenteValidationByEstudiante,
+  getMatriculasAcademicas,
 } from '../../modules/matricula/services/matriculaAcademicaService'
-import type { DocumentoRequerido, MateriaDto, MateriaSeleccionada, MatriculaConvocatoria } from '../../modules/matricula/types'
+import type {
+  DocumentoRequerido,
+  MateriaDto,
+  MateriaSeleccionada,
+  MatriculaAcademicaListadoDto,
+  MatriculaConvocatoria,
+} from '../../modules/matricula/types'
 import './MatriculaPage.css'
+
+const formatDateTime = (value: string | null) => {
+  if (!value) {
+    return '—'
+  }
+
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
+  const date = new Date(normalized)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toLocaleString('es-CO', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 const MatriculaPage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
+  const canManageMatriculas = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
 
   const [loadingConvocatoria, setLoadingConvocatoria] = useState(false)
   const [loadingForm, setLoadingForm] = useState(false)
@@ -36,6 +64,15 @@ const MatriculaPage = () => {
   const [canCreateMatricula, setCanCreateMatricula] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [periodoId, setPeriodoId] = useState<number>(1)
+
+  const [isLoadingListado, setIsLoadingListado] = useState(false)
+  const [errorListado, setErrorListado] = useState<string | null>(null)
+  const [matriculas, setMatriculas] = useState<MatriculaAcademicaListadoDto[]>([])
+  const [programaFilter, setProgramaFilter] = useState('TODOS')
+  const [estadoFilter, setEstadoFilter] = useState('TODOS')
+  const [periodoFilter, setPeriodoFilter] = useState('TODOS')
+  const [searchText, setSearchText] = useState('')
+  const [selectedMatriculaId, setSelectedMatriculaId] = useState<number | null>(null)
 
   const applyMatriculaValidation = (
     validation: Awaited<ReturnType<typeof getMatriculaVigenteValidationByEstudiante>>,
@@ -162,6 +199,43 @@ const MatriculaPage = () => {
     }
   }, [estudianteId, isEstudiante])
 
+  useEffect(() => {
+    if (!canManageMatriculas) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadMatriculas = async () => {
+      setIsLoadingListado(true)
+      setErrorListado(null)
+
+      try {
+        const response = await getMatriculasAcademicas()
+        if (cancelled) {
+          return
+        }
+
+        setMatriculas(response)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'No fue posible cargar el listado de matrículas.'
+        if (!cancelled) {
+          setErrorListado(message)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingListado(false)
+        }
+      }
+    }
+
+    void loadMatriculas()
+
+    return () => {
+      cancelled = true
+    }
+  }, [canManageMatriculas])
+
   const handleAddMateria = (materia: MateriaDto) => {
     setSelectedMaterias((current) => {
       if (current.some((item) => item.id === materia.id)) {
@@ -217,10 +291,214 @@ const MatriculaPage = () => {
     }
   }
 
-  if (!isEstudiante) {
+  const programas = useMemo(
+    () => ['TODOS', ...Array.from(new Set(matriculas.map((item) => item.programaAcademico))).sort((a, b) => a.localeCompare(b))],
+    [matriculas],
+  )
+  const periodos = useMemo(
+    () => ['TODOS', ...Array.from(new Set(matriculas.map((item) => item.periodoAcademico))).sort((a, b) => b.localeCompare(a))],
+    [matriculas],
+  )
+  const estados = useMemo(
+    () => ['TODOS', ...Array.from(new Set(matriculas.map((item) => item.estado))).sort((a, b) => a.localeCompare(b))],
+    [matriculas],
+  )
+
+  const filteredMatriculas = useMemo(() => {
+    const normalizedSearch = searchText.trim().toLowerCase()
+
+    return matriculas.filter((item) => {
+      if (programaFilter !== 'TODOS' && item.programaAcademico !== programaFilter) {
+        return false
+      }
+
+      if (periodoFilter !== 'TODOS' && item.periodoAcademico !== periodoFilter) {
+        return false
+      }
+
+      if (estadoFilter !== 'TODOS' && item.estado !== estadoFilter) {
+        return false
+      }
+
+      if (!normalizedSearch) {
+        return true
+      }
+
+      const searchable = [item.estudianteNombreCompleto, item.codigoEstudianteUis ?? '', item.programaAcademico]
+        .join(' ')
+        .toLowerCase()
+
+      return searchable.includes(normalizedSearch)
+    })
+  }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText])
+
+  const selectedMatricula = useMemo(
+    () => filteredMatriculas.find((item) => item.id === selectedMatriculaId) ?? null,
+    [filteredMatriculas, selectedMatriculaId],
+  )
+
+  if (!isEstudiante && !canManageMatriculas) {
     return (
       <ModuleLayout title="Matrícula">
         <p className="matricula-page__placeholder">No disponible para tu rol.</p>
+      </ModuleLayout>
+    )
+  }
+
+  if (canManageMatriculas) {
+    return (
+      <ModuleLayout title="Matrícula">
+        <div className="matricula-page">
+          <header className="matricula-page__header">
+            <h3>Listado de matrículas académicas</h3>
+            <p>Consulta y filtra las matrículas registradas por programa.</p>
+          </header>
+
+          <section className="matricula-page__card matricula-page__filters">
+            <label>
+              Programa
+              <select value={programaFilter} onChange={(event) => setProgramaFilter(event.target.value)}>
+                {programas.map((programa) => (
+                  <option key={programa} value={programa}>
+                    {programa}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Periodo
+              <select value={periodoFilter} onChange={(event) => setPeriodoFilter(event.target.value)}>
+                {periodos.map((periodo) => (
+                  <option key={periodo} value={periodo}>
+                    {periodo}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Estado
+              <select value={estadoFilter} onChange={(event) => setEstadoFilter(event.target.value)}>
+                {estados.map((estado) => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Buscar estudiante
+              <input
+                type="text"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Nombre, código o programa"
+              />
+            </label>
+          </section>
+
+          <section className="matricula-page__card">
+            {isLoadingListado ? <p className="matricula-page__status">Cargando matrículas...</p> : null}
+            {errorListado ? <p className="matricula-page__error">{errorListado}</p> : null}
+
+            {!isLoadingListado && !errorListado ? (
+              <>
+                <p className="matricula-page__description">Registros encontrados: {filteredMatriculas.length}</p>
+                <div className="matricula-page__table-wrapper">
+                  <table className="matricula-page__table" role="grid">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Estudiante</th>
+                        <th>Programa</th>
+                        <th>Periodo</th>
+                        <th>Estado</th>
+                        <th>Fecha solicitud</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredMatriculas.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td>
+                            <strong>{item.estudianteNombreCompleto}</strong>
+                            <br />
+                            <small>Código UIS: {item.codigoEstudianteUis ?? '—'}</small>
+                          </td>
+                          <td>{item.programaAcademico}</td>
+                          <td>{item.periodoAcademico}</td>
+                          <td>{item.estado}</td>
+                          <td>{formatDateTime(item.fechaSolicitud)}</td>
+                          <td>
+                            <button type="button" onClick={() => setSelectedMatriculaId(item.id)} className="matricula-page__detail-button">
+                              Ver detalle
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+          </section>
+
+          {selectedMatricula ? (
+            <section className="matricula-page__card">
+              <h4>Detalle de matrícula #{selectedMatricula.id}</h4>
+              <div className="matricula-page__detail-grid">
+                <p>
+                  <strong>Estudiante:</strong> {selectedMatricula.estudianteNombreCompleto}
+                </p>
+                <p>
+                  <strong>Código UIS:</strong> {selectedMatricula.codigoEstudianteUis ?? '—'}
+                </p>
+                <p>
+                  <strong>Programa:</strong> {selectedMatricula.programaAcademico}
+                </p>
+                <p>
+                  <strong>Periodo:</strong> {selectedMatricula.periodoAcademico}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {selectedMatricula.estado}
+                </p>
+                <p>
+                  <strong>Fecha solicitud:</strong> {formatDateTime(selectedMatricula.fechaSolicitud)}
+                </p>
+                <p>
+                  <strong>Fecha revisión:</strong> {formatDateTime(selectedMatricula.fechaRevision)}
+                </p>
+                <p>
+                  <strong>Usuario revisión:</strong> {selectedMatricula.usuarioRevisionUsername ?? '—'}
+                </p>
+              </div>
+
+              <h5>Asignaturas registradas</h5>
+              <div className="matricula-page__table-wrapper">
+                <table className="matricula-page__table" role="grid">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Asignatura</th>
+                      <th>Grupo</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedMatricula.asignaturas.map((asignatura) => (
+                      <tr key={asignatura.id}>
+                        <td>{asignatura.asignaturaCodigo ?? '—'}</td>
+                        <td>{asignatura.asignaturaNombre}</td>
+                        <td>{asignatura.grupo}</td>
+                        <td>{asignatura.estado}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+        </div>
       </ModuleLayout>
     )
   }
