@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
@@ -9,11 +9,14 @@ import MatriculaClosedState from "../../modules/matricula/components/MatriculaCl
 import MateriasSelectedTable from "../../modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable";
 import MateriasSelector from "../../modules/matricula/components/MateriasSelector/MateriasSelector";
 import {
-  fetchDocumentosRequeridos,
   fetchMatriculaConvocatoria,
 } from "../../modules/matricula/services/matriculaMockService";
+import { getDocumentosPorTipoTramite } from "../../api/tramiteDocumentService";
+import type { TramiteDocumentoDto } from "../../api/tramiteDocumentTypes";
+import type { DocumentoTramiteItemDto } from "../../modules/documentos/api/types";
 import {
   crearMatriculaAcademica,
+  getDocumentosMatriculaAcademica,
   getAsignaturasPorPrograma,
   getMatriculaVigenteValidationByEstudiante,
   getMatriculasAcademicas,
@@ -26,6 +29,8 @@ import type {
   MatriculaConvocatoria,
 } from "../../modules/matricula/types";
 import "./MatriculaPage.css";
+
+const TIPO_TRAMITE_ID_MATRICULA = 2;
 
 const formatDateTime = (value: string | null) => {
   if (!value) {
@@ -46,6 +51,51 @@ const formatDateTime = (value: string | null) => {
     minute: "2-digit",
   });
 };
+
+const mapDocumentoTramiteToRequerido = (
+  documento: TramiteDocumentoDto,
+): DocumentoRequerido => ({
+  id: documento.id,
+  nombre: documento.descripcion?.trim() || documento.nombre,
+  obligatorio: documento.obligatorio,
+  estado: "PENDIENTE",
+  fechaRevision: null,
+  observaciones: null,
+});
+
+const mapEstadoDocumento = (
+  documento: DocumentoTramiteItemDto,
+): DocumentoRequerido["estado"] => {
+  const estadoRaw =
+    documento.documentoUploadedResponse?.estadoDocumento?.toUpperCase() ?? "";
+
+  if (estadoRaw.includes("APROB")) {
+    return "APROBADO";
+  }
+
+  if (estadoRaw.includes("RECHAZ")) {
+    return "RECHAZADO";
+  }
+
+  if (estadoRaw.includes("REVISION") || estadoRaw.includes("ESTUDIO")) {
+    return "EN_REVISION";
+  }
+
+  return documento.documentoCargado ? "EN_REVISION" : "PENDIENTE";
+};
+
+const mapDocumentoCargadoToRequerido = (
+  documento: DocumentoTramiteItemDto,
+): DocumentoRequerido => ({
+  id: documento.idTipoDocumentoTramite,
+  nombre:
+    documento.descripcionTipoDocumentoTramite?.trim() ||
+    documento.nombreTipoDocumentoTramite,
+  obligatorio: documento.obligatorioTipoDocumentoTramite,
+  estado: mapEstadoDocumento(documento),
+  fechaRevision: documento.documentoUploadedResponse?.fechaCargaDocumento ?? null,
+  observaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
+});
 
 const MatriculaPage = () => {
   const { session } = useAuth();
@@ -141,6 +191,25 @@ const MatriculaPage = () => {
     setMatriculaValidationMessage(null);
   };
 
+  const loadDocumentosMatricula = useCallback(async (
+    validation: Awaited<
+      ReturnType<typeof getMatriculaVigenteValidationByEstudiante>
+    >,
+  ) => {
+    if (validation.status === "EXISTS") {
+      const documentosCargados = await getDocumentosMatriculaAcademica(
+        validation.matricula.id,
+      );
+      setDocumentos(documentosCargados.map(mapDocumentoCargadoToRequerido));
+      return;
+    }
+
+    const documentosRequeridos = await getDocumentosPorTipoTramite(
+      TIPO_TRAMITE_ID_MATRICULA,
+    );
+    setDocumentos(documentosRequeridos.map(mapDocumentoTramiteToRequerido));
+  }, []);
+
   const estudianteId = useMemo(() => {
     if (session?.kind !== "SAPP") {
       return null;
@@ -183,17 +252,14 @@ const MatriculaPage = () => {
         setLoadingForm(true);
         setErrorForm(null);
 
-        const [materiasResult, documentosResult] = await Promise.all([
-          getAsignaturasPorPrograma(1),
-          fetchDocumentosRequeridos(),
-        ]);
+        const materiasResult = await getAsignaturasPorPrograma(1);
+        await loadDocumentosMatricula(matriculaValidation);
 
         if (cancelled) {
           return;
         }
 
         setMateriasCatalogo(materiasResult);
-        setDocumentos(documentosResult);
 
         applyMatriculaValidation(matriculaValidation, materiasResult);
       } catch (error) {
@@ -222,7 +288,7 @@ const MatriculaPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [estudianteId, isEstudiante]);
+  }, [estudianteId, isEstudiante, loadDocumentosMatricula]);
 
   useEffect(() => {
     if (!canManageMatriculas) {
@@ -300,6 +366,7 @@ const MatriculaPage = () => {
       const latestValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
       applyMatriculaValidation(latestValidation, materiasCatalogo);
+      await loadDocumentosMatricula(latestValidation);
 
       if (latestValidation.status !== "CAN_CREATE") {
         setErrorForm(
@@ -321,6 +388,7 @@ const MatriculaPage = () => {
       const matriculaValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
+      await loadDocumentosMatricula(matriculaValidation);
 
       window.alert("Matrícula registrada correctamente.");
     } catch (error) {
