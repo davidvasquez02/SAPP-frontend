@@ -61,6 +61,23 @@ export type MatriculaAcademicaVigenteDto = {
   asignaturas: MatriculaAsignaturaVigenteDto[]
 }
 
+export type MatriculaAcademicaListadoDto = {
+  id: number
+  estudianteId: number
+  estudianteNombreCompleto: string
+  codigoEstudianteUis: string | null
+  periodoId: number
+  periodoAcademico: string
+  programaAcademico: string
+  estado: string
+  fechaSolicitud: string
+  fechaRevision: string | null
+  observaciones: string | null
+  usuarioRevisionId: number | null
+  usuarioRevisionUsername: string | null
+  asignaturas: MatriculaAsignaturaVigenteDto[]
+}
+
 export type MatriculaVigenteValidationResult =
   | {
       status: 'EXISTS'

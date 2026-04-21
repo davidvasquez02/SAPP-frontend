@@ -2,6 +2,7 @@ import { httpGet, httpPost } from '../../../shared/http/httpClient'
 import type {
   MateriaDto,
   MatriculaAcademicaCreatePayload,
+  MatriculaAcademicaListadoDto,
   MatriculaAcademicaVigenteDto,
   MatriculaVigenteValidationResult,
 } from '../types'
@@ -35,6 +36,16 @@ export const getAsignaturasPorPrograma = async (programaId: number): Promise<Mat
     nivel: item.nivel,
     programaId: item.programaId,
   }))
+}
+
+export const getMatriculasAcademicas = async (): Promise<MatriculaAcademicaListadoDto[]> => {
+  const response = await httpGet<ApiResponse<MatriculaAcademicaListadoDto[]>>('/sapp/matriculaAcademica')
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible consultar el listado de matrículas académicas.')
+  }
+
+  return response.data
 }
 
 export const crearMatriculaAcademica = async (payload: MatriculaAcademicaCreatePayload): Promise<void> => {
