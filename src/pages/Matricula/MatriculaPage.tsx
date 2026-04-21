@@ -226,6 +226,15 @@ const MatriculaPage = () => {
     return (session.user as AuthUser).estudiante?.id ?? null;
   }, [session]);
 
+  const usuarioCargaId = useMemo(() => {
+    if (session?.kind !== "SAPP") {
+      return null;
+    }
+
+    const usuarioId = Number(session.user.id);
+    return Number.isFinite(usuarioId) ? usuarioId : null;
+  }, [session]);
+
   useEffect(() => {
     if (!isEstudiante || !estudianteId) {
       return;
@@ -356,6 +365,10 @@ const MatriculaPage = () => {
       setErrorForm("No fue posible identificar el estudiante autenticado.");
       return;
     }
+    if (!usuarioCargaId) {
+      setErrorForm("No fue posible identificar el usuario que carga documentos.");
+      return;
+    }
 
     const hasInvalidGrupo = selectedMaterias.some(
       (materia) => !materia.grupo.trim(),
@@ -435,7 +448,7 @@ const MatriculaPage = () => {
             tipoDocumentoTramiteId: documento.id,
             nombreArchivo: file.name,
             tramiteId: matriculaValidation.matricula.id,
-            usuarioCargaId: null,
+            usuarioCargaId,
             aspiranteCargaId: null,
             contenidoBase64,
             mimeType: file.type || "application/octet-stream",
