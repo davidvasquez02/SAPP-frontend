@@ -3,7 +3,7 @@ import type { ApiResponse } from './types'
 
 type HttpMethod = 'PUT' | 'POST' | 'GET'
 
-const FINALIZAR_EVALUACION_HTTP_METHOD: HttpMethod = 'PUT'
+const FINALIZAR_EVALUACION_HTTP_METHOD: HttpMethod = 'POST'
 
 const requestWithoutBody = async (path: string): Promise<ApiResponse<unknown>> => {
   switch (FINALIZAR_EVALUACION_HTTP_METHOD) {
