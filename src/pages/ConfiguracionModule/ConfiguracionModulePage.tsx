@@ -131,8 +131,8 @@ const ConfiguracionModulePage = () => {
                 </button>
               </div>
 
-              <div className="config-module__table-wrap">
-                <table className="config-module__table">
+              <div className="config-module__table-wrap sapp-table-shell">
+                <table className="config-module__table sapp-table">
                   <thead>
                     <tr>
                       <th>Período</th>
@@ -170,8 +170,8 @@ const ConfiguracionModulePage = () => {
                 </button>
               </div>
 
-              <div className="config-module__table-wrap">
-                <table className="config-module__table">
+              <div className="config-module__table-wrap sapp-table-shell">
+                <table className="config-module__table sapp-table">
                   <thead>
                     <tr>
                       <th>Programa</th>

@@ -58,8 +58,8 @@ const EvaluacionEtapaSection = ({
         </p>
       )}
       {hasItems && (
-        <div className="evaluacion-etapa-section__table-wrapper">
-          <table className="evaluacion-etapa-section__table">
+        <div className="evaluacion-etapa-section__table-wrapper sapp-table-shell">
+          <table className="evaluacion-etapa-section__table sapp-table">
             <thead>
               <tr>
                 <th>Aspecto</th>

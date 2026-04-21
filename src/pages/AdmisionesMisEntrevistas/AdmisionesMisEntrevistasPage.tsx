@@ -41,8 +41,8 @@ const AdmisionesMisEntrevistasPage = () => {
             No tienes inscripciones asignadas actualmente.
           </p>
         ) : (
-          <div className="admisiones-mis-entrevistas__table-wrapper">
-            <table className="admisiones-mis-entrevistas__table">
+          <div className="admisiones-mis-entrevistas__table-wrapper sapp-table-shell">
+            <table className="admisiones-mis-entrevistas__table sapp-table">
               <thead>
                 <tr>
                   <th>Aspirante</th>

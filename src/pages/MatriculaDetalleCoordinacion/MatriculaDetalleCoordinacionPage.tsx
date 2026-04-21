@@ -444,8 +444,8 @@ const MatriculaDetalleCoordinacionPage = () => {
               </div>
 
               <h3>Asignaturas registradas</h3>
-              <div className="matricula-detalle__table-wrapper">
-                <table className="matricula-detalle__table" role="grid">
+              <div className="matricula-detalle__table-wrapper sapp-table-shell">
+                <table className="matricula-detalle__table sapp-table" role="grid">
                   <thead>
                     <tr>
                       <th>Código</th>

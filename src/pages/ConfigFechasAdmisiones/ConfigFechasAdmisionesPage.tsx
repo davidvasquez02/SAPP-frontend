@@ -343,8 +343,8 @@ const ConfigFechasAdmisionesPage = () => {
           {configs.length === 0 ? (
             <p className="config-fechas-admisiones__status">Aún no hay configuraciones guardadas.</p>
           ) : (
-            <div className="config-fechas-admisiones__table-wrap">
-              <table className="config-fechas-admisiones__table">
+            <div className="config-fechas-admisiones__table-wrap sapp-table-shell">
+              <table className="config-fechas-admisiones__table sapp-table">
                 <thead>
                   <tr>
                     <th>Periodo</th>
