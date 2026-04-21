@@ -10,13 +10,8 @@ import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { CreateAspiranteModal } from '../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal'
 import StudentCard from '../../modules/admisiones/components/StudentCard/StudentCard'
 import { isConvocatoriaVigente } from '../../modules/admisiones/utils/convocatoriaEstado'
-import { getMockStudentPhotoUrl } from '../../modules/admisiones/utils/mockStudentPhoto'
 import { resolveProgramaIdFromInscripciones } from '../../modules/admisiones/utils/resolveProgramaId'
-import { getFotosDocumentoByTramites } from '../../modules/documentos/api/documentoFotoService'
-import { CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE } from '../../modules/documentos/constants'
 import './ConvocatoriaDetallePage.css'
-
-const CODIGO_TIPO_DOCUMENTO_FOTO = 'ANX-4'
 
 const ConvocatoriaDetallePage = () => {
   const { convocatoriaId } = useParams()
@@ -29,7 +24,6 @@ const ConvocatoriaDetallePage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [convocatoria, setConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null)
-  const [fotosPorAspiranteId, setFotosPorAspiranteId] = useState<Record<number, string>>({})
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } = useMemo(() => {
     return (
@@ -119,34 +113,16 @@ const ConvocatoriaDetallePage = () => {
     loadInscripciones()
   }, [convocatoriaId, loadInscripciones])
 
-  useEffect(() => {
-    let isMounted = true
 
-    const loadFotos = async () => {
-      const aspiranteIds = inscripciones.map((inscripcion) => inscripcion.aspiranteId)
-
-      if (aspiranteIds.length === 0) {
-        setFotosPorAspiranteId({})
-        return
-      }
-
-      const fotos = await getFotosDocumentoByTramites({
-        codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
-        codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_FOTO,
-        tramiteIds: aspiranteIds,
-      })
-
-      if (isMounted) {
-        setFotosPorAspiranteId(fotos)
-      }
+  const resolveAspirantePhoto = (inscripcion: InscripcionAdmisionDto): string | null => {
+    const contenidoBase64 = inscripcion.foto?.contenidoBase64?.trim()
+    if (!contenidoBase64) {
+      return null
     }
 
-    void loadFotos()
-
-    return () => {
-      isMounted = false
-    }
-  }, [inscripciones])
+    const mimeType = inscripcion.foto?.mimeType?.trim() || 'image/jpeg'
+    return `data:${mimeType};base64,${contenidoBase64}`
+  }
 
   const handleRowClick = (inscripcion: InscripcionAdmisionDto) => {
     if (!convocatoriaId) {
@@ -274,10 +250,7 @@ const ConvocatoriaDetallePage = () => {
               <StudentCard
                 key={inscripcion.id}
                 inscripcion={inscripcion}
-                photoUrl={
-                  fotosPorAspiranteId[inscripcion.aspiranteId] ||
-                  getMockStudentPhotoUrl(inscripcion.aspiranteId, inscripcion.nombreAspirante)
-                }
+                photoUrl={resolveAspirantePhoto(inscripcion)}
                 onClick={() => handleRowClick(inscripcion)}
               />
             ))}

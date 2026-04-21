@@ -4,6 +4,14 @@ export interface ApiResponse<T> {
   data: T
 }
 
+
+export interface DocumentoFotoDto {
+  documentoId: number
+  nombreArchivo: string
+  contenidoBase64: string | null
+  mimeType: string | null
+}
+
 export interface InscripcionAdmisionDto {
   id: number
   aspiranteId: number
@@ -22,4 +30,5 @@ export interface InscripcionAdmisionDto {
   correo?: string | null
   telefono?: string | null
   observaciones: string | null
+  foto?: DocumentoFotoDto | null
 }

@@ -114,6 +114,8 @@ Mock data for the Admisiones module still lives in:
 
 ## Recent Decisions (Changelog-lite)
 
+- April 21, 2026: en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga manual/fallback de foto por aspirante; ahora la tarjeta usa directamente `inscripcion.foto` (base64 + mimeType) retornado por el endpoint de inscripciones, mostrando placeholder cuando no hay imagen.
+- April 21, 2026: en `/coordinacion/estudiantes/:estudianteId` se agregó un bloque de 3 pestañas (**Matrículas**, **Admisión**, **Solicitudes**) que consulta cada listado por estudiante y renderiza también los documentos asociados de cada trámite con `GET /sapp/document`.
 - April 21, 2026: en `/matricula` para `COORDINACION/ADMIN` el botón **Ver detalle** ahora navega a una pantalla separada (`/matricula/:matriculaId`) con resumen de matrícula, tabla de asignaturas y checklist de documentos del trámite. Desde ese detalle se puede **ver/descargar**, **aprobar/rechazar** documentos (patrón igual a admisiones) y ejecutar **Aprobar matrícula** cuando todos los documentos obligatorios están aprobados.
 - April 21, 2026: fix en `/admisiones/configuracion/fechas` para evitar llamadas infinitas a `GET /api/sapp/periodoAcademico`. La carga inicial de periodos quedó desacoplada del callback dependiente de `periodos`, eliminando el ciclo de re-render/re-fetch en la pantalla de configuración de fechas.
 - April 21, 2026: se creó el nuevo módulo **Configuración** (`/configuracion`) para `ADMIN/COORDINACION`, agregado al final del sidebar. La pantalla muestra primero una vista de **Períodos académicos** y después **Convocatorias de admisión**, con acciones directas para gestionar cada configuración.
