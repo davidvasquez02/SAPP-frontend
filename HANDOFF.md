@@ -1,7 +1,8 @@
-# Update — 2026-04-21 (configuración + matrícula UX)
+# Update — 2026-04-21 (matrícula documentos estudiante + configuración + matrícula UX)
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) el bloque **Cargue de documentos** ahora usa endpoints reales: `GET /sapp/tramite/document?tipoTramiteId=2` para requisitos iniciales y, si `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` retorna matrícula existente, se consulta `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` para mostrar estados/observaciones reales de documentos cargados.
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
 - April 21, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga de foto por documento ANX-4 en segundo request; ahora cada card usa directamente `inscripcion.foto` (base64 + mimeType) del endpoint de inscripciones.
 - April 21, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` se agregaron pestañas **Matrículas**, **Admisión** y **Solicitudes**; cada una consulta listados por estudiante y carga documentos asociados con `GET /sapp/document` por trámite.
@@ -13,6 +14,7 @@
 
 ## Paths / Artifacts
 
+- Matrícula estudiante (documentos endpoint real): `src/pages/Matricula/MatriculaPage.tsx`
 - Nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.tsx`
 - Estilos nueva página: `src/pages/ConfiguracionModule/ConfiguracionModulePage.css`
 - Export página: `src/pages/ConfiguracionModule/index.ts`
@@ -30,8 +32,8 @@
 
 ## Recent Tests + Logs
 
-- `npx eslint src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx README.md HANDOFF.md` → validación rápida de lint sobre archivos tocados por el hotfix de loop.
-- `npm run build` → esperado como validación principal de compilación tras cambios de rutas/páginas/estilos y fix de ciclo de requests.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores para el archivo actualizado del flujo de matrícula estudiante.
+- `npm run lint -- src/pages/Matricula/MatriculaPage.tsx` → ⚠️ comando ejecutado, pero el repo tiene errores de lint preexistentes en archivos no tocados (auth, solicitudes, servicios legacy con `any`).
 - Nota: en este entorno no se tomó screenshot automático (no hay herramienta de browser_container disponible).
 
 ---
