@@ -201,3 +201,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+.convocatorias-config__header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.convocatorias-config__new-button--ghost {
+  background: color-mix(in srgb, var(--surface), var(--outline) 25%);
+  color: var(--text-primary);
+}

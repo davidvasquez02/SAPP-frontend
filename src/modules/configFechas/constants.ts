@@ -1,0 +1,1 @@
+export const TIPO_TRAMITE_ADMISIONES = 2

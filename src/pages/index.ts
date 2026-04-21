@@ -18,3 +18,5 @@ export { LoginPage } from './Login'
 export { MatriculaPage } from './Matricula'
 export { SolicitudesPage } from './Solicitudes'
 export { SolicitudDetallePage } from './SolicitudDetalle'
+
+export { ConfigFechasAdmisionesPage } from './ConfigFechasAdmisiones'
