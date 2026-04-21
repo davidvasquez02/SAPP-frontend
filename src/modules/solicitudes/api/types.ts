@@ -40,9 +40,27 @@ export interface CreateSolicitudRequestDto {
   tipoSolicitudId: number
   fechaResolucion: string | null
   observaciones: string
+  modalidadId?: number
+  solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
 }
 
 export interface CreateSolicitudResponseDto {
   id: number
   tipoTramiteCodigo?: string | null
+}
+
+export interface SolicitudHomologacionAsignaturaRequestDto {
+  asignatura_origen_id: number
+  asignatura_destino_id: number
+}
+
+export interface ModalidadContraprestacionDto {
+  id: number
+  nombre: string
+}
+
+export interface AsignaturaCatalogoDto {
+  id: number
+  codigo: string | null
+  nombre: string
 }
