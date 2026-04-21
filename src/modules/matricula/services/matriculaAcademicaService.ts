@@ -1,4 +1,7 @@
 import { httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { getDocumentosByTramiteParams } from '../../documentos/api/documentosService'
+import type { DocumentoTramiteItemDto } from '../../documentos/api/types'
+import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../constants'
 import type {
   MateriaDto,
   MatriculaAcademicaCreatePayload,
@@ -125,3 +128,11 @@ export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<vo
     throw new Error(response.message || 'No fue posible aprobar la matrícula académica.')
   }
 }
+
+export const getDocumentosMatriculaAcademica = async (
+  matriculaId: number,
+): Promise<DocumentoTramiteItemDto[]> =>
+  getDocumentosByTramiteParams({
+    tramiteId: matriculaId,
+    codigoTipoTramite: CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA,
+  })

@@ -1,8 +1,10 @@
 import { httpGet } from '../../../shared/http/httpClient'
 import { getDocumentosByTramiteParams } from '../../documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../documentos/api/types'
-import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../../matricula/constants'
-import { getMatriculasAcademicas } from '../../matricula/services/matriculaAcademicaService'
+import {
+  getDocumentosMatriculaAcademica,
+  getMatriculasAcademicas,
+} from '../../matricula/services/matriculaAcademicaService'
 import { getSolicitudesAcademicasByEstudiante } from '../../solicitudes/api/solicitudesAcademicasService'
 import type { SolicitudAcademicaDto } from '../../solicitudes/api/types'
 import type { MatriculaAcademicaListadoDto } from '../../matricula/types'
@@ -28,10 +30,7 @@ const ADMISION_BY_ESTUDIANTE_ENDPOINT = '/sapp/inscripcionAdmision/estudiante'
 const mapMatriculaResumen = async (
   matricula: MatriculaAcademicaListadoDto,
 ): Promise<MatriculaResumen> => {
-  const documentos = await getDocumentosByTramiteParams({
-    tramiteId: matricula.id,
-    codigoTipoTramite: CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA,
-  })
+  const documentos = await getDocumentosMatriculaAcademica(matricula.id)
 
   return {
     id: matricula.id,
