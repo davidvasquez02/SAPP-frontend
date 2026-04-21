@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import type { DocumentoRequerido } from '../../types'
 import './DocumentosRequeridosTable.css'
 
@@ -7,6 +7,7 @@ type DocumentoAction = 'VER' | 'SUBIR' | 'DESCARGAR'
 type DocumentosRequeridosTableProps = {
   documentos: DocumentoRequerido[]
   onAction?: (docId: number, action: DocumentoAction) => void
+  onSelectFile?: (docId: number, file: File | null) => void
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -16,8 +17,7 @@ const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
   RECHAZADO: 'rechazado',
 }
 
-const DocumentosRequeridosTable = ({ documentos, onAction }: DocumentosRequeridosTableProps) => {
-  const [uploadedNames, setUploadedNames] = useState<Record<number, string>>({})
+const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   return (
@@ -41,8 +41,19 @@ const DocumentosRequeridosTable = ({ documentos, onAction }: DocumentosRequerido
                   <span className={`documentos-requeridos-table__badge ${doc.obligatorio ? 'required' : 'optional'}`}>
                     {doc.obligatorio ? 'Obligatorio' : 'Opcional'}
                   </span>
-                  {uploadedNames[doc.id] ? (
-                    <small className="documentos-requeridos-table__file-name">{uploadedNames[doc.id]}</small>
+                  {doc.uploadedFileName ? (
+                    <small className="documentos-requeridos-table__file-name">{doc.uploadedFileName}</small>
+                  ) : null}
+                  {doc.selectedFile ? (
+                    <small className="documentos-requeridos-table__file-name">{doc.selectedFile.name}</small>
+                  ) : null}
+                  {doc.uploadStatus && doc.uploadStatus !== 'NOT_SELECTED' ? (
+                    <small className="documentos-requeridos-table__file-name">
+                      Estado de carga: {doc.uploadStatus}
+                    </small>
+                  ) : null}
+                  {doc.errorMessage ? (
+                    <small className="documentos-requeridos-table__file-name">{doc.errorMessage}</small>
                   ) : null}
                 </div>
               </td>
@@ -58,6 +69,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction }: DocumentosRequerido
                   </button>
                   <button
                     type="button"
+                    disabled={doc.uploadStatus === 'UPLOADING'}
                     onClick={() => {
                       onAction?.(doc.id, 'SUBIR')
                       fileInputRefs.current[doc.id]?.click()
@@ -75,12 +87,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction }: DocumentosRequerido
                     className="documentos-requeridos-table__file-input"
                     type="file"
                     onChange={(event) => {
-                      const fileName = event.target.files?.[0]?.name
-                      if (!fileName) {
-                        return
-                      }
-
-                      setUploadedNames((current) => ({ ...current, [doc.id]: fileName }))
+                      onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                     }}
                   />
                 </div>

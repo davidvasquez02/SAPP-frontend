@@ -26,6 +26,10 @@ export type DocumentoRequerido = {
   estado: 'PENDIENTE' | 'EN_REVISION' | 'APROBADO' | 'RECHAZADO'
   fechaRevision: string | null
   observaciones: string | null
+  selectedFile?: File | null
+  uploadStatus?: 'NOT_SELECTED' | 'READY_TO_UPLOAD' | 'UPLOADING' | 'UPLOADED' | 'ERROR'
+  uploadedFileName?: string
+  errorMessage?: string
 }
 
 export type MatriculaAsignaturaPayload = {

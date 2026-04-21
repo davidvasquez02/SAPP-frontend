@@ -115,6 +115,7 @@ Mock data for the Admisiones module still lives in:
 
 ## Recent Decisions (Changelog-lite)
 
+- April 21, 2026: en `/matricula` (rol `ESTUDIANTE`) al confirmar la creación de matrícula ahora inicia automáticamente la carga secuencial de documentos (`POST /sapp/document`) uno por uno usando el `tramiteId` de la matrícula recién creada. La tabla refleja estado visual de cada documento (`READY_TO_UPLOAD`, `UPLOADING`, `UPLOADED`, `ERROR`) con el mismo patrón del flujo de creación de aspirante.
 - April 21, 2026: en `/matricula` (rol `ESTUDIANTE`) el bloque **Cargue de documentos** dejó de usar mock. Ahora consulta `GET /sapp/tramite/document?tipoTramiteId=2` para listar requisitos cuando aún no hay matrícula creada; si la validación de vigente devuelve una matrícula existente, recarga la tabla con `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` para mostrar estado real por documento.
 - April 21, 2026: en `/matricula/:matriculaId` (vista `COORDINACION/ADMIN`) se unificó la carga de documentos para usar el mismo endpoint/servicio de matrícula que usa el detalle del estudiante (`getDocumentosMatriculaAcademica` -> `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), evitando divergencias de checklist entre vistas.
 - April 21, 2026: en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga manual/fallback de foto por aspirante; ahora la tarjeta usa directamente `inscripcion.foto` (base64 + mimeType) retornado por el endpoint de inscripciones, mostrando placeholder cuando no hay imagen.
