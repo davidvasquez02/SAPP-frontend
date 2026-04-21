@@ -17,6 +17,7 @@ import type {
   MatriculaAcademicaListadoDto,
   MatriculaAsignaturaValidacionDecision,
   MatriculaAsignaturaValidacionPayload,
+  MatriculaValidacionAsignaturasRequest,
 } from '../../modules/matricula/types'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './MatriculaDetalleCoordinacionPage.css'
@@ -351,11 +352,11 @@ const MatriculaDetalleCoordinacionPage = () => {
   }
 
   const handleGuardarValidacionAsignaturas = async () => {
-    if (!matricula) {
+    if (!matricula || session?.kind !== 'SAPP') {
       return
     }
 
-    const payload: MatriculaAsignaturaValidacionPayload[] = matricula.asignaturas
+    const asignaturas: MatriculaAsignaturaValidacionPayload[] = matricula.asignaturas
       .map((asignatura) => {
         const current = asignaturasDecision[asignatura.id]
         if (!current?.decision) {
@@ -363,16 +364,22 @@ const MatriculaDetalleCoordinacionPage = () => {
         }
 
         return {
-          matriculaAsignaturaId: asignatura.id,
+          asignaturaId: asignatura.asignaturaId,
           estado: current.decision,
           observaciones: current.observaciones.trim() || null,
         }
       })
       .filter((item): item is MatriculaAsignaturaValidacionPayload => item !== null)
 
-    if (payload.length === 0) {
+    if (asignaturas.length === 0) {
       window.alert('Debe seleccionar al menos una asignatura para aprobar o rechazar.')
       return
+    }
+
+    const payload: MatriculaValidacionAsignaturasRequest = {
+      usuarioRevisionId: session.user.id,
+      observaciones: 'Revision manual',
+      asignaturas,
     }
 
     setIsSavingAsignaturas(true)

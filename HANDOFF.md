@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): hotfix en `/matricula/:matriculaId` para coordinación/admin. La acción **Guardar validación de asignaturas** ahora envía el contrato backend completo en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con `{ usuarioRevisionId, observaciones, asignaturas[] }`; además cada elemento usa `asignaturaId` (antes se enviaba `matriculaAsignaturaId`, lo que rompía el consumo esperado).
 - April 21, 2026 (latest): en `/solicitudes` (rol `ESTUDIANTE`) se extendió el formulario de creación con lógica condicional por tipo. Para **créditos condonables** ahora es obligatorio seleccionar `modalidadId` (catálogo desde `GET /sapp/modalidadContraprestacion`), y para **homologación de asignaturas** se construye `solicitudHomologacionesAsignaturas[]` con pares `{ asignatura_origen_id, asignatura_destino_id }`, permitiendo elegir asignaturas backend (`GET /sapp/asignaturas?programaId=1`) o crear nuevas asignaturas mock en UI.
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`) se habilitó validación de asignaturas en tabla. Cada fila ahora incluye decisión `Aprobar/Rechazar` + textarea de observaciones y acción de guardado por lote usando `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con payload `asignaturas[]` (`{ matriculaAsignaturaId, estado, observaciones }`).
 - April 21, 2026 (latest): hotfix en `/matricula` (rol `ESTUDIANTE`) para upload de documentos. `MatriculaPage` ahora envía `usuarioCargaId` con el usuario autenticado (`session.user.id` normalizado a `number`) en cada `POST /sapp/document`; antes se enviaba `null`.
@@ -41,6 +42,7 @@
 
 ## Recent Tests + Logs
 
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores para el hotfix del body de validación de asignaturas.
 - `npm run lint` → ❌ falla por problemas preexistentes fuera del alcance de este cambio (`no-explicit-any` en servicios legacy, reglas `react-hooks/purity` y `set-state-in-effect` en módulos previos).
 - `npm run build` → ❌ falla por errores TypeScript preexistentes fuera del alcance de este cambio (`evaluacionAdmisionService`, `finalizarEvaluacionService`, `InscripcionAdmisionDetallePage`).
 - `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores en el flujo nuevo de validación de asignaturas.
@@ -56,6 +58,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): hotfix en `/matricula/:matriculaId` para coordinación/admin. La acción **Guardar validación de asignaturas** ahora envía el contrato backend completo en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con `{ usuarioRevisionId, observaciones, asignaturas[] }`; además cada elemento usa `asignaturaId` (antes se enviaba `matriculaAsignaturaId`, lo que rompía el consumo esperado).
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
 - April 21, 2026 (latest): se implementó el módulo **Configuración de fechas — Admisiones** en `/admisiones/configuracion/fechas` con guard de roles (`ADMIN`, `COORDINADOR`). La pantalla carga periodos reales por `GET /api/sapp/periodoAcademico`, permite guardar fechas con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`) y mantiene una tabla local editable/persistente en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) al no existir endpoint GET de configuraciones guardadas.
 - April 21, 2026 (latest): `/matricula` ahora tiene vista de gestión para `COORDINADOR/ADMIN` consumiendo `GET /sapp/matriculaAcademica`, con filtros de programa/periodo/estado + búsqueda libre (nombre/código/programa), tabla de resultados y panel de detalle por matrícula (incluye asignaturas). Se conservaron intactos los flujos de `ESTUDIANTE` (validación vigente + creación).
