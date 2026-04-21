@@ -21,6 +21,9 @@ import {
   getMatriculaVigenteValidationByEstudiante,
   getMatriculasAcademicas,
 } from "../../modules/matricula/services/matriculaAcademicaService";
+import { uploadDocument } from "../../api/documentUploadService";
+import { fileToBase64 } from "../../utils/fileToBase64";
+import { sha256Hex } from "../../utils/sha256";
 import type {
   DocumentoRequerido,
   MateriaDto,
@@ -61,6 +64,8 @@ const mapDocumentoTramiteToRequerido = (
   estado: "PENDIENTE",
   fechaRevision: null,
   observaciones: null,
+  selectedFile: null,
+  uploadStatus: "NOT_SELECTED",
 });
 
 const mapEstadoDocumento = (
@@ -95,6 +100,9 @@ const mapDocumentoCargadoToRequerido = (
   estado: mapEstadoDocumento(documento),
   fechaRevision: documento.documentoUploadedResponse?.fechaCargaDocumento ?? null,
   observaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
+  selectedFile: null,
+  uploadStatus: documento.documentoCargado ? "UPLOADED" : "NOT_SELECTED",
+  uploadedFileName: documento.documentoUploadedResponse?.nombreArchivoDocumento,
 });
 
 const MatriculaPage = () => {
@@ -359,6 +367,19 @@ const MatriculaPage = () => {
       return;
     }
 
+    const missingRequiredDocument = documentos.some(
+      (documento) =>
+        documento.obligatorio &&
+        documento.uploadStatus !== "UPLOADED" &&
+        !documento.selectedFile,
+    );
+    if (missingRequiredDocument) {
+      setErrorForm(
+        "Debes adjuntar todos los documentos obligatorios antes de confirmar.",
+      );
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setErrorForm(null);
@@ -387,6 +408,72 @@ const MatriculaPage = () => {
 
       const matriculaValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
+      if (matriculaValidation.status !== "EXISTS") {
+        throw new Error("No fue posible obtener el trámite de matrícula creado.");
+      }
+
+      for (const documento of documentos) {
+        const file = documento.selectedFile;
+        if (!file || documento.uploadStatus === "UPLOADED") {
+          continue;
+        }
+
+        setDocumentos((current) =>
+          current.map((item) =>
+            item.id === documento.id
+              ? { ...item, uploadStatus: "UPLOADING", errorMessage: undefined }
+              : item,
+          ),
+        );
+
+        try {
+          const buffer = await file.arrayBuffer();
+          const contenidoBase64 = await fileToBase64(file);
+          const checksum = await sha256Hex(buffer);
+
+          const uploaded = await uploadDocument({
+            tipoDocumentoTramiteId: documento.id,
+            nombreArchivo: file.name,
+            tramiteId: matriculaValidation.matricula.id,
+            usuarioCargaId: null,
+            aspiranteCargaId: null,
+            contenidoBase64,
+            mimeType: file.type || "application/octet-stream",
+            tamanoBytes: file.size,
+            checksum,
+          });
+
+          setDocumentos((current) =>
+            current.map((item) =>
+              item.id === documento.id
+                ? {
+                    ...item,
+                    uploadStatus: "UPLOADED",
+                    uploadedFileName: uploaded.nombreArchivo,
+                    selectedFile: null,
+                    errorMessage: undefined,
+                  }
+                : item,
+            ),
+          );
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "No fue posible cargar el documento.";
+          setDocumentos((current) =>
+            current.map((item) =>
+              item.id === documento.id
+                ? { ...item, uploadStatus: "ERROR", errorMessage: message }
+                : item,
+            ),
+          );
+          throw new Error(
+            `La matrícula fue creada, pero falló la carga del documento "${documento.nombre}". ${message}`,
+          );
+        }
+      }
+
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
       await loadDocumentosMatricula(matriculaValidation);
 
@@ -674,7 +761,37 @@ const MatriculaPage = () => {
                 <p className="matricula-page__status">Cargando documentos...</p>
               ) : null}
               {!loadingForm && !errorForm ? (
-                <DocumentosRequeridosTable documentos={documentos} />
+                <DocumentosRequeridosTable
+                  documentos={documentos}
+                  onSelectFile={(docId, file) => {
+                    setDocumentos((current) =>
+                      current.map((item) => {
+                        if (item.id !== docId) {
+                          return item;
+                        }
+
+                        if (!file) {
+                          return {
+                            ...item,
+                            selectedFile: null,
+                            uploadStatus: item.uploadedFileName
+                              ? "UPLOADED"
+                              : "NOT_SELECTED",
+                            errorMessage: undefined,
+                          };
+                        }
+
+                        return {
+                          ...item,
+                          selectedFile: file,
+                          uploadStatus: "READY_TO_UPLOAD",
+                          errorMessage: undefined,
+                        };
+                      }),
+                    );
+                    setErrorForm(null);
+                  }}
+                />
               ) : null}
             </section>
 
