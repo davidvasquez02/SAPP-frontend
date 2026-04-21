@@ -114,6 +114,8 @@
   color: var(--on-primary);
   padding: 0.45rem 0.8rem;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .matricula-page__detail-grid {

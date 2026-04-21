@@ -16,6 +16,7 @@ export { InscripcionExamenPage } from "./InscripcionExamen";
 export { InscripcionHojaVidaPage } from "./InscripcionHojaVida";
 export { LoginPage } from "./Login";
 export { MatriculaPage } from "./Matricula";
+export { MatriculaDetalleCoordinacionPage } from "./MatriculaDetalleCoordinacion";
 export { SolicitudesPage } from "./Solicitudes";
 export { SolicitudDetallePage } from "./SolicitudDetalle";
 

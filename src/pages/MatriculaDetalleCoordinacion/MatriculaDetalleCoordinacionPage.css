@@ -1,0 +1,192 @@
+.matricula-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.matricula-detalle__back {
+  color: var(--primary);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.matricula-detalle__card {
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(0.9rem, 2.2vw, 1.1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.matricula-detalle__header h2,
+.matricula-detalle__header h3,
+.matricula-detalle__header p {
+  margin: 0;
+}
+
+.matricula-detalle__header p {
+  color: var(--text-secondary);
+}
+
+.matricula-detalle__status {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-container-low), transparent 20%);
+  color: var(--text-secondary);
+}
+
+.matricula-detalle__status--error {
+  color: #b3261e;
+  border: 1px solid color-mix(in srgb, #b3261e, transparent 65%);
+  background: color-mix(in srgb, #b3261e, transparent 94%);
+}
+
+.matricula-detalle__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.matricula-detalle__grid p {
+  margin: 0;
+}
+
+.matricula-detalle__table-wrapper {
+  overflow-x: auto;
+}
+
+.matricula-detalle__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.matricula-detalle__table th,
+.matricula-detalle__table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+  text-align: left;
+  padding: 0.7rem;
+}
+
+.matricula-detalle__documents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.matricula-detalle__documents-header,
+.matricula-detalle__documents-row {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1.3fr 1fr 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+
+.matricula-detalle__documents-header {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.matricula-detalle__documents-row {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: color-mix(in srgb, var(--surface-container-low), transparent 45%);
+}
+
+.matricula-detalle__doc-name,
+.matricula-detalle__doc-description,
+.matricula-detalle__doc-meta,
+.matricula-detalle__validation-note,
+.matricula-detalle__footer-title,
+.matricula-detalle__footer-hint {
+  margin: 0;
+}
+
+.matricula-detalle__doc-description,
+.matricula-detalle__doc-meta,
+.matricula-detalle__obs-empty,
+.matricula-detalle__footer-hint {
+  color: var(--text-secondary);
+}
+
+.matricula-detalle__badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.matricula-detalle__badge--loaded {
+  background: color-mix(in srgb, #2e7d32, transparent 84%);
+  color: #2e7d32;
+}
+
+.matricula-detalle__badge--pending {
+  background: color-mix(in srgb, #8e24aa, transparent 86%);
+  color: #8e24aa;
+}
+
+.matricula-detalle__doc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.matricula-detalle__view-button,
+.matricula-detalle__download-button,
+.matricula-detalle__approve-button,
+.matricula-detalle__back-button {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.matricula-detalle__view-button,
+.matricula-detalle__download-button,
+.matricula-detalle__back-button {
+  background: var(--surface-container-low);
+  border-color: color-mix(in srgb, var(--outline), transparent 25%);
+  color: var(--on-surface);
+}
+
+.matricula-detalle__approve-button {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+}
+
+.matricula-detalle__approve-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.matricula-detalle__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.35rem;
+}
+
+@media (max-width: 960px) {
+  .matricula-detalle__documents-header {
+    display: none;
+  }
+
+  .matricula-detalle__documents-row {
+    grid-template-columns: 1fr;
+  }
+
+  .matricula-detalle__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
