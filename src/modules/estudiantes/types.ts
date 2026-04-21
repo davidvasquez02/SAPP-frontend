@@ -21,3 +21,41 @@ export interface EstudianteCoordinacion {
   programaNombre: string
   fechaIngreso: string
 }
+
+
+export interface DocumentoResumen {
+  idTipoDocumentoTramite: number
+  codigoTipoDocumentoTramite: string
+  nombreTipoDocumentoTramite: string
+  documentoCargado: boolean
+  documentoUploadedResponse: {
+    idDocumento: number
+    nombreArchivoDocumento: string
+    fechaCargaDocumento: string
+  } | null
+}
+
+export interface MatriculaResumen {
+  id: number
+  periodoAcademico: string
+  estado: string
+  fechaSolicitud: string
+  documentos: DocumentoResumen[]
+}
+
+export interface SolicitudResumen {
+  id: number
+  tipoSolicitud: string
+  estado: string
+  fechaRegistro: string
+  documentos: DocumentoResumen[]
+}
+
+export interface AdmisionResumen {
+  id: number
+  estado: string
+  fechaInscripcion: string | null
+  fechaResultado: string | null
+  puntajeTotal: number | null
+  documentos: DocumentoResumen[]
+}

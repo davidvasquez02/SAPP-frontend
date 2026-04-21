@@ -2,6 +2,8 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga de foto por documento ANX-4 en segundo request; ahora cada card usa directamente `inscripcion.foto` (base64 + mimeType) del endpoint de inscripciones.
+- April 21, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` se agregaron pestañas **Matrículas**, **Admisión** y **Solicitudes**; cada una consulta listados por estudiante y carga documentos asociados con `GET /sapp/document` por trámite.
 - ✅ Hotfix aplicado en `/admisiones/configuracion/fechas`: se corrigió un loop de consumo infinito de `GET /api/sapp/periodoAcademico` causado por una dependencia circular entre `useEffect` y `applyPeriodoValues`.
 - ✅ La inicialización del formulario en carga de periodos ahora se resuelve dentro del primer fetch (config local o defaults por semestre), evitando retriggers del request.
 - ✅ Nuevo módulo de configuración creado en `/configuracion` con vista inicial orientada a escalabilidad: primero periodos académicos y luego convocatorias.
