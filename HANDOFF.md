@@ -20,6 +20,7 @@
 
 ## Next Steps
 
+1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
 1. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN` verificando explícitamente que `GET /api/sapp/periodoAcademico` se ejecute una vez por carga de pantalla.
 2. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
 3. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
@@ -214,6 +215,7 @@
 
 ## Open Challenges
 
+- Confirmar con backend el código de tipo trámite para documentos de matrícula (`CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA=1003`) y el endpoint de aprobación final (`PUT /sapp/matriculaAcademica/aprobar/{id}`) para asegurar compatibilidad en todos los ambientes.
 - Ejecutar QA manual del nuevo módulo `/admisiones/configuracion/fechas` con usuarios reales `ADMIN/COORDINADOR`: validar carga de periodos (`GET /api/sapp/periodoAcademico`), guardado (`POST /api/sapp/periodoAcademicoFecha`) y persistencia local tras refresh.
 - Ejecutar QA manual en `/matricula` con `COORDINADOR/ADMIN` para validar que el backend entregue valores consistentes de `programaAcademico`, `periodoAcademico` y `estado` (los filtros dependen de coincidencia exacta de estos strings).
 - QA manual pendiente para perfil `PROFESOR/DOCENTE`: validar que sidebar solo expone `Solicitudes` + `Admisiones`, que `/admisiones` lista asignaciones mock propias y que la redirección forzada a `/entrevistas` funciona para deep-links a otras etapas de inscripción.
@@ -255,6 +257,7 @@
 
 ## Next Steps
 
+1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
 1. QA manual de seguridad y acceso: confirmar que `ESTUDIANTE` no puede entrar a `/admisiones/configuracion/fechas` y que `ADMIN/COORDINADOR` sí pueden operar el formulario completo.
 2. Si backend expone un `GET /api/sapp/periodoAcademicoFecha`, reemplazar el store local temporal por fuente backend y conservar `localStorage` solo como caché opcional.
 3. QA manual en `/matricula` con rol `COORDINADOR` y `ADMIN`: validar filtros combinados (programa+periodo+estado+búsqueda), conteo de registros y apertura de detalle con asignaturas por matrícula.

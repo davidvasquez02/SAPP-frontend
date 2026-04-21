@@ -1,4 +1,4 @@
-import { httpGet, httpPost } from '../../../shared/http/httpClient'
+import { httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
 import type {
   MateriaDto,
   MatriculaAcademicaCreatePayload,
@@ -115,4 +115,13 @@ export const getMatriculaVigenteValidationByEstudiante = async (
   }
 
   throw new Error('Formato de respuesta no soportado al consultar matrícula vigente.')
+}
+
+
+export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<void> => {
+  const response = await httpPut<ApiResponse<unknown>>(`/sapp/matriculaAcademica/aprobar/${matriculaId}`)
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible aprobar la matrícula académica.')
+  }
 }

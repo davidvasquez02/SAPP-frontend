@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
@@ -87,9 +88,6 @@ const MatriculaPage = () => {
   const [estadoFilter, setEstadoFilter] = useState("TODOS");
   const [periodoFilter, setPeriodoFilter] = useState("TODOS");
   const [searchText, setSearchText] = useState("");
-  const [selectedMatriculaId, setSelectedMatriculaId] = useState<number | null>(
-    null,
-  );
 
   const applyMatriculaValidation = (
     validation: Awaited<
@@ -402,12 +400,7 @@ const MatriculaPage = () => {
     });
   }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText]);
 
-  const selectedMatricula = useMemo(
-    () =>
-      filteredMatriculas.find((item) => item.id === selectedMatriculaId) ??
-      null,
-    [filteredMatriculas, selectedMatriculaId],
-  );
+
 
   if (!isEstudiante && !canManageMatriculas) {
     return (
@@ -519,13 +512,12 @@ const MatriculaPage = () => {
                           <td>{item.estado}</td>
                           <td>{formatDateTime(item.fechaSolicitud)}</td>
                           <td>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedMatriculaId(item.id)}
+                            <Link
+                              to={`/matricula/${item.id}`}
                               className="matricula-page__detail-button"
                             >
                               Ver detalle
-                            </button>
+                            </Link>
                           </td>
                         </tr>
                       ))}
@@ -535,68 +527,6 @@ const MatriculaPage = () => {
               </>
             ) : null}
           </section>
-
-          {selectedMatricula ? (
-            <section className="matricula-page__card">
-              <h4>Detalle de matrícula #{selectedMatricula.id}</h4>
-              <div className="matricula-page__detail-grid">
-                <p>
-                  <strong>Estudiante:</strong>{" "}
-                  {selectedMatricula.estudianteNombreCompleto}
-                </p>
-                <p>
-                  <strong>Código UIS:</strong>{" "}
-                  {selectedMatricula.codigoEstudianteUis ?? "—"}
-                </p>
-                <p>
-                  <strong>Programa:</strong>{" "}
-                  {selectedMatricula.programaAcademico}
-                </p>
-                <p>
-                  <strong>Periodo:</strong> {selectedMatricula.periodoAcademico}
-                </p>
-                <p>
-                  <strong>Estado:</strong> {selectedMatricula.estado}
-                </p>
-                <p>
-                  <strong>Fecha solicitud:</strong>{" "}
-                  {formatDateTime(selectedMatricula.fechaSolicitud)}
-                </p>
-                <p>
-                  <strong>Fecha revisión:</strong>{" "}
-                  {formatDateTime(selectedMatricula.fechaRevision)}
-                </p>
-                <p>
-                  <strong>Usuario revisión:</strong>{" "}
-                  {selectedMatricula.usuarioRevisionUsername ?? "—"}
-                </p>
-              </div>
-
-              <h5>Asignaturas registradas</h5>
-              <div className="matricula-page__table-wrapper">
-                <table className="matricula-page__table" role="grid">
-                  <thead>
-                    <tr>
-                      <th>Código</th>
-                      <th>Asignatura</th>
-                      <th>Grupo</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedMatricula.asignaturas.map((asignatura) => (
-                      <tr key={asignatura.id}>
-                        <td>{asignatura.asignaturaCodigo ?? "—"}</td>
-                        <td>{asignatura.asignaturaNombre}</td>
-                        <td>{asignatura.grupo}</td>
-                        <td>{asignatura.estado}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          ) : null}
         </div>
       </ModuleLayout>
     );
