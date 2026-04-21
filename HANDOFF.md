@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- April 21, 2026 (latest): en `/solicitudes` (rol `ESTUDIANTE`) se extendió el formulario de creación con lógica condicional por tipo. Para **créditos condonables** ahora es obligatorio seleccionar `modalidadId` (catálogo desde `GET /sapp/modalidadContraprestacion`), y para **homologación de asignaturas** se construye `solicitudHomologacionesAsignaturas[]` con pares `{ asignatura_origen_id, asignatura_destino_id }`, permitiendo elegir asignaturas backend (`GET /sapp/asignaturas?programaId=1`) o crear nuevas asignaturas mock en UI.
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`) se habilitó validación de asignaturas en tabla. Cada fila ahora incluye decisión `Aprobar/Rechazar` + textarea de observaciones y acción de guardado por lote usando `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con payload `asignaturas[]` (`{ matriculaAsignaturaId, estado, observaciones }`).
 - April 21, 2026 (latest): hotfix en `/matricula` (rol `ESTUDIANTE`) para upload de documentos. `MatriculaPage` ahora envía `usuarioCargaId` con el usuario autenticado (`session.user.id` normalizado a `number`) en cada `POST /sapp/document`; antes se enviaba `null`.
 - April 21, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) al confirmar matrícula se ejecuta carga secuencial automática de documentos usando el `tramiteId` devuelto por la validación de matrícula vigente inmediatamente después de crear (`POST /sapp/matriculaAcademica` + `GET /sapp/matriculaAcademica/vigente/estudiante/{id}` + `POST /sapp/document` por archivo). La UI ahora muestra estado por documento (`READY_TO_UPLOAD`, `UPLOADING`, `UPLOADED`, `ERROR`) durante el proceso.
@@ -40,6 +41,8 @@
 
 ## Recent Tests + Logs
 
+- `npm run lint` → ❌ falla por problemas preexistentes fuera del alcance de este cambio (`no-explicit-any` en servicios legacy, reglas `react-hooks/purity` y `set-state-in-effect` en módulos previos).
+- `npm run build` → ❌ falla por errores TypeScript preexistentes fuera del alcance de este cambio (`evaluacionAdmisionService`, `finalizarEvaluacionService`, `InscripcionAdmisionDetallePage`).
 - `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores en el flujo nuevo de validación de asignaturas.
 - `npm run build` → ❌ falla por errores TypeScript preexistentes fuera del alcance del cambio (`evaluacionAdmisionService`, `finalizarEvaluacionService`, `InscripcionAdmisionDetallePage`).
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores luego del hotfix `usuarioCargaId` en upload de matrícula.

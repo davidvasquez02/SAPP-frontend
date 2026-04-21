@@ -118,6 +118,11 @@ const SolicitudesEstudianteView = () => {
         tipoSolicitudId: payload.tipoSolicitudId,
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
+        modalidadId: payload.modalidadId ?? undefined,
+        solicitudHomologacionesAsignaturas:
+          payload.solicitudHomologacionesAsignaturas.length > 0
+            ? payload.solicitudHomologacionesAsignaturas
+            : undefined,
       })
 
       const refreshedSolicitudes = await getSolicitudesAcademicasByEstudiante(estudianteId)
