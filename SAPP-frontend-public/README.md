@@ -1,76 +1,72 @@
-# React + TypeScript + Vite
+# SAPP Frontend Public (Flujo Aspirante)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend público del sistema SAPP enfocado en el **flujo completo de aspirante**: validación de ingreso, consulta/cargue de documentos y registro de información de investigación.
 
-Currently, two official plugins are available:
+## Propósito y alcance
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Este proyecto (`SAPP-frontend-public/`) ahora implementa como pantalla inicial:
 
-## React Compiler
+1. **Login de aspirante** por número de inscripción + tipo/número de documento.
+2. **Carga de documentos** del checklist de admisiones.
+3. **Actualización de información de investigación** (grupo y director).
+4. **Cambio de estado de inscripción** a `POR_VAL` cuando el checklist obligatorio queda completo.
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+> Alcance actual: solo flujo aspirante (sin módulos administrativos internos).
 
-Note: This will impact Vite dev & build performances.
+## Arquitectura breve
 
-## Expanding the ESLint configuration
+- **UI**: React + TypeScript.
+- **Estado de sesión**: `AuthProvider` + `localStorage` (`SAPP_AUTH_SESSION`).
+- **HTTP**: wrapper `fetch` en `src/shared/http/httpClient.ts` con `VITE_API_BASE_URL`.
+- **Pantalla inicial**: `AspiranteLoginPage`.
+- **Pantalla autenticada**: `AspiranteLayout` + `AspiranteDocumentosPage`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Stack y versiones (lockfile)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js: recomendado `>=18`
+- React: `19.2.5`
+- React DOM: `19.2.5`
+- Vite: `8.0.8`
+- TypeScript: `6.0.3`
+- ESLint: `9.39.4`
+- `@vitejs/plugin-react`: `6.0.1`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Ejecución local
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd SAPP-frontend-public
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```
-# SAPP-frontend-public
+
+## Variables de entorno
+
+Crear `.env` o `.env.local` en `SAPP-frontend-public/`:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+El cliente concatena automáticamente `api` + path (ej. `/sapp/aspirante/consultaInfo`).
+
+## Seeds / datos iniciales
+
+No hay seeds en este frontend. Depende de endpoints disponibles en backend SAPP con datos de aspirantes, checklist y catálogo de documentos/tipos.
+
+## Changelog-lite (decisiones recientes)
+
+- Se reemplazó el template base de Vite por una app enfocada en aspirantes.
+- La pantalla de inicio ahora es el login de aspirante.
+- Se portó la lógica de:
+  - autenticación de aspirante,
+  - checklist y cargue de documentos,
+  - cálculo de completitud de obligatorios,
+  - actualización de investigación,
+  - transición de estado de inscripción al completar checklist.
+- Se dejó el proyecto original (`/src` raíz del repo) sin cambios funcionales para este flujo.

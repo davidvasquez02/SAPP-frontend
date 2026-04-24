@@ -1,0 +1,202 @@
+.document-upload-card {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  border-radius: 20px;
+  padding: 1.1rem;
+  background: var(--surface);
+  display: grid;
+  gap: 0.9rem;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--outline), transparent 84%);
+}
+
+.document-upload-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.document-upload-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.document-upload-card__code {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__badge {
+  align-self: flex-start;
+  padding: 0.28rem 0.72rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.document-upload-card__badge--required {
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
+}
+
+.document-upload-card__badge--optional {
+  background: color-mix(in srgb, var(--inverse-primary), var(--surface) 82%);
+  color: var(--primary);
+}
+
+.document-upload-card__description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.document-upload-card__status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.document-upload-card__status {
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.document-upload-card__status--not_selected {
+  background: color-mix(in srgb, var(--outline), var(--surface) 76%);
+  color: var(--text-secondary);
+}
+
+.document-upload-card__status--ready_to_upload {
+  background: color-mix(in srgb, #f59e0b, var(--surface) 84%);
+  color: #92400e;
+}
+
+.document-upload-card__status--uploading {
+  background: color-mix(in srgb, var(--primary), var(--surface) 84%);
+  color: var(--primary);
+}
+
+.document-upload-card__status--uploaded {
+  background: color-mix(in srgb, #22c55e, var(--surface) 84%);
+  color: #166534;
+}
+
+.document-upload-card__status--error {
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
+}
+
+.document-upload-card__filename {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.document-upload-card__filename--empty {
+  color: var(--text-secondary);
+}
+
+.document-upload-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.document-upload-card__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px dashed var(--outline);
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface), var(--outline) 10%);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.document-upload-card__file input {
+  display: none;
+}
+
+.document-upload-card__button {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.document-upload-card__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.document-upload-card__button--ghost {
+  background: color-mix(in srgb, var(--surface), var(--outline) 24%);
+  color: var(--text-primary);
+}
+
+.document-upload-card__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.document-upload-card__error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+
+.document-upload-card__status--approved {
+  background: color-mix(in srgb, #22c55e, var(--surface) 84%);
+  color: #166534;
+}
+
+.document-upload-card__status--rejected {
+  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
+  color: #991b1b;
+}
+
+.document-upload-card__warning {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #ef4444, var(--surface) 90%);
+  color: #991b1b;
+  border: 1px solid color-mix(in srgb, #ef4444, transparent 70%);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__image-preview {
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface), var(--outline) 8%);
+  padding: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  justify-self: start;
+  max-width: 100%;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__image-preview img {
+  display: block;
+  width: auto;
+  max-width: min(100%, 400px);
+  height: auto;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 10px;
+}
