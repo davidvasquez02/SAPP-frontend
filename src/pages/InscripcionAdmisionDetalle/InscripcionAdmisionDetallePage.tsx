@@ -217,10 +217,14 @@ const InscripcionAdmisionDetallePage = () => {
       return
     }
 
+    if (evaluacionStatus !== 'STARTED') {
+      return
+    }
+
     if (activeKey !== 'entrevistas') {
       navigate(`${basePath}/entrevistas`, { replace: true })
     }
-  }, [activeKey, basePath, isProfesorOnly, navigate])
+  }, [activeKey, basePath, evaluacionStatus, isProfesorOnly, navigate])
 
   useEffect(() => {
     const previousActiveWindow = prevActiveRef.current

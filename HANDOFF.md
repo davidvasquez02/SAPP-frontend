@@ -1,7 +1,9 @@
-# Update — 2026-04-21 (matrícula documentos estudiante + configuración + matrícula UX)
+# Update — 2026-04-24 (hotfix admisiones profesor + continuidad handoff)
 
 ## Current Status
 
+- April 24, 2026 (latest): hotfix en `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` para evitar ciclo infinito en rol `PROFESOR/DOCENTE` al abrir un aspirante sin evaluación iniciada. Antes, la pantalla base redirigía siempre a `/entrevistas`, pero el guard de ruta devolvía al fallback cuando `GET /sapp/evaluacionAdmision/info?inscripcionId={id}` retornaba no iniciado (404/`ok:false`), generando loop de navegación y nuevas llamadas. Ahora la redirección automática a entrevistas solo corre cuando `evaluacionStatus === "STARTED"`.
+- April 24, 2026 (latest): documentación operativa actualizada en `README.md` (changelog-lite) y `HANDOFF.md` (estado actual/próximos pasos/resultados recientes) para que una nueva instancia retome sin contexto previo.
 - April 21, 2026 (latest): se ejecutó una homogenización visual de tablas/listados en múltiples módulos (Admisiones, Solicitudes, Matrícula y Configuración). Se creó un estilo compartido global en `src/styles/globals.css` (`.sapp-table-shell` + `.sapp-table`) y se aplicó en los componentes/páginas que renderizan `<table>` para estandarizar borde, fondo, header, padding y hover institucional.
 - April 21, 2026 (latest): hotfix en `/matricula/:matriculaId` para coordinación/admin. La acción **Guardar validación de asignaturas** ahora envía el contrato backend completo en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con `{ usuarioRevisionId, observaciones, asignaturas[] }`; además cada elemento usa `asignaturaId` (antes se enviaba `matriculaAsignaturaId`, lo que rompía el consumo esperado).
 - April 21, 2026 (latest): en `/solicitudes` (rol `ESTUDIANTE`) se extendió el formulario de creación con lógica condicional por tipo. Para **créditos condonables** ahora es obligatorio seleccionar `modalidadId` (catálogo desde `GET /sapp/modalidadContraprestacion`), y para **homologación de asignaturas** se construye `solicitudHomologacionesAsignaturas[]` con pares `{ asignatura_origen_id, asignatura_destino_id }`, permitiendo elegir asignaturas backend (`GET /sapp/asignaturas?programaId=1`) o crear nuevas asignaturas mock en UI.
@@ -20,6 +22,8 @@
 
 ## Paths / Artifacts
 
+- Hotfix loop profesor admisiones: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
+- Documentación actualizada: `README.md`, `HANDOFF.md`
 - Validación de asignaturas (detalle coordinación): `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`
 - Estilos tabla/controles validación asignaturas: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.css`
 - Servicio endpoint validación asignaturas: `src/modules/matricula/services/matriculaAcademicaService.ts`
@@ -35,7 +39,9 @@
 
 ## Next Steps
 
-1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar flujo completo de **validación de asignaturas** (selección aprobar/rechazar, envío de observaciones, persistencia tras refresh y manejo de errores del endpoint).
+- QA manual en `/admisiones` con rol `PROFESOR/DOCENTE`: seleccionar un aspirante sin evaluación iniciada y verificar que **no** ocurra bucle de navegación ni refetch infinito; la UI debe quedarse en el detalle fallback sin reenviar automáticamente a `/entrevistas`.
+- QA manual en `/admisiones` con rol `PROFESOR/DOCENTE`: seleccionar un aspirante con evaluación iniciada y verificar que la redirección automática a `/entrevistas` se mantiene.
+- QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar flujo completo de **validación de asignaturas** (selección aprobar/rechazar, envío de observaciones, persistencia tras refresh y manejo de errores del endpoint).
 2. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
 3. QA manual en navegador de `/configuracion`, `/admisiones/configuracion/fechas`, `/admisiones/convocatorias` con roles `COORDINACION` y `ADMIN` verificando explícitamente que `GET /api/sapp/periodoAcademico` se ejecute una vez por carga de pantalla.
 4. Validar con producto si en el módulo de configuración se desean tabs o paginación al agregar nuevos bloques futuros.
@@ -43,6 +49,7 @@
 
 ## Recent Tests + Logs
 
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` → ✅ sin errores para el hotfix del loop de profesor en admisiones.
 - `npx eslint src/modules/solicitudes/components/SolicitudesTable/SolicitudesTable.tsx src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx src/pages/AdmisionesMisEntrevistas/AdmisionesMisEntrevistasPage.tsx src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx src/pages/Matricula/MatriculaPage.tsx src/pages/ConfiguracionModule/ConfiguracionModulePage.tsx src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` → ✅ sin errores (solo warning global de npm por config `http-proxy`).
 - `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores para el hotfix del body de validación de asignaturas.
 - `npm run lint` → ❌ falla por problemas preexistentes fuera del alcance de este cambio (`no-explicit-any` en servicios legacy, reglas `react-hooks/purity` y `set-state-in-effect` en módulos previos).
