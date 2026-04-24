@@ -162,6 +162,67 @@ table {
   background: color-mix(in srgb, var(--primary), transparent 94%);
 }
 
+.sapp-filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.sapp-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sapp-filter-field > span {
+  color: var(--text-secondary);
+}
+
+.sapp-filter-field select,
+.sapp-filter-field input {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.sapp-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.sapp-filters-clear-button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sapp-filters-clear-button:hover:enabled {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.sapp-filters-clear-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* Shared component skin */
 .module-layout__content,
 .solicitud-detalle-page,

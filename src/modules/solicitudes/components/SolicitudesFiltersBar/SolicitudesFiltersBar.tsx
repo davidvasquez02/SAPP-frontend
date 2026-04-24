@@ -38,7 +38,7 @@ const SolicitudesFiltersBar = ({
   return (
     <div className="solicitudes-filters-bar" aria-live="polite">
       <div className="solicitudes-filters-bar__filters">
-        <label className="field label border solicitudes-filters-bar__field">
+        <label className="solicitudes-filters-bar__field sapp-filter-field">
           <span>Estado</span>
           <select
             disabled={disabled}
@@ -59,7 +59,7 @@ const SolicitudesFiltersBar = ({
           </select>
         </label>
 
-        <label className="field label border solicitudes-filters-bar__field">
+        <label className="solicitudes-filters-bar__field sapp-filter-field">
           <span>Tipo de solicitud</span>
           <select
             disabled={disabled}
@@ -85,10 +85,10 @@ const SolicitudesFiltersBar = ({
         </label>
       </div>
 
-      <div className="solicitudes-filters-bar__actions">
+      <div className="solicitudes-filters-bar__actions sapp-filters-actions">
         <button
           type="button"
-          className="solicitudes-filters-bar__clear-button"
+          className="solicitudes-filters-bar__clear-button sapp-filters-clear-button"
           disabled={disabled || !canClear}
           onClick={() => onChange({ estadoId: null, tipoSolicitudId: null })}
         >

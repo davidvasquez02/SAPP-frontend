@@ -1,7 +1,8 @@
-# Update — 2026-04-24 (hotfix admisiones profesor + continuidad handoff)
+# Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
 
+- April 24, 2026 (latest): se homologó el estilo de filtros para listas principales en frontend con clases compartidas en `src/styles/globals.css` (`.sapp-filters-panel`, `.sapp-filter-field`, `.sapp-filters-actions`, `.sapp-filters-clear-button`) y se migraron las vistas de matrícula, convocatorias, estudiantes de coordinación y filtros de solicitudes para un look-and-feel consistente.
 - April 24, 2026 (latest): hotfix en `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` para evitar ciclo infinito en rol `PROFESOR/DOCENTE` al abrir un aspirante sin evaluación iniciada. Antes, la pantalla base redirigía siempre a `/entrevistas`, pero el guard de ruta devolvía al fallback cuando `GET /sapp/evaluacionAdmision/info?inscripcionId={id}` retornaba no iniciado (404/`ok:false`), generando loop de navegación y nuevas llamadas. Ahora la redirección automática a entrevistas solo corre cuando `evaluacionStatus === "STARTED"`.
 - April 24, 2026 (latest): documentación operativa actualizada en `README.md` (changelog-lite) y `HANDOFF.md` (estado actual/próximos pasos/resultados recientes) para que una nueva instancia retome sin contexto previo.
 - April 21, 2026 (latest): se ejecutó una homogenización visual de tablas/listados en múltiples módulos (Admisiones, Solicitudes, Matrícula y Configuración). Se creó un estilo compartido global en `src/styles/globals.css` (`.sapp-table-shell` + `.sapp-table`) y se aplicó en los componentes/páginas que renderizan `<table>` para estandarizar borde, fondo, header, padding y hover institucional.
@@ -22,6 +23,11 @@
 
 ## Paths / Artifacts
 
+- Homologación visual de filtros (tokens y utilidades globales): `src/styles/globals.css`
+- Matrícula (filtros listados coordinación/admin): `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css`
+- Convocatorias (filtros de período/vigencia): `src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx`, `src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.css`
+- Estudiantes coordinación (filtro por programa): `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`, `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.css`
+- Solicitudes (barra de filtros): `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.tsx`, `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.css`
 - Hotfix loop profesor admisiones: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
 - Documentación actualizada: `README.md`, `HANDOFF.md`
 - Validación de asignaturas (detalle coordinación): `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`
@@ -49,6 +55,7 @@
 
 ## Recent Tests + Logs
 
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.tsx` → ✅ sin errores para los archivos TSX tocados de homologación de filtros.
 - `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` → ✅ sin errores para el hotfix del loop de profesor en admisiones.
 - `npx eslint src/modules/solicitudes/components/SolicitudesTable/SolicitudesTable.tsx src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx src/pages/AdmisionesMisEntrevistas/AdmisionesMisEntrevistasPage.tsx src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx src/pages/Matricula/MatriculaPage.tsx src/pages/ConfiguracionModule/ConfiguracionModulePage.tsx src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` → ✅ sin errores (solo warning global de npm por config `http-proxy`).
 - `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts` → ✅ sin errores para el hotfix del body de validación de asignaturas.

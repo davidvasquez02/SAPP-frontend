@@ -36,30 +36,11 @@
 }
 
 .convocatorias-config__filters {
-  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
-  border-radius: 16px;
-  padding: 1rem;
-  background: var(--surface);
 }
 
 .convocatorias-config__filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
   color: var(--text-primary);
-  font-weight: 500;
-}
-
-.convocatorias-config__filter-field select {
-  border-radius: 12px;
-  border: 1px solid var(--outline);
-  background: var(--surface);
-  color: var(--text-primary);
-  font: inherit;
-  padding: 0.56rem 0.75rem;
 }
 
 .convocatorias-config__feedback {
