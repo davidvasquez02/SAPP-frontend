@@ -74,24 +74,24 @@ const EstudiantesCoordinacionPage = () => {
           </p>
         </header>
 
-        <div className="estudiantes-coordinacion__filter-card">
-          <label htmlFor="programa-select" className="estudiantes-coordinacion__label">
-            Programa académico
+        <div className="estudiantes-coordinacion__filter-card sapp-filters-panel">
+          <label htmlFor="programa-select" className="estudiantes-coordinacion__label sapp-filter-field">
+            <span>Programa académico</span>
+            <select
+              id="programa-select"
+              className="estudiantes-coordinacion__select"
+              value={programaIdSeleccionado ?? ''}
+              onChange={(event) => setProgramaIdSeleccionado(Number(event.target.value) || null)}
+              disabled={isLoadingProgramas}
+            >
+              <option value="">Seleccione un programa...</option>
+              {programas.map((programa) => (
+                <option key={programa.id} value={programa.id}>
+                  {programa.codigo} · {programa.nombre}
+                </option>
+              ))}
+            </select>
           </label>
-          <select
-            id="programa-select"
-            className="estudiantes-coordinacion__select"
-            value={programaIdSeleccionado ?? ''}
-            onChange={(event) => setProgramaIdSeleccionado(Number(event.target.value) || null)}
-            disabled={isLoadingProgramas}
-          >
-            <option value="">Seleccione un programa...</option>
-            {programas.map((programa) => (
-              <option key={programa.id} value={programa.id}>
-                {programa.codigo} · {programa.nombre}
-              </option>
-            ))}
-          </select>
         </div>
 
         {isLoadingProgramas ? (

@@ -199,9 +199,9 @@ const ConvocatoriasAdmisionConfigPage = () => {
           </div>
         </header>
 
-        <div className="convocatorias-config__filters">
-          <label className="convocatorias-config__filter-field">
-            Período
+        <div className="convocatorias-config__filters sapp-filters-panel">
+          <label className="convocatorias-config__filter-field sapp-filter-field">
+            <span>Período</span>
             <select
               value={periodoFilter}
               onChange={(event) => setPeriodoFilter(event.target.value)}
@@ -214,8 +214,8 @@ const ConvocatoriasAdmisionConfigPage = () => {
             </select>
           </label>
 
-          <label className="convocatorias-config__filter-field">
-            Vigente
+          <label className="convocatorias-config__filter-field sapp-filter-field">
+            <span>Vigente</span>
             <select
               value={vigenteFilter}
               onChange={(event) =>

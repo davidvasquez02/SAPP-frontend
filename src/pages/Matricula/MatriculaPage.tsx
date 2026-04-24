@@ -589,9 +589,9 @@ const MatriculaPage = () => {
             <p>Consulta y filtra las matrículas registradas por programa.</p>
           </header>
 
-          <section className="matricula-page__card matricula-page__filters">
-            <label>
-              Programa
+          <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
+            <label className="sapp-filter-field">
+              <span>Programa</span>
               <select
                 value={programaFilter}
                 onChange={(event) => setProgramaFilter(event.target.value)}
@@ -603,8 +603,8 @@ const MatriculaPage = () => {
                 ))}
               </select>
             </label>
-            <label>
-              Periodo
+            <label className="sapp-filter-field">
+              <span>Periodo</span>
               <select
                 value={periodoFilter}
                 onChange={(event) => setPeriodoFilter(event.target.value)}
@@ -616,8 +616,8 @@ const MatriculaPage = () => {
                 ))}
               </select>
             </label>
-            <label>
-              Estado
+            <label className="sapp-filter-field">
+              <span>Estado</span>
               <select
                 value={estadoFilter}
                 onChange={(event) => setEstadoFilter(event.target.value)}
@@ -629,8 +629,8 @@ const MatriculaPage = () => {
                 ))}
               </select>
             </label>
-            <label>
-              Buscar estudiante
+            <label className="sapp-filter-field">
+              <span>Buscar estudiante</span>
               <input
                 type="text"
                 value={searchText}
