@@ -1,0 +1,29 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  WORKFLOW_STRATEGY: "gitflow"
+
+include:
+  - project: "infraestructure/gitlab-ci-templates"
+    file: "/build/react-build.yml"
+    ref: v4.0.6
+  - project: "infraestructure/gitlab-ci-templates"
+    file: "/docker/docker-push.yml"
+    ref: v4.0.6
+  - project: "infraestructure/gitlab-ci-templates"
+    file: "/deploy/trigger-infra.yml"
+    ref: v4.0.6
+
+react_build:
+  variables:
+    IMAGE: "node:24-alpine" 
+    BUILD_DIR: "dist"
+
+trigger_deploy:
+  extends: .trigger-infra
+  variables:
+    APP_NETWORKS: "nginx-network"
+
