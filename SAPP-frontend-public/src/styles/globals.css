@@ -1,0 +1,247 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #cfd8cc;
+  --surface: #ffffff;
+  --surface-container-low: #f9fbf8;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --danger: #b42318;
+  --success: #067647;
+  --warning: #b54708;
+  --radius-sm: 0.8rem;
+  --radius-md: 1rem;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+  --shadow-xs: 0 2px 8px rgba(32, 50, 35, 0.08);
+  --radius-card: 2rem;
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--app-background);
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+body.light {
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #cfd8cc;
+  --surface: #ffffff;
+  --surface-container-low: #f9fbf8;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+}
+
+body.dark {
+  --primary: #499113;
+  --on-primary: #ffffff;
+  --outline: #3a4238;
+  --surface: #141316;
+  --surface-container-low: #1c1b1e;
+  --inverse-primary: #304d30;
+  --app-background: #0f130f;
+  --text-primary: #ecf3e8;
+  --text-secondary: #b6c3b2;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.light {
+  color-scheme: light;
+}
+
+body.dark {
+  color-scheme: dark;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  min-height: 2.65rem;
+  background: color-mix(in srgb, var(--surface), transparent 2%);
+  color: var(--text-primary);
+  padding: 0.65rem 0.8rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 78%);
+}
+
+button {
+  color: inherit;
+  border-radius: 999px;
+  min-height: 2.65rem;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 74%);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.01em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+table {
+  width: 100%;
+}
+
+.sapp-table-shell {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.sapp-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.sapp-table thead th {
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sapp-table th,
+.sapp-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 38%);
+  vertical-align: top;
+}
+
+.sapp-table tbody tr:hover {
+  background: color-mix(in srgb, var(--primary), transparent 94%);
+}
+
+.sapp-filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.sapp-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sapp-filter-field > span {
+  color: var(--text-secondary);
+}
+
+.sapp-filter-field select,
+.sapp-filter-field input {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.sapp-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.sapp-filters-clear-button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sapp-filters-clear-button:hover:enabled {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.sapp-filters-clear-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Shared component skin */
+.module-layout__content,
+.solicitud-detalle-page,
+.solicitudes-filters-bar,
+.solicitud-estudiante-form__section,
+.solicitudes-table__container,
+.home-page__session {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  box-shadow: var(--shadow-xs);
+}
+
+@media (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
