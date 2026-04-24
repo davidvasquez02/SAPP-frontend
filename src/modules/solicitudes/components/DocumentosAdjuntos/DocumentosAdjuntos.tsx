@@ -40,8 +40,8 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
       ) : documentos.length === 0 ? (
         <p className="documentos-adjuntos__status">No hay documentos adjuntos.</p>
       ) : (
-        <div className="documentos-adjuntos__table-wrapper">
-          <table className="documentos-adjuntos__table">
+        <div className="documentos-adjuntos__table-wrapper sapp-table-shell">
+          <table className="documentos-adjuntos__table sapp-table">
             <thead>
               <tr>
                 <th scope="col">Nombre archivo</th>

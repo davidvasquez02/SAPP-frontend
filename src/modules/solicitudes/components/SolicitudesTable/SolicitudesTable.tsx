@@ -28,8 +28,8 @@ const getCellText = (value: string | null | undefined, fallback: string) => {
 
 const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => {
   return (
-    <div className="solicitudes-table__container">
-      <table className="solicitudes-table">
+    <div className="solicitudes-table__container sapp-table-shell">
+      <table className="solicitudes-table sapp-table">
         <thead>
           <tr>
             {mode === 'COORDINADOR' && <th>Estudiante</th>}

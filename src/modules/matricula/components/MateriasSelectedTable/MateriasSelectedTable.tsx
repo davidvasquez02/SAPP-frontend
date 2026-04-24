@@ -13,8 +13,8 @@ const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove }: MateriasSe
   }
 
   return (
-    <div className="materias-selected-table__wrapper">
-      <table className="materias-selected-table">
+    <div className="materias-selected-table__wrapper sapp-table-shell">
+      <table className="materias-selected-table sapp-table">
         <thead>
           <tr>
             <th>Materia</th>

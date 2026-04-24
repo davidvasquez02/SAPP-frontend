@@ -653,8 +653,8 @@ const MatriculaPage = () => {
                 <p className="matricula-page__description">
                   Registros encontrados: {filteredMatriculas.length}
                 </p>
-                <div className="matricula-page__table-wrapper">
-                  <table className="matricula-page__table" role="grid">
+                <div className="matricula-page__table-wrapper sapp-table-shell">
+                  <table className="matricula-page__table sapp-table" role="grid">
                     <thead>
                       <tr>
                         <th>Estudiante</th>

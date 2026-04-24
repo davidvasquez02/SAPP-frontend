@@ -269,8 +269,8 @@ const ConvocatoriasAdmisionConfigPage = () => {
                   <h2>{section.programaLabel}</h2>
                 </header>
 
-                <div className="convocatorias-config__table-wrap">
-                  <table className="convocatorias-config__table">
+                <div className="convocatorias-config__table-wrap sapp-table-shell">
+                  <table className="convocatorias-config__table sapp-table">
                     <thead>
                       <tr>
                         <th>Período</th>

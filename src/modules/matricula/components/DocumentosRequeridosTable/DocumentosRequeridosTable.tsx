@@ -21,8 +21,8 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: Docum
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   return (
-    <div className="documentos-requeridos-table__wrapper">
-      <table className="documentos-requeridos-table">
+    <div className="documentos-requeridos-table__wrapper sapp-table-shell">
+      <table className="documentos-requeridos-table sapp-table">
         <thead>
           <tr>
             <th>Documento</th>
