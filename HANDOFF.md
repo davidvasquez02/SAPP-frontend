@@ -756,3 +756,6 @@
 
 ### Recent test results + logs
 - `npm run lint` → ❌ falla por issues preexistentes fuera del alcance del cambio (ej. `no-explicit-any`, reglas `react-hooks/*`, `react-refresh/only-export-components` en archivos no modificados por este ajuste).
+
+
+- April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se bloquearon acciones de validación por estado. Si la matrícula está `RADICADA`, quedan deshabilitados aprobar/rechazar documentos y el botón **Aprobar documentos**. Si está `FINALIZADA`, además quedan deshabilitados aprobar/rechazar materias y **Guardar validación de asignaturas**; el estado del detalle ahora usa los mismos badges de color del listado.

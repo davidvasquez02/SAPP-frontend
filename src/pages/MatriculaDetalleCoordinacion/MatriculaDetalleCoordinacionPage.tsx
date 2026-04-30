@@ -70,6 +70,25 @@ const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEst
   return 'POR_REVISAR'
 }
 
+
+const getEstadoBadgeClassName = (estado: string) => {
+  const normalizedEstado = estado.toUpperCase()
+
+  if (normalizedEstado === 'PENDIENTE_DOCUMENTOS') {
+    return 'matricula-page__estado-badge matricula-page__estado-badge--pendiente-documentos'
+  }
+
+  if (normalizedEstado === 'RADICADA') {
+    return 'matricula-page__estado-badge matricula-page__estado-badge--radicada'
+  }
+
+  if (normalizedEstado === 'FINALIZADA') {
+    return 'matricula-page__estado-badge matricula-page__estado-badge--finalizada'
+  }
+
+  return 'matricula-page__estado-badge matricula-page__estado-badge--default'
+}
+
 const MatriculaDetalleCoordinacionPage = () => {
   const { session } = useAuth()
   const { matriculaId } = useParams()
@@ -91,6 +110,12 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
+
+  const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
+  const isRadicada = normalizedMatriculaEstado === 'RADICADA'
+  const isFinalizada = normalizedMatriculaEstado === 'FINALIZADA'
+  const disableDocumentValidation = isRadicada || isFinalizada
+  const disableAsignaturasValidation = isFinalizada
 
   const getActionState = useCallback(
     (id: number): DocumentoActionState =>
@@ -485,7 +510,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <strong>Periodo:</strong> {matricula.periodoAcademico}
                 </p>
                 <p>
-                  <strong>Estado:</strong> {matricula.estado}
+                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{matricula.estado}</span>
                 </p>
                 <p>
                   <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
@@ -530,7 +555,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                     const filename =
                       documentoResponse?.nombreArchivoDocumento ??
                       `documento_${documento.idTipoDocumentoTramite}.pdf`
-                    const disableValidation = !uploaded || isLoadingDecision
+                    const disableValidation = !uploaded || isLoadingDecision || disableDocumentValidation
                     const isRejectMode = documentoId != null && rejectingDocId === documentoId
                     const currentRejectNote =
                       documentoId != null
@@ -647,7 +672,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                       type="button"
                       className="matricula-detalle__approve-button"
                       onClick={() => void handleAprobarDocumentos()}
-                      disabled={!allRequiredApproved || isApprovingMatricula}
+                      disabled={!allRequiredApproved || isApprovingMatricula || disableDocumentValidation}
                     >
                       {isApprovingMatricula ? 'Aprobando documentos...' : 'Aprobar documentos'}
                     </button>
@@ -689,6 +714,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                               onClick={() =>
                                 updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
                               }
+                              disabled={disableAsignaturasValidation}
                             >
                               Aprobar
                             </button>
@@ -702,6 +728,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                               onClick={() =>
                                 updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
                               }
+                              disabled={disableAsignaturasValidation}
                             >
                               Rechazar
                             </button>
@@ -730,7 +757,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                   type="button"
                   className="matricula-detalle__approve-button"
                   onClick={() => void handleGuardarValidacionAsignaturas()}
-                  disabled={isSavingAsignaturas}
+                  disabled={isSavingAsignaturas || disableAsignaturasValidation}
                 >
                   {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
                 </button>
