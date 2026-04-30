@@ -231,7 +231,13 @@ const AdmisionesHomePage = () => {
                             : "No hay convocatoria vigente"}
                         </span>
                       </div>
-                      <span className="admisiones-home__pill">
+                      <span
+                        className={`admisiones-home__pill ${
+                          convocatoriaVigente
+                            ? "admisiones-home__pill--vigente"
+                            : "admisiones-home__pill--cerrada"
+                        }`}
+                      >
                         {convocatoriaVigente ? "Vigente" : "Cerrada"}
                       </span>
                     </div>
