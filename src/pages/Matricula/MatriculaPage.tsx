@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import { Link } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
@@ -125,6 +126,12 @@ const mapDocumentoCargadoToRequerido = (
   selectedFile: null,
   uploadStatus: documento.documentoCargado ? "UPLOADED" : "NOT_SELECTED",
   uploadedFileName: documento.documentoUploadedResponse?.nombreArchivoDocumento,
+  uploadedBase64:
+    documento.documentoUploadedResponse?.base64DocumentoContenido ??
+    documento.documentoUploadedResponse?.contenidoBase64,
+  uploadedMimeType:
+    documento.documentoUploadedResponse?.mimeTypeDocumentoContenido ??
+    documento.documentoUploadedResponse?.mimeType,
 });
 
 const MatriculaPage = () => {
@@ -887,6 +894,35 @@ const MatriculaPage = () => {
                   disabledActions={false}
                   showActions
                   uploadDisabledOnly={isReadOnlyMatriculaFinalizada}
+                  onAction={(docId, action) => {
+                    const documento = documentos.find((item) => item.id === docId);
+                    if (!documento) {
+                      return;
+                    }
+
+                    const fileBase64 = documento.uploadedBase64;
+                    const mimeType = documento.uploadedMimeType;
+                    const fileName = documento.uploadedFileName ?? `${documento.nombre}.pdf`;
+
+                    if (action === "VER") {
+                      if (!fileBase64 || !mimeType) {
+                        setErrorForm("Este documento todavía no tiene un archivo disponible para visualizar.");
+                        return;
+                      }
+
+                      openBase64InNewTab(fileBase64, mimeType, fileName);
+                      return;
+                    }
+
+                    if (action === "DESCARGAR") {
+                      if (!fileBase64 || !mimeType) {
+                        setErrorForm("Este documento todavía no tiene un archivo disponible para descargar.");
+                        return;
+                      }
+
+                      downloadBase64File(fileBase64, mimeType, fileName);
+                    }
+                  }}
                   onSelectFile={(docId, file) => {
                     setDocumentos((current) =>
                       current.map((item) => {

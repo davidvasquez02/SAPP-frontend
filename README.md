@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) el buscador de materias ahora muestra también el **nivel** de cada asignatura en el dropdown (junto al código), y en el checklist documental se habilitaron las acciones **Ver** y **Descargar** con archivo real (`base64 + mime`) cuando el documento ya fue cargado.
 - April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se bloquearon acciones de validación por estado. Si la matrícula está `RADICADA`, quedan deshabilitados aprobar/rechazar documentos y el botón **Aprobar documentos**. Si está `FINALIZADA`, además quedan deshabilitados aprobar/rechazar materias y **Guardar validación de asignaturas**; el estado del detalle ahora usa los mismos badges de color del listado.
 - April 30, 2026: en `/matricula/:matriculaId` (coordinación/admin), al aprobar o rechazar un documento en el detalle, la vista ya no recarga todo el detalle. Ahora espera la respuesta del `PUT /sapp/document` y refresca únicamente la lista documental (`loadDocumentos`), manteniendo intactos los datos generales y la tabla de asignaturas.
 - April 30, 2026: en `/matricula` se eliminó el manejo de `grupo` en materias para todos los roles (UI y validaciones). La tabla de materias ya no muestra columna **Grupo** y el payload de creación/actualización deja de enviar ese campo.

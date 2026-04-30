@@ -28,6 +28,8 @@ export type DocumentoRequerido = {
   selectedFile?: File | null
   uploadStatus?: 'NOT_SELECTED' | 'READY_TO_UPLOAD' | 'UPLOADING' | 'UPLOADED' | 'ERROR'
   uploadedFileName?: string
+  uploadedBase64?: string
+  uploadedMimeType?: string
   errorMessage?: string
 }
 
