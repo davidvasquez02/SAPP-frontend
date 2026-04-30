@@ -1,6 +1,7 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - April 30, 2026 (latest): en `/matricula` se retiró `grupo` del flujo de materias para todos los roles (sin columna, sin input y sin validaciones asociadas).
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente, la tabla de materias oculta la columna **Acción**.
@@ -88,6 +89,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 
 - April 21, 2026 (latest): hotfix en `/matricula/:matriculaId` para coordinación/admin. La acción **Guardar validación de asignaturas** ahora envía el contrato backend completo en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con `{ usuarioRevisionId, observaciones, asignaturas[] }`; además cada elemento usa `asignaturaId` (antes se enviaba `matriculaAsignaturaId`, lo que rompía el consumo esperado).
@@ -650,6 +652,7 @@
 ## Update — April 30, 2026
 
 ### Current Status
+- April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - Home (`/`) no longer shows account/session detail blocks. It now renders shortcut cards to the same modules exposed in sidebar (Solicitudes, Matrícula, Estudiantes, Admisiones, Configuración), filtered by user role permissions.
 - Role visibility logic for home shortcuts is aligned with sidebar behavior (including professor-only restrictions).

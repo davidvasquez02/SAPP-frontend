@@ -76,7 +76,7 @@ const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: Mater
                   }}
                 >
                   <span>{materia.nombre}</span>
-                  <small>{materia.codigo ?? 'Sin código'}</small>
+                  <small>{`${materia.codigo ?? 'Sin código'} · Nivel ${materia.nivel}`}</small>
                 </button>
               </li>
             ))
