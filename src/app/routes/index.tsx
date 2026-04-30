@@ -100,7 +100,7 @@ export const AppRoutes = () => {
             path="/admisiones/convocatoria/:convocatoriaId"
             element={
               <RequireRoles
-                allowedRoles={[ROLES.COORDINACION, ROLES.SECRETARIA]}
+                allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]}
               >
                 <ConvocatoriaDetallePage />
               </RequireRoles>
