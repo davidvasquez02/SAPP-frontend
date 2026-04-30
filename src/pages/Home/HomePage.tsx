@@ -39,7 +39,7 @@ const HomePage = () => {
 
   return (
     <ModuleLayout title="Inicio">
-      <p className="home-page__lead">En este sistema puedes atender los siguientes procesos</p>
+      <p className="home-page__lead">Sistema de apoyo a procesos de posgrado. Acá puedes atender los siguientes procesos: </p>
 
       <section className="home-page__shortcuts" aria-label="Accesos del sistema">
         {visibleShortcuts.map((item) => (
