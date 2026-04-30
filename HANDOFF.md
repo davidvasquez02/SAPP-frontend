@@ -636,3 +636,33 @@
 - April 30, 2026 (latest): hotfix de matrícula estudiante (`src/pages/Matricula/MatriculaPage.tsx`): en la precarga de matrícula vigente ahora se prioriza `materiaCatalogo.codigo` y, si viene `null`, se usa `asignatura.asignaturaCodigo` del DTO vigente. Esto corrige que no se mostrara el código de materia en tabla/selector cuando `/sapp/asignaturas` retorna códigos nulos.
 
 - April 30, 2026: en `/matricula` (vista `COORDINACION/ADMIN`) se homologó la columna **Estado** del listado con chips de color por estado, siguiendo el patrón visual de admisiones. Se añadieron variantes para `PENDIENTE_DOCUMENTOS` (ámbar), `RADICADA` (azul) y `FINALIZADA` (verde), con fallback neutro para otros valores y compatibilidad con tema claro/oscuro.
+
+## Update — April 30, 2026
+
+### Current Status
+- Home (`/`) no longer shows account/session detail blocks. It now renders shortcut cards to the same modules exposed in sidebar (Solicitudes, Matrícula, Estudiantes, Admisiones, Configuración), filtered by user role permissions.
+- Role visibility logic for home shortcuts is aligned with sidebar behavior (including professor-only restrictions).
+
+### Open Challenges
+- The role visibility rules are currently duplicated between `Sidebar` and `HomePage`; consider extracting a shared menu configuration to avoid drift.
+- Validate final UX with all role combinations from real backend users (ADMIN, COORDINACION, SECRETARIA, DOCENTE/PROFESOR, ESTUDIANTE).
+
+### Next Steps
+1. Optionally centralize nav item definitions in a shared module (`src/shared/navigation`).
+2. Add unit/RTL coverage for role-based visibility in Home shortcuts.
+3. Collect stakeholder feedback for icon labels/order in the home quick-access grid.
+
+### Paths / Artifacts
+- Updated page logic: `src/pages/Home/HomePage.tsx`
+- Updated styles: `src/pages/Home/HomePage.css`
+
+### Recent Test Results
+- `npm run lint` (pass on April 30, 2026 in local container after Home refactor).
+
+### Schemas / Contracts
+- No API contract changes.
+- No backend payload/schema changes.
+
+### Environment / Packages
+- Keep using existing Node/npm workspace environment (do not create new venv/conda/poetry envs; not applicable to this frontend repo).
+- Frontend stack versions remain those declared in `package.json`.

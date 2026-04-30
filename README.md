@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 30, 2026: la pantalla de **Inicio** (`/`) fue rediseñada para mostrar una grilla de accesos rápidos (cuadritos) que replica las opciones del sidebar y respeta visibilidad por rol (solo módulos permitidos por sesión).
 - April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando la matrícula vigente está en estado `FINALIZADA`, se ocultaron los textos del bloque de carga de documentos (`Cargue de documentos` y su descripción) y se mantuvo la tabla en modo consulta con acciones habilitadas solo para **Ver** y **Descargar** (la carga/subida queda deshabilitada).
 - April 30, 2026: se removió el acceso a **Créditos** del sidebar principal (no se usará el módulo por decisión funcional), manteniendo intactas rutas/páginas para evitar efectos colaterales mientras se coordina el retiro completo del módulo.
 - April 30, 2026: hotfix en `/matricula` (ESTUDIANTE) para pre-carga de matrícula vigente: cuando el catálogo de asignaturas viene sin `codigoUis/codigoExterno`, ahora el UI usa `asignaturaCodigo` del detalle de matrícula vigente como fallback, corrigiendo la visualización de código en tabla de materias seleccionadas y en el selector filtrable.

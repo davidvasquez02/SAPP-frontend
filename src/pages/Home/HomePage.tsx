@@ -1,49 +1,56 @@
+import { Link } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { getEstudianteIdFromSession } from '../../modules/solicitudes/utils/getEstudianteId'
 import './HomePage.css'
 
+interface HomeShortcut {
+  to: string
+  label: string
+  icon: string
+  visible: boolean
+}
+
 const HomePage = () => {
-  const { user, session } = useAuth()
-  const displayName = user
-    ? 'username' in user
-      ? user.nombreCompleto || user.username
-      : user.numeroInscripcionUis || user.numeroDocumento
-    : 'Usuario'
-  const isUserSession = session?.kind === 'SAPP' && user && 'username' in user
-  const roleCodes = isUserSession ? user.roles.join(', ') : ''
-  const expiresAtDate = isUserSession && session.expiresAt ? new Date(session.expiresAt * 1000) : null
-  const estudianteId = isUserSession ? getEstudianteIdFromSession(session) : null
+  const { session } = useAuth()
+
+  const roles = session?.kind === 'SAPP' ? session.user.roles : []
+  const canSeeAdmisiones = hasAnyRole(roles, [
+    ROLES.COORDINACION,
+    ROLES.SECRETARIA,
+    ROLES.ADMIN,
+    ROLES.PROFESOR,
+    ROLES.DOCENTE,
+  ])
+  const canSeeGestionEstudiantes = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+  const canSeeConfiguracion = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const isProfesorOnly =
+    isProfesor(roles) && !hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+
+  const shortcuts: HomeShortcut[] = [
+    { to: '/solicitudes', label: 'Solicitudes', icon: '📝', visible: true },
+    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
+    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
+    { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
+    { to: '/configuracion', label: 'Configuración', icon: '⚙️', visible: canSeeConfiguracion },
+  ]
+
+  const visibleShortcuts = shortcuts.filter((item) => item.visible)
 
   return (
     <ModuleLayout title="Inicio">
-      <p className="home-page__welcome">Bienvenido/a, {displayName}</p>
-      <p className="home-page__lead">Selecciona una opción del menú</p>
-      {isUserSession && (
-        <section className="home-page__session">
-          <h2 className="home-page__session-title">Mi cuenta</h2>
-          <dl className="home-page__session-list">
-            <div>
-              <dt>Usuario</dt>
-              <dd>{user.username}</dd>
-            </div>
-            <div>
-              <dt>Roles</dt>
-              <dd>{roleCodes || 'Sin roles'}</dd>
-            </div>
-            <div>
-              <dt>Expira</dt>
-              <dd>{expiresAtDate ? expiresAtDate.toLocaleString('es-CO') : 'Sin expiración'}</dd>
-            </div>
-            {import.meta.env.DEV && (
-              <div>
-                <dt>Estudiante ID (debug)</dt>
-                <dd>{estudianteId ?? 'No disponible'}</dd>
-              </div>
-            )}
-          </dl>
-        </section>
-      )}
+      <p className="home-page__lead">Accesos rápidos según tu rol</p>
+
+      <section className="home-page__shortcuts" aria-label="Accesos del sistema">
+        {visibleShortcuts.map((item) => (
+          <Link key={item.to} to={item.to} className="home-page__shortcut-card" title={item.label}>
+            <span className="home-page__shortcut-icon" aria-hidden="true">
+              {item.icon}
+            </span>
+            <span className="home-page__shortcut-label">{item.label}</span>
+          </Link>
+        ))}
+      </section>
     </ModuleLayout>
   )
 }
