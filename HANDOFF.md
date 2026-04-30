@@ -1,29 +1,30 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Flujo de creación de convocatorias actualizado para cumplir dependencia de evaluadores/profesores.
-- Después de `POST /sapp/convocatoriaAdmision`, el frontend ejecuta una llamada por profesor a `POST /sapp/evaluadorConvocatoria` con `{ evaluadorId, convocatoriaId }`.
-- La creación **no se considera finalizada** hasta completar exitosamente todas las asociaciones de profesores; si falla alguna, la UI deja mensaje de advertencia y permite reintento.
+- Listado de aspirantes por convocatoria con fallback visual de foto implementado.
+- En `StudentCard`, si `photoUrl` no existe o el recurso falla al cargar (`onError`), se renderiza avatar genérico institucional (`👤`) en el bloque de media.
+- Se mantiene compatibilidad con tema claro/oscuro usando tokens CSS semánticos (`--surface-container-low`, `--primary`).
 
 ## Archivos tocados
-- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
-- `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`
+- `src/modules/admisiones/components/StudentCard/StudentCard.tsx`
+- `src/modules/admisiones/components/StudentCard/StudentCard.css`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Confirmar con backend si la ausencia de inscripciones debería estandarizarse como `ok=true,data=[]` para eliminar inferencia por mensaje.
-2. Mantener consistencia de mensajes backend (evitar variantes excesivas de “sin registros”).
+1. Definir con diseño si el avatar genérico debe migrar de emoji a ícono SVG institucional compartido.
+2. Validar con backend si conviene exponer flag explícito de foto disponible para evitar intentos de carga inválidos.
 
 ## Próximos pasos recomendados
-1. Validar manualmente en `http://localhost:5173/admisiones/convocatoria/19` con una convocatoria vacía.
-2. (Opcional) Extraer helper compartido para clasificar respuestas “empty-state” por módulo en vez de lógica inline por página.
+1. Validar visualmente `/admisiones/convocatoria/:convocatoriaId` con casos: foto válida, sin foto, y foto corrupta/base64 inválido.
+2. (Opcional) Extraer componente reusable de avatar fallback para header/listados.
 
 ## Contratos/Esquemas esperados
-### Inscripciones por convocatoria
-- `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}`
-- Ideal esperado: `{ ok: true, message: string, data: [] }` cuando no hay registros.
-- Estado actual tolerado por frontend: respuestas con mensaje semántico de “no hay/no existe/sin registros” se interpretan como vacío.
+### Inscripción admisión (foto)
+- Campo actual usado: `inscripcion.foto?.contenidoBase64` + `inscripcion.foto?.mimeType`.
+- Comportamiento frontend esperado:
+  - Si hay base64 válido → render `<img>`.
+  - Si no hay base64 o falla carga de imagen → render avatar genérico.
 
 ## Entorno exacto y paquetes
 - Runtime: Node.js + npm (sin venv/conda/poetry).
@@ -39,8 +40,8 @@ npm run lint
 ```
 
 ## Últimos resultados de pruebas
-- `npm run lint`: falló por errores preexistentes del repositorio en módulos no relacionados (no introducidos por este ajuste).
-- No se ejecutó `npm run build` en este ajuste puntual (cambio acotado de comportamiento UI).
+- `npm run lint`: no ejecutado en este ajuste puntual (cambio UI acotado en componente).
+- Validación manual pendiente para escenarios de foto ausente y foto con error de carga.
 
 ## Logs útiles
-- Verificar en UI que, para convocatoria sin registros, se renderice solo mensaje neutro y no bloque de error/reintento.
+- Verificar en DevTools que imágenes con error disparen `onError` y cambien al fallback sin romper layout.
