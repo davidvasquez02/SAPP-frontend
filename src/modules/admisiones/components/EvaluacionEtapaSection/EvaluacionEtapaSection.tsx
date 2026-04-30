@@ -16,6 +16,7 @@ interface EvaluacionEtapaSectionProps {
   isSavingBulk?: boolean
   onChangeDraft: (id: number, changes: EvaluacionDraft) => void
   onSaveBulk?: () => Promise<void>
+  isReadOnly?: boolean
 }
 
 const parseConsideraciones = (value: string): string => {
@@ -42,6 +43,7 @@ const EvaluacionEtapaSection = ({
   isSavingBulk = false,
   onChangeDraft,
   onSaveBulk,
+  isReadOnly = false,
 }: EvaluacionEtapaSectionProps) => {
   const hasItems = items.length > 0
   const hasChanges = Object.values(modifiedByRow).some(Boolean)
@@ -94,6 +96,7 @@ const EvaluacionEtapaSection = ({
                         className="evaluacion-etapa-section__textarea"
                         rows={2}
                         value={observacionesValue}
+                        disabled={isReadOnly}
                         onChange={(event) =>
                           onChangeDraft(item.id, { observaciones: event.target.value })
                         }
@@ -109,6 +112,7 @@ const EvaluacionEtapaSection = ({
                           max={item.puntajeMax}
                           step="0.01"
                           value={puntajeValue}
+                          disabled={isReadOnly}
                           onChange={(event) => {
                             const value = event.target.value
                             const parsed = value === '' ? undefined : Number(value)
@@ -132,7 +136,7 @@ const EvaluacionEtapaSection = ({
           <button
             className="evaluacion-etapa-section__button"
             type="button"
-            disabled={!hasChanges || hasErrors || isSavingBulk}
+            disabled={!hasChanges || hasErrors || isSavingBulk || isReadOnly}
             onClick={onSaveBulk}
           >
             {isSavingBulk ? 'Actualizando...' : 'Actualizar'}

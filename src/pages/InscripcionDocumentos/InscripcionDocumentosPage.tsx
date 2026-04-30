@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
@@ -12,6 +12,7 @@ import ValidationButtons from '../../modules/documentos/components/ValidationBut
 import type { DocumentoTramiteUiItem, DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
+import type { InscripcionDetalleOutletContext } from '../InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
 
 interface DocumentoActionState {
   viewing: boolean
@@ -41,6 +42,7 @@ const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEst
 
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
+  const { isEstadoFinal } = useOutletContext<InscripcionDetalleOutletContext>()
   const navigate = useNavigate()
   const { session, user } = useAuth()
   const [documentos, setDocumentos] = useState<DocumentoTramiteUiItem[]>([])
@@ -349,7 +351,7 @@ const InscripcionDocumentosPage = () => {
             const filename =
               documentoResponse?.nombreArchivoDocumento ??
               `documento_${documento.idTipoDocumentoTramite}.pdf`
-            const disableValidation = !uploaded || isLoadingDecision
+            const disableValidation = !uploaded || isLoadingDecision || isEstadoFinal
             const isRejectMode = documentoId != null && rejectingDocId === documentoId
             const currentRejectNote =
               documentoId != null
@@ -427,8 +429,8 @@ const InscripcionDocumentosPage = () => {
                       onClick={() =>
                         documentoId && handleViewDocumento(documentoId, base64, mimeType, filename)
                       }
-                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
-                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
                     >
                       {actionState?.viewing ? 'Abriendo...' : 'Ver'}
                     </button>
@@ -438,8 +440,8 @@ const InscripcionDocumentosPage = () => {
                       onClick={() =>
                         documentoId && handleDownloadDocumento(documentoId, base64, mimeType, filename)
                       }
-                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
-                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
                     >
                       {actionState?.downloading ? 'Descargando...' : 'Descargar'}
                     </button>
@@ -462,8 +464,8 @@ const InscripcionDocumentosPage = () => {
             <button
               type="button"
               className="inscripcion-documentos__continue-button"
-              disabled={!allRequiredApproved || isStartingEvaluacion}
-              aria-disabled={!allRequiredApproved || isStartingEvaluacion}
+              disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
+              aria-disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
               onClick={() => void handleContinue()}
             >
               {isStartingEvaluacion ? 'Iniciando evaluación...' : 'Continuar evaluación'}
