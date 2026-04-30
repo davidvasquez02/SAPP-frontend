@@ -618,6 +618,19 @@ const MatriculaPage = () => {
     });
   }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText]);
 
+  const hasAllDocumentsUploadedAndNoRejected = useMemo(() => {
+    if (!hasExistingMatricula) {
+      return false;
+    }
+
+    const hasRejectedDocuments = documentos.some((item) => item.estado === "RECHAZADO");
+    if (hasRejectedDocuments) {
+      return false;
+    }
+
+    return documentos.every((item) => item.uploadStatus === "UPLOADED");
+  }, [documentos, hasExistingMatricula]);
+
   const canConfirmMatricula = useMemo(() => {
     if (isSubmitting || isReadOnlyMatriculaFinalizada) {
       return false;
@@ -627,9 +640,14 @@ const MatriculaPage = () => {
       return selectedMaterias.length > 0;
     }
 
-    return hasExistingMatricula;
+    if (hasExistingMatricula) {
+      return !hasAllDocumentsUploadedAndNoRejected;
+    }
+
+    return false;
   }, [
     canCreateMatricula,
+    hasAllDocumentsUploadedAndNoRejected,
     hasExistingMatricula,
     isReadOnlyMatriculaFinalizada,
     isSubmitting,
@@ -796,7 +814,7 @@ const MatriculaPage = () => {
         {!loadingConvocatoria && convocatoria?.isOpen ? (
           <>
             <section className="matricula-page__card">
-              {!isReadOnlyMatriculaFinalizada ? (
+              {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                 <>
                   <h4>Selección de materias</h4>
                   <p className="matricula-page__description">
@@ -810,19 +828,20 @@ const MatriculaPage = () => {
               {errorForm ? (
                 <p className="matricula-page__error">{errorForm}</p>
               ) : null}
-              {matriculaValidationMessage ? (
+              {!hasExistingMatricula && matriculaValidationMessage ? (
                 <p className="matricula-page__status">
                   {matriculaValidationMessage}
                 </p>
               ) : null}
+              
               {!loadingForm && !errorForm ? (
                 <>
-                  {!isReadOnlyMatriculaFinalizada ? (
+                  {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                     <MateriasSelector
                       materias={materiasCatalogo}
                       selected={selectedMaterias}
                       onAdd={handleAddMateria}
-                      disabled={isReadOnlyMatriculaFinalizada}
+                      disabled={isReadOnlyMatriculaFinalizada || hasExistingMatricula}
                     />
                   ) : null}
                   <MateriasSelectedTable
@@ -834,7 +853,7 @@ const MatriculaPage = () => {
                             .map((materia) => materia.id)
                         : []
                     }
-                    disabled={isReadOnlyMatriculaFinalizada}
+                    disabled={isReadOnlyMatriculaFinalizada || hasExistingMatricula}
                     readOnlyView={isReadOnlyMatriculaFinalizada}
                     onGrupoChange={(id, grupo) =>
                       setSelectedMaterias((current) => {
@@ -873,7 +892,7 @@ const MatriculaPage = () => {
 
             <section className="matricula-page__card">
               {!isReadOnlyMatriculaFinalizada ? <h4>Cargue de documentos</h4> : null}
-              {!isReadOnlyMatriculaFinalizada ? (
+              {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                 <p className="matricula-page__description">
                   Revisa y carga los documentos solicitados para la matrícula.
                 </p>
@@ -929,7 +948,7 @@ const MatriculaPage = () => {
                   }
                   onClick={() => void handleConfirmMatricula()}
                 >
-                  {isSubmitting ? "Confirmando..." : "Confirmar matrícula"}
+                  {isSubmitting ? (hasExistingMatricula ? "Actualizando..." : "Confirmando...") : hasExistingMatricula ? "Actualizar matrícula" : "Confirmar matrícula"}
                 </button>
               </div>
             ) : null}
