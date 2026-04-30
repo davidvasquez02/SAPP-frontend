@@ -665,45 +665,47 @@ const MatriculaPage = () => {
           </header>
 
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
-            <label className="sapp-filter-field">
-              <span>Programa</span>
-              <select
-                value={programaFilter}
-                onChange={(event) => setProgramaFilter(event.target.value)}
-              >
-                {programas.map((programa) => (
-                  <option key={programa} value={programa}>
-                    {programa}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="sapp-filter-field">
-              <span>Periodo</span>
-              <select
-                value={periodoFilter}
-                onChange={(event) => setPeriodoFilter(event.target.value)}
-              >
-                {periodos.map((periodo) => (
-                  <option key={periodo} value={periodo}>
-                    {periodo}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="sapp-filter-field">
-              <span>Estado</span>
-              <select
-                value={estadoFilter}
-                onChange={(event) => setEstadoFilter(event.target.value)}
-              >
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="matricula-page__filters-top-row">
+              <label className="sapp-filter-field matricula-page__filter-field">
+                <span>Programa</span>
+                <select
+                  value={programaFilter}
+                  onChange={(event) => setProgramaFilter(event.target.value)}
+                >
+                  {programas.map((programa) => (
+                    <option key={programa} value={programa}>
+                      {programa}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="sapp-filter-field matricula-page__filter-field">
+                <span>Periodo</span>
+                <select
+                  value={periodoFilter}
+                  onChange={(event) => setPeriodoFilter(event.target.value)}
+                >
+                  {periodos.map((periodo) => (
+                    <option key={periodo} value={periodo}>
+                      {periodo}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="sapp-filter-field matricula-page__filter-field">
+                <span>Estado</span>
+                <select
+                  value={estadoFilter}
+                  onChange={(event) => setEstadoFilter(event.target.value)}
+                >
+                  {estados.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <label className="sapp-filter-field matricula-page__search-filter">
               <span>Buscar estudiante</span>
               <input
