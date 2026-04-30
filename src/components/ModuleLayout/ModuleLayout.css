@@ -32,10 +32,9 @@
     text-align: right;
 }
 
-
 .module-layout__avatar {
-    width: 3rem;
-    height: 3rem;
+    width: 5rem;
+    height: 5rem;
     border-radius: 999px;
     object-fit: cover;
     border: 2px solid color-mix(in srgb, var(--outline), transparent 20%);

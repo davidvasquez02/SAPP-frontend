@@ -30,11 +30,12 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
           <h2 className="module-layout__title">{title}</h2>
         </div>
         <div className="module-layout__user">
-          <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />
           <div>
             <p className="module-layout__user-name">{displayName}</p>
             <p className="module-layout__user-role">{roleLabel}</p>
           </div>
+          <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />
+
         </div>
       </header>
       <main className="module-layout__content">{children}</main>
