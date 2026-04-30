@@ -134,6 +134,7 @@ const MatriculaPage = () => {
     string | null
   >(null);
   const [canCreateMatricula, setCanCreateMatricula] = useState(false);
+  const [hasExistingMatricula, setHasExistingMatricula] = useState(false);
   const [isReadOnlyMatriculaFinalizada, setIsReadOnlyMatriculaFinalizada] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -177,6 +178,7 @@ const MatriculaPage = () => {
   ) => {
     if (validation.status === "EXISTS") {
       setCanCreateMatricula(false);
+      setHasExistingMatricula(true);
       setIsReadOnlyMatriculaFinalizada(
         validation.matricula.estado.toUpperCase() === "FINALIZADA",
       );
@@ -219,12 +221,14 @@ const MatriculaPage = () => {
 
     if (validation.status === "NO_ACTIVE_PERIOD") {
       setCanCreateMatricula(false);
+      setHasExistingMatricula(false);
       setIsReadOnlyMatriculaFinalizada(false);
       setMatriculaValidationMessage(validation.message);
       return;
     }
 
     setCanCreateMatricula(true);
+    setHasExistingMatricula(false);
     setIsReadOnlyMatriculaFinalizada(false);
     setMatriculaValidationMessage(null);
   };
@@ -408,19 +412,6 @@ const MatriculaPage = () => {
       return;
     }
 
-    const missingRequiredDocument = documentos.some(
-      (documento) =>
-        documento.obligatorio &&
-        documento.uploadStatus !== "UPLOADED" &&
-        !documento.selectedFile,
-    );
-    if (missingRequiredDocument) {
-      setErrorForm(
-        "Debes adjuntar todos los documentos obligatorios antes de confirmar.",
-      );
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       setErrorForm(null);
@@ -431,7 +422,7 @@ const MatriculaPage = () => {
       applyMatriculaValidation(latestValidation, materiasCatalogo);
       await loadDocumentosMatricula(latestValidation);
 
-      if (latestValidation.status !== "CAN_CREATE") {
+      if (latestValidation.status === "NO_ACTIVE_PERIOD") {
         setErrorForm(
           latestValidation.message ||
             "No es posible crear matrícula en este momento.",
@@ -439,24 +430,50 @@ const MatriculaPage = () => {
         return;
       }
 
-      await crearMatriculaAcademica({
-        estudianteId,
-        periodoId,
-        asignaturas: selectedMaterias.map((materia) => ({
-          asignaturaId: materia.id,
-          grupo: materia.grupo.trim(),
-        })),
-      });
+      if (latestValidation.status === "CAN_CREATE") {
+        const missingRequiredDocument = documentos.some(
+          (documento) =>
+            documento.obligatorio &&
+            documento.uploadStatus !== "UPLOADED" &&
+            !documento.selectedFile,
+        );
+        if (missingRequiredDocument) {
+          setErrorForm(
+            "Debes adjuntar todos los documentos obligatorios antes de confirmar.",
+          );
+          return;
+        }
+
+        await crearMatriculaAcademica({
+          estudianteId,
+          periodoId,
+          asignaturas: selectedMaterias.map((materia) => ({
+            asignaturaId: materia.id,
+            grupo: materia.grupo.trim(),
+          })),
+        });
+      }
 
       const matriculaValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
       if (matriculaValidation.status !== "EXISTS") {
-        throw new Error("No fue posible obtener el trámite de matrícula creado.");
+        throw new Error("No fue posible obtener el trámite de matrícula vigente.");
       }
 
-      for (const documento of documentos) {
+      const documentosConCambios = documentos.filter(
+        (documento) => Boolean(documento.selectedFile),
+      );
+      if (
+        latestValidation.status === "EXISTS" &&
+        documentosConCambios.length === 0
+      ) {
+        setErrorForm("Selecciona al menos un documento nuevo para enviar.");
+        return;
+      }
+
+      for (const documento of documentosConCambios) {
         const file = documento.selectedFile;
-        if (!file || documento.uploadStatus === "UPLOADED") {
+        if (!file) {
           continue;
         }
 
@@ -519,7 +536,11 @@ const MatriculaPage = () => {
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
       await loadDocumentosMatricula(matriculaValidation);
 
-      window.alert("Matrícula registrada correctamente.");
+      window.alert(
+        latestValidation.status === "CAN_CREATE"
+          ? "Matrícula registrada correctamente."
+          : "Documentos actualizados correctamente.",
+      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -596,6 +617,24 @@ const MatriculaPage = () => {
       return searchable.includes(normalizedSearch);
     });
   }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText]);
+
+  const canConfirmMatricula = useMemo(() => {
+    if (isSubmitting || isReadOnlyMatriculaFinalizada) {
+      return false;
+    }
+
+    if (canCreateMatricula) {
+      return selectedMaterias.length > 0;
+    }
+
+    return hasExistingMatricula;
+  }, [
+    canCreateMatricula,
+    hasExistingMatricula,
+    isReadOnlyMatriculaFinalizada,
+    isSubmitting,
+    selectedMaterias.length,
+  ]);
 
 
 
@@ -886,7 +925,7 @@ const MatriculaPage = () => {
                   type="button"
                   className="matricula-page__confirm"
                   disabled={
-                    selectedMaterias.length === 0 || isSubmitting || !canCreateMatricula
+                    !canConfirmMatricula
                   }
                   onClick={() => void handleConfirmMatricula()}
                 >
