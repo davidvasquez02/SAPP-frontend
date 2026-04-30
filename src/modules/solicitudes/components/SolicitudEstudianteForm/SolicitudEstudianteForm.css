@@ -122,3 +122,28 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
+.solicitud-estudiante-form__motivos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.solicitud-estudiante-form__motivo-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.solicitud-estudiante-form__motivo-row button,
+.solicitud-estudiante-form__add-inline {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  background: var(--surface);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+}
+
+.solicitud-estudiante-form__add-inline {
+  align-self: flex-start;
+}

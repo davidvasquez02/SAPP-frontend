@@ -33,6 +33,7 @@ export interface SolicitudAcademicaDto {
   fechaRegistro: string
   fechaResolucion: string | null
   observaciones: string | null
+  motivosCreditoCondonable?: string[] | null
 }
 
 export interface CreateSolicitudRequestDto {
@@ -41,6 +42,7 @@ export interface CreateSolicitudRequestDto {
   fechaResolucion: string | null
   observaciones: string
   modalidadId?: number
+  motivosCreditoCondonable?: string[]
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
 }
 

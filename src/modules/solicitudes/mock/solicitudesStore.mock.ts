@@ -106,6 +106,7 @@ export const updateSolicitudEstudianteMock = (params: {
   id: number
   tipoSolicitudId: number
   observaciones: string
+  motivosCreditoCondonable?: string[]
 }): SolicitudCoordinadorDto => {
   const solicitudIndex = solicitudesStore.findIndex((solicitud) => solicitud.id === params.id)
 
@@ -127,6 +128,7 @@ export const updateSolicitudEstudianteMock = (params: {
     tipoSolicitudCodigo: tipoSolicitud.codigo,
     tipoSolicitud: tipoSolicitud.nombre,
     observaciones: params.observaciones,
+    motivosCreditoCondonable: params.motivosCreditoCondonable ?? solicitud.motivosCreditoCondonable ?? [],
   }
 
   solicitudesStore[solicitudIndex] = nextSolicitud

@@ -20,6 +20,7 @@ export interface SolicitudEstudiantePayload {
   tipoSolicitudId: number
   observaciones: string
   modalidadId: number | null
+  motivosCreditoCondonable: string[]
   solicitudHomologacionesAsignaturas: Array<{
     asignatura_origen_id: number
     asignatura_destino_id: number
@@ -95,6 +96,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
   const [asignaturasError, setAsignaturasError] = useState<string | null>(null)
   const [nuevaAsignaturaNombre, setNuevaAsignaturaNombre] = useState('')
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
+  const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -271,6 +273,11 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
         setErrorMsg('Debes seleccionar la modalidad de contraprestación para solicitudes de crédito condonable.')
         return false
       }
+      const motivosValidos = motivosCredito.map((item) => item.trim()).filter(Boolean)
+      if (motivosValidos.length === 0) {
+        setErrorMsg('Debes agregar al menos un motivo para la solicitud de crédito condonable.')
+        return false
+      }
     }
     if (isHomologacion) {
       if (asignaturasError) {
@@ -313,6 +320,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
     setModalidadId(null)
     setHomologaciones([])
     setNuevaAsignaturaNombre('')
+    setMotivosCredito([''])
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -327,6 +335,7 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
       tipoSolicitudId,
       observaciones,
       modalidadId,
+      motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
       solicitudHomologacionesAsignaturas: homologaciones
         .filter((item) => item.asignaturaOrigenId !== null && item.asignaturaDestinoId !== null)
         .map((item) => ({
@@ -376,6 +385,19 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
     value: number | null,
   ) => {
     setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, [key]: value } : item)))
+  }
+
+
+  const updateMotivo = (index: number, value: string) => {
+    setMotivosCredito((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  const addMotivo = () => {
+    setMotivosCredito((current) => [...current, ''])
+  }
+
+  const removeMotivo = (index: number) => {
+    setMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
   }
 
   const addMockAsignatura = () => {
@@ -449,6 +471,25 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
               ))}
             </select>
           )}
+
+          <div className="solicitud-estudiante-form__motivos">
+            <label>Motivos para la solicitud del crédito condonable *</label>
+            {motivosCredito.map((motivo, index) => (
+              <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
+                <input
+                  value={motivo}
+                  onChange={(event) => updateMotivo(index, event.target.value)}
+                  placeholder={`Motivo ${index + 1}`}
+                />
+                <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
+                  −
+                </button>
+              </div>
+            ))}
+            <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
+              + Agregar motivo
+            </button>
+          </div>
         </div>
       )}
 
