@@ -50,6 +50,7 @@ type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 export interface InscripcionDetalleOutletContext {
   isEstadoFinal: boolean
+  evaluacionStatus: 'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
 }
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
@@ -468,7 +469,7 @@ const InscripcionAdmisionDetallePage = () => {
     [activeKey, basePath, navigate, sectionAvailability],
   )
 
-  const outlet = <Outlet context={{ isEstadoFinal } satisfies InscripcionDetalleOutletContext} />
+  const outlet = <Outlet context={{ isEstadoFinal, evaluacionStatus } satisfies InscripcionDetalleOutletContext} />
   const sectionsToRender = isProfesorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS

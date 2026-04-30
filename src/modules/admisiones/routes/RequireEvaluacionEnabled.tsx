@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { getEvaluacionEstado } from '../api/evaluacionAdmisionEstadoService'
 import type { EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
+import type { InscripcionDetalleOutletContext } from '../../../pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
 
 interface RequireEvaluacionEnabledProps {
   etapa: EtapaEvaluacion
@@ -13,6 +14,7 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null)
+  const { evaluacionStatus } = useOutletContext<InscripcionDetalleOutletContext>()
 
   useEffect(() => {
     let isMounted = true
@@ -23,6 +25,21 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
       : '/admisiones'
 
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
+      navigate(fallbackPath, { replace: true })
+      setIsAllowed(false)
+      return () => {
+        isMounted = false
+      }
+    }
+
+    if (evaluacionStatus === 'STARTED') {
+      setIsAllowed(true)
+      return () => {
+        isMounted = false
+      }
+    }
+
+    if (evaluacionStatus === 'NOT_STARTED' || evaluacionStatus === 'ERROR') {
       navigate(fallbackPath, { replace: true })
       setIsAllowed(false)
       return () => {
@@ -54,7 +71,7 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
     return () => {
       isMounted = false
     }
-  }, [convocatoriaId, etapa, inscripcionId, navigate])
+  }, [convocatoriaId, etapa, evaluacionStatus, inscripcionId, navigate])
 
   if (isAllowed === null) {
     return <div>Cargando...</div>
