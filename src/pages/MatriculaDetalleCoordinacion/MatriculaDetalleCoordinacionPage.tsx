@@ -527,7 +527,14 @@ const MatriculaDetalleCoordinacionPage = () => {
                 <p>Valida documentos obligatorios y complementarios antes de aprobar.</p>
               </header>
 
-              {sortedDocumentos.length === 0 ? (
+              {isLoading ? (
+                <div className="matricula-detalle__docs-loading" aria-live="polite">
+                  <p className="matricula-detalle__docs-loading-label">Cargando documentos…</p>
+                  <p className="matricula-detalle__docs-loading-hint">
+                    Estamos consultando los soportes de la matrícula para validación de coordinación.
+                  </p>
+                </div>
+              ) : sortedDocumentos.length === 0 ? (
                 <p className="matricula-detalle__status">No hay documentos registrados para esta matrícula.</p>
               ) : (
                 <div className="matricula-detalle__documents">
