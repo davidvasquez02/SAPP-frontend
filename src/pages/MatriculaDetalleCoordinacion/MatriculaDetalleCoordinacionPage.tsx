@@ -173,8 +173,8 @@ const MatriculaDetalleCoordinacionPage = () => {
             let decision: MatriculaAsignaturaValidacionDecision | '' = ''
             if (estado === 'APROBADA' || estado === 'MATRICULADA') {
               decision = 'APROBADA'
-            } else if (estado === 'RECHAZADA') {
-              decision = 'RECHAZADA'
+            } else if (estado === 'RECHAZADA' || estado === 'NO_MATRICULADA') {
+              decision = 'NO_MATRICULADA'
             }
 
             acc[asignatura.id] = {
@@ -379,8 +379,8 @@ const MatriculaDetalleCoordinacionPage = () => {
 
         if (estado === 'APROBADA' || estado === 'MATRICULADA') {
           decision = 'APROBADA'
-        } else if (estado === 'RECHAZADA') {
-          decision = 'RECHAZADA'
+        } else if (estado === 'RECHAZADA' || estado === 'NO_MATRICULADA') {
+          decision = 'NO_MATRICULADA'
         }
 
         acc[asignatura.id] = {
@@ -689,25 +689,32 @@ const MatriculaDetalleCoordinacionPage = () => {
                     <tr>
                       <th>Código</th>
                       <th>Asignatura</th>
-                      <th>Grupo</th>
                       <th>Estado</th>
                       <th>Validación coordinación</th>
                       <th>Comentarios</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {matricula.asignaturas.map((asignatura) => (
+                    {matricula.asignaturas.map((asignatura) => {
+                      const currentDecision = asignaturasDecision[asignatura.id]?.decision
+                      const isRejectSelected = currentDecision === 'NO_MATRICULADA'
+                      const isRejectedPersisted = ['RECHAZADA', 'NO_MATRICULADA'].includes(
+                        asignatura.estado.toUpperCase(),
+                      )
+                      const disableComments =
+                        disableAsignaturasValidation || !isRejectSelected || isRejectedPersisted
+
+                      return (
                       <tr key={asignatura.id}>
                         <td>{asignatura.asignaturaCodigo ?? '—'}</td>
                         <td>{asignatura.asignaturaNombre}</td>
-                        <td>{asignatura.grupo}</td>
                         <td>{asignatura.estado}</td>
                         <td>
                           <div className="matricula-detalle__decision-group">
                             <button
                               type="button"
                               className={`matricula-detalle__decision-button matricula-detalle__decision-button--approve ${
-                                asignaturasDecision[asignatura.id]?.decision === 'APROBADA'
+                                currentDecision === 'APROBADA'
                                   ? 'matricula-detalle__decision-button--active'
                                   : ''
                               }`}
@@ -716,21 +723,21 @@ const MatriculaDetalleCoordinacionPage = () => {
                               }
                               disabled={disableAsignaturasValidation}
                             >
-                              Aprobar
+                              {currentDecision === 'APROBADA' ? 'Aprobada' : 'Aprobar'}
                             </button>
                             <button
                               type="button"
                               className={`matricula-detalle__decision-button matricula-detalle__decision-button--reject ${
-                                asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'
+                                isRejectSelected
                                   ? 'matricula-detalle__decision-button--active'
                                   : ''
                               }`}
                               onClick={() =>
-                                updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
+                                updateAsignaturaDecision(asignatura.id, { decision: 'NO_MATRICULADA' })
                               }
                               disabled={disableAsignaturasValidation}
                             >
-                              Rechazar
+                              {isRejectSelected ? 'Rechazada' : 'Rechazar'}
                             </button>
                           </div>
                         </td>
@@ -745,10 +752,11 @@ const MatriculaDetalleCoordinacionPage = () => {
                             }
                             placeholder="Observaciones de validación"
                             rows={2}
+                            disabled={disableComments}
                           />
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
