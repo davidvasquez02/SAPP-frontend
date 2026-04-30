@@ -811,18 +811,21 @@ const MatriculaPage = () => {
             </section>
 
             <section className="matricula-page__card">
-              <h4>Cargue de documentos</h4>
-              <p className="matricula-page__description">
-                Revisa y carga los documentos solicitados para la matrícula.
-              </p>
+              {!isReadOnlyMatriculaFinalizada ? <h4>Cargue de documentos</h4> : null}
+              {!isReadOnlyMatriculaFinalizada ? (
+                <p className="matricula-page__description">
+                  Revisa y carga los documentos solicitados para la matrícula.
+                </p>
+              ) : null}
               {loadingForm ? (
                 <p className="matricula-page__status">Cargando documentos...</p>
               ) : null}
               {!loadingForm && !errorForm ? (
                 <DocumentosRequeridosTable
                   documentos={documentos}
-                  disabledActions={isReadOnlyMatriculaFinalizada}
-                  showActions={!isReadOnlyMatriculaFinalizada}
+                  disabledActions={false}
+                  showActions
+                  uploadDisabledOnly={isReadOnlyMatriculaFinalizada}
                   onSelectFile={(docId, file) => {
                     setDocumentos((current) =>
                       current.map((item) => {

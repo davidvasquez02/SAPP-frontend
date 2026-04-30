@@ -10,6 +10,7 @@ type DocumentosRequeridosTableProps = {
   onSelectFile?: (docId: number, file: File | null) => void
   disabledActions?: boolean
   showActions?: boolean
+  uploadDisabledOnly?: boolean
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -29,7 +30,14 @@ const formatDateOnly = (value: string | null) => {
   return date.toISOString().slice(0, 10)
 }
 
-const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disabledActions = false, showActions = true }: DocumentosRequeridosTableProps) => {
+const DocumentosRequeridosTable = ({
+  documentos,
+  onAction,
+  onSelectFile,
+  disabledActions = false,
+  showActions = true,
+  uploadDisabledOnly = false,
+}: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   return (
@@ -82,7 +90,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disable
                     </button>
                     <button
                       type="button"
-                      disabled={disabledActions || doc.uploadStatus === 'UPLOADING'}
+                      disabled={disabledActions || uploadDisabledOnly || doc.uploadStatus === 'UPLOADING'}
                       onClick={() => {
                         onAction?.(doc.id, 'SUBIR')
                         fileInputRefs.current[doc.id]?.click()
@@ -99,7 +107,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disable
                       }}
                       className="documentos-requeridos-table__file-input"
                       type="file"
-                      disabled={disabledActions}
+                      disabled={disabledActions || uploadDisabledOnly}
                       onChange={(event) => {
                         onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                       }}

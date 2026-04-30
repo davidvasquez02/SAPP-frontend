@@ -1,6 +1,7 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), si la matrícula vigente está `FINALIZADA`, el bloque documental ahora oculta su título/descripción de “Cargue de documentos”; en la tabla de documentos quedan habilitadas únicamente las acciones **Ver** y **Descargar** (acción **Subir** deshabilitada).
 - April 30, 2026 (latest): en `/matricula` (perfil `ESTUDIANTE`) se cambió la validación de grupos al confirmar matrícula: ya no se muestra el mensaje bloqueante “Debes asignar un grupo...”. Ahora, al intentar confirmar con grupos vacíos, se resaltan en rojo únicamente los campos `Grupo` faltantes (sin modales), y el resaltado se limpia automáticamente cuando todos quedan diligenciados.
 - April 30, 2026 (latest): en el mismo flujo se compactó el control de grupo por asignatura (2 caracteres máximo, input angosto, centrado y en mayúsculas) para ajustarse al uso real de siglas cortas.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) el bloque de **Documentos de la matrícula** quedó primero y el bloque de **Asignaturas registradas** quedó en segundo lugar, según flujo operativo de revisión documental previa.
