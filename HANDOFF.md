@@ -723,3 +723,36 @@
 ### Recent test results + logs
 - Pending in this handoff section; see latest CI/local command outputs in task summary for exact command status.
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores tras remover el popup de éxito y mantener refresh silencioso del listado de documentos.
+
+## Update — April 30, 2026 (Matrícula coordinación, aprobación sin recarga completa)
+
+### Current status
+- Ajustado `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`: el botón **Aprobar documentos** ya no llama `loadDetalle()` (que activaba `isLoading` y parpadeo de pantalla completa).
+- Se agregó `refreshMatriculaAfterApproval()` para refrescar únicamente lo necesario tras `aprobarMatriculaAcademica(matricula.id)`: consulta paralela de `getMatriculasAcademicas()` y `getDocumentosMatriculaAcademica(matriculaId)`, luego actualización de `matricula`, `documentos` y `asignaturasDecision`.
+
+### Open challenges
+- El refresco sigue dependiendo de `GET /sapp/matriculaAcademica` (listado completo + filtro en frontend). Si backend expone endpoint de detalle por id, conviene migrar para reducir payload y latencia.
+
+### Next steps
+1. Validar manualmente en `/matricula/:matriculaId` (COORDINACION/ADMIN) que al aprobar documentos no aparezca el estado global “Cargando detalle de matrícula...”.
+2. Verificar que cambie el estado de matrícula/asignaturas en pantalla tras aprobación sin perder scroll/contexto.
+3. Considerar factorizar una función compartida de hidratación de `matricula`/`asignaturasDecision` para evitar duplicación entre `loadDetalle` y `refreshMatriculaAfterApproval`.
+
+### Paths / artifacts
+- `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`
+- `README.md` (changelog-lite)
+- `HANDOFF.md` (estado de continuidad)
+
+### Schemas / contracts and expected outputs
+- `PUT /sapp/matriculaAcademica/{matriculaId}`: aprueba matrícula cuando requisitos documentales se cumplen.
+- Refresh post-acción:
+  - `GET /sapp/matriculaAcademica` (selección por `id` en frontend)
+  - `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` (vía servicio)
+- Resultado esperado UI: actualización de estado sin recarga completa ni spinner global.
+
+### Environment snapshot
+- Entorno npm existente del repo (sin venv/conda/poetry).
+- No crear entornos duplicados.
+
+### Recent test results + logs
+- `npm run lint` → ❌ falla por issues preexistentes fuera del alcance del cambio (ej. `no-explicit-any`, reglas `react-hooks/*`, `react-refresh/only-export-components` en archivos no modificados por este ajuste).
