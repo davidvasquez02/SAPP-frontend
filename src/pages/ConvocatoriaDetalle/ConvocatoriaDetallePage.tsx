@@ -91,7 +91,19 @@ const ConvocatoriaDetallePage = () => {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
-      setError(message)
+      const normalizedMessage = message.toLowerCase()
+      const isEmptyInscripcionesResponse =
+        normalizedMessage.includes('inscrip') &&
+        (normalizedMessage.includes('no hay') ||
+          normalizedMessage.includes('no existe') ||
+          normalizedMessage.includes('sin registros'))
+
+      if (isEmptyInscripcionesResponse) {
+        setInscripciones([])
+        setError(null)
+      } else {
+        setError(message)
+      }
     } finally {
       setIsLoading(false)
     }

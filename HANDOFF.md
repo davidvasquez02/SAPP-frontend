@@ -1,45 +1,28 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Se corrigió el modal **Nueva convocatoria** en `/admisiones/convocatorias`: el combo de programas ya no depende de convocatorias existentes.
-- Ahora se consume `GET /sapp/programaAcademico` para poblar opciones y se mantiene fallback a programas derivados de convocatorias por resiliencia.
-- El submit sigue enviando `programaId` numérico dentro de `POST /sapp/convocatoriaAdmision` (contrato esperado por backend).
+- Se ajustó `/admisiones/convocatoria/:convocatoriaId` para manejar correctamente convocatorias sin inscripciones.
+- Si backend responde “no hay/no existe/sin registros” para inscripciones, la UI ahora muestra estado vacío neutro: **No hay inscripciones para esta convocatoria.**
+- Ya no se presenta ese caso como error (sin texto rojo) y no aparece botón **Reintentar** en ese escenario.
 
 ## Archivos tocados
-- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Confirmar con backend si el endpoint `/sapp/programaAcademico` siempre retorna `codigoNombre` con formato estable (actualmente se parsea para etiqueta UI).
-2. Resolver errores TypeScript preexistentes del repo que bloquean `npm run build` global (no introducidos por este cambio).
+1. Confirmar con backend si la ausencia de inscripciones debería estandarizarse como `ok=true,data=[]` para eliminar inferencia por mensaje.
+2. Mantener consistencia de mensajes backend (evitar variantes excesivas de “sin registros”).
 
 ## Próximos pasos recomendados
-1. Probar manualmente flujo completo en navegador:
-   - abrir modal,
-   - seleccionar programa (MISI/DCC),
-   - crear convocatoria y validar payload real en Network.
-2. Agregar prueba de integración UI (RTL/Vitest) para asegurar que el combo de programas se puebla desde API aunque no existan convocatorias.
+1. Validar manualmente en `http://localhost:5173/admisiones/convocatoria/19` con una convocatoria vacía.
+2. (Opcional) Extraer helper compartido para clasificar respuestas “empty-state” por módulo en vez de lógica inline por página.
 
 ## Contratos/Esquemas esperados
-### Programas
-- `GET /sapp/programaAcademico`
-- Respuesta esperada:
-  - `{ ok, message, data: Array<{ id, nombre, codigoNombre }> }`
-
-### Crear convocatoria
-- `POST /sapp/convocatoriaAdmision`
-- Body ejemplo:
-```json
-{
-  "cupos": 5,
-  "fechaFin": "2026-02-10",
-  "fechaInicio": "2026-01-29",
-  "observaciones": "observadassss",
-  "programaId": 2,
-  "periodoId": 2
-}
-```
+### Inscripciones por convocatoria
+- `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}`
+- Ideal esperado: `{ ok: true, message: string, data: [] }` cuando no hay registros.
+- Estado actual tolerado por frontend: respuestas con mensaje semántico de “no hay/no existe/sin registros” se interpretan como vacío.
 
 ## Entorno exacto y paquetes
 - Runtime: Node.js + npm (sin venv/conda/poetry).
@@ -55,8 +38,8 @@ npm run lint
 ```
 
 ## Últimos resultados de pruebas
-- `npm run build`: **falló** por errores TypeScript preexistentes en módulos no relacionados (ModuleLayout/evaluación/documentos).
-- No se ejecutaron pruebas automáticas adicionales en este cambio.
+- `npm run lint`: falló por errores preexistentes del repositorio en módulos no relacionados (no introducidos por este ajuste).
+- No se ejecutó `npm run build` en este ajuste puntual (cambio acotado de comportamiento UI).
 
 ## Logs útiles
-- Verificar en DevTools Network que `POST /sapp/convocatoriaAdmision` incluya `programaId` (`1` MISI, `2` DCC) según selección del combo.
+- Verificar en UI que, para convocatoria sin registros, se renderice solo mensaje neutro y no bloque de error/reintento.
