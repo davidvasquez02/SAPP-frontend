@@ -188,6 +188,7 @@ const MatriculaPage = () => {
 
           return {
             ...materiaCatalogo,
+            codigo: materiaCatalogo.codigo ?? asignatura.asignaturaCodigo,
             grupo: asignatura.grupo,
             addedAt: new Date().toISOString(),
           } satisfies MateriaSeleccionada;
