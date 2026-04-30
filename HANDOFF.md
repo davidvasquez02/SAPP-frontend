@@ -1,6 +1,8 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) el bloque de **Documentos de la matrícula** quedó primero y el bloque de **Asignaturas registradas** quedó en segundo lugar, según flujo operativo de revisión documental previa.
+- April 30, 2026 (latest): en el mismo detalle de matrícula se renombró la acción final de `Aprobar matrícula` a **Aprobar documentos**; al hacer click (con obligatorios aprobados) ahora se ejecuta `PUT /sapp/matriculaAcademica/{matriculaId}`.
 
 - April 24, 2026 (latest): se homologó el estilo de filtros para listas principales en frontend con clases compartidas en `src/styles/globals.css` (`.sapp-filters-panel`, `.sapp-filter-field`, `.sapp-filters-actions`, `.sapp-filters-clear-button`) y se migraron las vistas de matrícula, convocatorias, estudiantes de coordinación y filtros de solicitudes para un look-and-feel consistente.
 - April 24, 2026 (latest): hotfix en `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` para evitar ciclo infinito en rol `PROFESOR/DOCENTE` al abrir un aspirante sin evaluación iniciada. Antes, la pantalla base redirigía siempre a `/entrevistas`, pero el guard de ruta devolvía al fallback cuando `GET /sapp/evaluacionAdmision/info?inscripcionId={id}` retornaba no iniciado (404/`ok:false`), generando loop de navegación y nuevas llamadas. Ahora la redirección automática a entrevistas solo corre cuando `evaluacionStatus === "STARTED"`.

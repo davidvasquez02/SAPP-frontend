@@ -319,7 +319,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     }
   }
 
-  const handleAprobarMatricula = async () => {
+  const handleAprobarDocumentos = async () => {
     if (!matricula) {
       return
     }
@@ -416,109 +416,6 @@ const MatriculaDetalleCoordinacionPage = () => {
 
         {!isLoading && matricula ? (
           <>
-            <article className="matricula-detalle__card">
-              <header className="matricula-detalle__header">
-                <h2>Matrícula #{matricula.id}</h2>
-                <p>{matricula.programaAcademico}</p>
-              </header>
-
-              <div className="matricula-detalle__grid">
-                <p>
-                  <strong>Estudiante:</strong> {matricula.estudianteNombreCompleto}
-                </p>
-                <p>
-                  <strong>Código UIS:</strong> {matricula.codigoEstudianteUis ?? '—'}
-                </p>
-                <p>
-                  <strong>Periodo:</strong> {matricula.periodoAcademico}
-                </p>
-                <p>
-                  <strong>Estado:</strong> {matricula.estado}
-                </p>
-                <p>
-                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
-                </p>
-                <p>
-                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
-                </p>
-              </div>
-
-              <h3>Asignaturas registradas</h3>
-              <div className="matricula-detalle__table-wrapper sapp-table-shell">
-                <table className="matricula-detalle__table sapp-table" role="grid">
-                  <thead>
-                    <tr>
-                      <th>Código</th>
-                      <th>Asignatura</th>
-                      <th>Grupo</th>
-                      <th>Estado</th>
-                      <th>Validación coordinación</th>
-                      <th>Comentarios</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matricula.asignaturas.map((asignatura) => (
-                      <tr key={asignatura.id}>
-                        <td>{asignatura.asignaturaCodigo ?? '—'}</td>
-                        <td>{asignatura.asignaturaNombre}</td>
-                        <td>{asignatura.grupo}</td>
-                        <td>{asignatura.estado}</td>
-                        <td>
-                          <div className="matricula-detalle__decision-group">
-                            <label>
-                              <input
-                                type="radio"
-                                name={`decision-asig-${asignatura.id}`}
-                                checked={asignaturasDecision[asignatura.id]?.decision === 'APROBADA'}
-                                onChange={() =>
-                                  updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
-                                }
-                              />
-                              Aprobar
-                            </label>
-                            <label>
-                              <input
-                                type="radio"
-                                name={`decision-asig-${asignatura.id}`}
-                                checked={asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'}
-                                onChange={() =>
-                                  updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
-                                }
-                              />
-                              Rechazar
-                            </label>
-                          </div>
-                        </td>
-                        <td>
-                          <textarea
-                            className="matricula-detalle__asignatura-comments"
-                            value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
-                            onChange={(event) =>
-                              updateAsignaturaDecision(asignatura.id, {
-                                observaciones: event.target.value,
-                              })
-                            }
-                            placeholder="Observaciones de validación"
-                            rows={2}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="matricula-detalle__asignatura-actions">
-                <button
-                  type="button"
-                  className="matricula-detalle__approve-button"
-                  onClick={() => void handleGuardarValidacionAsignaturas()}
-                  disabled={isSavingAsignaturas}
-                >
-                  {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
-                </button>
-              </div>
-            </article>
-
             <article className="matricula-detalle__card">
               <header className="matricula-detalle__header">
                 <h3>Documentos de la matrícula</h3>
@@ -669,15 +566,119 @@ const MatriculaDetalleCoordinacionPage = () => {
                     <button
                       type="button"
                       className="matricula-detalle__approve-button"
-                      onClick={() => void handleAprobarMatricula()}
+                      onClick={() => void handleAprobarDocumentos()}
                       disabled={!allRequiredApproved || isApprovingMatricula}
                     >
-                      {isApprovingMatricula ? 'Aprobando matrícula...' : 'Aprobar matrícula'}
+                      {isApprovingMatricula ? 'Aprobando documentos...' : 'Aprobar documentos'}
                     </button>
                   </footer>
                 </div>
               )}
             </article>
+
+            <article className="matricula-detalle__card">
+              <header className="matricula-detalle__header">
+                <h2>Matrícula #{matricula.id}</h2>
+                <p>{matricula.programaAcademico}</p>
+              </header>
+
+              <div className="matricula-detalle__grid">
+                <p>
+                  <strong>Estudiante:</strong> {matricula.estudianteNombreCompleto}
+                </p>
+                <p>
+                  <strong>Código UIS:</strong> {matricula.codigoEstudianteUis ?? '—'}
+                </p>
+                <p>
+                  <strong>Periodo:</strong> {matricula.periodoAcademico}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {matricula.estado}
+                </p>
+                <p>
+                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
+                </p>
+                <p>
+                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
+                </p>
+              </div>
+
+              <h3>Asignaturas registradas</h3>
+              <div className="matricula-detalle__table-wrapper sapp-table-shell">
+                <table className="matricula-detalle__table sapp-table" role="grid">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Asignatura</th>
+                      <th>Grupo</th>
+                      <th>Estado</th>
+                      <th>Validación coordinación</th>
+                      <th>Comentarios</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matricula.asignaturas.map((asignatura) => (
+                      <tr key={asignatura.id}>
+                        <td>{asignatura.asignaturaCodigo ?? '—'}</td>
+                        <td>{asignatura.asignaturaNombre}</td>
+                        <td>{asignatura.grupo}</td>
+                        <td>{asignatura.estado}</td>
+                        <td>
+                          <div className="matricula-detalle__decision-group">
+                            <label>
+                              <input
+                                type="radio"
+                                name={`decision-asig-${asignatura.id}`}
+                                checked={asignaturasDecision[asignatura.id]?.decision === 'APROBADA'}
+                                onChange={() =>
+                                  updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
+                                }
+                              />
+                              Aprobar
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                name={`decision-asig-${asignatura.id}`}
+                                checked={asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'}
+                                onChange={() =>
+                                  updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
+                                }
+                              />
+                              Rechazar
+                            </label>
+                          </div>
+                        </td>
+                        <td>
+                          <textarea
+                            className="matricula-detalle__asignatura-comments"
+                            value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
+                            onChange={(event) =>
+                              updateAsignaturaDecision(asignatura.id, {
+                                observaciones: event.target.value,
+                              })
+                            }
+                            placeholder="Observaciones de validación"
+                            rows={2}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="matricula-detalle__asignatura-actions">
+                <button
+                  type="button"
+                  className="matricula-detalle__approve-button"
+                  onClick={() => void handleGuardarValidacionAsignaturas()}
+                  disabled={isSavingAsignaturas}
+                >
+                  {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
+                </button>
+              </div>
+            </article>
+
           </>
         ) : null}
 
