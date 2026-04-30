@@ -2,6 +2,7 @@
 
 - April 30, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` (rol COORDINACION), en la pestaña de Matrículas se removió el rótulo con consecutivo (`Matrícula #{id}`) y se homologaron acciones documentales para Matrículas/Admisión/Solicitudes con botones **Ver**/**Descargar** basados en `base64 + mimeType` retornados por `GET /sapp/document`.
 ## Current Status
+- April 30, 2026 (latest): hotfix en `/coordinacion/estudiantes/:estudianteId` para manejo de admisión inexistente por aspirante. El servicio `GET /sapp/inscripcionAdmision/aspirante/{id}` ahora tolera 404 de negocio (“No existe una inscripcion admision con el id proporcionado”) y retorna lista vacía en frontend; el detalle no se bloquea y mantiene visibles Matrículas + Solicitudes.
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/*` (coordinación), se removió el texto `Inscripción #{id}` de las 4 etapas y se corrigió el “refresh visual” al abrir **Documentos cargados**. El estado local ya no se reinicia por navegación interna entre subrutas (`location.state` opcional), evitando que desaparezca/aparezca nuevamente el badge de estado.
 - April 30, 2026 (latest): en admisiones detalle de inscripción se redujeron llamadas redundantes al cambiar entre secciones de evaluación usando caché en memoria por `inscripcionId+etapa` (evaluación) y por `inscripcionId` (PDF hoja de vida), evitando refetches innecesarios en recargas parciales y navegación entre acordeones; además, cuando el estado es `ADMITIDO` o `RECHAZADO`, la UI queda en modo solo lectura (inputs/acciones deshabilitados) en Documentos, Hoja de vida, Examen y Entrevistas.
 - April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
@@ -72,6 +73,8 @@
 
 ## Recent Tests + Logs
 
+- `npx eslint src/modules/estudiantes/services/estudianteDetalleService.ts` → ✅ sin errores en el hotfix de tolerancia a 404 de admisión inexistente.
+
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx` → ✅ sin errores de lint en los archivos tocados para ajuste de grupos/validación visual (npm mostró warning no bloqueante de config `http-proxy`).
 
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.tsx` → ✅ sin errores para los archivos TSX tocados de homologación de filtros.
@@ -92,6 +95,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 30, 2026 (latest): hotfix en `/coordinacion/estudiantes/:estudianteId` para manejo de admisión inexistente por aspirante. El servicio `GET /sapp/inscripcionAdmision/aspirante/{id}` ahora tolera 404 de negocio (“No existe una inscripcion admision con el id proporcionado”) y retorna lista vacía en frontend; el detalle no se bloquea y mantiene visibles Matrículas + Solicitudes.
 - April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 
@@ -655,6 +659,7 @@
 ## Update — April 30, 2026
 
 ### Current Status
+- April 30, 2026 (latest): hotfix en `/coordinacion/estudiantes/:estudianteId` para manejo de admisión inexistente por aspirante. El servicio `GET /sapp/inscripcionAdmision/aspirante/{id}` ahora tolera 404 de negocio (“No existe una inscripcion admision con el id proporcionado”) y retorna lista vacía en frontend; el detalle no se bloquea y mantiene visibles Matrículas + Solicitudes.
 - April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - Home (`/`) no longer shows account/session detail blocks. It now renders shortcut cards to the same modules exposed in sidebar (Solicitudes, Matrícula, Estudiantes, Admisiones, Configuración), filtered by user role permissions.

@@ -91,19 +91,33 @@ export const getSolicitudesByEstudiante = async (estudianteId: number): Promise<
 }
 
 export const getAdmisionesByAspirante = async (aspiranteId: number): Promise<AdmisionResumen[]> => {
-  const response = await httpGet<ApiResponse<AdmisionBackendDto | null>>(
-    `${ADMISION_BY_ASPIRANTE_ENDPOINT}/${encodeURIComponent(aspiranteId)}`,
-  )
+  try {
+    const response = await httpGet<ApiResponse<AdmisionBackendDto | null>>(
+      `${ADMISION_BY_ASPIRANTE_ENDPOINT}/${encodeURIComponent(aspiranteId)}`,
+    )
 
-  if (!response.ok) {
-    throw new Error(response.message || 'No fue posible cargar las admisiones del aspirante.')
+    if (!response.ok) {
+      throw new Error(response.message || 'No fue posible cargar las admisiones del aspirante.')
+    }
+
+    if (!response.data) {
+      return []
+    }
+
+    return [await mapAdmisionResumen(response.data)]
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    const normalized = message.toLowerCase()
+
+    if (
+      normalized.includes('no existe una inscripcion admision') ||
+      normalized.includes('inscripcion admision con el id proporcionado')
+    ) {
+      return []
+    }
+
+    throw error
   }
-
-  if (!response.data) {
-    return []
-  }
-
-  return [await mapAdmisionResumen(response.data)]
 }
 
 export type { DocumentoTramiteItemDto }
