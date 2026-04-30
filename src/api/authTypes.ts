@@ -16,8 +16,16 @@ export interface PersonaDto {
   telefono: string | null
 }
 
+export interface EstudianteFotoDto {
+  documentoId: number
+  nombreArchivo: string
+  contenidoBase64: string
+  mimeType: string
+}
+
 export interface EstudianteDto {
   id: number
+  foto?: EstudianteFotoDto | null
   [key: string]: unknown
 }
 

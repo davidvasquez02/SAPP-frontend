@@ -32,6 +32,17 @@
     text-align: right;
 }
 
+
+.module-layout__avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid color-mix(in srgb, var(--outline), transparent 20%);
+    background: var(--surface-container-low);
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--outline), transparent 75%);
+}
+
 .module-layout__user-name {
     margin: 0;
     font-weight: 600;
