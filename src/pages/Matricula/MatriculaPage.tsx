@@ -35,6 +35,28 @@ import "./MatriculaPage.css";
 
 const TIPO_TRAMITE_ID_MATRICULA = 2;
 
+const PROGRAMAS_COORDINACION_LABELS: Record<string, string> = {
+  MISI: "Maestría en Ingeniería de Sistemas e Informática",
+  DCC: "Doctorado en Ciencias de la Computación",
+};
+
+const resolveProgramaLabel = (programa: string): string => {
+  if (programa === "TODOS") {
+    return "Seleccione un programa...";
+  }
+
+  const normalized = programa.toUpperCase();
+  const codigo = Object.keys(PROGRAMAS_COORDINACION_LABELS).find((item) =>
+    normalized.includes(item),
+  );
+
+  if (!codigo) {
+    return programa;
+  }
+
+  return `${codigo} · ${PROGRAMAS_COORDINACION_LABELS[codigo]}`;
+};
+
 const formatDateTime = (value: string | null) => {
   if (!value) {
     return "—";
@@ -667,14 +689,14 @@ const MatriculaPage = () => {
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
             <div className="matricula-page__filters-top-row">
               <label className="sapp-filter-field matricula-page__filter-field">
-                <span>Programa</span>
+                <span>Programa académico</span>
                 <select
                   value={programaFilter}
                   onChange={(event) => setProgramaFilter(event.target.value)}
                 >
                   {programas.map((programa) => (
                     <option key={programa} value={programa}>
-                      {programa}
+                      {resolveProgramaLabel(programa)}
                     </option>
                   ))}
                 </select>
