@@ -43,6 +43,9 @@ const INSCRIPCION_SECTIONS = [
 
 type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
+export interface InscripcionDetalleOutletContext {
+  isEstadoFinal: boolean
+}
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 const EVALUACION_RETRY_ATTEMPTS = 5
@@ -419,7 +422,7 @@ const InscripcionAdmisionDetallePage = () => {
     [activeKey, basePath, navigate, sectionAvailability],
   )
 
-  const outlet = <Outlet />
+  const outlet = <Outlet context={{ isEstadoFinal } satisfies InscripcionDetalleOutletContext} />
   const sectionsToRender = isProfesorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS

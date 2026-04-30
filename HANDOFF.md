@@ -1,6 +1,7 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en admisiones detalle de inscripción se redujeron llamadas redundantes al cambiar entre secciones de evaluación usando caché en memoria por `inscripcionId+etapa` (evaluación) y por `inscripcionId` (PDF hoja de vida), evitando refetches innecesarios en recargas parciales y navegación entre acordeones; además, cuando el estado es `ADMITIDO` o `RECHAZADO`, la UI queda en modo solo lectura (inputs/acciones deshabilitados) en Documentos, Hoja de vida, Examen y Entrevistas.
 - April 30, 2026 (latest): en `/matricula` (ESTUDIANTE) se ajustó el dropdown del buscador de asignaturas para incluir `Nivel` en cada opción (`codigo · Nivel N`) y se corrigieron acciones de documentos en tabla para **Ver**/**Descargar** usando el contenido base64/mime retornado por `GET /sapp/document` cuando existe archivo cargado.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - April 30, 2026 (latest): en `/matricula` se retiró `grupo` del flujo de materias para todos los roles (sin columna, sin input y sin validaciones asociadas).

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../../../components'
 import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
@@ -23,6 +23,7 @@ import {
   CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
 } from '../../../documentos/constants'
 import './EvaluacionEtapaPage.css'
+import type { InscripcionDetalleOutletContext } from '../../../../pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
 
 interface EvaluacionEtapaPageProps {
   title: string
@@ -35,6 +36,8 @@ interface HojaVidaPreviewDocument {
   mimeType: string
   filename: string
 }
+const evaluacionCache = new Map<string, EvaluacionAdmisionItem[]>()
+const hojaVidaDocCache = new Map<number, HojaVidaPreviewDocument>()
 
 const buildValidationMessage = (
   puntajeAspirante: number | undefined,
@@ -61,6 +64,7 @@ const normalizeWhitespaceUpper = (value: string | null | undefined): string =>
 const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapaPageProps) => {
   const { session } = useAuth()
   const { convocatoriaId, inscripcionId } = useParams()
+  const { isEstadoFinal = false } = useOutletContext<InscripcionDetalleOutletContext>()
   const [items, setItems] = useState<EvaluacionAdmisionItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -110,11 +114,23 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       return
     }
 
+    const cacheKey = `${inscripcionIdNumber}-${etapa}`
+    const cachedItems = evaluacionCache.get(cacheKey)
+    if (cachedItems) {
+      setItems(cachedItems.filter(shouldIncludeByProfesor))
+      setDrafts({})
+      setModifiedByRow({})
+      setErrorsByRow({})
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
       const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
+      evaluacionCache.set(cacheKey, data)
       setItems(data.filter(shouldIncludeByProfesor))
       setDrafts({})
       setModifiedByRow({})
@@ -157,6 +173,13 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       setHojaVidaPreviewDoc(null)
 
       try {
+        const cachedDoc = hojaVidaDocCache.get(inscripcionIdNumber)
+        if (cachedDoc) {
+          setHojaVidaPreviewDoc(cachedDoc)
+          setHojaVidaDocStatus('ready')
+          return
+        }
+
         const documentos = await getDocumentosByTramiteParams({
           tramiteId: inscripcionIdNumber,
           codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
@@ -173,7 +196,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           return
         }
 
-        setHojaVidaPreviewDoc(resolveHojaVidaDocumento(base64, mimeType, filename))
+        const resolvedDoc = resolveHojaVidaDocumento(base64, mimeType, filename)
+        hojaVidaDocCache.set(inscripcionIdNumber, resolvedDoc)
+        setHojaVidaPreviewDoc(resolvedDoc)
         setHojaVidaDocStatus('ready')
       } catch (errorResponse) {
         setHojaVidaDocStatus('error')
@@ -269,6 +294,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     setSavingBulk(true)
     try {
       await updateEvaluacionRegistroPuntaje(payload)
+      evaluacionCache.delete(`${inscripcionIdNumber}-${etapa}`)
       window.alert('Calificación guardada')
       await loadEvaluacion()
     } catch (errorResponse) {
@@ -342,6 +368,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               isSavingBulk={savingBulk}
               onChangeDraft={handleChangeDraft}
               onSaveBulk={handleSaveBulk}
+              isReadOnly={isEstadoFinal}
             />
           </div>
           {isHojaDeVida && (
@@ -352,7 +379,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                   <button
                     type="button"
                     className="evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc}
+                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       openBase64InNewTab(
@@ -367,7 +394,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                   <button
                     type="button"
                     className="evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc}
+                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       downloadBase64File(
