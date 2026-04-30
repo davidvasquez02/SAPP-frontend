@@ -69,6 +69,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
+  width: 100%;
 }
 
 .matricula-page__filter-field {
@@ -80,13 +81,13 @@
 }
 
 @media (min-width: 900px) {
-  .matricula-page__filters {
-    grid-template-columns: repeat(3, minmax(190px, 320px));
+  .matricula-page__filters-top-row {
+    grid-template-columns: repeat(3, minmax(190px, 250px));
     justify-content: end;
   }
 
   .matricula-page__search-filter {
-    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 
