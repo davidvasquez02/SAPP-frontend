@@ -8,7 +8,11 @@ import SolicitudEstudianteForm, {
   type SolicitudEstudiantePayload,
 } from '../SolicitudEstudianteForm/SolicitudEstudianteForm'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
-import { createSolicitudAcademica, getSolicitudesAcademicasByEstudiante } from '../../api/solicitudesAcademicasService'
+import {
+  createSolicitudAcademica,
+  getSolicitudesAcademicasByEstudiante,
+  previsualizarSolicitudCredito,
+} from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
 import './SolicitudesEstudianteView.css'
@@ -225,7 +229,22 @@ const SolicitudesEstudianteView = () => {
             <p className="solicitudes-estudiante-view__status solicitudes-estudiante-view__status--error">{formError}</p>
           )}
           {formSuccess && <p className="solicitudes-estudiante-view__status">{formSuccess}</p>}
-          <SolicitudEstudianteForm tipos={tiposSolicitud} onSubmit={handleRegisterSolicitud} />
+          <SolicitudEstudianteForm
+            tipos={tiposSolicitud}
+            estudianteId={estudianteId as number}
+            onPreviewCreditoCondonable={async (previewPayload) =>
+              previsualizarSolicitudCredito({
+                estudianteId: previewPayload.estudianteId,
+                tipoSolicitudId: previewPayload.tipoSolicitudId,
+                observaciones: previewPayload.observaciones,
+                modalidadId: previewPayload.modalidadId,
+                motivos: previewPayload.motivos,
+                ciudadExpedicionDocumento: previewPayload.ciudadExpedicionDocumento,
+                solicitudHomologacionesAsignaturas: [],
+              })
+            }
+            onSubmit={handleRegisterSolicitud}
+          />
           {saving && <p className="solicitudes-estudiante-view__status">Registrando solicitud...</p>}
         </>
       )}

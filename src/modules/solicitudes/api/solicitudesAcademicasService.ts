@@ -3,6 +3,8 @@ import type {
   ApiResponse,
   CreateSolicitudRequestDto,
   CreateSolicitudResponseDto,
+  PreviewSolicitudCreditoRequestDto,
+  PreviewSolicitudCreditoResponseDto,
   SolicitudAcademicaDto,
 } from './types'
 
@@ -74,4 +76,17 @@ export async function createSolicitudAcademica(req: CreateSolicitudRequestDto): 
   }
 
   return response.data ?? null
+}
+
+export async function previsualizarSolicitudCredito(
+  req: PreviewSolicitudCreditoRequestDto,
+): Promise<PreviewSolicitudCreditoResponseDto> {
+  const response = await httpPost<ApiResponse<PreviewSolicitudCreditoResponseDto>>(
+    '/sapp/solicitudesAcademicas/pdf-previsualizacion',
+    req,
+  )
+  if (!response.ok || !response.data) {
+    throw new Error(response.message || 'No fue posible generar la previsualización del documento.')
+  }
+  return response.data
 }
