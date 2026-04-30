@@ -795,3 +795,30 @@
 
 ### Recent test results + logs
 - `npm run lint` pendiente en este ajuste puntual (no ejecutado en este cambio).
+
+## Update — 2026-04-30 (Matrícula documentos UI)
+
+### Current status
+- Updated visual style for `src/modules/matricula/components/DocumentosRequeridosTable` to align with document-request sections used in Solicitudes/Admisiones.
+- Changes are CSS-only in this pass (no API contract changes, no payload changes).
+
+### Artifacts touched
+- `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.css`
+- `README.md` (changelog-lite entry)
+
+### Open challenges / next steps
+1. Run full TypeScript/build pipeline after resolving pre-existing compile issues in Admisiones module.
+2. Perform visual QA in both themes (`body.light`/`body.dark`) on:
+   - `/matricula` (estudiante)
+   - `/matricula/:matriculaId` (coordinación)
+3. Capture screenshots once app compiles/runs cleanly.
+
+### Recent test results + logs
+- `npm run build` failed due to pre-existing TS errors unrelated to this CSS change:
+  - `src/modules/admisiones/api/evaluacionAdmisionService.ts`: TS6133 (`httpPost` unused)
+  - `src/modules/admisiones/api/finalizarEvaluacionService.ts`: TS2678 (`GET`/`PUT` not comparable to `POST`)
+  - `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: TS2339 (`reasons` missing on union branch)
+
+### Environment notes
+- Node/npm environment unchanged.
+- Do not create a duplicate env; reuse existing project Node setup (`npm install` in repo root).
