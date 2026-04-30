@@ -77,9 +77,9 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar" aria-label="Navegación principal">
-      <div className="sidebar__brand" title="SAPP">
+      <NavLink to="/" className="sidebar__brand" title="Ir al inicio" aria-label="Ir al inicio">
         <span className="sidebar__label_title">SAPP</span>
-      </div>
+      </NavLink>
 
       <nav className="sidebar__nav">
         {sidebarItems
