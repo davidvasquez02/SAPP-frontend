@@ -85,6 +85,7 @@ const InscripcionAdmisionDetallePage = () => {
   const [inscripcionEstado, setInscripcionEstado] = useState<string | null>(
     routeState?.inscripcionEstado ?? null,
   )
+  const [programaAcademico, setProgramaAcademico] = useState<string | null>(null)
   const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
   const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
   const didCambioEstadoValRef = useRef<Record<number, boolean>>({})
@@ -127,6 +128,9 @@ const InscripcionAdmisionDetallePage = () => {
   const isProfesorOnly =
     isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
   const canFinalizeInscripcion = hasAnyRole(roles, ['ADMIN', 'COORDINADOR'])
+  const estadoNormalizado = normalizeEstado(inscripcionEstado)
+  const isEstadoFinal = estadoNormalizado === 'ADMITIDO' || estadoNormalizado === 'RECHAZADO'
+  const canShowFinalizeSection = canFinalizeInscripcion && !isEstadoFinal
 
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
@@ -144,6 +148,7 @@ const InscripcionAdmisionDetallePage = () => {
         parsedInscripcionId,
       )
       setInscripcionEstado(inscripcion.estado ?? null)
+      setProgramaAcademico(inscripcion.programaAcademico ?? null)
     } catch {
       // Silenciamos el error para no interrumpir la navegación de ventanas.
     }
@@ -430,10 +435,10 @@ const InscripcionAdmisionDetallePage = () => {
         </Link>
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
-        <p className="inscripcion-detalle__subtitle">Seleccione una opción</p>
-        {inscripcionEstado ? (
-          <p className="inscripcion-detalle__state">Estado de inscripción: {inscripcionEstado}</p>
+                {inscripcionEstado ? (
+          <p className={`inscripcion-detalle__state inscripcion-detalle__state--${estadoNormalizado.replace(/_/g, '-')}`}>Estado de inscripción: {inscripcionEstado.replaceAll('_', ' ')}</p>
         ) : null}
+        {programaAcademico ? <p className="inscripcion-detalle__subtitle">Programa: {programaAcademico}</p> : null}
         {evaluacionStatus === 'ERROR' && evaluacionMsg ? (
           <p className="inscripcion-detalle__alert inscripcion-detalle__alert--error">
             {evaluacionMsg}
@@ -501,7 +506,7 @@ const InscripcionAdmisionDetallePage = () => {
           })}
         </div>
 
-        {canFinalizeInscripcion ? (
+        {canShowFinalizeSection ? (
           <section className="inscripcion-detalle__finalize">
             <p className="inscripcion-detalle__finalize-text">
               Finaliza la evaluación y calcula puntajes finales.

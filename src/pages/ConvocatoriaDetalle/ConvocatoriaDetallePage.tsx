@@ -54,7 +54,7 @@ const ConvocatoriaDetallePage = () => {
   const periodoConvocatoria =
     periodoLabel ?? periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
   const pageTitle = programaNombre && periodoConvocatoria
-    ? `Convocatoria - ${programaNombre} · ${periodoConvocatoria}`
+    ? `Convocatoria - ${periodoConvocatoria} - ${programaNombre}`
     : periodoConvocatoria
       ? `Convocatoria - ${periodoConvocatoria}`
       : 'Convocatoria'
@@ -190,14 +190,16 @@ const ConvocatoriaDetallePage = () => {
           </div>
           {canCreateAspirante ? (
             <div className="convocatoria-detalle__actions">
-              <button
-                type="button"
-                className="convocatoria-detalle__create-button"
-                onClick={handleOpenCreateAspirante}
-                disabled={!resolvedProgramaId || isLoading || cuposExcedidos || convocatoriaCerrada}
-              >
-                Crear aspirante
-              </button>
+              {!convocatoriaCerrada ? (
+                <button
+                  type="button"
+                  className="convocatoria-detalle__create-button"
+                  onClick={handleOpenCreateAspirante}
+                  disabled={!resolvedProgramaId || isLoading || cuposExcedidos}
+                >
+                  Crear aspirante
+                </button>
+              ) : null}
               {!resolvedProgramaId && !isLoading && !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   No se pudo determinar el programa de la convocatoria.
@@ -209,7 +211,7 @@ const ConvocatoriaDetallePage = () => {
                 </p>
               ) : null}
               {convocatoriaCerrada ? (
-                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
+                <p className="convocatoria-detalle__status convocatoria-detalle__status--error convocatoria-detalle__status--closed">
                   La convocatoria está cerrada. No se pueden registrar nuevos aspirantes.
                 </p>
               ) : null}
