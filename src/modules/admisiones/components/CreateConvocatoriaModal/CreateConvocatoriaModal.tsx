@@ -55,7 +55,7 @@ const getDefaultDatesForSemester = (anio: number, semestre: 1 | 2) =>
 
 const initialDates = getDefaultDatesForSemester(nowYear, 1)
 
-const PRESELECTED_EXCLUDED_PROFESORES = ['Luis Carlos Gomez', 'Fabio Martinez Carillo'] as const
+const PRESELECTED_EXCLUDED_PROFESORES = ['Luis Carlos Gomez Florez', 'Fabio Martinez Carillo'] as const
 
 const normalizeName = (value: string): string =>
   value
