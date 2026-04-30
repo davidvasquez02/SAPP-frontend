@@ -15,6 +15,8 @@ type FormState = {
   periodo: '1' | '2'
   fechaInicio: string
   fechaFin: string
+  fechaInicioMatricula: string
+  fechaFinMatricula: string
   descripcion: string
 }
 
@@ -24,6 +26,8 @@ const EMPTY_FORM: FormState = {
   periodo: '1',
   fechaInicio: '',
   fechaFin: '',
+  fechaInicioMatricula: '',
+  fechaFinMatricula: '',
   descripcion: '',
 }
 
@@ -86,6 +90,8 @@ const ConfigFechasAdmisionesPage = () => {
       periodo: String(periodo.periodo.periodo) as '1' | '2',
       fechaInicio: periodo.periodo.fechaInicio ?? '',
       fechaFin: periodo.periodo.fechaFin ?? '',
+      fechaInicioMatricula: periodo.fechas[0]?.fechaInicio ?? '',
+      fechaFinMatricula: periodo.fechas[0]?.fechaFin ?? '',
       descripcion: periodo.periodo.descripcion ?? '',
     })
   }
@@ -95,12 +101,22 @@ const ConfigFechasAdmisionesPage = () => {
     setFeedback(null)
 
     if (!form.fechaInicio || !form.fechaFin) {
-      setError('Debe seleccionar fecha de inicio y fecha fin.')
+      setError('Debe seleccionar fecha de inicio y fecha fin del semestre.')
+      return
+    }
+
+    if (!form.fechaInicioMatricula || !form.fechaFinMatricula) {
+      setError('Debe seleccionar fecha de inicio y fecha fin para matrículas.')
       return
     }
 
     if (form.fechaInicio > form.fechaFin) {
-      setError('La fecha inicio no puede ser mayor que la fecha fin.')
+      setError('La fecha inicio del semestre no puede ser mayor que la fecha fin.')
+      return
+    }
+
+    if (form.fechaInicioMatricula > form.fechaFinMatricula) {
+      setError('La fecha inicio de matrículas no puede ser mayor que la fecha fin.')
       return
     }
 
@@ -115,9 +131,9 @@ const ConfigFechasAdmisionesPage = () => {
           fechas: [
             {
               tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-              fechaInicio: form.fechaInicio,
-              fechaFin: form.fechaFin,
-              descripcion: form.descripcion.trim() || `Fechas admisiones ${form.anio}-${form.periodo}`,
+              fechaInicio: form.fechaInicioMatricula,
+              fechaFin: form.fechaFinMatricula,
+              descripcion: form.descripcion.trim() || `Fechas matrículas ${form.anio}-${form.periodo}`,
             },
           ],
         })
@@ -195,6 +211,24 @@ const ConfigFechasAdmisionesPage = () => {
             <label className="config-fechas-admisiones__field">
               Fecha fin
               <input type="date" value={form.fechaFin} onChange={(event) => setForm((c) => ({ ...c, fechaFin: event.target.value }))} />
+            </label>
+
+            <label className="config-fechas-admisiones__field">
+              Fecha inicio matrículas
+              <input
+                type="date"
+                value={form.fechaInicioMatricula}
+                onChange={(event) => setForm((c) => ({ ...c, fechaInicioMatricula: event.target.value }))}
+              />
+            </label>
+
+            <label className="config-fechas-admisiones__field">
+              Fecha fin matrículas
+              <input
+                type="date"
+                value={form.fechaFinMatricula}
+                onChange={(event) => setForm((c) => ({ ...c, fechaFinMatricula: event.target.value }))}
+              />
             </label>
 
             <label className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
