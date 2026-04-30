@@ -319,3 +319,5 @@ Mock data for the Admisiones module still lives in:
 
 - April 30, 2026: en `/matricula` (vista `COORDINACION/ADMIN`) se homologó la columna **Estado** del listado con chips de color por estado, siguiendo el patrón visual de admisiones. Se añadieron variantes para `PENDIENTE_DOCUMENTOS` (ámbar), `RADICADA` (azul) y `FINALIZADA` (verde), con fallback neutro para otros valores y compatibilidad con tema claro/oscuro.
 - April 30, 2026: en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`), al usar el botón **Aprobar documentos** ya no se ejecuta una recarga global de la pantalla (`loadDetalle`). Después del `PUT /sapp/matriculaAcademica/{id}` ahora se refrescan solo los datos requeridos del detalle (matrícula + checklist) en segundo plano, evitando el estado de carga completo y manteniendo el contexto visible.
+
+- April 30, 2026: refactor del módulo de Configuración a **Fechas** para enfocarlo en la configuración de fechas académicas. Se cambiaron etiquetas e iconos (calendario), ruta principal `/fechas` y ruta de admisiones `/admisiones/fechas`.

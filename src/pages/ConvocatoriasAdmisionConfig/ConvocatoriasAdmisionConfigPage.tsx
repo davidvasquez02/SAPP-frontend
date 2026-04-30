@@ -185,7 +185,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
             <button
               type="button"
               className="convocatorias-config__new-button convocatorias-config__new-button--ghost"
-              onClick={() => navigate("/configuracion")}
+              onClick={() => navigate("/fechas")}
             >
               Configurar fechas de semestre
             </button>

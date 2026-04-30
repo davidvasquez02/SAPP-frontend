@@ -8,7 +8,7 @@ import {
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
   ConfigFechasAdmisionesPage,
-  ConfiguracionModulePage,
+  FechasModulePage,
   EstudianteDetalleCoordinacionPage,
   EstudiantesCoordinacionPage,
   HomePage,
@@ -89,7 +89,7 @@ export const AppRoutes = () => {
             }
           />
           <Route
-            path="/admisiones/configuracion/fechas"
+            path="/admisiones/fechas"
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
                 <ConfigFechasAdmisionesPage />
@@ -149,10 +149,10 @@ export const AppRoutes = () => {
             />
           </Route>
           <Route
-            path="/configuracion"
+            path="/fechas"
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
-                <ConfiguracionModulePage />
+                <FechasModulePage />
               </RequireRoles>
             }
           />

@@ -23,7 +23,7 @@ const HomePage = () => {
     ROLES.DOCENTE,
   ])
   const canSeeGestionEstudiantes = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
-  const canSeeConfiguracion = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const canSeeFechas = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
   const isProfesorOnly =
     isProfesor(roles) && !hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
 
@@ -32,7 +32,7 @@ const HomePage = () => {
     { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
     { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
-    { to: '/configuracion', label: 'Configuración', icon: '⚙️', visible: canSeeConfiguracion },
+    { to: '/fechas', label: 'Fechas', icon: '📅', visible: canSeeFechas },
   ]
 
   const visibleShortcuts = shortcuts.filter((item) => item.visible)

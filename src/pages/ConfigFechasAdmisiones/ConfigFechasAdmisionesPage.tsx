@@ -250,11 +250,11 @@ const ConfigFechasAdmisionesPage = () => {
   }
 
   return (
-    <ModuleLayout title="Configuración de fechas — Admisiones">
+    <ModuleLayout title="Fechas académicas — Admisiones">
       <section className="config-fechas-admisiones">
         <header className="config-fechas-admisiones__header">
           <div>
-            <h1>Configuración de fechas por semestre</h1>
+            <h1>Fechas académicas por semestre</h1>
             <p>Defina el rango de fechas de admisiones para cada periodo académico.</p>
           </div>
         </header>
@@ -341,7 +341,7 @@ const ConfigFechasAdmisionesPage = () => {
           <h2>Configuraciones guardadas</h2>
 
           {configs.length === 0 ? (
-            <p className="config-fechas-admisiones__status">Aún no hay configuraciones guardadas.</p>
+            <p className="config-fechas-admisiones__status">Aún no hay fechas guardadas.</p>
           ) : (
             <div className="config-fechas-admisiones__table-wrap sapp-table-shell">
               <table className="config-fechas-admisiones__table sapp-table">
