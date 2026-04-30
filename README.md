@@ -307,3 +307,5 @@ Mock data for the Admisiones module still lives in:
 - Added `fetchSolicitudesEstudiante()` + `solicitudesEstudiante.mock.ts` so student listings are consumed through services (not direct mock imports), and mock form submissions prepend a new `REGISTRADA` row before returning to the list.
 
 - April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) cuando la matrícula vigente retorna estado `FINALIZADA` desde `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`, la pantalla pasa a **modo solo lectura**: se muestran materias y documentos, pero se deshabilitan selector/agregado, edición de grupo, eliminación, carga de archivos y botón de confirmación para impedir nuevas operaciones sobre un trámite cerrado.
+
+- April 30, 2026: en `/matricula` (vista `COORDINACION/ADMIN`) se homologó la columna **Estado** del listado con chips de color por estado, siguiendo el patrón visual de admisiones. Se añadieron variantes para `PENDIENTE_DOCUMENTOS` (ámbar), `RADICADA` (azul) y `FINALIZADA` (verde), con fallback neutro para otros valores y compatibilidad con tema claro/oscuro.
