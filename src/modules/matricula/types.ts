@@ -16,7 +16,6 @@ export type MateriaDto = {
 
 export type MateriaSeleccionada = MateriaDto & {
   addedAt: string
-  grupo: string
 }
 
 export type DocumentoRequerido = {
@@ -34,7 +33,6 @@ export type DocumentoRequerido = {
 
 export type MatriculaAsignaturaPayload = {
   asignaturaId: number
-  grupo: string
 }
 
 export type MatriculaAcademicaCreatePayload = {

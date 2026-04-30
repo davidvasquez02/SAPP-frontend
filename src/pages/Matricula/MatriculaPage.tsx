@@ -139,8 +139,6 @@ const MatriculaPage = () => {
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [periodoId, setPeriodoId] = useState<number>(1);
-  const [shouldHighlightMissingGroups, setShouldHighlightMissingGroups] =
-    useState(false);
 
   const [isLoadingListado, setIsLoadingListado] = useState(false);
   const [errorListado, setErrorListado] = useState<string | null>(null);
@@ -209,7 +207,6 @@ const MatriculaPage = () => {
           return {
             ...materiaCatalogo,
             codigo: materiaCatalogo.codigo ?? asignatura.asignaturaCodigo,
-            grupo: asignatura.grupo,
             addedAt: new Date().toISOString(),
           } satisfies MateriaSeleccionada;
         })
@@ -389,7 +386,7 @@ const MatriculaPage = () => {
 
       return [
         ...current,
-        { ...materia, grupo: "", addedAt: new Date().toISOString() },
+        { ...materia, addedAt: new Date().toISOString() },
       ];
     });
   };
@@ -404,18 +401,9 @@ const MatriculaPage = () => {
       return;
     }
 
-    const hasInvalidGrupo = selectedMaterias.some(
-      (materia) => !materia.grupo.trim(),
-    );
-    if (hasInvalidGrupo) {
-      setShouldHighlightMissingGroups(true);
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       setErrorForm(null);
-      setShouldHighlightMissingGroups(false);
 
       const latestValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
@@ -449,7 +437,6 @@ const MatriculaPage = () => {
           periodoId,
           asignaturas: selectedMaterias.map((materia) => ({
             asignaturaId: materia.id,
-            grupo: materia.grupo.trim(),
           })),
         });
       }
@@ -536,11 +523,6 @@ const MatriculaPage = () => {
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
       await loadDocumentosMatricula(matriculaValidation);
 
-      window.alert(
-        latestValidation.status === "CAN_CREATE"
-          ? "Matrícula registrada correctamente."
-          : "Documentos actualizados correctamente.",
-      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -846,47 +828,15 @@ const MatriculaPage = () => {
                   ) : null}
                   <MateriasSelectedTable
                     selected={selectedMaterias}
-                    invalidGrupoIds={
-                      shouldHighlightMissingGroups
-                        ? selectedMaterias
-                            .filter((materia) => !materia.grupo.trim())
-                            .map((materia) => materia.id)
-                        : []
-                    }
                     disabled={isReadOnlyMatriculaFinalizada || hasExistingMatricula}
                     readOnlyView={isReadOnlyMatriculaFinalizada}
-                    onGrupoChange={(id, grupo) =>
-                      setSelectedMaterias((current) => {
-                        const updated = current.map((item) =>
-                          item.id === id ? { ...item, grupo } : item,
-                        );
-
-                        if (
-                          shouldHighlightMissingGroups &&
-                          updated.every((item) => item.grupo.trim().length > 0)
-                        ) {
-                          setShouldHighlightMissingGroups(false);
-                        }
-
-                        return updated;
-                      })
-                    }
+                    hideActionColumn={hasExistingMatricula}
                     onRemove={(id) =>
-                      setSelectedMaterias((current) => {
-                        const updated = current.filter((item) => item.id !== id);
-
-                        if (
-                          shouldHighlightMissingGroups &&
-                          updated.every((item) => item.grupo.trim().length > 0)
-                        ) {
-                          setShouldHighlightMissingGroups(false);
-                        }
-
-                        return updated;
-                      })
+                      setSelectedMaterias((current) =>
+                        current.filter((item) => item.id !== id),
+                      )
                     }
-                  />
-                </>
+                  />                </>
               ) : null}
             </section>
 

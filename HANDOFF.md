@@ -1,6 +1,9 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` se retiró `grupo` del flujo de materias para todos los roles (sin columna, sin input y sin validaciones asociadas).
+- April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente, la tabla de materias oculta la columna **Acción**.
+- April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) se eliminó el popup/modal de confirmación tras subir documentos. El flujo ahora hace refresh silencioso solo del checklist documental (sin recargar página completa).
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), con matrícula vigente existente (no finalizada) se ocultaron los mensajes de ayuda/validación y el buscador de materias; además se bloquearon edición de grupo y acciones de materias. El botón final ahora muestra **Actualizar matrícula** y queda deshabilitado si todos los documentos ya están subidos y no hay rechazados.
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), si la matrícula vigente está `FINALIZADA`, el bloque documental ahora oculta su título/descripción de “Cargue de documentos”; en la tabla de documentos quedan habilitadas únicamente las acciones **Ver** y **Descargar** (acción **Subir** deshabilitada).
 - April 30, 2026 (latest): en `/matricula` (perfil `ESTUDIANTE`) se cambió la validación de grupos al confirmar matrícula: ya no se muestra el mensaje bloqueante “Debes asignar un grupo...”. Ahora, al intentar confirmar con grupos vacíos, se resaltan en rojo únicamente los campos `Grupo` faltantes (sin modales), y el resaltado se limpia automáticamente cuando todos quedan diligenciados.
@@ -700,8 +703,9 @@
   - `EXISTS`: do **not** create matrícula; upload only selected new files to `tramiteId = matricula.id`.
 - Document upload endpoint: `POST /sapp/document` with base64 + checksum payload (unchanged).
 - Expected UI output for `EXISTS` submit:
-  - success alert: `Documentos actualizados correctamente.`
+  - no success modal/popup after upload; refresh is silent.
   - unchanged docs preserved; no duplicate uploads triggered.
+  - checklist refreshes from backend without full page reload.
 
 ### Environment snapshot (avoid duplicate env creation)
 - Runtime: Node.js/npm project (no Python venv/Conda/Poetry required for this change).
@@ -712,3 +716,4 @@
 
 ### Recent test results + logs
 - Pending in this handoff section; see latest CI/local command outputs in task summary for exact command status.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx` → ✅ sin errores tras remover el popup de éxito y mantener refresh silencioso del listado de documentos.
