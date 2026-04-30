@@ -80,9 +80,13 @@
 }
 
 @media (min-width: 900px) {
-  .matricula-page__filters-top-row {
+  .matricula-page__filters {
     grid-template-columns: repeat(3, minmax(190px, 320px));
     justify-content: end;
+  }
+
+  .matricula-page__search-filter {
+    grid-column: 1 / -1;
   }
 }
 
