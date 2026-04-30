@@ -91,3 +91,24 @@
     flex-direction: column;
   }
 }
+
+.config-module__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.config-module__pagination button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--on-surface, inherit);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.config-module__pagination button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
