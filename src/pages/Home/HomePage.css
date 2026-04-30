@@ -1,13 +1,15 @@
 .home-page__lead {
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 1.05rem;
+  text-align: center;
 }
 
 .home-page__shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 240px));
+  justify-content: center;
+  gap: 1.25rem;
 }
 
 .home-page__shortcut-card {
@@ -16,21 +18,21 @@
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  min-height: 132px;
-  padding: 1rem;
+  min-height: 148px;
+  padding: 1.15rem;
   border: 1px solid var(--outline);
   border-radius: 20px;
   background: var(--surface-container-low);
   color: var(--text-primary);
   text-decoration: none;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .home-page__shortcut-card:hover,
 .home-page__shortcut-card:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
   border-color: var(--primary);
   outline: none;
 }
