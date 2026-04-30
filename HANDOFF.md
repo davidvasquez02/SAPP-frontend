@@ -1,6 +1,7 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), con matrícula vigente existente (no finalizada) se ocultaron los mensajes de ayuda/validación y el buscador de materias; además se bloquearon edición de grupo y acciones de materias. El botón final ahora muestra **Actualizar matrícula** y queda deshabilitado si todos los documentos ya están subidos y no hay rechazados.
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), si la matrícula vigente está `FINALIZADA`, el bloque documental ahora oculta su título/descripción de “Cargue de documentos”; en la tabla de documentos quedan habilitadas únicamente las acciones **Ver** y **Descargar** (acción **Subir** deshabilitada).
 - April 30, 2026 (latest): en `/matricula` (perfil `ESTUDIANTE`) se cambió la validación de grupos al confirmar matrícula: ya no se muestra el mensaje bloqueante “Debes asignar un grupo...”. Ahora, al intentar confirmar con grupos vacíos, se resaltan en rojo únicamente los campos `Grupo` faltantes (sin modales), y el resaltado se limpia automáticamente cuando todos quedan diligenciados.
 - April 30, 2026 (latest): en el mismo flujo se compactó el control de grupo por asignatura (2 caracteres máximo, input angosto, centrado y en mayúsculas) para ajustarse al uso real de siglas cortas.
@@ -49,6 +50,8 @@
 - Hotfix loop periodos: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`
 
 ## Next Steps
+- QA manual en `/matricula` con estudiante que ya tenga matrícula vigente no finalizada: confirmar que no aparece buscador/mensajes, que grupo+acciones de materias están deshabilitados, y que el botón muestre `Actualizar matrícula`.
+- QA manual en `/matricula` con checklist 100% cargado y sin rechazados: validar que `Actualizar matrícula` permanezca deshabilitado.
 
 - QA manual en `/admisiones` con rol `PROFESOR/DOCENTE`: seleccionar un aspirante sin evaluación iniciada y verificar que **no** ocurra bucle de navegación ni refetch infinito; la UI debe quedarse en el detalle fallback sin reenviar automáticamente a `/entrevistas`.
 - QA manual en `/admisiones` con rol `PROFESOR/DOCENTE`: seleccionar un aspirante con evaluación iniciada y verificar que la redirección automática a `/entrevistas` se mantiene.
