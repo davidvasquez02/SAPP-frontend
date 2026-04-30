@@ -21,6 +21,8 @@ const formatFecha = (value: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const ConfiguracionModulePage = () => {
   const navigate = useNavigate();
   const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
@@ -29,6 +31,8 @@ const ConfiguracionModulePage = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [periodosPage, setPeriodosPage] = useState(1);
+  const [convocatoriasPage, setConvocatoriasPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,21 +51,22 @@ const ConfiguracionModulePage = () => {
           return;
         }
 
-        setPeriodos(
-          [...periodosResult].sort((a, b) => {
+        const sortedPeriodos = [...periodosResult].sort((a, b) => {
             if (a.anio !== b.anio) {
               return b.anio - a.anio;
             }
 
             return b.periodo - a.periodo;
-          }),
+          });
+
+        const sortedConvocatorias = [...convocatoriasResult].sort((a, b) =>
+          b.periodo.localeCompare(a.periodo, "es"),
         );
 
-        setConvocatorias(
-          [...convocatoriasResult].sort((a, b) =>
-            b.periodo.localeCompare(a.periodo, "es"),
-          ),
-        );
+        setPeriodos(sortedPeriodos);
+        setConvocatorias(sortedConvocatorias);
+        setPeriodosPage(1);
+        setConvocatoriasPage(1);
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -86,11 +91,21 @@ const ConfiguracionModulePage = () => {
     };
   }, []);
 
-  const periodosPreview = useMemo(() => periodos.slice(0, 6), [periodos]);
-  const convocatoriasPreview = useMemo(
-    () => convocatorias.slice(0, 6),
-    [convocatorias],
+  const totalPagesPeriodos = Math.max(1, Math.ceil(periodos.length / ITEMS_PER_PAGE));
+  const totalPagesConvocatorias = Math.max(
+    1,
+    Math.ceil(convocatorias.length / ITEMS_PER_PAGE),
   );
+
+  const periodosPreview = useMemo(() => {
+    const start = (periodosPage - 1) * ITEMS_PER_PAGE;
+    return periodos.slice(start, start + ITEMS_PER_PAGE);
+  }, [periodos, periodosPage]);
+
+  const convocatoriasPreview = useMemo(() => {
+    const start = (convocatoriasPage - 1) * ITEMS_PER_PAGE;
+    return convocatorias.slice(start, start + ITEMS_PER_PAGE);
+  }, [convocatorias, convocatoriasPage]);
 
   return (
     <ModuleLayout title="Configuración">
@@ -151,6 +166,28 @@ const ConfiguracionModulePage = () => {
                   </tbody>
                 </table>
               </div>
+
+              <div className="config-module__pagination">
+                <button
+                  type="button"
+                  onClick={() => setPeriodosPage((page) => Math.max(1, page - 1))}
+                  disabled={periodosPage === 1}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {periodosPage} de {totalPagesPeriodos}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPeriodosPage((page) => Math.min(totalPagesPeriodos, page + 1))
+                  }
+                  disabled={periodosPage === totalPagesPeriodos}
+                >
+                  Siguiente
+                </button>
+              </div>
             </article>
 
             <article className="config-module__card">
@@ -195,6 +232,30 @@ const ConfiguracionModulePage = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="config-module__pagination">
+                <button
+                  type="button"
+                  onClick={() => setConvocatoriasPage((page) => Math.max(1, page - 1))}
+                  disabled={convocatoriasPage === 1}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {convocatoriasPage} de {totalPagesConvocatorias}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setConvocatoriasPage((page) =>
+                      Math.min(totalPagesConvocatorias, page + 1),
+                    )
+                  }
+                  disabled={convocatoriasPage === totalPagesConvocatorias}
+                >
+                  Siguiente
+                </button>
               </div>
             </article>
           </>
