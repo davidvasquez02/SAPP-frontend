@@ -33,6 +33,10 @@ export interface DocumentoResumen {
     idDocumento: number
     nombreArchivoDocumento: string
     fechaCargaDocumento: string
+    mimeTypeDocumentoContenido?: string
+    base64DocumentoContenido?: string
+    mimeType?: string
+    contenidoBase64?: string
   } | null
 }
 

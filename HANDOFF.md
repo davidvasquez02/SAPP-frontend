@@ -1,5 +1,6 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
+- April 30, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` (rol COORDINACION), en la pestaña de Matrículas se removió el rótulo con consecutivo (`Matrícula #{id}`) y se homologaron acciones documentales para Matrículas/Admisión/Solicitudes con botones **Ver**/**Descargar** basados en `base64 + mimeType` retornados por `GET /sapp/document`.
 ## Current Status
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/*` (coordinación), se removió el texto `Inscripción #{id}` de las 4 etapas y se corrigió el “refresh visual” al abrir **Documentos cargados**. El estado local ya no se reinicia por navegación interna entre subrutas (`location.state` opcional), evitando que desaparezca/aparezca nuevamente el badge de estado.
 - April 30, 2026 (latest): en admisiones detalle de inscripción se redujeron llamadas redundantes al cambiar entre secciones de evaluación usando caché en memoria por `inscripcionId+etapa` (evaluación) y por `inscripcionId` (PDF hoja de vida), evitando refetches innecesarios en recargas parciales y navegación entre acordeones; además, cuando el estado es `ADMITIDO` o `RECHAZADO`, la UI queda en modo solo lectura (inputs/acciones deshabilitados) en Documentos, Hoja de vida, Examen y Entrevistas.
@@ -872,3 +873,8 @@
 - Entorno actual: Node/npm del contenedor, sin crear entornos Python/conda/poetry; no crear entornos duplicados para este repo (frontend JS/TS).
 
 - April 30, 2026 (latest): módulo **Estudiantes coordinación** ajustado para admisiones por aspirante. El listado normaliza `estudiante.idAspirante` y el detalle consulta `GET /sapp/inscripcionAdmision/aspirante/{aspiranteId}` (ya no `GET /sapp/inscripcionAdmision/estudiante?estudianteId=...`). Si no hay `idAspirante`, la pestaña Admisión informa que no existe aspirante asociado.
+
+## Current status (for next instance)
+- Ajuste solicitado por coordinación de Estudiantes aplicado en detalle por estudiante (tabs de trámites).
+- Pendiente QA manual en navegador con datos reales para confirmar que todos los documentos de cada trámite incluyan base64/mime y habiliten Ver/Descargar.
+

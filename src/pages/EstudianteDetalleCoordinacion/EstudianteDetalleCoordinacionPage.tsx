@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
   getAdmisionesByAspirante,
   getMatriculasByEstudiante,
@@ -50,6 +51,15 @@ const TAB_OPTIONS: { id: DetalleTab; label: string }[] = [
   { id: 'SOLICITUDES', label: 'Solicitudes' },
 ]
 
+const resolveDocumentoContenido = (documento: DocumentoResumen) => {
+  const uploaded = documento.documentoUploadedResponse
+  return {
+    base64: uploaded?.base64DocumentoContenido ?? uploaded?.contenidoBase64,
+    mimeType: uploaded?.mimeTypeDocumentoContenido ?? uploaded?.mimeType ?? 'application/pdf',
+    filename: uploaded?.nombreArchivoDocumento ?? 'documento.pdf',
+  }
+}
+
 const renderDocumentos = (documentos: DocumentoResumen[]) => {
   if (documentos.length === 0) {
     return <p className="estudiante-detalle__mini-status">No hay documentos registrados.</p>
@@ -57,16 +67,27 @@ const renderDocumentos = (documentos: DocumentoResumen[]) => {
 
   return (
     <ul className="estudiante-detalle__docs-list">
-      {documentos.map((documento) => (
-        <li key={`${documento.idTipoDocumentoTramite}-${documento.codigoTipoDocumentoTramite}`}>
-          <strong>{documento.nombreTipoDocumentoTramite}</strong>
-          <span>
-            {documento.documentoCargado && documento.documentoUploadedResponse
-              ? `Cargado: ${documento.documentoUploadedResponse.nombreArchivoDocumento}`
-              : 'Pendiente por cargar'}
-          </span>
-        </li>
-      ))}
+      {documentos.map((documento) => {
+        const { base64, mimeType, filename } = resolveDocumentoContenido(documento)
+        const canOpenActions = Boolean(documento.documentoCargado && base64)
+
+        return (
+          <li key={`${documento.idTipoDocumentoTramite}-${documento.codigoTipoDocumentoTramite}`}>
+            <strong>{documento.nombreTipoDocumentoTramite}</strong>
+            <span>{documento.documentoCargado && documento.documentoUploadedResponse ? `Cargado: ${filename}` : 'Pendiente por cargar'}</span>
+            {canOpenActions ? (
+              <div className="estudiante-detalle__doc-actions">
+                <button type="button" onClick={() => openBase64InNewTab(base64 as string, mimeType, filename)}>
+                  Ver
+                </button>
+                <button type="button" onClick={() => downloadBase64File(base64 as string, mimeType, filename)}>
+                  Descargar
+                </button>
+              </div>
+            ) : null}
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -164,7 +185,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         <div className="estudiante-detalle__tab-grid">
           {matriculas.map((matricula) => (
             <article key={matricula.id} className="estudiante-detalle__tab-card">
-              <h3>Matrícula #{matricula.id}</h3>
+              <h3>Matrícula</h3>
               <p>Periodo: {matricula.periodoAcademico}</p>
               <p>Estado: {matricula.estado}</p>
               <p>Fecha solicitud: {formatDate(matricula.fechaSolicitud)}</p>
