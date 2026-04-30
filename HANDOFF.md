@@ -857,3 +857,10 @@
   - `src/modules/admisiones/api/evaluacionAdmisionService.ts`: import sin uso.
   - `src/modules/admisiones/api/finalizarEvaluacionService.ts`: comparaciones de tipo en método HTTP.
   - `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: acceso a propiedad `reasons` no existente en un branch de tipo.
+
+## Update — April 30, 2026 (Avatar de estudiante en header)
+
+- **Estado actual:** el header principal (`ModuleLayout`) ahora renderiza la foto del estudiante al lado del nombre y rol cuando viene en la respuesta de login (`data.estudiante.foto.contenidoBase64` + `mimeType`).
+- **Fallback:** si no viene foto, se renderiza un avatar SVG embebido (muñequito) para mantener consistencia visual sin URLs externas.
+- **Contrato actualizado:** `EstudianteDto` tipado con `foto?: { documentoId, nombreArchivo, contenidoBase64, mimeType } | null`.
+- **Siguientes pasos sugeridos:** validar payloads de fotos muy grandes (rendimiento) y, si aplica, migrar a endpoint de miniatura para reducir tamaño en sesión/localStorage.
