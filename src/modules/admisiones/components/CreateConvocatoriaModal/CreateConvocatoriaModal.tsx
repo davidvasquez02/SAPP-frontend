@@ -55,6 +55,17 @@ const getDefaultDatesForSemester = (anio: number, semestre: 1 | 2) =>
 
 const initialDates = getDefaultDatesForSemester(nowYear, 1)
 
+const PRESELECTED_EXCLUDED_PROFESORES = ['Luis Carlos Gomez', 'Fabio Martinez Carillo'] as const
+
+const normalizeName = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+
+const excludedProfesorNames = new Set(PRESELECTED_EXCLUDED_PROFESORES.map(normalizeName))
 
 const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
 
@@ -152,7 +163,14 @@ export const CreateConvocatoriaModal = ({
         const nextYear = new Date().getFullYear()
         const defaultDates = getDefaultDatesForSemester(nextYear, 1)
 
-        setProfesores(profesoresData)
+        const blockedProfesores = profesoresData.filter((profesor) =>
+          excludedProfesorNames.has(normalizeName(profesor.nombre))
+        )
+        const selectableProfesores = profesoresData.filter(
+          (profesor) => !excludedProfesorNames.has(normalizeName(profesor.nombre))
+        )
+
+        setProfesores(selectableProfesores)
         setProgramas(resolvedProgramas)
         setFormState({
           ...initialFormState,
@@ -161,7 +179,7 @@ export const CreateConvocatoriaModal = ({
           fechaInicio: defaultDates.inicio,
           fechaFin: defaultDates.fin,
         })
-        setSelectedProfesores([])
+        setSelectedProfesores(blockedProfesores)
         setPendingAssignment(null)
         setErrors({})
         setDatesTouched(false)
@@ -395,7 +413,9 @@ export const CreateConvocatoriaModal = ({
 
       const created = await createConvocatoriaAdmision(payload)
       const convocatoriaId = await resolveCreatedConvocatoriaId(payload, created)
-      const profesoresId = selectedProfesores.map((profesor) => profesor.id)
+      const profesoresId = selectedProfesores
+        .filter((profesor) => !excludedProfesorNames.has(normalizeName(profesor.nombre)))
+        .map((profesor) => profesor.id)
 
       if (profesoresId.length > 0) {
         try {
