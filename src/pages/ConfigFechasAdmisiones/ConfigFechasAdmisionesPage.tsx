@@ -1,249 +1,140 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ModuleLayout } from '../../components'
-import { savePeriodoAcademicoFecha } from '../../modules/configFechas/api/periodoAcademicoFechaService'
-import { getPeriodosAcademicos } from '../../modules/configFechas/api/periodoAcademicoService'
-import type { PeriodoAcademicoDto } from '../../modules/configFechas/api/types'
-import { TIPO_TRAMITE_ADMISIONES } from '../../modules/configFechas/constants'
 import {
-  getConfigByPeriodo,
-  loadConfigs,
-  type ConfigFechasItem,
-  upsertConfig,
-} from '../../modules/configFechas/storage/configFechasStorage'
+  createPeriodoAcademico,
+  getPeriodosAcademicosWithFechas,
+  updatePeriodoAcademico,
+} from '../../modules/configFechas/api/periodoAcademicoService'
+import type { PeriodoAcademicoWithFechasDto } from '../../modules/configFechas/api/types'
+import { TIPO_TRAMITE_ADMISIONES } from '../../modules/configFechas/constants'
 import './ConfigFechasAdmisionesPage.css'
 
 type FormState = {
-  periodoId: number | null
+  selectedPeriodoId: string
+  anio: string
+  periodo: '1' | '2'
   fechaInicio: string
   fechaFin: string
   descripcion: string
 }
 
 const EMPTY_FORM: FormState = {
-  periodoId: null,
+  selectedPeriodoId: 'new',
+  anio: String(new Date().getFullYear()),
+  periodo: '1',
   fechaInicio: '',
   fechaFin: '',
   descripcion: '',
 }
 
 const formatDateLabel = (value: string | null) => {
-  if (!value) {
-    return '-'
-  }
-
+  if (!value) return '-'
   const [year, month, day] = value.split('-')
-  if (!year || !month || !day) {
-    return value
-  }
-
+  if (!year || !month || !day) return value
   return `${day}/${month}/${year}`
 }
 
-const getDefaultDatesByPeriodo = (periodo: PeriodoAcademicoDto) => {
-  if (periodo.fechaInicio && periodo.fechaFin) {
-    return {
-      fechaInicio: periodo.fechaInicio,
-      fechaFin: periodo.fechaFin,
-    }
-  }
-
-  if (periodo.periodo === 1) {
-    return {
-      fechaInicio: `${periodo.anio}-01-01`,
-      fechaFin: `${periodo.anio}-06-30`,
-    }
-  }
-
-  return {
-    fechaInicio: `${periodo.anio}-07-01`,
-    fechaFin: `${periodo.anio}-12-31`,
-  }
-}
-
 const ConfigFechasAdmisionesPage = () => {
-  const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([])
-  const [configs, setConfigs] = useState<ConfigFechasItem[]>([])
+  const [periodos, setPeriodos] = useState<PeriodoAcademicoWithFechasDto[]>([])
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
 
-  const periodosById = useMemo(() => {
-    return new Map(periodos.map((periodo) => [periodo.id, periodo]))
-  }, [periodos])
-
-  const applyPeriodoValues = useCallback(
-    (periodoId: number) => {
-      const periodo = periodosById.get(periodoId)
-      if (!periodo) {
-        return
-      }
-
-      const localConfig = getConfigByPeriodo(periodoId)
-
-      if (localConfig) {
-        setForm({
-          periodoId,
-          fechaInicio: localConfig.fechaInicio,
-          fechaFin: localConfig.fechaFin,
-          descripcion: localConfig.descripcion,
-        })
-        return
-      }
-
-      const defaults = getDefaultDatesByPeriodo(periodo)
-
-      setForm({
-        periodoId,
-        fechaInicio: defaults.fechaInicio,
-        fechaFin: defaults.fechaFin,
-        descripcion: '',
-      })
-    },
-    [periodosById]
+  const sortedPeriodos = useMemo(
+    () =>
+      [...periodos].sort((a, b) => {
+        if (a.periodo.anio !== b.periodo.anio) return b.periodo.anio - a.periodo.anio
+        return b.periodo.periodo - a.periodo.periodo
+      }),
+    [periodos]
   )
 
-  useEffect(() => {
-    const fetchPeriodos = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const data = await getPeriodosAcademicos()
-        const sorted = [...data].sort((a, b) => {
-          if (a.anio !== b.anio) {
-            return b.anio - a.anio
-          }
-
-          return b.periodo - a.periodo
-        })
-
-        setPeriodos(sorted)
-        const storedConfigs = loadConfigs()
-        setConfigs(storedConfigs)
-
-        if (sorted.length > 0) {
-          const firstPeriodo = sorted[0]
-          const localConfig = getConfigByPeriodo(firstPeriodo.id)
-
-          if (localConfig) {
-            setForm({
-              periodoId: firstPeriodo.id,
-              fechaInicio: localConfig.fechaInicio,
-              fechaFin: localConfig.fechaFin,
-              descripcion: localConfig.descripcion,
-            })
-          } else {
-            const defaults = getDefaultDatesByPeriodo(firstPeriodo)
-            setForm({
-              periodoId: firstPeriodo.id,
-              fechaInicio: defaults.fechaInicio,
-              fechaFin: defaults.fechaFin,
-              descripcion: '',
-            })
-          }
-        }
-      } catch (requestError) {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : 'No fue posible cargar los periodos académicos.'
-        )
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchPeriodos()
-  }, [])
-
-  const handlePeriodoChange = (periodoId: number) => {
+  const loadData = async () => {
+    setIsLoading(true)
     setError(null)
-    setFeedback(null)
-    applyPeriodoValues(periodoId)
+    try {
+      const data = await getPeriodosAcademicosWithFechas()
+      setPeriodos(data)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'No fue posible cargar los periodos.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleClear = () => {
-    if (!form.periodoId) {
-      setForm(EMPTY_FORM)
+  useEffect(() => {
+    void loadData()
+  }, [])
+
+  const handleSelectPeriodo = (value: string) => {
+    setError(null)
+    setFeedback(null)
+
+    if (value === 'new') {
+      setForm((current) => ({ ...EMPTY_FORM, anio: current.anio }))
       return
     }
 
-    applyPeriodoValues(form.periodoId)
-    setError(null)
-    setFeedback(null)
-  }
+    const periodo = sortedPeriodos.find((item) => item.periodo.id === Number(value))
+    if (!periodo) return
 
-  const validateForm = (): string | null => {
-    if (!form.periodoId) {
-      return 'Debe seleccionar un periodo académico.'
-    }
-
-    if (!form.fechaInicio || !form.fechaFin) {
-      return 'Debe seleccionar la fecha de inicio y la fecha de fin.'
-    }
-
-    if (form.fechaInicio > form.fechaFin) {
-      return 'La fecha de inicio no puede ser mayor que la fecha de fin.'
-    }
-
-    if (!form.descripcion.trim() || form.descripcion.trim().length < 5) {
-      return 'La descripción es obligatoria y debe tener al menos 5 caracteres.'
-    }
-
-    return null
+    setForm({
+      selectedPeriodoId: String(periodo.periodo.id),
+      anio: String(periodo.periodo.anio),
+      periodo: String(periodo.periodo.periodo) as '1' | '2',
+      fechaInicio: periodo.periodo.fechaInicio ?? '',
+      fechaFin: periodo.periodo.fechaFin ?? '',
+      descripcion: periodo.periodo.descripcion ?? '',
+    })
   }
 
   const handleSave = async () => {
     setError(null)
     setFeedback(null)
 
-    const validationError = validateForm()
-    if (validationError) {
-      setError(validationError)
+    if (!form.fechaInicio || !form.fechaFin) {
+      setError('Debe seleccionar fecha de inicio y fecha fin.')
       return
     }
 
-    if (!form.periodoId) {
-      return
-    }
-
-    const periodo = periodosById.get(form.periodoId)
-    if (!periodo) {
-      setError('No se encontró el periodo seleccionado.')
+    if (form.fechaInicio > form.fechaFin) {
+      setError('La fecha inicio no puede ser mayor que la fecha fin.')
       return
     }
 
     setIsSaving(true)
-
     try {
-      await savePeriodoAcademicoFecha({
-        periodoId: form.periodoId,
-        tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-        fechaInicio: form.fechaInicio,
-        fechaFin: form.fechaFin,
-        descripcion: form.descripcion.trim(),
-      })
+      if (form.selectedPeriodoId === 'new') {
+        await createPeriodoAcademico({
+          anio: Number(form.anio),
+          periodo: Number(form.periodo) as 1 | 2,
+          fechaInicio: form.fechaInicio,
+          fechaFin: form.fechaFin,
+          fechas: [
+            {
+              tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
+              fechaInicio: form.fechaInicio,
+              fechaFin: form.fechaFin,
+              descripcion: form.descripcion.trim() || `Fechas admisiones ${form.anio}-${form.periodo}`,
+            },
+          ],
+        })
+        setFeedback('Periodo académico creado correctamente.')
+      } else {
+        await updatePeriodoAcademico(Number(form.selectedPeriodoId), {
+          fechaInicio: form.fechaInicio,
+          fechaFin: form.fechaFin,
+          descripcion: form.descripcion.trim() || `Periodo ${form.anio}-${form.periodo}`,
+        })
+        setFeedback('Periodo académico actualizado correctamente.')
+      }
 
-      upsertConfig({
-        periodoId: form.periodoId,
-        periodoLabel: periodo.anioPeriodo,
-        tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-        fechaInicio: form.fechaInicio,
-        fechaFin: form.fechaFin,
-        descripcion: form.descripcion.trim(),
-        updatedAt: new Date().toISOString(),
-      })
-
-      setConfigs(loadConfigs())
-      setFeedback('Fechas guardadas correctamente')
+      await loadData()
+      handleSelectPeriodo('new')
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'No fue posible guardar la configuración de fechas.'
-      )
+      setError(requestError instanceof Error ? requestError.message : 'No fue posible guardar el periodo.')
     } finally {
       setIsSaving(false)
     }
@@ -255,119 +146,85 @@ const ConfigFechasAdmisionesPage = () => {
         <header className="config-fechas-admisiones__header">
           <div>
             <h1>Fechas académicas por semestre</h1>
-            <p>Defina el rango de fechas de admisiones para cada periodo académico.</p>
+            <p>Cree un nuevo periodo (año/semestre) o ajuste uno existente.</p>
           </div>
         </header>
 
         <div className="config-fechas-admisiones__form-card">
           <div className="config-fechas-admisiones__form-grid">
             <label className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
-              Periodo académico
-              <select
-                value={form.periodoId ?? ''}
-                onChange={(event) => handlePeriodoChange(Number(event.target.value))}
-                disabled={isLoading || periodos.length === 0}
-              >
-                {periodos.length === 0 ? <option value="">Sin periodos disponibles</option> : null}
-                {periodos.map((periodo) => {
-                  const hasDates = Boolean(periodo.fechaInicio && periodo.fechaFin)
-                  const optionLabel = hasDates
-                    ? `${periodo.anioPeriodo} (${periodo.fechaInicio} → ${periodo.fechaFin})`
-                    : periodo.anioPeriodo
+              Gestión de periodo
+              <select value={form.selectedPeriodoId} onChange={(event) => handleSelectPeriodo(event.target.value)}>
+                <option value="new">Crear nuevo periodo</option>
+                {sortedPeriodos.map((item) => (
+                  <option key={item.periodo.id} value={item.periodo.id}>
+                    {item.periodo.anioPeriodo}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-                  return (
-                    <option key={periodo.id} value={periodo.id}>
-                      {optionLabel}
-                    </option>
-                  )
-                })}
+            <label className="config-fechas-admisiones__field">
+              Año
+              <input
+                type="number"
+                min={2020}
+                value={form.anio}
+                disabled={form.selectedPeriodoId !== 'new'}
+                onChange={(event) => setForm((current) => ({ ...current, anio: event.target.value }))}
+              />
+            </label>
+
+            <label className="config-fechas-admisiones__field">
+              Periodo
+              <select
+                value={form.periodo}
+                disabled={form.selectedPeriodoId !== 'new'}
+                onChange={(event) => setForm((current) => ({ ...current, periodo: event.target.value as '1' | '2' }))}
+              >
+                <option value="1">1</option>
+                <option value="2">2</option>
               </select>
             </label>
 
             <label className="config-fechas-admisiones__field">
               Fecha inicio
-              <input
-                type="date"
-                value={form.fechaInicio}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, fechaInicio: event.target.value }))
-                }
-              />
+              <input type="date" value={form.fechaInicio} onChange={(event) => setForm((c) => ({ ...c, fechaInicio: event.target.value }))} />
             </label>
 
             <label className="config-fechas-admisiones__field">
               Fecha fin
-              <input
-                type="date"
-                value={form.fechaFin}
-                onChange={(event) => setForm((current) => ({ ...current, fechaFin: event.target.value }))}
-              />
+              <input type="date" value={form.fechaFin} onChange={(event) => setForm((c) => ({ ...c, fechaFin: event.target.value }))} />
             </label>
 
             <label className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
               Descripción
-              <textarea
-                rows={3}
-                value={form.descripcion}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, descripcion: event.target.value }))
-                }
-                placeholder="Ej. Periodo de recepción de documentos de admisión"
-              />
+              <textarea rows={3} value={form.descripcion} onChange={(event) => setForm((c) => ({ ...c, descripcion: event.target.value }))} />
             </label>
           </div>
 
           <div className="config-fechas-admisiones__actions">
             <button type="button" onClick={handleSave} disabled={isSaving || isLoading}>
-              {isSaving ? 'Guardando...' : 'Guardar'}
-            </button>
-            <button
-              type="button"
-              className="config-fechas-admisiones__ghost"
-              onClick={handleClear}
-              disabled={isSaving}
-            >
-              Limpiar
+              {isSaving ? 'Guardando...' : form.selectedPeriodoId === 'new' ? 'Crear periodo' : 'Actualizar periodo'}
             </button>
           </div>
 
           {error ? <p className="config-fechas-admisiones__alert config-fechas-admisiones__alert--error">{error}</p> : null}
-          {feedback ? (
-            <p className="config-fechas-admisiones__alert config-fechas-admisiones__alert--success">{feedback}</p>
-          ) : null}
+          {feedback ? <p className="config-fechas-admisiones__alert config-fechas-admisiones__alert--success">{feedback}</p> : null}
         </div>
 
         <div className="config-fechas-admisiones__table-card">
-          <h2>Configuraciones guardadas</h2>
-
-          {configs.length === 0 ? (
-            <p className="config-fechas-admisiones__status">Aún no hay fechas guardadas.</p>
+          <h2>Periodos creados</h2>
+          {isLoading ? (
+            <p className="config-fechas-admisiones__status">Cargando periodos...</p>
           ) : (
             <div className="config-fechas-admisiones__table-wrap sapp-table-shell">
               <table className="config-fechas-admisiones__table sapp-table">
-                <thead>
-                  <tr>
-                    <th>Periodo</th>
-                    <th>Fecha inicio</th>
-                    <th>Fecha fin</th>
-                    <th>Descripción</th>
-                    <th>Actualizado</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Periodo</th><th>Inicio</th><th>Fin</th><th>Descripción</th><th>Fechas trámite</th></tr></thead>
                 <tbody>
-                  {configs.map((item) => (
-                    <tr key={item.periodoId}>
-                      <td>{item.periodoLabel}</td>
-                      <td>{formatDateLabel(item.fechaInicio)}</td>
-                      <td>{formatDateLabel(item.fechaFin)}</td>
-                      <td>{item.descripcion}</td>
-                      <td>{new Date(item.updatedAt).toLocaleString('es-CO')}</td>
-                      <td>
-                        <button type="button" onClick={() => handlePeriodoChange(item.periodoId)}>
-                          Editar
-                        </button>
-                      </td>
+                  {sortedPeriodos.map((item) => (
+                    <tr key={item.periodo.id}>
+                      <td>{item.periodo.anioPeriodo}</td><td>{formatDateLabel(item.periodo.fechaInicio)}</td><td>{formatDateLabel(item.periodo.fechaFin)}</td><td>{item.periodo.descripcion ?? '-'}</td><td>{item.fechas.length}</td>
                     </tr>
                   ))}
                 </tbody>
