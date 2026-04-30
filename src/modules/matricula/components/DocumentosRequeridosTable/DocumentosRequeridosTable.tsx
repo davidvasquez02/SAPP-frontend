@@ -9,6 +9,7 @@ type DocumentosRequeridosTableProps = {
   onAction?: (docId: number, action: DocumentoAction) => void
   onSelectFile?: (docId: number, file: File | null) => void
   disabledActions?: boolean
+  showActions?: boolean
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -18,7 +19,17 @@ const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
   RECHAZADO: 'rechazado',
 }
 
-const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disabledActions = false }: DocumentosRequeridosTableProps) => {
+const formatDateOnly = (value: string | null) => {
+  if (!value) return '-'
+
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
+  const date = new Date(normalized)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toISOString().slice(0, 10)
+}
+
+const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disabledActions = false, showActions = true }: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   return (
@@ -30,7 +41,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disable
             <th>Estado</th>
             <th>Fecha de revisión</th>
             <th>Observaciones</th>
-            <th>Acciones</th>
+            {showActions ? <th>Acciones</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -61,39 +72,41 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disable
               <td>
                 <span className={`documentos-requeridos-table__status ${statusClassByEstado[doc.estado]}`}>{doc.estado}</span>
               </td>
-              <td>{doc.fechaRevision ?? '-'}</td>
+              <td>{formatDateOnly(doc.fechaRevision)}</td>
               <td>{doc.observaciones ?? '-'}</td>
-              <td>
-                <div className="documentos-requeridos-table__actions">
-                  <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
-                    Ver
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabledActions || doc.uploadStatus === 'UPLOADING'}
-                    onClick={() => {
-                      onAction?.(doc.id, 'SUBIR')
-                      fileInputRefs.current[doc.id]?.click()
-                    }}
-                  >
-                    Subir
-                  </button>
-                  <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
-                    Descargar
-                  </button>
-                  <input
-                    ref={(element) => {
-                      fileInputRefs.current[doc.id] = element
-                    }}
-                    className="documentos-requeridos-table__file-input"
-                    type="file"
-                    disabled={disabledActions}
-                    onChange={(event) => {
-                      onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
-                    }}
-                  />
-                </div>
-              </td>
+              {showActions ? (
+                <td>
+                  <div className="documentos-requeridos-table__actions">
+                    <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
+                      Ver
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabledActions || doc.uploadStatus === 'UPLOADING'}
+                      onClick={() => {
+                        onAction?.(doc.id, 'SUBIR')
+                        fileInputRefs.current[doc.id]?.click()
+                      }}
+                    >
+                      Subir
+                    </button>
+                    <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
+                      Descargar
+                    </button>
+                    <input
+                      ref={(element) => {
+                        fileInputRefs.current[doc.id] = element
+                      }}
+                      className="documentos-requeridos-table__file-input"
+                      type="file"
+                      disabled={disabledActions}
+                      onChange={(event) => {
+                        onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
+                      }}
+                    />
+                  </div>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>

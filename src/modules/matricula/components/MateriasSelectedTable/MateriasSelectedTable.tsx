@@ -7,6 +7,7 @@ type MateriasSelectedTableProps = {
   onRemove: (id: number) => void
   invalidGrupoIds?: number[]
   disabled?: boolean
+  readOnlyView?: boolean
 }
 
 const MateriasSelectedTable = ({
@@ -15,6 +16,7 @@ const MateriasSelectedTable = ({
   onRemove,
   invalidGrupoIds = [],
   disabled = false,
+  readOnlyView = false,
 }: MateriasSelectedTableProps) => {
   if (selected.length === 0) {
     return <p className="materias-selected-table__empty">Aún no has agregado materias.</p>
@@ -29,7 +31,7 @@ const MateriasSelectedTable = ({
             <th>Código</th>
             <th>Nivel</th>
             <th>Grupo</th>
-            <th>Acción</th>
+            {!readOnlyView ? <th>Acción</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -39,21 +41,27 @@ const MateriasSelectedTable = ({
               <td>{materia.codigo ?? 'Sin código'}</td>
               <td>{materia.nivel}</td>
               <td>
-                <input
-                  type="text"
-                  value={materia.grupo}
-                  placeholder="Ej: A1"
-                  maxLength={2}
-                  className={invalidGrupoIds.includes(materia.id) ? 'materias-selected-table__grupo-input materias-selected-table__grupo-input--error' : 'materias-selected-table__grupo-input'}
-                  disabled={disabled}
-                  onChange={(event) => onGrupoChange(materia.id, event.target.value)}
-                />
+                {readOnlyView ? (
+                  materia.grupo || '—'
+                ) : (
+                  <input
+                    type="text"
+                    value={materia.grupo}
+                    placeholder="Ej: A1"
+                    maxLength={2}
+                    className={invalidGrupoIds.includes(materia.id) ? 'materias-selected-table__grupo-input materias-selected-table__grupo-input--error' : 'materias-selected-table__grupo-input'}
+                    disabled={disabled}
+                    onChange={(event) => onGrupoChange(materia.id, event.target.value)}
+                  />
+                )}
               </td>
-              <td>
-                <button type="button" className="materias-selected-table__remove" disabled={disabled} onClick={() => onRemove(materia.id)}>
-                  Eliminar
-                </button>
-              </td>
+              {!readOnlyView ? (
+                <td>
+                  <button type="button" className="materias-selected-table__remove" disabled={disabled} onClick={() => onRemove(materia.id)}>
+                    Eliminar
+                  </button>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
