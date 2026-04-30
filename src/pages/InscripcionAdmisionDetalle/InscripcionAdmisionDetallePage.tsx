@@ -229,6 +229,28 @@ const InscripcionAdmisionDetallePage = () => {
     return false
   }, [parsedInscripcionId])
 
+  const prefetchAllSections = useCallback(async () => {
+    const errors: Partial<Record<InscripcionSectionKey, string>> = {}
+    await Promise.allSettled([
+      prefetchInscripcionDocumentos(parsedInscripcionId).catch((e) => {
+        errors.documentos = e instanceof Error ? e.message : 'Error cargando documentos.'
+      }),
+      prefetchEvaluacionEtapa(parsedInscripcionId, 'HOJA_DE_VIDA')
+        .then(() => prefetchHojaVidaDocumento(parsedInscripcionId))
+        .catch((e) => {
+          errors['hoja-vida'] = e instanceof Error ? e.message : 'Error cargando hoja de vida.'
+        }),
+      prefetchEvaluacionEtapa(parsedInscripcionId, 'EXAMEN_DE_CONOCIMIENTOS').catch((e) => {
+        errors.examen = e instanceof Error ? e.message : 'Error cargando examen.'
+      }),
+      prefetchEvaluacionEtapa(parsedInscripcionId, 'ENTREVISTA').catch((e) => {
+        errors.entrevistas = e instanceof Error ? e.message : 'Error cargando entrevistas.'
+      }),
+    ])
+
+    setSectionErrors(errors)
+  }, [parsedInscripcionId])
+
   useEffect(() => {
     if (Number.isNaN(parsedInscripcionId)) {
       setIsInitialLoading(false)
@@ -238,29 +260,10 @@ const InscripcionAdmisionDetallePage = () => {
     void (async () => {
       setIsInitialLoading(true)
       await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
-
-      const errors: Partial<Record<InscripcionSectionKey, string>> = {}
-      await Promise.allSettled([
-        prefetchInscripcionDocumentos(parsedInscripcionId).catch((e) => {
-          errors.documentos = e instanceof Error ? e.message : 'Error cargando documentos.'
-        }),
-        prefetchEvaluacionEtapa(parsedInscripcionId, 'HOJA_DE_VIDA')
-          .then(() => prefetchHojaVidaDocumento(parsedInscripcionId))
-          .catch((e) => {
-            errors['hoja-vida'] = e instanceof Error ? e.message : 'Error cargando hoja de vida.'
-          }),
-        prefetchEvaluacionEtapa(parsedInscripcionId, 'EXAMEN_DE_CONOCIMIENTOS').catch((e) => {
-          errors.examen = e instanceof Error ? e.message : 'Error cargando examen.'
-        }),
-        prefetchEvaluacionEtapa(parsedInscripcionId, 'ENTREVISTA').catch((e) => {
-          errors.entrevistas = e instanceof Error ? e.message : 'Error cargando entrevistas.'
-        }),
-      ])
-
-      setSectionErrors(errors)
+      await prefetchAllSections()
       setIsInitialLoading(false)
     })()
-  }, [loadEvaluacionEstado, parsedInscripcionId, reloadInscripcionDetalle])
+  }, [loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, reloadInscripcionDetalle])
 
   useEffect(() => {
     if (!isProfesorOnly || !basePath) {
@@ -374,6 +377,7 @@ const InscripcionAdmisionDetallePage = () => {
       if (isStarted) {
         setEvaluacionStatus('STARTED')
         setEvaluacionMsg(null)
+        await prefetchAllSections()
         setComponentReloadVersion((prev) => prev + 1)
       } else {
         await loadEvaluacionEstado()
@@ -385,7 +389,7 @@ const InscripcionAdmisionDetallePage = () => {
     } finally {
       setStarting(false)
     }
-  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId, waitForEvaluacionStarted])
+  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, waitForEvaluacionStarted])
 
   const handleFinalizarInscripcion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
