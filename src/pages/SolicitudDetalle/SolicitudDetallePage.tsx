@@ -51,6 +51,7 @@ const SolicitudDetallePage = () => {
   const [editMode, setEditMode] = useState(false)
   const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
   const [draftObservaciones, setDraftObservaciones] = useState('')
+  const [draftMotivosCredito, setDraftMotivosCredito] = useState<string[]>([''])
   const [formError, setFormError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -84,6 +85,7 @@ const SolicitudDetallePage = () => {
         setSolicitud(response)
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
+        setDraftMotivosCredito(response.motivosCreditoCondonable?.length ? response.motivosCreditoCondonable : [''])
         const normalizedEstado = normalizeEstadoSolicitud(response.estadoSigla || response.estado)
         setEstadoTarget(normalizedEstado === 'UNKNOWN' ? 'EN_REVISION' : normalizedEstado)
         setEditMode(false)
@@ -204,6 +206,7 @@ const SolicitudDetallePage = () => {
       const updated = await updateSolicitudEstudiante(solicitud.id, {
         tipoSolicitudId: draftTipoSolicitudId,
         observaciones: draftObservaciones.trim(),
+        motivosCreditoCondonable: draftMotivosCredito.map((item) => item.trim()).filter(Boolean),
       })
 
       if (documentosEditorRef.current) {
@@ -213,6 +216,7 @@ const SolicitudDetallePage = () => {
       setSolicitud(updated)
       setDraftTipoSolicitudId(updated.tipoSolicitudId)
       setDraftObservaciones(updated.observaciones ?? '')
+      setDraftMotivosCredito(updated.motivosCreditoCondonable?.length ? updated.motivosCreditoCondonable : [''])
       setEditMode(false)
       setSuccessMessage('Cambios guardados (mock)')
       const codigoTipoTramite = updated.tipoTramiteCodigo?.trim()
@@ -232,8 +236,22 @@ const SolicitudDetallePage = () => {
     }
     setDraftTipoSolicitudId(solicitud.tipoSolicitudId)
     setDraftObservaciones(solicitud.observaciones ?? '')
+    setDraftMotivosCredito(solicitud.motivosCreditoCondonable?.length ? solicitud.motivosCreditoCondonable : [''])
     setFormError(null)
     setEditMode(false)
+  }
+
+
+  const updateDraftMotivo = (index: number, value: string) => {
+    setDraftMotivosCredito((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  const addDraftMotivo = () => {
+    setDraftMotivosCredito((current) => [...current, ''])
+  }
+
+  const removeDraftMotivo = (index: number) => {
+    setDraftMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
@@ -320,6 +338,20 @@ const SolicitudDetallePage = () => {
                 <dt>Observaciones</dt>
                 <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
               </div>
+              <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                <dt>Motivos para la solicitud del crédito condonable</dt>
+                <dd>
+                  {solicitud.motivosCreditoCondonable?.length ? (
+                    <ul className="solicitud-detalle-page__motivos-list">
+                      {solicitud.motivosCreditoCondonable.map((motivo, index) => (
+                        <li key={`${motivo}-${index}`}>{motivo}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'No aplica.'
+                  )}
+                </dd>
+              </div>
             </dl>
 
             {isEstudiante && (
@@ -383,6 +415,16 @@ const SolicitudDetallePage = () => {
                         onChange={(event) => setDraftObservaciones(event.target.value)}
                       />
                     </label>
+                    <div className="solicitud-detalle-page__field">
+                      <span>Motivos para la solicitud del crédito condonable</span>
+                      {draftMotivosCredito.map((motivo, index) => (
+                        <div key={`edit-motivo-${index}`} className="solicitud-detalle-page__motivo-row">
+                          <input value={motivo} onChange={(event) => updateDraftMotivo(index, event.target.value)} />
+                          <button type="button" className="solicitud-detalle-page__back" onClick={() => removeDraftMotivo(index)} disabled={draftMotivosCredito.length === 1}>−</button>
+                        </div>
+                      ))}
+                      <button type="button" className="solicitud-detalle-page__back" onClick={addDraftMotivo}>+ Agregar motivo</button>
+                    </div>
 
                     {draftTipoSolicitudId && (
                       <SolicitudDocumentosEditor

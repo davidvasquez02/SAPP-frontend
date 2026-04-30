@@ -119,6 +119,8 @@ const SolicitudesEstudianteView = () => {
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
         modalidadId: payload.modalidadId ?? undefined,
+        motivosCreditoCondonable:
+          payload.motivosCreditoCondonable.length > 0 ? payload.motivosCreditoCondonable : undefined,
         solicitudHomologacionesAsignaturas:
           payload.solicitudHomologacionesAsignaturas.length > 0
             ? payload.solicitudHomologacionesAsignaturas

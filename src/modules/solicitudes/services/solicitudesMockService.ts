@@ -49,7 +49,7 @@ export async function updateSolicitudEstado(
 
 export async function updateSolicitudEstudiante(
   id: number,
-  payload: { tipoSolicitudId: number; observaciones: string },
+  payload: { tipoSolicitudId: number; observaciones: string; motivosCreditoCondonable?: string[] },
 ): Promise<SolicitudCoordinadorDto> {
   await wait(220)
   return updateSolicitudEstudianteMock({ id, ...payload })
