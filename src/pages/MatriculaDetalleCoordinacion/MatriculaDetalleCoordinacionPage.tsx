@@ -140,7 +140,7 @@ const MatriculaDetalleCoordinacionPage = () => {
           selected.asignaturas.reduce<Record<number, AsignaturaDecisionState>>((acc, asignatura) => {
             const estado = asignatura.estado.toUpperCase()
             let decision: MatriculaAsignaturaValidacionDecision | '' = ''
-            if (estado === 'APROBADA') {
+            if (estado === 'APROBADA' || estado === 'MATRICULADA') {
               decision = 'APROBADA'
             } else if (estado === 'RECHAZADA') {
               decision = 'RECHAZADA'
@@ -625,28 +625,32 @@ const MatriculaDetalleCoordinacionPage = () => {
                         <td>{asignatura.estado}</td>
                         <td>
                           <div className="matricula-detalle__decision-group">
-                            <label>
-                              <input
-                                type="radio"
-                                name={`decision-asig-${asignatura.id}`}
-                                checked={asignaturasDecision[asignatura.id]?.decision === 'APROBADA'}
-                                onChange={() =>
-                                  updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
-                                }
-                              />
+                            <button
+                              type="button"
+                              className={`matricula-detalle__decision-button matricula-detalle__decision-button--approve ${
+                                asignaturasDecision[asignatura.id]?.decision === 'APROBADA'
+                                  ? 'matricula-detalle__decision-button--active'
+                                  : ''
+                              }`}
+                              onClick={() =>
+                                updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
+                              }
+                            >
                               Aprobar
-                            </label>
-                            <label>
-                              <input
-                                type="radio"
-                                name={`decision-asig-${asignatura.id}`}
-                                checked={asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'}
-                                onChange={() =>
-                                  updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
-                                }
-                              />
+                            </button>
+                            <button
+                              type="button"
+                              className={`matricula-detalle__decision-button matricula-detalle__decision-button--reject ${
+                                asignaturasDecision[asignatura.id]?.decision === 'RECHAZADA'
+                                  ? 'matricula-detalle__decision-button--active'
+                                  : ''
+                              }`}
+                              onClick={() =>
+                                updateAsignaturaDecision(asignatura.id, { decision: 'RECHAZADA' })
+                              }
+                            >
                               Rechazar
-                            </label>
+                            </button>
                           </div>
                         </td>
                         <td>
