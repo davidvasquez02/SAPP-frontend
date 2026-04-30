@@ -5,9 +5,10 @@ type MateriasSelectedTableProps = {
   selected: MateriaSeleccionada[]
   onGrupoChange: (id: number, grupo: string) => void
   onRemove: (id: number) => void
+  disabled?: boolean
 }
 
-const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove }: MateriasSelectedTableProps) => {
+const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove, disabled = false }: MateriasSelectedTableProps) => {
   if (selected.length === 0) {
     return <p className="materias-selected-table__empty">Aún no has agregado materias.</p>
   }
@@ -35,11 +36,12 @@ const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove }: MateriasSe
                   type="text"
                   value={materia.grupo}
                   placeholder="Ej: A1"
+                  disabled={disabled}
                   onChange={(event) => onGrupoChange(materia.id, event.target.value)}
                 />
               </td>
               <td>
-                <button type="button" className="materias-selected-table__remove" onClick={() => onRemove(materia.id)}>
+                <button type="button" className="materias-selected-table__remove" disabled={disabled} onClick={() => onRemove(materia.id)}>
                   Eliminar
                 </button>
               </td>
