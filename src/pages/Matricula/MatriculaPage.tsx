@@ -164,7 +164,7 @@ const MatriculaPage = () => {
       );
       setMatriculaValidationMessage(
         validation.matricula.estado.toUpperCase() === "FINALIZADA"
-          ? "La matrícula ya está finalizada. Solo puedes consultar el detalle."
+          ? "Tu proceso de matrícula se encuentra finalizado."
           : "El estudiante ya tiene matrícula para el periodo vigente.",
       );
       setPeriodoId(validation.matricula.periodoId);
@@ -735,10 +735,14 @@ const MatriculaPage = () => {
         {!loadingConvocatoria && convocatoria?.isOpen ? (
           <>
             <section className="matricula-page__card">
-              <h4>Selección de materias</h4>
-              <p className="matricula-page__description">
-                Agrega las materias que cursarás en este periodo.
-              </p>
+              {!isReadOnlyMatriculaFinalizada ? (
+                <>
+                  <h4>Selección de materias</h4>
+                  <p className="matricula-page__description">
+                    Agrega las materias que cursarás en este periodo.
+                  </p>
+                </>
+              ) : null}
               {loadingForm ? (
                 <p className="matricula-page__status">Cargando materias...</p>
               ) : null}
