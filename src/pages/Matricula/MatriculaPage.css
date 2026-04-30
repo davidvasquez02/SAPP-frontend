@@ -63,6 +63,20 @@
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
+.matricula-page__search-filter {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 900px) {
+  .matricula-page__filters {
+    grid-template-columns: repeat(3, minmax(190px, 1fr));
+  }
+
+  .matricula-page__search-filter {
+    grid-column: 1 / -1;
+  }
+}
+
 .matricula-page__table-wrapper {
   overflow-x: auto;
 }

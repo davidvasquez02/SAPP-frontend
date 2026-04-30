@@ -565,7 +565,8 @@ const MatriculaPage = () => {
   const filteredMatriculas = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
 
-    return matriculas.filter((item) => {
+    return matriculas
+      .filter((item) => {
       if (
         programaFilter !== "TODOS" &&
         item.programaAcademico !== programaFilter
@@ -597,7 +598,13 @@ const MatriculaPage = () => {
         .toLowerCase();
 
       return searchable.includes(normalizedSearch);
-    });
+    })
+      .sort((a, b) => {
+        const aTime = new Date(a.fechaSolicitud).getTime();
+        const bTime = new Date(b.fechaSolicitud).getTime();
+
+        return bTime - aTime;
+      });
   }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText]);
 
   const hasAllDocumentsUploadedAndNoRejected = useMemo(() => {
@@ -697,7 +704,7 @@ const MatriculaPage = () => {
                 ))}
               </select>
             </label>
-            <label className="sapp-filter-field">
+            <label className="sapp-filter-field matricula-page__search-filter">
               <span>Buscar estudiante</span>
               <input
                 type="text"
