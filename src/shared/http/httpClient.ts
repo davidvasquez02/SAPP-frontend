@@ -70,17 +70,17 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
 }
 
 export const httpGet = <T>(path: string, options?: HttpOptions) =>
-  http<T>('api' + path, { ...options, method: 'GET' })
+  http<T>(path, { ...options, method: 'GET' })
 
 export const httpPost = <T>(path: string, body?: unknown, options?: HttpOptions) =>
-  http<T>('api' + path, {
+  http<T>(path, {
     ...options,
     method: 'POST',
     body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
 
 export const httpPut = <T>(path: string, body?: unknown, options?: HttpOptions) =>
-  http<T>('api' + path, {
+  http<T>(path, {
     ...options,
     method: 'PUT',
     body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
