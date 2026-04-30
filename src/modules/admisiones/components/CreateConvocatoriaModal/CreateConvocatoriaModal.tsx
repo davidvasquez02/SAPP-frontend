@@ -336,7 +336,7 @@ export const CreateConvocatoriaModal = ({
         setIsSubmitting(true)
         await runAssignProfesores(pendingAssignment.convocatoriaId, pendingAssignment.profesoresId)
         await onRefreshConvocatorias()
-        onSuccess('Convocatoria creada y profesores asignados correctamente (mock).')
+        onSuccess('Convocatoria creada y profesores asociados correctamente.')
         onClose()
       } catch (error) {
         setErrors({
@@ -416,7 +416,7 @@ export const CreateConvocatoriaModal = ({
       await onRefreshConvocatorias()
       onSuccess(
         profesoresId.length > 0
-          ? 'Convocatoria creada y profesores asignados correctamente (mock).'
+          ? 'Convocatoria creada y profesores asociados correctamente.'
           : 'Convocatoria creada correctamente.'
       )
       onClose()

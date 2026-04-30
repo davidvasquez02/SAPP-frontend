@@ -1,16 +1,27 @@
+import { httpPost } from '../../../shared/http/httpClient'
+
+type EvaluadorConvocatoriaRequest = {
+  evaluadorId: number
+  convocatoriaId: number
+}
+
 export async function assignProfesoresToConvocatoria(params: {
   convocatoriaId: number
   profesoresId: number[]
 }): Promise<void> {
-  const { profesoresId } = params
+  const { convocatoriaId, profesoresId } = params
 
-  await new Promise((resolve) => setTimeout(resolve, 250))
+  for (const profesorId of profesoresId) {
+    const response = await httpPost<unknown, EvaluadorConvocatoriaRequest>(
+      '/sapp/evaluadorConvocatoria',
+      {
+        evaluadorId: profesorId,
+        convocatoriaId,
+      }
+    )
 
-  if (profesoresId.length === 0) {
-    return
-  }
-
-  if (profesoresId.includes(999)) {
-    throw new Error('Error mock al asignar profesores a la convocatoria.')
+    if (!response.ok) {
+      throw new Error(response.message || 'No fue posible asociar los profesores a la convocatoria.')
+    }
   }
 }

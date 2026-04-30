@@ -1,12 +1,13 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Se ajustó `/admisiones/convocatoria/:convocatoriaId` para manejar correctamente convocatorias sin inscripciones.
-- Si backend responde “no hay/no existe/sin registros” para inscripciones, la UI ahora muestra estado vacío neutro: **No hay inscripciones para esta convocatoria.**
-- Ya no se presenta ese caso como error (sin texto rojo) y no aparece botón **Reintentar** en ese escenario.
+- Flujo de creación de convocatorias actualizado para cumplir dependencia de evaluadores/profesores.
+- Después de `POST /sapp/convocatoriaAdmision`, el frontend ejecuta una llamada por profesor a `POST /sapp/evaluadorConvocatoria` con `{ evaluadorId, convocatoriaId }`.
+- La creación **no se considera finalizada** hasta completar exitosamente todas las asociaciones de profesores; si falla alguna, la UI deja mensaje de advertencia y permite reintento.
 
 ## Archivos tocados
-- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`
+- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
+- `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`
 - `README.md`
 - `HANDOFF.md`
 
