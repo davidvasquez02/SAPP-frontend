@@ -631,3 +631,5 @@
 - Manual code-path validation completed for role branching and LIST/FORM toggle behavior in the new containers.
 
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) se activó modo de solo lectura cuando la matrícula vigente tiene estado `FINALIZADA` (consulta `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`): quedan deshabilitados selector de materias, edición de grupo, eliminación de materias, acciones de documentos y botón de confirmación; se conserva visualización del detalle para consulta.
+- April 30, 2026 (latest): se ocultó el módulo **Créditos** del sidebar principal (`src/components/Sidebar/Sidebar.tsx`) por decisión funcional; no se removieron aún rutas/páginas para evitar impactos colaterales hasta confirmar retiro completo.
+- April 30, 2026 (latest): hotfix de matrícula estudiante (`src/pages/Matricula/MatriculaPage.tsx`): en la precarga de matrícula vigente ahora se prioriza `materiaCatalogo.codigo` y, si viene `null`, se usa `asignatura.asignaturaCodigo` del DTO vigente. Esto corrige que no se mostrara el código de materia en tabla/selector cuando `/sapp/asignaturas` retorna códigos nulos.

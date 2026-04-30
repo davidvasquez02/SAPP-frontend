@@ -51,12 +51,6 @@ const Sidebar = () => {
       visible: !isProfesorOnly,
     },
     {
-      to: "/creditos",
-      label: "Créditos",
-      icon: "💳",
-      visible: !isProfesorOnly,
-    },
-    {
       to: "/coordinacion/estudiantes",
       label: "Estudiantes",
       icon: "👥",
