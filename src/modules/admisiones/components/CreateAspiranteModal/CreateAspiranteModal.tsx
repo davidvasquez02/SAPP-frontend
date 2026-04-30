@@ -441,11 +441,8 @@ export const CreateAspiranteModal = ({
 
       setUploadSummary(summary)
       onCreated?.({ created, uploadSummary: summary })
-
-      if (failedItems.length === 0) {
-        onClose()
-        resetForm()
-      }
+      onClose()
+      resetForm()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No fue posible crear el aspirante.'
       setErrors((prev) => ({ ...prev, general: message }))
