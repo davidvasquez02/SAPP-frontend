@@ -1,6 +1,8 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula` (perfil `ESTUDIANTE`) se cambió la validación de grupos al confirmar matrícula: ya no se muestra el mensaje bloqueante “Debes asignar un grupo...”. Ahora, al intentar confirmar con grupos vacíos, se resaltan en rojo únicamente los campos `Grupo` faltantes (sin modales), y el resaltado se limpia automáticamente cuando todos quedan diligenciados.
+- April 30, 2026 (latest): en el mismo flujo se compactó el control de grupo por asignatura (2 caracteres máximo, input angosto, centrado y en mayúsculas) para ajustarse al uso real de siglas cortas.
 - April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) el bloque de **Documentos de la matrícula** quedó primero y el bloque de **Asignaturas registradas** quedó en segundo lugar, según flujo operativo de revisión documental previa.
 - April 30, 2026 (latest): en el mismo detalle de matrícula se renombró la acción final de `Aprobar matrícula` a **Aprobar documentos**; al hacer click (con obligatorios aprobados) ahora se ejecuta `PUT /sapp/matriculaAcademica/{matriculaId}`.
 
@@ -56,6 +58,8 @@
 5. Si se requiere, mover las rutas de configuración antiguas bajo prefijo único (`/configuracion/...`) manteniendo redirects.
 
 ## Recent Tests + Logs
+
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx` → ✅ sin errores de lint en los archivos tocados para ajuste de grupos/validación visual (npm mostró warning no bloqueante de config `http-proxy`).
 
 - `npx eslint src/pages/Matricula/MatriculaPage.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.tsx` → ✅ sin errores para los archivos TSX tocados de homologación de filtros.
 - `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` → ✅ sin errores para el hotfix del loop de profesor en admisiones.

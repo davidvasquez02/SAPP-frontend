@@ -38,12 +38,18 @@
   color: var(--text-secondary);
 }
 
-.materias-selected-table td input {
-  width: 100%;
-  min-width: 4.5rem;
+.materias-selected-table__grupo-input {
+  width: 4.5rem;
   border: 1px solid var(--outline);
   border-radius: 8px;
   background: var(--surface);
   color: var(--text-primary);
   padding: 0.35rem 0.5rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.materias-selected-table__grupo-input--error {
+  border-color: #b3261e;
+  background: color-mix(in srgb, #b3261e, var(--surface) 92%);
 }

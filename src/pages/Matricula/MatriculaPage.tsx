@@ -138,6 +138,8 @@ const MatriculaPage = () => {
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [periodoId, setPeriodoId] = useState<number>(1);
+  const [shouldHighlightMissingGroups, setShouldHighlightMissingGroups] =
+    useState(false);
 
   const [isLoadingListado, setIsLoadingListado] = useState(false);
   const [errorListado, setErrorListado] = useState<string | null>(null);
@@ -383,9 +385,7 @@ const MatriculaPage = () => {
       (materia) => !materia.grupo.trim(),
     );
     if (hasInvalidGrupo) {
-      setErrorForm(
-        "Debes asignar un grupo para cada materia antes de confirmar.",
-      );
+      setShouldHighlightMissingGroups(true);
       return;
     }
 
@@ -405,6 +405,7 @@ const MatriculaPage = () => {
     try {
       setIsSubmitting(true);
       setErrorForm(null);
+      setShouldHighlightMissingGroups(false);
 
       const latestValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
@@ -758,18 +759,43 @@ const MatriculaPage = () => {
                   />
                   <MateriasSelectedTable
                     selected={selectedMaterias}
+                    invalidGrupoIds={
+                      shouldHighlightMissingGroups
+                        ? selectedMaterias
+                            .filter((materia) => !materia.grupo.trim())
+                            .map((materia) => materia.id)
+                        : []
+                    }
                     disabled={isReadOnlyMatriculaFinalizada}
                     onGrupoChange={(id, grupo) =>
-                      setSelectedMaterias((current) =>
-                        current.map((item) =>
+                      setSelectedMaterias((current) => {
+                        const updated = current.map((item) =>
                           item.id === id ? { ...item, grupo } : item,
-                        ),
-                      )
+                        );
+
+                        if (
+                          shouldHighlightMissingGroups &&
+                          updated.every((item) => item.grupo.trim().length > 0)
+                        ) {
+                          setShouldHighlightMissingGroups(false);
+                        }
+
+                        return updated;
+                      })
                     }
                     onRemove={(id) =>
-                      setSelectedMaterias((current) =>
-                        current.filter((item) => item.id !== id),
-                      )
+                      setSelectedMaterias((current) => {
+                        const updated = current.filter((item) => item.id !== id);
+
+                        if (
+                          shouldHighlightMissingGroups &&
+                          updated.every((item) => item.grupo.trim().length > 0)
+                        ) {
+                          setShouldHighlightMissingGroups(false);
+                        }
+
+                        return updated;
+                      })
                     }
                   />
                 </>

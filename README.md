@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 30, 2026: en `/matricula` (perfil `ESTUDIANTE`) se ajustó la captura de grupo por asignatura: el control ahora es compacto (2 caracteres, centrado y en mayúscula) y la validación de “Confirmar matrícula” dejó de mostrar mensaje bloqueante para grupos faltantes; en su lugar, al intentar confirmar se resaltan en rojo únicamente los campos `Grupo` vacíos (sin modal), limpiando el resaltado al completar todos los grupos.
 - April 30, 2026: en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`) se ajustó el orden visual del detalle para mostrar primero **Documentos de la matrícula** y luego **Asignaturas registradas**; además el CTA final ahora se etiqueta **Aprobar documentos** y consume `PUT /sapp/matriculaAcademica/{matriculaId}` (en reemplazo de la ruta `/aprobar/{id}`) cuando ya están aprobados todos los obligatorios.
 
 - April 24, 2026: se verificaron y homologaron estilos de filtros en listados clave (`/matricula`, `/admisiones/configuracion/convocatorias`, `/coordinacion/estudiantes`, `/solicitudes`) usando utilidades globales compartidas (`.sapp-filters-panel`, `.sapp-filter-field`, `.sapp-filters-actions`, `.sapp-filters-clear-button`) para asegurar consistencia visual, jerarquía de campos y compatibilidad de tema claro/oscuro.
