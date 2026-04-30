@@ -5,25 +5,18 @@ import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
 import type { AuthUser } from '../../../../context/Auth/types'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
-import {
-  getEvaluacionAdmisionInfo,
-  updateEvaluacionRegistroPuntaje,
-} from '../../api/evaluacionAdmisionService'
+import { updateEvaluacionRegistroPuntaje } from '../../api/evaluacionAdmisionService'
 import EvaluacionEtapaSection, {
   type EvaluacionDraft,
 } from '../../components/EvaluacionEtapaSection/EvaluacionEtapaSection'
-import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
-import type {
-  EvaluacionAdmisionItem,
-  EtapaEvaluacion,
-} from '../../types/evaluacionAdmisionTypes'
+import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evaluacionAdmisionTypes'
 import { groupByEvaluador } from '../../utils/groupByEvaluador'
-import {
-  CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
-  CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
-} from '../../../documentos/constants'
 import './EvaluacionEtapaPage.css'
 import type { InscripcionDetalleOutletContext } from '../../../../pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
+import { evaluacionCache, hojaVidaDocCache } from './evaluacionPrefetchCache'
+import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
+import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
+import { CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION } from '../../../documentos/constants'
 
 interface EvaluacionEtapaPageProps {
   title: string
@@ -36,8 +29,6 @@ interface HojaVidaPreviewDocument {
   mimeType: string
   filename: string
 }
-const evaluacionCache = new Map<string, EvaluacionAdmisionItem[]>()
-const hojaVidaDocCache = new Map<number, HojaVidaPreviewDocument>()
 
 const buildValidationMessage = (
   puntajeAspirante: number | undefined,

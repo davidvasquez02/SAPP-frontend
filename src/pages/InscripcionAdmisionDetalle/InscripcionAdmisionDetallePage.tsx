@@ -15,7 +15,12 @@ import {
   finalizarEvaluacion,
 } from '../../modules/admisiones/api/finalizarEvaluacionService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
+import {
+  prefetchEvaluacionEtapa,
+  prefetchHojaVidaDocumento,
+} from '../../modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache'
 import { validateEvaluacionCompleta } from '../../modules/admisiones/utils/validateEvaluacionCompleta'
+import { prefetchInscripcionDocumentos } from '../InscripcionDocumentos/documentosPrefetchCache'
 import './InscripcionAdmisionDetallePage.css'
 
 const INSCRIPCION_SECTIONS = [
@@ -73,6 +78,8 @@ const InscripcionAdmisionDetallePage = () => {
   const [finalizeError, setFinalizeError] = useState<string[] | null>(null)
   const [finalizeSuccess, setFinalizeSuccess] = useState<string | null>(null)
   const [componentReloadVersion, setComponentReloadVersion] = useState(0)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [sectionErrors, setSectionErrors] = useState<Partial<Record<InscripcionSectionKey, string>>>({})
 
   const routeState = useMemo(
     () =>
@@ -223,8 +230,37 @@ const InscripcionAdmisionDetallePage = () => {
   }, [parsedInscripcionId])
 
   useEffect(() => {
-    void loadEvaluacionEstado()
-  }, [loadEvaluacionEstado])
+    if (Number.isNaN(parsedInscripcionId)) {
+      setIsInitialLoading(false)
+      return
+    }
+
+    void (async () => {
+      setIsInitialLoading(true)
+      await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
+
+      const errors: Partial<Record<InscripcionSectionKey, string>> = {}
+      await Promise.allSettled([
+        prefetchInscripcionDocumentos(parsedInscripcionId).catch((e) => {
+          errors.documentos = e instanceof Error ? e.message : 'Error cargando documentos.'
+        }),
+        prefetchEvaluacionEtapa(parsedInscripcionId, 'HOJA_DE_VIDA')
+          .then(() => prefetchHojaVidaDocumento(parsedInscripcionId))
+          .catch((e) => {
+            errors['hoja-vida'] = e instanceof Error ? e.message : 'Error cargando hoja de vida.'
+          }),
+        prefetchEvaluacionEtapa(parsedInscripcionId, 'EXAMEN_DE_CONOCIMIENTOS').catch((e) => {
+          errors.examen = e instanceof Error ? e.message : 'Error cargando examen.'
+        }),
+        prefetchEvaluacionEtapa(parsedInscripcionId, 'ENTREVISTA').catch((e) => {
+          errors.entrevistas = e instanceof Error ? e.message : 'Error cargando entrevistas.'
+        }),
+      ])
+
+      setSectionErrors(errors)
+      setIsInitialLoading(false)
+    })()
+  }, [loadEvaluacionEstado, parsedInscripcionId, reloadInscripcionDetalle])
 
   useEffect(() => {
     if (!isProfesorOnly || !basePath) {
@@ -457,11 +493,12 @@ const InscripcionAdmisionDetallePage = () => {
           <p className="inscripcion-detalle__alert">{evaluacionMsg}</p>
         ) : null}
 
-        <div className="inscripcion-detalle__windows">
+        {isInitialLoading ? <p className="inscripcion-detalle__alert">Cargando información de secciones…</p> : null}
+        <div className="inscripcion-detalle__windows" aria-busy={isInitialLoading}>
           {sectionsToRender.map((section) => {
             const isOpen = activeKey === section.key
             const isEnabled = sectionAvailability[section.key]
-            const subtitle = isEnabled ? undefined : DISABLED_MESSAGE
+            const subtitle = sectionErrors[section.key] ?? (isEnabled ? undefined : DISABLED_MESSAGE)
 
             return (
               <InscripcionAccordionWindow
@@ -469,7 +506,7 @@ const InscripcionAdmisionDetallePage = () => {
                 title={section.title}
                 subtitle={subtitle}
                 isOpen={isOpen}
-                isDisabled={!isEnabled}
+                isDisabled={!isEnabled || isInitialLoading}
                 onToggle={() => handleToggle(section.key)}
               >
                 {isOpen ? (
