@@ -8,7 +8,7 @@ import type {
 } from './types'
 
 export async function getPeriodosAcademicos(): Promise<PeriodoAcademicoDto[]> {
-  const response = await http<ApiResponse<PeriodoAcademicoDto[]>>('/api/sapp/periodoAcademico', {
+  const response = await http<ApiResponse<PeriodoAcademicoDto[]>>('/sapp/periodoAcademico', {
     method: 'GET',
   })
 
@@ -21,7 +21,7 @@ export async function getPeriodosAcademicos(): Promise<PeriodoAcademicoDto[]> {
 
 export async function getPeriodosAcademicosWithFechas(): Promise<PeriodoAcademicoWithFechasDto[]> {
   const response = await http<ApiResponse<PeriodoAcademicoWithFechasDto[]>>(
-    '/api/sapp/periodoAcademico/withFechas',
+    '/  sapp/periodoAcademico/withFechas',
     {
       method: 'GET',
     }
@@ -35,7 +35,7 @@ export async function getPeriodosAcademicosWithFechas(): Promise<PeriodoAcademic
 }
 
 export async function createPeriodoAcademico(request: CreatePeriodoAcademicoRequestDto): Promise<void> {
-  const response = await http<ApiResponse<null>>('/api/sapp/periodoAcademico', {
+  const response = await http<ApiResponse<null>>('/sapp/periodoAcademico', {
     method: 'POST',
     body: JSON.stringify(request),
   })
@@ -49,7 +49,7 @@ export async function updatePeriodoAcademico(
   periodoId: number,
   request: UpdatePeriodoAcademicoRequestDto
 ): Promise<void> {
-  const response = await http<ApiResponse<null>>(`/api/sapp/periodoAcademico/${periodoId}`, {
+  const response = await http<ApiResponse<null>>(`/sapp/periodoAcademico/${periodoId}`, {
     method: 'PUT',
     body: JSON.stringify(request),
   })

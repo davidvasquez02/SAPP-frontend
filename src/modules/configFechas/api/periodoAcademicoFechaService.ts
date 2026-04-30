@@ -5,7 +5,7 @@ import type { PeriodoAcademicoFechaRequestDto } from './types'
 export async function savePeriodoAcademicoFecha(
   request: PeriodoAcademicoFechaRequestDto
 ): Promise<void> {
-  const response = await http<ApiResponse<null>>('/api/sapp/periodoAcademicoFecha', {
+  const response = await http<ApiResponse<null>>('/sapp/periodoAcademicoFecha', {
     method: 'POST',
     body: JSON.stringify(request),
   })
