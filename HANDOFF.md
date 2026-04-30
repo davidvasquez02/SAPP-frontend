@@ -1,6 +1,7 @@
 # Update — 2026-04-24 (homologación de filtros + hotfix admisiones profesor)
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - April 30, 2026 (latest): en `/matricula` se retiró `grupo` del flujo de materias para todos los roles (sin columna, sin input y sin validaciones asociadas).
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente, la tabla de materias oculta la columna **Acción**.
 - April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) se eliminó el popup/modal de confirmación tras subir documentos. El flujo ahora hace refresh silencioso solo del checklist documental (sin recargar página completa).
@@ -53,6 +54,7 @@
 - Hotfix loop periodos: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`
 
 ## Next Steps
+- Verificar en QA que el patrón de refresh parcial (solo checklist) también se replique donde aplique en otras pantallas de validación documental para mantener UX consistente.
 - QA manual en `/matricula` con estudiante que ya tenga matrícula vigente no finalizada: confirmar que no aparece buscador/mensajes, que grupo+acciones de materias están deshabilitados, y que el botón muestre `Actualizar matrícula`.
 - QA manual en `/matricula` con checklist 100% cargado y sin rechazados: validar que `Actualizar matrícula` permanezca deshabilitado.
 
@@ -86,6 +88,7 @@
 # Handoff — SAPP Frontend
 
 ## Current Status
+- April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 
 - April 21, 2026 (latest): hotfix en `/matricula/:matriculaId` para coordinación/admin. La acción **Guardar validación de asignaturas** ahora envía el contrato backend completo en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` con `{ usuarioRevisionId, observaciones, asignaturas[] }`; además cada elemento usa `asignaturaId` (antes se enviaba `matriculaAsignaturaId`, lo que rompía el consumo esperado).
 - April 21, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin) se homologó la fuente de documentos con la vista de detalle por estudiante; ahora ambas rutas consumen el mismo servicio `getDocumentosMatriculaAcademica` (wrapper de `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), para garantizar paridad de documentos/estados mostrados.
@@ -308,6 +311,7 @@
 - Replace the frontend document template with a backend requirements endpoint for `codigoTipoTramite=1002` once available, and verify the correct `tipoDocumentoTramiteId` values for uploads.
 
 ## Next Steps
+- Verificar en QA que el patrón de refresh parcial (solo checklist) también se replique donde aplique en otras pantallas de validación documental para mantener UX consistente.
 
 1. QA manual en `/matricula/:matriculaId` (rol `COORDINADOR/ADMIN`): validar carga de checklist de documentos, acciones Ver/Descargar, aprobación/rechazo con observaciones y habilitación del botón **Aprobar matrícula** únicamente con obligatorios aprobados.
 1. QA manual de seguridad y acceso: confirmar que `ESTUDIANTE` no puede entrar a `/admisiones/configuracion/fechas` y que `ADMIN/COORDINADOR` sí pueden operar el formulario completo.
@@ -646,6 +650,7 @@
 ## Update — April 30, 2026
 
 ### Current Status
+- April 30, 2026 (latest): en `/matricula/:matriculaId` (coordinación/admin), la aprobación/rechazo de documentos ya no invoca recarga completa del detalle. Se agregó `loadDocumentos()` dedicado y los handlers de validación documental refrescan solo el checklist tras respuesta backend, evitando parpadeo y pérdida de contexto en la pantalla.
 - Home (`/`) no longer shows account/session detail blocks. It now renders shortcut cards to the same modules exposed in sidebar (Solicitudes, Matrícula, Estudiantes, Admisiones, Configuración), filtered by user role permissions.
 - Role visibility logic for home shortcuts is aligned with sidebar behavior (including professor-only restrictions).
 
@@ -654,6 +659,7 @@
 - Validate final UX with all role combinations from real backend users (ADMIN, COORDINACION, SECRETARIA, DOCENTE/PROFESOR, ESTUDIANTE).
 
 ### Next Steps
+- Verificar en QA que el patrón de refresh parcial (solo checklist) también se replique donde aplique en otras pantallas de validación documental para mantener UX consistente.
 1. Optionally centralize nav item definitions in a shared module (`src/shared/navigation`).
 2. Add unit/RTL coverage for role-based visibility in Home shortcuts.
 3. Collect stakeholder feedback for icon labels/order in the home quick-access grid.
