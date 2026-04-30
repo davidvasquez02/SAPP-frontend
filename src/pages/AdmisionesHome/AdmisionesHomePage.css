@@ -109,13 +109,21 @@
 }
 
 .admisiones-home__pill {
-  background: #dcfce7;
-  color: #15803d;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
   text-transform: uppercase;
+}
+
+.admisiones-home__pill--vigente {
+  background: color-mix(in srgb, #22c55e 18%, var(--surface));
+  color: color-mix(in srgb, #15803d 82%, var(--text-primary));
+}
+
+.admisiones-home__pill--cerrada {
+  background: color-mix(in srgb, #f59e0b 18%, var(--surface));
+  color: color-mix(in srgb, #b45309 82%, var(--text-primary));
 }
 
 .admisiones-home__card-details {
