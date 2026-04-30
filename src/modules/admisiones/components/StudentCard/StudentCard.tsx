@@ -1,13 +1,15 @@
+import { useState } from 'react'
 import type { InscripcionAdmisionDto } from '../../api/types'
 import './StudentCard.css'
 
 interface StudentCardProps {
   inscripcion: InscripcionAdmisionDto
-  photoUrl: string
+  photoUrl: string | null
   onClick: () => void
 }
 
 const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
   const posicionAdmision = inscripcion.posicionAdmision ?? inscripcion.posicion_admision ?? null
   const cedula = inscripcion.cedula ?? inscripcion.numeroDocumento ?? '—'
   const correo = inscripcion.correo ?? inscripcion.emailPersonal ?? '—'
@@ -25,6 +27,8 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
     }
   }
 
+  const showFallbackAvatar = !photoUrl || failedPhotoUrl === photoUrl
+
   return (
     <div
       className="student-card"
@@ -34,12 +38,19 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
       onKeyDown={handleKeyDown}
     >
       <div className="student-card__media">
-        <img
-          className="student-card__photo"
-          src={photoUrl}
-          alt={`Foto de ${inscripcion.nombreAspirante}`}
-          loading="lazy"
-        />
+        {showFallbackAvatar ? (
+          <div className="student-card__avatar-fallback" aria-label="Avatar genérico">
+            <span aria-hidden="true">👤</span>
+          </div>
+        ) : (
+          <img
+            className="student-card__photo"
+            src={photoUrl}
+            alt={`Foto de ${inscripcion.nombreAspirante}`}
+            loading="lazy"
+            onError={() => setFailedPhotoUrl(photoUrl)}
+          />
+        )}
       </div>
 
       <div className="student-card__body">
