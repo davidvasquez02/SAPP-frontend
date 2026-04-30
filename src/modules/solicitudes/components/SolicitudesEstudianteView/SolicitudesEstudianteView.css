@@ -46,3 +46,23 @@
   background: color-mix(in srgb, #b3261e, transparent 90%);
   color: #b3261e;
 }
+
+.solicitudes-estudiante-view__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.solicitudes-estudiante-view__pagination button {
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.solicitudes-estudiante-view__pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

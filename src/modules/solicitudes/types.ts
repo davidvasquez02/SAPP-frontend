@@ -6,6 +6,7 @@ export type { TipoSolicitudDto }
 
 export type SolicitudTableRow = {
   id: number
+  tipoSolicitudId?: number
   tipoSolicitudCodigo: string
   tipoSolicitud: string
   estadoSigla: string
