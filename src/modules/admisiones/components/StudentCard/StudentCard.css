@@ -66,8 +66,30 @@
 }
 
 .student-card__badge--state {
-  background: #e0f2fe;
-  color: #0c4a6e;
+  background: color-mix(in srgb, var(--primary), white 85%);
+  color: color-mix(in srgb, var(--primary), black 40%);
+}
+
+.student-card__badge--state-EN-CONSTRUCCION,
+.student-card__badge--state-POR-VALIDAR-DOCUMENTOS {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.student-card__badge--state-EN-VALIDACION-DOCUMENTOS,
+.student-card__badge--state-EN-EVALUACION {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.student-card__badge--state-ADMITIDO {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.student-card__badge--state-RECHAZADO {
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .student-card__meta {

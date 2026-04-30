@@ -18,6 +18,8 @@
 .convocatoria-detalle__title {
   margin: 0;
   font-size: 1.75rem;
+  width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .convocatoria-detalle__header {
@@ -62,6 +64,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.convocatoria-detalle__status--closed {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
 }
 
 .convocatoria-detalle__retry {
