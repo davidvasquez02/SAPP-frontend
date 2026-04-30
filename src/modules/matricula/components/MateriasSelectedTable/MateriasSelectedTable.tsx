@@ -5,10 +5,17 @@ type MateriasSelectedTableProps = {
   selected: MateriaSeleccionada[]
   onGrupoChange: (id: number, grupo: string) => void
   onRemove: (id: number) => void
+  invalidGrupoIds?: number[]
   disabled?: boolean
 }
 
-const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove, disabled = false }: MateriasSelectedTableProps) => {
+const MateriasSelectedTable = ({
+  selected,
+  onGrupoChange,
+  onRemove,
+  invalidGrupoIds = [],
+  disabled = false,
+}: MateriasSelectedTableProps) => {
   if (selected.length === 0) {
     return <p className="materias-selected-table__empty">Aún no has agregado materias.</p>
   }
@@ -36,6 +43,8 @@ const MateriasSelectedTable = ({ selected, onGrupoChange, onRemove, disabled = f
                   type="text"
                   value={materia.grupo}
                   placeholder="Ej: A1"
+                  maxLength={2}
+                  className={invalidGrupoIds.includes(materia.id) ? 'materias-selected-table__grupo-input materias-selected-table__grupo-input--error' : 'materias-selected-table__grupo-input'}
                   disabled={disabled}
                   onChange={(event) => onGrupoChange(materia.id, event.target.value)}
                 />
