@@ -158,9 +158,15 @@ const InscripcionAdmisionDetallePage = () => {
   }, [convocatoriaId, inscripcionId, parsedConvocatoriaId, parsedInscripcionId])
 
   useEffect(() => {
-    setInscripcionEstado(routeState?.inscripcionEstado ?? null)
     setInscripcionEstadoWarning(null)
     setIsUpdatingInscripcionEstado(false)
+
+    if (routeState?.inscripcionEstado) {
+      setInscripcionEstado(routeState.inscripcionEstado)
+      return
+    }
+
+    setInscripcionEstado(null)
   }, [inscripcionId, routeState?.inscripcionEstado])
 
   useEffect(() => {
