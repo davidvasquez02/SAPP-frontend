@@ -1,74 +1,50 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- La pantalla **Fechas académicas por semestre** (`/admisiones/fechas`) ahora separa explícitamente:
-  - fechas del semestre (`fechaInicio`, `fechaFin`), y
-  - fechas de matrículas (`fechas[0].fechaInicio`, `fechas[0].fechaFin`).
-- En creación de periodo, el payload de `POST /api/sapp/periodoAcademico` ya envía `fechas[]` usando las fechas de matrículas (no copia automática desde semestre).
-- Se agregaron validaciones de formulario para rango de semestre y rango de matrículas por separado.
-- El flujo sigue diferenciando crear (`POST`) vs editar periodo (`PUT`).
+- Se corrigió el modal **Nueva convocatoria** en `/admisiones/convocatorias`: el combo de programas ya no depende de convocatorias existentes.
+- Ahora se consume `GET /sapp/programaAcademico` para poblar opciones y se mantiene fallback a programas derivados de convocatorias por resiliencia.
+- El submit sigue enviando `programaId` numérico dentro de `POST /sapp/convocatoriaAdmision` (contrato esperado por backend).
 
 ## Archivos tocados
-- `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`
+- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Confirmar el `tipoTramiteId` correcto para “matrículas” en este módulo (actualmente fijo por constante).
-2. Validar si en edición de periodo también debe permitirse actualizar fechas de matrículas mediante endpoint dedicado (hoy solo actualiza datos del periodo).
-3. Confirmar si backend exige múltiples objetos en `fechas[]` o solo uno para este caso.
+1. Confirmar con backend si el endpoint `/sapp/programaAcademico` siempre retorna `codigoNombre` con formato estable (actualmente se parsea para etiqueta UI).
+2. Resolver errores TypeScript preexistentes del repo que bloquean `npm run build` global (no introducidos por este cambio).
 
 ## Próximos pasos recomendados
-1. Validar funcionalmente en ambiente local con backend arriba:
-   - crear periodo inexistente (año + periodo);
-   - editar un periodo existente;
-   - confirmar refresco de tabla y mensajes UX.
-2. Añadir pruebas unitarias de formulario (modo crear vs editar).
-3. Definir si se debe exponer edición de `fechas` por trámite en la misma vista.
+1. Probar manualmente flujo completo en navegador:
+   - abrir modal,
+   - seleccionar programa (MISI/DCC),
+   - crear convocatoria y validar payload real en Network.
+2. Agregar prueba de integración UI (RTL/Vitest) para asegurar que el combo de programas se puebla desde API aunque no existan convocatorias.
 
 ## Contratos/Esquemas esperados
-### Listado
-- `GET /api/sapp/periodoAcademico/withFechas`
+### Programas
+- `GET /sapp/programaAcademico`
 - Respuesta esperada:
-  - `{ ok, message, data: Array<{ periodo, fechas[] }> }`
+  - `{ ok, message, data: Array<{ id, nombre, codigoNombre }> }`
 
-### Crear
-- `POST /api/sapp/periodoAcademico`
-- Body:
+### Crear convocatoria
+- `POST /sapp/convocatoriaAdmision`
+- Body ejemplo:
 ```json
 {
-  "anio": 2027,
-  "periodo": 1,
-  "fechaInicio": "2027-01-01",
-  "fechaFin": "2027-05-01",
-  "fechas": [
-    {
-      "tipoTramiteId": 2,
-      "fechaInicio": "2027-01-01",
-      "fechaFin": "2027-06-01",
-      "descripcion": "Fechas matriculas 2027-1"
-    }
-  ]
-}
-```
-
-### Actualizar
-- `PUT /api/sapp/periodoAcademico/{id}`
-- Body:
-```json
-{
-  "fechaInicio": "2027-01-01",
-  "fechaFin": "2027-06-15",
-  "descripcion": "Periodo 2027-1 (ajuste fechas)"
+  "cupos": 5,
+  "fechaFin": "2026-02-10",
+  "fechaInicio": "2026-01-29",
+  "observaciones": "observadassss",
+  "programaId": 2,
+  "periodoId": 2
 }
 ```
 
 ## Entorno exacto y paquetes
-- Proyecto: Node + Vite + React + TypeScript.
-- Dependencias exactas: revisar `package.json` (fuente única).
-- Recomendación para nueva instancia:
-  - **No crear entorno duplicado** (no usar conda/venv/poetry aquí).
-  - usar únicamente el `node_modules` del repo con `npm install`.
+- Runtime: Node.js + npm (sin venv/conda/poetry).
+- Frontend: React 19.2.0 + TypeScript ~5.9.3 + Vite (rolldown-vite 7.2.5 alias).
+- **Evitar entornos duplicados**: usar instalación local del repo (`npm install`) y no crear entornos paralelos.
 
 ## Comandos base
 ```bash
@@ -79,8 +55,8 @@ npm run lint
 ```
 
 ## Últimos resultados de pruebas
-- `npm run build`: **falló** por errores TypeScript preexistentes fuera del alcance de este ajuste (ModuleLayout, evaluaciones admisiones, documentos inscripción).
-- `npm run lint`: pendiente.
+- `npm run build`: **falló** por errores TypeScript preexistentes en módulos no relacionados (ModuleLayout/evaluación/documentos).
+- No se ejecutaron pruebas automáticas adicionales en este cambio.
 
 ## Logs útiles
-- Si falla llamada de API, revisar errores de `httpClient` en consola navegador y respuesta `{ ok, message }` backend.
+- Verificar en DevTools Network que `POST /sapp/convocatoriaAdmision` incluya `programaId` (`1` MISI, `2` DCC) según selección del combo.
