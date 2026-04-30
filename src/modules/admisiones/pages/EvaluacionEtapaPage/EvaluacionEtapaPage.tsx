@@ -337,12 +337,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           </Link>
           <div className="evaluacion-etapa-page__header">
             <h1 className="evaluacion-etapa-page__title">{title}</h1>
-            <p className="evaluacion-etapa-page__meta">Inscripción #{inscripcionId}</p>
           </div>
         </>
-      ) : (
-        <p className="evaluacion-etapa-page__meta">Inscripción #{inscripcionId}</p>
-      )}
+      ) : null}
 
       {loading && <p className="evaluacion-etapa-page__status">Cargando evaluación...</p>}
       {!loading && error && (
