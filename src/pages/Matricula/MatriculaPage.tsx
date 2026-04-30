@@ -752,12 +752,14 @@ const MatriculaPage = () => {
               ) : null}
               {!loadingForm && !errorForm ? (
                 <>
-                  <MateriasSelector
-                    materias={materiasCatalogo}
-                    selected={selectedMaterias}
-                    onAdd={handleAddMateria}
-                    disabled={isReadOnlyMatriculaFinalizada}
-                  />
+                  {!isReadOnlyMatriculaFinalizada ? (
+                    <MateriasSelector
+                      materias={materiasCatalogo}
+                      selected={selectedMaterias}
+                      onAdd={handleAddMateria}
+                      disabled={isReadOnlyMatriculaFinalizada}
+                    />
+                  ) : null}
                   <MateriasSelectedTable
                     selected={selectedMaterias}
                     invalidGrupoIds={
@@ -768,6 +770,7 @@ const MatriculaPage = () => {
                         : []
                     }
                     disabled={isReadOnlyMatriculaFinalizada}
+                    readOnlyView={isReadOnlyMatriculaFinalizada}
                     onGrupoChange={(id, grupo) =>
                       setSelectedMaterias((current) => {
                         const updated = current.map((item) =>
@@ -815,6 +818,7 @@ const MatriculaPage = () => {
                 <DocumentosRequeridosTable
                   documentos={documentos}
                   disabledActions={isReadOnlyMatriculaFinalizada}
+                  showActions={!isReadOnlyMatriculaFinalizada}
                   onSelectFile={(docId, file) => {
                     setDocumentos((current) =>
                       current.map((item) => {
@@ -847,21 +851,20 @@ const MatriculaPage = () => {
               ) : null}
             </section>
 
-            <div className="matricula-page__actions">
-              <button
-                type="button"
-                className="matricula-page__confirm"
-                disabled={
-                  isReadOnlyMatriculaFinalizada ||
-                  selectedMaterias.length === 0 ||
-                  isSubmitting ||
-                  !canCreateMatricula
-                }
-                onClick={() => void handleConfirmMatricula()}
-              >
-                {isSubmitting ? "Confirmando..." : "Confirmar matrícula"}
-              </button>
-            </div>
+            {!isReadOnlyMatriculaFinalizada ? (
+              <div className="matricula-page__actions">
+                <button
+                  type="button"
+                  className="matricula-page__confirm"
+                  disabled={
+                    selectedMaterias.length === 0 || isSubmitting || !canCreateMatricula
+                  }
+                  onClick={() => void handleConfirmMatricula()}
+                >
+                  {isSubmitting ? "Confirmando..." : "Confirmar matrícula"}
+                </button>
+              </div>
+            ) : null}
           </>
         ) : null}
       </div>
