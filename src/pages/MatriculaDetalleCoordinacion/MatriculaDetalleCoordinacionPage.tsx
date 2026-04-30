@@ -113,6 +113,15 @@ const MatriculaDetalleCoordinacionPage = () => {
     }))
   }, [])
 
+  const loadDocumentos = useCallback(async () => {
+    if (Number.isNaN(parsedMatriculaId)) {
+      return
+    }
+
+    const documentosData = await getDocumentosMatriculaAcademica(parsedMatriculaId)
+    setDocumentos(documentosData)
+  }, [parsedMatriculaId])
+
   const loadDetalle = useCallback(async () => {
     if (Number.isNaN(parsedMatriculaId)) {
       setError('La matrícula solicitada no es válida.')
@@ -124,10 +133,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     setError(null)
 
     try {
-      const [matriculasData, documentosData] = await Promise.all([
-        getMatriculasAcademicas(),
-        getDocumentosMatriculaAcademica(parsedMatriculaId),
-      ])
+      const matriculasData = await getMatriculasAcademicas()
 
       const selected = matriculasData.find((item) => item.id === parsedMatriculaId)
       if (!selected) {
@@ -156,7 +162,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         )
       }
 
-      setDocumentos(documentosData)
+      await loadDocumentos()
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -166,7 +172,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [parsedMatriculaId])
+  }, [loadDocumentos, parsedMatriculaId])
 
   useEffect(() => {
     void loadDetalle()
@@ -221,7 +227,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         aprobado: true,
         observaciones: null,
       })
-      await loadDetalle()
+      await loadDocumentos()
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
@@ -267,7 +273,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
-      await loadDetalle()
+      await loadDocumentos()
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {

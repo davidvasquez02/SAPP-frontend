@@ -114,6 +114,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 30, 2026: en `/matricula/:matriculaId` (coordinación/admin), al aprobar o rechazar un documento en el detalle, la vista ya no recarga todo el detalle. Ahora espera la respuesta del `PUT /sapp/document` y refresca únicamente la lista documental (`loadDocumentos`), manteniendo intactos los datos generales y la tabla de asignaturas.
 - April 30, 2026: en `/matricula` se eliminó el manejo de `grupo` en materias para todos los roles (UI y validaciones). La tabla de materias ya no muestra columna **Grupo** y el payload de creación/actualización deja de enviar ese campo.
 - April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente, la tabla de materias oculta la columna **Acción** para evitar eliminaciones en esa vista.
 - April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), al cargar documentos ya no se muestra modal/popup de éxito. Después de cada envío exitoso se refresca únicamente el listado de documentos del trámite vigente (`loadDocumentosMatricula`) sin recargar la pantalla completa, manteniendo contexto de la vista.
