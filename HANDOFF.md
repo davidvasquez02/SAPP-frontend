@@ -822,3 +822,38 @@
 ### Environment notes
 - Node/npm environment unchanged.
 - Do not create a duplicate env; reuse existing project Node setup (`npm install` in repo root).
+
+## 2026-04-30 — Solicitudes crédito condonable (previsualización)
+
+### Estado actual
+- Implementado en `src/modules/solicitudes/components/SolicitudEstudianteForm` un bloque adicional solo para solicitudes de crédito condonable en creación por estudiante: campo ciudad/departamento de expedición, botón de previsualización y visor PDF inline.
+- El botón de previsualización solo se habilita cuando existen los 3 datos requeridos: modalidad de contraprestación, al menos un motivo y ciudad/departamento de expedición.
+- El endpoint consumido es `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` con payload:
+  - `estudianteId`, `tipoSolicitudId`, `observaciones`, `modalidadId`, `motivos`, `ciudadExpedicionDocumento`, `solicitudHomologacionesAsignaturas: []`.
+- Debajo del visor se añadió `Cargar archivo de solicitud`, que convierte el PDF base64 previsualizado a `File` y lo asigna al documento requerido en el checklist (heurística por id=18 o nombre tipo carta de solicitud).
+
+### Archivos tocados
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.css`
+- `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`
+- `src/modules/solicitudes/api/solicitudesAcademicasService.ts`
+- `src/modules/solicitudes/api/types.ts`
+
+### Retos abiertos / siguientes pasos
+1. Confirmar con backend si el documento objetivo siempre tendrá `id=18` para evitar heurística por nombre.
+2. Validar con QA que la previsualización solo aplique al flujo de creación de estudiante (no detalle/edición).
+3. Evaluar si el campo debe llamarse estrictamente “departamento” o “ciudad/departamento” según contrato final.
+
+### Contrato esperado (respuesta)
+- `data.base64DocumentoContenido`: base64 del PDF.
+- `data.mimeTypeDocumentoContenido`: `application/pdf`.
+
+### Entorno y versiones
+- Node/npm/stack: sin cambios respecto a la base documentada en este archivo y `README.md`.
+- Evitar crear entornos duplicados: usar el entorno Node del repo (`npm install` en raíz) y no crear `venv/conda/poetry` (no aplica a este frontend).
+
+### Pruebas recientes y logs
+- `npm run build` falla actualmente por errores TypeScript preexistentes en módulo de admisiones (no introducidos por este cambio):
+  - `src/modules/admisiones/api/evaluacionAdmisionService.ts`: import sin uso.
+  - `src/modules/admisiones/api/finalizarEvaluacionService.ts`: comparaciones de tipo en método HTTP.
+  - `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: acceso a propiedad `reasons` no existente en un branch de tipo.

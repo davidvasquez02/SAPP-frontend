@@ -35,6 +35,15 @@ export interface SolicitudEstudiantePayload {
 
 interface SolicitudEstudianteFormProps {
   tipos: TipoSolicitudDto[]
+  estudianteId: number
+  onPreviewCreditoCondonable: (payload: {
+    estudianteId: number
+    tipoSolicitudId: number
+    observaciones: string
+    modalidadId: number
+    motivos: string[]
+    ciudadExpedicionDocumento: string
+  }) => Promise<{ base64DocumentoContenido: string; mimeTypeDocumentoContenido: string }>
   onSubmit?: (payload: SolicitudEstudiantePayload) => Promise<void> | void
 }
 
@@ -81,7 +90,7 @@ const isHomologacionTipo = (tipo: TipoSolicitudDto | null): boolean => {
   return normalizeText(descriptor).includes('HOMOLOG')
 }
 
-const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormProps) => {
+const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonable, onSubmit }: SolicitudEstudianteFormProps) => {
   const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
   const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
@@ -97,6 +106,9 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
   const [nuevaAsignaturaNombre, setNuevaAsignaturaNombre] = useState('')
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
+  const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -109,6 +121,9 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
   )
   const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
+  const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
+  const canPreviewCredito =
+    isCreditoCondonable && modalidadId !== null && motivosCreditoValidos.length > 0 && ciudadExpedicionDocumento.trim().length > 0
 
   useEffect(() => {
     if (selectedTipo == null) {
@@ -321,6 +336,47 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
     setHomologaciones([])
     setNuevaAsignaturaNombre('')
     setMotivosCredito([''])
+    setCiudadExpedicionDocumento('')
+    setPreviewPdfUrl(null)
+  }
+
+  const handlePreviewCredito = async () => {
+    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null) {
+      return
+    }
+    setPreviewLoading(true)
+    try {
+      const response = await onPreviewCreditoCondonable({
+        estudianteId,
+        tipoSolicitudId,
+        observaciones: observaciones || 'Solicitud de crédito condonable',
+        modalidadId,
+        motivos: motivosCreditoValidos,
+        ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
+      })
+      setPreviewPdfUrl(`data:${response.mimeTypeDocumentoContenido};base64,${response.base64DocumentoContenido}`)
+      setErrorMsg(null)
+    } catch (previewError) {
+      setPreviewPdfUrl(null)
+      setErrorMsg(previewError instanceof Error ? previewError.message : 'No fue posible generar la previsualización.')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleCargarDocumentoSolicitud = async () => {
+    if (!previewPdfUrl) {
+      return
+    }
+    const requirement = documentosDraft.find((item) => item.id === 18 || normalizeText(item.nombre).includes('CARTA SOLICITUD'))
+    if (!requirement) {
+      setErrorMsg('No se encontró el requisito de carta de solicitud de crédito condonable en el listado de documentos.')
+      return
+    }
+    const response = await fetch(previewPdfUrl)
+    const blob = await response.blob()
+    const file = new File([blob], 'carta-solicitud-credito-condonable.pdf', { type: 'application/pdf' })
+    handleFileChange(requirement.id, file)
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -490,6 +546,29 @@ const SolicitudEstudianteForm = ({ tipos, onSubmit }: SolicitudEstudianteFormPro
               + Agregar motivo
             </button>
           </div>
+          <label htmlFor="ciudadExpedicionDocumento">Departamento/Ciudad de expedición del documento *</label>
+          <input
+            id="ciudadExpedicionDocumento"
+            value={ciudadExpedicionDocumento}
+            onChange={(event) => setCiudadExpedicionDocumento(event.target.value)}
+            placeholder="Ej: Bucaramanga"
+          />
+          <button
+            type="button"
+            className="solicitud-estudiante-form__add-inline"
+            onClick={handlePreviewCredito}
+            disabled={!canPreviewCredito || previewLoading}
+          >
+            {previewLoading ? 'Generando previsualización...' : 'Previsualizar documento de solicitud'}
+          </button>
+          {previewPdfUrl && (
+            <div className="solicitud-estudiante-form__preview">
+              <iframe title="Previsualización solicitud crédito condonable" src={previewPdfUrl} />
+              <button type="button" className="solicitud-estudiante-form__add-inline" onClick={handleCargarDocumentoSolicitud}>
+                Cargar archivo de solicitud
+              </button>
+            </div>
+          )}
         </div>
       )}
 

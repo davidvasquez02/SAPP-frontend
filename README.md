@@ -324,3 +324,5 @@ Mock data for the Admisiones module still lives in:
 
 - April 30, 2026: refactor del módulo de Configuración a **Fechas** para enfocarlo en la configuración de fechas académicas. Se cambiaron etiquetas e iconos (calendario), ruta principal `/fechas` y ruta de admisiones `/admisiones/fechas`.
 - April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se ajustó el estado de carga del bloque **Documentos de la matrícula** para que use una presentación visual más guiada (mensaje principal + texto de contexto), alineada con el estilo aplicado en la carga de documentos al crear aspirantes desde coordinación.
+
+- April 30, 2026: módulo /solicitudes (rol ESTUDIANTE, creación) ahora incluye flujo de crédito condonable con nuevo campo `Departamento/Ciudad de expedición`, previsualización PDF vía `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` (habilitada solo con modalidad + motivos + ciudad diligenciados), visor inline del PDF y acción `Cargar archivo de solicitud` para adjuntar automáticamente la carta generada al requisito documental de crédito condonable.

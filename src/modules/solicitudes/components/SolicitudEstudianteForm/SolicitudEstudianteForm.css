@@ -147,3 +147,18 @@
 .solicitud-estudiante-form__add-inline {
   align-self: flex-start;
 }
+
+.solicitud-estudiante-form__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.solicitud-estudiante-form__preview iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}

@@ -51,6 +51,21 @@ export interface CreateSolicitudResponseDto {
   tipoTramiteCodigo?: string | null
 }
 
+export interface PreviewSolicitudCreditoRequestDto {
+  estudianteId: number
+  tipoSolicitudId: number
+  observaciones: string
+  modalidadId: number
+  motivos: string[]
+  ciudadExpedicionDocumento: string
+  solicitudHomologacionesAsignaturas: SolicitudHomologacionAsignaturaRequestDto[]
+}
+
+export interface PreviewSolicitudCreditoResponseDto {
+  base64DocumentoContenido: string
+  mimeTypeDocumentoContenido: string
+}
+
 export interface SolicitudHomologacionAsignaturaRequestDto {
   asignatura_origen_id: number
   asignatura_destino_id: number
