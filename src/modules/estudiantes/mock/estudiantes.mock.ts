@@ -9,6 +9,7 @@ export const programasMock: ProgramaCoordinacion[] = [
 export const estudiantesMock: EstudianteCoordinacion[] = [
   {
     id: 101,
+    idAspirante: null,
     codigo: '22012001',
     nombreCompleto: 'Valentina Rojas Herrera',
     fotoUrl: null,
@@ -26,6 +27,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
   },
   {
     id: 102,
+    idAspirante: null,
     codigo: '22012008',
     nombreCompleto: 'Andrés Felipe Pineda',
     fotoUrl: null,
@@ -43,6 +45,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
   },
   {
     id: 203,
+    idAspirante: null,
     codigo: '23021003',
     nombreCompleto: 'María Camila Gómez Duarte',
     fotoUrl: null,
@@ -60,6 +63,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
   },
   {
     id: 204,
+    idAspirante: null,
     codigo: '23021011',
     nombreCompleto: 'Julián Sebastián Cárdenas',
     fotoUrl: null,
@@ -77,6 +81,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
   },
   {
     id: 305,
+    idAspirante: null,
     codigo: '21033002',
     nombreCompleto: 'Natalia Milena Blanco López',
     fotoUrl: null,

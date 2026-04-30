@@ -29,6 +29,7 @@ type ProgramaAcademicoBackend = {
 type EstudianteConsultaBackend = {
   estudiante: {
     id: number
+    idAspirante: number | null
     codigoEstudianteUis: string | null
     cohorte: number | null
     estado: string | null
@@ -114,6 +115,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
 
   return {
     id: item.estudiante.id,
+    idAspirante: item.estudiante.idAspirante,
     codigo: item.estudiante.codigoEstudianteUis?.trim() || `EST-${item.estudiante.id}`,
     nombreCompleto: item.nombreCompleto.trim(),
     fotoUrl: buildFotoUrl(item.estudiante.foto),

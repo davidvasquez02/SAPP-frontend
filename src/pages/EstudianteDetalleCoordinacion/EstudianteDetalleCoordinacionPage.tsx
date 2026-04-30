@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import {
-  getAdmisionesByEstudiante,
+  getAdmisionesByAspirante,
   getMatriculasByEstudiante,
   getSolicitudesByEstudiante,
 } from '../../modules/estudiantes/services/estudianteDetalleService'
@@ -105,6 +105,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         }
 
         setEstudiante(data)
+        await loadTabsData(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
       } finally {
@@ -112,14 +113,17 @@ const EstudianteDetalleCoordinacionPage = () => {
       }
     }
 
-    const loadTabsData = async () => {
+    const loadTabsData = async (estudianteData: EstudianteCoordinacion) => {
       setIsLoadingTabs(true)
       setTabsError(null)
 
       try {
+        const admisionesPromise = estudianteData.idAspirante
+          ? getAdmisionesByAspirante(estudianteData.idAspirante)
+          : Promise.resolve([])
         const [matriculasData, admisionesData, solicitudesData] = await Promise.all([
           getMatriculasByEstudiante(id),
-          getAdmisionesByEstudiante(id),
+          admisionesPromise,
           getSolicitudesByEstudiante(id),
         ])
 
@@ -138,7 +142,6 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
 
     void loadEstudiante()
-    void loadTabsData()
   }, [estudianteId])
 
   const contenidoTab = useMemo(() => {
@@ -173,6 +176,10 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
 
     if (tabActiva === 'ADMISION') {
+      if (!estudiante?.idAspirante) {
+        return <p className="estudiante-detalle__mini-status">No hay aspirante asociado para este estudiante.</p>
+      }
+
       if (admisiones.length === 0) {
         return <p className="estudiante-detalle__mini-status">No hay procesos de admisión registrados.</p>
       }
@@ -210,7 +217,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         ))}
       </div>
     )
-  }, [admisiones, isLoadingTabs, matriculas, solicitudes, tabActiva, tabsError])
+  }, [admisiones, estudiante?.idAspirante, isLoadingTabs, matriculas, solicitudes, tabActiva, tabsError])
 
   return (
     <ModuleLayout title="Estudiantes">

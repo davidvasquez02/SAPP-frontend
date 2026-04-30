@@ -6,6 +6,7 @@ export interface ProgramaCoordinacion {
 
 export interface EstudianteCoordinacion {
   id: number
+  idAspirante: number | null
   codigo: string
   nombreCompleto: string
   fotoUrl: string | null

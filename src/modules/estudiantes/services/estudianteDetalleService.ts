@@ -25,7 +25,7 @@ type AdmisionBackendDto = {
   puntajeTotal: number | null
 }
 
-const ADMISION_BY_ESTUDIANTE_ENDPOINT = '/sapp/inscripcionAdmision/estudiante'
+const ADMISION_BY_ASPIRANTE_ENDPOINT = '/sapp/inscripcionAdmision/aspirante'
 
 const mapMatriculaResumen = async (
   matricula: MatriculaAcademicaListadoDto,
@@ -90,16 +90,20 @@ export const getSolicitudesByEstudiante = async (estudianteId: number): Promise<
   return Promise.all(solicitudes.map((item) => mapSolicitudResumen(item)))
 }
 
-export const getAdmisionesByEstudiante = async (estudianteId: number): Promise<AdmisionResumen[]> => {
-  const response = await httpGet<ApiResponse<AdmisionBackendDto[]>>(
-    `${ADMISION_BY_ESTUDIANTE_ENDPOINT}?estudianteId=${encodeURIComponent(estudianteId)}`,
+export const getAdmisionesByAspirante = async (aspiranteId: number): Promise<AdmisionResumen[]> => {
+  const response = await httpGet<ApiResponse<AdmisionBackendDto | null>>(
+    `${ADMISION_BY_ASPIRANTE_ENDPOINT}/${encodeURIComponent(aspiranteId)}`,
   )
 
   if (!response.ok) {
-    throw new Error(response.message || 'No fue posible cargar las admisiones del estudiante.')
+    throw new Error(response.message || 'No fue posible cargar las admisiones del aspirante.')
   }
 
-  return Promise.all((response.data ?? []).map((item) => mapAdmisionResumen(item)))
+  if (!response.data) {
+    return []
+  }
+
+  return [await mapAdmisionResumen(response.data)]
 }
 
 export type { DocumentoTramiteItemDto }
