@@ -236,3 +236,43 @@
     align-items: stretch;
   }
 }
+
+
+.matricula-page__estado-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.matricula-page__estado-badge--pendiente-documentos {
+  background: color-mix(in srgb, #8e24aa, transparent 86%);
+  color: #6a1b9a;
+  border-color: color-mix(in srgb, #8e24aa, transparent 70%);
+}
+
+.matricula-page__estado-badge--radicada {
+  background: color-mix(in srgb, #0b57d0, transparent 86%);
+  color: #0b57d0;
+  border-color: color-mix(in srgb, #0b57d0, transparent 72%);
+}
+
+.matricula-page__estado-badge--finalizada {
+  background: color-mix(in srgb, #1b5e20, transparent 84%);
+  color: #1b5e20;
+  border-color: color-mix(in srgb, #1b5e20, transparent 72%);
+}
+
+.matricula-page__estado-badge--default {
+  background: color-mix(in srgb, var(--surface-container-low), transparent 16%);
+  color: var(--text-secondary);
+  border-color: color-mix(in srgb, var(--outline), transparent 48%);
+}
+
+.matricula-detalle__decision-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
