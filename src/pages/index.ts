@@ -22,4 +22,4 @@ export { SolicitudDetallePage } from "./SolicitudDetalle";
 
 export { ConfigFechasAdmisionesPage } from "./ConfigFechasAdmisiones";
 
-export { ConfiguracionModulePage } from "./ConfiguracionModule";
+export { FechasModulePage } from "./FechasModule";

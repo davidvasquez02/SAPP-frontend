@@ -6,7 +6,7 @@ import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convo
 import { getPeriodosAcademicos } from "../../modules/configFechas/api/periodoAcademicoService";
 import type { PeriodoAcademicoDto } from "../../modules/configFechas/api/types";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
-import "./ConfiguracionModulePage.css";
+import "./FechasModulePage.css";
 
 const formatFecha = (value: string | null) => {
   if (!value) {
@@ -23,7 +23,7 @@ const formatFecha = (value: string | null) => {
 
 const ITEMS_PER_PAGE = 10;
 
-const ConfiguracionModulePage = () => {
+const FechasModulePage = () => {
   const navigate = useNavigate();
   const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
   const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>(
@@ -72,7 +72,7 @@ const ConfiguracionModulePage = () => {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "No fue posible cargar el módulo de configuración.",
+              : "No fue posible cargar el módulo de fechas académicas.",
           );
           setPeriodos([]);
           setConvocatorias([]);
@@ -108,18 +108,18 @@ const ConfiguracionModulePage = () => {
   }, [convocatorias, convocatoriasPage]);
 
   return (
-    <ModuleLayout title="Configuración">
+    <ModuleLayout title="Fechas">
       <section className="config-module">
         <header className="config-module__header">
-          <h1>Módulo de configuración</h1>
+          <h1>Módulo de fechas académicas</h1>
           <p>
-            Centraliza las configuraciones del sistema. Primero se visualizan
+            Centraliza las fechas académicas del sistema. Primero se visualizan
             los períodos académicos y luego las convocatorias.
           </p>
         </header>
 
         {isLoading ? (
-          <p className="config-module__status">Cargando configuraciones...</p>
+          <p className="config-module__status">Cargando fechas académicas...</p>
         ) : null}
         {error ? (
           <p className="config-module__status config-module__status--error">
@@ -140,7 +140,7 @@ const ConfiguracionModulePage = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate("/admisiones/configuracion/fechas")}
+                  onClick={() => navigate("/admisiones/fechas")}
                 >
                   Gestionar períodos
                 </button>
@@ -265,4 +265,4 @@ const ConfiguracionModulePage = () => {
   );
 };
 
-export default ConfiguracionModulePage;
+export default FechasModulePage;

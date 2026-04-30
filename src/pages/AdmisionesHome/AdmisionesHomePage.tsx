@@ -153,9 +153,9 @@ const AdmisionesHomePage = () => {
             <button
               type="button"
               className="admisiones-home__config-button"
-              onClick={() => navigate("/configuracion")}
+              onClick={() => navigate("/fechas")}
             >
-              Configurar convocatorias
+              Configurar fechas académicas
             </button>
           ) : null}
         </header>

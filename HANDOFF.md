@@ -759,3 +759,5 @@
 
 
 - April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se bloquearon acciones de validación por estado. Si la matrícula está `RADICADA`, quedan deshabilitados aprobar/rechazar documentos y el botón **Aprobar documentos**. Si está `FINALIZADA`, además quedan deshabilitados aprobar/rechazar materias y **Guardar validación de asignaturas**; el estado del detalle ahora usa los mismos badges de color del listado.
+
+- April 30, 2026 (latest): refactor de navegación para módulo **Fechas** (antes Configuración). Nuevo acceso `/fechas`, icono calendario y actualización de ruta de admisiones a `/admisiones/fechas`.

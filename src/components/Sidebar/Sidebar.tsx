@@ -30,7 +30,7 @@ const Sidebar = () => {
       ROLES.SECRETARIA,
       ROLES.ADMIN,
     ]);
-  const canSeeConfiguracion =
+  const canSeeFechas =
     session?.kind === "SAPP" &&
     hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.ADMIN]);
   const isProfesorOnly =
@@ -63,10 +63,10 @@ const Sidebar = () => {
       visible: canSeeAdmisiones,
     },
     {
-      to: "/configuracion",
-      label: "Configuración",
-      icon: "⚙️",
-      visible: canSeeConfiguracion,
+      to: "/fechas",
+      label: "Fechas",
+      icon: "📅",
+      visible: canSeeFechas,
     },
   ];
 
