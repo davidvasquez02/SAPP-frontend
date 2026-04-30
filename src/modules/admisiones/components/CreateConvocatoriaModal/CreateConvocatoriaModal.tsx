@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { createConvocatoriaAdmision } from '../../api/convocatoriaAdmisionService'
 import type {
@@ -8,6 +8,8 @@ import type {
 import type { ProfesorOption } from '../../mock/profesores.mock'
 import { assignProfesoresToConvocatoria } from '../../services/convocatoriaProfesoresMockService'
 import { ensurePeriodoForAdmision } from '../../services/ensurePeriodoService'
+import type { ApiResponse } from '../../../../api/types'
+import { httpGet } from '../../../../shared/http/httpClient'
 import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
 
@@ -53,6 +55,45 @@ const getDefaultDatesForSemester = (anio: number, semestre: 1 | 2) =>
 
 const initialDates = getDefaultDatesForSemester(nowYear, 1)
 
+
+const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
+
+type ProgramaAcademicoBackend = {
+  id: number
+  nombre: string
+  codigoNombre: string
+}
+
+const buildProgramaLabel = (programa: ProgramaAcademicoBackend): string => {
+  const normalizedName = programa.nombre.trim().toUpperCase()
+  const codigo = programa.codigoNombre.split('-')[1]?.trim().toUpperCase()
+
+  if (normalizedName === 'MISI') {
+    return `${codigo || 'MISI'} - Maestría en Ingeniería de Sistemas e Informática`
+  }
+
+  if (normalizedName === 'DCC') {
+    return `${codigo || 'DCC'} - Doctorado en Ciencias de la Computación`
+  }
+
+  return programa.codigoNombre.trim() || programa.nombre.trim()
+}
+
+const getProgramasAdmision = async (): Promise<ProgramaOption[]> => {
+  const response = await httpGet<ApiResponse<ProgramaAcademicoBackend[]>>(PROGRAMAS_ENDPOINT)
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar los programas académicos.')
+  }
+
+  return (response.data ?? [])
+    .map((programa) => ({
+      programaId: programa.id,
+      programa: buildProgramaLabel(programa),
+    }))
+    .sort((a, b) => a.programa.localeCompare(b.programa, 'es'))
+}
+
 const initialFormState: FormState = {
   programaId: '',
   anio: String(nowYear),
@@ -82,19 +123,7 @@ export const CreateConvocatoriaModal = ({
   const [submitStep, setSubmitStep] = useState<SubmitStep>('idle')
   const [submitNote, setSubmitNote] = useState<string | null>(null)
 
-  const programas = useMemo<ProgramaOption[]>(() => {
-    const grouped = new Map<number, string>()
-
-    convocatorias.forEach((convocatoria) => {
-      if (!grouped.has(convocatoria.programaId)) {
-        grouped.set(convocatoria.programaId, convocatoria.programa)
-      }
-    })
-
-    return Array.from(grouped.entries())
-      .map(([programaId, programa]) => ({ programaId, programa }))
-      .sort((a, b) => a.programa.localeCompare(b.programa, 'es'))
-  }, [convocatorias])
+  const [programas, setProgramas] = useState<ProgramaOption[]>([])
 
   useEffect(() => {
     if (!open) {
@@ -106,19 +135,28 @@ export const CreateConvocatoriaModal = ({
     const loadOptions = async () => {
       setIsLoadingOptions(true)
       try {
-        const profesoresData = await fetchProfesores()
+        const [profesoresData, programasData] = await Promise.all([
+          fetchProfesores(),
+          getProgramasAdmision(),
+        ])
 
         if (!active) {
           return
         }
 
+        const fallbackProgramas = convocatorias
+          .map((convocatoria) => ({ programaId: convocatoria.programaId, programa: convocatoria.programa }))
+          .filter((item, index, all) => all.findIndex((current) => current.programaId === item.programaId) === index)
+
+        const resolvedProgramas = programasData.length > 0 ? programasData : fallbackProgramas
         const nextYear = new Date().getFullYear()
         const defaultDates = getDefaultDatesForSemester(nextYear, 1)
 
         setProfesores(profesoresData)
+        setProgramas(resolvedProgramas)
         setFormState({
           ...initialFormState,
-          programaId: programas[0] ? String(programas[0].programaId) : '',
+          programaId: resolvedProgramas[0] ? String(resolvedProgramas[0].programaId) : '',
           anio: String(nextYear),
           fechaInicio: defaultDates.inicio,
           fechaFin: defaultDates.fin,
@@ -148,7 +186,7 @@ export const CreateConvocatoriaModal = ({
     return () => {
       active = false
     }
-  }, [open, programas])
+  }, [convocatorias, open])
 
   useEffect(() => {
     if (!open) {
