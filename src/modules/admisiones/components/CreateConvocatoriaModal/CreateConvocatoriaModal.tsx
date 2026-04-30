@@ -251,6 +251,10 @@ export const CreateConvocatoriaModal = ({
       nextErrors.fechaFin = 'La fecha de fin no puede ser menor a la fecha de inicio.'
     }
 
+    if (selectedProfesores.length === 0) {
+      nextErrors.profesorId = 'Debe seleccionar al menos un profesor.'
+    }
+
     return nextErrors
   }
 
@@ -284,6 +288,7 @@ export const CreateConvocatoriaModal = ({
     })
 
     setFormState((prev) => ({ ...prev, profesorId: '' }))
+    setErrors((prev) => ({ ...prev, profesorId: undefined }))
   }
 
   const handleRemoveProfesor = (profesorId: number) => {
@@ -553,7 +558,7 @@ export const CreateConvocatoriaModal = ({
           </label>
 
           <div className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
-            <span>Profesores (opcional)</span>
+            <span>Profesores</span>
             <div className="create-convocatoria-modal__profesor-picker">
               <select
                 value={formState.profesorId}
@@ -599,6 +604,9 @@ export const CreateConvocatoriaModal = ({
                 ))
               )}
             </div>
+            {errors.profesorId ? (
+              <span className="create-convocatoria-modal__error">{errors.profesorId}</span>
+            ) : null}
           </div>
 
           {isSubmitting ? (
