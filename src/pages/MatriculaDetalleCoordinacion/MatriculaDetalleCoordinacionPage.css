@@ -118,6 +118,30 @@
   justify-content: flex-end;
 }
 
+
+.matricula-detalle__docs-loading {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+  background: color-mix(in srgb, var(--surface-container-low), transparent 28%);
+}
+
+.matricula-detalle__docs-loading-label,
+.matricula-detalle__docs-loading-hint {
+  margin: 0;
+}
+
+.matricula-detalle__docs-loading-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.matricula-detalle__docs-loading-hint {
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+}
+
 .matricula-detalle__documents {
   display: flex;
   flex-direction: column;

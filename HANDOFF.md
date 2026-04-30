@@ -764,3 +764,34 @@
 - April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se bloquearon acciones de validación por estado. Si la matrícula está `RADICADA`, quedan deshabilitados aprobar/rechazar documentos y el botón **Aprobar documentos**. Si está `FINALIZADA`, además quedan deshabilitados aprobar/rechazar materias y **Guardar validación de asignaturas**; el estado del detalle ahora usa los mismos badges de color del listado.
 
 - April 30, 2026 (latest): refactor de navegación para módulo **Fechas** (antes Configuración). Nuevo acceso `/fechas`, icono calendario y actualización de ruta de admisiones a `/admisiones/fechas`.
+
+## Update — April 30, 2026 (Ajuste visual estado de carga en detalle de matrícula)
+
+### Current status
+- En `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`, el bloque **Documentos de la matrícula** ahora muestra un estado de carga con estilo contextual (label + hint) cuando `isLoading` está activo, en vez de depender solo del mensaje global del detalle.
+- Se añadieron estilos dedicados en `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.css` (`matricula-detalle__docs-loading*`) para mantener coherencia visual con el patrón usado en la carga documental de aspirantes desde coordinación.
+
+### Open challenges
+- Validar con UX si se desea añadir skeleton/shimmer además del estado textual contextual.
+
+### Next steps
+1. Probar manualmente `/matricula/:matriculaId` con red lenta para verificar visibilidad del nuevo estado en documentos.
+2. Confirmar consistencia visual en `body.light` y `body.dark`.
+3. Si se solicita, extraer patrón de “loading contextual” a clase compartida reusable.
+
+### Paths / artifacts
+- `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`
+- `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.css`
+- `README.md`
+- `HANDOFF.md`
+
+### Schemas / contracts and expected outputs
+- No cambia contratos API.
+- Salida esperada UI: durante carga del detalle, la tarjeta de documentos muestra estado de carga contextual con copy de apoyo.
+
+### Environment snapshot
+- Entorno npm del repositorio.
+- Sin venv/conda/poetry; no crear entornos duplicados.
+
+### Recent test results + logs
+- `npm run lint` pendiente en este ajuste puntual (no ejecutado en este cambio).
