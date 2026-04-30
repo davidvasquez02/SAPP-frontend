@@ -123,7 +123,7 @@ export const getMatriculaVigenteValidationByEstudiante = async (
 
 
 export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<void> => {
-  const response = await httpPut<ApiResponse<unknown>>(`/sapp/matriculaAcademica/aprobar/${matriculaId}`)
+  const response = await httpPut<ApiResponse<unknown>>(`/sapp/matriculaAcademica/${matriculaId}`)
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible aprobar la matrícula académica.')
