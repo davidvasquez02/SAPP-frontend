@@ -325,6 +325,49 @@ const MatriculaDetalleCoordinacionPage = () => {
     }
   }
 
+  const refreshMatriculaAfterApproval = useCallback(async () => {
+    if (Number.isNaN(parsedMatriculaId)) {
+      return
+    }
+
+    const [matriculasData, documentosData] = await Promise.all([
+      getMatriculasAcademicas(),
+      getDocumentosMatriculaAcademica(parsedMatriculaId),
+    ])
+
+    const selected = matriculasData.find((item) => item.id === parsedMatriculaId)
+    if (!selected) {
+      setError('No se encontró la matrícula seleccionada.')
+      setMatricula(null)
+      setAsignaturasDecision({})
+      setDocumentos([])
+      return
+    }
+
+    setError(null)
+    setMatricula(selected)
+    setDocumentos(documentosData)
+    setAsignaturasDecision(
+      selected.asignaturas.reduce<Record<number, AsignaturaDecisionState>>((acc, asignatura) => {
+        const estado = asignatura.estado.toUpperCase()
+        let decision: MatriculaAsignaturaValidacionDecision | '' = ''
+
+        if (estado === 'APROBADA' || estado === 'MATRICULADA') {
+          decision = 'APROBADA'
+        } else if (estado === 'RECHAZADA') {
+          decision = 'RECHAZADA'
+        }
+
+        acc[asignatura.id] = {
+          decision,
+          observaciones: asignatura.observaciones ?? '',
+        }
+
+        return acc
+      }, {}),
+    )
+  }, [parsedMatriculaId])
+
   const handleAprobarDocumentos = async () => {
     if (!matricula) {
       return
@@ -333,7 +376,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     setIsApprovingMatricula(true)
     try {
       await aprobarMatriculaAcademica(matricula.id)
-      await loadDetalle()
+      await refreshMatriculaAfterApproval()
       window.alert('La matrícula fue aprobada correctamente.')
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
