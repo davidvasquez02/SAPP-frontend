@@ -6,13 +6,12 @@ import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
-import { getDocumentosByTramite } from '../../modules/documentos/api/documentosService'
-import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
 import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
-import type { DocumentoTramiteUiItem, DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
+import type { DocumentoTramiteUiItem } from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
 import type { InscripcionDetalleOutletContext } from '../InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
+import { getCachedDocumentos, getEstadoUi, invalidateInscripcionDocumentosCache, prefetchInscripcionDocumentos } from './documentosPrefetchCache'
 
 interface DocumentoActionState {
   viewing: boolean
@@ -21,24 +20,6 @@ interface DocumentoActionState {
 
 const EVALUACION_RETRY_ATTEMPTS = 5
 const EVALUACION_RETRY_DELAY_MS = 500
-
-const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEstado => {
-  if (!documento.documentoCargado) {
-    return 'PENDIENTE'
-  }
-
-  const estado = documento.documentoUploadedResponse?.estadoDocumento?.toUpperCase()
-
-  if (estado === 'APROBADO') {
-    return 'APROBADO'
-  }
-
-  if (estado === 'RECHAZADO') {
-    return 'RECHAZADO'
-  }
-
-  return 'POR_REVISAR'
-}
 
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
@@ -83,12 +64,11 @@ const InscripcionDocumentosPage = () => {
         }
 
         setErrorMessage(null)
-        const data = await getDocumentosByTramite(tramiteId)
-        const mappedDocumentos = data.map((documento) => ({
-          ...documento,
-          validacionEstado: getEstadoUi(documento),
-          validacionObservaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
-        }))
+        const cached = getCachedDocumentos(tramiteId)
+        const mappedDocumentos = cached ?? (await (async () => {
+          await prefetchInscripcionDocumentos(tramiteId)
+          return getCachedDocumentos(tramiteId) ?? []
+        })())
 
         setDocumentos(mappedDocumentos)
       } catch (error) {
@@ -151,6 +131,7 @@ const InscripcionDocumentosPage = () => {
         aprobado: true,
         observaciones: null,
       })
+      invalidateInscripcionDocumentosCache(tramiteId)
       await loadDocumentos()
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
@@ -195,6 +176,7 @@ const InscripcionDocumentosPage = () => {
         aprobado: false,
         observaciones: trimmed,
       })
+      invalidateInscripcionDocumentosCache(tramiteId)
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)

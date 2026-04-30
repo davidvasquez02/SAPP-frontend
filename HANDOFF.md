@@ -866,3 +866,7 @@
 - **Fallback:** si no viene foto, se renderiza un avatar SVG embebido (muñequito) para mantener consistencia visual sin URLs externas.
 - **Contrato actualizado:** `EstudianteDto` tipado con `foto?: { documentoId, nombreArchivo, contenidoBase64, mimeType } | null`.
 - **Siguientes pasos sugeridos:** validar payloads de fotos muy grandes (rendimiento) y, si aplica, migrar a endpoint de miniatura para reducir tamaño en sesión/localStorage.
+
+- 2026-04-30: Refactor de rendimiento en detalle de inscripción (admisiones). Nuevo comportamiento: prefetch inicial obligatorio de Documentos + etapas de evaluación (HV/Examen/Entrevistas) con loader global; navegación entre ventanitas sin recargas de red iniciales. Fallas aisladas por sección visibles como subtítulo de error en el acordeón.
+- Archivos clave: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`, `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`, `src/pages/InscripcionDocumentos/documentosPrefetchCache.ts`, `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`, `src/modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache.ts`.
+- Entorno actual: Node/npm del contenedor, sin crear entornos Python/conda/poetry; no crear entornos duplicados para este repo (frontend JS/TS).
