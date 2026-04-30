@@ -134,6 +134,8 @@ const MatriculaPage = () => {
     string | null
   >(null);
   const [canCreateMatricula, setCanCreateMatricula] = useState(false);
+  const [isReadOnlyMatriculaFinalizada, setIsReadOnlyMatriculaFinalizada] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [periodoId, setPeriodoId] = useState<number>(1);
 
@@ -155,8 +157,13 @@ const MatriculaPage = () => {
   ) => {
     if (validation.status === "EXISTS") {
       setCanCreateMatricula(false);
+      setIsReadOnlyMatriculaFinalizada(
+        validation.matricula.estado.toUpperCase() === "FINALIZADA",
+      );
       setMatriculaValidationMessage(
-        "El estudiante ya tiene matrícula para el periodo vigente.",
+        validation.matricula.estado.toUpperCase() === "FINALIZADA"
+          ? "La matrícula ya está finalizada. Solo puedes consultar el detalle."
+          : "El estudiante ya tiene matrícula para el periodo vigente.",
       );
       setPeriodoId(validation.matricula.periodoId);
       setConvocatoria((current) =>
@@ -191,11 +198,13 @@ const MatriculaPage = () => {
 
     if (validation.status === "NO_ACTIVE_PERIOD") {
       setCanCreateMatricula(false);
+      setIsReadOnlyMatriculaFinalizada(false);
       setMatriculaValidationMessage(validation.message);
       return;
     }
 
     setCanCreateMatricula(true);
+    setIsReadOnlyMatriculaFinalizada(false);
     setMatriculaValidationMessage(null);
   };
 
@@ -745,9 +754,11 @@ const MatriculaPage = () => {
                     materias={materiasCatalogo}
                     selected={selectedMaterias}
                     onAdd={handleAddMateria}
+                    disabled={isReadOnlyMatriculaFinalizada}
                   />
                   <MateriasSelectedTable
                     selected={selectedMaterias}
+                    disabled={isReadOnlyMatriculaFinalizada}
                     onGrupoChange={(id, grupo) =>
                       setSelectedMaterias((current) =>
                         current.map((item) =>
@@ -776,6 +787,7 @@ const MatriculaPage = () => {
               {!loadingForm && !errorForm ? (
                 <DocumentosRequeridosTable
                   documentos={documentos}
+                  disabledActions={isReadOnlyMatriculaFinalizada}
                   onSelectFile={(docId, file) => {
                     setDocumentos((current) =>
                       current.map((item) => {
@@ -813,6 +825,7 @@ const MatriculaPage = () => {
                 type="button"
                 className="matricula-page__confirm"
                 disabled={
+                  isReadOnlyMatriculaFinalizada ||
                   selectedMaterias.length === 0 ||
                   isSubmitting ||
                   !canCreateMatricula

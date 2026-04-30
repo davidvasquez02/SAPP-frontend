@@ -625,3 +625,5 @@
 
 - Build/lint were not re-run in this update window; existing repo baseline still applies (see prior section with lint debt).
 - Manual code-path validation completed for role branching and LIST/FORM toggle behavior in the new containers.
+
+- April 30, 2026 (latest): en `/matricula` (rol `ESTUDIANTE`) se activó modo de solo lectura cuando la matrícula vigente tiene estado `FINALIZADA` (consulta `GET /sapp/matriculaAcademica/vigente/estudiante/{id}`): quedan deshabilitados selector de materias, edición de grupo, eliminación de materias, acciones de documentos y botón de confirmación; se conserva visualización del detalle para consulta.

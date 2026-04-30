@@ -8,6 +8,7 @@ type DocumentosRequeridosTableProps = {
   documentos: DocumentoRequerido[]
   onAction?: (docId: number, action: DocumentoAction) => void
   onSelectFile?: (docId: number, file: File | null) => void
+  disabledActions?: boolean
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -17,7 +18,7 @@ const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
   RECHAZADO: 'rechazado',
 }
 
-const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: DocumentosRequeridosTableProps) => {
+const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile, disabledActions = false }: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
   return (
@@ -64,12 +65,12 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: Docum
               <td>{doc.observaciones ?? '-'}</td>
               <td>
                 <div className="documentos-requeridos-table__actions">
-                  <button type="button" disabled onClick={() => onAction?.(doc.id, 'VER')}>
+                  <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
                     Ver
                   </button>
                   <button
                     type="button"
-                    disabled={doc.uploadStatus === 'UPLOADING'}
+                    disabled={disabledActions || doc.uploadStatus === 'UPLOADING'}
                     onClick={() => {
                       onAction?.(doc.id, 'SUBIR')
                       fileInputRefs.current[doc.id]?.click()
@@ -77,7 +78,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: Docum
                   >
                     Subir
                   </button>
-                  <button type="button" disabled onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
+                  <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
                     Descargar
                   </button>
                   <input
@@ -86,6 +87,7 @@ const DocumentosRequeridosTable = ({ documentos, onAction, onSelectFile }: Docum
                     }}
                     className="documentos-requeridos-table__file-input"
                     type="file"
+                    disabled={disabledActions}
                     onChange={(event) => {
                       onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                     }}

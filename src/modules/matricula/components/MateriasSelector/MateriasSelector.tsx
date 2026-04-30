@@ -6,9 +6,10 @@ type MateriasSelectorProps = {
   materias: MateriaDto[]
   selected: MateriaSeleccionada[]
   onAdd: (materia: MateriaDto) => void
+  disabled?: boolean
 }
 
-const MateriasSelector = ({ materias, selected, onAdd }: MateriasSelectorProps) => {
+const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: MateriasSelectorProps) => {
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
@@ -50,6 +51,7 @@ const MateriasSelector = ({ materias, selected, onAdd }: MateriasSelectorProps) 
         className="materias-selector__input"
         value={query}
         placeholder="Buscar materia…"
+        disabled={disabled}
         onChange={(event) => {
           setQuery(event.target.value)
           setIsOpen(true)
@@ -57,7 +59,7 @@ const MateriasSelector = ({ materias, selected, onAdd }: MateriasSelectorProps) 
         onFocus={() => setIsOpen(true)}
       />
 
-      {isOpen ? (
+      {isOpen && !disabled ? (
         <ul className="materias-selector__dropdown" role="listbox">
           {filteredMaterias.length === 0 ? (
             <li className="materias-selector__empty">Sin resultados</li>
