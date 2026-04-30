@@ -666,3 +666,46 @@
 ### Environment / Packages
 - Keep using existing Node/npm workspace environment (do not create new venv/conda/poetry envs; not applicable to this frontend repo).
 - Frontend stack versions remain those declared in `package.json`.
+
+
+## Update — April 30, 2026 (Matrícula estudiante, reenvío incremental de documentos)
+
+### Current status
+- En la tabla de documentos de matrícula, los ítems en estado `APROBADO` ya no permiten acción `Subir` ni selección de archivo; solo se mantienen acciones de consulta/descarga.
+- Completed frontend adjustment in `src/pages/Matricula/MatriculaPage.tsx` for existing matrícula flow (`validation.status === "EXISTS"`).
+- `Confirmar matrícula` now stays enabled for non-finalized existing enrollments, so students can submit newly selected files for pending/rejected docs without creating a new matrícula.
+- Existing unchanged files are not re-uploaded; upload loop now processes only docs with `selectedFile`.
+
+### Open challenges
+- Backend currently determines rejection/pending states via checklist payload; ensure state transitions after document re-upload match business rules expected by coordinación.
+- UX message after submit is generic (`Documentos actualizados correctamente.`); if required, align exact copy with product/content team.
+
+### Next steps
+1. Validate manually with a real ESTUDIANTE account that already has matrícula `PENDIENTE_DOCUMENTOS` and at least one rejected doc.
+2. Confirm checklist refresh reflects new statuses (`EN_REVISION`/`APROBADO`) after upload.
+3. Add/adjust automated tests for `MatriculaPage` submit branching (`CAN_CREATE` vs `EXISTS`) when test harness for this page is available.
+
+### Paths / artifacts
+- Main implementation: `src/pages/Matricula/MatriculaPage.tsx`.
+- Existing services used (unchanged contract):
+  - `src/modules/matricula/services/matriculaAcademicaService.ts`
+  - `src/api/documentUploadService.ts`
+
+### Schemas / contracts and expected outputs
+- Validation endpoint: `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`
+  - `CAN_CREATE`: create matrícula + upload required docs.
+  - `EXISTS`: do **not** create matrícula; upload only selected new files to `tramiteId = matricula.id`.
+- Document upload endpoint: `POST /sapp/document` with base64 + checksum payload (unchanged).
+- Expected UI output for `EXISTS` submit:
+  - success alert: `Documentos actualizados correctamente.`
+  - unchanged docs preserved; no duplicate uploads triggered.
+
+### Environment snapshot (avoid duplicate env creation)
+- Runtime: Node.js/npm project (no Python venv/Conda/Poetry required for this change).
+- Use existing repo install only:
+  - `npm install`
+  - `npm run lint` or `npm run build`
+- Do not create additional virtual environments; frontend toolchain is fully npm-based.
+
+### Recent test results + logs
+- Pending in this handoff section; see latest CI/local command outputs in task summary for exact command status.

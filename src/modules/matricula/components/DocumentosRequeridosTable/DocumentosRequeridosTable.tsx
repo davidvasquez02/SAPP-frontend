@@ -53,7 +53,14 @@ const DocumentosRequeridosTable = ({
           </tr>
         </thead>
         <tbody>
-          {documentos.map((doc) => (
+          {documentos.map((doc) => {
+            const uploadBlocked =
+              disabledActions ||
+              uploadDisabledOnly ||
+              doc.uploadStatus === 'UPLOADING' ||
+              doc.estado === 'APROBADO'
+
+            return (
             <tr key={doc.id}>
               <td>
                 <div className="documentos-requeridos-table__doc-cell">
@@ -90,7 +97,7 @@ const DocumentosRequeridosTable = ({
                     </button>
                     <button
                       type="button"
-                      disabled={disabledActions || uploadDisabledOnly || doc.uploadStatus === 'UPLOADING'}
+                      disabled={uploadBlocked}
                       onClick={() => {
                         onAction?.(doc.id, 'SUBIR')
                         fileInputRefs.current[doc.id]?.click()
@@ -107,7 +114,7 @@ const DocumentosRequeridosTable = ({
                       }}
                       className="documentos-requeridos-table__file-input"
                       type="file"
-                      disabled={disabledActions || uploadDisabledOnly}
+                      disabled={uploadBlocked}
                       onChange={(event) => {
                         onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                       }}
@@ -116,7 +123,8 @@ const DocumentosRequeridosTable = ({
                 </td>
               ) : null}
             </tr>
-          ))}
+            )
+          })}
         </tbody>
       </table>
     </div>

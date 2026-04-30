@@ -114,6 +114,8 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) los documentos con estado `APROBADO` quedaron bloqueados para edición/reemplazo por parte del estudiante (acciones de subida deshabilitadas), manteniendo solo consulta/descarga para preservar trazabilidad de revisión.
+- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) se habilitó **Confirmar matrícula** cuando ya existe matrícula vigente no finalizada, para permitir reenvío incremental de documentos pendientes/rechazados sin recrear la matrícula. El submit ahora reutiliza el trámite vigente y solo sube archivos recién seleccionados (`selectedFile`), evitando recargas de documentos sin cambios.
 - April 30, 2026: la pantalla de **Inicio** (`/`) fue rediseñada para mostrar una grilla de accesos rápidos (cuadritos) que replica las opciones del sidebar y respeta visibilidad por rol (solo módulos permitidos por sesión).
 - April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando la matrícula vigente está en estado `FINALIZADA`, se ocultaron los textos del bloque de carga de documentos (`Cargue de documentos` y su descripción) y se mantuvo la tabla en modo consulta con acciones habilitadas solo para **Ver** y **Descargar** (la carga/subida queda deshabilitada).
 - April 30, 2026: se removió el acceso a **Créditos** del sidebar principal (no se usará el módulo por decisión funcional), manteniendo intactas rutas/páginas para evitar efectos colaterales mientras se coordina el retiro completo del módulo.
