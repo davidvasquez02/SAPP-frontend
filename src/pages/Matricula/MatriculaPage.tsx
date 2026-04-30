@@ -151,6 +151,24 @@ const MatriculaPage = () => {
   const [periodoFilter, setPeriodoFilter] = useState("TODOS");
   const [searchText, setSearchText] = useState("");
 
+  const getMatriculaEstadoClassName = (estado: string) => {
+    const normalizedEstado = estado.trim().toUpperCase();
+
+    if (normalizedEstado === "PENDIENTE_DOCUMENTOS") {
+      return "matricula-page__estado-badge matricula-page__estado-badge--pendiente-documentos";
+    }
+
+    if (normalizedEstado === "RADICADA") {
+      return "matricula-page__estado-badge matricula-page__estado-badge--radicada";
+    }
+
+    if (normalizedEstado === "FINALIZADA") {
+      return "matricula-page__estado-badge matricula-page__estado-badge--finalizada";
+    }
+
+    return "matricula-page__estado-badge matricula-page__estado-badge--default";
+  };
+
   const applyMatriculaValidation = (
     validation: Awaited<
       ReturnType<typeof getMatriculaVigenteValidationByEstudiante>
@@ -688,7 +706,11 @@ const MatriculaPage = () => {
                           </td>
                           <td>{item.programaAcademico}</td>
                           <td>{item.periodoAcademico}</td>
-                          <td>{item.estado}</td>
+                          <td>
+                            <span className={getMatriculaEstadoClassName(item.estado)}>
+                              {item.estado}
+                            </span>
+                          </td>
                           <td>{formatDateTime(item.fechaSolicitud)}</td>
                           <td>
                             <Link
