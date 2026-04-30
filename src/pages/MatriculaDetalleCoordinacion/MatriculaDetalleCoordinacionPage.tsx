@@ -418,6 +418,37 @@ const MatriculaDetalleCoordinacionPage = () => {
           <>
             <article className="matricula-detalle__card">
               <header className="matricula-detalle__header">
+                <h2>Matrícula de {matricula.estudianteNombreCompleto}</h2>
+                <p>{matricula.programaAcademico}</p>
+              </header>
+
+              <div className="matricula-detalle__grid">
+                <p>
+                  <strong>Matrícula:</strong> #{matricula.id}
+                </p>
+                <p>
+                  <strong>Estudiante:</strong> {matricula.estudianteNombreCompleto}
+                </p>
+                <p>
+                  <strong>Código UIS:</strong> {matricula.codigoEstudianteUis ?? '—'}
+                </p>
+                <p>
+                  <strong>Periodo:</strong> {matricula.periodoAcademico}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {matricula.estado}
+                </p>
+                <p>
+                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
+                </p>
+                <p>
+                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
+                </p>
+              </div>
+            </article>
+
+            <article className="matricula-detalle__card">
+              <header className="matricula-detalle__header">
                 <h3>Documentos de la matrícula</h3>
                 <p>Valida documentos obligatorios y complementarios antes de aprobar.</p>
               </header>
@@ -577,32 +608,6 @@ const MatriculaDetalleCoordinacionPage = () => {
             </article>
 
             <article className="matricula-detalle__card">
-              <header className="matricula-detalle__header">
-                <h2>Matrícula #{matricula.id}</h2>
-                <p>{matricula.programaAcademico}</p>
-              </header>
-
-              <div className="matricula-detalle__grid">
-                <p>
-                  <strong>Estudiante:</strong> {matricula.estudianteNombreCompleto}
-                </p>
-                <p>
-                  <strong>Código UIS:</strong> {matricula.codigoEstudianteUis ?? '—'}
-                </p>
-                <p>
-                  <strong>Periodo:</strong> {matricula.periodoAcademico}
-                </p>
-                <p>
-                  <strong>Estado:</strong> {matricula.estado}
-                </p>
-                <p>
-                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
-                </p>
-                <p>
-                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
-                </p>
-              </div>
-
               <h3>Asignaturas registradas</h3>
               <div className="matricula-detalle__table-wrapper sapp-table-shell">
                 <table className="matricula-detalle__table sapp-table" role="grid">
