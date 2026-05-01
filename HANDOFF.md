@@ -1,28 +1,28 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Ajuste aplicado en detalle de inscripción de admisiones: en el listado de evaluación de **Hoja de vida**, la columna/campo **Observaciones** quedó al final de la tabla para seguir el orden de captura esperado por coordinación.
-- No se alteró contrato API ni payload de guardado (`PUT /sapp/evaluacionAdmision/registroPuntaje`); solo cambió el orden visual de columnas.
+- Ajuste aplicado en detalle de inscripción de admisiones (sección **Documentos cargados**): las acciones **Ver/Descargar** se muestran únicamente cuando la inscripción **no** está en estado final (`ADMITIDO` o `RECHAZADO`).
+- Se preserva la validación por rol (`COORDINADOR`/`SECRETARIA`) y no hubo cambios de contrato API; el cambio es de renderizado condicional en frontend.
 
 ## Archivos tocados
-- `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Validar con usuarios de coordinación que el nuevo orden de columnas (Observaciones al final) mejora la operación en escritorio y móvil.
-2. Verificar si el mismo orden debe aplicarse también a otras etapas/tablas (examen/entrevista) para consistencia total.
+1. Validar con coordinación/secretaría que, en inscripciones no finalizadas, las acciones **Ver/Descargar** vuelven a mostrarse correctamente.
+2. Confirmar en estados `ADMITIDO` y `RECHAZADO` que la columna **Acciones** ya no se renderiza.
 
 ## Próximos pasos recomendados
-1. Validación manual de detalle de inscripción:
-   - entrar a Hoja de vida,
-   - confirmar orden visual: Aspecto, Consideraciones, Puntaje máx., Nota, Observaciones.
-2. Probar edición y guardado de observaciones/nota para confirmar que el cambio fue únicamente de presentación.
-3. (Opcional) agregar test de render de cabeceras en `EvaluacionEtapaSection`.
+1. Validación manual en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` con rol coordinación/secretaría:
+   - inscripción en estado no final: debe aparecer columna **Acciones** con **Ver/Descargar**.
+   - inscripción en estado `ADMITIDO` o `RECHAZADO`: no debe aparecer columna **Acciones**.
+2. Verificar que aprobar/rechazar documentos mantiene comportamiento previo en estados no finales.
+3. (Opcional) agregar test de render condicional de columna Acciones por `isEstadoFinal`.
 
 ## Paths / artefactos clave
-- Componente tabla de evaluación: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`
-- Página consumidora principal: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`
+- Página documentos inscripción: `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`
+- Contexto de estado final (`isEstadoFinal`): `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
 
 ## Contratos/Esquemas esperados
 ### Asignación de evaluadores
