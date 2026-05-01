@@ -1,33 +1,28 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Ajuste aplicado en creación de convocatorias (`/admisiones/convocatorias`) para manejo especial de evaluadores:
-  - `Luis Carlos Gomez` y `Fabio Martinez Carillo` ya no aparecen en el combo de profesores seleccionables.
-  - Ambos se muestran preseleccionados en chips al abrir el modal.
-  - Al guardar, **no** se incluyen en el payload de asignación de evaluadores (`POST /sapp/evaluadorConvocatoria`).
-  - Solo se envían los profesores adicionales que el usuario agregue manualmente.
+- Ajuste aplicado en detalle de inscripción de admisiones: en el listado de evaluación de **Hoja de vida**, la columna/campo **Observaciones** quedó al final de la tabla para seguir el orden de captura esperado por coordinación.
+- No se alteró contrato API ni payload de guardado (`PUT /sapp/evaluacionAdmision/registroPuntaje`); solo cambió el orden visual de columnas.
 
 ## Archivos tocados
-- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
+- `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Confirmar con negocio si la exclusión de los dos profesores debe basarse en nombre (actual) o en `id` fijo de backend.
-2. Confirmar si los chips preseleccionados deben ser removibles por usuario o bloquearse visualmente.
+1. Validar con usuarios de coordinación que el nuevo orden de columnas (Observaciones al final) mejora la operación en escritorio y móvil.
+2. Verificar si el mismo orden debe aplicarse también a otras etapas/tablas (examen/entrevista) para consistencia total.
 
 ## Próximos pasos recomendados
-1. Validación manual de flujo completo en UI:
-   - abrir modal,
-   - verificar que los dos profesores no salgan en dropdown,
-   - verificar que sí aparezcan en chips,
-   - crear convocatoria con profesores extra.
-2. Verificar en Network que `POST /sapp/evaluadorConvocatoria` no reciba IDs de los dos profesores excluidos.
-3. (Opcional) agregar test unitario para la lógica de filtrado/normalización de nombres.
+1. Validación manual de detalle de inscripción:
+   - entrar a Hoja de vida,
+   - confirmar orden visual: Aspecto, Consideraciones, Puntaje máx., Nota, Observaciones.
+2. Probar edición y guardado de observaciones/nota para confirmar que el cambio fue únicamente de presentación.
+3. (Opcional) agregar test de render de cabeceras en `EvaluacionEtapaSection`.
 
 ## Paths / artefactos clave
-- Modal de creación: `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`
-- Servicio de asignación: `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`
+- Componente tabla de evaluación: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`
+- Página consumidora principal: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`
 
 ## Contratos/Esquemas esperados
 ### Asignación de evaluadores

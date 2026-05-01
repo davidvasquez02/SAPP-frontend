@@ -66,9 +66,9 @@ const EvaluacionEtapaSection = ({
               <tr>
                 <th>Aspecto</th>
                 <th>Consideraciones</th>
-                <th>Observaciones</th>
                 <th className="evaluacion-etapa-section__th-max">Puntaje máx.</th>
                 <th className="evaluacion-etapa-section__th-nota">Nota</th>
+                <th>Observaciones</th>
               </tr>
             </thead>
             <tbody>
@@ -91,17 +91,6 @@ const EvaluacionEtapaSection = ({
                         <span className="evaluacion-etapa-section__text-muted">-</span>
                       )}
                     </td>
-                    <td>
-                      <textarea
-                        className="evaluacion-etapa-section__textarea"
-                        rows={2}
-                        value={observacionesValue}
-                        disabled={isReadOnly}
-                        onChange={(event) =>
-                          onChangeDraft(item.id, { observaciones: event.target.value })
-                        }
-                      />
-                    </td>
                     <td className="evaluacion-etapa-section__cell-max">{item.puntajeMax}</td>
                     <td className="evaluacion-etapa-section__cell-nota">
                       <div className="evaluacion-etapa-section__field evaluacion-etapa-section__nota-field">
@@ -123,6 +112,17 @@ const EvaluacionEtapaSection = ({
                           <span className="evaluacion-etapa-section__error">{errorMessage}</span>
                         )}
                       </div>
+                    </td>
+                    <td>
+                      <textarea
+                        className="evaluacion-etapa-section__textarea"
+                        rows={2}
+                        value={observacionesValue}
+                        disabled={isReadOnly}
+                        onChange={(event) =>
+                          onChangeDraft(item.id, { observaciones: event.target.value })
+                        }
+                      />
                     </td>
                   </tr>
                 )
