@@ -11,7 +11,7 @@ import type { DocumentoTramiteUiItem } from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './InscripcionDocumentosPage.css'
 import type { InscripcionDetalleOutletContext } from '../InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
-import { getCachedDocumentos, getEstadoUi, invalidateInscripcionDocumentosCache, prefetchInscripcionDocumentos } from './documentosPrefetchCache'
+import { getCachedDocumentos, invalidateInscripcionDocumentosCache, prefetchInscripcionDocumentos } from './documentosPrefetchCache'
 
 interface DocumentoActionState {
   viewing: boolean
@@ -314,7 +314,7 @@ const InscripcionDocumentosPage = () => {
             <span>Estado</span>
             <span>Validación</span>
             <span>Observaciones</span>
-            {canManageDocuments ? <span>Acciones</span> : null}
+            {canManageDocuments && !isEstadoFinal ? <span>Acciones</span> : null}
           </div>
           {sortedDocumentos.map((documento) => {
             const documentoId = documento.documentoUploadedResponse?.idDocumento
@@ -403,7 +403,7 @@ const InscripcionDocumentosPage = () => {
                     <span className="inscripcion-documentos__observaciones-placeholder">—</span>
                   )}
                 </div>
-                {canManageDocuments ? (
+                {canManageDocuments && !isEstadoFinal ? (
                   <div className="inscripcion-documentos__docActions">
                     <button
                       type="button"
