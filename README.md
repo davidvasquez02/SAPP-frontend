@@ -115,6 +115,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- May 1, 2026 (latest): en el detalle de inscripción de admisiones (etapa **Hoja de vida**), el listado de evaluaciones reordenó columnas para que **Observaciones** quede de última, manteniendo **Puntaje máx.** y **Nota** antes de ese campo para facilitar captura secuencial.
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, las tarjetas de aspirantes ahora muestran **avatar genérico** cuando no existe foto (`ANX-4`) o cuando la imagen no puede cargarse (error de `img`), evitando espacios vacíos/rotos en el listado.
 - April 30, 2026 (latest): en `/admisiones/convocatorias`, la creación de convocatoria ahora **se completa solo después** de registrar cada profesor seleccionado en `POST /sapp/evaluadorConvocatoria` con payload `{ evaluadorId, convocatoriaId }` (una llamada por profesor). Si alguna asociación falla, la convocatoria no se da por finalizada en la UI hasta reintentar exitosamente.
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, cuando el backend responde sin registros de inscripciones (mensajes tipo “no hay/no existe/sin registros”), la vista ahora lo trata como estado vacío funcional: muestra “No hay inscripciones para esta convocatoria.” con estilo neutro (no error en rojo) y sin botón **Reintentar**.
