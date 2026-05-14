@@ -245,3 +245,45 @@ table {
     font-size: 14px;
   }
 }
+
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.sapp-responsive-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .sapp-filters-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .sapp-table-shell {
+    margin-inline: -0.25rem;
+  }
+
+  .sapp-table th,
+  .sapp-table td {
+    white-space: nowrap;
+  }
+}
