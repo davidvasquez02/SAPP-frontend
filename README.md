@@ -115,6 +115,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- May 13, 2026 (latest): se implementó responsive integral del shell principal: sidebar fijo en escritorio y menú drawer en tablet/móvil (botón hamburguesa, overlay, cierre al navegar/click afuera/cerrar), bloqueo de scroll de fondo al abrir menú, y refuerzo global anti-overflow horizontal con ajustes para filtros/tablas en móvil.
 - May 1, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` (coordinación/secretaría), la columna y botones de **Acciones** (**Ver/Descargar**) ahora se renderizan **solo cuando la inscripción no está en estado final** (`ADMITIDO`/`RECHAZADO`), evitando acciones documentales en trámites cerrados.
 - May 1, 2026 (latest): en el detalle de inscripción de admisiones (etapa **Hoja de vida**), el listado de evaluaciones reordenó columnas para que **Observaciones** quede de última, manteniendo **Puntaje máx.** y **Nota** antes de ese campo para facilitar captura secuencial.
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, las tarjetas de aspirantes ahora muestran **avatar genérico** cuando no existe foto (`ANX-4`) o cuando la imagen no puede cargarse (error de `img`), evitando espacios vacíos/rotos en el listado.

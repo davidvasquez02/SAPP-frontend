@@ -10,7 +10,17 @@ interface SidebarItem {
   visible?: boolean;
 }
 
-const Sidebar = () => {
+type SidebarProps = {
+  id?: string;
+  isMobileOpen?: boolean;
+  onCloseMobileMenu?: () => void;
+};
+
+const Sidebar = ({
+  id,
+  isMobileOpen = false,
+  onCloseMobileMenu,
+}: SidebarProps) => {
   const { session, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -72,11 +82,20 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     logout();
+    onCloseMobileMenu?.();
     navigate("/login", { replace: true });
   };
 
+  const sidebarClassName = `sidebar${isMobileOpen ? " sidebar--mobile-open" : ""}`;
+
   return (
-    <aside className="sidebar" aria-label="Navegación principal">
+    <aside id={id} className={sidebarClassName} aria-label="Navegación principal">
+      <div className="sidebar__mobile-actions">
+        <button type="button" className="sidebar__mobile-close" onClick={onCloseMobileMenu}>
+          ✕ Cerrar
+        </button>
+      </div>
+
       <NavLink to="/" className="sidebar__brand" title="Ir al inicio" aria-label="Ir al inicio">
         <span className="sidebar__label_title">SAPP</span>
       </NavLink>
@@ -88,6 +107,7 @@ const Sidebar = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={onCloseMobileMenu}
               className={({ isActive }) =>
                 `sidebar__link${isActive ? " sidebar__link--active" : ""}`
               }
