@@ -68,3 +68,19 @@ npm run lint
 
 ### Resultado de pruebas / logs recientes
 - `npm run build` ejecutado el **2026-05-19**: falla por errores TypeScript preexistentes fuera del alcance de este ajuste (por ejemplo en `ModuleLayout`, `admisiones/api`, `InscripcionDocumentos`).
+
+
+## Update 2026-05-19 (preselección investigación aspirante)
+
+### Estado actual
+- En `/aspirante/documentos`, cuando la sesión del aspirante trae `grupoInvestigacion` y `director` desde `consultaInfo`, la UI ahora:
+  1. Preselecciona el **grupo de investigación** haciendo match contra `codigoNombre` del catálogo.
+  2. Dispara la consulta de docentes del grupo seleccionado.
+  3. Preselecciona el **director** en el segundo combo una vez llegan los docentes.
+
+### Archivo modificado
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+
+### Pruebas sugeridas
+- Ingresar como aspirante con grupo/director ya registrados y validar que ambos combos aparezcan seleccionados sin interacción manual.
+- Cambiar manualmente el grupo para comprobar que el combo de director se refresca según el nuevo grupo.
