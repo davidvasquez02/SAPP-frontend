@@ -115,6 +115,9 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- May 19, 2026 (latest): en `/aspirante/documentos` (carga de documentos del aspirante), la selección de archivo ahora dispara la subida automática sin botón intermedio, con actualización del ítem en caliente (estado/archivo) y refresco del checklist sin recargar la página.
+- May 19, 2026 (latest): en `/aspirante/documentos` se agregó validación previa de tipo de archivo (PDF, Word `.doc/.docx`, imágenes `.png/.jpg/.jpeg`) antes de iniciar carga, mostrando error inline cuando el archivo no cumple.
+- May 19, 2026 (latest): en `/aspirante/documentos` la grilla de requisitos se reorganizó para mostrar hasta 2 tarjetas por fila en pantallas amplias, manteniendo una columna en móvil.
 - May 1, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` (coordinación/secretaría), la columna y botones de **Acciones** (**Ver/Descargar**) ahora se renderizan **solo cuando la inscripción no está en estado final** (`ADMITIDO`/`RECHAZADO`), evitando acciones documentales en trámites cerrados.
 - May 1, 2026 (latest): en el detalle de inscripción de admisiones (etapa **Hoja de vida**), el listado de evaluaciones reordenó columnas para que **Observaciones** quede de última, manteniendo **Puntaje máx.** y **Nota** antes de ese campo para facilitar captura secuencial.
 - April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, las tarjetas de aspirantes ahora muestran **avatar genérico** cuando no existe foto (`ANX-4`) o cuando la imagen no puede cargarse (error de `img`), evitando espacios vacíos/rotos en el listado.

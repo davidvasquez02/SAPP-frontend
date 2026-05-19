@@ -18,6 +18,23 @@ import type { DocumentUploadItem } from '../../modules/documentos/types/document
 import type { AspiranteUser } from '../../context/Auth'
 import './AspiranteDocumentosPage.css'
 
+
+const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg']
+const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/png',
+  'image/jpeg',
+])
+
+const isAllowedDocumentFile = (file: File) => {
+  const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+  const hasValidExtension = ALLOWED_DOCUMENT_EXTENSIONS.includes(extension)
+  const hasValidMimeType = file.type ? ALLOWED_DOCUMENT_MIME_TYPES.has(file.type.toLowerCase()) : false
+  return hasValidExtension || hasValidMimeType
+}
+
 const mapDocumentoToUploadItem = (documento: DocumentChecklistItemDto): DocumentUploadItem => {
   const uploaded = documento.documentoUploadedResponse
   const isUploaded = documento.documentoCargado === true && uploaded != null
@@ -75,6 +92,7 @@ const AspiranteDocumentosPage = () => {
   const [isLoadingDocentes, setIsLoadingDocentes] = useState(false)
   const [investigacionErrorMessage, setInvestigacionErrorMessage] = useState<string | null>(null)
   const [isSavingInvestigacion, setIsSavingInvestigacion] = useState(false)
+  const handleUploadRef = useRef<((id: number) => Promise<void>) | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -202,6 +220,23 @@ const AspiranteDocumentosPage = () => {
     : 100
 
   const handleSelectFile = useCallback((id: number, file: File | null) => {
+    if (file && !isAllowedDocumentFile(file)) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                selectedFile: null,
+                status: item.uploadedFileName ? item.status : 'NOT_SELECTED',
+                errorMessage:
+                  'Tipo de archivo no permitido. Use PDF, Word (.doc/.docx) o imagen (.png/.jpg/.jpeg).',
+              }
+            : item,
+        ),
+      )
+      return
+    }
+
     setItems((prev) =>
       prev.map((item) =>
         item.id === id
@@ -215,6 +250,12 @@ const AspiranteDocumentosPage = () => {
           : item,
       ),
     )
+
+    if (file) {
+      setTimeout(() => {
+        void handleUploadRef.current?.(id)
+      }, 0)
+    }
   }, [])
 
   const handleUpload = useCallback(
@@ -326,6 +367,10 @@ const AspiranteDocumentosPage = () => {
     [items, session],
   )
 
+  useEffect(() => {
+    handleUploadRef.current = handleUpload
+  }, [handleUpload])
+
   const handleAgregarInformacionInvestigacion = useCallback(async () => {
     if (!session || session.kind !== 'ASPIRANTE') {
       setInvestigacionErrorMessage('No se encontró la sesión del aspirante.')
@@ -403,7 +448,7 @@ const AspiranteDocumentosPage = () => {
               onSelectFile={handleSelectFile}
               onUpload={handleUpload}
               disabled={item.status === 'UPLOADING'}
-              fileAccept={item.codigo === 'ANX-4' ? 'image/*' : undefined}
+              fileAccept=".pdf,.doc,.docx,image/png,image/jpeg"
               previewAsImage={item.codigo === 'ANX-4'}
             />
           ))
