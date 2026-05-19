@@ -93,6 +93,8 @@ const AspiranteDocumentosPage = () => {
   const [investigacionErrorMessage, setInvestigacionErrorMessage] = useState<string | null>(null)
   const [isSavingInvestigacion, setIsSavingInvestigacion] = useState(false)
   const handleUploadRef = useRef<((id: number) => Promise<void>) | null>(null)
+  const hasPreselectedGrupoRef = useRef(false)
+  const pendingDirectorNameRef = useRef<string | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -166,6 +168,54 @@ const AspiranteDocumentosPage = () => {
       isMounted = false
     }
   }, [grupoInvestigacionId])
+
+  useEffect(() => {
+    if (!session || session.kind !== 'ASPIRANTE') {
+      return
+    }
+
+    if (hasPreselectedGrupoRef.current || gruposInvestigacion.length === 0) {
+      return
+    }
+
+    const aspiranteUser = session.user as AspiranteUser
+    const grupoGuardado = aspiranteUser.grupoInvestigacion?.trim().toLowerCase()
+    const directorGuardado = aspiranteUser.director?.trim().toLowerCase()
+    if (!grupoGuardado) {
+      hasPreselectedGrupoRef.current = true
+      return
+    }
+
+    const grupoMatched = gruposInvestigacion.find((grupo) =>
+      grupo.codigoNombre.toLowerCase().includes(grupoGuardado),
+    )
+
+    if (!grupoMatched) {
+      hasPreselectedGrupoRef.current = true
+      return
+    }
+
+    setGrupoInvestigacionId(String(grupoMatched.id))
+    pendingDirectorNameRef.current = directorGuardado ?? null
+    hasPreselectedGrupoRef.current = true
+  }, [gruposInvestigacion, session])
+
+  useEffect(() => {
+    if (!pendingDirectorNameRef.current || directoresGrupo.length === 0) {
+      return
+    }
+
+    const directorGuardado = pendingDirectorNameRef.current
+    const directorMatched = directoresGrupo.find((director) =>
+      director.nombre.trim().replace(/\s+/g, ' ').toLowerCase() === directorGuardado,
+    )
+
+    if (directorMatched) {
+      setDirectorGrupoId(String(directorMatched.id))
+    }
+
+    pendingDirectorNameRef.current = null
+  }, [directoresGrupo])
 
   useEffect(() => {
     if (!session || session.kind !== 'ASPIRANTE') {
