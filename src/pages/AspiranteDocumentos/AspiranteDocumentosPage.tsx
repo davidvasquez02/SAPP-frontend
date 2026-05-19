@@ -442,15 +442,20 @@ const AspiranteDocumentosPage = () => {
           <p className="aspirante-documentos__empty">No hay requisitos disponibles.</p>
         ) : (
           items.map((item) => (
-            <DocumentUploadCard
+            <div
               key={item.id}
-              item={item}
-              onSelectFile={handleSelectFile}
-              onUpload={handleUpload}
-              disabled={item.status === 'UPLOADING'}
-              fileAccept=".pdf,.doc,.docx,image/png,image/jpeg"
-              previewAsImage={item.codigo === 'ANX-4'}
-            />
+              className={item.codigo === 'ANX-4' ? 'aspirante-documentos__item aspirante-documentos__item--full' : 'aspirante-documentos__item'}
+            >
+              <DocumentUploadCard
+                item={item}
+                onSelectFile={handleSelectFile}
+                onUpload={handleUpload}
+                showUploadButton={false}
+                disabled={item.status === 'UPLOADING'}
+                fileAccept={item.codigo === 'ANX-4' ? 'image/*' : '.pdf,.doc,.docx,image/png,image/jpeg'}
+                previewAsImage={item.codigo === 'ANX-4'}
+              />
+            </div>
           ))
         )}
       </div>

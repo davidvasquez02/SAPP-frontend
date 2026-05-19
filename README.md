@@ -349,3 +349,9 @@ Mock data for the Admisiones module still lives in:
 
 - April 30, 2026 (latest): pantalla `/admisiones/fechas` ajustada para gestión de periodos académicos con backend real: listado principal desde `GET /api/sapp/periodoAcademico/withFechas`, creación de periodos nuevos con `POST /api/sapp/periodoAcademico` (incluyendo `anio` y `periodo` en formulario), y edición de periodos existentes con `PUT /api/sapp/periodoAcademico/{periodoId}` para actualizar fechas/descripción.
 - April 30, 2026 (latest): en `/admisiones/convocatorias`, durante **Nueva convocatoria** se excluyen del selector de profesores `Luis Carlos Gomez` y `Fabio Martinez Carillo`; ambos quedan preagregados visualmente en la lista de seleccionados, pero al finalizar **no** se incluyen en el envío a `POST /sapp/evaluadorConvocatoria` (solo se envían los profesores agregados manualmente por el usuario).
+
+## Recent decisions (changelog-lite)
+
+- **2026-05-19:** En `/aspirante/documentos`, la carga ahora ocurre automáticamente al seleccionar archivo; se removió la acción manual de “Subir” en la tarjeta para este flujo.
+- **2026-05-19:** Para el requisito `ANX-4` (Foto), la tarjeta ocupa todo el ancho de la grilla en desktop (no se agrupa en pares) y fuerza selección de imágenes (`accept="image/*"`).
+- **2026-05-19:** Cuando un documento ya existe en checklist, el CTA principal cambia a “Reemplazar foto/archivo”, manteniendo “Ver documento/foto” según tipo.
