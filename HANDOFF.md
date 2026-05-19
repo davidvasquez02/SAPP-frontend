@@ -49,3 +49,22 @@ npm run dev
 npm run build
 npm run lint
 ```
+
+---
+
+## Update 2026-05-19 (esta sesión)
+
+### Estado actual
+- Ajustado el flujo de **/aspirante/documentos** para que la carga sea inmediata al seleccionar archivo (sin botón manual de carga en la tarjeta).
+- El item de **Foto (`ANX-4`)** ahora se renderiza en fila completa en desktop (no en pares).
+- Si el documento ya existe, el botón de selección se presenta como **Reemplazar foto/archivo**.
+
+### Archivos modificados en esta sesión
+- `src/components/DocumentUploadCard/DocumentUploadCard.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
+- `README.md`
+- `HANDOFF.md`
+
+### Resultado de pruebas / logs recientes
+- `npm run build` ejecutado el **2026-05-19**: falla por errores TypeScript preexistentes fuera del alcance de este ajuste (por ejemplo en `ModuleLayout`, `admisiones/api`, `InscripcionDocumentos`).

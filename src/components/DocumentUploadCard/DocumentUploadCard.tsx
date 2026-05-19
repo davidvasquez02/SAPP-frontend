@@ -8,6 +8,7 @@ interface DocumentUploadCardProps {
   item: DocumentUploadItem
   onSelectFile: (id: number, file: File | null) => void
   onUpload?: (id: number) => void
+  showUploadButton?: boolean
   onRemoveFile?: (id: number) => void
   disabled?: boolean
   fileAccept?: string
@@ -56,6 +57,7 @@ export const DocumentUploadCard = ({
   disabled = false,
   fileAccept,
   previewAsImage = false,
+  showUploadButton = true,
 }: DocumentUploadCardProps) => {
   const [selectedPreviewDataUrl, setSelectedPreviewDataUrl] = useState<string | null>(null)
   const inputId = `document-upload-${item.id}`
@@ -76,6 +78,12 @@ export const DocumentUploadCard = ({
     return `data:${item.uploadedMimeType};base64,${item.uploadedBase64}`
   }, [item.uploadedBase64, item.uploadedMimeType, previewAsImage])
   const previewUrl = item.selectedFile ? selectedPreviewDataUrl : uploadedPreviewUrl
+  const hasUploadedFile = item.status === 'UPLOADED' || item.status === 'APPROVED' || item.status === 'REJECTED'
+  const selectButtonLabel = hasUploadedFile
+    ? `Reemplazar ${previewAsImage ? 'foto' : 'archivo'}`
+    : previewAsImage
+      ? 'Seleccionar foto'
+      : 'Seleccionar archivo'
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null
@@ -132,7 +140,7 @@ export const DocumentUploadCard = ({
             onChange={handleChange}
             disabled={disabled}
           />
-          <span>{previewAsImage ? 'Seleccionar foto' : 'Seleccionar archivo'}</span>
+          <span>{selectButtonLabel}</span>
         </label>
         {item.selectedFile && onRemoveFile ? (
           <button
@@ -144,7 +152,7 @@ export const DocumentUploadCard = ({
             Quitar archivo
           </button>
         ) : null}
-        {onUpload ? (
+        {onUpload && showUploadButton ? (
           <button
             type="button"
             className="document-upload-card__button"
