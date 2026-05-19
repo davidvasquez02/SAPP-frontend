@@ -1,48 +1,46 @@
 # HANDOFF — SAPP Frontend
 
 ## Estado actual
-- Ajuste aplicado en detalle de inscripción de admisiones (sección **Documentos cargados**): las acciones **Ver/Descargar** se muestran únicamente cuando la inscripción **no** está en estado final (`ADMITIDO` o `RECHAZADO`).
-- Se preserva la validación por rol (`COORDINADOR`/`SECRETARIA`) y no hubo cambios de contrato API; el cambio es de renderizado condicional en frontend.
+- Implementado ajuste solicitado en la pantalla **/aspirante/documentos**:
+  1. **Auto-carga** al seleccionar archivo (sin pulsar botón “Subir”).
+  2. **Actualización inmediata del ítem** afectado y refresco del checklist sin recargar la página.
+  3. **Validación previa** de tipo de archivo permitido (PDF, Word, imagen).
+  4. **Layout de documentos** en grilla (2 por fila en desktop, 1 en móvil).
 
 ## Archivos tocados
-- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
 - `README.md`
 - `HANDOFF.md`
 
 ## Retos abiertos
-1. Validar con coordinación/secretaría que, en inscripciones no finalizadas, las acciones **Ver/Descargar** vuelven a mostrarse correctamente.
-2. Confirmar en estados `ADMITIDO` y `RECHAZADO` que la columna **Acciones** ya no se renderiza.
+1. Confirmar con backend si desean restringir también por **tamaño máximo** de archivo en cliente para alinearlo con validaciones del API.
+2. Confirmar si todos los tipos documentales de admisión comparten las mismas extensiones permitidas o si algunas requieren restricciones más específicas.
 
 ## Próximos pasos recomendados
-1. Validación manual en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` con rol coordinación/secretaría:
-   - inscripción en estado no final: debe aparecer columna **Acciones** con **Ver/Descargar**.
-   - inscripción en estado `ADMITIDO` o `RECHAZADO`: no debe aparecer columna **Acciones**.
-2. Verificar que aprobar/rechazar documentos mantiene comportamiento previo en estados no finales.
-3. (Opcional) agregar test de render condicional de columna Acciones por `isEstadoFinal`.
+1. Probar manualmente `/aspirante/documentos` con archivos válidos e inválidos para verificar mensajes inline.
+2. Validar en UI que al cargar un documento el estado del card cambie a “En revisión” y se mantenga tras el refresco del checklist.
+3. (Opcional) agregar pruebas unitarias al flujo de validación previa de archivo.
 
 ## Paths / artefactos clave
-- Página documentos inscripción: `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`
-- Contexto de estado final (`isEstadoFinal`): `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
+- Vista principal: `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- Estilos de grilla: `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
+- Componente de tarjeta: `src/components/DocumentUploadCard/DocumentUploadCard.tsx`
 
 ## Contratos/Esquemas esperados
-### Asignación de evaluadores
-- Endpoint: `POST /sapp/evaluadorConvocatoria`
-- Payload por iteración:
-  - `evaluadorId: number`
-  - `convocatoriaId: number`
-- Regla implementada:
-  - excluir de `evaluadorId` a profesores con nombre normalizado `luis carlos gomez` y `fabio martinez carillo`.
+- Upload de documento aspirante: `POST /sapp/document`
+- Lectura checklist de documentos: `GET /sapp/document?codigoTipoTramite=1002&tramiteId={id}`
+- Cambio de estado por validación al completar checklist: `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}`
 
 ## Entorno exacto y paquetes
-- Runtime: Node.js + npm.
-- Frontend: React 19.2.0, TypeScript 5.9.3, Vite (rolldown-vite 7.2.5 alias).
-- Sin venv/conda/poetry (no aplica al stack actual).
-- **Evitar entornos duplicados**: usar el entorno local del repo con `npm install`.
+- Runtime: Node.js + npm
+- Frontend: React 19.2.0, TypeScript 5.9.3, Vite (rolldown-vite 7.2.5 alias)
+- Sin venv/conda/poetry (no aplica en este repo)
+- Para evitar entornos duplicados: usar el `node_modules` del repo y no crear entornos paralelos.
 
 ## Últimos resultados de pruebas + logs
-- `npm run lint` ejecutado el 30-Apr-2026:
-  - **falla** por errores preexistentes en varios módulos no relacionados al ajuste (e.g. `no-explicit-any`, `react-hooks/set-state-in-effect`, `react-refresh/only-export-components`).
-  - Resultado del ajuste puntual sin errores de compilación reportados en este cambio.
+- `npm run lint` (2026-05-19): **falla por issues históricos** no relacionados en módulos existentes (`no-explicit-any`, reglas de hooks, etc.).
+- `npm run build` (2026-05-19): **pendiente de ejecución** en esta sesión.
 
 ## Comandos base
 ```bash
