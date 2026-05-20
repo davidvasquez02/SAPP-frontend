@@ -84,3 +84,21 @@ npm run lint
 ### Pruebas sugeridas
 - Ingresar como aspirante con grupo/director ya registrados y validar que ambos combos aparezcan seleccionados sin interacción manual.
 - Cambiar manualmente el grupo para comprobar que el combo de director se refresca según el nuevo grupo.
+
+## Update 2026-05-20 (foto ANX-4 compacta en grilla)
+
+### Estado actual
+- En `/aspirante/documentos` se revierte el comportamiento de tarjeta completa para foto.
+- La grilla de requisitos vuelve a **2 tarjetas por fila en desktop** (sin excepción para ANX-4).
+- La foto ahora se muestra como **miniatura compacta** dentro de la fila de estado del card, con tamaño fijo para mantener altura homogénea respecto a otras tarjetas.
+
+### Archivos modificados
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
+- `src/components/DocumentUploadCard/DocumentUploadCard.tsx`
+- `src/components/DocumentUploadCard/DocumentUploadCard.css`
+
+### Pruebas sugeridas
+- Validar en desktop que ANX-4 se muestre en la misma grilla de 2 columnas que el resto.
+- Cargar/reemplazar una foto y verificar que la miniatura permanezca alineada sin expandir la altura del card.
+
