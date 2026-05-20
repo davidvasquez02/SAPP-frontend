@@ -53,11 +53,10 @@
 }
 
 .document-upload-card__status-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
 }
 
 .document-upload-card__status {
@@ -177,26 +176,31 @@
   font-size: 0.85rem;
 }
 
-.document-upload-card__image-preview {
+.document-upload-card__thumbnail {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 12px;
   border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
-  border-radius: 14px;
   background: color-mix(in srgb, var(--surface), var(--outline) 8%);
-  padding: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  justify-self: start;
-  max-width: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.72rem;
 }
 
-.document-upload-card__image-preview img {
-  display: block;
-  width: auto;
-  max-width: min(100%, 400px);
-  height: auto;
-  max-height: 240px;
-  object-fit: contain;
-  border-radius: 10px;
+.document-upload-card__thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .document-upload-card__status-row {
+    grid-template-columns: 1fr;
+  }
+
+  .document-upload-card__thumbnail {
+    justify-self: start;
+  }
 }

@@ -494,7 +494,7 @@ const AspiranteDocumentosPage = () => {
           items.map((item) => (
             <div
               key={item.id}
-              className={item.codigo === 'ANX-4' ? 'aspirante-documentos__item aspirante-documentos__item--full' : 'aspirante-documentos__item'}
+              className='aspirante-documentos__item'
             >
               <DocumentUploadCard
                 item={item}
