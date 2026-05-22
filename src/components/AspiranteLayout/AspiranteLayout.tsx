@@ -76,11 +76,13 @@ const AspiranteLayout = () => {
           </dl>
         </div>
         <aside className="aspirante-layout__date-card">
-          <p className="aspirante-layout__meta-label">Fecha de inscripción</p>
+          <div className="aspirante-layout__date-header">
+            <p className="aspirante-layout__meta-label">Fecha de inscripción</p>
+            <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+          </div>
           <p className="aspirante-layout__date">12 de mayo de 2026</p>
-          <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
-            Cerrar sesión
-          </button>
         </aside>
       </header>
       <main className="aspirante-layout__content">
