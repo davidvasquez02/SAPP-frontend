@@ -102,3 +102,18 @@ npm run lint
 - Validar en desktop que ANX-4 se muestre en la misma grilla de 2 columnas que el resto.
 - Cargar/reemplazar una foto y verificar que la miniatura permanezca alineada sin expandir la altura del card.
 
+
+## Update 2026-05-20 (alineación fina de tarjetas con foto)
+
+### Estado actual
+- Se aplicó ajuste de alineación para que la tarjeta de **Foto (ANX-4)** no incremente la altura respecto a otras tarjetas.
+- La miniatura se redujo a `2.5rem` y se forzó truncado (`ellipsis`) del nombre de archivo para evitar saltos de línea que desalinean filas.
+
+### Archivos modificados
+- `src/components/DocumentUploadCard/DocumentUploadCard.css`
+- `SAPP-frontend-public/src/components/DocumentUploadCard/DocumentUploadCard.css`
+
+### Validación visual esperada
+- Desktop: tarjetas de la misma fila con alturas más homogéneas incluso con ANX-4 cargada.
+- El nombre del archivo no debe romperse a múltiples líneas en la fila de estado.
+

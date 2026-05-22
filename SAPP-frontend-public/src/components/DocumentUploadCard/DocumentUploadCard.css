@@ -54,9 +54,10 @@
 
 .document-upload-card__status-row {
   display: grid;
-  gap: 0.6rem;
-  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
+  min-height: 2.5rem;
 }
 
 .document-upload-card__status {
@@ -94,6 +95,9 @@
 .document-upload-card__filename {
   font-size: 0.85rem;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .document-upload-card__filename--empty {
@@ -177,16 +181,17 @@
 }
 
 .document-upload-card__thumbnail {
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 12px;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
   border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
   background: color-mix(in srgb, var(--surface), var(--outline) 8%);
   overflow: hidden;
   display: grid;
   place-items: center;
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.62rem;
+  line-height: 1;
 }
 
 .document-upload-card__thumbnail img {
