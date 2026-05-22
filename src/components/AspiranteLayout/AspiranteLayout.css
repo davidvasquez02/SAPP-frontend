@@ -9,8 +9,9 @@
 .aspirante-layout__meta-item{margin:0}
 .aspirante-layout__meta-label{margin:0;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary)}
 .aspirante-layout__meta-value{margin:.1rem 0 0;color:var(--text-primary);font-weight:600}
-.aspirante-layout__date-card{min-width:230px;border-radius:16px;padding:1rem;background:color-mix(in srgb,var(--surface-container-low),var(--primary) 8%);display:grid;align-content:space-between;gap:.4rem}
-.aspirante-layout__date{margin:0;color:var(--text-primary);font-size:1.05rem;font-weight:700}
-.aspirante-layout__logout{border:none;border-radius:999px;padding:.65rem 1.1rem;background:var(--primary);color:var(--on-primary);font-weight:600;cursor:pointer}
+.aspirante-layout__date-card{min-width:260px;border-radius:16px;padding:1rem;background:color-mix(in srgb,var(--surface-container-low),var(--primary) 8%);display:grid;gap:.85rem;align-content:start}
+.aspirante-layout__date-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem}
+.aspirante-layout__date{margin:0;color:var(--text-primary);font-size:1.2rem;font-weight:700;padding:.75rem .85rem;border-radius:12px;background:color-mix(in srgb,var(--surface),var(--primary) 4%)}
+.aspirante-layout__logout{border:none;border-radius:999px;padding:.45rem .9rem;background:var(--primary);color:var(--on-primary);font-weight:600;cursor:pointer;white-space:nowrap;line-height:1.1}
 .aspirante-layout__content{padding:0}
 @media (max-width:980px){.aspirante-layout__header{grid-template-columns:1fr}.aspirante-layout__meta-list{grid-template-columns:1fr}.aspirante-layout__date-card{min-width:0}}
