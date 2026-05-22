@@ -34,9 +34,10 @@ const AspiranteLayout = () => {
   return (
     <div className="aspirante-layout">
       <header className="aspirante-layout__header">
+        <div className="aspirante-layout__profile" aria-hidden="true">👤</div>
         <div className="aspirante-layout__identity">
-          <p className="aspirante-layout__eyebrow">SAPP – Aspirantes</p>
           <h1 className="aspirante-layout__name">{nombre ?? 'Aspirante'}</h1>
+          <p className="aspirante-layout__status">Inscripción activa</p>
           <dl className="aspirante-layout__meta-list">
             <div className="aspirante-layout__meta-item">
               <dt className="aspirante-layout__meta-label">Inscripción</dt>
@@ -68,15 +69,19 @@ const AspiranteLayout = () => {
             ) : null}
             {emailPersonal ? (
               <div className="aspirante-layout__meta-item">
-                <dt className="aspirante-layout__meta-label">Email</dt>
+                <dt className="aspirante-layout__meta-label">Correo electrónico</dt>
                 <dd className="aspirante-layout__meta-value">{emailPersonal}</dd>
               </div>
             ) : null}
           </dl>
         </div>
-        <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
-          Cerrar sesión
-        </button>
+        <aside className="aspirante-layout__date-card">
+          <p className="aspirante-layout__meta-label">Fecha de inscripción</p>
+          <p className="aspirante-layout__date">12 de mayo de 2026</p>
+          <button type="button" className="aspirante-layout__logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </aside>
       </header>
       <main className="aspirante-layout__content">
         <Outlet />

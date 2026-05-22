@@ -170,3 +170,5 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+.aspirante-documentos__header{padding:1.15rem 1.4rem}.aspirante-documentos__list{gap:1.1rem}

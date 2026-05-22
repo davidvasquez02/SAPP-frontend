@@ -1,105 +1,16 @@
-.aspirante-layout {
-    min-height: 100vh;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    background: var(--app-background);
-    margin-left: 4rem;
-    margin-right: 4rem;
-}
 
-.aspirante-layout__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin: clamp(2rem, 2.5vw, 2rem);
-    padding: clamp(1.2rem, 2.2vw, 1.8rem);
-    border-radius: 1.5rem;
-    background: var(--surface);
-    border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
-    box-shadow: var(--shadow-soft);
-}
-
-.aspirante-layout__identity {
-    display: grid;
-    gap: 0.9rem;
-}
-
-.aspirante-layout__eyebrow {
-    margin: 0;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--text-secondary), var(--primary) 20%);
-}
-
-.aspirante-layout__name {
-    margin: 0;
-    font-size: clamp(1.15rem, 2vw, 1.5rem);
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.aspirante-layout__meta-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.45rem 1.2rem;
-    margin: 0;
-}
-
-.aspirante-layout__meta-item {
-    margin: 0;
-    padding: 0;
-    color: var(--text-secondary);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.35rem;
-}
-
-.aspirante-layout__meta-label {
-    margin: 0;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: color-mix(in srgb, var(--text-secondary), var(--primary) 24%);
-}
-
-.aspirante-layout__meta-value {
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.aspirante-layout__logout {
-    border: none;
-    border-radius: 999px;
-    padding: 0.65rem 1.2rem;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.aspirante-layout__logout:hover {
-    filter: brightness(0.97);
-}
-
-.aspirante-layout__logout:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--inverse-primary), transparent 45%);
-    outline-offset: 2px;
-}
-
-.aspirante-layout__content {
-    padding: 0 clamp(1rem, 2.5vw, 2rem) clamp(1rem, 2.5vw, 2rem);
-}
-
-@media (max-width: 720px) {
-    .aspirante-layout__header {
-        flex-direction: column;
-    }
-    .aspirante-layout__logout {
-        align-self: flex-start;
-    }
-}
+.aspirante-layout {min-height:100vh;display:grid;grid-template-rows:auto 1fr;background:var(--app-background);margin:0 auto;max-width:1320px;padding:1rem 1rem 1.5rem;gap:1rem}
+.aspirante-layout__header {display:grid;grid-template-columns:auto 1fr auto;gap:1.25rem;align-items:stretch;padding:1.25rem;border-radius:20px;background:var(--surface);border:1px solid color-mix(in srgb, var(--outline), transparent 35%);box-shadow:var(--shadow-soft)}
+.aspirante-layout__profile{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--surface-container-low),var(--primary) 10%);font-size:2.2rem;color:var(--primary)}
+.aspirante-layout__identity{display:grid;gap:.55rem}
+.aspirante-layout__name{margin:0;font-size:2rem;color:var(--text-primary)}
+.aspirante-layout__status{margin:0;display:inline-flex;width:max-content;padding:.2rem .7rem;border-radius:999px;background:color-mix(in srgb,var(--primary),var(--surface) 82%);color:var(--primary);font-weight:700;font-size:.82rem}
+.aspirante-layout__meta-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem 1.5rem;margin:.25rem 0 0}
+.aspirante-layout__meta-item{margin:0}
+.aspirante-layout__meta-label{margin:0;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary)}
+.aspirante-layout__meta-value{margin:.1rem 0 0;color:var(--text-primary);font-weight:600}
+.aspirante-layout__date-card{min-width:230px;border-radius:16px;padding:1rem;background:color-mix(in srgb,var(--surface-container-low),var(--primary) 8%);display:grid;align-content:space-between;gap:.4rem}
+.aspirante-layout__date{margin:0;color:var(--text-primary);font-size:1.05rem;font-weight:700}
+.aspirante-layout__logout{border:none;border-radius:999px;padding:.65rem 1.1rem;background:var(--primary);color:var(--on-primary);font-weight:600;cursor:pointer}
+.aspirante-layout__content{padding:0}
+@media (max-width:980px){.aspirante-layout__header{grid-template-columns:1fr}.aspirante-layout__meta-list{grid-template-columns:1fr}.aspirante-layout__date-card{min-width:0}}

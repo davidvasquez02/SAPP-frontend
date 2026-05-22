@@ -117,3 +117,27 @@ npm run lint
 - Desktop: tarjetas de la misma fila con alturas más homogéneas incluso con ANX-4 cargada.
 - El nombre del archivo no debe romperse a múltiples líneas en la fila de estado.
 
+
+
+## Update 2026-05-22 (mockup UI detalles inscripción aspirante)
+
+### Estado actual
+- Se ajustó la composición visual de la pantalla `/aspirante/documentos` con foco en el mockup compartido:
+  1. Cabecera tipo ficha con avatar, nombre, badge de estado, metadatos y bloque lateral de fecha.
+  2. Ajustes de espaciado y densidad visual en el bloque de “Carga de documentos del aspirante”.
+  3. Corrección menor de sintaxis en `AspiranteDocumentosPage.tsx` (paréntesis sobrante en `useMemo`).
+
+### Archivos modificados
+- `src/components/AspiranteLayout/AspiranteLayout.tsx`
+- `src/components/AspiranteLayout/AspiranteLayout.css`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- `README.md`
+- `HANDOFF.md`
+
+### Resultados de pruebas (esta sesión)
+- `npm run build` (2026-05-22): falla por errores TypeScript preexistentes fuera del alcance de este ajuste visual (ModuleLayout/admisiones/inscripción documentos).
+
+### Notas de entorno
+- No crear nuevos entornos virtuales; usar `node_modules` del repo actual.
+- Stack vigente para esta sesión: npm + Vite + React 19 + TypeScript 5.9.
