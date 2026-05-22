@@ -84,3 +84,36 @@ npm run lint
 ### Pruebas sugeridas
 - Ingresar como aspirante con grupo/director ya registrados y validar que ambos combos aparezcan seleccionados sin interacción manual.
 - Cambiar manualmente el grupo para comprobar que el combo de director se refresca según el nuevo grupo.
+
+## Update 2026-05-20 (foto ANX-4 compacta en grilla)
+
+### Estado actual
+- En `/aspirante/documentos` se revierte el comportamiento de tarjeta completa para foto.
+- La grilla de requisitos vuelve a **2 tarjetas por fila en desktop** (sin excepción para ANX-4).
+- La foto ahora se muestra como **miniatura compacta** dentro de la fila de estado del card, con tamaño fijo para mantener altura homogénea respecto a otras tarjetas.
+
+### Archivos modificados
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx`
+- `src/pages/AspiranteDocumentos/AspiranteDocumentosPage.css`
+- `src/components/DocumentUploadCard/DocumentUploadCard.tsx`
+- `src/components/DocumentUploadCard/DocumentUploadCard.css`
+
+### Pruebas sugeridas
+- Validar en desktop que ANX-4 se muestre en la misma grilla de 2 columnas que el resto.
+- Cargar/reemplazar una foto y verificar que la miniatura permanezca alineada sin expandir la altura del card.
+
+
+## Update 2026-05-20 (alineación fina de tarjetas con foto)
+
+### Estado actual
+- Se aplicó ajuste de alineación para que la tarjeta de **Foto (ANX-4)** no incremente la altura respecto a otras tarjetas.
+- La miniatura se redujo a `2.5rem` y se forzó truncado (`ellipsis`) del nombre de archivo para evitar saltos de línea que desalinean filas.
+
+### Archivos modificados
+- `src/components/DocumentUploadCard/DocumentUploadCard.css`
+- `SAPP-frontend-public/src/components/DocumentUploadCard/DocumentUploadCard.css`
+
+### Validación visual esperada
+- Desktop: tarjetas de la misma fila con alturas más homogéneas incluso con ANX-4 cargada.
+- El nombre del archivo no debe romperse a múltiples líneas en la fila de estado.
+

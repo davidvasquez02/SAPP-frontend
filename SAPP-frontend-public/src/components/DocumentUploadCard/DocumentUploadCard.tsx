@@ -121,6 +121,15 @@ export const DocumentUploadCard = ({
             Sin archivo seleccionado
           </span>
         )}
+        {previewAsImage ? (
+          <div className="document-upload-card__thumbnail">
+            {previewUrl ? (
+              <img src={previewUrl} alt={`Vista previa de ${item.nombre}`} />
+            ) : (
+              <span>Sin foto</span>
+            )}
+          </div>
+        ) : null}
       </div>
 
       <div className="document-upload-card__actions">
@@ -165,16 +174,6 @@ export const DocumentUploadCard = ({
           </button>
         ) : null}
       </div>
-
-      {previewAsImage ? (
-        <div className="document-upload-card__image-preview">
-          {previewUrl ? (
-            <img src={previewUrl} alt={`Vista previa de ${item.nombre}`} />
-          ) : (
-            <span>Seleccione una foto para previsualizar.</span>
-          )}
-        </div>
-      ) : null}
 
 
       {item.status === 'REJECTED' && item.rejectionReason ? (
