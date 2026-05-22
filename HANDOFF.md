@@ -141,3 +141,21 @@ npm run lint
 ### Notas de entorno
 - No crear nuevos entornos virtuales; usar `node_modules` del repo actual.
 - Stack vigente para esta sesión: npm + Vite + React 19 + TypeScript 5.9.
+
+
+## Update 2026-05-22 (ajuste header detalles inscripción aspirante)
+
+### Estado actual
+- En `/aspirante/documentos` se aplicó el ajuste visual solicitado en cabecera de detalle:
+  1. Botón **Cerrar sesión** movido fuera del aside de fecha y ubicado arriba a la derecha.
+  2. Tarjeta **Fecha de inscripción** compactada para que no crezca verticalmente.
+  3. Reducción de separación vertical entre bloques de metadatos (inscripción, documento, grupo, director, etc.) para un layout más junto.
+
+### Archivos modificados
+- `src/components/AspiranteLayout/AspiranteLayout.tsx`
+- `src/components/AspiranteLayout/AspiranteLayout.css`
+- `README.md`
+- `HANDOFF.md`
+
+### Pruebas ejecutadas
+- `npm run build` (2026-05-22): falla por errores TypeScript preexistentes fuera del alcance de este ajuste visual.
