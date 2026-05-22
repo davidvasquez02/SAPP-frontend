@@ -34,7 +34,6 @@ const AspiranteLayout = () => {
   return (
     <div className="aspirante-layout">
       <header className="aspirante-layout__header">
-        <div className="aspirante-layout__profile" aria-hidden="true">👤</div>
         <div className="aspirante-layout__identity">
           <h1 className="aspirante-layout__name">{nombre ?? 'Aspirante'}</h1>
           <p className="aspirante-layout__status">Inscripción activa</p>
