@@ -115,6 +115,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- May 22, 2026 (latest): rediseño visual de la cabecera en `/aspirante/documentos` para acercarla al mockup institucional: avatar lateral, estado de inscripción en badge, metadatos en dos columnas y tarjeta lateral con fecha de inscripción; además se compactó el bloque de progreso para reforzar jerarquía visual del checklist.
 - May 20, 2026 (latest): ajuste fino visual en `/aspirante/documentos` para ANX-4: la miniatura de foto se compactó (2.5rem) y la fila de estado usa `minmax(0,1fr)` + `ellipsis` en nombre de archivo para evitar desalineaciones de altura entre tarjetas cuando el texto es largo.
 - May 20, 2026 (latest): en `/aspirante/documentos` se retiró el layout especial de tarjeta completa para **Foto (ANX-4)**; ahora la grilla vuelve a mostrar los requisitos de a 2 en desktop y la foto se visualiza con miniatura compacta (mismo alto visual del bloque) dentro de la misma fila de estado/archivo, evitando que la tarjeta crezca con preview vertical.
 - May 19, 2026 (latest): en `/aspirante/documentos`, si el endpoint de consulta del aspirante ya retorna `grupoInvestigacion` y `director`, el frontend ahora preselecciona automáticamente primero el grupo (match por texto en `codigoNombre`) y luego consulta/preselecciona el director correspondiente en el combo dependiente.
