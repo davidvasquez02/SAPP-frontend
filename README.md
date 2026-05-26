@@ -115,6 +115,7 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+- May 26, 2026 (latest): se elimino la carpeta versionada `SAPP-frontend-public/` y todo su contenido. Era una copia usada para publicar/subir un repositorio publico y ya no forma parte del frontend activo; el codigo fuente vigente queda en la raiz del proyecto (`src/`, `public/`, `package.json`, etc.).
 - May 22, 2026 (latest): en `/aspirante/documentos`, en el header de detalles de inscripción se movió el botón **Cerrar sesión** fuera de la tarjeta lateral de fecha (arriba a la derecha), se compactó la tarjeta de **Fecha de inscripción** para evitar expansión vertical y se redujo el espaciado entre metadatos para lograr una cabecera más densa y alineada al mockup.
 - May 22, 2026 (latest): rediseño visual de la cabecera en `/aspirante/documentos` para acercarla al mockup institucional: avatar lateral, estado de inscripción en badge, metadatos en dos columnas y tarjeta lateral con fecha de inscripción; además se compactó el bloque de progreso para reforzar jerarquía visual del checklist.
 - May 20, 2026 (latest): ajuste fino visual en `/aspirante/documentos` para ANX-4: la miniatura de foto se compactó (2.5rem) y la fila de estado usa `minmax(0,1fr)` + `ellipsis` en nombre de archivo para evitar desalineaciones de altura entre tarjetas cuando el texto es largo.

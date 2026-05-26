@@ -52,6 +52,26 @@ npm run lint
 
 ---
 
+## Update 2026-05-26 (limpieza de copia publica)
+
+### Estado actual
+- Eliminada la carpeta `SAPP-frontend-public/` y todo su contenido. Esa carpeta era una copia usada para publicar/subir un repositorio y ya no se requiere.
+- El frontend activo sigue siendo la raiz del repo actual: `src/`, `public/`, `package.json`, `vite.config.ts`, etc.
+
+### Archivos/rutas afectados
+- Eliminado: `SAPP-frontend-public/`
+- Actualizados para trazabilidad: `README.md`, `HANDOFF.md`
+
+### Resultado de verificacion
+- `Test-Path .\SAPP-frontend-public` devuelve `False`.
+- `git status --short` muestra eliminaciones versionadas bajo `SAPP-frontend-public/` y modificaciones en `README.md`/`HANDOFF.md`.
+
+### Notas para continuar
+- No recrear `SAPP-frontend-public/`.
+- No crear otro `node_modules` ni entorno paralelo dentro de copias del frontend; usar el `node_modules` existente en la raiz del repo.
+
+---
+
 ## Update 2026-05-19 (esta sesión)
 
 ### Estado actual
