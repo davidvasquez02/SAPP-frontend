@@ -22,6 +22,7 @@ interface CreateAspiranteModalProps {
   open: boolean
   onClose: () => void
   programaId: number | null
+  convocatoriaAdmisionId: number | null
   onCreated?: (result: CreateAspiranteResult) => void
 }
 
@@ -73,6 +74,7 @@ export const CreateAspiranteModal = ({
   open,
   onClose,
   programaId,
+  convocatoriaAdmisionId,
   onCreated,
 }: CreateAspiranteModalProps) => {
   const [formState, setFormState] = useState<FormState>(initialFormState)
@@ -254,6 +256,10 @@ export const CreateAspiranteModal = ({
       nextErrors.general = 'No se pudo determinar el programa de la convocatoria.'
     }
 
+    if (!convocatoriaAdmisionId && !isAspiranteCreated) {
+      nextErrors.general = 'No se pudo determinar la convocatoria desde la URL.'
+    }
+
     const missingDocument = documentos.find(
       (item) => item.obligatorio && !item.selectedFile && !item.uploadedFileName,
     )
@@ -401,7 +407,7 @@ export const CreateAspiranteModal = ({
       return
     }
 
-    if (!programaId && !createdAspirante) {
+    if ((!programaId || !convocatoriaAdmisionId) && !createdAspirante) {
       return
     }
 
@@ -422,6 +428,7 @@ export const CreateAspiranteModal = ({
           telefono: formState.telefono.trim() || null,
           observaciones: formState.observaciones.trim() || null,
           programaId: programaId ?? 0,
+          convocatoriaAdmisionId: convocatoriaAdmisionId ?? 0,
         }
 
         created = await createAspirante(payload)
@@ -743,7 +750,7 @@ export const CreateAspiranteModal = ({
               disabled={
                 isSubmitting ||
                 isLoadingDocs ||
-                (!programaId && !isAspiranteCreated) ||
+                ((!programaId || !convocatoriaAdmisionId) && !isAspiranteCreated) ||
                 (!!docsError && !import.meta.env.DEV) ||
                 isDocsEmptyState
               }
