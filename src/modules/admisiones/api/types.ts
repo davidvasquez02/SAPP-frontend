@@ -32,3 +32,17 @@ export interface InscripcionAdmisionDto {
   observaciones: string | null
   foto?: DocumentoFotoDto | null
 }
+
+export interface AdmitirEstudiantePayload {
+  aspiranteId: number
+  programaId: number
+  periodoAcademico: string
+  codigoEstudiante: string
+  correoInstitucional: string
+}
+
+export interface EstudianteCreadoDto {
+  estudianteId: number
+  estado: string
+  fechaCreacion: string
+}
