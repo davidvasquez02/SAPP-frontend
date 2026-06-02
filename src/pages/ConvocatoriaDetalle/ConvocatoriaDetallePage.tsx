@@ -58,6 +58,15 @@ const ConvocatoriaDetallePage = () => {
     session?.kind === 'SAPP' &&
     hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
 
+  const parsedConvocatoriaId = useMemo(() => {
+    if (!convocatoriaId) {
+      return null
+    }
+
+    const convocatoriaIdNumber = Number(convocatoriaId)
+    return Number.isNaN(convocatoriaIdNumber) ? null : convocatoriaIdNumber
+  }, [convocatoriaId])
+
   const periodoConvocatoria =
     periodoLabel ?? periodoAcademico ?? inscripciones[0]?.periodoAcademico ?? null
   const pageTitle = programaNombre && periodoConvocatoria
@@ -264,14 +273,14 @@ const ConvocatoriaDetallePage = () => {
                   type="button"
                   className="convocatoria-detalle__create-button"
                   onClick={handleOpenCreateAspirante}
-                  disabled={!resolvedProgramaId || isLoading || cuposExcedidos}
+                  disabled={!resolvedProgramaId || !parsedConvocatoriaId || isLoading || cuposExcedidos}
                 >
                   Crear aspirante
                 </button>
               ) : null}
-              {!resolvedProgramaId && !isLoading && !error ? (
+              {(!resolvedProgramaId || !parsedConvocatoriaId) && !isLoading && !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
-                  No se pudo determinar el programa de la convocatoria.
+                  No se pudo determinar el programa o el identificador de la convocatoria.
                 </p>
               ) : null}
               {cuposExcedidos ? (
@@ -390,6 +399,7 @@ const ConvocatoriaDetallePage = () => {
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         programaId={resolvedProgramaId}
+        convocatoriaAdmisionId={parsedConvocatoriaId}
         onCreated={handleCreated}
       />
     </ModuleLayout>

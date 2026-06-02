@@ -5,6 +5,7 @@ export interface AspiranteCreateRequestDto {
   numeroInscripcionUis: string
   observaciones?: string | null
   programaId: number
+  convocatoriaAdmisionId: number
   nombre: string
   telefono?: string | null
 }
