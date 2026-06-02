@@ -179,3 +179,28 @@ npm run lint
 
 ### Pruebas ejecutadas
 - `npm run build` (2026-05-22): falla por errores TypeScript preexistentes fuera del alcance de este ajuste visual.
+
+
+## Update 2026-05-26 (admitir aspirantes -> estudiante)
+
+### Estado actual
+- En `ConvocatoriaDetalle` se incorporo la seccion **Admitir aspirantes** con lista de aspirantes en estado `ADMITIDO`.
+- La seccion solo aparece si la convocatoria esta cerrada o si existe al menos un admitido.
+- Desde la tabla se puede seleccionar un aspirante admitido, diligenciar `codigoEstudiante` y `correoInstitucional`, y confirmar admision para llamar `POST /api/v1/estudiantes` (mock).
+- Al responder OK, el aspirante queda marcado como `CONVERTIDO` en UI y se deshabilita reintento de conversion sobre ese registro.
+
+### Archivos modificados
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.css`
+- `src/modules/admisiones/api/estudianteAdmisionService.ts`
+- `src/modules/admisiones/api/types.ts`
+- `README.md`
+- `HANDOFF.md`
+
+### Contrato/endpoint
+- `POST /api/v1/estudiantes`
+- Payload UI: `{ aspiranteId, programaId, periodoAcademico, codigoEstudiante, correoInstitucional }`
+- Response esperada: `{ estudianteId, estado, fechaCreacion }`
+
+### Resultado de pruebas
+- `npm run build` (2026-05-26): falla por errores TypeScript preexistentes fuera de este ajuste (ModuleLayout/admisiones services/inscripcion documentos).

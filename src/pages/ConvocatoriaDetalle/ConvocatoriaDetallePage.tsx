@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { useAuth } from '../../context/Auth'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { useAuth } from '../../context/Auth'
 import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
 import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
+import { admitirAspiranteComoEstudiante } from '../../modules/admisiones/api/estudianteAdmisionService'
 import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { CreateAspiranteModal } from '../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal'
@@ -18,12 +19,18 @@ const ConvocatoriaDetallePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
+
   const [inscripciones, setInscripciones] = useState<InscripcionAdmisionDto[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [convocatoria, setConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null)
+  const [admitidosConvertidos, setAdmitidosConvertidos] = useState<Record<number, number>>({})
+  const [selectedAdmitidoId, setSelectedAdmitidoId] = useState<number | null>(null)
+  const [codigoEstudiante, setCodigoEstudiante] = useState('')
+  const [correoInstitucional, setCorreoInstitucional] = useState('')
+  const [isSubmittingEstudiante, setIsSubmittingEstudiante] = useState(false)
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } = useMemo(() => {
     return (
@@ -58,10 +65,24 @@ const ConvocatoriaDetallePage = () => {
     : periodoConvocatoria
       ? `Convocatoria - ${periodoConvocatoria}`
       : 'Convocatoria'
+
   const cuposConvocatoria = typeof cupos === 'number' ? cupos : null
-  const cuposExcedidos =
-    typeof cuposConvocatoria === 'number' && inscripciones.length >= cuposConvocatoria
+  const cuposExcedidos = typeof cuposConvocatoria === 'number' && inscripciones.length >= cuposConvocatoria
   const convocatoriaCerrada = convocatoria ? !isConvocatoriaVigente(convocatoria) : false
+
+  const aspirantesAdmitidos = useMemo(() => {
+    return inscripciones.filter((inscripcion) => {
+      const estadoNormalizado = inscripcion.estado?.trim().toUpperCase().replaceAll(' ', '_')
+      return estadoNormalizado === 'ADMITIDO'
+    })
+  }, [inscripciones])
+
+  const mostrarModuloAdmitir = convocatoriaCerrada || aspirantesAdmitidos.length > 0
+
+  const selectedAdmitido = useMemo(
+    () => aspirantesAdmitidos.find((inscripcion) => inscripcion.id === selectedAdmitidoId) ?? null,
+    [aspirantesAdmitidos, selectedAdmitidoId],
+  )
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {
@@ -85,12 +106,9 @@ const ConvocatoriaDetallePage = () => {
         getConvocatoriasAdmision(),
       ])
       setInscripciones(data)
-      setConvocatoria(
-        convocatorias.find((item) => item.id === convocatoriaIdNumber) ?? null
-      )
+      setConvocatoria(convocatorias.find((item) => item.id === convocatoriaIdNumber) ?? null)
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
+      const message = err instanceof Error ? err.message : 'No fue posible cargar las inscripciones.'
       const normalizedMessage = message.toLowerCase()
       const isEmptyInscripcionesResponse =
         normalizedMessage.includes('inscrip') &&
@@ -116,7 +134,6 @@ const ConvocatoriaDetallePage = () => {
     }
 
     const convocatoriaIdNumber = Number(convocatoriaId)
-
     if (Number.isNaN(convocatoriaIdNumber)) {
       setError('Convocatoria inválida.')
       return
@@ -124,7 +141,6 @@ const ConvocatoriaDetallePage = () => {
 
     loadInscripciones()
   }, [convocatoriaId, loadInscripciones])
-
 
   const resolveAspirantePhoto = (inscripcion: InscripcionAdmisionDto): string | null => {
     const contenidoBase64 = inscripcion.foto?.contenidoBase64?.trim()
@@ -141,24 +157,21 @@ const ConvocatoriaDetallePage = () => {
       return
     }
 
-    navigate(
-      `/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcion.id}`,
-      {
-        state: {
-          nombreAspirante: inscripcion.nombreAspirante,
-          periodoAcademico: inscripcion.periodoAcademico,
-          inscripcionId: inscripcion.id,
-          inscripcionEstado: inscripcion.estado,
-        },
-      }
-    )
+    navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcion.id}`, {
+      state: {
+        nombreAspirante: inscripcion.nombreAspirante,
+        periodoAcademico: inscripcion.periodoAcademico,
+        inscripcionId: inscripcion.id,
+        inscripcionEstado: inscripcion.estado,
+      },
+    })
   }
 
   const handleCreated = useCallback(
     (result: { uploadSummary: { failedItems: { id: number }[] } }) => {
       if (result.uploadSummary.failedItems.length > 0) {
         setSuccessMessage(
-          `Aspirante creado. Falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`
+          `Aspirante creado. Falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
         )
       } else {
         setSuccessMessage('Aspirante creado y documentos cargados correctamente.')
@@ -176,13 +189,59 @@ const ConvocatoriaDetallePage = () => {
 
     if (cuposExcedidos) {
       window.alert(
-        `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`
+        `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`,
       )
       return
     }
 
     setIsCreateModalOpen(true)
   }, [convocatoriaCerrada, cuposConvocatoria, cuposExcedidos])
+
+  const handleOpenAdmitirEstudiante = (inscripcion: InscripcionAdmisionDto) => {
+    setSelectedAdmitidoId(inscripcion.id)
+    setCodigoEstudiante('')
+    setCorreoInstitucional('')
+    setSuccessMessage(null)
+  }
+
+  const handleCancelAdmitirEstudiante = () => {
+    setSelectedAdmitidoId(null)
+    setCodigoEstudiante('')
+    setCorreoInstitucional('')
+  }
+
+  const handleConfirmAdmitirEstudiante = async () => {
+    if (!selectedAdmitido || !resolvedProgramaId) {
+      return
+    }
+
+    const correoNormalizado = correoInstitucional.trim().toLowerCase()
+    const codigoNormalizado = codigoEstudiante.trim()
+    if (!codigoNormalizado || !correoNormalizado.includes('@')) {
+      window.alert('Debes diligenciar código estudiantil y correo institucional válido.')
+      return
+    }
+
+    setIsSubmittingEstudiante(true)
+    try {
+      const response = await admitirAspiranteComoEstudiante({
+        aspiranteId: selectedAdmitido.aspiranteId,
+        programaId: resolvedProgramaId,
+        periodoAcademico: selectedAdmitido.periodoAcademico,
+        codigoEstudiante: codigoNormalizado,
+        correoInstitucional: correoNormalizado,
+      })
+
+      setAdmitidosConvertidos((prev) => ({ ...prev, [selectedAdmitido.id]: response.estudianteId }))
+      setSuccessMessage(`Aspirante ${selectedAdmitido.nombreAspirante} admitido como estudiante.`)
+      handleCancelAdmitirEstudiante()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No fue posible admitir al aspirante.'
+      window.alert(message)
+    } finally {
+      setIsSubmittingEstudiante(false)
+    }
+  }
 
   return (
     <ModuleLayout title="Admisiones">
@@ -195,9 +254,7 @@ const ConvocatoriaDetallePage = () => {
           <div>
             <h1 className="convocatoria-detalle__title">{pageTitle}</h1>
             {successMessage ? (
-              <p className="convocatoria-detalle__status convocatoria-detalle__status--success">
-                {successMessage}
-              </p>
+              <p className="convocatoria-detalle__status convocatoria-detalle__status--success">{successMessage}</p>
             ) : null}
           </div>
           {canCreateAspirante ? (
@@ -222,11 +279,6 @@ const ConvocatoriaDetallePage = () => {
                   Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden registrar más aspirantes.
                 </p>
               ) : null}
-              {convocatoriaCerrada ? (
-                <p className="convocatoria-detalle__status convocatoria-detalle__status--error convocatoria-detalle__status--closed">
-                  La convocatoria está cerrada. No se pueden registrar nuevos aspirantes.
-                </p>
-              ) : null}
             </div>
           ) : null}
         </header>
@@ -242,20 +294,14 @@ const ConvocatoriaDetallePage = () => {
         {error ? (
           <div className="convocatoria-detalle__status convocatoria-detalle__status--error">
             <p>{error}</p>
-            <button
-              className="convocatoria-detalle__retry"
-              type="button"
-              onClick={loadInscripciones}
-            >
+            <button className="convocatoria-detalle__retry" type="button" onClick={loadInscripciones}>
               Reintentar
             </button>
           </div>
         ) : null}
 
         {!isLoading && !error && inscripciones.length === 0 ? (
-          <p className="convocatoria-detalle__status">
-            No hay inscripciones para esta convocatoria.
-          </p>
+          <p className="convocatoria-detalle__status">No hay inscripciones para esta convocatoria.</p>
         ) : null}
 
         {!isLoading && !error && inscripciones.length > 0 ? (
@@ -269,6 +315,74 @@ const ConvocatoriaDetallePage = () => {
               />
             ))}
           </div>
+        ) : null}
+
+        {!isLoading && !error && mostrarModuloAdmitir && canCreateAspirante ? (
+          <section className="convocatoria-detalle__admitir-panel">
+            <h2>Admitir aspirantes</h2>
+            {aspirantesAdmitidos.length === 0 ? (
+              <p className="convocatoria-detalle__status">Aún no hay aspirantes en estado ADMITIDO para esta convocatoria.</p>
+            ) : (
+              <div className="convocatoria-detalle__table-wrap">
+                <table className="convocatoria-detalle__table">
+                  <thead>
+                    <tr>
+                      <th>Documento</th>
+                      <th>Aspirante</th>
+                      <th>Programa</th>
+                      <th>Periodo</th>
+                      <th>Estado</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {aspirantesAdmitidos.map((inscripcion) => {
+                      const estudianteId = admitidosConvertidos[inscripcion.id]
+                      return (
+                        <tr key={`admitido-${inscripcion.id}`}>
+                          <td>{inscripcion.numeroDocumento ?? inscripcion.cedula ?? '—'}</td>
+                          <td>{inscripcion.nombreAspirante}</td>
+                          <td>{inscripcion.programaAcademico}</td>
+                          <td>{inscripcion.periodoAcademico}</td>
+                          <td>{estudianteId ? 'CONVERTIDO' : 'ADMITIDO'}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="convocatoria-detalle__create-button"
+                              onClick={() => handleOpenAdmitirEstudiante(inscripcion)}
+                              disabled={Boolean(estudianteId)}
+                            >
+                              {estudianteId ? `Estudiante #${estudianteId}` : 'Admitir estudiante'}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {selectedAdmitido ? (
+              <div className="convocatoria-detalle__admitir-form">
+                <h3>Admitir como estudiante: {selectedAdmitido.nombreAspirante}</h3>
+                <label>
+                  Código estudiantil
+                  <input value={codigoEstudiante} onChange={(event) => setCodigoEstudiante(event.target.value)} />
+                </label>
+                <label>
+                  Correo institucional
+                  <input type="email" value={correoInstitucional} onChange={(event) => setCorreoInstitucional(event.target.value)} />
+                </label>
+                <div className="convocatoria-detalle__admitir-actions">
+                  <button type="button" onClick={handleCancelAdmitirEstudiante} disabled={isSubmittingEstudiante}>Cancelar</button>
+                  <button type="button" onClick={handleConfirmAdmitirEstudiante} disabled={isSubmittingEstudiante || !resolvedProgramaId}>
+                    {isSubmittingEstudiante ? 'Guardando...' : 'Confirmar admisión'}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </section>
         ) : null}
       </section>
 

@@ -152,3 +152,50 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.convocatoria-detalle__admitir-panel {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--outline);
+  border-radius: 16px;
+  background: var(--surface-container-low);
+}
+
+.convocatoria-detalle__table-wrap {
+  overflow-x: auto;
+}
+
+.convocatoria-detalle__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.convocatoria-detalle__table th,
+.convocatoria-detalle__table td {
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--outline);
+  text-align: left;
+}
+
+.convocatoria-detalle__admitir-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.convocatoria-detalle__admitir-form label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.convocatoria-detalle__admitir-form input {
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--outline);
+  background: var(--surface);
+}
+
+.convocatoria-detalle__admitir-actions {
+  display: flex;
+  gap: 0.6rem;
+}
