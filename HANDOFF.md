@@ -1,5 +1,47 @@
 # HANDOFF — SAPP Frontend
 
+## Update 2026-06-02 (ajuste temporal: crear aspirante en convocatoria cerrada)
+
+### Estado actual
+- Ajuste temporal solicitado para pruebas: en `/admisiones/convocatoria/:convocatoriaId`, el botón `Crear aspirante` queda disponible aunque `convocatoriaCerrada` sea `true`. El usuario lo mencionó como “crear estudiante”, pero en esta pantalla el control afectado por la convocatoria cerrada es el botón `Crear aspirante`; el módulo `Admitir estudiante` conserva su bloqueo solo para admitidos ya convertidos.
+- Se removió el bloqueo/alerta por convocatoria cerrada en `handleOpenCreateAspirante`, pero se mantienen las validaciones por `programaId`, `convocatoriaAdmisionId`, estado de carga y cupos excedidos.
+- Hay comentarios `AJUSTE TEMPORAL PARA PRUEBAS (2026-06-02)` en `ConvocatoriaDetallePage` indicando que se debe revertir al finalizar pruebas.
+
+### Archivos modificados
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`
+- `README.md`
+- `HANDOFF.md`
+
+### Prompt sugerido para pedir la reversión
+```text
+Por favor revierte el ajuste temporal de pruebas del 2026-06-02 en el detalle de convocatoria: vuelve a ocultar o bloquear el botón Crear aspirante cuando convocatoriaCerrada sea true y restaura la alerta que impide abrir el modal si la convocatoria está cerrada. Mantén intactas las validaciones de programaId, convocatoriaAdmisionId, loading y cupos.
+```
+
+### Retos abiertos
+1. Validar manualmente con una convocatoria cerrada que el modal de creación abre y el payload sigue enviando `convocatoriaAdmisionId` de la URL.
+2. Revertir este ajuste antes de pasar a ambiente estable/productivo para respetar la regla original del proceso de admisiones.
+
+### Próximos pasos recomendados
+1. Probar `/admisiones/convocatoria/{id}` con una convocatoria cerrada y un usuario de coordinación/secretaría/admin.
+2. Confirmar en Network que `POST /sapp/aspirante` conserva `{ programaId, convocatoriaAdmisionId }`.
+3. Ejecutar el prompt de reversión cuando terminen las pruebas.
+
+### Contratos / esquemas esperados
+- Crear aspirante: `POST /sapp/aspirante`
+- Payload esperado desde coordinación: `{ nombre, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`
+- No cambia el contrato backend; solo cambia el gating visual/cliente para pruebas.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm.
+- Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite rolldown-vite 7.2.5, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1.
+- Sin venv/conda/poetry; no crear entornos Python ni copias paralelas. Usar `node_modules` de la raíz del repo.
+
+### Resultados de pruebas + logs
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` (2026-06-02): OK.
+- `npm run build` (2026-06-02): falla por errores TypeScript preexistentes fuera de este ajuste (`ModuleLayout`, `evaluacionAdmisionService`, `finalizarEvaluacionService`, `convocatoriaProfesoresMockService`, `InscripcionAdmisionDetalle`, `InscripcionDocumentos`).
+
+---
+
 ## Update 2026-06-02 (creación de aspirante con convocatoria de URL)
 
 ### Estado actual
