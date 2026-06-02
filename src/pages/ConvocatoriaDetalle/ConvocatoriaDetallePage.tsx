@@ -191,11 +191,8 @@ const ConvocatoriaDetallePage = () => {
   )
 
   const handleOpenCreateAspirante = useCallback(() => {
-    if (convocatoriaCerrada) {
-      window.alert('No es posible crear aspirantes: la convocatoria está cerrada.')
-      return
-    }
-
+    // AJUSTE TEMPORAL PARA PRUEBAS (2026-06-02): permitir crear aspirantes aunque la convocatoria esté cerrada.
+    // Revertir después de las pruebas para restaurar el bloqueo por convocatoria cerrada.
     if (cuposExcedidos) {
       window.alert(
         `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`,
@@ -204,7 +201,7 @@ const ConvocatoriaDetallePage = () => {
     }
 
     setIsCreateModalOpen(true)
-  }, [convocatoriaCerrada, cuposConvocatoria, cuposExcedidos])
+  }, [cuposConvocatoria, cuposExcedidos])
 
   const handleOpenAdmitirEstudiante = (inscripcion: InscripcionAdmisionDto) => {
     setSelectedAdmitidoId(inscripcion.id)
@@ -268,16 +265,16 @@ const ConvocatoriaDetallePage = () => {
           </div>
           {canCreateAspirante ? (
             <div className="convocatoria-detalle__actions">
-              {!convocatoriaCerrada ? (
-                <button
-                  type="button"
-                  className="convocatoria-detalle__create-button"
-                  onClick={handleOpenCreateAspirante}
-                  disabled={!resolvedProgramaId || !parsedConvocatoriaId || isLoading || cuposExcedidos}
-                >
-                  Crear aspirante
-                </button>
-              ) : null}
+              {/* AJUSTE TEMPORAL PARA PRUEBAS (2026-06-02): antes este botón se ocultaba cuando la convocatoria estaba cerrada.
+                  Revertir tras validar creación de aspirantes/estudiantes en convocatorias cerradas. */}
+              <button
+                type="button"
+                className="convocatoria-detalle__create-button"
+                onClick={handleOpenCreateAspirante}
+                disabled={!resolvedProgramaId || !parsedConvocatoriaId || isLoading || cuposExcedidos}
+              >
+                Crear aspirante
+              </button>
               {(!resolvedProgramaId || !parsedConvocatoriaId) && !isLoading && !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   No se pudo determinar el programa o el identificador de la convocatoria.
