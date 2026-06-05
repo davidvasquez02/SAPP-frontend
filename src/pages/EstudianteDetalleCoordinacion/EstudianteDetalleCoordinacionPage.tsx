@@ -418,14 +418,9 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
 
 const StudentAcademicStats = ({ estudiante }: { estudiante: EstudianteCoordinacion }) => {
   const stats = [
-    { label: 'Documento', value: `${estudiante.tipoDocumento || EMPTY_VALUE} ${estudiante.numeroDocumento || ''}`.trim(), icon: '▤' },
-    { label: 'Estado académico', value: formatEstado(estudiante.estadoAcademico), icon: '●' },
     { label: 'Fecha de ingreso', value: formatDate(estudiante.fechaIngreso), icon: '↳' },
     { label: 'Fecha de egreso', value: formatDate(estudiante.fechaEgreso), icon: '↱' },
-    { label: 'Promedio acumulado', value: estudiante.promedioAcumulado?.toFixed(2) ?? EMPTY_VALUE, icon: '★' },
-    { label: 'Créditos aprobados', value: String(estudiante.creditosAprobados ?? EMPTY_VALUE), icon: '✓' },
-    { label: 'Créditos pendientes', value: String(estudiante.creditosPendientes ?? EMPTY_VALUE), icon: '…' },
-    { label: 'Cohorte', value: estudiante.cohorte || EMPTY_VALUE, icon: '♙' },
+    { label: 'Cohorte de ingreso', value: estudiante.cohorte || EMPTY_VALUE, icon: '♙' },
   ]
 
   return (
@@ -645,7 +640,6 @@ const EstudianteDetalleCoordinacionPage = () => {
             <section key={group.periodo ?? SIN_PERIODO_KEY} className="estudiante-detalle__tab-card estudiante-detalle__enrollment-group">
               <header className="estudiante-detalle__tab-card-header">
                 <div>
-                  <span className="estudiante-detalle__eyebrow">Matrículas</span>
                   <h3>{group.periodo ? `Periodo ${group.periodo}` : 'Matrícula sin periodo'}</h3>
                 </div>
                 <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">
