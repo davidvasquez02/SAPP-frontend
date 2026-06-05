@@ -450,3 +450,68 @@ npm run lint
 - `npx tsc --noEmit --pretty false` (2026-06-05): OK; solo advertencia npm `Unknown env config "http-proxy"`.
 - `npm run build` (2026-06-05): OK; build generado con `rolldown-vite v7.2.5`, 241 módulos transformados, assets `dist/assets/index-C0xBaWQF.css` y `dist/assets/index-DMMnH4gn.js`.
 - `npm run lint` (2026-06-05): falla por 12 errores históricos no relacionados en `src/api/*Service.ts`, `src/app/routes/protectedRoute.tsx`, `src/modules/admisiones/*`, `src/modules/documentos/*`, `src/modules/solicitudes/*`; no se observaron errores nuevos en los archivos del rediseño.
+
+---
+
+## Update 2026-06-05 — Detalle coordinación estudiante con endpoint documental único
+
+### Estado actual
+- Implementado ajuste en `/coordinacion/estudiantes/:id` para que las secciones documentales de **Admisión** y **Matrículas** se construyan desde `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`.
+- Eliminada la precarga de contenido base64 en la entrada a la pantalla: `GET /sapp/document/{documentoId}` se ejecuta únicamente en botones **Ver** y **Descargar**.
+- La consulta principal de documentos se protege con `loadedDocumentsCodeRef` para evitar disparos repetidos por renders cuando el código UIS no cambia.
+- El modelo `EstudianteCoordinacion` ahora conserva opcionalmente `codigoEstudianteUis`, y el mapper de estudiantes lo llena desde la respuesta backend.
+
+### Archivos tocados
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`
+- `src/modules/documentos/api/documentosService.ts`
+- `src/modules/estudiantes/types.ts`
+- `src/modules/estudiantes/services/estudiantesMockService.ts`
+- `README.md`
+- `HANDOFF.md`
+
+### Contratos / schemas esperados
+- Metadata por estudiante:
+  - `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`
+  - Envelope: `{ ok: boolean, message: string, data: DocumentosEstudianteGrupoDto[] }`
+  - Grupo: `{ tipoTramite: string | null, periodo: string | null, tramiteId: number | null, documentos: DocumentoEstudianteMetadataDto[] }`
+  - Documento metadata: `{ id, estado, fechaCarga, mimeType, nombreArchivo, secuencia, tamanoBytes, tipoDocumento, tipoDocumentoTramiteId, version }`
+- Documento completo bajo demanda:
+  - `GET /sapp/document/{documentoId}`
+  - Envelope: `{ ok: boolean, message: string, data: DocumentoCompletoDto }`
+  - Campos usados por UI: `contenidoBase64`, `mimeType`, `nombreArchivo`, `id`.
+
+### Reglas de transformación implementadas
+- Admisión:
+  1. Filtrar `ADMISION_ASPIRANTE` y `ADMISION_COORDINACION`.
+  2. Mostrar primero aspirante y luego coordinación.
+  3. Ordenar internamente por `tipoDocumentoTramiteId`, `secuencia`, `id`.
+- Matrículas:
+  1. Filtrar `MATRICULA` y `MATRICULA_PRIMERA_VEZ`.
+  2. Agrupar por `periodo`; `null` usa clave interna `__SIN_PERIODO__` y se pinta como “Matrícula sin periodo”.
+  3. Ordenar periodos por formato `YYYY-N`, de menor a mayor; null al final.
+  4. Ordenar documentos del periodo por `tipoDocumentoTramiteId`, `secuencia`, `id`.
+
+### Retos abiertos
+1. Validar manualmente contra backend real que `/sapp/document/by-estudiante/{codigoEstudianteUis}` no devuelve `contenidoBase64` y que los campos de metadata coinciden exactamente con los tipos frontend.
+2. Confirmar si el tab **Solicitudes** debe recuperar datos por un endpoint agregado similar o permanecer sin recarga documental para evitar múltiples llamados.
+3. Si se requiere conservar información no documental de solicitudes, crear un servicio liviano que no cargue documentos ni contenido base64.
+
+### Próximos pasos recomendados
+1. Probar navegación desde el listado de estudiantes para confirmar que `navigate state` trae `codigoEstudianteUis` o, como mínimo, `codigo` UIS normalizado.
+2. Probar recarga directa en `/coordinacion/estudiantes/:id` y verificar en Network: una llamada a `/sapp/document/by-estudiante/{codigo}` después de resolver estudiante.
+3. Probar botones **Ver** y **Descargar** con PDF e imagen; ambos deben llamar `/sapp/document/{documentoId}` solo al click.
+4. Si el navegador bloquea `window.open`, considerar visor modal/iframe para PDF.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm desde la raíz `/workspace/SAPP-frontend`.
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`, ESLint `^9.39.1`, `@vitejs/plugin-react-swc` `^4.2.2`.
+- Vite: override `vite -> npm:rolldown-vite@7.2.5`.
+- Sin venv/conda/poetry; no crear entornos Python ni copias paralelas. Usar `node_modules` existente del repo.
+
+### Resultados recientes de pruebas + logs
+- `npx eslint src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx src/modules/documentos/api/documentosService.ts src/modules/estudiantes/types.ts src/modules/estudiantes/services/estudiantesMockService.ts` (2026-06-05): OK; npm imprimió warning no bloqueante `Unknown env config "http-proxy"`.
+- `npm run build` (2026-06-05): OK; `tsc -b && vite build` completó y generó `dist/`.
+- Intento de screenshot (2026-06-05): no se pudo generar porque el paquete `playwright` no está instalado en el repo (`ERR_MODULE_NOT_FOUND`). No instalar dependencias solo para esto sin acordarlo con el equipo.
+- `npm run lint` (2026-06-05): falla por issues históricos fuera de este ajuste (`no-explicit-any` en `src/api/*Service.ts`, reglas `react-hooks/purity` / `set-state-in-effect`, variables sin uso y `no-empty-object-type`). No reportó errores nuevos en los archivos tocados del detalle de estudiante.

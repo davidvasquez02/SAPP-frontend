@@ -162,6 +162,12 @@
   color: var(--text-secondary);
 }
 
+.estudiante-detalle__badge--document.is-neutral {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+}
+
 .estudiante-detalle__badge--document.is-pending {
   border: 1px solid color-mix(in srgb, var(--warning), transparent 62%);
   background: color-mix(in srgb, var(--warning), transparent 90%);
@@ -406,6 +412,33 @@
   overflow-wrap: anywhere;
 }
 
+.estudiante-detalle__document-meta {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+}
+
+.estudiante-detalle__document-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 72%);
+  padding-top: 0.35rem;
+}
+
+.estudiante-detalle__document-meta dt,
+.estudiante-detalle__document-meta dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.estudiante-detalle__document-meta dd {
+  color: var(--text-primary);
+  text-align: right;
+}
+
 .estudiante-detalle__document-body p.is-muted,
 .estudiante-detalle__document-no-actions {
   color: var(--text-secondary);
@@ -435,8 +468,13 @@
   color: var(--on-primary);
 }
 
-.estudiante-detalle__document-actions button:hover {
+.estudiante-detalle__document-actions button:hover:not(:disabled) {
   filter: brightness(0.98);
+}
+
+.estudiante-detalle__document-actions button:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 @media (min-width: 1180px) {
