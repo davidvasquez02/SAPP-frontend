@@ -7,7 +7,7 @@ This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gest
 ## Architecture (Brief)
 
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
-- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes.
+- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes. As of June 5, 2026, `src/context/Auth/mockGatewaySession.ts` enables a temporary API Gateway auth mock that forces a `SAPP` session with role `ADMIN` at app startup so `/` loads directly without using the SAPP login screen.
 - **Session store:** A non-React session store (`src/modules/auth/session/sessionStore.ts`) keeps the token accessible for API clients and handles save/clear/get operations.
 - **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
 - **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
@@ -84,6 +84,13 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ### Seeds / Mock Data
 
+Temporary API Gateway auth mock for integration tests:
+
+- `src/context/Auth/mockGatewaySession.ts` exports `ENABLE_GATEWAY_AUTH_MOCK = true` and `getMockGatewayAdminSession()`.
+- The mocked session is persisted under `SAPP_AUTH_SESSION` on startup, uses role `ADMIN`, and uses `accessToken: 'NO_TOKEN'` so `src/modules/auth/session/sessionStore.ts` does not attach a fake Bearer token to backend/API Gateway requests.
+- To return to real login/API Gateway identity consumption, disable or remove `ENABLE_GATEWAY_AUTH_MOCK` and wire `AuthProvider` to the real gateway response mapper.
+
+
 There are no seed scripts. The SAPP login calls the backend directly:
 
 - Endpoint: `POST ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/auth/login`
@@ -115,6 +122,8 @@ Mock data for the Admisiones module still lives in:
 - `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
 
 ## Recent Decisions (Changelog-lite)
+
+- June 5, 2026: para pruebas de integración con API Gateway se deshabilitó temporalmente el uso de la pantalla de login SAPP en el arranque. `AuthProvider` ahora fuerza una sesión mock `SAPP` con rol `ADMIN` mediante `src/context/Auth/mockGatewaySession.ts`, guarda esa sesión en `localStorage` y conserva `accessToken: 'NO_TOKEN'` para evitar enviar un Bearer ficticio mientras el gateway real se integra más adelante. En la misma sesión se corrigieron errores TypeScript puntuales en `ModuleLayout`, servicios de evaluación/admisiones y páginas de inscripción/documentos para que `npm run build` vuelva a compilar exitosamente.
 - June 2, 2026 (latest): ajuste temporal de pruebas en `/admisiones/convocatoria/:convocatoriaId`: `Crear aspirante` ya no se oculta ni se bloquea por `convocatoriaCerrada`, aunque sigue validando `programaId`, `convocatoriaId`, carga y cupos. **Debe revertirse** después de las pruebas para restaurar la regla original: no crear aspirantes/estudiantes desde una convocatoria cerrada. Prompt sugerido para revertir: `Por favor revierte el ajuste temporal de pruebas del 2026-06-02 en el detalle de convocatoria: vuelve a ocultar o bloquear el botón Crear aspirante cuando convocatoriaCerrada sea true y restaura la alerta que impide abrir el modal si la convocatoria está cerrada.`
 - June 2, 2026: en `/admisiones/convocatoria/:convocatoriaId`, la creación de aspirante ahora parsea el `convocatoriaId` de la URL y lo envía en `POST /sapp/aspirante` como `convocatoriaAdmisionId` junto con `programaId`; el botón/modal quedan bloqueados si no se puede resolver ese identificador para evitar que backend asigne una convocatoria actual/default distinta.
 - May 26, 2026: en `/admisiones/convocatoria/:convocatoriaId` se agrego el modulo **Admitir aspirantes** para roles de coordinacion/secretaria/admin. La seccion se habilita cuando la convocatoria esta cerrada o ya existe al menos un aspirante `ADMITIDO`, lista solo aspirantes admitidos y permite convertirlos a estudiante completando `codigoEstudiante` + `correoInstitucional` y consumiendo `POST /api/v1/estudiantes` (mock actual).

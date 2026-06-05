@@ -235,7 +235,7 @@ const InscripcionDocumentosPage = () => {
     }
   }
 
-  const getEstadoDocumento = useCallback((documento: DocumentoTramiteItemDto) => {
+  const getEstadoDocumento = useCallback((documento: DocumentoTramiteUiItem) => {
     if (!documento.documentoCargado) {
       return null
     }
