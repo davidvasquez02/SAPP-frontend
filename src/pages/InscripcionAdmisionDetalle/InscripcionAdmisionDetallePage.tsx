@@ -411,7 +411,7 @@ const InscripcionAdmisionDetallePage = () => {
 
     try {
       const validation = await validateEvaluacionCompleta(parsedInscripcionId)
-      if (!validation.ok) {
+      if ('reasons' in validation) {
         setFinalizeError(validation.reasons)
         return
       }

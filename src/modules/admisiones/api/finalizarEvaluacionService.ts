@@ -3,19 +3,16 @@ import type { ApiResponse } from './types'
 
 type HttpMethod = 'PUT' | 'POST' | 'GET'
 
-const FINALIZAR_EVALUACION_HTTP_METHOD: HttpMethod = 'POST'
+const FINALIZAR_EVALUACION_HTTP_METHOD = 'POST' as HttpMethod
 
-const requestWithoutBody = async (path: string): Promise<ApiResponse<unknown>> => {
-  switch (FINALIZAR_EVALUACION_HTTP_METHOD) {
-    case 'POST':
-      return httpPost<ApiResponse<unknown>>(path)
-    case 'GET':
-      return httpGet<ApiResponse<unknown>>(path)
-    case 'PUT':
-    default:
-      return httpPut<ApiResponse<unknown>>(path)
-  }
+const requestByMethod: Record<HttpMethod, (path: string) => Promise<ApiResponse<unknown>>> = {
+  GET: (path) => httpGet<ApiResponse<unknown>>(path),
+  POST: (path) => httpPost<ApiResponse<unknown>>(path),
+  PUT: (path) => httpPut<ApiResponse<unknown>>(path),
 }
+
+const requestWithoutBody = async (path: string): Promise<ApiResponse<unknown>> =>
+  requestByMethod[FINALIZAR_EVALUACION_HTTP_METHOD](path)
 
 export async function calcularPuntajes(inscripcionId: number): Promise<void> {
   const response = await requestWithoutBody(

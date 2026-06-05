@@ -1,4 +1,5 @@
 import { httpPost } from '../../../shared/http/httpClient'
+import type { ApiResponse } from '../api/types'
 
 type EvaluadorConvocatoriaRequest = {
   evaluadorId: number
@@ -12,12 +13,14 @@ export async function assignProfesoresToConvocatoria(params: {
   const { convocatoriaId, profesoresId } = params
 
   for (const profesorId of profesoresId) {
-    const response = await httpPost<unknown, EvaluadorConvocatoriaRequest>(
+    const payload: EvaluadorConvocatoriaRequest = {
+      evaluadorId: profesorId,
+      convocatoriaId,
+    }
+
+    const response = await httpPost<ApiResponse<unknown>>(
       '/sapp/evaluadorConvocatoria',
-      {
-        evaluadorId: profesorId,
-        convocatoriaId,
-      }
+      payload,
     )
 
     if (!response.ok) {

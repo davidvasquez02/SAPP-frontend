@@ -1,3 +1,50 @@
+# Handoff - SAPP Frontend
+
+## Update 2026-06-05 (mock ADMIN para pruebas con API Gateway)
+
+### Estado actual
+- Se implementó un mock temporal de autenticación para pruebas de integración con API Gateway.
+- Al cargar el aplicativo, `AuthProvider` fuerza una sesión `SAPP` con rol `ADMIN`, por lo que `/` inicia directamente en la pantalla de inicio y `/login` redirige al home al detectar sesión autenticada.
+- El mock se persiste en `localStorage` usando la clave existente `SAPP_AUTH_SESSION`.
+- El token del mock es `NO_TOKEN`; `sessionStore.getToken()` lo filtra y devuelve `null`, por lo que el cliente HTTP no adjunta un Bearer falso a las llamadas contra backend/gateway.
+- El botón de cerrar sesión limpia la sesión y, mientras `ENABLE_GATEWAY_AUTH_MOCK` esté en `true`, reconstruye inmediatamente la sesión ADMIN mock para evitar volver a la pantalla de login durante estas pruebas.
+
+### Archivos modificados
+- `src/context/Auth/mockGatewaySession.ts`: nuevo artefacto con `ENABLE_GATEWAY_AUTH_MOCK = true` y la sesión ADMIN mock.
+- `src/context/Auth/AuthContext.tsx`: inicializa y persiste el mock al arranque; ajusta `logout` para mantener el bypass del login mientras dure la prueba.
+- `src/context/Auth/context.ts` y `src/context/Auth/useAuth.ts`: separan el objeto `AuthContext` del provider para cumplir `react-refresh/only-export-components` en el lint puntual.
+- `src/context/Auth/types.ts` y `src/components/ModuleLayout/ModuleLayout.tsx`: tipado de `estudiante.foto` para el avatar de usuario.
+- `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/api/finalizarEvaluacionService.ts`, `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`, `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: correcciones TypeScript/lint puntuales para recuperar build verde.
+- `README.md` y `HANDOFF.md`: trazabilidad, decisiones recientes, contratos y notas de entorno.
+
+### Contratos / esquemas esperados
+- Tipo usado: `AuthSession` con `kind: 'SAPP'`.
+- Usuario mock: `username: 'admin-gateway-mock'`, `roles: ['ADMIN']`, `activo: true`, `persona.emailInstitucional: 'admin.gateway.mock@uis.edu.co'`.
+- Persistencia: `localStorage['SAPP_AUTH_SESSION']`.
+- Token: `NO_TOKEN` para no enviar `Authorization: Bearer ...` ficticio desde `src/shared/http/httpClient.ts`.
+
+### Retos abiertos
+1. Reemplazar este mock por el consumo real del API Gateway cuando esté disponible el contrato de identidad/autenticación.
+2. Confirmar si el gateway entregará token Bearer, cookies/session headers o headers de identidad ya validados, para definir si `httpClient` debe adjuntar Authorization o delegar completamente en el gateway.
+3. Definir mapeo final entre roles del gateway y roles internos SAPP (`ADMIN`, `COORDINADOR`, `SECRETARIA`, `PROFESOR`, `DOCENTE`, etc.).
+
+### Próximos pasos recomendados
+1. Iniciar con `npm run dev`, abrir `/` y verificar que no aparece la pantalla de login.
+2. Revisar en DevTools que `SAPP_AUTH_SESSION` contiene rol `ADMIN` y token `NO_TOKEN`.
+3. Validar navegación ADMIN: `/`, `/admisiones`, `/fechas`, `/coordinacion/estudiantes`, `/solicitudes`, `/matricula`.
+4. Cuando llegue el contrato real del gateway, cambiar `ENABLE_GATEWAY_AUTH_MOCK` a `false` o eliminar el bypass y conectar el mapper real en `AuthProvider`.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm.
+- Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite rolldown-vite 7.2.5, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1.
+- Sin venv/conda/poetry; no crear entornos Python ni copias paralelas. Usar `node_modules` de la raíz del repo.
+
+### Resultados de pruebas + logs
+- `npx eslint src/context/Auth/AuthContext.tsx src/context/Auth/context.ts src/context/Auth/useAuth.ts src/context/Auth/mockGatewaySession.ts src/context/Auth/types.ts src/components/ModuleLayout/ModuleLayout.tsx src/modules/admisiones/api/evaluacionAdmisionService.ts src/modules/admisiones/api/finalizarEvaluacionService.ts src/modules/admisiones/services/convocatoriaProfesoresMockService.ts src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: OK el 2026-06-05.
+- `npm run build`: OK el 2026-06-05; salida relevante: `✓ 237 modules transformed` y `✓ built in 709ms`.
+
+---
+
 # HANDOFF — SAPP Frontend
 
 ## Update 2026-06-02 (ajuste temporal: crear aspirante en convocatoria cerrada)

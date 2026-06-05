@@ -1,4 +1,4 @@
-import { httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { httpGet, httpPut } from '../../../shared/http/httpClient'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
 import type { ApiResponse } from './types'
 

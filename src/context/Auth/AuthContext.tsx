@@ -1,14 +1,20 @@
-import { createContext, useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { login as loginService } from '../../api/authService'
 import { mapLoginToUserSession } from '../../api/authMappers'
 import { consultaInfoAspirante } from '../../api/aspiranteAuthService'
 import { mapAspiranteInfoToSession } from '../../api/aspiranteAuthMappers'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
+import { ENABLE_GATEWAY_AUTH_MOCK, getMockGatewayAdminSession } from './mockGatewaySession'
+import { AuthContext } from './context'
 import type { AspiranteLoginParams, AuthContextValue, AuthSession } from './types'
 
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
-
 const getInitialSession = () => {
+  if (ENABLE_GATEWAY_AUTH_MOCK) {
+    const mockSession = getMockGatewayAdminSession()
+    saveSession(mockSession)
+    return mockSession
+  }
+
   const storedSession = getSession()
   const isExpired =
     storedSession?.kind === 'SAPP' && storedSession.expiresAt
@@ -41,8 +47,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   const logout = useCallback(() => {
-    setSessionState(null)
     clearSession()
+
+    if (ENABLE_GATEWAY_AUTH_MOCK) {
+      const mockSession = getMockGatewayAdminSession()
+      setSessionState(mockSession)
+      saveSession(mockSession)
+      return
+    }
+
+    setSessionState(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
