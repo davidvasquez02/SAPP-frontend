@@ -1,24 +1,42 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
-  getAdmisionesByAspirante,
-  getMatriculasByEstudiante,
-  getSolicitudesByEstudiante,
-} from '../../modules/estudiantes/services/estudianteDetalleService'
+  getDocumentById,
+  getDocumentsByEstudiante,
+  type DocumentoEstudianteMetadataDto,
+  type DocumentosEstudianteGrupoDto,
+} from '../../modules/documentos/api/documentosService'
 import { getEstudianteById } from '../../modules/estudiantes/services/estudiantesMockService'
-import type {
-  AdmisionResumen,
-  DocumentoResumen,
-  EstudianteCoordinacion,
-  MatriculaResumen,
-  SolicitudResumen,
-} from '../../modules/estudiantes/types'
+import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import './EstudianteDetalleCoordinacionPage.css'
 
 const EMPTY_VALUE = '—'
+const SIN_PERIODO_KEY = '__SIN_PERIODO__'
+const ADMISSION_TYPES = ['ADMISION_ASPIRANTE', 'ADMISION_COORDINACION'] as const
+const ENROLLMENT_TYPES = ['MATRICULA', 'MATRICULA_PRIMERA_VEZ'] as const
+
+type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES'
+type DocumentAction = 'view' | 'download'
+
+type EnrollmentDocumentGroup = {
+  periodo: string | null
+  tipoTramites: string[]
+  documentos: DocumentoEstudianteMetadataDto[]
+}
+
+type ActiveDocumentAction = {
+  documentoId: number
+  action: DocumentAction
+} | null
+
+const TAB_OPTIONS: { id: DetalleTab; label: string }[] = [
+  { id: 'MATRICULAS', label: 'Matrículas' },
+  { id: 'ADMISION', label: 'Admisión' },
+  { id: 'SOLICITUDES', label: 'Solicitudes' },
+]
 
 const formatDate = (value?: string | null) => {
   if (!value) {
@@ -83,59 +101,191 @@ const getFotoSrc = (estudiante: EstudianteCoordinacion) => {
   return estudiante.fotoUrl
 }
 
-type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES'
+const getCodigoEstudianteUis = (estudiante: EstudianteCoordinacion | null) => {
+  return estudiante?.codigoEstudianteUis?.trim() || estudiante?.codigo?.trim() || null
+}
 
-const TAB_OPTIONS: { id: DetalleTab; label: string }[] = [
-  { id: 'MATRICULAS', label: 'Matrículas' },
-  { id: 'ADMISION', label: 'Admisión' },
-  { id: 'SOLICITUDES', label: 'Solicitudes' },
-]
+const normalizeTipoTramite = (tipoTramite?: string | null) => tipoTramite?.trim().toUpperCase() ?? ''
 
-const resolveDocumentoContenido = (documento: DocumentoResumen) => {
-  const uploaded = documento.documentoUploadedResponse
+const compareNullableNumber = (left?: number | null, right?: number | null) => {
+  const normalizedLeft = left ?? Number.MAX_SAFE_INTEGER
+  const normalizedRight = right ?? Number.MAX_SAFE_INTEGER
+
+  return normalizedLeft - normalizedRight
+}
+
+const compareDocuments = (left: DocumentoEstudianteMetadataDto, right: DocumentoEstudianteMetadataDto) => {
+  const byTipoDocumento = compareNullableNumber(left.tipoDocumentoTramiteId, right.tipoDocumentoTramiteId)
+  if (byTipoDocumento !== 0) {
+    return byTipoDocumento
+  }
+
+  const bySecuencia = compareNullableNumber(left.secuencia, right.secuencia)
+  if (bySecuencia !== 0) {
+    return bySecuencia
+  }
+
+  return compareNullableNumber(left.id, right.id)
+}
+
+const parsePeriodo = (periodo: string | null) => {
+  if (!periodo) {
+    return null
+  }
+
+  const match = periodo.trim().match(/^(\d{4})-(\d+)$/)
+  if (!match) {
+    return null
+  }
+
   return {
-    base64: uploaded?.base64DocumentoContenido ?? uploaded?.contenidoBase64,
-    mimeType: uploaded?.mimeTypeDocumentoContenido ?? uploaded?.mimeType ?? 'application/pdf',
-    filename: uploaded?.nombreArchivoDocumento ?? 'documento.pdf',
+    year: Number(match[1]),
+    term: Number(match[2]),
   }
 }
 
-const getDocumentoEstado = (documento: DocumentoResumen) => {
-  const estado = documento.documentoUploadedResponse?.estado?.trim()
+const comparePeriodos = (left: string | null, right: string | null) => {
+  if (!left && !right) {
+    return 0
+  }
+
+  if (!left) {
+    return 1
+  }
+
+  if (!right) {
+    return -1
+  }
+
+  const parsedLeft = parsePeriodo(left)
+  const parsedRight = parsePeriodo(right)
+
+  if (parsedLeft && parsedRight) {
+    return parsedLeft.year - parsedRight.year || parsedLeft.term - parsedRight.term
+  }
+
+  if (parsedLeft) {
+    return -1
+  }
+
+  if (parsedRight) {
+    return 1
+  }
+
+  return left.localeCompare(right, 'es-CO', { numeric: true })
+}
+
+const buildAdmissionDocuments = (
+  data: DocumentosEstudianteGrupoDto[],
+): DocumentoEstudianteMetadataDto[] => {
+  return ADMISSION_TYPES.flatMap((tipoTramite) =>
+    data
+      .filter((group) => normalizeTipoTramite(group.tipoTramite) === tipoTramite)
+      .flatMap((group) => [...(group.documentos ?? [])].sort(compareDocuments)),
+  )
+}
+
+const buildEnrollmentGroups = (
+  data: DocumentosEstudianteGrupoDto[],
+): EnrollmentDocumentGroup[] => {
+  const groupsByPeriodo = new Map<string, EnrollmentDocumentGroup>()
+
+  data
+    .filter((group) => ENROLLMENT_TYPES.includes(normalizeTipoTramite(group.tipoTramite) as (typeof ENROLLMENT_TYPES)[number]))
+    .forEach((group) => {
+      const periodo = group.periodo?.trim() || null
+      const key = periodo ?? SIN_PERIODO_KEY
+      const existing = groupsByPeriodo.get(key) ?? {
+        periodo,
+        tipoTramites: [],
+        documentos: [],
+      }
+      const tipoTramite = normalizeTipoTramite(group.tipoTramite)
+
+      if (tipoTramite && !existing.tipoTramites.includes(tipoTramite)) {
+        existing.tipoTramites.push(tipoTramite)
+      }
+
+      existing.documentos.push(...(group.documentos ?? []))
+      groupsByPeriodo.set(key, existing)
+    })
+
+  return Array.from(groupsByPeriodo.values())
+    .map((group) => ({
+      ...group,
+      documentos: [...group.documentos].sort(compareDocuments),
+    }))
+    .sort((left, right) => comparePeriodos(left.periodo, right.periodo))
+}
+
+const getDocumentoEstado = (documento: DocumentoEstudianteMetadataDto) => {
+  const estado = documento.estado?.trim()
 
   if (estado) {
     return estado.replaceAll('_', ' ')
   }
 
-  return documento.documentoCargado ? 'Cargado' : 'Pendiente'
+  return documento.id && documento.nombreArchivo ? 'Cargado' : 'Pendiente'
 }
 
 const getDocumentoEstadoModifier = (estado: string) => {
-  const normalized = estado.trim().toUpperCase()
+  const normalized = estado.trim().toUpperCase().replaceAll(' ', '_')
 
-  if (normalized.includes('APROB')) {
+  if (normalized.includes('APROBADO')) {
     return 'is-approved'
   }
 
-  if (normalized.includes('RECHAZ')) {
+  if (normalized.includes('RECHAZADO')) {
     return 'is-rejected'
   }
 
-  if (normalized.includes('PEND')) {
+  if (normalized.includes('CARGADO') || normalized.includes('EN_REVISION')) {
+    return 'is-loaded'
+  }
+
+  if (normalized.includes('PENDIENTE')) {
     return 'is-pending'
   }
 
-  return 'is-loaded'
+  return 'is-neutral'
+}
+
+const formatFileSize = (bytes?: number | null) => {
+  if (!bytes || bytes <= 0) {
+    return EMPTY_VALUE
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB']
+  let value = bytes
+  let unitIndex = 0
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024
+    unitIndex += 1
+  }
+
+  return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
+}
+
+const resolveDocumentoKey = (documento: DocumentoEstudianteMetadataDto, index: number) => {
+  return documento.id
+    ? `documento-${documento.id}`
+    : `pendiente-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}-${documento.secuencia ?? index}-${index}`
 }
 
 interface DocumentCardProps {
-  documento: DocumentoResumen
+  documento: DocumentoEstudianteMetadataDto
+  activeAction: ActiveDocumentAction
+  onView: (documentoId: number) => void
+  onDownload: (documentoId: number) => void
 }
 
-const DocumentCard = ({ documento }: DocumentCardProps) => {
-  const { base64, mimeType, filename } = resolveDocumentoContenido(documento)
-  const canOpenActions = Boolean(documento.documentoCargado && base64)
+const DocumentCard = ({ documento, activeAction, onView, onDownload }: DocumentCardProps) => {
   const estado = getDocumentoEstado(documento)
+  const hasFile = Boolean(documento.id && documento.nombreArchivo?.trim())
+  const isProcessing = Boolean(activeAction && activeAction.documentoId === documento.id)
+  const isViewing = isProcessing && activeAction?.action === 'view'
+  const isDownloading = isProcessing && activeAction?.action === 'download'
 
   return (
     <article className="estudiante-detalle__document-card">
@@ -143,7 +293,7 @@ const DocumentCard = ({ documento }: DocumentCardProps) => {
         <span className="estudiante-detalle__document-icon" aria-hidden="true">
           📄
         </span>
-        <h4>{documento.nombreTipoDocumentoTramite || 'Documento requerido'}</h4>
+        <h4>{documento.tipoDocumento || 'Documento requerido'}</h4>
         <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${getDocumentoEstadoModifier(estado)}`}>
           {estado}
         </span>
@@ -151,19 +301,29 @@ const DocumentCard = ({ documento }: DocumentCardProps) => {
 
       <div className="estudiante-detalle__document-body">
         <span className="estudiante-detalle__document-label">Archivo</span>
-        <p className={canOpenActions ? '' : 'is-muted'}>
-          {canOpenActions ? filename : 'No se ha cargado archivo'}
+        <p className={hasFile ? '' : 'is-muted'}>
+          {hasFile ? documento.nombreArchivo : 'No se ha cargado archivo'}
         </p>
+        <dl className="estudiante-detalle__document-meta">
+          <div>
+            <dt>Fecha de carga</dt>
+            <dd>{formatDate(documento.fechaCarga)}</dd>
+          </div>
+          <div>
+            <dt>Tamaño</dt>
+            <dd>{formatFileSize(documento.tamanoBytes)}</dd>
+          </div>
+        </dl>
       </div>
 
       <footer className="estudiante-detalle__document-actions">
-        {canOpenActions ? (
+        {hasFile && documento.id ? (
           <>
-            <button type="button" onClick={() => openBase64InNewTab(base64 as string, mimeType, filename)}>
-              Ver
+            <button type="button" disabled={isProcessing} onClick={() => onView(documento.id as number)}>
+              {isViewing ? 'Abriendo...' : 'Ver'}
             </button>
-            <button type="button" onClick={() => downloadBase64File(base64 as string, mimeType, filename)}>
-              Descargar
+            <button type="button" disabled={isProcessing} onClick={() => onDownload(documento.id as number)}>
+              {isDownloading ? 'Descargando...' : 'Descargar'}
             </button>
           </>
         ) : (
@@ -174,17 +334,28 @@ const DocumentCard = ({ documento }: DocumentCardProps) => {
   )
 }
 
-const DocumentGrid = ({ documentos }: { documentos: DocumentoResumen[] }) => {
+interface DocumentGridProps {
+  documentos: DocumentoEstudianteMetadataDto[]
+  emptyMessage: string
+  activeAction: ActiveDocumentAction
+  onView: (documentoId: number) => void
+  onDownload: (documentoId: number) => void
+}
+
+const DocumentGrid = ({ documentos, emptyMessage, activeAction, onView, onDownload }: DocumentGridProps) => {
   if (documentos.length === 0) {
-    return <p className="estudiante-detalle__mini-status">No hay documentos registrados.</p>
+    return <p className="estudiante-detalle__mini-status">{emptyMessage}</p>
   }
 
   return (
     <div className="estudiante-detalle__documents-grid">
-      {documentos.map((documento) => (
+      {documentos.map((documento, index) => (
         <DocumentCard
-          key={`${documento.idTipoDocumentoTramite}-${documento.codigoTipoDocumentoTramite}`}
+          key={resolveDocumentoKey(documento, index)}
           documento={documento}
+          activeAction={activeAction}
+          onView={onView}
+          onDownload={onDownload}
         />
       ))}
     </div>
@@ -217,7 +388,7 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
         <span className="estudiante-detalle__eyebrow">Perfil académico</span>
         <h1 className="estudiante-detalle__title">{estudiante.nombreCompleto || 'Sin información'}</h1>
         <div className="estudiante-detalle__profile-tags" aria-label="Resumen académico">
-          <span className="estudiante-detalle__code-pill">Código UIS {estudiante.codigo || EMPTY_VALUE}</span>
+          <span className="estudiante-detalle__code-pill">Código UIS {getCodigoEstudianteUis(estudiante) || EMPTY_VALUE}</span>
           <span className="estudiante-detalle__program-pill">{getProgramaDisplay(estudiante)}</span>
           <span className="estudiante-detalle__badge estudiante-detalle__badge--status">
             {formatEstado(estudiante.estadoAcademico)}
@@ -301,35 +472,6 @@ const StudentDetailTabs = ({ activeTab, onChange, children }: StudentDetailTabsP
   </section>
 )
 
-const AdmissionSummaryCard = ({ admision }: { admision: AdmisionResumen }) => (
-  <article className="estudiante-detalle__admission-card">
-    <header className="estudiante-detalle__admission-header">
-      <div>
-        <span className="estudiante-detalle__eyebrow">Proceso de admisión</span>
-        <h3>Admisión #{admision.id}</h3>
-      </div>
-      <span className="estudiante-detalle__badge estudiante-detalle__badge--status">
-        {formatEstado(admision.estado)}
-      </span>
-    </header>
-
-    <div className="estudiante-detalle__admission-grid">
-      <div>
-        <span className="estudiante-detalle__label">Fecha inscripción</span>
-        <strong>{formatDate(admision.fechaInscripcion)}</strong>
-      </div>
-      <div>
-        <span className="estudiante-detalle__label">Fecha resultado</span>
-        <strong>{formatDate(admision.fechaResultado)}</strong>
-      </div>
-      <div>
-        <span className="estudiante-detalle__label">Puntaje total</span>
-        <strong>{admision.puntajeTotal ?? EMPTY_VALUE}</strong>
-      </div>
-    </div>
-  </article>
-)
-
 type EstudianteDetalleLocationState = {
   estudiante?: EstudianteCoordinacion
 } | null
@@ -342,11 +484,12 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [estudiante, setEstudiante] = useState<EstudianteCoordinacion | null>(estudianteFromState)
   const [isLoading, setIsLoading] = useState(!estudianteFromState)
   const [error, setError] = useState<string | null>(null)
-  const [isLoadingTabs, setIsLoadingTabs] = useState(false)
-  const [tabsError, setTabsError] = useState<string | null>(null)
-  const [matriculas, setMatriculas] = useState<MatriculaResumen[]>([])
-  const [admisiones, setAdmisiones] = useState<AdmisionResumen[]>([])
-  const [solicitudes, setSolicitudes] = useState<SolicitudResumen[]>([])
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
+  const [documentsError, setDocumentsError] = useState<string | null>(null)
+  const [documentActionError, setDocumentActionError] = useState<string | null>(null)
+  const [documentGroups, setDocumentGroups] = useState<DocumentosEstudianteGrupoDto[]>([])
+  const [activeDocumentAction, setActiveDocumentAction] = useState<ActiveDocumentAction>(null)
+  const loadedDocumentsCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
     const id = Number(estudianteId)
@@ -357,65 +500,30 @@ const EstudianteDetalleCoordinacionPage = () => {
       return
     }
 
-    const loadTabsData = async (estudianteData: EstudianteCoordinacion) => {
-      setIsLoadingTabs(true)
-      setTabsError(null)
-
-      try {
-        const admisionesPromise = estudianteData.idAspirante
-          ? getAdmisionesByAspirante(estudianteData.idAspirante)
-          : Promise.resolve([])
-        const [matriculasData, admisionesData, solicitudesData] = await Promise.all([
-          getMatriculasByEstudiante(id),
-          admisionesPromise,
-          getSolicitudesByEstudiante(id),
-        ])
-
-        setMatriculas(matriculasData)
-        setAdmisiones(admisionesData)
-        setSolicitudes(solicitudesData)
-      } catch (err) {
-        setTabsError(
-          err instanceof Error
-            ? err.message
-            : 'No fue posible cargar la información complementaria del estudiante.',
-        )
-      } finally {
-        setIsLoadingTabs(false)
-      }
-    }
-
     const loadEstudiante = async () => {
       const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
 
       if (stateEstudiante) {
         setEstudiante(stateEstudiante)
         setIsLoading(false)
-        void loadTabsData(stateEstudiante)
-      } else {
-        setIsLoading(true)
+        setError(null)
+        return
       }
 
+      setIsLoading(true)
       setError(null)
 
       try {
         const data = await getEstudianteById(id)
 
         if (!data) {
-          if (!stateEstudiante) {
-            setError('No se encontró información para el estudiante seleccionado.')
-          }
+          setError('No se encontró información para el estudiante seleccionado.')
           return
         }
 
         setEstudiante(data)
-        if (!stateEstudiante) {
-          await loadTabsData(data)
-        }
       } catch (err) {
-        if (!stateEstudiante) {
-          setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
-        }
+        setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
       } finally {
         setIsLoading(false)
       }
@@ -424,87 +532,160 @@ const EstudianteDetalleCoordinacionPage = () => {
     void loadEstudiante()
   }, [estudianteFromState, estudianteId])
 
-  const contenidoTab = useMemo(() => {
-    if (isLoadingTabs) {
-      return <p className="estudiante-detalle__mini-status">Cargando información de la pestaña...</p>
+  const codigoEstudianteUis = getCodigoEstudianteUis(estudiante)
+
+  useEffect(() => {
+    if (!codigoEstudianteUis) {
+      setDocumentGroups([])
+      setDocumentsError(estudiante ? 'No se encontró código UIS para consultar documentos.' : null)
+      return
     }
 
-    if (tabsError) {
+    if (loadedDocumentsCodeRef.current === codigoEstudianteUis) {
+      return
+    }
+
+    let ignore = false
+    loadedDocumentsCodeRef.current = codigoEstudianteUis
+    setIsLoadingDocuments(true)
+    setDocumentsError(null)
+
+    const loadDocuments = async () => {
+      try {
+        const data = await getDocumentsByEstudiante(codigoEstudianteUis)
+
+        if (!ignore) {
+          setDocumentGroups(data)
+        }
+      } catch (err) {
+        if (!ignore) {
+          loadedDocumentsCodeRef.current = null
+          setDocumentGroups([])
+          setDocumentsError(
+            err instanceof Error
+              ? err.message
+              : 'No fue posible cargar los documentos del estudiante.',
+          )
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingDocuments(false)
+        }
+      }
+    }
+
+    void loadDocuments()
+
+    return () => {
+      ignore = true
+    }
+  }, [codigoEstudianteUis, estudiante])
+
+  const admissionDocuments = useMemo(() => buildAdmissionDocuments(documentGroups), [documentGroups])
+  const enrollmentGroups = useMemo(() => buildEnrollmentGroups(documentGroups), [documentGroups])
+
+  const handleDocumentAction = async (documentoId: number, action: DocumentAction) => {
+    setActiveDocumentAction({ documentoId, action })
+    setDocumentActionError(null)
+
+    try {
+      const file = await getDocumentById(documentoId)
+
+      if (!file.contenidoBase64) {
+        throw new Error('El documento no contiene archivo disponible.')
+      }
+
+      const mimeType = file.mimeType || 'application/octet-stream'
+      const filename = file.nombreArchivo || `documento-${documentoId}`
+
+      if (action === 'view') {
+        openBase64InNewTab(file.contenidoBase64, mimeType, filename)
+      } else {
+        downloadBase64File(file.contenidoBase64, mimeType, filename)
+      }
+    } catch (err) {
+      setDocumentActionError(
+        err instanceof Error
+          ? err.message
+          : 'No fue posible procesar el documento solicitado.',
+      )
+    } finally {
+      setActiveDocumentAction(null)
+    }
+  }
+
+  const contenidoTab = useMemo(() => {
+    const withActionError = (content: ReactNode) => (
+      <>
+        {documentActionError ? (
+          <p className="estudiante-detalle__mini-status estudiante-detalle__mini-status--error">{documentActionError}</p>
+        ) : null}
+        {content}
+      </>
+    )
+
+    if (isLoadingDocuments) {
+      return <p className="estudiante-detalle__mini-status">Cargando documentos del estudiante...</p>
+    }
+
+    if (documentsError) {
       return (
-        <p className="estudiante-detalle__mini-status estudiante-detalle__mini-status--error">{tabsError}</p>
+        <p className="estudiante-detalle__mini-status estudiante-detalle__mini-status--error">{documentsError}</p>
       )
     }
 
     if (tabActiva === 'MATRICULAS') {
-      if (matriculas.length === 0) {
-        return <p className="estudiante-detalle__mini-status">No hay matrículas registradas.</p>
+      if (enrollmentGroups.length === 0) {
+        return <p className="estudiante-detalle__mini-status">No hay documentos de matrícula registrados para este estudiante.</p>
       }
 
-      return (
+      return withActionError(
         <div className="estudiante-detalle__tab-grid">
-          {matriculas.map((matricula) => (
-            <article key={matricula.id} className="estudiante-detalle__tab-card">
+          {enrollmentGroups.map((group) => (
+            <section key={group.periodo ?? SIN_PERIODO_KEY} className="estudiante-detalle__tab-card estudiante-detalle__enrollment-group">
               <header className="estudiante-detalle__tab-card-header">
-                <h3>Matrícula</h3>
-                <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">{matricula.estado}</span>
+                <div>
+                  <span className="estudiante-detalle__eyebrow">Matrículas</span>
+                  <h3>{group.periodo ? `Periodo ${group.periodo}` : 'Matrícula sin periodo'}</h3>
+                </div>
+                <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">
+                  {group.documentos.length} documento{group.documentos.length === 1 ? '' : 's'}
+                </span>
               </header>
-              <div className="estudiante-detalle__tab-card-meta">
-                <p>Periodo: {matricula.periodoAcademico}</p>
-                <p>Fecha solicitud: {formatDate(matricula.fechaSolicitud)}</p>
-              </div>
-              <DocumentGrid documentos={matricula.documentos} />
-            </article>
+              <DocumentGrid
+                documentos={group.documentos}
+                emptyMessage="No hay documentos de matrícula registrados para este periodo."
+                activeAction={activeDocumentAction}
+                onView={(documentoId) => void handleDocumentAction(documentoId, 'view')}
+                onDownload={(documentoId) => void handleDocumentAction(documentoId, 'download')}
+              />
+            </section>
           ))}
-        </div>
+        </div>,
       )
     }
 
     if (tabActiva === 'ADMISION') {
-      if (!estudiante?.idAspirante) {
-        return <p className="estudiante-detalle__mini-status">No hay aspirante asociado para este estudiante.</p>
-      }
-
-      if (admisiones.length === 0) {
-        return <p className="estudiante-detalle__mini-status">No hay procesos de admisión registrados.</p>
-      }
-
-      return (
-        <div className="estudiante-detalle__admission-section">
-          {admisiones.map((admision) => (
-            <section key={admision.id} className="estudiante-detalle__admission-group">
-              <AdmissionSummaryCard admision={admision} />
-              <div className="estudiante-detalle__documents-section">
-                <h3>Documentos de admisión</h3>
-                <DocumentGrid documentos={admision.documentos} />
-              </div>
-            </section>
-          ))}
-        </div>
+      return withActionError(
+        <div className="estudiante-detalle__documents-section">
+          <h3>Documentos de admisión</h3>
+          <DocumentGrid
+            documentos={admissionDocuments}
+            emptyMessage="No hay documentos de admisión registrados para este estudiante."
+            activeAction={activeDocumentAction}
+            onView={(documentoId) => void handleDocumentAction(documentoId, 'view')}
+            onDownload={(documentoId) => void handleDocumentAction(documentoId, 'download')}
+          />
+        </div>,
       )
     }
 
-    if (solicitudes.length === 0) {
-      return <p className="estudiante-detalle__mini-status">No hay solicitudes registradas.</p>
-    }
-
-    return (
-      <div className="estudiante-detalle__tab-grid">
-        {solicitudes.map((solicitud) => (
-          <article key={solicitud.id} className="estudiante-detalle__tab-card">
-            <header className="estudiante-detalle__tab-card-header">
-              <h3>Solicitud #{solicitud.id}</h3>
-              <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">{solicitud.estado}</span>
-            </header>
-            <div className="estudiante-detalle__tab-card-meta">
-              <p>Tipo: {solicitud.tipoSolicitud}</p>
-              <p>Fecha registro: {formatDate(solicitud.fechaRegistro)}</p>
-            </div>
-            <DocumentGrid documentos={solicitud.documentos} />
-          </article>
-        ))}
-      </div>
+    return withActionError(
+      <p className="estudiante-detalle__mini-status">
+        La consulta documental de esta pantalla se concentra en Admisión y Matrículas. Las solicitudes académicas no se recargan en este ajuste para evitar llamados documentales duplicados.
+      </p>
     )
-  }, [admisiones, estudiante?.idAspirante, isLoadingTabs, matriculas, solicitudes, tabActiva, tabsError])
+  }, [activeDocumentAction, admissionDocuments, documentActionError, documentsError, enrollmentGroups, isLoadingDocuments, tabActiva])
 
   return (
     <ModuleLayout title="Estudiantes">

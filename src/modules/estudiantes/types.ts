@@ -8,6 +8,7 @@ export interface EstudianteCoordinacion {
   id: number
   idAspirante: number | null
   codigo: string
+  codigoEstudianteUis?: string | null
   nombreCompleto: string
   fotoUrl: string | null
   foto?: {

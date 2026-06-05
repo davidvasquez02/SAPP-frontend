@@ -412,3 +412,37 @@ npm run lint
 - June 5, 2026: `/coordinacion/estudiantes/:estudianteId` deja la tarjeta angosta anterior y adopta dashboard de ancho completo con enlace de regreso, card principal de perfil, grid de datos académicos, tabs grandes y documentos en cards responsivas.
 - June 5, 2026: el listado de estudiantes ahora pasa el objeto completo del estudiante por `location.state`; el detalle lo usa como render optimista y conserva consulta por `id` para recargas o acceso directo.
 - June 5, 2026: el tab **Admisión** separa el resumen del proceso (`Admisión #{id}`, estado, fechas y puntaje) de la grilla **Documentos de admisión**, con acciones Ver/Descargar solo cuando hay archivo base64 disponible.
+
+---
+
+## Update 2026-06-05 — Detalle de estudiante: documentos bajo demanda
+
+### Decisión reciente
+- La pantalla `/coordinacion/estudiantes/:id` dejó de precargar documentos desde múltiples consultas de admisión, matrícula, solicitudes y trámites.
+- La fuente documental principal ahora es una sola consulta de metadatos: `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`.
+- El contenido pesado (`contenidoBase64`) se consulta únicamente bajo demanda con `GET /sapp/document/{documentoId}` cuando el usuario pulsa **Ver** o **Descargar**.
+
+### Contratos usados
+- `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` devuelve `{ ok, message, data }`, donde `data` es un arreglo de grupos `{ tipoTramite, periodo, tramiteId, documentos }`.
+- Cada documento de la consulta por estudiante es solo metadata: `id`, `estado`, `fechaCarga`, `mimeType`, `nombreArchivo`, `secuencia`, `tamanoBytes`, `tipoDocumento`, `tipoDocumentoTramiteId`, `version`.
+- `GET /sapp/document/{documentoId}` devuelve `{ ok, message, data }`, donde `data.contenidoBase64`, `data.mimeType` y `data.nombreArchivo` se usan para abrir o descargar el archivo.
+
+### Comportamiento de UI
+- El código enviado al endpoint documental se toma de `estudiante.codigoEstudianteUis`; si no existe, se usa el `codigo` UIS ya normalizado en el modelo frontend.
+- En recarga directa de `/coordinacion/estudiantes/:id`, primero se resuelve el estudiante por el mecanismo actual (`getEstudianteById`) y luego se dispara la consulta documental si existe código UIS.
+- Tab **Admisión**: muestra juntos `ADMISION_ASPIRANTE` y `ADMISION_COORDINACION` en cards, ordenados por tipo de trámite y por `tipoDocumentoTramiteId`, `secuencia`, `id`.
+- Tab **Matrículas**: muestra `MATRICULA` y `MATRICULA_PRIMERA_VEZ` agrupados por periodo cronológico `YYYY-N`; los grupos sin periodo quedan al final como “Matrícula sin periodo”.
+- Las cards de documentos muestran tipo documental, estado, archivo, fecha de carga, tamaño, y botones con loading por card/action.
+
+### Stack y ejecución vigentes
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`, ESLint `^9.39.1`, `@vitejs/plugin-react-swc` `^4.2.2`.
+- Vite está fijado vía override a `rolldown-vite@7.2.5`.
+- Comandos base:
+  ```bash
+  npm install
+  npm run dev
+  npm run build
+  npm run lint
+  ```
+- No hay seeds frontend obligatorias para este ajuste; depende de backend con estudiantes que tengan `codigoEstudianteUis` y documentos asociados.
