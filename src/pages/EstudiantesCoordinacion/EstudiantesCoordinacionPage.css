@@ -1,36 +1,24 @@
 .estudiantes-coordinacion {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  max-width: 1100px;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .estudiantes-coordinacion__header {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  align-items: flex-start;
+  gap: 1.35rem;
 }
 
 .estudiantes-coordinacion__title {
   margin: 0;
-  font-size: 1.75rem;
-}
-
-.estudiantes-coordinacion__subtitle {
-  margin: 0;
-  color: var(--text-secondary);
-}
-
-.estudiantes-coordinacion__filter-card {
-  grid-template-columns: minmax(240px, 460px);
-}
-
-.estudiantes-coordinacion__label {
   color: var(--text-primary);
-}
-
-.estudiantes-coordinacion__select {
-  width: 100%;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  line-height: 1.1;
+  font-weight: 900;
 }
 
 .estudiantes-coordinacion__status {
@@ -38,28 +26,47 @@
   color: var(--text-secondary);
 }
 
-.estudiantes-coordinacion__status--context {
-  color: var(--text-primary);
-}
-
 .estudiantes-coordinacion__status--error {
+  width: fit-content;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #b91c1c, transparent 65%);
+  background: color-mix(in srgb, #b91c1c, var(--surface) 90%);
   color: #b91c1c;
+  padding: 0.85rem 1rem;
 }
 
-.estudiantes-coordinacion__grid {
+.estudiantes-coordinacion__empty {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 18px;
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
+  background: color-mix(in srgb, var(--surface-container-low), var(--surface) 42%);
+  color: var(--text-secondary);
+  padding: 1.25rem;
+}
+
+.estudiantes-coordinacion__empty p {
+  margin: 0;
+  font-weight: 650;
+}
+
+.estudiantes-coordinacion__empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  place-items: center;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary), transparent 88%);
 }
 
-@media (min-width: 760px) {
-  .estudiantes-coordinacion__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 640px) {
+  .estudiantes-coordinacion {
+    gap: 1.25rem;
   }
-}
 
-@media (min-width: 1120px) {
-  .estudiantes-coordinacion__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .estudiantes-coordinacion__header {
+    width: 100%;
   }
 }

@@ -1,4 +1,62 @@
-# Handoff - SAPP Frontend
+# HANDOFF — SAPP Frontend
+
+## Update 2026-06-05 (Coordinación > Estudiantes: tablero horizontal tipo Trello)
+
+### Estado actual
+- Implementado el rediseño de `/coordinacion/estudiantes`: ya no hay combo/select de programa ni textos redundantes tipo “Programa seleccionado”.
+- La selección de programa se hace únicamente con el nuevo componente `ProgramTypeToggle`, un segmented control de botones reales **Maestría** / **Doctorado** con `aria-pressed`; el estado local usa `ProgramType` y por defecto inicia en `doctorado`.
+- La pantalla mapea los programas reales cargados desde `GET /sapp/programaAcademico` hacia `maestria`/`doctorado` por nombre/código (`MISI` / `DCC`) y conserva la consulta existente de estudiantes con `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`.
+- El listado ahora usa `StudentHorizontalBoard` con `useRef`, scroll horizontal (`scrollBy({ behavior: 'smooth' })`), botones accesibles izquierda/derecha y guía “Desliza horizontalmente para ver más estudiantes”.
+- `EstudianteCard` quedó con ancho fijo (`flex: 0 0 290px`), foto superior de altura fija, placeholder profesional “Sin foto”, badge de estado, metadatos (código, documento, correo, cohorte) y footer fijo “Ver perfil”.
+- Si el programa seleccionado no existe en catálogo o no retorna estudiantes, se muestra el estado vacío: “No hay estudiantes registrados para este programa”.
+
+### Archivos modificados
+- `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`
+- `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.css`
+- `src/modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle.tsx`
+- `src/modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle.css`
+- `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx`
+- `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.css`
+- `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx`
+- `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css`
+- `README.md`
+- `HANDOFF.md`
+
+### Retos abiertos
+1. Validar manualmente con backend activo que ambos programas (`MISI`/`DCC`) llegan en `GET /sapp/programaAcademico`; si el backend cambia códigos/nombres, actualizar `getProgramaType`.
+2. Tomar captura visual en navegador real si el entorno dispone de Chromium/Playwright; en esta sesión no había browser CLI instalado para screenshot automatizado.
+3. Revisar si el equipo quiere cambiar el programa activo inicial de `doctorado` a `maestria` según datos reales o preferencia de coordinación.
+
+### Próximos pasos recomendados
+1. Levantar backend + frontend y abrir `http://localhost:5173/coordinacion/estudiantes` con usuario `COORDINACION`/`ADMIN`.
+2. Verificar en Network que al pulsar **Maestría** y **Doctorado** se conserva el endpoint `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false` con el `programaId` correspondiente.
+3. Probar scroll lateral con trackpad, rueda/barra y botones de flecha; comprobar responsive móvil (tarjeta `84vw`) y modo claro/oscuro.
+4. Resolver o separar los errores históricos de `npm run lint` antes de exigir lint global como gate de CI.
+
+### Paths / artefactos / datasets
+- Ruta UI: `/coordinacion/estudiantes`.
+- Servicio de programas y estudiantes: `src/modules/estudiantes/services/estudiantesMockService.ts`.
+- Tipos UI: `src/modules/estudiantes/types.ts` (`ProgramaCoordinacion`, `EstudianteCoordinacion`).
+- Mock de detalle fallback: `src/modules/estudiantes/mock/estudiantes.mock.ts` (no se usa como fuente principal del listado).
+- Build generado localmente en `dist/` por `npm run build` (no versionar si está ignorado).
+
+### Contratos / esquemas esperados
+- Programas: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/programaAcademico` con envelope `{ ok, message, data }`; cada item esperado incluye `{ id, nombre, codigoNombre }`.
+- Estudiantes por programa: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/estudiantes/consulta?programaId={id}&egresados=false` con envelope `{ ok, message, data }`.
+- Item estudiante esperado: `data[].estudiante` con `{ id, idAspirante, codigoEstudianteUis, cohorte, estado, fechaIngreso, foto }`, `data[].persona` con documento/correo, `nombreCompleto`, `programaId`, `programaCodigoNombre`.
+- Foto: si `foto.contenidoBase64` existe, se normaliza a `data:${mimeType || 'image/jpeg'};base64,...`; si no existe, UI muestra “Sin foto”.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm, sin venv/conda/poetry. No crear entornos Python ni duplicar dependencias; usar `node_modules` en la raíz de `/workspace/SAPP-frontend`.
+- Versiones principales desde `package.json`: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, rolldown-vite 7.2.5 (override de `vite`), @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1, typescript-eslint 8.46.4.
+
+### Resultados de pruebas + logs
+- `npm run build` (2026-06-05): OK. Log relevante: `✓ 241 modules transformed`, `✓ built in 649ms`. npm emitió warning no bloqueante: `Unknown env config "http-proxy"`.
+- `npm run lint` (2026-06-05): falla por issues históricos fuera de este ajuste (`no-explicit-any` en servicios legacy, reglas React hooks/purity y variables sin uso en módulos existentes). No se observaron errores específicos de los archivos nuevos/modificados en el log.
+
+---
+
+## Previous handoff entries
 
 ## Update 2026-06-05 (mock ADMIN para pruebas con API Gateway)
 

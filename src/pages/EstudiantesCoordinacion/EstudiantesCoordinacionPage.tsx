@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import EstudianteCard from '../../modules/estudiantes/components/EstudianteCard/EstudianteCard'
+import ProgramTypeToggle, { type ProgramType } from '../../modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle'
+import StudentHorizontalBoard from '../../modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard'
 import {
   getEstudiantesByPrograma,
   getProgramasCoordinacion,
@@ -9,10 +10,25 @@ import {
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import './EstudiantesCoordinacionPage.css'
 
+const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
+  const nombre = programa.nombre.trim().toLowerCase()
+  const codigo = programa.codigo.trim().toLowerCase()
+
+  if (nombre.includes('maestr') || codigo.includes('misi')) {
+    return 'maestria'
+  }
+
+  if (nombre.includes('doctor') || codigo.includes('dcc')) {
+    return 'doctorado'
+  }
+
+  return null
+}
+
 const EstudiantesCoordinacionPage = () => {
   const navigate = useNavigate()
   const [programas, setProgramas] = useState<ProgramaCoordinacion[]>([])
-  const [programaIdSeleccionado, setProgramaIdSeleccionado] = useState<number | null>(null)
+  const [programTypeSeleccionado, setProgramTypeSeleccionado] = useState<ProgramType>('doctorado')
   const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>([])
   const [isLoadingProgramas, setIsLoadingProgramas] = useState(true)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
@@ -36,8 +52,13 @@ const EstudiantesCoordinacionPage = () => {
     loadProgramas()
   }, [])
 
+  const programaSeleccionado = useMemo(
+    () => programas.find((programa) => getProgramaType(programa) === programTypeSeleccionado) ?? null,
+    [programTypeSeleccionado, programas]
+  )
+
   useEffect(() => {
-    if (!programaIdSeleccionado) {
+    if (!programaSeleccionado) {
       setEstudiantes([])
       return
     }
@@ -47,7 +68,7 @@ const EstudiantesCoordinacionPage = () => {
       setError(null)
 
       try {
-        const data = await getEstudiantesByPrograma(programaIdSeleccionado)
+        const data = await getEstudiantesByPrograma(programaSeleccionado.id)
         setEstudiantes(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No fue posible cargar los estudiantes.')
@@ -57,42 +78,22 @@ const EstudiantesCoordinacionPage = () => {
     }
 
     loadEstudiantes()
-  }, [programaIdSeleccionado])
+  }, [programaSeleccionado])
 
-  const programaSeleccionado = useMemo(
-    () => programas.find((programa) => programa.id === programaIdSeleccionado) ?? null,
-    [programaIdSeleccionado, programas]
-  )
+  const isEmptyStateVisible =
+    !isLoadingProgramas && !isLoadingEstudiantes && !error && (!programaSeleccionado || estudiantes.length === 0)
 
   return (
     <ModuleLayout title="Estudiantes">
       <section className="estudiantes-coordinacion">
         <header className="estudiantes-coordinacion__header">
           <h1 className="estudiantes-coordinacion__title">Listado de estudiantes</h1>
-          <p className="estudiantes-coordinacion__subtitle">
-            Seleccione un programa para consultar los estudiantes matriculados.
-          </p>
+          <ProgramTypeToggle
+            value={programTypeSeleccionado}
+            onChange={setProgramTypeSeleccionado}
+            disabled={isLoadingProgramas}
+          />
         </header>
-
-        <div className="estudiantes-coordinacion__filter-card sapp-filters-panel">
-          <label htmlFor="programa-select" className="estudiantes-coordinacion__label sapp-filter-field">
-            <span>Programa académico</span>
-            <select
-              id="programa-select"
-              className="estudiantes-coordinacion__select"
-              value={programaIdSeleccionado ?? ''}
-              onChange={(event) => setProgramaIdSeleccionado(Number(event.target.value) || null)}
-              disabled={isLoadingProgramas}
-            >
-              <option value="">Seleccione un programa...</option>
-              {programas.map((programa) => (
-                <option key={programa.id} value={programa.id}>
-                  {programa.codigo} · {programa.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
 
         {isLoadingProgramas ? (
           <p className="estudiantes-coordinacion__status">Cargando programas...</p>
@@ -100,36 +101,22 @@ const EstudiantesCoordinacionPage = () => {
 
         {error ? <p className="estudiantes-coordinacion__status estudiantes-coordinacion__status--error">{error}</p> : null}
 
-        {!programaIdSeleccionado && !isLoadingProgramas ? (
-          <p className="estudiantes-coordinacion__status">
-            Debe seleccionar un programa para visualizar estudiantes.
-          </p>
-        ) : null}
-
-        {programaSeleccionado ? (
-          <p className="estudiantes-coordinacion__status estudiantes-coordinacion__status--context">
-            Programa seleccionado: <strong>{programaSeleccionado.nombre}</strong>
-          </p>
-        ) : null}
-
         {isLoadingEstudiantes ? (
           <p className="estudiantes-coordinacion__status">Cargando estudiantes...</p>
         ) : null}
 
-        {!isLoadingEstudiantes && programaIdSeleccionado && estudiantes.length === 0 ? (
-          <p className="estudiantes-coordinacion__status">No hay estudiantes para este programa.</p>
+        {isEmptyStateVisible ? (
+          <div className="estudiantes-coordinacion__empty" role="status">
+            <span className="estudiantes-coordinacion__empty-icon" aria-hidden="true">🎓</span>
+            <p>No hay estudiantes registrados para este programa.</p>
+          </div>
         ) : null}
 
         {!isLoadingEstudiantes && estudiantes.length > 0 ? (
-          <div className="estudiantes-coordinacion__grid">
-            {estudiantes.map((estudiante) => (
-              <EstudianteCard
-                key={estudiante.id}
-                estudiante={estudiante}
-                onClick={() => navigate(`/coordinacion/estudiantes/${estudiante.id}`)}
-              />
-            ))}
-          </div>
+          <StudentHorizontalBoard
+            estudiantes={estudiantes}
+            onStudentClick={(estudianteId) => navigate(`/coordinacion/estudiantes/${estudianteId}`)}
+          />
         ) : null}
       </section>
     </ModuleLayout>

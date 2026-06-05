@@ -1,0 +1,124 @@
+.student-horizontal-board {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.student-horizontal-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.student-horizontal-board__title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.student-horizontal-board__title-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.student-horizontal-board__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-left: auto;
+}
+
+.student-horizontal-board__hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.student-horizontal-board__controls {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.student-horizontal-board__control {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.student-horizontal-board__control:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--primary), var(--surface) 90%);
+  box-shadow: 0 9px 18px rgba(15, 23, 42, 0.11);
+}
+
+.student-horizontal-board__control:focus-visible,
+.student-horizontal-board__scroller:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%);
+  outline-offset: 3px;
+}
+
+.student-horizontal-board__scroller {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  padding: 0.15rem 0.15rem 1.1rem;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 0.15rem;
+  scrollbar-color: var(--primary) color-mix(in srgb, var(--outline), transparent 75%);
+  scrollbar-width: thin;
+}
+
+.student-horizontal-board__scroller::-webkit-scrollbar {
+  height: 0.65rem;
+}
+
+.student-horizontal-board__scroller::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--outline), transparent 78%);
+}
+
+.student-horizontal-board__scroller::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+@media (max-width: 760px) {
+  .student-horizontal-board__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .student-horizontal-board__tools {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .student-horizontal-board__hint {
+    max-width: 16rem;
+    font-size: 0.82rem;
+  }
+
+  .student-horizontal-board__scroller {
+    gap: 1rem;
+  }
+}
