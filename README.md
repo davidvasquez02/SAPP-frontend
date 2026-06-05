@@ -376,3 +376,39 @@ Mock data for the Admisiones module still lives in:
 - **2026-05-19:** En `/aspirante/documentos`, la carga ahora ocurre automáticamente al seleccionar archivo; se removió la acción manual de “Subir” en la tarjeta para este flujo.
 - **2026-05-19:** Para el requisito `ANX-4` (Foto), la tarjeta ocupa todo el ancho de la grilla en desktop (no se agrupa en pares) y fuerza selección de imágenes (`accept="image/*"`).
 - **2026-05-19:** Cuando un documento ya existe en checklist, el CTA principal cambia a “Reemplazar foto/archivo”, manteniendo “Ver documento/foto” según tipo.
+
+---
+
+## Update 2026-06-05 — Rediseño perfil académico de estudiante (Coordinación)
+
+### Purpose / Scope actualizado
+- La ruta `/coordinacion/estudiantes/:estudianteId` ahora se presenta como una vista de **perfil académico** para coordinación, orientada a revisar información principal del estudiante, métricas académicas y trazabilidad documental de Matrículas, Admisión y Solicitudes sin abandonar el layout institucional SAPP.
+
+### Arquitectura y contratos involucrados
+- La navegación desde `/coordinacion/estudiantes` envía el objeto `estudiante` por `navigate(..., { state: { estudiante } })` para pintar el encabezado del perfil inmediatamente.
+- El detalle mantiene fallback por servicio con `getEstudianteById(estudianteId)` cuando el usuario recarga o entra directamente por URL.
+- Las pestañas conservan los servicios existentes:
+  - Matrículas: `getMatriculasByEstudiante(estudianteId)`.
+  - Admisión: `getAdmisionesByAspirante(estudiante.idAspirante)`.
+  - Solicitudes: `getSolicitudesByEstudiante(estudianteId)`.
+- La foto del estudiante soporta el contrato `estudiante.foto.contenidoBase64`; si existe, se renderiza como `data:image/png;base64,...`; si no existe, se conserva un placeholder visual “Sin foto”.
+
+### Stack exacto vigente
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`.
+- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
+- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+
+### Cómo correr / validar
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```
+- No hay seeds frontend nuevas para este ajuste. Los datos dependen del backend SAPP y de los mocks existentes en `src/modules/estudiantes/mock/estudiantes.mock` cuando el servicio de detalle no encuentra información en cache.
+
+### Decisiones recientes (changelog-lite)
+- June 5, 2026: `/coordinacion/estudiantes/:estudianteId` deja la tarjeta angosta anterior y adopta dashboard de ancho completo con enlace de regreso, card principal de perfil, grid de datos académicos, tabs grandes y documentos en cards responsivas.
+- June 5, 2026: el listado de estudiantes ahora pasa el objeto completo del estudiante por `location.state`; el detalle lo usa como render optimista y conserva consulta por `id` para recargas o acceso directo.
+- June 5, 2026: el tab **Admisión** separa el resumen del proceso (`Admisión #{id}`, estado, fechas y puntaje) de la grilla **Documentos de admisión**, con acciones Ver/Descargar solo cuando hay archivo base64 disponible.

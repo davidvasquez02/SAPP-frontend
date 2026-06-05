@@ -2,102 +2,275 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 920px;
+  width: 100%;
+  min-width: 0;
 }
 
 .estudiante-detalle__back {
+  align-self: flex-start;
   color: var(--primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .estudiante-detalle__back:hover {
   text-decoration: underline;
 }
 
-.estudiante-detalle__status {
+.estudiante-detalle__status,
+.estudiante-detalle__mini-status {
   margin: 0;
   color: var(--text-secondary);
 }
 
 .estudiante-detalle__status--error,
 .estudiante-detalle__mini-status--error {
-  color: var(--error, #b91c1c);
+  color: var(--error, var(--danger));
 }
 
-.estudiante-detalle__card {
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
-  background: var(--surface);
-  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.08);
-  padding: 1.2rem 1.5rem;
-}
-
-.estudiante-detalle__header {
+.estudiante-detalle__dashboard {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1.1rem;
+  gap: clamp(1rem, 2vw, 1.35rem);
+  width: 100%;
+  min-width: 0;
+}
+
+.estudiante-detalle__profile-card,
+.estudiante-detalle__tabs,
+.estudiante-detalle__admission-card,
+.estudiante-detalle__tab-card,
+.estudiante-detalle__document-card,
+.estudiante-detalle__stat-card {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 22%);
+  background: var(--surface);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--text-primary), transparent 92%);
+}
+
+.estudiante-detalle__profile-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(220px, 0.52fr);
+  align-items: center;
+  gap: clamp(1rem, 2.6vw, 2rem);
+  border-radius: 24px;
+  padding: clamp(1.1rem, 2.5vw, 1.75rem);
+}
+
+.estudiante-detalle__profile-photo-shell {
+  width: clamp(7.5rem, 12vw, 10rem);
+  aspect-ratio: 1;
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--surface-container-low);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--surface), transparent 40%);
+}
+
+.estudiante-detalle__profile-photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.estudiante-detalle__profile-placeholder {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-align: center;
+}
+
+.estudiante-detalle__profile-placeholder svg {
+  width: 3.2rem;
+  height: 3.2rem;
+  fill: color-mix(in srgb, var(--primary), transparent 25%);
+}
+
+.estudiante-detalle__profile-main,
+.estudiante-detalle__profile-meta,
+.estudiante-detalle__stat-card,
+.estudiante-detalle__tab-card-meta,
+.estudiante-detalle__admission-grid > div {
+  min-width: 0;
+}
+
+.estudiante-detalle__eyebrow,
+.estudiante-detalle__label,
+.estudiante-detalle__document-label {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
 }
 
 .estudiante-detalle__title {
-  margin: 0;
-  font-size: 1.6rem;
+  margin: 0.25rem 0 0;
+  color: var(--text-primary);
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  line-height: 1.08;
 }
 
-.estudiante-detalle__subtitle {
-  margin: 0;
-  color: var(--text-secondary);
-}
-
-.estudiante-detalle__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.9rem;
-}
-
-.estudiante-detalle__grid > div {
+.estudiante-detalle__profile-tags {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
 }
 
-.estudiante-detalle__label {
-  font-size: 0.8rem;
+.estudiante-detalle__code-pill,
+.estudiante-detalle__program-pill,
+.estudiante-detalle__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.estudiante-detalle__code-pill,
+.estudiante-detalle__program-pill {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.estudiante-detalle__program-pill {
+  color: var(--primary);
+}
+
+.estudiante-detalle__badge--status,
+.estudiante-detalle__badge--loaded,
+.estudiante-detalle__badge--document.is-loaded {
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 50%);
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--primary);
+}
+
+.estudiante-detalle__badge--neutral {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  background: var(--surface-container-low);
   color: var(--text-secondary);
+}
+
+.estudiante-detalle__badge--document.is-pending {
+  border: 1px solid color-mix(in srgb, var(--warning), transparent 62%);
+  background: color-mix(in srgb, var(--warning), transparent 90%);
+  color: var(--warning);
+}
+
+.estudiante-detalle__badge--document.is-approved {
+  border: 1px solid color-mix(in srgb, var(--success), transparent 58%);
+  background: color-mix(in srgb, var(--success), transparent 90%);
+  color: var(--success);
+}
+
+.estudiante-detalle__badge--document.is-rejected {
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 58%);
+  background: color-mix(in srgb, var(--danger), transparent 90%);
+  color: var(--danger);
+}
+
+.estudiante-detalle__profile-meta {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--surface-container-low);
+}
+
+.estudiante-detalle__profile-meta div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.estudiante-detalle__profile-meta dt {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+}
+
+.estudiante-detalle__profile-meta dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.estudiante-detalle__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.85rem;
+}
+
+.estudiante-detalle__stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 6.25rem;
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.estudiante-detalle__stat-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--primary);
+  font-weight: 900;
 }
 
 .estudiante-detalle__value {
+  display: block;
+  margin-top: 0.2rem;
   color: var(--text-primary);
-  font-weight: 600;
-}
-
-.estudiante-detalle__value--break {
+  font-size: 1rem;
   overflow-wrap: anywhere;
 }
 
 .estudiante-detalle__tabs {
-  margin-top: 1.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
-  padding-top: 1rem;
+  border-radius: 24px;
+  padding: clamp(1rem, 2vw, 1.35rem);
 }
 
 .estudiante-detalle__tab-list {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.7rem;
   flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .estudiante-detalle__tab-button {
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 12%);
   border-radius: 999px;
-  background: var(--surface-container-low, var(--surface));
-  color: var(--text-secondary);
-  padding: 0.4rem 1rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.65rem 1.35rem;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 800;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--text-primary), transparent 94%);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.estudiante-detalle__tab-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px color-mix(in srgb, var(--text-primary), transparent 90%);
 }
 
 .estudiante-detalle__tab-button.is-active {
@@ -107,71 +280,217 @@
 }
 
 .estudiante-detalle__tab-panel {
-  margin-top: 0.9rem;
+  min-width: 0;
 }
 
-.estudiante-detalle__tab-grid {
+.estudiante-detalle__tab-grid,
+.estudiante-detalle__admission-section,
+.estudiante-detalle__admission-group {
   display: grid;
-  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.estudiante-detalle__tab-card,
+.estudiante-detalle__admission-card {
+  border-radius: 18px;
+  padding: clamp(1rem, 2vw, 1.25rem);
+}
+
+.estudiante-detalle__tab-card-header,
+.estudiante-detalle__admission-header,
+.estudiante-detalle__document-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
-.estudiante-detalle__tab-card {
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
-  border-radius: 14px;
-  padding: 0.85rem 1rem;
-  background: var(--surface-container-low, var(--surface));
-}
-
-.estudiante-detalle__tab-card h3 {
-  margin: 0 0 0.35rem;
-  color: var(--text-primary);
-}
-
-.estudiante-detalle__tab-card p {
-  margin: 0.1rem 0;
-  color: var(--text-secondary);
-}
-
-.estudiante-detalle__mini-status {
+.estudiante-detalle__tab-card h3,
+.estudiante-detalle__admission-card h3,
+.estudiante-detalle__documents-section h3 {
   margin: 0;
-  color: var(--text-secondary);
-}
-
-.estudiante-detalle__docs-list {
-  margin: 0.65rem 0 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: 0.3rem;
-}
-
-.estudiante-detalle__docs-list li {
-  color: var(--text-secondary);
-}
-
-.estudiante-detalle__docs-list strong {
-  display: block;
   color: var(--text-primary);
 }
 
-@media (min-width: 780px) {
-  .estudiante-detalle__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.estudiante-detalle__doc-actions {
+.estudiante-detalle__tab-card-meta {
   display: flex;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0.75rem 0 1rem;
+  color: var(--text-secondary);
 }
 
-.estudiante-detalle__doc-actions button {
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+.estudiante-detalle__tab-card-meta p {
+  margin: 0;
+}
+
+.estudiante-detalle__admission-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.estudiante-detalle__admission-grid > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem;
+  border-radius: 16px;
+  background: var(--surface-container-low);
+}
+
+.estudiante-detalle__admission-grid strong {
+  color: var(--text-primary);
+}
+
+.estudiante-detalle__documents-section {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.estudiante-detalle__documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.estudiante-detalle__document-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.9rem;
+  min-height: 12rem;
+  border-color: color-mix(in srgb, var(--outline), transparent 5%);
+  border-radius: 16px;
+  padding: 1rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.estudiante-detalle__document-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--primary), transparent 58%);
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--text-primary), transparent 88%);
+}
+
+.estudiante-detalle__document-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: flex-start;
+}
+
+.estudiante-detalle__document-icon {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--surface-container-low);
+}
+
+.estudiante-detalle__document-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.estudiante-detalle__document-body {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.estudiante-detalle__document-body p {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.estudiante-detalle__document-body p.is-muted,
+.estudiante-detalle__document-no-actions {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.estudiante-detalle__document-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.estudiante-detalle__document-actions button {
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 45%);
   background: var(--surface);
   color: var(--primary);
   border-radius: 999px;
-  padding: 0.2rem 0.7rem;
+  padding: 0.45rem 0.9rem;
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.estudiante-detalle__document-actions button:first-child {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.estudiante-detalle__document-actions button:hover {
+  filter: brightness(0.98);
+}
+
+@media (min-width: 1180px) {
+  .estudiante-detalle__documents-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .estudiante-detalle__profile-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .estudiante-detalle__profile-meta {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .estudiante-detalle__admission-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .estudiante-detalle__profile-card {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .estudiante-detalle__profile-photo-shell {
+    width: min(100%, 11rem);
+  }
+
+  .estudiante-detalle__profile-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .estudiante-detalle__tab-list,
+  .estudiante-detalle__document-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .estudiante-detalle__tab-button,
+  .estudiante-detalle__document-actions button {
+    width: 100%;
+  }
+
+  .estudiante-detalle__document-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .estudiante-detalle__document-header .estudiante-detalle__badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
 }

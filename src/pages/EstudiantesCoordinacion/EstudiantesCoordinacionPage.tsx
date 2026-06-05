@@ -115,7 +115,11 @@ const EstudiantesCoordinacionPage = () => {
         {!isLoadingEstudiantes && estudiantes.length > 0 ? (
           <StudentHorizontalBoard
             estudiantes={estudiantes}
-            onStudentClick={(estudianteId) => navigate(`/coordinacion/estudiantes/${estudianteId}`)}
+            onStudentClick={(estudiante) =>
+              navigate(`/coordinacion/estudiantes/${estudiante.id}`, {
+                state: { estudiante },
+              })
+            }
           />
         ) : null}
       </section>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
@@ -17,9 +18,11 @@ import type {
 } from '../../modules/estudiantes/types'
 import './EstudianteDetalleCoordinacionPage.css'
 
-const formatDate = (value: string | null) => {
+const EMPTY_VALUE = '—'
+
+const formatDate = (value?: string | null) => {
   if (!value) {
-    return '—'
+    return EMPTY_VALUE
   }
 
   const parsedDate = new Date(value.includes('T') ? value : `${value}T00:00:00`)
@@ -33,14 +36,51 @@ const formatDate = (value: string | null) => {
   }).format(parsedDate)
 }
 
-const formatEstado = (estado: EstudianteCoordinacion['estadoAcademico']) => {
-  const normalized = estado.trim().toUpperCase()
+const formatEstado = (estado?: EstudianteCoordinacion['estadoAcademico'] | string | null) => {
+  const normalized = estado?.trim().toUpperCase()
 
-  if (normalized === '1') {
-    return 'activo'
+  if (!normalized) {
+    return EMPTY_VALUE
   }
 
-  return normalized.replaceAll('_', ' ').toLowerCase()
+  if (normalized === '1') {
+    return 'ACTIVO'
+  }
+
+  return normalized.replaceAll('_', ' ')
+}
+
+const getProgramaDisplay = (estudiante: EstudianteCoordinacion) => {
+  const programa = estudiante.programaNombre?.trim()
+
+  if (!programa) {
+    return EMPTY_VALUE
+  }
+
+  const codigoAfterDash = programa.split('-').at(-1)?.trim()
+  if (codigoAfterDash && /^[A-ZÁÉÍÓÚÑ]{2,8}$/.test(codigoAfterDash)) {
+    return codigoAfterDash
+  }
+
+  if (programa.toUpperCase().includes('DOCTORADO')) {
+    return 'DCC'
+  }
+
+  if (programa.toUpperCase().includes('MAESTR')) {
+    return 'MISI'
+  }
+
+  return programa
+}
+
+const getFotoSrc = (estudiante: EstudianteCoordinacion) => {
+  const contenidoBase64 = estudiante.foto?.contenidoBase64?.trim()
+
+  if (contenidoBase64) {
+    return `data:image/png;base64,${contenidoBase64}`
+  }
+
+  return estudiante.fotoUrl
 }
 
 type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES'
@@ -60,43 +100,247 @@ const resolveDocumentoContenido = (documento: DocumentoResumen) => {
   }
 }
 
-const renderDocumentos = (documentos: DocumentoResumen[]) => {
+const getDocumentoEstado = (documento: DocumentoResumen) => {
+  const estado = documento.documentoUploadedResponse?.estado?.trim()
+
+  if (estado) {
+    return estado.replaceAll('_', ' ')
+  }
+
+  return documento.documentoCargado ? 'Cargado' : 'Pendiente'
+}
+
+const getDocumentoEstadoModifier = (estado: string) => {
+  const normalized = estado.trim().toUpperCase()
+
+  if (normalized.includes('APROB')) {
+    return 'is-approved'
+  }
+
+  if (normalized.includes('RECHAZ')) {
+    return 'is-rejected'
+  }
+
+  if (normalized.includes('PEND')) {
+    return 'is-pending'
+  }
+
+  return 'is-loaded'
+}
+
+interface DocumentCardProps {
+  documento: DocumentoResumen
+}
+
+const DocumentCard = ({ documento }: DocumentCardProps) => {
+  const { base64, mimeType, filename } = resolveDocumentoContenido(documento)
+  const canOpenActions = Boolean(documento.documentoCargado && base64)
+  const estado = getDocumentoEstado(documento)
+
+  return (
+    <article className="estudiante-detalle__document-card">
+      <header className="estudiante-detalle__document-header">
+        <span className="estudiante-detalle__document-icon" aria-hidden="true">
+          📄
+        </span>
+        <h4>{documento.nombreTipoDocumentoTramite || 'Documento requerido'}</h4>
+        <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${getDocumentoEstadoModifier(estado)}`}>
+          {estado}
+        </span>
+      </header>
+
+      <div className="estudiante-detalle__document-body">
+        <span className="estudiante-detalle__document-label">Archivo</span>
+        <p className={canOpenActions ? '' : 'is-muted'}>
+          {canOpenActions ? filename : 'No se ha cargado archivo'}
+        </p>
+      </div>
+
+      <footer className="estudiante-detalle__document-actions">
+        {canOpenActions ? (
+          <>
+            <button type="button" onClick={() => openBase64InNewTab(base64 as string, mimeType, filename)}>
+              Ver
+            </button>
+            <button type="button" onClick={() => downloadBase64File(base64 as string, mimeType, filename)}>
+              Descargar
+            </button>
+          </>
+        ) : (
+          <span className="estudiante-detalle__document-no-actions">Acciones disponibles al cargar el archivo</span>
+        )}
+      </footer>
+    </article>
+  )
+}
+
+const DocumentGrid = ({ documentos }: { documentos: DocumentoResumen[] }) => {
   if (documentos.length === 0) {
     return <p className="estudiante-detalle__mini-status">No hay documentos registrados.</p>
   }
 
   return (
-    <ul className="estudiante-detalle__docs-list">
-      {documentos.map((documento) => {
-        const { base64, mimeType, filename } = resolveDocumentoContenido(documento)
-        const canOpenActions = Boolean(documento.documentoCargado && base64)
-
-        return (
-          <li key={`${documento.idTipoDocumentoTramite}-${documento.codigoTipoDocumentoTramite}`}>
-            <strong>{documento.nombreTipoDocumentoTramite}</strong>
-            <span>{documento.documentoCargado && documento.documentoUploadedResponse ? `Cargado: ${filename}` : 'Pendiente por cargar'}</span>
-            {canOpenActions ? (
-              <div className="estudiante-detalle__doc-actions">
-                <button type="button" onClick={() => openBase64InNewTab(base64 as string, mimeType, filename)}>
-                  Ver
-                </button>
-                <button type="button" onClick={() => downloadBase64File(base64 as string, mimeType, filename)}>
-                  Descargar
-                </button>
-              </div>
-            ) : null}
-          </li>
-        )
-      })}
-    </ul>
+    <div className="estudiante-detalle__documents-grid">
+      {documentos.map((documento) => (
+        <DocumentCard
+          key={`${documento.idTipoDocumentoTramite}-${documento.codigoTipoDocumentoTramite}`}
+          documento={documento}
+        />
+      ))}
+    </div>
   )
 }
 
+const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinacion }) => {
+  const fotoSrc = getFotoSrc(estudiante)
+
+  return (
+    <article className="estudiante-detalle__profile-card">
+      <div className="estudiante-detalle__profile-photo-shell">
+        {fotoSrc ? (
+          <img
+            className="estudiante-detalle__profile-photo"
+            src={fotoSrc}
+            alt={`Foto de ${estudiante.nombreCompleto}`}
+          />
+        ) : (
+          <div className="estudiante-detalle__profile-placeholder" aria-label="Sin foto">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Zm0 2c-3.31 0-6 2.02-6 4.5V20h12v-1.5c0-2.48-2.69-4.5-6-4.5Z" />
+            </svg>
+            <span>Sin foto</span>
+          </div>
+        )}
+      </div>
+
+      <div className="estudiante-detalle__profile-main">
+        <span className="estudiante-detalle__eyebrow">Perfil académico</span>
+        <h1 className="estudiante-detalle__title">{estudiante.nombreCompleto || 'Sin información'}</h1>
+        <div className="estudiante-detalle__profile-tags" aria-label="Resumen académico">
+          <span className="estudiante-detalle__code-pill">Código UIS {estudiante.codigo || EMPTY_VALUE}</span>
+          <span className="estudiante-detalle__program-pill">{getProgramaDisplay(estudiante)}</span>
+          <span className="estudiante-detalle__badge estudiante-detalle__badge--status">
+            {formatEstado(estudiante.estadoAcademico)}
+          </span>
+        </div>
+      </div>
+
+      <dl className="estudiante-detalle__profile-meta">
+        <div>
+          <dt>Cohorte</dt>
+          <dd>{estudiante.cohorte || EMPTY_VALUE}</dd>
+        </div>
+        <div>
+          <dt>Correo institucional</dt>
+          <dd>{estudiante.correoInstitucional || 'Sin información'}</dd>
+        </div>
+        <div>
+          <dt>Documento</dt>
+          <dd>
+            {estudiante.tipoDocumento || EMPTY_VALUE} {estudiante.numeroDocumento || ''}
+          </dd>
+        </div>
+      </dl>
+    </article>
+  )
+}
+
+const StudentAcademicStats = ({ estudiante }: { estudiante: EstudianteCoordinacion }) => {
+  const stats = [
+    { label: 'Documento', value: `${estudiante.tipoDocumento || EMPTY_VALUE} ${estudiante.numeroDocumento || ''}`.trim(), icon: '▤' },
+    { label: 'Estado académico', value: formatEstado(estudiante.estadoAcademico), icon: '●' },
+    { label: 'Fecha de ingreso', value: formatDate(estudiante.fechaIngreso), icon: '↳' },
+    { label: 'Fecha de egreso', value: formatDate(estudiante.fechaEgreso), icon: '↱' },
+    { label: 'Promedio acumulado', value: estudiante.promedioAcumulado?.toFixed(2) ?? EMPTY_VALUE, icon: '★' },
+    { label: 'Créditos aprobados', value: String(estudiante.creditosAprobados ?? EMPTY_VALUE), icon: '✓' },
+    { label: 'Créditos pendientes', value: String(estudiante.creditosPendientes ?? EMPTY_VALUE), icon: '…' },
+    { label: 'Cohorte', value: estudiante.cohorte || EMPTY_VALUE, icon: '♙' },
+  ]
+
+  return (
+    <section className="estudiante-detalle__stats-grid" aria-label="Datos académicos del estudiante">
+      {stats.map((stat) => (
+        <article key={stat.label} className="estudiante-detalle__stat-card">
+          <span className="estudiante-detalle__stat-icon" aria-hidden="true">{stat.icon}</span>
+          <div>
+            <span className="estudiante-detalle__label">{stat.label}</span>
+            <strong className="estudiante-detalle__value">{stat.value || EMPTY_VALUE}</strong>
+          </div>
+        </article>
+      ))}
+    </section>
+  )
+}
+
+interface StudentDetailTabsProps {
+  activeTab: DetalleTab
+  onChange: (tab: DetalleTab) => void
+  children: ReactNode
+}
+
+const StudentDetailTabs = ({ activeTab, onChange, children }: StudentDetailTabsProps) => (
+  <section className="estudiante-detalle__tabs" aria-label="Detalle de trámites del estudiante">
+    <div className="estudiante-detalle__tab-list" role="tablist" aria-label="Pestañas de trámites">
+      {TAB_OPTIONS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          className={`estudiante-detalle__tab-button ${activeTab === tab.id ? 'is-active' : ''}`}
+          aria-selected={activeTab === tab.id}
+          onClick={() => onChange(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+
+    <div className="estudiante-detalle__tab-panel" role="tabpanel">
+      {children}
+    </div>
+  </section>
+)
+
+const AdmissionSummaryCard = ({ admision }: { admision: AdmisionResumen }) => (
+  <article className="estudiante-detalle__admission-card">
+    <header className="estudiante-detalle__admission-header">
+      <div>
+        <span className="estudiante-detalle__eyebrow">Proceso de admisión</span>
+        <h3>Admisión #{admision.id}</h3>
+      </div>
+      <span className="estudiante-detalle__badge estudiante-detalle__badge--status">
+        {formatEstado(admision.estado)}
+      </span>
+    </header>
+
+    <div className="estudiante-detalle__admission-grid">
+      <div>
+        <span className="estudiante-detalle__label">Fecha inscripción</span>
+        <strong>{formatDate(admision.fechaInscripcion)}</strong>
+      </div>
+      <div>
+        <span className="estudiante-detalle__label">Fecha resultado</span>
+        <strong>{formatDate(admision.fechaResultado)}</strong>
+      </div>
+      <div>
+        <span className="estudiante-detalle__label">Puntaje total</span>
+        <strong>{admision.puntajeTotal ?? EMPTY_VALUE}</strong>
+      </div>
+    </div>
+  </article>
+)
+
+type EstudianteDetalleLocationState = {
+  estudiante?: EstudianteCoordinacion
+} | null
+
 const EstudianteDetalleCoordinacionPage = () => {
   const { estudianteId } = useParams()
+  const location = useLocation()
+  const estudianteFromState = (location.state as EstudianteDetalleLocationState)?.estudiante ?? null
   const [tabActiva, setTabActiva] = useState<DetalleTab>('MATRICULAS')
-  const [estudiante, setEstudiante] = useState<EstudianteCoordinacion | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [estudiante, setEstudiante] = useState<EstudianteCoordinacion | null>(estudianteFromState)
+  const [isLoading, setIsLoading] = useState(!estudianteFromState)
   const [error, setError] = useState<string | null>(null)
   const [isLoadingTabs, setIsLoadingTabs] = useState(false)
   const [tabsError, setTabsError] = useState<string | null>(null)
@@ -111,27 +355,6 @@ const EstudianteDetalleCoordinacionPage = () => {
       setError('El estudiante solicitado no es válido.')
       setIsLoading(false)
       return
-    }
-
-    const loadEstudiante = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const data = await getEstudianteById(id)
-
-        if (!data) {
-          setError('No se encontró información para el estudiante seleccionado.')
-          return
-        }
-
-        setEstudiante(data)
-        await loadTabsData(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
-      } finally {
-        setIsLoading(false)
-      }
     }
 
     const loadTabsData = async (estudianteData: EstudianteCoordinacion) => {
@@ -162,8 +385,44 @@ const EstudianteDetalleCoordinacionPage = () => {
       }
     }
 
+    const loadEstudiante = async () => {
+      const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
+
+      if (stateEstudiante) {
+        setEstudiante(stateEstudiante)
+        setIsLoading(false)
+        void loadTabsData(stateEstudiante)
+      } else {
+        setIsLoading(true)
+      }
+
+      setError(null)
+
+      try {
+        const data = await getEstudianteById(id)
+
+        if (!data) {
+          if (!stateEstudiante) {
+            setError('No se encontró información para el estudiante seleccionado.')
+          }
+          return
+        }
+
+        setEstudiante(data)
+        if (!stateEstudiante) {
+          await loadTabsData(data)
+        }
+      } catch (err) {
+        if (!stateEstudiante) {
+          setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     void loadEstudiante()
-  }, [estudianteId])
+  }, [estudianteFromState, estudianteId])
 
   const contenidoTab = useMemo(() => {
     if (isLoadingTabs) {
@@ -185,11 +444,15 @@ const EstudianteDetalleCoordinacionPage = () => {
         <div className="estudiante-detalle__tab-grid">
           {matriculas.map((matricula) => (
             <article key={matricula.id} className="estudiante-detalle__tab-card">
-              <h3>Matrícula</h3>
-              <p>Periodo: {matricula.periodoAcademico}</p>
-              <p>Estado: {matricula.estado}</p>
-              <p>Fecha solicitud: {formatDate(matricula.fechaSolicitud)}</p>
-              {renderDocumentos(matricula.documentos)}
+              <header className="estudiante-detalle__tab-card-header">
+                <h3>Matrícula</h3>
+                <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">{matricula.estado}</span>
+              </header>
+              <div className="estudiante-detalle__tab-card-meta">
+                <p>Periodo: {matricula.periodoAcademico}</p>
+                <p>Fecha solicitud: {formatDate(matricula.fechaSolicitud)}</p>
+              </div>
+              <DocumentGrid documentos={matricula.documentos} />
             </article>
           ))}
         </div>
@@ -206,16 +469,15 @@ const EstudianteDetalleCoordinacionPage = () => {
       }
 
       return (
-        <div className="estudiante-detalle__tab-grid">
+        <div className="estudiante-detalle__admission-section">
           {admisiones.map((admision) => (
-            <article key={admision.id} className="estudiante-detalle__tab-card">
-              <h3>Admisión #{admision.id}</h3>
-              <p>Estado: {admision.estado}</p>
-              <p>Fecha inscripción: {formatDate(admision.fechaInscripcion)}</p>
-              <p>Fecha resultado: {formatDate(admision.fechaResultado)}</p>
-              <p>Puntaje total: {admision.puntajeTotal ?? '—'}</p>
-              {renderDocumentos(admision.documentos)}
-            </article>
+            <section key={admision.id} className="estudiante-detalle__admission-group">
+              <AdmissionSummaryCard admision={admision} />
+              <div className="estudiante-detalle__documents-section">
+                <h3>Documentos de admisión</h3>
+                <DocumentGrid documentos={admision.documentos} />
+              </div>
+            </section>
           ))}
         </div>
       )
@@ -229,11 +491,15 @@ const EstudianteDetalleCoordinacionPage = () => {
       <div className="estudiante-detalle__tab-grid">
         {solicitudes.map((solicitud) => (
           <article key={solicitud.id} className="estudiante-detalle__tab-card">
-            <h3>Solicitud #{solicitud.id}</h3>
-            <p>Tipo: {solicitud.tipoSolicitud}</p>
-            <p>Estado: {solicitud.estado}</p>
-            <p>Fecha registro: {formatDate(solicitud.fechaRegistro)}</p>
-            {renderDocumentos(solicitud.documentos)}
+            <header className="estudiante-detalle__tab-card-header">
+              <h3>Solicitud #{solicitud.id}</h3>
+              <span className="estudiante-detalle__badge estudiante-detalle__badge--neutral">{solicitud.estado}</span>
+            </header>
+            <div className="estudiante-detalle__tab-card-meta">
+              <p>Tipo: {solicitud.tipoSolicitud}</p>
+              <p>Fecha registro: {formatDate(solicitud.fechaRegistro)}</p>
+            </div>
+            <DocumentGrid documentos={solicitud.documentos} />
           </article>
         ))}
       </div>
@@ -253,77 +519,14 @@ const EstudianteDetalleCoordinacionPage = () => {
           <p className="estudiante-detalle__status estudiante-detalle__status--error">{error}</p>
         ) : null}
 
-        {!isLoading && estudiante ? (
-          <article className="estudiante-detalle__card">
-            <header className="estudiante-detalle__header">
-              <h1 className="estudiante-detalle__title">{estudiante.nombreCompleto}</h1>
-              <p className="estudiante-detalle__subtitle">{estudiante.programaNombre}</p>
-            </header>
-
-            <div className="estudiante-detalle__grid">
-              <div>
-                <span className="estudiante-detalle__label">Código</span>
-                <span className="estudiante-detalle__value">{estudiante.codigo}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Documento</span>
-                <span className="estudiante-detalle__value">
-                  {estudiante.tipoDocumento} {estudiante.numeroDocumento}
-                </span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Correo institucional</span>
-                <span className="estudiante-detalle__value estudiante-detalle__value--break">
-                  {estudiante.correoInstitucional}
-                </span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Estado académico</span>
-                <span className="estudiante-detalle__value">{formatEstado(estudiante.estadoAcademico)}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Cohorte</span>
-                <span className="estudiante-detalle__value">{estudiante.cohorte}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Fecha de ingreso</span>
-                <span className="estudiante-detalle__value">{formatDate(estudiante.fechaIngreso)}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Promedio acumulado</span>
-                <span className="estudiante-detalle__value">{estudiante.promedioAcumulado.toFixed(2)}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Créditos aprobados</span>
-                <span className="estudiante-detalle__value">{estudiante.creditosAprobados}</span>
-              </div>
-              <div>
-                <span className="estudiante-detalle__label">Créditos pendientes</span>
-                <span className="estudiante-detalle__value">{estudiante.creditosPendientes}</span>
-              </div>
-            </div>
-
-            <section className="estudiante-detalle__tabs" aria-label="Detalle de trámites del estudiante">
-              <div className="estudiante-detalle__tab-list" role="tablist" aria-label="Pestañas de trámites">
-                {TAB_OPTIONS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    className={`estudiante-detalle__tab-button ${tabActiva === tab.id ? 'is-active' : ''}`}
-                    aria-selected={tabActiva === tab.id}
-                    onClick={() => setTabActiva(tab.id)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="estudiante-detalle__tab-panel" role="tabpanel">
-                {contenidoTab}
-              </div>
-            </section>
-          </article>
+        {estudiante ? (
+          <div className="estudiante-detalle__dashboard">
+            <StudentProfileHeader estudiante={estudiante} />
+            <StudentAcademicStats estudiante={estudiante} />
+            <StudentDetailTabs activeTab={tabActiva} onChange={setTabActiva}>
+              {contenidoTab}
+            </StudentDetailTabs>
+          </div>
         ) : null}
       </section>
     </ModuleLayout>

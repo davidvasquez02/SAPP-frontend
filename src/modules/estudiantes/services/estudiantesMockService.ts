@@ -119,6 +119,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     codigo: item.estudiante.codigoEstudianteUis?.trim() || `EST-${item.estudiante.id}`,
     nombreCompleto: item.nombreCompleto.trim(),
     fotoUrl: buildFotoUrl(item.estudiante.foto),
+    foto: item.estudiante.foto,
     tipoDocumento: item.persona.tipoDocumento?.trim() || 'N/A',
     numeroDocumento: item.persona.numeroDocumento?.trim() || 'N/A',
     correoInstitucional: resolveCorreo(item.persona),
