@@ -10,6 +10,10 @@ export interface EstudianteCoordinacion {
   codigo: string
   nombreCompleto: string
   fotoUrl: string | null
+  foto?: {
+    contenidoBase64: string | null
+    mimeType: string | null
+  } | null
   tipoDocumento: string
   numeroDocumento: string
   correoInstitucional: string
@@ -21,6 +25,7 @@ export interface EstudianteCoordinacion {
   programaId: number
   programaNombre: string
   fechaIngreso: string
+  fechaEgreso?: string | null
 }
 
 
@@ -37,6 +42,7 @@ export interface DocumentoResumen {
     base64DocumentoContenido?: string
     mimeType?: string
     contenidoBase64?: string
+    estado?: string
   } | null
 }
 

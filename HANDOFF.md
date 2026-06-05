@@ -392,3 +392,61 @@ npm run lint
 
 ### Resultado de pruebas
 - `npm run build` (2026-05-26): falla por errores TypeScript preexistentes fuera de este ajuste (ModuleLayout/admisiones services/inscripcion documentos).
+
+---
+
+## Update 2026-06-05 — Rediseño `/coordinacion/estudiantes/:estudianteId`
+
+### Estado actual
+- Implementado el rediseño visual de la pantalla de detalle del estudiante como perfil académico tipo dashboard.
+- Se conserva `ModuleLayout`, por lo que siguen intactos el sidebar SAPP y el header superior con usuario autenticado.
+- El flujo desde el listado ahora navega con estado de React Router: `state: { estudiante }`, permitiendo pintar el perfil antes de completar consultas adicionales.
+- El detalle no depende únicamente del state: si se recarga la URL o se accede directamente, usa `getEstudianteById(estudianteId)` como fallback.
+
+### Archivos tocados
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`
+- `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`
+- `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx`
+- `src/modules/estudiantes/services/estudiantesMockService.ts`
+- `src/modules/estudiantes/types.ts`
+- `README.md`
+- `HANDOFF.md`
+
+### Componentes / estructura esperada
+- `StudentProfileHeader`: card principal con foto, nombre, código UIS, programa/sigla, estado, cohorte, correo y documento.
+- `StudentAcademicStats`: grid de mini cards para documento, estado, fecha ingreso, fecha egreso, promedio, créditos aprobados, créditos pendientes y cohorte.
+- `StudentDetailTabs`: tabs visuales Matrículas / Admisión / Solicitudes.
+- `AdmissionSummaryCard`: resumen del proceso de admisión con estado, fechas y puntaje.
+- `DocumentCard` + `DocumentGrid`: cards responsivas de documentos con badge de estado y acciones Ver/Descargar.
+
+### Contratos / esquemas esperados
+- Listado estudiantes coordinación: `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`.
+- La respuesta de estudiante puede incluir `estudiante.foto.contenidoBase64`; el detalle renderiza `data:image/png;base64,{contenidoBase64}` cuando está presente.
+- Detalle complementario:
+  - Matrículas: `getMatriculasByEstudiante(estudianteId)`.
+  - Admisión: `getAdmisionesByAspirante(idAspirante)` y documentos de trámite `codigoTipoTramite=1002`.
+  - Solicitudes: `getSolicitudesByEstudiante(estudianteId)`.
+- Documento esperado: `documentoCargado`, `documentoUploadedResponse.nombreArchivoDocumento`, `base64DocumentoContenido`/`contenidoBase64`, `mimeTypeDocumentoContenido`/`mimeType`; si no hay base64, las acciones se ocultan y se muestra pendiente.
+
+### Retos abiertos
+1. Validar manualmente con backend real que `estudiante.foto.contenidoBase64` llega también al acceder desde cache/listado y que los documentos de admisión entregan base64 para habilitar Ver/Descargar.
+2. Confirmar si el backend expondrá `fechaEgreso`; el frontend ya muestra “—” cuando no llega.
+3. Si se requiere una sigla de programa distinta de `DCC`/`MISI`, ajustar `getProgramaDisplay` o añadir campo explícito desde backend.
+
+### Próximos pasos recomendados
+1. Levantar backend + frontend y abrir `http://localhost:5173/coordinacion/estudiantes` con rol `COORDINACION` o `ADMIN`.
+2. Entrar a “Ver perfil” y confirmar que el encabezado se pinta inmediatamente con `navigate state`.
+3. Recargar `http://localhost:5173/coordinacion/estudiantes/{id}` y confirmar fallback por servicio.
+4. Revisar tab **Admisión**: resumen arriba y documentos en grilla, sin bullets.
+5. Probar botones **Ver** y **Descargar** con un documento cargado.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm en la raíz `/workspace/SAPP-frontend`.
+- Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite rolldown-vite 7.2.5, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1.
+- Sin venv/conda/poetry; no crear entornos Python ni copias paralelas. Usar `node_modules` y `package-lock.json` del repo.
+
+### Resultados recientes de pruebas + logs
+- `npx tsc --noEmit --pretty false` (2026-06-05): OK; solo advertencia npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-06-05): OK; build generado con `rolldown-vite v7.2.5`, 241 módulos transformados, assets `dist/assets/index-C0xBaWQF.css` y `dist/assets/index-DMMnH4gn.js`.
+- `npm run lint` (2026-06-05): falla por 12 errores históricos no relacionados en `src/api/*Service.ts`, `src/app/routes/protectedRoute.tsx`, `src/modules/admisiones/*`, `src/modules/documentos/*`, `src/modules/solicitudes/*`; no se observaron errores nuevos en los archivos del rediseño.

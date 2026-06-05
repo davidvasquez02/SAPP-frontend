@@ -5,7 +5,7 @@ import './StudentHorizontalBoard.css'
 
 interface StudentHorizontalBoardProps {
   estudiantes: EstudianteCoordinacion[]
-  onStudentClick: (estudianteId: number) => void
+  onStudentClick: (estudiante: EstudianteCoordinacion) => void
 }
 
 const SCROLL_DISTANCE = 620
@@ -63,7 +63,7 @@ const StudentHorizontalBoard = ({ estudiantes, onStudentClick }: StudentHorizont
           <EstudianteCard
             key={estudiante.id}
             estudiante={estudiante}
-            onClick={() => onStudentClick(estudiante.id)}
+            onClick={() => onStudentClick(estudiante)}
           />
         ))}
       </div>
