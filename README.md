@@ -4,6 +4,40 @@
 
 This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gestión de Solicitudes de Posgrados) at EISI–UIS. The UI centralizes workflows such as admisiones, matrícula académica/financiera, solicitudes, exámenes de candidatura, trabajos de grado, and notificaciones.
 
+
+## Update 2026-06-06 — Rediseño visual de `/admisiones`
+
+### Purpose / Scope actualizado
+- La ruta `/admisiones` mantiene el flujo de gestión de convocatorias de Maestría y Doctorado, pero ahora presenta una interfaz más institucional y profesional: descripción superior, contenedor principal blanco, header de sección con acción de configuración, dos cards de programa y selectores de convocatorias anteriores.
+- El cambio es estrictamente de presentación en `src/pages/AdmisionesHome`; no modifica endpoints, contratos, agrupación de convocatorias, navegación al detalle ni lógica de selección de convocatorias anteriores.
+
+### Arquitectura y contratos involucrados
+- La pantalla sigue consumiendo `getConvocatoriasAdmision()` desde `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, con DTO `ConvocatoriaAdmisionDto` (`id`, `programaId`, `programa`, `periodo`, `cupos`, `fechaInicio`, `fechaFin`, `vigente`).
+- La navegación a detalle conserva `navigate('/admisiones/convocatoria/{id}', { state: { programaId, programaNombre, periodoLabel, periodoAcademico, cupos } })`.
+- El botón **Configurar fechas académicas** conserva la navegación actual a `/fechas` y solo se muestra a usuarios `ADMIN` o `COORDINACION`.
+- Se agregó `formatDateOnly` local en la pantalla para renderizar fechas calendario como `31 mar 2026` y devolver `—` ante valores nulos, vacíos o inválidos, evitando mostrar horas o `Invalid Date`.
+
+### Stack exacto vigente
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`.
+- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
+- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+
+### Cómo correr / validar
+```bash
+npm install
+npm run dev
+npm run build
+npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx
+```
+- No hay seeds frontend nuevas. La pantalla depende de convocatorias retornadas por el backend en `/sapp/convocatoriaAdmision` y de la sesión SAPP vigente/mock existente.
+
+### Decisiones recientes (changelog-lite)
+- June 6, 2026: `/admisiones` elimina de las cards el render visual de cupos y solo muestra fecha de inicio y fecha de fin de la convocatoria vigente, sin horas.
+- June 6, 2026: se reemplazó el botón **Entrar** por **Entrar a la convocatoria** con estilo primario verde, manteniendo la navegación al detalle.
+- June 6, 2026: se mantuvo **Convocatorias anteriores** con el mismo flujo de selección, pero con placeholder `Seleccione un período...` y estilo de select más cómodo.
+- June 6, 2026: no se agregó ninguna sección inferior de ayuda; la pantalla termina después del grid de programas.
+
 ## Architecture (Brief)
 
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
