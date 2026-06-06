@@ -21,6 +21,27 @@ interface DocumentoActionState {
 const EVALUACION_RETRY_ATTEMPTS = 5
 const EVALUACION_RETRY_DELAY_MS = 500
 
+const normalizeBadgeKey = (value?: string | null) =>
+  (value ?? 'NEUTRO').trim().toUpperCase().replace(/\s+/g, '_').replace(/_/g, '-')
+
+const getDocumentIcon = (documentName: string, mimeType?: string | null) => {
+  const normalized = `${documentName} ${mimeType ?? ''}`.toLowerCase()
+
+  if (normalized.includes('foto') || normalized.includes('image') || normalized.includes('jpg') || normalized.includes('png')) {
+    return '🖼️'
+  }
+
+  if (normalized.includes('pdf')) {
+    return '📕'
+  }
+
+  if (normalized.includes('referencia') || normalized.includes('acad')) {
+    return '🎓'
+  }
+
+  return '📄'
+}
+
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const { isEstadoFinal } = useOutletContext<InscripcionDetalleOutletContext>()
@@ -297,9 +318,14 @@ const InscripcionDocumentosPage = () => {
 
   return (
     <section className="inscripcion-documentos">
-      <p className="inscripcion-documentos__subtitle">
-        Revisa los documentos cargados por el aspirante y marca la validación.
-      </p>
+      <div className="inscripcion-documentos__panel-header">
+        <div>
+          <h2 className="inscripcion-documentos__heading">Documentos cargados</h2>
+          <p className="inscripcion-documentos__subtitle">
+            Revisa los documentos cargados por el aspirante y marca la validación.
+          </p>
+        </div>
+      </div>
 
       {isLoading ? (
         <p className="inscripcion-documentos__status">Cargando documentos...</p>
@@ -311,7 +337,9 @@ const InscripcionDocumentosPage = () => {
         <div className="inscripcion-documentos__table">
           <div className="inscripcion-documentos__table-header">
             <span>Documento</span>
+            <span>Requisito</span>
             <span>Estado</span>
+            <span>Archivo cargado</span>
             <span>Validación</span>
             <span>Observaciones</span>
             {canManageDocuments && !isEstadoFinal ? <span>Acciones</span> : null}
@@ -341,40 +369,62 @@ const InscripcionDocumentosPage = () => {
                 : ''
             const currentRejectError = documentoId != null ? rejectErrors[documentoId] : null
             const canOpenActions = uploaded && Boolean(base64) && Boolean(mimeType)
+            const estadoDocumento = uploaded ? getEstadoDocumento(documento) ?? 'CARGADO' : 'PENDIENTE'
+            const estadoBadgeKey = normalizeBadgeKey(estadoDocumento)
+            const documentIcon = getDocumentIcon(documento.nombreTipoDocumentoTramite, mimeType)
 
             return (
-              <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row">
-                <div>
-                  <p className="inscripcion-documentos__doc-name">
-                    {documento.nombreTipoDocumentoTramite}
-                  </p>
-                  {documento.descripcionTipoDocumentoTramite ? (
-                    <p className="inscripcion-documentos__doc-description">
-                      {documento.descripcionTipoDocumentoTramite}
+              <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row document-row">
+                <div className="inscripcion-documentos__doc-cell document-name-cell">
+                  <span className="inscripcion-documentos__doc-icon" aria-hidden="true">
+                    {documentIcon}
+                  </span>
+                  <div>
+                    <p className="inscripcion-documentos__doc-name">
+                      {documento.nombreTipoDocumentoTramite}
                     </p>
-                  ) : null}
-                  <p className="inscripcion-documentos__meta-line">
-                    {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
-                  </p>
+                    {documento.descripcionTipoDocumentoTramite ? (
+                      <p className="inscripcion-documentos__doc-description">
+                        {documento.descripcionTipoDocumentoTramite}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 <div>
+                  <span className={`inscripcion-documentos__badge inscripcion-documentos__badge--requirement ${
+                    documento.obligatorioTipoDocumentoTramite
+                      ? 'inscripcion-documentos__badge--required'
+                      : 'inscripcion-documentos__badge--optional'
+                  }`}>
+                    {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
+                  </span>
+                </div>
+                <div>
+                  <span className={`inscripcion-documentos__badge document-status-badge inscripcion-documentos__badge--${estadoBadgeKey}`}>
+                    {estadoDocumento.replaceAll('_', ' ')}
+                  </span>
+                </div>
+                <div className="inscripcion-documentos__file-cell document-file-cell">
                   {uploaded ? (
                     <>
-                      <span className="inscripcion-documentos__badge inscripcion-documentos__badge--loaded">
-                        Cargado
+                      <span className="inscripcion-documentos__file-icon" aria-hidden="true">
+                        {documentIcon}
                       </span>
-                      <p className="inscripcion-documentos__file">
-                        {documento.documentoUploadedResponse?.nombreArchivoDocumento} (v
-                        {documento.documentoUploadedResponse?.versionDocumento})
-                      </p>
+                      <div>
+                        <p className="inscripcion-documentos__file-name">
+                          {documento.documentoUploadedResponse?.nombreArchivoDocumento}
+                        </p>
+                        <p className="inscripcion-documentos__file">
+                          Versión {documento.documentoUploadedResponse?.versionDocumento}
+                        </p>
+                      </div>
                     </>
                   ) : (
-                    <span className="inscripcion-documentos__badge inscripcion-documentos__badge--pending">
-                      Pendiente
-                    </span>
+                    <span className="inscripcion-documentos__observaciones-placeholder">No cargado</span>
                   )}
                 </div>
-                <ValidationButtons
+                <div className="inscripcion-documentos__validation-actions document-validation-actions">
+                  <ValidationButtons
                   estadoUi={validacionEstado}
                   disabled={disableValidation}
                   onApprove={() => documentoId && void handleApprove(documentoId, disableValidation)}
@@ -394,8 +444,9 @@ const InscripcionDocumentosPage = () => {
                     }))
                   }
                   rejectError={currentRejectError}
-                  textareaId={documentoId ? `motivo-${documentoId}` : undefined}
-                />
+                    textareaId={documentoId ? `motivo-${documentoId}` : undefined}
+                  />
+                </div>
                 <div>
                   {isRejectMode && currentRejectNote.trim() ? (
                     <p className="inscripcion-documentos__validation-note">{currentRejectNote.trim()}</p>

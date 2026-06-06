@@ -1,97 +1,208 @@
 .inscripcion-documentos {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  padding: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 42%);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--primary), transparent 94%);
+}
+
+.inscripcion-documentos__panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.inscripcion-documentos__heading {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  line-height: 1.25;
 }
 
 .inscripcion-documentos__subtitle,
 .inscripcion-documentos__status {
-  margin: 0;
+  margin: 0.35rem 0 0;
   color: var(--text-secondary);
+}
+
+.inscripcion-documentos__status {
+  margin: 0;
 }
 
 .inscripcion-documentos__error {
   margin: 0;
-  color: #b91c1c;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, #dc2626, transparent 70%);
+  border-radius: 14px;
+  background: color-mix(in srgb, #dc2626, transparent 92%);
+  color: #991b1b;
   font-weight: 600;
 }
 
 .inscripcion-documentos__table {
   display: grid;
-  gap: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
-  border-radius: 16px;
-  padding: 0.9rem;
-  background: var(--surface);
+  gap: 0.55rem;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 48%);
+  border-radius: 18px;
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--surface-container-low), var(--surface) 50%);
 }
 
 .inscripcion-documentos__table-header,
 .inscripcion-documentos__table-row {
   display: grid;
-  grid-template-columns: 1.7fr 1.1fr 1.7fr 1fr 0.9fr;
-  gap: 0.75rem;
-  align-items: start;
+  grid-template-columns: minmax(230px, 1.55fr) minmax(100px, 0.72fr) minmax(105px, 0.72fr) minmax(210px, 1.25fr) minmax(220px, 1.25fr) minmax(130px, 0.9fr) minmax(150px, 0.9fr);
+  gap: 0.8rem;
+  align-items: center;
+  min-width: 1180px;
+}
+
+.inscripcion-documentos__table:not(:has(.inscripcion-documentos__docActions)) .inscripcion-documentos__table-header,
+.inscripcion-documentos__table:not(:has(.inscripcion-documentos__docActions)) .inscripcion-documentos__table-row {
+  grid-template-columns: minmax(230px, 1.55fr) minmax(100px, 0.72fr) minmax(105px, 0.72fr) minmax(210px, 1.25fr) minmax(220px, 1.25fr) minmax(130px, 0.9fr);
+  min-width: 1020px;
 }
 
 .inscripcion-documentos__table-header {
-  font-weight: 700;
+  padding: 0.55rem 0.8rem;
   color: var(--text-secondary);
-  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
-  padding-bottom: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .inscripcion-documentos__table-row {
-  padding: 0.35rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+  padding: 0.78rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 58%);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary), transparent 96%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.inscripcion-documentos__table-row:last-child {
-  border-bottom: none;
+.inscripcion-documentos__table-row:hover {
+  border-color: color-mix(in srgb, var(--primary), transparent 65%);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary), transparent 92%);
+  transform: translateY(-1px);
+}
+
+.inscripcion-documentos__doc-cell,
+.inscripcion-documentos__file-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.inscripcion-documentos__doc-icon,
+.inscripcion-documentos__file-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.inscripcion-documentos__file-icon {
+  width: 30px;
+  height: 30px;
+  background: color-mix(in srgb, #dc2626, transparent 90%);
+  color: #b91c1c;
 }
 
 .inscripcion-documentos__doc-name {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 
 .inscripcion-documentos__doc-description {
   margin: 0.2rem 0 0;
   color: var(--text-secondary);
-  font-size: 0.85rem;
-}
-
-.inscripcion-documentos__meta-line {
-  margin: 0.25rem 0 0;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
 }
 
 .inscripcion-documentos__badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.18rem 0.52rem;
+  width: fit-content;
+  padding: 0.22rem 0.62rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
+.inscripcion-documentos__badge--required,
+.inscripcion-documentos__badge--optional {
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--primary);
+}
+
+.inscripcion-documentos__badge--optional {
+  background: color-mix(in srgb, var(--outline), transparent 82%);
+  color: var(--text-secondary);
+}
+
+.inscripcion-documentos__badge--CARGADO,
+.inscripcion-documentos__badge--APROBADO,
 .inscripcion-documentos__badge--loaded {
-  background: color-mix(in srgb, #16a34a, transparent 80%);
+  background: color-mix(in srgb, #16a34a, transparent 84%);
   color: #166534;
 }
 
+.inscripcion-documentos__badge--PENDIENTE,
 .inscripcion-documentos__badge--pending {
+  background: color-mix(in srgb, #dc2626, transparent 88%);
+  color: #991b1b;
+}
+
+.inscripcion-documentos__badge--POR-REVISAR,
+.inscripcion-documentos__badge--EN-REVISION {
+  background: color-mix(in srgb, #2563eb, transparent 88%);
+  color: #1d4ed8;
+}
+
+.inscripcion-documentos__badge--RECHAZADO {
   background: color-mix(in srgb, #dc2626, transparent 86%);
   color: #991b1b;
 }
 
+.inscripcion-documentos__badge--NEUTRO {
+  background: color-mix(in srgb, var(--outline), transparent 82%);
+  color: var(--text-secondary);
+}
+
+.inscripcion-documentos__file-name {
+  max-width: 220px;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .inscripcion-documentos__file {
-  margin: 0.35rem 0 0;
-  font-size: 0.82rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
   color: var(--text-secondary);
 }
 
@@ -107,19 +218,54 @@
   font-size: 0.9rem;
 }
 
+.inscripcion-documentos__validation-actions .validation-buttons__btn {
+  min-width: 86px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 800;
+}
+
+.inscripcion-documentos__validation-actions .validation-buttons__btn--approve {
+  border-color: color-mix(in srgb, #16a34a, transparent 38%);
+  color: #166534;
+}
+
+.inscripcion-documentos__validation-actions .validation-buttons__btn--reject {
+  border-color: color-mix(in srgb, #dc2626, transparent 38%);
+  color: #b91c1c;
+}
+
+.inscripcion-documentos__validation-actions .validation-buttons__btn--approve.validation-buttons__btn--active {
+  background: color-mix(in srgb, #16a34a, transparent 16%);
+  color: #ffffff;
+}
+
+.inscripcion-documentos__validation-actions .validation-buttons__btn--reject.validation-buttons__btn--active {
+  background: color-mix(in srgb, #dc2626, transparent 12%);
+  color: #ffffff;
+}
+
+.inscripcion-documentos__validation-actions .validation-buttons__btn:disabled {
+  border-color: color-mix(in srgb, var(--outline), transparent 25%);
+  background: color-mix(in srgb, var(--surface), var(--outline) 24%);
+  color: var(--text-secondary);
+  opacity: 0.65;
+}
+
 .inscripcion-documentos__docActions {
   display: flex;
   gap: 8px;
   align-items: center;
   justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .inscripcion-documentos__view-button,
 .inscripcion-documentos__download-button {
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--primary);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -146,14 +292,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  padding: 0.9rem 0.25rem 0.15rem;
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
   margin-top: 0.25rem;
 }
 
 .inscripcion-documentos__footer-title {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -166,9 +312,9 @@
 .inscripcion-documentos__continue-button {
   border: none;
   border-radius: 999px;
-  padding: 0.55rem 1rem;
+  padding: 0.65rem 1.1rem;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 800;
   background: var(--primary);
   color: var(--on-primary);
   cursor: pointer;
@@ -178,4 +324,43 @@
   background: color-mix(in srgb, var(--primary), transparent 55%);
   color: var(--text-secondary);
   cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .inscripcion-documentos {
+    padding: 0.85rem;
+  }
+
+  .inscripcion-documentos__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inscripcion-documentos__continue-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .inscripcion-documentos__table-header {
+    display: none;
+  }
+
+  .inscripcion-documentos__table,
+  .inscripcion-documentos__table:not(:has(.inscripcion-documentos__docActions)) {
+    overflow-x: visible;
+  }
+
+  .inscripcion-documentos__table-row,
+  .inscripcion-documentos__table:not(:has(.inscripcion-documentos__docActions)) .inscripcion-documentos__table-row {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    gap: 0.65rem;
+  }
+
+  .inscripcion-documentos__file-name {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
 }

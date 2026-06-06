@@ -9,6 +9,7 @@ import {
   getInscripcionByConvocatoriaAndId,
 } from '../../modules/admisiones/api/inscripcionAdmisionService'
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
+import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
 import {
   calcularPuntajes,
@@ -51,6 +52,53 @@ type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 export interface InscripcionDetalleOutletContext {
   isEstadoFinal: boolean
   evaluacionStatus: 'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
+}
+
+const formatDisplayDate = (value?: string | null, options?: Intl.DateTimeFormatOptions) => {
+  if (!value) {
+    return '—'
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    ...options,
+  }).format(date)
+}
+
+const getFotoSrc = (inscripcion?: InscripcionAdmisionDto | null) => {
+  const foto = inscripcion?.foto
+  if (!foto?.contenidoBase64) {
+    return null
+  }
+
+  if (foto.contenidoBase64.startsWith('data:')) {
+    return foto.contenidoBase64
+  }
+
+  return `data:${foto.mimeType ?? 'image/jpeg'};base64,${foto.contenidoBase64}`
+}
+
+const getEvaluacionLabel = (status: InscripcionDetalleOutletContext['evaluacionStatus']) => {
+  if (status === 'STARTED') {
+    return 'Iniciada'
+  }
+
+  if (status === 'NOT_STARTED') {
+    return 'No iniciada'
+  }
+
+  if (status === 'LOADING') {
+    return 'Consultando...'
+  }
+
+  return 'Con novedad'
 }
 
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
@@ -97,15 +145,14 @@ const InscripcionAdmisionDetallePage = () => {
     routeState?.inscripcionEstado ?? null,
   )
   const [programaAcademico, setProgramaAcademico] = useState<string | null>(null)
+  const [inscripcionDetalle, setInscripcionDetalle] = useState<InscripcionAdmisionDto | null>(null)
   const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
   const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
   const didCambioEstadoValRef = useRef<Record<number, boolean>>({})
   const prevActiveRef = useRef<ActiveWindow>(null)
 
-  const nombreAspirante = routeState?.nombreAspirante
-  const pageTitle = nombreAspirante
-    ? `Inscripción - ${nombreAspirante}`
-    : 'Inscripción'
+  const nombreAspirante = inscripcionDetalle?.nombreAspirante ?? routeState?.nombreAspirante ?? 'Aspirante'
+  const pageTitle = 'Inscripción'
 
   const parsedInscripcionId = useMemo(() => Number(inscripcionId), [inscripcionId])
   const parsedConvocatoriaId = useMemo(() => Number(convocatoriaId), [convocatoriaId])
@@ -142,6 +189,18 @@ const InscripcionAdmisionDetallePage = () => {
   const estadoNormalizado = normalizeEstado(inscripcionEstado)
   const isEstadoFinal = estadoNormalizado === 'ADMITIDO' || estadoNormalizado === 'RECHAZADO'
   const canShowFinalizeSection = canFinalizeInscripcion && !isEstadoFinal
+  const fotoSrc = getFotoSrc(inscripcionDetalle)
+  const documentoAspirante = inscripcionDetalle?.numeroDocumento ?? inscripcionDetalle?.cedula ?? '—'
+  const correoAspirante = inscripcionDetalle?.emailPersonal ?? inscripcionDetalle?.correo ?? '—'
+  const telefonoAspirante = inscripcionDetalle?.telefono ?? '—'
+  const codigoInscripcion = inscripcionDetalle?.id ? `INS-${inscripcionDetalle.id}` : inscripcionId ? `INS-${inscripcionId}` : '—'
+  const periodoAcademico = inscripcionDetalle?.periodoAcademico ?? '—'
+  const fechaInscripcion = formatDisplayDate(inscripcionDetalle?.fechaInscripcion)
+  const ultimaActualizacion = formatDisplayDate(inscripcionDetalle?.fechaResultado, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const evaluacionLabel = getEvaluacionLabel(evaluacionStatus)
 
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
@@ -158,9 +217,11 @@ const InscripcionAdmisionDetallePage = () => {
         parsedConvocatoriaId,
         parsedInscripcionId,
       )
+      setInscripcionDetalle(inscripcion)
       setInscripcionEstado(inscripcion.estado ?? null)
       setProgramaAcademico(inscripcion.programaAcademico ?? null)
     } catch {
+      setInscripcionDetalle(null)
       // Silenciamos el error para no interrumpir la navegación de ventanas.
     }
   }, [convocatoriaId, inscripcionId, parsedConvocatoriaId, parsedInscripcionId])
@@ -485,17 +546,93 @@ const InscripcionAdmisionDetallePage = () => {
         </Link>
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
-                {inscripcionEstado ? (
-          <p className={`inscripcion-detalle__state inscripcion-detalle__state--${estadoNormalizado.replace(/_/g, '-')}`}>Estado de inscripción: {inscripcionEstado.replaceAll('_', ' ')}</p>
-        ) : null}
-        {programaAcademico ? <p className="inscripcion-detalle__subtitle">Programa: {programaAcademico}</p> : null}
+
+        <section className="inscripcion-detalle__profile-card" aria-label="Resumen del aspirante">
+          <div className="inscripcion-detalle__profile-photo">
+            {fotoSrc ? (
+              <img src={fotoSrc} alt={`Foto de ${nombreAspirante}`} />
+            ) : (
+              <span aria-hidden="true">👤</span>
+            )}
+          </div>
+
+          <div className="inscripcion-detalle__profile-info">
+            <div className="inscripcion-detalle__profile-heading">
+              <h2>{nombreAspirante}</h2>
+              {inscripcionEstado ? (
+                <span className={`inscripcion-detalle__state inscripcion-detalle__state--${estadoNormalizado.replace(/_/g, '-')}`}>
+                  {inscripcionEstado.replaceAll('_', ' ')}
+                </span>
+              ) : null}
+            </div>
+            <div className="inscripcion-detalle__contact-grid">
+              <span>🪪 Documento: <strong>{documentoAspirante}</strong></span>
+              <span>✉️ Correo: <strong>{correoAspirante}</strong></span>
+              <span>☎️ Teléfono: <strong>{telefonoAspirante}</strong></span>
+            </div>
+          </div>
+
+          <div className="inscripcion-detalle__profile-meta">
+            <div className="inscripcion-detalle__meta-item">
+              <span>Programa</span>
+              <strong>{programaAcademico ?? '—'}</strong>
+            </div>
+            <div className="inscripcion-detalle__meta-item">
+              <span>Código de inscripción</span>
+              <strong>{codigoInscripcion}</strong>
+            </div>
+            <div className="inscripcion-detalle__meta-row">
+              <div className="inscripcion-detalle__meta-item">
+                <span>Período</span>
+                <strong>{periodoAcademico}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-item">
+                <span>Fecha de inscripción</span>
+                <strong>{fechaInscripcion}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-item">
+                <span>Última actualización</span>
+                <strong>{ultimaActualizacion}</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="inscripcion-detalle__summary-bar" aria-label="Resumen de inscripción">
+          <div className="inscripcion-detalle__summary-item">
+            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">✓</span>
+            <div>
+              <span>Estado de inscripción</span>
+              <strong>{inscripcionEstado ? inscripcionEstado.replaceAll('_', ' ') : '—'}</strong>
+            </div>
+          </div>
+          <div className="inscripcion-detalle__summary-item">
+            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">🎓</span>
+            <div>
+              <span>Programa</span>
+              <strong>{programaAcademico ?? '—'}</strong>
+            </div>
+          </div>
+          <div className="inscripcion-detalle__summary-item">
+            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
+            <div>
+              <span>Estado de evaluación</span>
+              <strong>{evaluacionLabel}</strong>
+            </div>
+          </div>
+        </section>
+
         {evaluacionStatus === 'ERROR' && evaluacionMsg ? (
           <p className="inscripcion-detalle__alert inscripcion-detalle__alert--error">
+            <span aria-hidden="true">⚠️</span>
             {evaluacionMsg}
           </p>
         ) : null}
         {evaluacionStatus === 'NOT_STARTED' && evaluacionMsg ? (
-          <p className="inscripcion-detalle__alert">{evaluacionMsg}</p>
+          <p className="inscripcion-detalle__alert inscripcion-detalle__alert--warning">
+            <span aria-hidden="true">ⓘ</span>
+            {evaluacionMsg}
+          </p>
         ) : null}
 
         {isInitialLoading ? <p className="inscripcion-detalle__alert">Cargando información de secciones…</p> : null}

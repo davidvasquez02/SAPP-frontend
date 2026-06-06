@@ -1,3 +1,48 @@
+# Update 2026-06-06 — Rediseño visual detalle inscripción/documentos
+
+## Estado actual
+- Implementado un ajuste exclusivamente visual para `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`.
+- La pantalla ahora muestra una ficha superior del aspirante con foto/placeholder, nombre, badge de estado, documento, correo, teléfono, programa, código visual de inscripción, período, fecha de inscripción y última actualización cuando el DTO ya lo trae.
+- Se agregó barra resumen con estado de inscripción, programa y estado de evaluación.
+- La alerta de evaluación no iniciada conserva el texto/mensaje actual, pero se presenta como alerta suave roja.
+- La sección `Documentos cargados` se convirtió en una card interna con encabezado y listado moderno; cada fila mantiene las mismas acciones y handlers existentes.
+
+## Archivos tocados
+- `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`
+- `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.css`
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.css`
+- `README.md`
+- `HANDOFF.md`
+
+## Retos abiertos
+1. Validar manualmente con backend real que todos los campos opcionales del DTO (`foto`, `numeroDocumento`/`cedula`, `emailPersonal`/`correo`, `telefono`, `fechaResultado`) aparecen según disponibilidad en datos productivos.
+2. Si el backend expone en el futuro tamaño de archivo, se puede renderizar en la columna `Archivo cargado`; este ajuste no agregó esa lógica porque el DTO actual no lo contiene.
+3. Tomar captura navegada con datos reales si el ambiente local dispone de backend y navegador automatizado; en esta sesión se validó build/dev server, pero no había Playwright/Puppeteer/Chrome instalado para screenshot automatizado.
+
+## Próximos pasos recomendados
+1. Abrir `/admisiones/convocatoria/{convocatoriaId}/inscripcion/{inscripcionId}/documentos` con sesión de coordinación/secretaría y confirmar que `← Volver a Convocatoria` conserva navegación.
+2. Verificar que los documentos cargan igual, que `Ver`/`Descargar` siguen disponibles solo bajo las mismas condiciones y que `Aprobar`/`Rechazar` disparan los handlers existentes.
+3. Revisar móvil/tablet: cabecera apilada y tabla con scroll horizontal o cards verticales según ancho.
+
+## Contratos / esquemas esperados
+- Inscripción: `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` usado por `getInscripcionByConvocatoriaAndId`; la UI busca localmente el `inscripcionId`.
+- DTO usado para cabecera: `InscripcionAdmisionDto` con `id`, `nombreAspirante`, `estado`, `fechaInscripcion`, `fechaResultado`, `periodoAcademico`, `programaAcademico`, `numeroDocumento`/`cedula`, `emailPersonal`/`correo`, `telefono`, `foto`.
+- Documentos: checklist cargado por `prefetchInscripcionDocumentos(tramiteId)` y validación con `PUT /sapp/document` mediante `aprobarRechazarDocumento`; no se cambiaron payloads ni respuestas esperadas.
+- Acciones de archivo: siguen usando `base64DocumentoContenido`/`contenidoBase64`, `mimeTypeDocumentoContenido`/`mimeType` y `nombreArchivoDocumento`.
+
+## Entorno exacto y paquetes
+- Runtime: Node.js + npm en la raíz `/workspace/SAPP-frontend`.
+- Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite rolldown-vite 7.2.5, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1.
+- Sin venv/conda/poetry; no crear entornos Python ni copias paralelas. Usar `node_modules` de la raíz del repo.
+
+## Resultados de pruebas + logs
+- `npm run build` (2026-06-06): OK. Log relevante: `✓ 239 modules transformed` y `✓ built in 694ms`.
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx` (2026-06-06): OK; solo aparece warning npm histórico `Unknown env config "http-proxy"`.
+- `npm run dev -- --host 127.0.0.1` (2026-06-06): OK; Vite listo en `http://127.0.0.1:5173/`.
+
+---
+
 # HANDOFF — SAPP Frontend
 
 ## Update 2026-06-06 — Rediseño visual de Admisiones (`/admisiones`)
