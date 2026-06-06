@@ -635,3 +635,39 @@ npm run lint
 - Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2.
 - Tooling: TypeScript 5.9.3, Vite override `rolldown-vite@7.2.5`, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1, typescript-eslint 8.46.4.
 - Sin venv/conda/poetry; no crear entornos Python ni duplicar `node_modules`. Usar `npm install` solo en la raíz del repo si faltan dependencias.
+
+## Handoff update — 2026-06-06 — Visual detail for admission call applicants
+
+### Current status
+- Implemented the visual redesign for `/admisiones/convocatoria/:id` in `src/pages/ConvocatoriaDetalle`.
+- The page now shows **Aspirantes inscritos** as the primary title, convocatoria context as chips, a four-card summary metrics row, and a horizontal applicants board with scroll buttons.
+- The applicant card component used by this screen now presents a student-card-like visual treatment through `applicant-card*` classes and shows `fechaInscripcion` as date only (`YYYY-MM-DD`) with safe fallback `—`.
+- The user explicitly requested not to include the **Nuevo hoy** metric, so it is intentionally absent.
+
+### Files changed / artifacts
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`: layout, header hierarchy, metrics derivation, horizontal board `useRef`, scroll controls, empty state copy.
+- `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.css`: page-scoped visual styles for header, chips, metrics, horizontal board, scrollbar, responsive behavior and empty state.
+- `src/modules/admisiones/components/StudentCard/StudentCard.tsx`: date-only formatter and applicant-card class names; no service or navigation changes.
+- `src/modules/admisiones/components/StudentCard/StudentCard.css`: visual redesign of applicant cards with fixed horizontal-card width, photo/placeholder area, badges, metadata and footer.
+- `README.md` and `HANDOFF.md`: updated traceability notes for this work.
+
+### Contracts and expected outputs
+- Input DTO remains `InscripcionAdmisionDto` with fields already used by the screen: `id`, `aspiranteId`, `nombreAspirante`, `estado`, `fechaInscripcion`, `puntajeTotal`, `posicion_admision`/`posicionAdmision`, `periodoAcademico`, `programaAcademico`, `numeroDocumento`/`cedula`, `emailPersonal`/`correo`, `telefono`, and optional `foto` with base64 content.
+- Convocatoria context still comes from route state (`periodoLabel`, `periodoAcademico`, `programaNombre`, `programaId`, `cupos`) with fallback to first inscription and `ConvocatoriaAdmisionDto` from `getConvocatoriasAdmision()`.
+- `Crear aspirante` still opens `CreateAspiranteModal` with the current `programaId` and `convocatoriaAdmisionId`.
+- `Ver inscripción` still navigates to `/admisiones/convocatoria/{convocatoriaId}/inscripcion/{inscripcion.id}` and passes the same route state.
+
+### Recent test results / logs
+- `npm run build`: PASS. Build completed with `rolldown-vite v7.2.5`, 239 transformed modules, and generated `dist/index.html`, CSS and JS assets.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx`: PASS.
+- `npm run lint`: FAIL due pre-existing repository-wide lint issues outside this change, including `no-explicit-any` in `src/api/*Service.ts`, React purity/set-state-in-effect warnings/errors in protected/admisiones/solicitudes routes/components, unused vars in mocks/services, and empty object interfaces in solicitudes types.
+
+### Environment / package versions
+- Use the existing Node/npm environment in the repository; do **not** create venv/conda/poetry environments because this is a Vite frontend.
+- `package.json` versions at handoff: React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`, TypeScript `~5.9.3`, `rolldown-vite@7.2.5` via `vite`, `@vitejs/plugin-react-swc@^4.2.2`, ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+- Commands used from repo root: `npm run build`, `npm run lint`, and targeted `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx`.
+
+### Open challenges / next steps
+- If a browser is available in a future environment, capture a screenshot of `/admisiones/convocatoria/:id` with real/mock data because this was a perceptible visual change.
+- Decide whether to expose a program code/código field in the admission DTOs if the UI must show a chip such as `61204 - DCC`; no new backend contract was introduced in this visual-only change.
+- Repository-wide lint remains blocked by unrelated pre-existing issues; fix those separately before treating `npm run lint` as a full quality gate.
