@@ -4,6 +4,8 @@ import type { ApiResponse, DocumentoTramiteItemDto } from './types'
 
 
 export interface DocumentoEstudianteMetadataDto {
+  documentoCargado?: boolean
+  obligatorio?: boolean
   id: number | null
   estado: string | null
   fechaCarga: string | null
