@@ -38,6 +38,39 @@ npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx
 - June 6, 2026: se mantuvo **Convocatorias anteriores** con el mismo flujo de selección, pero con placeholder `Seleccione un período...` y estilo de select más cómodo.
 - June 6, 2026: no se agregó ninguna sección inferior de ayuda; la pantalla termina después del grid de programas.
 
+
+## Update 2026-06-06 — Rediseño visual de detalle de inscripción/documentos
+
+### Purpose / Scope actualizado
+- La ruta `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` mantiene intacta la revisión de documentos de inscripción, pero ahora presenta una ficha superior del aspirante, un resumen de estado y una sección de documentos con filas tipo card más clara y profesional.
+- El ajuste es exclusivamente visual: no cambia servicios, endpoints, contratos, permisos, navegación, handlers de aprobación/rechazo, condiciones `disabled`, descarga/visualización de documentos ni validaciones.
+
+### Arquitectura y contratos involucrados
+- `src/pages/InscripcionAdmisionDetalle` sigue obteniendo datos con `getInscripcionByConvocatoriaAndId(convocatoriaId, inscripcionId)` y reutiliza el mismo DTO `InscripcionAdmisionDto` para renderizar foto, identificación, contacto, programa, período y fechas disponibles.
+- `src/pages/InscripcionDocumentos` conserva la carga mediante `prefetchInscripcionDocumentos(tramiteId)`, cache local por inscripción, ordenamiento por `codigoTipoDocumentoTramite`, `ValidationButtons`, `aprobarRechazarDocumento`, `openBase64InNewTab` y `downloadBase64File`.
+- La alerta de evaluación no iniciada mantiene el mensaje retornado por `getEvaluacionEstado`; solo cambia su presentación a alerta suave.
+
+### Stack exacto vigente
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`.
+- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
+- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+
+### Cómo correr / validar
+```bash
+npm install
+npm run dev
+npm run build
+npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx
+```
+- No hay seeds frontend nuevas. Para ver datos reales se requiere sesión SAPP con permisos existentes y backend respondiendo inscripciones/documentos en los endpoints actuales.
+
+### Decisiones recientes (changelog-lite)
+- June 6, 2026: se agregó ficha visual del aspirante bajo el título `Inscripción`, con foto base64 si existe o placeholder circular, badge de estado y datos de contacto/inscripción disponibles.
+- June 6, 2026: se agregó barra resumen con estado de inscripción, programa y estado de evaluación sin introducir nuevas reglas de negocio.
+- June 6, 2026: la tabla de documentos pasó a filas tipo card con columnas `Documento`, `Requisito`, `Estado`, `Archivo cargado`, `Validación`, `Observaciones` y `Acciones` cuando ya aplicaban.
+- June 6, 2026: los botones actuales de aprobar/rechazar se mantienen con sus handlers originales y solo reciben estilos contextualizados para borde verde/rojo y estado deshabilitado más claro.
+
 ## Architecture (Brief)
 
 - **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).

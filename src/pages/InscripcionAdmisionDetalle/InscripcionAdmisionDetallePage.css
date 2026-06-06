@@ -165,3 +165,194 @@
     background: color-mix(in srgb, var(--primary), transparent 55%);
     cursor: not-allowed;
 }
+
+.inscripcion-detalle__profile-card {
+    display: grid;
+    grid-template-columns: auto minmax(220px, 1fr) minmax(320px, 1.25fr);
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.inscripcion-detalle__profile-photo {
+    width: 112px;
+    height: 112px;
+    border-radius: 999px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--primary), transparent 88%);
+    color: var(--primary);
+    font-size: 2.75rem;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary), transparent 70%);
+}
+
+.inscripcion-detalle__profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inscripcion-detalle__profile-info,
+.inscripcion-detalle__profile-meta {
+    min-width: 0;
+}
+
+.inscripcion-detalle__profile-heading {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+}
+
+.inscripcion-detalle__profile-heading h2 {
+    margin: 0;
+    font-size: clamp(1.25rem, 2vw, 1.7rem);
+    line-height: 1.15;
+    color: var(--text-primary);
+}
+
+.inscripcion-detalle__contact-grid {
+    display: grid;
+    gap: 0.45rem;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+.inscripcion-detalle__contact-grid strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.inscripcion-detalle__profile-meta {
+    display: grid;
+    gap: 0.75rem;
+    padding-left: 1.25rem;
+    border-left: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+}
+
+.inscripcion-detalle__meta-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.inscripcion-detalle__meta-item {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface), var(--surface-container-low) 45%);
+}
+
+.inscripcion-detalle__meta-item span,
+.inscripcion-detalle__summary-item span:not(.inscripcion-detalle__summary-icon) {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.inscripcion-detalle__meta-item strong,
+.inscripcion-detalle__summary-item strong {
+    color: var(--text-primary);
+    font-size: 0.98rem;
+    overflow-wrap: anywhere;
+}
+
+.inscripcion-detalle__summary-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+    padding: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+    border-radius: 18px;
+    background: var(--surface);
+}
+
+.inscripcion-detalle__summary-item {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.75rem 0.85rem;
+    border-radius: 14px;
+    background: var(--surface-container-low);
+}
+
+.inscripcion-detalle__summary-item > div {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.inscripcion-detalle__summary-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--primary), transparent 86%);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.inscripcion-detalle__alert {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+    background: var(--surface-container-low);
+}
+
+.inscripcion-detalle__alert--warning {
+    border-color: color-mix(in srgb, #dc2626, transparent 72%);
+    background: color-mix(in srgb, #dc2626, transparent 92%);
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.inscripcion-detalle__alert--error {
+    border-color: color-mix(in srgb, #dc2626, transparent 68%);
+    background: color-mix(in srgb, #dc2626, transparent 90%);
+}
+
+@media (max-width: 1100px) {
+    .inscripcion-detalle__profile-card {
+        grid-template-columns: auto 1fr;
+    }
+
+    .inscripcion-detalle__profile-meta {
+        grid-column: 1 / -1;
+        padding-left: 0;
+        border-left: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    .inscripcion-detalle__profile-card,
+    .inscripcion-detalle__summary-bar,
+    .inscripcion-detalle__meta-row {
+        grid-template-columns: 1fr;
+    }
+
+    .inscripcion-detalle__profile-card {
+        justify-items: start;
+        padding: 1rem;
+    }
+
+    .inscripcion-detalle__profile-photo {
+        width: 92px;
+        height: 92px;
+    }
+}
