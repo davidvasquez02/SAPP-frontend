@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { ChangeEvent, ReactNode } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { uploadDocument } from '../../api/documentUploadService'
+import { useAuth } from '../../context/Auth'
+import { fileToBase64 } from '../../utils/fileToBase64'
+import { sha256Hex } from '../../utils/sha256'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
   getDocumentById,
@@ -21,15 +25,25 @@ const ENROLLMENT_TYPES = ['MATRICULA', 'MATRICULA_PRIMERA_VEZ'] as const
 type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES'
 type DocumentAction = 'view' | 'download'
 
+type DocumentCardDocument = DocumentoEstudianteMetadataDto & {
+  tramiteId: number | null
+  tipoTramite: string | null
+}
+
 type EnrollmentDocumentGroup = {
   periodo: string | null
   tipoTramites: string[]
-  documentos: DocumentoEstudianteMetadataDto[]
+  documentos: DocumentCardDocument[]
 }
 
 type ActiveDocumentAction = {
   documentoId: number
   action: DocumentAction
+} | null
+
+type UploadingDocumentAction = {
+  key: string
+  filename: string
 } | null
 
 const TAB_OPTIONS: { id: DetalleTab; label: string }[] = [
@@ -175,13 +189,24 @@ const comparePeriodos = (left: string | null, right: string | null) => {
   return left.localeCompare(right, 'es-CO', { numeric: true })
 }
 
+const withDocumentContext = (
+  documento: DocumentoEstudianteMetadataDto,
+  group: DocumentosEstudianteGrupoDto,
+): DocumentCardDocument => ({
+  ...documento,
+  tramiteId: group.tramiteId,
+  tipoTramite: group.tipoTramite,
+})
+
 const buildAdmissionDocuments = (
   data: DocumentosEstudianteGrupoDto[],
-): DocumentoEstudianteMetadataDto[] => {
+): DocumentCardDocument[] => {
   return ADMISSION_TYPES.flatMap((tipoTramite) =>
     data
       .filter((group) => normalizeTipoTramite(group.tipoTramite) === tipoTramite)
-      .flatMap((group) => [...(group.documentos ?? [])].sort(compareDocuments)),
+      .flatMap((group) => [...(group.documentos ?? [])]
+        .sort(compareDocuments)
+        .map((documento) => withDocumentContext(documento, group))),
   )
 }
 
@@ -206,7 +231,7 @@ const buildEnrollmentGroups = (
         existing.tipoTramites.push(tipoTramite)
       }
 
-      existing.documentos.push(...(group.documentos ?? []))
+      existing.documentos.push(...(group.documentos ?? []).map((documento) => withDocumentContext(documento, group)))
       groupsByPeriodo.set(key, existing)
     })
 
@@ -267,25 +292,47 @@ const formatFileSize = (bytes?: number | null) => {
   return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
 }
 
-const resolveDocumentoKey = (documento: DocumentoEstudianteMetadataDto, index: number) => {
+const getUploadDocumentKey = (documento: Pick<DocumentCardDocument, 'tramiteId' | 'tipoDocumentoTramiteId'>) => {
+  return `${documento.tramiteId ?? 'sin-tramite'}-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}`
+}
+
+const canUploadDocument = (documento: DocumentCardDocument) => {
+  return !documento.id && Boolean(documento.tipoDocumentoTramiteId && documento.tramiteId)
+}
+
+const resolveDocumentoKey = (documento: DocumentCardDocument, index: number) => {
   return documento.id
     ? `documento-${documento.id}`
-    : `pendiente-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}-${documento.secuencia ?? index}-${index}`
+    : `pendiente-${documento.tramiteId ?? 'sin-tramite'}-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}-${documento.secuencia ?? index}-${index}`
 }
 
 interface DocumentCardProps {
-  documento: DocumentoEstudianteMetadataDto
+  documento: DocumentCardDocument
   activeAction: ActiveDocumentAction
+  uploadingAction: UploadingDocumentAction
   onView: (documentoId: number) => void
   onDownload: (documentoId: number) => void
+  onUpload: (documento: DocumentCardDocument, file: File) => void
 }
 
-const DocumentCard = ({ documento, activeAction, onView, onDownload }: DocumentCardProps) => {
+const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDownload, onUpload }: DocumentCardProps) => {
   const estado = getDocumentoEstado(documento)
   const hasFile = Boolean(documento.id && documento.nombreArchivo?.trim())
   const isProcessing = Boolean(activeAction && activeAction.documentoId === documento.id)
   const isViewing = isProcessing && activeAction?.action === 'view'
   const isDownloading = isProcessing && activeAction?.action === 'download'
+  const uploadKey = getUploadDocumentKey(documento)
+  const uploadEnabled = canUploadDocument(documento)
+  const isUploading = uploadingAction?.key === uploadKey
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (file) {
+      onUpload(documento, file)
+    }
+  }
 
   return (
     <article className="estudiante-detalle__document-card">
@@ -326,8 +373,19 @@ const DocumentCard = ({ documento, activeAction, onView, onDownload }: DocumentC
               {isDownloading ? 'Descargando...' : 'Descargar'}
             </button>
           </>
+        ) : uploadEnabled ? (
+          <label className={`estudiante-detalle__upload-button ${isUploading ? 'is-disabled' : ''}`}>
+            {isUploading ? `Cargando ${uploadingAction?.filename ?? 'archivo'}...` : 'Cargar documento'}
+            <input
+              type="file"
+              className="estudiante-detalle__upload-input"
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg"
+              disabled={isUploading}
+              onChange={handleFileChange}
+            />
+          </label>
         ) : (
-          <span className="estudiante-detalle__document-no-actions">Acciones disponibles al cargar el archivo</span>
+          <span className="estudiante-detalle__document-no-actions">No hay trámite disponible para cargar este archivo</span>
         )}
       </footer>
     </article>
@@ -335,14 +393,16 @@ const DocumentCard = ({ documento, activeAction, onView, onDownload }: DocumentC
 }
 
 interface DocumentGridProps {
-  documentos: DocumentoEstudianteMetadataDto[]
+  documentos: DocumentCardDocument[]
   emptyMessage: string
   activeAction: ActiveDocumentAction
+  uploadingAction: UploadingDocumentAction
   onView: (documentoId: number) => void
   onDownload: (documentoId: number) => void
+  onUpload: (documento: DocumentCardDocument, file: File) => void
 }
 
-const DocumentGrid = ({ documentos, emptyMessage, activeAction, onView, onDownload }: DocumentGridProps) => {
+const DocumentGrid = ({ documentos, emptyMessage, activeAction, uploadingAction, onView, onDownload, onUpload }: DocumentGridProps) => {
   if (documentos.length === 0) {
     return <p className="estudiante-detalle__mini-status">{emptyMessage}</p>
   }
@@ -354,8 +414,10 @@ const DocumentGrid = ({ documentos, emptyMessage, activeAction, onView, onDownlo
           key={resolveDocumentoKey(documento, index)}
           documento={documento}
           activeAction={activeAction}
+          uploadingAction={uploadingAction}
           onView={onView}
           onDownload={onDownload}
+          onUpload={onUpload}
         />
       ))}
     </div>
@@ -473,6 +535,7 @@ type EstudianteDetalleLocationState = {
 
 const EstudianteDetalleCoordinacionPage = () => {
   const { estudianteId } = useParams()
+  const { session } = useAuth()
   const location = useLocation()
   const estudianteFromState = (location.state as EstudianteDetalleLocationState)?.estudiante ?? null
   const [tabActiva, setTabActiva] = useState<DetalleTab>('MATRICULAS')
@@ -484,6 +547,7 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [documentActionError, setDocumentActionError] = useState<string | null>(null)
   const [documentGroups, setDocumentGroups] = useState<DocumentosEstudianteGrupoDto[]>([])
   const [activeDocumentAction, setActiveDocumentAction] = useState<ActiveDocumentAction>(null)
+  const [uploadingDocumentAction, setUploadingDocumentAction] = useState<UploadingDocumentAction>(null)
   const loadedDocumentsCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -528,6 +592,24 @@ const EstudianteDetalleCoordinacionPage = () => {
   }, [estudianteFromState, estudianteId])
 
   const codigoEstudianteUis = getCodigoEstudianteUis(estudiante)
+
+  const usuarioCargaId = useMemo(() => {
+    if (session?.kind !== 'SAPP') {
+      return null
+    }
+
+    const id = Number(session.user.id)
+    return Number.isFinite(id) ? id : null
+  }, [session])
+
+  const refreshDocumentGroups = useCallback(async () => {
+    if (!codigoEstudianteUis) {
+      return
+    }
+
+    const data = await getDocumentsByEstudiante(codigoEstudianteUis)
+    setDocumentGroups(data)
+  }, [codigoEstudianteUis])
 
   useEffect(() => {
     if (!codigoEstudianteUis) {
@@ -579,7 +661,7 @@ const EstudianteDetalleCoordinacionPage = () => {
   const admissionDocuments = useMemo(() => buildAdmissionDocuments(documentGroups), [documentGroups])
   const enrollmentGroups = useMemo(() => buildEnrollmentGroups(documentGroups), [documentGroups])
 
-  const handleDocumentAction = async (documentoId: number, action: DocumentAction) => {
+  const handleDocumentAction = useCallback(async (documentoId: number, action: DocumentAction) => {
     setActiveDocumentAction({ documentoId, action })
     setDocumentActionError(null)
 
@@ -607,7 +689,52 @@ const EstudianteDetalleCoordinacionPage = () => {
     } finally {
       setActiveDocumentAction(null)
     }
-  }
+  }, [])
+
+
+  const handleDocumentUpload = useCallback(async (documento: DocumentCardDocument, file: File) => {
+    if (!documento.tipoDocumentoTramiteId || !documento.tramiteId) {
+      setDocumentActionError('No se encontró el trámite asociado para cargar este documento.')
+      return
+    }
+
+    if (!usuarioCargaId) {
+      setDocumentActionError('No se encontró el usuario SAPP que realiza la carga.')
+      return
+    }
+
+    const uploadKey = getUploadDocumentKey(documento)
+    setUploadingDocumentAction({ key: uploadKey, filename: file.name })
+    setDocumentActionError(null)
+
+    try {
+      const buffer = await file.arrayBuffer()
+      const contenidoBase64 = await fileToBase64(file)
+      const checksum = await sha256Hex(buffer)
+
+      await uploadDocument({
+        tipoDocumentoTramiteId: documento.tipoDocumentoTramiteId,
+        nombreArchivo: file.name,
+        tramiteId: documento.tramiteId,
+        usuarioCargaId,
+        aspiranteCargaId: null,
+        contenidoBase64,
+        mimeType: file.type || 'application/octet-stream',
+        tamanoBytes: file.size,
+        checksum,
+      })
+
+      await refreshDocumentGroups()
+    } catch (err) {
+      setDocumentActionError(
+        err instanceof Error
+          ? err.message
+          : 'No fue posible cargar el documento seleccionado.',
+      )
+    } finally {
+      setUploadingDocumentAction(null)
+    }
+  }, [refreshDocumentGroups, usuarioCargaId])
 
   const contenidoTab = useMemo(() => {
     const withActionError = (content: ReactNode) => (
@@ -650,8 +777,10 @@ const EstudianteDetalleCoordinacionPage = () => {
                 documentos={group.documentos}
                 emptyMessage="No hay documentos de matrícula registrados para este periodo."
                 activeAction={activeDocumentAction}
+                uploadingAction={uploadingDocumentAction}
                 onView={(documentoId) => void handleDocumentAction(documentoId, 'view')}
                 onDownload={(documentoId) => void handleDocumentAction(documentoId, 'download')}
+                onUpload={(documento, file) => void handleDocumentUpload(documento, file)}
               />
             </section>
           ))}
@@ -667,8 +796,10 @@ const EstudianteDetalleCoordinacionPage = () => {
             documentos={admissionDocuments}
             emptyMessage="No hay documentos de admisión registrados para este estudiante."
             activeAction={activeDocumentAction}
+            uploadingAction={uploadingDocumentAction}
             onView={(documentoId) => void handleDocumentAction(documentoId, 'view')}
             onDownload={(documentoId) => void handleDocumentAction(documentoId, 'download')}
+            onUpload={(documento, file) => void handleDocumentUpload(documento, file)}
           />
         </div>,
       )
@@ -679,7 +810,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         La consulta documental de esta pantalla se concentra en Admisión y Matrículas. Las solicitudes académicas no se recargan en este ajuste para evitar llamados documentales duplicados.
       </p>
     )
-  }, [activeDocumentAction, admissionDocuments, documentActionError, documentsError, enrollmentGroups, isLoadingDocuments, tabActiva])
+  }, [activeDocumentAction, admissionDocuments, documentActionError, documentsError, enrollmentGroups, handleDocumentAction, handleDocumentUpload, isLoadingDocuments, tabActiva, uploadingDocumentAction])
 
   return (
     <ModuleLayout title="Estudiantes">

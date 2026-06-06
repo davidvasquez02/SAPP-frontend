@@ -446,3 +446,37 @@ npm run lint
   npm run lint
   ```
 - No hay seeds frontend obligatorias para este ajuste; depende de backend con estudiantes que tengan `codigoEstudianteUis` y documentos asociados.
+
+---
+
+## Update 2026-06-05 — Carga de documentos pendientes desde detalle de estudiante
+
+### Purpose / Scope actualizado
+- En `/coordinacion/estudiantes/:estudianteId`, las cards documentales de **Matrículas** y **Admisión** ahora permiten cargar archivos cuando el metadata del backend indica un requisito pendiente (`id: null`, sin `nombreArchivo`, con `tipoDocumentoTramiteId` y `tramiteId` del grupo documental).
+
+### Arquitectura y contratos involucrados
+- La fuente principal sigue siendo `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` con grupos `{ tipoTramite, periodo, tramiteId, documentos }`.
+- Cada documento pendiente se enriquece en frontend con el `tramiteId` del grupo para poder llamar `POST /sapp/document` sin consultas adicionales.
+- La carga reutiliza el contrato existente de `src/api/documentUploadService.ts`: `tipoDocumentoTramiteId`, `tramiteId`, `usuarioCargaId`, `aspiranteCargaId: null`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum` SHA-256.
+- Después de una carga exitosa se refresca el checklist completo con `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` para que la card cambie de pendiente a cargada y exponga **Ver** / **Descargar** según el nuevo `id` documental.
+
+### Stack exacto vigente
+- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
+- TypeScript `~5.9.3`.
+- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
+- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+
+### Cómo correr / validar
+```bash
+npm install
+npm run dev
+npx tsc --noEmit --pretty false
+npm run build
+npm run lint
+```
+- No hay seeds frontend nuevas. Para validar manualmente se requiere backend con un estudiante que retorne al menos un documento pendiente, por ejemplo `tipoDocumento: "Pago_Poliza"`, `id: null`, `documentoCargado: false`, `tipoDocumentoTramiteId: 16`, dentro de un grupo con `tramiteId` no nulo.
+
+### Decisiones recientes (changelog-lite)
+- June 5, 2026: las cards sin archivo ya no muestran solo texto pasivo; si existe `tramiteId` + `tipoDocumentoTramiteId`, muestran el CTA **Cargar documento**.
+- June 5, 2026: el input acepta PDF, Word e imágenes (`pdf`, `doc`, `docx`, `png`, `jpg`, `jpeg`) y convierte el archivo a base64 + checksum con las utilidades compartidas existentes.
+- June 5, 2026: la carga se asocia al usuario SAPP autenticado (`session.user.id`) y no a `aspiranteCargaId`, porque esta pantalla pertenece a Coordinación/Admin.

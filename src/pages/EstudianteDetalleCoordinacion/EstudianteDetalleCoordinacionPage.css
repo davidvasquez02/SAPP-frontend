@@ -452,7 +452,8 @@
   flex-wrap: wrap;
 }
 
-.estudiante-detalle__document-actions button {
+.estudiante-detalle__document-actions button,
+.estudiante-detalle__upload-button {
   border: 1px solid color-mix(in srgb, var(--primary), transparent 45%);
   background: var(--surface);
   color: var(--primary);
@@ -463,18 +464,37 @@
   font-weight: 800;
 }
 
-.estudiante-detalle__document-actions button:first-child {
+.estudiante-detalle__document-actions button:first-child,
+.estudiante-detalle__upload-button {
   background: var(--primary);
   color: var(--on-primary);
 }
 
-.estudiante-detalle__document-actions button:hover:not(:disabled) {
+.estudiante-detalle__document-actions button:hover:not(:disabled),
+.estudiante-detalle__upload-button:hover:not(.is-disabled) {
   filter: brightness(0.98);
 }
 
-.estudiante-detalle__document-actions button:disabled {
+.estudiante-detalle__document-actions button:disabled,
+.estudiante-detalle__upload-button.is-disabled {
   cursor: wait;
   opacity: 0.68;
+}
+
+.estudiante-detalle__upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.estudiante-detalle__upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (min-width: 1180px) {
@@ -519,7 +539,8 @@
   }
 
   .estudiante-detalle__tab-button,
-  .estudiante-detalle__document-actions button {
+  .estudiante-detalle__document-actions button,
+  .estudiante-detalle__upload-button {
     width: 100%;
   }
 

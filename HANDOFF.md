@@ -515,3 +515,71 @@ npm run lint
 - `npm run build` (2026-06-05): OK; `tsc -b && vite build` completó y generó `dist/`.
 - Intento de screenshot (2026-06-05): no se pudo generar porque el paquete `playwright` no está instalado en el repo (`ERR_MODULE_NOT_FOUND`). No instalar dependencias solo para esto sin acordarlo con el equipo.
 - `npm run lint` (2026-06-05): falla por issues históricos fuera de este ajuste (`no-explicit-any` en `src/api/*Service.ts`, reglas `react-hooks/purity` / `set-state-in-effect`, variables sin uso y `no-empty-object-type`). No reportó errores nuevos en los archivos tocados del detalle de estudiante.
+
+---
+
+## Update 2026-06-05 — Carga de documentos pendientes en `/coordinacion/estudiantes/:estudianteId`
+
+### Estado actual
+- Implementado ajuste solicitado para la pantalla `http://localhost:5173/coordinacion/estudiantes/27` y equivalentes.
+- En las cards documentales de **Matrículas** y **Admisión**, si el documento viene pendiente (`id: null`, sin `nombreArchivo`) pero el item trae `tipoDocumentoTramiteId` y el grupo documental trae `tramiteId`, se habilita el botón **Cargar documento**.
+- Al seleccionar archivo, la UI sube inmediatamente el documento con `POST /sapp/document`, muestra loading por card y refresca `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` para reemplazar el estado pendiente por la metadata actualizada.
+- Si falta `tramiteId`, `tipoDocumentoTramiteId` o `usuarioCargaId`, se muestra error inline y no se intenta subir.
+
+### Archivos tocados
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`
+- `src/modules/documentos/api/documentosService.ts`
+- `README.md`
+- `HANDOFF.md`
+
+### Contratos / esquemas esperados
+- Consulta metadata: `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`.
+- Grupo documental esperado: `{ tipoTramite: string | null, periodo: string | null, tramiteId: number | null, documentos: DocumentoEstudianteMetadataDto[] }`.
+- Documento pendiente esperado dentro del grupo:
+  ```json
+  {
+    "documentoCargado": false,
+    "estado": null,
+    "fechaCarga": null,
+    "id": null,
+    "mimeType": null,
+    "nombreArchivo": null,
+    "obligatorio": true,
+    "secuencia": null,
+    "tamanoBytes": null,
+    "tipoDocumento": "Pago_Poliza",
+    "tipoDocumentoTramiteId": 16,
+    "version": null
+  }
+  ```
+- Carga: `POST /sapp/document` con payload del servicio compartido `uploadDocument`:
+  - `tipoDocumentoTramiteId`: del documento pendiente.
+  - `tramiteId`: del grupo que contiene el documento.
+  - `usuarioCargaId`: `Number(session.user.id)` cuando la sesión es `SAPP`.
+  - `aspiranteCargaId`: `null`.
+  - `contenidoBase64`, `mimeType`, `tamanoBytes`, `checksum`: derivados del archivo seleccionado.
+- Salida esperada: backend responde `{ ok: true, message, data }`; el frontend no confía en el response para pintar la card y vuelve a consultar el checklist por estudiante.
+
+### Resultados recientes de pruebas + logs
+- `npx tsc --noEmit --pretty false` (2026-06-05): OK; solo advertencia npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-06-05): OK; build generado con `rolldown-vite v7.2.5`, 240 módulos transformados, assets `dist/assets/index-D7grqMCP.css` y `dist/assets/index-4Nip-cwe.js`.
+- `npm run lint` (2026-06-05): falla por 12 errores históricos no relacionados y 1 warning en archivos fuera del ajuste (`src/api/*Service.ts`, `protectedRoute.tsx`, admisiones, solicitudes, etc.). No aparecieron errores nuevos en `EstudianteDetalleCoordinacionPage` ni `documentosService.ts`.
+- Intento de screenshot (2026-06-05): `npm run dev -- --host 127.0.0.1` levantó Vite, pero el script de captura con Playwright falló porque `playwright` no está instalado en el repo (`ERR_MODULE_NOT_FOUND`).
+
+### Retos abiertos
+1. Validar manualmente con backend real que todos los grupos devueltos por `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` incluyen `tramiteId`; sin ese dato la UI no puede asociar un documento pendiente al trámite correcto.
+2. Confirmar con backend si Coordinación/Admin puede cargar documentos de matrícula/admisión con `usuarioCargaId` y `aspiranteCargaId: null` para todos los tipos de trámite.
+3. Si se requiere restringir extensiones por tipo documental, mover el `accept` actual de la card a configuración por `tipoDocumentoTramiteId`.
+
+### Próximos pasos recomendados
+1. Levantar backend + frontend y abrir `http://localhost:5173/coordinacion/estudiantes/27` con usuario `ADMIN` o `COORDINACION`.
+2. En Network, confirmar que el documento pendiente `Pago_Poliza` está dentro de un grupo con `tramiteId` no nulo.
+3. Pulsar **Cargar documento**, seleccionar un PDF o imagen válida y verificar `POST /sapp/document`.
+4. Confirmar que después del POST se ejecuta de nuevo `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` y la card muestra nombre de archivo + acciones **Ver**/**Descargar**.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm desde `/workspace/SAPP-frontend`.
+- Frontend: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2.
+- Tooling: TypeScript 5.9.3, Vite override `rolldown-vite@7.2.5`, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1, typescript-eslint 8.46.4.
+- Sin venv/conda/poetry; no crear entornos Python ni duplicar `node_modules`. Usar `npm install` solo en la raíz del repo si faltan dependencias.
