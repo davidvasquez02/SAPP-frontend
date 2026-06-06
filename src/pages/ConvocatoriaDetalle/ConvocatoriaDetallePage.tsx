@@ -36,12 +36,12 @@ const ConvocatoriaDetallePage = () => {
     return (
       (location.state as
         | {
-            periodoAcademico?: string
-            periodoLabel?: string
-            programaNombre?: string
-            programaId?: number
-            cupos?: number
-          }
+          periodoAcademico?: string
+          periodoLabel?: string
+          programaNombre?: string
+          programaId?: number
+          cupos?: number
+        }
         | null) ?? {}
     )
   }, [location.state])
@@ -322,7 +322,7 @@ const ConvocatoriaDetallePage = () => {
             ))}
           </div>
         ) : null}
-
+        {/* 
         {!isLoading && !error && mostrarModuloAdmitir && canCreateAspirante ? (
           <section className="convocatoria-detalle__admitir-panel">
             <h2>Admitir aspirantes</h2>
@@ -389,7 +389,7 @@ const ConvocatoriaDetallePage = () => {
               </div>
             ) : null}
           </section>
-        ) : null}
+        ) : null} */}
       </section>
 
       <CreateAspiranteModal
