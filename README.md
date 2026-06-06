@@ -514,3 +514,30 @@ npm run lint
 - June 5, 2026: las cards sin archivo ya no muestran solo texto pasivo; si existe `tramiteId` + `tipoDocumentoTramiteId`, muestran el CTA **Cargar documento**.
 - June 5, 2026: el input acepta PDF, Word e imágenes (`pdf`, `doc`, `docx`, `png`, `jpg`, `jpeg`) y convierte el archivo a base64 + checksum con las utilidades compartidas existentes.
 - June 5, 2026: la carga se asocia al usuario SAPP autenticado (`session.user.id`) y no a `aspiranteCargaId`, porque esta pantalla pertenece a Coordinación/Admin.
+
+## Update 2026-06-06 — Detalle visual de convocatoria `/admisiones/convocatoria/:id`
+
+### Purpose / Scope actualizado
+- La pantalla de detalle de convocatoria queda orientada explícitamente a consultar aspirantes inscritos, manteniendo intactos los servicios, endpoints y navegación existente hacia creación de aspirante y detalle de inscripción.
+- El título principal ahora es **Aspirantes inscritos**; el período y programa de la convocatoria se muestran como chips contextuales para separar la acción principal del contexto académico.
+
+### Arquitectura y contratos involucrados
+- La ruta sigue cargando inscripciones con `getInscripcionesByConvocatoria(convocatoriaId)` y contexto de convocatoria con `getConvocatoriasAdmision()` desde los servicios existentes de admisiones.
+- El CTA **Crear aspirante** conserva el mismo `CreateAspiranteModal`, `programaId`, `convocatoriaAdmisionId` y callback `onCreated` para recargar inscripciones.
+- La acción **Ver inscripción** conserva la navegación a `/admisiones/convocatoria/{convocatoriaId}/inscripcion/{inscripcionId}` con el mismo `state` de ruta.
+- La tarjeta visual de aspirante se mantiene en `src/modules/admisiones/components/StudentCard`, pero usa clases `applicant-card*` y formatea `fechaInscripcion` como fecha calendario `YYYY-MM-DD`, devolviendo `—` para valores nulos, vacíos o inválidos.
+
+### Decisiones recientes (changelog-lite)
+- June 6, 2026: se reemplazó el título largo `Convocatoria - período - programa` por **Aspirantes inscritos** con chips de **Período** y **Programa**.
+- June 6, 2026: se añadió una fila de métricas calculadas localmente: aspirantes inscritos, admitidos, en evaluación y no admitidos. Se omitió **Nuevo hoy** por decisión explícita del usuario.
+- June 6, 2026: el listado de aspirantes cambió de grid vertical a board horizontal con `useRef`, botones de scroll izquierda/derecha, `scroll-snap-type: x proximity` y barra horizontal visible.
+- June 6, 2026: las cards de aspirantes se alinearon visualmente con las cards de estudiantes: foto superior, placeholder **Sin foto**, badges de estado/programa, datos resumidos y footer **Ver inscripción**.
+
+### Cómo correr / validar
+```bash
+npm install
+npm run dev
+npm run build
+npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx
+```
+- No hay seeds frontend nuevas. Para ver datos reales en `/admisiones/convocatoria/:id`, el backend debe responder con inscripciones de admisión para la convocatoria seleccionada.
