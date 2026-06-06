@@ -1,5 +1,57 @@
 # HANDOFF — SAPP Frontend
 
+## Update 2026-06-06 — Rediseño visual de Admisiones (`/admisiones`)
+
+### Estado actual
+- La pantalla `/admisiones` fue rediseñada visualmente sin alterar lógica de negocio, servicios ni contratos backend.
+- El layout sigue usando `ModuleLayout`, por lo que se mantiene el sidebar verde y el header superior con usuario autenticado.
+- El contenido ahora muestra la descripción “Gestiona las convocatorias de maestría y doctorado.”, un contenedor principal blanco con bordes amplios, header de sección, botón secundario **Configurar fechas académicas**, grid responsive de programas y cards profesionales para Maestría/Doctorado.
+- En la convocatoria vigente solo se renderizan **Fecha de inicio** y **Fecha de fin** con formato calendario sin hora. No se muestran cupos, fecha límite, resultados ni sección inferior de ayuda.
+
+### Archivos modificados
+- `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`
+- `src/pages/AdmisionesHome/AdmisionesHomePage.css`
+- `README.md`
+- `HANDOFF.md`
+
+### Retos abiertos
+1. Validar visualmente con backend activo y datos reales que los IDs de programa `1` y `2` correspondan a `61412 - MISI` y `61204 - DCC`; si el backend usa otros IDs, ajustar `PROGRAM_META` sin tocar la lógica de convocatorias.
+2. Tomar screenshot en navegador real si el entorno dispone de Chromium/Playwright. En esta sesión no se pudo automatizar porque no había browser CLI instalado y `npx playwright --version` fue bloqueado por política npm `403 Forbidden`.
+3. Confirmar con usuarios `SECRETARIA` que la ausencia del botón **Configurar fechas académicas** sigue siendo el comportamiento esperado, ya que la condición previa solo permite `ADMIN`/`COORDINACION`.
+
+### Próximos pasos recomendados
+1. Levantar backend + frontend con `npm run dev` y abrir `http://localhost:5173/admisiones` con usuario `ADMIN` o `COORDINACION`.
+2. Verificar que el botón **Configurar fechas académicas** navega a `/fechas`.
+3. Pulsar **Entrar a la convocatoria** y confirmar que conserva la navegación a `/admisiones/convocatoria/{id}` con el estado de navegación existente.
+4. Seleccionar una convocatoria anterior y confirmar que el select navega al detalle y luego limpia el valor seleccionado.
+5. Revisar responsive en ancho móvil: header apilado, cards en una columna y sin overflow horizontal.
+
+### Paths / artefactos / datasets
+- Ruta UI: `/admisiones`.
+- Pantalla: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
+- Estilos específicos: `src/pages/AdmisionesHome/AdmisionesHomePage.css`.
+- Servicio existente: `src/modules/admisiones/api/convocatoriaAdmisionService.ts`.
+- Tipos existentes: `src/modules/admisiones/api/convocatoriaAdmisionTypes.ts`.
+- Build generado localmente en `dist/` por `npm run build` (no versionar si está ignorado).
+
+### Contratos / esquemas esperados
+- Listado de convocatorias: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/convocatoriaAdmision` con envelope `{ ok, message, data }`.
+- Item esperado: `ConvocatoriaAdmisionDto` con `{ id, programaId, programa, periodoId, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }`.
+- Fechas aceptadas por UI: strings como `YYYY-MM-DD`, `YYYY-MM-DD HH:mm:ss` o ISO parseable. Valores `null`, `undefined`, vacíos o inválidos renderizan `—`.
+- Navegación esperada al detalle: `/admisiones/convocatoria/{convocatoria.id}` con `state` que conserva `programaId`, `programaNombre`, `periodoLabel`, `periodoAcademico` y `cupos`.
+
+### Entorno exacto y paquetes
+- Runtime: Node.js + npm. No usar venv/conda/poetry ni crear entornos paralelos; trabajar con `node_modules` en la raíz de `/workspace/SAPP-frontend`.
+- Versiones principales desde `package.json`: React 19.2.0, React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, rolldown-vite 7.2.5 (override de `vite`), @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.1, typescript-eslint 8.46.4.
+
+### Resultados de pruebas + logs
+- `npm run build` (2026-06-06): OK. Log relevante: `✓ 240 modules transformed`, `✓ built in 708ms`. npm emitió warning no bloqueante: `Unknown env config "http-proxy"`.
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx` (2026-06-06): OK. npm emitió warning no bloqueante: `Unknown env config "http-proxy"`.
+- `npm run dev -- --host 127.0.0.1` (2026-06-06): OK; Vite quedó listo en `http://127.0.0.1:5173/`.
+- `npx playwright --version` (2026-06-06): falló por limitación del entorno/política npm con `403 Forbidden - GET https://registry.npmjs.org/playwright`; por eso no se adjuntó screenshot automatizado.
+
+---
+
 ## Update 2026-06-05 (Coordinación > Estudiantes: tablero horizontal tipo Trello)
 
 ### Estado actual

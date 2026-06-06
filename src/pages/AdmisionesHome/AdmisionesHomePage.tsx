@@ -10,6 +10,48 @@ import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import "./AdmisionesHomePage.css";
 
+const PROGRAM_META = new Map<
+  number,
+  {
+    code: string;
+    icon: string;
+  }
+>([
+  [1, { code: "61412 - MISI", icon: "▣" }],
+  [2, { code: "61204 - DCC", icon: "010\n101" }],
+]);
+
+const DATE_ONLY_FORMATTER = new Intl.DateTimeFormat("es-ES", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+const formatDateOnly = (value?: string | null): string => {
+  const rawValue = value?.trim();
+
+  if (!rawValue) {
+    return "—";
+  }
+
+  const dateOnlyMatch = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+    return Number.isNaN(parsedDate.getTime())
+      ? "—"
+      : DATE_ONLY_FORMATTER.format(parsedDate).replace(/\./g, "");
+  }
+
+  const parsedDate = new Date(rawValue);
+
+  return Number.isNaN(parsedDate.getTime())
+    ? "—"
+    : DATE_ONLY_FORMATTER.format(parsedDate).replace(/\./g, "");
+};
+
 const sortByPeriodoDesc = (
   a: ConvocatoriaAdmisionDto,
   b: ConvocatoriaAdmisionDto,
@@ -144,174 +186,231 @@ const AdmisionesHomePage = () => {
 
   return (
     <ModuleLayout title="Admisiones">
-      <section className="admisiones-home">
-        <header className="admisiones-home__header">
-          <h1 className="admisiones-home__title">
-            Seleccione una convocatoria
-          </h1>
-          {canManageConvocatorias ? (
-            <button
-              type="button"
-              className="admisiones-home__config-button"
-              onClick={() => navigate("/fechas")}
-            >
-              Configurar fechas académicas
-            </button>
-          ) : null}
-        </header>
+      <section className="admisiones-page" aria-label="Admisiones">
+        <p className="admisiones-page__description">
+          Gestiona las convocatorias de maestría y doctorado.
+        </p>
 
-        {isLoading ? (
-          <p className="admisiones-home__status">Cargando convocatorias...</p>
-        ) : null}
-
-        {!isLoading && error ? (
-          <div className="admisiones-home__status admisiones-home__status--error">
-            <p>{error}</p>
-            <button
-              type="button"
-              className="admisiones-home__retry"
-              onClick={loadConvocatorias}
-            >
-              Reintentar
-            </button>
-          </div>
-        ) : null}
-
-        {!isLoading && !error && convocatorias.length === 0 ? (
-          <p className="admisiones-home__status">
-            No hay convocatorias disponibles.
-          </p>
-        ) : null}
-
-        {!isLoading && !error && convocatorias.length > 0 ? (
-          <div className="admisiones-home__programs">
-            {programas.map((programa) => {
-              const convocatoriaVigente = getConvocatoriaVigente(
-                programa.convocatorias,
-              );
-              const anteriores = convocatoriaVigente
-                ? programa.convocatorias.filter(
-                    (convocatoria) =>
-                      convocatoria.id !== convocatoriaVigente.id,
-                  )
-                : programa.convocatorias;
-              const anterioresOrdenadas = [...anteriores].sort(
-                sortByPeriodoDesc,
-              );
-              const programaNombre = getProgramaNombreLargo(
-                programa.programaId,
-                programa.programa,
-              );
-
-              return (
-                <section
-                  key={programa.programaId}
-                  className="admisiones-home__program"
+        <section
+          className="admisiones-section-card"
+          aria-labelledby="admisiones-section-title"
+        >
+          <header className="admisiones-section-header">
+            <div className="admisiones-section-header__content">
+              <span className="admisiones-section-header__icon" aria-hidden="true">
+                📣
+              </span>
+              <div>
+                <h2
+                  id="admisiones-section-title"
+                  className="admisiones-section-header__title"
                 >
-                  <div className="admisiones-home__program-header">
-                    <h2 className="admisiones-home__program-title">
-                      {programaNombre}
-                    </h2>
-                    {programa.programa ? (
-                      <p className="admisiones-home__program-subtitle">
-                        {programa.programa}
-                      </p>
-                    ) : null}
-                  </div>
+                  Seleccione una convocatoria
+                </h2>
+                <p className="admisiones-section-header__description">
+                  Elige un programa académico para ver la convocatoria vigente o
+                  consultar convocatorias anteriores.
+                </p>
+              </div>
+            </div>
 
-                  <div className="admisiones-home__card">
-                    <div className="admisiones-home__card-header">
+            {canManageConvocatorias ? (
+              <button
+                type="button"
+                className="admisiones-config-button"
+                onClick={() => navigate("/fechas")}
+              >
+                <span aria-hidden="true">📅</span>
+                Configurar fechas académicas
+              </button>
+            ) : null}
+          </header>
+
+          {isLoading ? (
+            <p className="admisiones-status">Cargando convocatorias...</p>
+          ) : null}
+
+          {!isLoading && error ? (
+            <div className="admisiones-status admisiones-status--error">
+              <p>{error}</p>
+              <button
+                type="button"
+                className="admisiones-retry-button"
+                onClick={loadConvocatorias}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : null}
+
+          {!isLoading && !error && convocatorias.length === 0 ? (
+            <p className="admisiones-status">
+              No hay convocatorias disponibles.
+            </p>
+          ) : null}
+
+          {!isLoading && !error && convocatorias.length > 0 ? (
+            <div className="admisiones-program-grid">
+              {programas.map((programa) => {
+                const convocatoriaVigente = getConvocatoriaVigente(
+                  programa.convocatorias,
+                );
+                const anteriores = convocatoriaVigente
+                  ? programa.convocatorias.filter(
+                      (convocatoria) =>
+                        convocatoria.id !== convocatoriaVigente.id,
+                    )
+                  : programa.convocatorias;
+                const anterioresOrdenadas = [...anteriores].sort(
+                  sortByPeriodoDesc,
+                );
+                const programaNombre = getProgramaNombreLargo(
+                  programa.programaId,
+                  programa.programa,
+                );
+                const programaMeta = PROGRAM_META.get(programa.programaId);
+
+                return (
+                  <article
+                    key={programa.programaId}
+                    className="admisiones-program-card"
+                  >
+                    <header className="admisiones-program-card__header">
+                      <span
+                        className="admisiones-program-card__icon"
+                        aria-hidden="true"
+                      >
+                        {programaMeta?.icon ?? "🎓"}
+                      </span>
                       <div>
-                        <span className="admisiones-home__card-title">
+                        <h3 className="admisiones-program-card__title">
+                          {programaNombre}
+                        </h3>
+                        <p className="admisiones-program-card__code">
+                          {programaMeta?.code ?? programa.programa}
+                        </p>
+                      </div>
+                    </header>
+
+                    <section className="admisiones-current-callout">
+                      <div className="admisiones-current-callout__header">
+                        <span
+                          className="admisiones-current-callout__label"
+                          aria-live="polite"
+                        >
+                          <span
+                            className="admisiones-current-callout__dot"
+                            aria-hidden="true"
+                          />
                           Convocatoria vigente
                         </span>
-                        <span className="admisiones-home__card-meta">
-                          {convocatoriaVigente
-                            ? convocatoriaVigente.periodo
-                            : "No hay convocatoria vigente"}
+                        <span
+                          className={`admisiones-current-callout__badge ${
+                            convocatoriaVigente
+                              ? "admisiones-current-callout__badge--active"
+                              : "admisiones-current-callout__badge--inactive"
+                          }`}
+                        >
+                          {convocatoriaVigente ? "VIGENTE" : "SIN VIGENCIA"}
                         </span>
                       </div>
-                      <span
-                        className={`admisiones-home__pill ${
-                          convocatoriaVigente
-                            ? "admisiones-home__pill--vigente"
-                            : "admisiones-home__pill--cerrada"
-                        }`}
-                      >
-                        {convocatoriaVigente ? "Vigente" : "Cerrada"}
-                      </span>
-                    </div>
 
-                    {convocatoriaVigente ? (
-                      <div className="admisiones-home__card-details">
-                        <span>
-                          Cupos:{" "}
-                          {typeof convocatoriaVigente.cupos === "number"
-                            ? convocatoriaVigente.cupos
-                            : "Por definir"}
-                        </span>
-                        <span>Inicio: {convocatoriaVigente.fechaInicio}</span>
-                        <span>Fin: {convocatoriaVigente.fechaFin}</span>
-                      </div>
-                    ) : (
-                      <p className="admisiones-home__card-meta">
-                        No hay convocatorias disponibles.
-                      </p>
-                    )}
+                      {convocatoriaVigente ? (
+                        <div className="admisiones-date-grid">
+                          <div className="admisiones-date-item">
+                            <span
+                              className="admisiones-date-item__icon"
+                              aria-hidden="true"
+                            >
+                              📅
+                            </span>
+                            <div>
+                              <span className="admisiones-date-item__label">
+                                Fecha de inicio
+                              </span>
+                              <strong className="admisiones-date-item__value">
+                                {formatDateOnly(convocatoriaVigente.fechaInicio)}
+                              </strong>
+                            </div>
+                          </div>
+                          <div className="admisiones-date-item">
+                            <span
+                              className="admisiones-date-item__icon"
+                              aria-hidden="true"
+                            >
+                              📅
+                            </span>
+                            <div>
+                              <span className="admisiones-date-item__label">
+                                Fecha de fin
+                              </span>
+                              <strong className="admisiones-date-item__value">
+                                {formatDateOnly(convocatoriaVigente.fechaFin)}
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="admisiones-current-callout__empty">
+                          No hay convocatoria vigente para este programa.
+                        </p>
+                      )}
 
-                    <button
-                      type="button"
-                      className="admisiones-home__enter-button"
-                      disabled={!convocatoriaVigente}
-                      onClick={() =>
-                        convocatoriaVigente &&
-                        handleNavigate(convocatoriaVigente, programaNombre)
-                      }
-                    >
-                      Entrar
-                    </button>
-                  </div>
-
-                  <div className="admisiones-home__previous">
-                    <label
-                      className="admisiones-home__card-title"
-                      htmlFor={`prev-${programa.programaId}`}
-                    >
-                      Convocatorias anteriores
-                    </label>
-
-                    {anterioresOrdenadas.length === 0 ? (
-                      <p className="admisiones-home__empty">
-                        No hay convocatorias anteriores.
-                      </p>
-                    ) : (
-                      <select
-                        id={`prev-${programa.programaId}`}
-                        className="admisiones-home__select"
-                        value={selectedPrevious[programa.programaId] ?? ""}
-                        onChange={(event) =>
-                          handlePreviousChange(
-                            programa.programaId,
-                            programaNombre,
-                            anterioresOrdenadas,
-                            event.target.value,
-                          )
+                      <button
+                        type="button"
+                        className="admisiones-enter-button"
+                        disabled={!convocatoriaVigente}
+                        onClick={() =>
+                          convocatoriaVigente &&
+                          handleNavigate(convocatoriaVigente, programaNombre)
                         }
                       >
-                        <option value="">Seleccione periodo...</option>
-                        {anterioresOrdenadas.map((convocatoria) => (
-                          <option key={convocatoria.id} value={convocatoria.id}>
-                            {convocatoria.periodo}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        ) : null}
+                        Entrar a la convocatoria
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    </section>
+
+                    <div className="admisiones-previous-select">
+                      <label
+                        className="admisiones-previous-select__label"
+                        htmlFor={`prev-${programa.programaId}`}
+                      >
+                        Convocatorias anteriores
+                      </label>
+
+                      {anterioresOrdenadas.length === 0 ? (
+                        <p className="admisiones-previous-select__empty">
+                          No hay convocatorias anteriores.
+                        </p>
+                      ) : (
+                        <select
+                          id={`prev-${programa.programaId}`}
+                          className="admisiones-previous-select__control"
+                          value={selectedPrevious[programa.programaId] ?? ""}
+                          onChange={(event) =>
+                            handlePreviousChange(
+                              programa.programaId,
+                              programaNombre,
+                              anterioresOrdenadas,
+                              event.target.value,
+                            )
+                          }
+                        >
+                          <option value="">Seleccione un período...</option>
+                          {anterioresOrdenadas.map((convocatoria) => (
+                            <option key={convocatoria.id} value={convocatoria.id}>
+                              {convocatoria.periodo}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
+        </section>
       </section>
     </ModuleLayout>
   );
