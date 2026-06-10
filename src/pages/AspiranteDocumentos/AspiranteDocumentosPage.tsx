@@ -242,7 +242,7 @@ const AspiranteDocumentosPage = () => {
           codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
           tramiteId,
         })
-        console.log('[AspiranteDocumentos] requisitos:', documentos)
+        console.log('[AspiranteDocumentos] requisitos: ', documentos)
         setItems(documentos.map(mapDocumentoToUploadItem))
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
@@ -275,12 +275,12 @@ const AspiranteDocumentosPage = () => {
         prev.map((item) =>
           item.id === id
             ? {
-                ...item,
-                selectedFile: null,
-                status: item.uploadedFileName ? item.status : 'NOT_SELECTED',
-                errorMessage:
-                  'Tipo de archivo no permitido. Use PDF, Word (.doc/.docx) o imagen (.png/.jpg/.jpeg).',
-              }
+              ...item,
+              selectedFile: null,
+              status: item.uploadedFileName ? item.status : 'NOT_SELECTED',
+              errorMessage:
+                'Tipo de archivo no permitido. Use PDF, Word (.doc/.docx) o imagen (.png/.jpg/.jpeg).',
+            }
             : item,
         ),
       )
@@ -291,12 +291,12 @@ const AspiranteDocumentosPage = () => {
       prev.map((item) =>
         item.id === id
           ? {
-              ...item,
-              selectedFile: file,
-              status: file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
-              errorMessage: undefined,
-              rejectionReason: undefined,
-            }
+            ...item,
+            selectedFile: file,
+            status: file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
+            errorMessage: undefined,
+            rejectionReason: undefined,
+          }
           : item,
       ),
     )
@@ -336,10 +336,10 @@ const AspiranteDocumentosPage = () => {
             prev.map((current) =>
               current.id === id
                 ? {
-                    ...current,
-                    status: 'ERROR',
-                    errorMessage: 'No se encontró inscripcionAdmisionId en la sesión del aspirante.',
-                  }
+                  ...current,
+                  status: 'ERROR',
+                  errorMessage: 'No se encontró inscripcionAdmisionId en la sesión del aspirante.',
+                }
                 : current,
             ),
           )
@@ -372,14 +372,14 @@ const AspiranteDocumentosPage = () => {
           prev.map((current) =>
             current.id === id
               ? {
-                  ...current,
-                  status: 'UPLOADED',
-                  uploadedFileName: uploaded.nombreArchivo,
-                  selectedFile: null,
-                  errorMessage: undefined,
-                  backendEstadoDocumento: undefined,
-                  rejectionReason: undefined,
-                }
+                ...current,
+                status: 'UPLOADED',
+                uploadedFileName: uploaded.nombreArchivo,
+                selectedFile: null,
+                errorMessage: undefined,
+                backendEstadoDocumento: undefined,
+                rejectionReason: undefined,
+              }
               : current,
           ),
         )
