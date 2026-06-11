@@ -1,576 +1,93 @@
-# SAPP Frontend
-
-## Purpose & Scope
-
-This repository hosts the React frontend for SAPP (Sistema de Apoyo para la Gestión de Solicitudes de Posgrados) at EISI–UIS. The UI centralizes workflows such as admisiones, matrícula académica/financiera, solicitudes, exámenes de candidatura, trabajos de grado, and notificaciones.
+# SAPP-frontend
 
 
-## Update 2026-06-06 — Rediseño visual de `/admisiones`
 
-### Purpose / Scope actualizado
-- La ruta `/admisiones` mantiene el flujo de gestión de convocatorias de Maestría y Doctorado, pero ahora presenta una interfaz más institucional y profesional: descripción superior, contenedor principal blanco, header de sección con acción de configuración, dos cards de programa y selectores de convocatorias anteriores.
-- El cambio es estrictamente de presentación en `src/pages/AdmisionesHome`; no modifica endpoints, contratos, agrupación de convocatorias, navegación al detalle ni lógica de selección de convocatorias anteriores.
+## Getting started
 
-### Arquitectura y contratos involucrados
-- La pantalla sigue consumiendo `getConvocatoriasAdmision()` desde `src/modules/admisiones/api/convocatoriaAdmisionService.ts`, con DTO `ConvocatoriaAdmisionDto` (`id`, `programaId`, `programa`, `periodo`, `cupos`, `fechaInicio`, `fechaFin`, `vigente`).
-- La navegación a detalle conserva `navigate('/admisiones/convocatoria/{id}', { state: { programaId, programaNombre, periodoLabel, periodoAcademico, cupos } })`.
-- El botón **Configurar fechas académicas** conserva la navegación actual a `/fechas` y solo se muestra a usuarios `ADMIN` o `COORDINACION`.
-- Se agregó `formatDateOnly` local en la pantalla para renderizar fechas calendario como `31 mar 2026` y devolver `—` ante valores nulos, vacíos o inválidos, evitando mostrar horas o `Invalid Date`.
+To make it easy for you to get started with GitLab, here's a list of recommended next steps.
 
-### Stack exacto vigente
-- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
-- TypeScript `~5.9.3`.
-- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
-- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
+Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
 
-### Cómo correr / validar
-```bash
-npm install
-npm run dev
-npm run build
-npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx
+## Add your files
+
+- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
+- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+
 ```
-- No hay seeds frontend nuevas. La pantalla depende de convocatorias retornadas por el backend en `/sapp/convocatoriaAdmision` y de la sesión SAPP vigente/mock existente.
-
-### Decisiones recientes (changelog-lite)
-- June 6, 2026: `/admisiones` elimina de las cards el render visual de cupos y solo muestra fecha de inicio y fecha de fin de la convocatoria vigente, sin horas.
-- June 6, 2026: se reemplazó el botón **Entrar** por **Entrar a la convocatoria** con estilo primario verde, manteniendo la navegación al detalle.
-- June 6, 2026: se mantuvo **Convocatorias anteriores** con el mismo flujo de selección, pero con placeholder `Seleccione un período...` y estilo de select más cómodo.
-- June 6, 2026: no se agregó ninguna sección inferior de ayuda; la pantalla termina después del grid de programas.
-
-
-## Update 2026-06-06 — Rediseño visual de detalle de inscripción/documentos
-
-### Purpose / Scope actualizado
-- La ruta `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` mantiene intacta la revisión de documentos de inscripción, pero ahora presenta una ficha superior del aspirante, un resumen de estado y una sección de documentos con filas tipo card más clara y profesional.
-- El ajuste es exclusivamente visual: no cambia servicios, endpoints, contratos, permisos, navegación, handlers de aprobación/rechazo, condiciones `disabled`, descarga/visualización de documentos ni validaciones.
-
-### Arquitectura y contratos involucrados
-- `src/pages/InscripcionAdmisionDetalle` sigue obteniendo datos con `getInscripcionByConvocatoriaAndId(convocatoriaId, inscripcionId)` y reutiliza el mismo DTO `InscripcionAdmisionDto` para renderizar foto, identificación, contacto, programa, período y fechas disponibles.
-- `src/pages/InscripcionDocumentos` conserva la carga mediante `prefetchInscripcionDocumentos(tramiteId)`, cache local por inscripción, ordenamiento por `codigoTipoDocumentoTramite`, `ValidationButtons`, `aprobarRechazarDocumento`, `openBase64InNewTab` y `downloadBase64File`.
-- La alerta de evaluación no iniciada mantiene el mensaje retornado por `getEvaluacionEstado`; solo cambia su presentación a alerta suave.
-
-### Stack exacto vigente
-- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
-- TypeScript `~5.9.3`.
-- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
-- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
-
-### Cómo correr / validar
-```bash
-npm install
-npm run dev
-npm run build
-npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx
-```
-- No hay seeds frontend nuevas. Para ver datos reales se requiere sesión SAPP con permisos existentes y backend respondiendo inscripciones/documentos en los endpoints actuales.
-
-### Decisiones recientes (changelog-lite)
-- June 6, 2026: se agregó ficha visual del aspirante bajo el título `Inscripción`, con foto base64 si existe o placeholder circular, badge de estado y datos de contacto/inscripción disponibles.
-- June 6, 2026: se agregó barra resumen con estado de inscripción, programa y estado de evaluación sin introducir nuevas reglas de negocio.
-- June 6, 2026: la tabla de documentos pasó a filas tipo card con columnas `Documento`, `Requisito`, `Estado`, `Archivo cargado`, `Validación`, `Observaciones` y `Acciones` cuando ya aplicaban.
-- June 6, 2026: los botones actuales de aprobar/rechazar se mantienen con sus handlers originales y solo reciben estilos contextualizados para borde verde/rojo y estado deshabilitado más claro.
-
-## Architecture (Brief)
-
-- **Routing:** React Router v7 with protected routes (`src/app/routes/index.tsx` + `src/app/routes/protectedRoute.tsx`) and aspirante-only routes (`src/app/routes/aspiranteOnlyRoute.tsx`).
-- **Auth state:** Context-based session management with localStorage persistence (`src/context/Auth`) and session kind support (`SAPP` vs `ASPIRANTE`), including token-expiration checks in protected routes. As of June 5, 2026, `src/context/Auth/mockGatewaySession.ts` enables a temporary API Gateway auth mock that forces a `SAPP` session with role `ADMIN` at app startup so `/` loads directly without using the SAPP login screen.
-- **Session store:** A non-React session store (`src/modules/auth/session/sessionStore.ts`) keeps the token accessible for API clients and handles save/clear/get operations.
-- **Auth service:** `src/api/authService.ts` performs real login against the backend (`/sapp/auth/login`) using the shared API response envelope and returns the typed DTO.
-- **JWT utilities:** `src/utils/jwt.ts` provides base64url decoding and payload parsing (no signature validation) to extract username, roles, and timestamps from JWTs.
-- **Auth DTOs/mappers:** `src/api/authTypes.ts` + `src/api/authMappers.ts` define backend DTOs and map the login response + JWT payload (string roles) into `AuthSession`, including optional `data.estudiante` when backend authenticates an `ESTUDIANTE`.
-- **Aspirante auth:** `src/api/aspiranteAuthService.ts` fetches `/sapp/aspirante/consultaInfo` and maps the aspirante info into an `AuthSession` via `src/api/aspiranteAuthMappers.ts`.
-- **API config/types:** `src/api/config.ts` defines `API_BASE_URL` (from `VITE_API_BASE_URL`), and `src/api/types.ts` defines the standard `{ ok, message, data }` envelope.
-- **HTTP client:** `src/shared/http/httpClient.ts` wraps `fetch`, automatically attaching the Bearer token from the session store (unless `auth: false` is passed) and handling 401/403 logout redirects.
-- **Document checklist API:** `src/api/documentChecklistTypes.ts` + `src/api/documentChecklistService.ts` define DTOs (including uploaded metadata) and a GET client for `/sapp/document?codigoTipoTramite=1002&tramiteId=...`.
-- **Documentos module (coordinación/secretaría):** `src/modules/documentos` defines shared checklist DTOs, the GET checklist service, and the approval/rejection service for `/sapp/document` using `PUT` and the standard `{ ok, message, data }` envelope.
-- **Inscripción documentos (coordinador):** `src/pages/InscripcionDocumentos` renders the real checklist for a given inscripción (tramiteId = inscripcionId), sorts rows by `codigoTipoDocumentoTramite`, derives UI validation state (`PENDIENTE | POR_REVISAR | APROBADO | RECHAZADO`), and executes approve/reject with per-row loading + inline rejection reason capture while refreshing only checklist data (no route/tab reload). “Continuar evaluación” remains gated until all required docs are approved.
-- **Base64 file utilities:** `src/shared/files/base64FileUtils.ts` normalizes base64 payloads and supports blob creation, tab opening, and download handling for document previews.
-- **Tipos de documento API:** `src/api/tipoDocumentoIdentificacionTypes.ts` + `src/api/tipoDocumentoIdentificacionService.ts` provide DTOs and a GET client for `/sapp/tipoDocumentoIdentificacion`.
-- **Aspirante document upload UI:** checklist-style cards in `src/pages/AspiranteDocumentos` backed by the real upload service (`src/api/documentUploadService.ts`) plus base64/checksum utilities (`src/utils/fileToBase64.ts`, `src/utils/sha256.ts`).
-- **Aspirante investigación update:** `src/api/aspiranteService.ts` now wraps `PUT /sapp/aspirante` so `/aspirante/documentos` persists `grupoInvestigacionId` + `directorId` for the logged aspirante when clicking “Agregar información”.
-- **Admisiones API:** `src/modules/admisiones/api` centralizes DTOs + service calls for convocatorias (`/sapp/convocatoriaAdmision`) and inscripciones, backed by the shared HTTP client wrapper.
-- **Admisiones create modal (programas reales):** `CreateConvocatoriaModal` now loads programa options from `GET /sapp/programaAcademico` (instead of deriving options only from existing convocatorias), so the combo works even when there are no convocatorias yet and still sends `programaId` in `POST /sapp/convocatoriaAdmision`.
-- **Configuración de fechas (admisiones):** nuevo módulo `src/modules/configFechas` con servicios reales para `GET /api/sapp/periodoAcademico` y `POST /api/sapp/periodoAcademicoFecha`, más persistencia temporal local (`localStorage`) para re-edición en UI cuando no existe endpoint de listado de configuraciones.
-- **Aspirante creation flow:** `CreateAspiranteModal` posts `/sapp/aspirante`, stores the returned `aspiranteId` + `inscripcionAdmisionId`, and then uploads selected documents **sequentially** via `POST /sapp/document` using base64 + SHA-256 helpers. The create payload now includes `convocatoriaAdmisionId` parsed from `/admisiones/convocatoria/:convocatoriaId` so backend creates the inscripción against the convocatoria from the URL instead of deriving a current/default convocatoria only from `programaId`. Temporalmente, para pruebas del 2026-06-02, el botón `Crear aspirante` en el detalle de convocatoria se mantiene visible/habilitable aunque la convocatoria esté cerrada; se debe revertir para volver a ocultarlo/bloquearlo cuando terminen las pruebas. The modal loads trámite documents from backend (`GET /sapp/tramite/document?tipoTramiteId=1`) using `httpClient`, filters by `ADMISION_COORDINACION`, computes required items from backend `obligatorio`, preserves sequential uploads/retry behavior, and renders backend-driven loading/error/empty states with retry when the request fails.
-- **Admisiones (coordinación) create aspirante UX:** the create modal no longer asks for “Foto de perfil”; coordinators now only register aspirante data and required coordinación documents.
-- **Aspirante documents UX (ANX-4 Foto):** when checklist item code is `ANX-4`, upload UI switches to a photo-focused control (`accept="image/*"`) with inline image preview while keeping the same backend upload contract (`POST /sapp/document`).
-- **UI composition:** Page-level views in `src/pages` (Home/Solicitudes/Matrícula/Créditos), shared layout/components in `src/components`, global styles in `src/styles` (login screen in `src/pages/Login`).
-- **Matrícula documentos (estudiante):** en `/matricula` los documentos requeridos para carga se consultan por trámite (`GET /sapp/tramite/document?tipoTramiteId=2`) y, cuando el estudiante ya tiene una matrícula vigente, la tabla se alimenta con los documentos del trámite existente (`GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003`).
-- **Matrícula estudiante (API real):** `src/pages/Matricula/MatriculaPage.tsx` y `src/modules/matricula/services/matriculaAcademicaService.ts` consumen `GET /sapp/asignaturas?programaId=1`, permiten definir `grupo` por materia seleccionada, crean matrícula con `POST /sapp/matriculaAcademica`, y validan elegibilidad con `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` (si devuelve lista: ya existe matrícula; `data=false`: no hay periodo vigente/no se permite crear; `data=true`: sí se permite crear).
-- **Coordinación > Estudiantes (lista API real):** `src/modules/estudiantes/services/estudiantesMockService.ts` ahora consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`, normaliza el contrato backend (`estudiante/persona/programaCodigoNombre`) al tipo UI `EstudianteCoordinacion` y mantiene caché en memoria por `estudiante.id` para reutilizar los datos en el detalle.
-- **Coordinación > Estudiantes (tablero horizontal):** al 2026-06-05, `/coordinacion/estudiantes` elimina el selector `<select>` y usa un control segmentado accesible **Maestría/Doctorado**; el listado se renderiza como tablero horizontal tipo Trello con scroll lateral, botones `scrollBy` y tarjetas de ancho fijo con foto/placeholder, datos académicos y CTA “Ver perfil”.
-- **Global theming:** `src/styles/globals.css` centraliza tokens de identidad visual UIS (compatibles con Beer.css) para `body.light` / `body.dark`, y los layouts/login consumen variables semánticas para mantener consistencia institucional.
-- **Role-based UI guard:** `src/auth/roleGuards.ts` + `src/modules/auth/roles/roleUtils.ts` centralize role checks for sidebar/menu visibility and protected routes (string roles, normalized to uppercase).
-- **Solicitudes module (mock-ready):** `src/modules/solicitudes` now includes typed DTOs, role-targeted UI components (student form + coordinator cards), and async mock services that preserve the `{ ok, message, data }` envelope contract for future API replacement.
-- **Solicitudes cambio de estado (coordinador):** `src/modules/solicitudes/api/solicitudCambioEstadoService.ts` usa el endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=...`; el selector de detalle y los badges/listados están alineados al catálogo oficial de estados (`ENVIADA`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `DEVUELTA`, `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT`) y el detalle recarga la solicitud tras guardar.
-- **Solicitudes coordinación (listado):** `src/modules/solicitudes/components/SolicitudesCoordinadorView` ordena por `fechaRegistro` descendente, pagina en bloques de 10 elementos y conserva filtros por `estadoId`/`tipoSolicitudId`; en tabla y filtro de tipo se prioriza mostrar solo el nombre legible del tipo (sin prefijo de código).
-- **Solicitudes coordinación (detalle documentos):** `src/modules/solicitudes/api/solicitudDocumentosService.ts` consume `GET /sapp/document?tramiteId={solicitudId}&codigoTipoTramite={tipoTramiteCodigo}` y mapea la respuesta del checklist a `DocumentosAdjuntos` para ver/descargar archivos cargados.
-- **Barrel exports:** Top-level `src/components/index.ts` and `src/pages/index.ts` centralize exports for cleaner imports.
-- **App shell:** `src/components/Layout` wraps protected routes with a persistent sidebar (`src/components/Sidebar`); `src/main.tsx` provides router + auth providers. Module pages render a header with user info and logout actions via `src/components/ModuleLayout`.
-- **Admisiones module:** `src/modules/admisiones` defines convocatoria DTOs/services and program helpers; `src/pages/AdmisionesHome` renders program-specific selectors sourced from the backend, and `src/pages/ConvocatoriaDetalle` fetches real inscripciones for the selected convocatoria.
-- **Aspirante photo fetch (genérico):** `src/modules/documentos/api/documentoFotoService.ts` añade utilitarios reutilizables para cargar imágenes base64 de documentos por `codigoTipoTramite` + `codigoTipoDocumentoTramite` + `tramiteId`(s). En `ConvocatoriaDetalle`, la lista de aspirantes ahora consulta `ANX-4` (foto) con `codigoTipoTramite=1002` para cada `aspiranteId`; si no existe documento, usa un placeholder institucional local (sin dependencia de URLs externas).
-- **Evaluación de admisión:** `src/modules/admisiones/api/evaluacionAdmisionService.ts` consume `/sapp/evaluacionAdmision/info`, `src/modules/admisiones/components/EvaluacionEtapaSection` renderiza tablas editables por etapa, y las páginas de hoja de vida/examen/entrevista usan la misma base con validación de puntajes.
-- **Evaluación (Hoja de vida / Examen) UI update:** `EvaluacionEtapaSection` ahora prioriza la columna **Nota** (última, alineada a la derecha), elimina “Evaluador”, y muestra consideraciones en bloque completo (incluye pretty-print para JSON). `EvaluacionEtapaPage` además integra visor PDF de hoja de vida (preview inline + abrir/descargar) resolviendo el archivo en coordinación desde `/sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`.
-- **Gating de evaluación por etapa:** `src/modules/admisiones/api/evaluacionAdmisionAvailabilityService.ts` consulta disponibilidad por etapa con caché en memoria, `InscripcionAdmisionDetallePage` deshabilita las ventanas según disponibilidad y `RequireEvaluacionEnabled` protege accesos directos por URL.
-
-## Tech Stack (Exact Versions)
-
-- **React:** 19.2.0
-- **React DOM:** 19.2.0
-- **React Router DOM:** 7.9.2
-- **TypeScript:** 5.9.3
-- **Vite:** rolldown-vite 7.2.5 (npm alias)
-- **@vitejs/plugin-react-swc:** 4.2.2
-- **ESLint:** 9.39.1
-
-> Full dependency list: see `package.json`.
-
-## How to Run
-
-```bash
-npm install
-npm run dev
+cd existing_repo
+git remote add origin https://gitlab.eisi.internal/SAPP/sapp-frontend.git
+git branch -M main
+git push -uf origin main
 ```
 
-Other useful commands:
+## Integrate with your tools
 
-```bash
-npm run build
-npm run preview
-npm run lint
-```
+- [ ] [Set up project integrations](https://gitlab.eisi.internal/SAPP/sapp-frontend/-/settings/integrations)
 
-No seed step is required for this frontend; it consumes backend data directly via the configured API base URL.
+## Collaborate with your team
 
-### Environment Variables
+- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
+- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
+- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
+- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
+- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
 
-```env
-# .env.local
-VITE_API_BASE_URL=http://localhost:8080
-```
+## Test and Deploy
 
-### Seeds / Mock Data
+Use the built-in continuous integration in GitLab.
 
-Temporary API Gateway auth mock for integration tests:
+- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
+- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
+- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
+- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
+- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
 
-- `src/context/Auth/mockGatewaySession.ts` exports `ENABLE_GATEWAY_AUTH_MOCK = true` and `getMockGatewayAdminSession()`.
-- The mocked session is persisted under `SAPP_AUTH_SESSION` on startup, uses role `ADMIN`, and uses `accessToken: 'NO_TOKEN'` so `src/modules/auth/session/sessionStore.ts` does not attach a fake Bearer token to backend/API Gateway requests.
-- To return to real login/API Gateway identity consumption, disable or remove `ENABLE_GATEWAY_AUTH_MOCK` and wire `AuthProvider` to the real gateway response mapper.
+***
 
+# Editing this README
 
-There are no seed scripts. The SAPP login calls the backend directly:
+When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
 
-- Endpoint: `POST ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/auth/login`
-- Response envelope: `{ ok, message, data }`
-- The frontend maps the response into an `AuthSession`, stores the JWT as `accessToken`, and decodes the payload for username, roles, and `iat/exp`.
+## Suggestions for a good README
 
-The aspirante login now also calls the backend directly:
+Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
 
-- Endpoint: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/aspirante/consultaInfo?numeroInscripcion=...&tipoDocumentoId=...&numeroDocumento=...`
-- Response envelope: `{ ok, message, data }`
-- The frontend maps the aspirante response into an `AuthSession` with `kind: "ASPIRANTE"` and `accessToken: "NO_TOKEN"`.
+## Name
+Choose a self-explaining name for your project.
 
-Coordinación > Estudiantes usa endpoints reales para catálogo y listado:
+## Description
+Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-- Programas: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/programaAcademico`
-- Estudiantes por programa: `GET ${VITE_API_BASE_URL || "http://localhost:8080"}/sapp/estudiantes/consulta?programaId={id}&egresados=false`
-- Contrato esperado actual: `{ ok, message, data }` con `data[]` de estudiantes incluyendo `estudiante`, `persona`, `nombreCompleto`, `programaId`, `programaCodigoNombre`.
-- Regla de filtrado de programas en frontend: solo se muestran
-  - `Maestría en Ingeniería de Sistemas e Informática`
-  - `Doctorado en Ciencias de la Computación`
+## Badges
+On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
 
-Mock data de estudiantes se conserva únicamente como fallback para detalle cuando no hay cache de la lista en memoria:
+## Visuals
+Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
-- `src/modules/estudiantes/mock/estudiantes.mock.ts`
-- `src/modules/estudiantes/services/estudiantesMockService.ts`
+## Installation
+Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-Mock data for the Admisiones module still lives in:
+## Usage
+Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-- `src/modules/admisiones/mock/convocatorias.mock.ts` (legacy mock list; the home selector now uses the real `/sapp/convocatoriaAdmision` service).
+## Support
+Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
 
-## Recent Decisions (Changelog-lite)
+## Roadmap
+If you have ideas for releases in the future, it is a good idea to list them in the README.
 
-- June 5, 2026 (latest): en **Coordinación > Estudiantes** (`/coordinacion/estudiantes`) el filtro visual queda reducido a dos botones segmentados **Maestría** y **Doctorado**; se remueven el combo de programa y textos redundantes de programa seleccionado. El listado pasa de grilla a tablero horizontal tipo Trello (`display:flex`, `overflow-x:auto`, scroll-snap), con controles de flecha accesibles, guía de desplazamiento y estado vacío “No hay estudiantes registrados para este programa”. Las tarjetas mantienen integración con `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`, usan foto real si llega en backend o placeholder “Sin foto”, y muestran CTA fijo “Ver perfil”.
+## Contributing
+State if you are open to contributions and what your requirements are for accepting them.
 
-- June 5, 2026: para pruebas de integración con API Gateway se deshabilitó temporalmente el uso de la pantalla de login SAPP en el arranque. `AuthProvider` ahora fuerza una sesión mock `SAPP` con rol `ADMIN` mediante `src/context/Auth/mockGatewaySession.ts`, guarda esa sesión en `localStorage` y conserva `accessToken: 'NO_TOKEN'` para evitar enviar un Bearer ficticio mientras el gateway real se integra más adelante. En la misma sesión se corrigieron errores TypeScript puntuales en `ModuleLayout`, servicios de evaluación/admisiones y páginas de inscripción/documentos para que `npm run build` vuelva a compilar exitosamente.
-- June 2, 2026 (latest): ajuste temporal de pruebas en `/admisiones/convocatoria/:convocatoriaId`: `Crear aspirante` ya no se oculta ni se bloquea por `convocatoriaCerrada`, aunque sigue validando `programaId`, `convocatoriaId`, carga y cupos. **Debe revertirse** después de las pruebas para restaurar la regla original: no crear aspirantes/estudiantes desde una convocatoria cerrada. Prompt sugerido para revertir: `Por favor revierte el ajuste temporal de pruebas del 2026-06-02 en el detalle de convocatoria: vuelve a ocultar o bloquear el botón Crear aspirante cuando convocatoriaCerrada sea true y restaura la alerta que impide abrir el modal si la convocatoria está cerrada.`
-- June 2, 2026: en `/admisiones/convocatoria/:convocatoriaId`, la creación de aspirante ahora parsea el `convocatoriaId` de la URL y lo envía en `POST /sapp/aspirante` como `convocatoriaAdmisionId` junto con `programaId`; el botón/modal quedan bloqueados si no se puede resolver ese identificador para evitar que backend asigne una convocatoria actual/default distinta.
-- May 26, 2026: en `/admisiones/convocatoria/:convocatoriaId` se agrego el modulo **Admitir aspirantes** para roles de coordinacion/secretaria/admin. La seccion se habilita cuando la convocatoria esta cerrada o ya existe al menos un aspirante `ADMITIDO`, lista solo aspirantes admitidos y permite convertirlos a estudiante completando `codigoEstudiante` + `correoInstitucional` y consumiendo `POST /api/v1/estudiantes` (mock actual).
-- May 26, 2026: se elimino la carpeta versionada `SAPP-frontend-public/` y todo su contenido. Era una copia usada para publicar/subir un repositorio publico y ya no forma parte del frontend activo; el codigo fuente vigente queda en la raiz del proyecto (`src/`, `public/`, `package.json`, etc.).
-- May 22, 2026: en `/aspirante/documentos`, en el header de detalles de inscripción se movió el botón **Cerrar sesión** fuera de la tarjeta lateral de fecha (arriba a la derecha), se compactó la tarjeta de **Fecha de inscripción** para evitar expansión vertical y se redujo el espaciado entre metadatos para lograr una cabecera más densa y alineada al mockup.
-- May 22, 2026: rediseño visual de la cabecera en `/aspirante/documentos` para acercarla al mockup institucional: avatar lateral, estado de inscripción en badge, metadatos en dos columnas y tarjeta lateral con fecha de inscripción; además se compactó el bloque de progreso para reforzar jerarquía visual del checklist.
-- May 20, 2026 (latest): ajuste fino visual en `/aspirante/documentos` para ANX-4: la miniatura de foto se compactó (2.5rem) y la fila de estado usa `minmax(0,1fr)` + `ellipsis` en nombre de archivo para evitar desalineaciones de altura entre tarjetas cuando el texto es largo.
-- May 20, 2026 (latest): en `/aspirante/documentos` se retiró el layout especial de tarjeta completa para **Foto (ANX-4)**; ahora la grilla vuelve a mostrar los requisitos de a 2 en desktop y la foto se visualiza con miniatura compacta (mismo alto visual del bloque) dentro de la misma fila de estado/archivo, evitando que la tarjeta crezca con preview vertical.
-- May 19, 2026 (latest): en `/aspirante/documentos`, si el endpoint de consulta del aspirante ya retorna `grupoInvestigacion` y `director`, el frontend ahora preselecciona automáticamente primero el grupo (match por texto en `codigoNombre`) y luego consulta/preselecciona el director correspondiente en el combo dependiente.
-- May 19, 2026 (latest): en `/aspirante/documentos` (carga de documentos del aspirante), la selección de archivo ahora dispara la subida automática sin botón intermedio, con actualización del ítem en caliente (estado/archivo) y refresco del checklist sin recargar la página.
-- May 19, 2026 (latest): en `/aspirante/documentos` se agregó validación previa de tipo de archivo (PDF, Word `.doc/.docx`, imágenes `.png/.jpg/.jpeg`) antes de iniciar carga, mostrando error inline cuando el archivo no cumple.
-- May 19, 2026 (latest): en `/aspirante/documentos` la grilla de requisitos se reorganizó para mostrar hasta 2 tarjetas por fila en pantallas amplias, manteniendo una columna en móvil.
-- May 1, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` (coordinación/secretaría), la columna y botones de **Acciones** (**Ver/Descargar**) ahora se renderizan **solo cuando la inscripción no está en estado final** (`ADMITIDO`/`RECHAZADO`), evitando acciones documentales en trámites cerrados.
-- May 1, 2026 (latest): en el detalle de inscripción de admisiones (etapa **Hoja de vida**), el listado de evaluaciones reordenó columnas para que **Observaciones** quede de última, manteniendo **Puntaje máx.** y **Nota** antes de ese campo para facilitar captura secuencial.
-- April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, las tarjetas de aspirantes ahora muestran **avatar genérico** cuando no existe foto (`ANX-4`) o cuando la imagen no puede cargarse (error de `img`), evitando espacios vacíos/rotos en el listado.
-- April 30, 2026 (latest): en `/admisiones/convocatorias`, la creación de convocatoria ahora **se completa solo después** de registrar cada profesor seleccionado en `POST /sapp/evaluadorConvocatoria` con payload `{ evaluadorId, convocatoriaId }` (una llamada por profesor). Si alguna asociación falla, la convocatoria no se da por finalizada en la UI hasta reintentar exitosamente.
-- April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId`, cuando el backend responde sin registros de inscripciones (mensajes tipo “no hay/no existe/sin registros”), la vista ahora lo trata como estado vacío funcional: muestra “No hay inscripciones para esta convocatoria.” con estilo neutro (no error en rojo) y sin botón **Reintentar**.
-- April 30, 2026 (latest): en `/admisiones/convocatorias`, el modal **Nueva convocatoria** ahora carga el combo de programa desde `GET /sapp/programaAcademico` con fallback a convocatorias existentes; esto corrige el fallo donde el selector quedaba vacío y garantiza enviar `programaId` válido al crear (`POST /sapp/convocatoriaAdmision`).
-- April 30, 2026 (latest): en `/admisiones/fechas` (Configuración de fechas) el formulario de creación de periodo ahora solicita fechas de **inicio/fin de semestre** y también fechas separadas de **inicio/fin de matrículas**; al crear, el payload `fechas[]` usa las fechas de matrículas (distintas a las del semestre) según el DTO de `POST /api/sapp/periodoAcademico`.
-- April 30, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` se corrigió tolerancia a ausencia de inscripción de admisión. Si `GET /sapp/inscripcionAdmision/aspirante/{id}` responde 404 con mensaje de “no existe inscripción”, el frontend ya no rompe la carga global del detalle: la pestaña **Admisión** muestra “No hay procesos de admisión registrados” y las pestañas **Matrículas**/**Solicitudes** continúan cargando normalmente.
-- April 30, 2026 (latest): en `/coordinacion/estudiantes/:estudianteId` (rol COORDINACION), la pestaña **Matrículas** dejó de mostrar el identificador numérico en el título (se removió `Matrícula #{id}`) y el checklist documental de Matrículas/Admisión/Solicitudes ahora habilita acciones **Ver** y **Descargar** cuando el backend entrega contenido base64+mimetype, homologando el comportamiento con los demás módulos documentales.
-- April 30, 2026 (latest): en detalle de inscripción (coordinación), se eliminó el texto “Inscripción #{id}” de las 4 etapas embebidas (Documentos, Hoja de vida, Examen y Entrevistas). Además se corrigió el parpadeo/reinicialización del estado al abrir “Documentos cargados”: el estado ya no se limpia por cambios de `location.state` al navegar entre subrutas y la actualización ocurre sin sensación de recarga completa de pantalla.
-- April 30, 2026 (latest): en admisiones detalle de inscripción se redujeron llamadas redundantes al cambiar entre secciones de evaluación usando caché en memoria por `inscripcionId+etapa` (evaluación) y por `inscripcionId` (PDF hoja de vida), evitando refetches innecesarios en recargas parciales y navegación entre acordeones; además, cuando el estado es `ADMITIDO` o `RECHAZADO`, la UI queda en modo solo lectura (inputs/acciones deshabilitados) en Documentos, Hoja de vida, Examen y Entrevistas.
-- April 30, 2026: login SAPP ahora soporta foto de estudiante (`data.estudiante.foto`) en sesión y la muestra en el header superior derecho (avatar circular junto a nombre y rol). Si no llega foto o viene incompleta, se usa un avatar placeholder institucional (muñequito).
-- April 30, 2026: en los listados de documentos de matrícula (estudiante y coordinación) se homologó el estilo visual para acercarlo a las secciones de documentos de Solicitudes/Admisiones: contenedor tipo tarjeta institucional, badges y estados en píldora, acciones con botones redondeados y uso consistente de tokens de tema (`--surface-container-low`, `--outline`, `--primary`, `--inverse-primary`) en claro/oscuro.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) el buscador de materias ahora muestra también el **nivel** de cada asignatura en el dropdown (junto al código), y en el checklist documental se habilitaron las acciones **Ver** y **Descargar** con archivo real (`base64 + mime`) cuando el documento ya fue cargado.
-- April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se bloquearon acciones de validación por estado. Si la matrícula está `RADICADA`, quedan deshabilitados aprobar/rechazar documentos y el botón **Aprobar documentos**. Si está `FINALIZADA`, además quedan deshabilitados aprobar/rechazar materias y **Guardar validación de asignaturas**; el estado del detalle ahora usa los mismos badges de color del listado.
-- April 30, 2026: en `/matricula/:matriculaId` (coordinación/admin), al aprobar o rechazar un documento en el detalle, la vista ya no recarga todo el detalle. Ahora espera la respuesta del `PUT /sapp/document` y refresca únicamente la lista documental (`loadDocumentos`), manteniendo intactos los datos generales y la tabla de asignaturas.
-- April 30, 2026: en `/matricula` se eliminó el manejo de `grupo` en materias para todos los roles (UI y validaciones). La tabla de materias ya no muestra columna **Grupo** y el payload de creación/actualización deja de enviar ese campo.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente, la tabla de materias oculta la columna **Acción** para evitar eliminaciones en esa vista.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), al cargar documentos ya no se muestra modal/popup de éxito. Después de cada envío exitoso se refresca únicamente el listado de documentos del trámite vigente (`loadDocumentosMatricula`) sin recargar la pantalla completa, manteniendo contexto de la vista.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando ya existe matrícula vigente no finalizada se ocultan el mensaje de selección y el aviso de matrícula existente, se oculta el buscador de materias, y la tabla de materias queda en modo no editable (grupo/acciones deshabilitadas). El CTA cambia a **Actualizar matrícula** y se deshabilita automáticamente cuando todos los documentos ya están cargados y ninguno está rechazado.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) los documentos con estado `APROBADO` quedaron bloqueados para edición/reemplazo por parte del estudiante (acciones de subida deshabilitadas), manteniendo solo consulta/descarga para preservar trazabilidad de revisión.
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) se habilitó **Confirmar matrícula** cuando ya existe matrícula vigente no finalizada, para permitir reenvío incremental de documentos pendientes/rechazados sin recrear la matrícula. El submit ahora reutiliza el trámite vigente y solo sube archivos recién seleccionados (`selectedFile`), evitando recargas de documentos sin cambios.
-- April 30, 2026: la pantalla de **Inicio** (`/`) fue rediseñada para mostrar una grilla de accesos rápidos (cuadritos) que replica las opciones del sidebar y respeta visibilidad por rol (solo módulos permitidos por sesión).
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`), cuando la matrícula vigente está en estado `FINALIZADA`, se ocultaron los textos del bloque de carga de documentos (`Cargue de documentos` y su descripción) y se mantuvo la tabla en modo consulta con acciones habilitadas solo para **Ver** y **Descargar** (la carga/subida queda deshabilitada).
-- April 30, 2026: se removió el acceso a **Créditos** del sidebar principal (no se usará el módulo por decisión funcional), manteniendo intactas rutas/páginas para evitar efectos colaterales mientras se coordina el retiro completo del módulo.
-- April 30, 2026: hotfix en `/matricula` (ESTUDIANTE) para pre-carga de matrícula vigente: cuando el catálogo de asignaturas viene sin `codigoUis/codigoExterno`, ahora el UI usa `asignaturaCodigo` del detalle de matrícula vigente como fallback, corrigiendo la visualización de código en tabla de materias seleccionadas y en el selector filtrable.
-- April 30, 2026: en `/matricula` (perfil `ESTUDIANTE`) se ajustó la captura de grupo por asignatura: el control ahora es compacto (2 caracteres, centrado y en mayúscula) y la validación de “Confirmar matrícula” dejó de mostrar mensaje bloqueante para grupos faltantes; en su lugar, al intentar confirmar se resaltan en rojo únicamente los campos `Grupo` vacíos (sin modal), limpiando el resaltado al completar todos los grupos.
-- April 30, 2026: en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`) se ajustó el orden visual del detalle para mostrar primero **Documentos de la matrícula** y luego **Asignaturas registradas**; además el CTA final ahora se etiqueta **Aprobar documentos** y consume `PUT /sapp/matriculaAcademica/{matriculaId}` (en reemplazo de la ruta `/aprobar/{id}`) cuando ya están aprobados todos los obligatorios.
+For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
 
-- April 24, 2026: se verificaron y homologaron estilos de filtros en listados clave (`/matricula`, `/admisiones/configuracion/convocatorias`, `/coordinacion/estudiantes`, `/solicitudes`) usando utilidades globales compartidas (`.sapp-filters-panel`, `.sapp-filter-field`, `.sapp-filters-actions`, `.sapp-filters-clear-button`) para asegurar consistencia visual, jerarquía de campos y compatibilidad de tema claro/oscuro.
-- April 24, 2026: hotfix en admisiones para rol `PROFESOR/DOCENTE` en el detalle de inscripción. Se evitó un ciclo de navegación/reintentos infinitos cuando `GET /sapp/evaluacionAdmision/info?inscripcionId={id}` retorna “no iniciada” (ej. 404/`ok:false`) al seleccionar aspirantes sin evaluación; ahora la redirección automática a `/entrevistas` solo ocurre cuando el estado de evaluación es `STARTED`, preservando el guard y sin afectar otros roles.
-- April 21, 2026: se homologó el estilo base de **todas las tablas/listados** del frontend agregando clases compartidas (`sapp-table-shell`, `sapp-table`) y aplicándolas en módulos/páginas de Admisiones, Solicitudes, Matrícula y Configuración para un look institucional consistente (bordes, encabezados, espaciado y hover).
-- April 21, 2026: hotfix en `/matricula/:matriculaId` (roles `COORDINACION/ADMIN`) para validación de asignaturas. El frontend ahora envía el body completo exigido por backend en `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas`: `{ usuarioRevisionId, observaciones, asignaturas[] }`, y cada ítem usa `asignaturaId` (no `matriculaAsignaturaId`) con `estado` + `observaciones`.
-- April 21, 2026: en `/solicitudes` (rol `ESTUDIANTE`) el formulario de creación ahora soporta casos especiales: (1) solicitudes de **créditos condonables** exigen seleccionar `modalidadId` cargando catálogo desde `GET /sapp/modalidadContraprestacion`; (2) solicitudes de **homologación** permiten construir `solicitudHomologacionesAsignaturas[]` con pares `asignatura_origen_id/asignatura_destino_id`, seleccionando asignaturas disponibles (`GET /sapp/asignaturas?programaId=1`) o creando asignaturas nuevas mock en UI.
-- April 21, 2026: en `/matricula/:matriculaId` (roles `COORDINACION/ADMIN`) se habilitó la **validación de asignaturas** en tabla: cada fila ahora permite seleccionar **Aprobar/Rechazar**, diligenciar observaciones, y guardar decisiones por lote contra `PUT /sapp/matriculaAcademica/{matriculaId}/validarAsignaturas` enviando `asignaturas[]` con `{ matriculaAsignaturaId, estado, observaciones }`.
-- April 21, 2026: hotfix en `/matricula` (rol `ESTUDIANTE`) para envío de documentos: el payload de `POST /sapp/document` ahora incluye `usuarioCargaId = session.user.id` (normalizado a number) en lugar de `null`, cumpliendo el contrato backend para trazabilidad del usuario que carga archivos.
-- April 21, 2026: en `/matricula` (rol `ESTUDIANTE`) al confirmar la creación de matrícula ahora inicia automáticamente la carga secuencial de documentos (`POST /sapp/document`) uno por uno usando el `tramiteId` de la matrícula recién creada. La tabla refleja estado visual de cada documento (`READY_TO_UPLOAD`, `UPLOADING`, `UPLOADED`, `ERROR`) con el mismo patrón del flujo de creación de aspirante.
-- April 21, 2026: en `/matricula` (rol `ESTUDIANTE`) el bloque **Cargue de documentos** dejó de usar mock. Ahora consulta `GET /sapp/tramite/document?tipoTramiteId=2` para listar requisitos cuando aún no hay matrícula creada; si la validación de vigente devuelve una matrícula existente, recarga la tabla con `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=1003` para mostrar estado real por documento.
-- April 21, 2026: en `/matricula/:matriculaId` (vista `COORDINACION/ADMIN`) se unificó la carga de documentos para usar el mismo endpoint/servicio de matrícula que usa el detalle del estudiante (`getDocumentosMatriculaAcademica` -> `GET /sapp/document?codigoTipoTramite=1003&tramiteId={matriculaId}`), evitando divergencias de checklist entre vistas.
-- April 21, 2026: en `/admisiones/convocatoria/:convocatoriaId` se eliminó la carga manual/fallback de foto por aspirante; ahora la tarjeta usa directamente `inscripcion.foto` (base64 + mimeType) retornado por el endpoint de inscripciones, mostrando placeholder cuando no hay imagen.
-- April 21, 2026: en `/coordinacion/estudiantes/:estudianteId` se agregó un bloque de 3 pestañas (**Matrículas**, **Admisión**, **Solicitudes**) que consulta cada listado por estudiante y renderiza también los documentos asociados de cada trámite con `GET /sapp/document`.
-- April 21, 2026: en `/matricula` para `COORDINACION/ADMIN` el botón **Ver detalle** ahora navega a una pantalla separada (`/matricula/:matriculaId`) con resumen de matrícula, tabla de asignaturas y checklist de documentos del trámite. Desde ese detalle se puede **ver/descargar**, **aprobar/rechazar** documentos (patrón igual a admisiones) y ejecutar **Aprobar matrícula** cuando todos los documentos obligatorios están aprobados.
-- April 21, 2026: fix en `/admisiones/configuracion/fechas` para evitar llamadas infinitas a `GET /api/sapp/periodoAcademico`. La carga inicial de periodos quedó desacoplada del callback dependiente de `periodos`, eliminando el ciclo de re-render/re-fetch en la pantalla de configuración de fechas.
-- April 21, 2026: se creó el nuevo módulo **Configuración** (`/configuracion`) para `ADMIN/COORDINACION`, agregado al final del sidebar. La pantalla muestra primero una vista de **Períodos académicos** y después **Convocatorias de admisión**, con acciones directas para gestionar cada configuración.
-- April 21, 2026: en `/matricula` para coordinación/admin se retiró la columna **ID** del listado y se homologó el estilo de tabla con el patrón visual usado en otras pantallas (fondo de superficie, espaciado mayor y hover institucional).
-- April 21, 2026: se agregó la nueva ruta protegida `/admisiones/configuracion/fechas` (solo `ADMIN/COORDINADOR`) con pantalla **Configuración de fechas — Admisiones**. La vista consume periodos reales (`GET /api/sapp/periodoAcademico`), guarda configuración con `POST /api/sapp/periodoAcademicoFecha` (`tipoTramiteId=2`), y mantiene tabla local en `localStorage` (`SAPP_CONFIG_FECHAS_ADMISIONES`) para listar/editar sin endpoint backend de consulta.
-- April 21, 2026: en `/matricula`, para roles `COORDINADOR/ADMIN`, se habilitó el listado real de matrículas desde `GET /sapp/matriculaAcademica` con filtros por **programa**, **periodo**, **estado** y **búsqueda por estudiante/código**; además, cada registro ahora permite abrir un detalle en la misma pantalla (datos generales + asignaturas registradas). El flujo de `ESTUDIANTE` se mantiene sin cambios funcionales.
-- April 20, 2026: en **Coordinación > Estudiantes** (`/coordinacion/estudiantes`) las tarjetas del listado ahora muestran foto del estudiante cuando el backend la envía en `estudiante.foto` (`contenidoBase64` + `mimeType`) desde `GET /sapp/estudiantes/consulta`. Se normaliza a Data URL en el servicio y se mantiene placeholder institucional “Sin foto” cuando `foto` es `null`.
-- April 20, 2026: en la etapa `HOJA_DE_VIDA` de coordinación (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida`), el visor PDF lateral dejó de buscar por heurística y ahora consulta explícitamente `GET /sapp/document?tramiteId={inscripcionId}&codigoTipoDocumentoTramite=ANX-2&codigoTipoTramite=1001`; con esto el panel carga directamente el documento oficial de hoja de vida de la inscripción.
-- April 20, 2026: en el detalle de inscripción de admisiones (`/admisiones/convocatoria/:convId/inscripcion/:inscId`) se agregó la acción **Finalizar inscripción** para `ADMIN/COORDINADOR`: valida en tiempo real las tres etapas (`HOJA_DE_VIDA`, `EXAMEN_DE_CONOCIMIENTOS`, `ENTREVISTA`) contra `GET /sapp/evaluacionAdmision/info`, exige puntajes diligenciados y en rango `[0, puntajeMax]`, y solo si pasa ejecuta secuencialmente `PUT /sapp/evaluacionAdmision/calcularPuntajes/{inscripcionId}` + `PUT /sapp/evaluacionAdmision/finalizarEvaluacion/{inscripcionId}`. Tras finalizar, invalida caché de availability, recarga estado/detalle y muestra feedback de éxito/error en la misma pantalla.
-- April 20, 2026: en la etapa `ENTREVISTAS` del detalle de inscripción (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas`) se alineó el flujo de `PROFESOR/DOCENTE` al patrón de coordinación para captura incremental de notas: cada fila modificada se rastrea en frontend y se habilita un botón único al final **Enviar calificaciones**, que envía en lote solo los registros editados a `POST /sapp/evaluacionAdmision/registroPuntaje` con payload `{ id, puntajeAspirante, observaciones }`.
-- April 20, 2026: en el módulo de `solicitudes` se reemplazó el catálogo frontend hardcodeado por consumo del nuevo endpoint `GET /sapp/estadosSolicitud`. El catálogo se carga y cachea en runtime para filtros, selector de cambio de estado y etiquetas (`StatusBadge`), manteniendo fallback local con las 8 siglas oficiales cuando el endpoint no responde.
-- April 20, 2026: `/admisiones` ahora muestra una vista específica para `PROFESOR/DOCENTE` basada en endpoints reales de `/api/sapp` (convocatorias vigentes + inscripciones por convocatoria), separa cards por programa MISI/DCC, y cada card navega directo a `/entrevistas` para mantener la restricción de evaluación solo en entrevistas.
-- April 20, 2026: en `InscripcionAdmisionDetallePage` se agregó un `componentReloadVersion` para forzar remount del contenido de etapas (`Outlet`) cuando la evaluación pasa a `STARTED` (ya sea por polling exitoso o por recarga de estado). Con esto, tras pulsar **Iniciar proceso de evaluación** se recargan los componentes hijos con la nueva data, se desbloquean las secciones y desaparece el mensaje de “No se ha iniciado proceso de evaluación.” sin recargar manualmente la página.
-- April 20, 2026: fix en el flujo de **“Continuar/Iniciar evaluación”** para secretaría/coordinación en admisiones. Se agregó reintento corto de verificación de estado (`GET /sapp/evaluacionAdmision/info`) tras `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}` en `InscripcionDocumentosPage` e `InscripcionAdmisionDetallePage`, evitando navegación prematura a etapas protegidas y eliminando el estado “gris” con mensaje persistente de “No se ha iniciado proceso de evaluación.” cuando el backend tarda en reflejar el inicio.
-- April 20, 2026: ajuste de flujo de estados en admisiones. En `/aspirante/documentos`, al completar la carga del último documento obligatorio se ejecuta `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` para pasar a **POR VALIDAR DOCUMENTOS**. En detalle de inscripción (`/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId`), al abrir **Documentos cargados** se ejecuta `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` únicamente si el estado actual normalizado es `POR_VALIDAR_DOCUMENTOS`, manteniendo guard de “una sola vez por inscripción abierta”.
-- April 20, 2026: en `/admisiones/convocatoria/:convocatoriaId` se reemplazó la foto mock remota por carga real de foto por aspirante usando `GET /sapp/document?codigoTipoTramite=1002&tramiteId={aspiranteId}` + filtro `codigoTipoDocumentoTramite=ANX-4`. La implementación quedó genérica y reutilizable (`getFotoDocumentoByTramite` / `getFotosDocumentoByTramites`) para futuros casos de documentos imagen; cuando no hay foto, se renderiza un mock local de perfil vacío.
-- April 20, 2026: en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos` se ajustó el refresh al aprobar/rechazar para que sea silencioso (sin popup de éxito) y sin vaciar la lista durante la recarga; la tabla se mantiene visible y se actualiza cuando llega la nueva data en memoria.
-- April 20, 2026: en la tarjeta de carga de **Foto** (`DocumentUploadCard` con `previewAsImage`) se ajustó la previsualización para alinearla a la izquierda y evitar que el contenedor se extienda al ancho completo; ahora el borde punteado se adapta al contenido real de la imagen.
-- April 20, 2026: en el flujo de **Crear aspirante** (coordinación) se eliminó el campo de “Foto de perfil” del modal para no exigir esa carga durante la creación inicial del aspirante.
-- April 20, 2026: en `/aspirante/documentos`, cuando el checklist devuelve `codigoTipoDocumentoTramite = ANX-4` (Foto), la tarjeta se renderiza como carga de imagen con previsualización inline y selector restringido a `image/*`.
-- April 17, 2026: se habilitó el rol `PROFESOR` (con alias `DOCENTE`) en navegación y guards para `Solicitudes` + `Admisiones`; `/solicitudes` ahora reutiliza la vista de coordinación en modo solo lectura para profesor, `/admisiones` muestra flujo alterno **Mis entrevistas** con asignaciones mock por usuario y, en detalle de inscripción, profesor queda restringido a la etapa `ENTREVISTAS` (redirección automática desde `/documentos`, `/hoja-vida`, `/examen` hacia `/entrevistas`). Además, la persistencia de entrevista usa `POST /sapp/evaluacionAdmision/registroPuntaje` y refresca la data tras guardar.
-- April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) se habilitó edición/reemplazo de documentos en la lista actual cuando el estado normalizado es `ENVIADA`, `EN_REVISION`, `DEVUELTA` o `RECHAZADA`; la validación ahora usa `normalizeEstadoSolicitud(...)` para evitar bloqueos por variantes como `EN REVISION` con espacio.
-- April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) se eliminó la duplicidad visual de documentos (se retiró la tabla extra de **Documentos adjuntos**) y se dejó una sola sección de documentos basada en `SolicitudDocumentosEditor`, alineada con el estilo institucional de carga de archivos.
-- April 17, 2026: en el mismo detalle de estudiante, los documentos ahora pueden actualizarse directamente desde la sección única mediante acción **Guardar documentos** (reemplazo + subida a backend con `POST /sapp/document`) sin depender del bloque duplicado.
-- April 17, 2026: en `/solicitudes/:solicitudId` (vista ESTUDIANTE) el detalle migró de persistencia mock local de documentos a checklist/document upload real (`GET /sapp/document` + `POST /sapp/document`) dentro de un único componente de edición/consulta.
-- April 17, 2026: en `/solicitudes` (vista ESTUDIANTE), al pulsar **Registrar solicitud** ahora se ejecuta un flujo secuencial: primero `POST /sapp/solicitudesAcademicas` y luego la carga de documentos seleccionados uno a uno con `POST /sapp/document` (base64 + SHA-256), reutilizando el patrón del flujo de aspirantes; además se reforzó validación para exigir documentos obligatorios antes del envío.
-- April 17, 2026: en el listado de `/solicitudes` se ajustó la celda de **Estado** para usar un ancho fijo en desktop (`9.5rem`) y permitir ajuste de texto (`white-space: normal`, `overflow-wrap: anywhere`) cuando la etiqueta del estado es larga; en mobile el badge vuelve a ancho fluido (`width: 100%`) para evitar recortes.
-- April 17, 2026: en `/solicitudes` (vista ESTUDIANTE), se normalizó el contrato de `GET /sapp/tipoSolicitud` para aceptar tanto `tipoTramiteId` como `tramiteId`; el frontend ahora mapea `tramiteId -> tipoTramiteId` antes de consultar `GET /sapp/tramite/document?tipoTramiteId=...`, evitando el error “no cuenta con tipoTramiteId”.
-- April 17, 2026: en `/solicitudes` (vista ESTUDIANTE), el formulario de creación ahora carga documentos requeridos desde backend con `GET /sapp/tramite/document?tipoTramiteId={tipoTramiteId}` tomando `tipoTramiteId` del tipo de solicitud seleccionado; además, la lista de documentos reutiliza `DocumentUploadCard` para mantener el mismo estilo visual de carga de documentos del flujo de aspirante.
-- April 17, 2026: se unificó el manejo visual de estados de `solicitudes` con el catálogo oficial backend (IDs 1..8). `StatusBadge` ahora normaliza/etiqueta `ENVIADA`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `DEVUELTA`, `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT`; filtros de coordinación y selector de cambio de estado en detalle consumen ese mismo catálogo para evitar inconsistencias en listado/detalle/creación.
-- April 17, 2026: en `/solicitudes/:solicitudId` (coordinación/admin) la sección **Documentos adjuntos** ahora toma `data.tipoTramiteCodigo` del endpoint de detalle y consulta checklist con `GET /sapp/document?tramiteId={id}&codigoTipoTramite={tipoTramiteCodigo}` (antes dependía de `tipoSolicitudCodigo` + `codigoTipoTramiteId`).
-- April 16, 2026: se corrigió un crash en `/solicitudes` (coordinación) cuando backend retorna tipos con `codigoNombre` nulo/indefinido; `formatTipoSolicitudLabel` ahora es null-safe y el filtro muestra fallback `Sin tipo de solicitud` si no hay etiqueta utilizable.
-- April 16, 2026: en `/solicitudes` (coordinación) se ajustó UX del listado: la columna de tipo ya no muestra el código, el combo de filtro de tipo también muestra solo nombre, se ajustaron márgenes de la barra de filtros, se aplica orden descendente por `fechaRegistro`, y se agregó paginación local de 10 registros por página.
-- April 15, 2026: en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/hoja-vida` se retiró la columna **Acción** y la edición por fila; ahora la tabla mantiene campos de **Observaciones** y **Nota** siempre habilitados, marca filas modificadas en memoria y ejecuta actualización masiva con `PUT /sapp/evaluacionAdmision/registroPuntaje` al pulsar **Actualizar**.
-- April 15, 2026: se actualizó el sidebar global para mostrar íconos semánticos por opción (Solicitudes, Matrícula, Créditos, Estudiantes, Admisiones y Cerrar sesión) y mejorar el escaneo visual del menú.
-- April 15, 2026: el sidebar desktop quedó en modo colapsado por defecto (84px) y ahora se expande automáticamente al pasar el mouse o enfocar elementos (`:hover` / `:focus-within`), liberando más espacio horizontal para el contenido principal.
-- April 9, 2026: se reforzó la validación de elegibilidad en `/matricula` justo antes del `POST /sapp/matriculaAcademica` (re-validación en tiempo real con `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`) para bloquear confirmación si backend responde que ya existe matrícula vigente o que `data=false` (sin periodo vigente), evitando confirmaciones con estado desactualizado en frontend.
-- April 9, 2026: en **Coordinación > Estudiantes**, el listado dejó de usar `estudiantesMock` y ahora consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`; se agregó normalización de estados/correos/campos nulos y caché en memoria para que el detalle reutilice el estudiante consultado desde el listado.
-- April 9, 2026: en `/matricula` se agregó validación inicial obligatoria con `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para gobernar el botón de confirmación: si el backend retorna arreglo (`data[]`) se bloquea creación porque ya existe matrícula vigente; si retorna `data=false`, se bloquea por ausencia de periodo vigente; si retorna `data=true`, se habilita la creación.
-- April 9, 2026: en `/matricula` (rol `ESTUDIANTE`) se reemplazó la carga mock de materias por integración real a `GET /sapp/asignaturas?programaId=1`; además, cada materia seleccionada ahora exige `grupo`, la confirmación ejecuta `POST /sapp/matriculaAcademica` con `{ estudianteId, periodoId, asignaturas[] }`, y tras crear se consulta `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` para mantener sincronizado el periodo vigente en pantalla.
-- April 9, 2026: en `/solicitudes/:solicitudId` (detalle coordinador), el cambio de estado dejó de usar endpoints separados (`cambioEstadoEnEstudio`, `cambioEstadoAprobada`, `cambioEstadoRechazada`) y migró al endpoint unificado `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}?siglaEstado=...`; además, la opción de UI para coordinación quedó alineada a `EN REVISION`, `APROBADA`, `RECHAZADA`.
-- April 9, 2026: en **Coordinación > Estudiantes**, el selector de programa dejó de consumir `programasMock` y ahora carga catálogo real desde `GET /sapp/programaAcademico`, filtrando únicamente los dos programas oficiales definidos para coordinación: **Maestría en Ingeniería de Sistemas e Informática** y **Doctorado en Ciencias de la Computación**.
-- April 9, 2026: se creó el módulo **Estudiantes** para coordinación con flujo completamente mockeado: selector de programa, listado tipo tarjetas y navegación a detalle (`/coordinacion/estudiantes` y `/coordinacion/estudiantes/:estudianteId`).
-- April 9, 2026: en tarjetas de aspirantes de coordinación (`StudentCard`) se corrigió el render de campos largos (correo/teléfono) para evitar traslape entre columnas (`overflow-wrap:anywhere`, `word-break`, columnas con `min-width:0`) y se normalizó la visualización del estado reemplazando `_` por espacios.
-- April 8, 2026: en `/aspirante/documentos` se ajustó el checklist para respetar `documentoUploadedResponse.estadoDocumento` del backend: `APROBADO` se muestra como validado, `RECHAZADO` se marca con observación visible y obliga al aspirante a cargar una nueva versión (`Subir nuevamente`) para continuar con los requisitos obligatorios.
-- April 8, 2026: en `/solicitudes` se corrigió el descuadre visual de la columna **Observaciones** en desktop. La celda volvió a comportarse como `table-cell` (se movió el clamp de texto a un `span` interno), se fijó ancho consistente de columna (260px) y se alinearon nuevamente las líneas separadoras horizontales entre filas.
-- April 8, 2026: en el listado admin/coordinación de `/solicitudes` se eliminó la columna **ID** de la tabla y se robusteció el render de celdas textuales para evitar descuadres cuando backend retorna descripción/observaciones vacías (`null`, `undefined` o `""`); ahora se muestran fallbacks `Sin descripción.` y `Sin observaciones.`.
-- April 8, 2026: se corrigió el guardado de investigación en `/aspirante/documentos` para normalizar `session.user.id` a número (`Number(...)`) antes de validar y ejecutar `PUT /sapp/aspirante`; con esto se evita omitir la llamada cuando el backend/session serializa el id como string.
-- April 8, 2026: en `/aspirante/documentos`, el botón **Agregar información** de la tarjeta de investigación dejó de ser mock; ahora ejecuta `PUT /sapp/aspirante` con payload `{ id, grupoInvestigacionId, directorId }`, maneja estado de guardado (`Guardando información...`), y mantiene bloqueados los combos después de una actualización exitosa.
-- April 8, 2026: en `/aspirante/documentos`, la tarjeta de investigación dejó de usar catálogos mock hardcodeados y ahora consume APIs reales: `GET /sapp/gruposInvestigacion` para cargar grupos y `GET /sapp/gruposInvestigacionDocentes?grupoId={id}&query=` para poblar directores según grupo seleccionado.
-- April 8, 2026: en `/aspirante/documentos` la tarjeta de **Información de investigación** ahora incluye botón **“Agregar información”** con comportamiento mockeado; al registrar la información se deshabilitan ambos combos (`Grupo de investigación` y `Director del grupo de investigación`) para simular estado bloqueado tras guardado.
-- April 8, 2026: en `/aspirante/documentos` se agregó una nueva tarjeta de **Información de investigación** debajo del checklist de documentos, con dos combos (`Grupo de investigación` y `Director del grupo de investigación`) y estilos institucionales compatibles con tokens semánticos (`--surface`, `--outline`, `--primary`) para modo claro/oscuro.
-- April 8, 2026: en `/aspirante/documentos`, al completar la carga del **último documento obligatorio** durante una acción de subida del usuario (no en la carga inicial de pantalla), el frontend ejecuta en background la transición hacia “por validar documentos” (actualmente `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}`), sin feedback visual adicional para el aspirante.
-- April 7, 2026: en `/aspirante/documentos`, al seleccionar un archivo el estado visual ahora muestra el **nombre del archivo** (ya no “Listo para subir”), y cuando el documento ya está cargado se habilita acción **“Ver documento”** para abrir el base64 en una nueva pestaña reutilizando `openBase64InNewTab`.
-- April 7, 2026: refreshed aspirante document upload UI to align with SAPP institutional tokens/patterns (surface cards, soft shadows, semantic colors, pill actions) and added a mock completion event log when the last **required** document is uploaded (`[AspiranteDocumentos] mock-event: último documento obligatorio cargado, checklist completo.`).
-- April 7, 2026: en detalle de inscripción (pantalla de secretaría/coordinación), al abrir la sección **Documentos cargados** ahora se dispara `PUT /sapp/inscripcionAdmision/cambioEstadoVal/{inscripcionId}` (antes `cambioEstadoPorVal`) **solo** cuando el estado previo de la inscripción es `POR VALIDAR DOCUMENTOS` (`POR_VALIDAR_DOCUMENTOS` tras normalización frontend).
-- April 6, 2026: adjusted Admisiones evaluación UI for COORDINADOR in Hoja de vida y Examen: full-width responsive layout, removed “Evaluador” from tablas, reordered columns to leave **Nota** as final emphasized field, converted “Consideraciones” to full callout blocks with optional JSON pretty rendering, and added hoja de vida inline PDF viewer (desktop split 60/40 + mobile stack) with `Abrir`/`Descargar` actions and fallback panel when no matching document is found.
-- April 6, 2026: hardened inscripción estado transition trigger in `InscripcionAdmisionDetallePage`: `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` now runs from the real `DOCUMENTOS` open transition (`CLOSED -> OPEN`) using previous-window tracking, with one-success-per-inscripción guard (`Record<inscripcionId, boolean>`), retry-on-error behavior, and DEV-only diagnostic logs (`open detected`, `skip reason`, `calling PUT`, `OK`, `ERROR`). This call is no longer fired from generic toggle handlers and remains isolated from approve/reject document actions.
-- April 6, 2026: updated coordinación/secretaría document validation UX on `/admisiones/convocatoria/:convId/inscripcion/:inscId/documentos`: the table now uses dedicated columns (`Documento`, `Estado`, `Validación`, `Observaciones`, `Acciones`), `Validación` always shows both `Aprobar`/`Rechazar` buttons with active filled state by backend status, rejection note is shown only in reject mode (after pressing `Rechazar`), `Acciones` now contains only horizontal `Ver/Descargar`, pending uploads keep validation disabled in gray, and approve/reject refreshes only checklist data through `loadDocumentos()` (no route/tab reload).
-- April 6, 2026: en detalle de inscripción (coordinación/secretaría), al expandir “Documentos cargados” se dispara una sola vez `PUT /sapp/inscripcionAdmision/cambioEstadoPorVal/{inscripcionId}` cuando el estado actual está en `EN CONSTRUCCION`/`EN_CONSTRUCCION`; la llamada no bloquea la carga de documentos, muestra estado de actualización inline y permite reintento solo si falla.
-- April 6, 2026: optimized admisiones document review UX in `InscripcionDocumentosPage`: removed the two-step state selector, approve now calls `PUT /sapp/document` immediately, reject opens inline reason capture + confirm, actions are horizontally grouped (`Ver/Descargar` + `Aprobar/Rechazar`), decision buttons reflect current backend status, rows with `documentoCargado=false` keep decision buttons disabled/gray, and checklist refresh now uses local `loadDocumentos()` only (no full tab/route reload).
-- April 6, 2026: fixed inscripción documentos “Continuar evaluación” flow so it no longer uses the simulated alert path; the button now calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, invalidates evaluación availability cache, and then navigates to Hoja de vida with loading/disable UX to prevent duplicate submissions.
-- April 6, 2026: Admisiones (detalle inscripción) now probes `GET /sapp/evaluacionAdmision/info?inscripcionId={id}` without etapa to detect `NOT_STARTED` (`ok:false`, `data:null`) vs `STARTED` (`ok:true`), shows a new “Iniciar proceso de evaluación” action under Documentos only when not started, calls `POST /sapp/evaluacionAdmision/iniciarEvaluacion/{inscripcionId}`, then re-probes and re-renders to enable Hoja de vida/Examen/Entrevistas without manual browser refresh; route guard now blocks direct stage URLs when evaluation is not started.
-- April 6, 2026: en Admisiones Home solo se considera “convocatoria vigente” cuando el periodo está efectivamente abierto; si la convocatoria más reciente está cerrada ahora se lista en “Convocatorias anteriores”. Además, en `ConvocatoriaDetalle` se consulta `GET /sapp/convocatoriaAdmision` para resolver el estado real de la convocatoria por `id` y bloquear `Crear aspirante` cuando está cerrada.
-- April 6, 2026: convocatoria vigencia en Admisiones ahora se determina en frontend por rango de fechas (`fechaInicio`/`fechaFin`) y no solo por el booleano `vigente`; además, se propagó `cupos` al detalle de convocatoria para bloquear creación de aspirantes cuando se alcanza el máximo y se ampliaron las tarjetas de inscripciones con cédula, correo, teléfono y posición en admisión cuando el backend entregue esos campos.
-- April 6, 2026: standardized product branding in the UI from **"SAPP Posgrados"** to **"SAPP"** in shared shells/login, and added the full descriptive name "Sistema de apoyo a procesos de posgrado" on the main login screen as contextual subtitle.
-- April 4, 2026: convocatoria de admisión ahora permite periodo libre (año/semestre), verifica existencia por `anioPeriodo` con `GET /sapp/periodoAcademico`, asegura periodo con `POST /sapp/periodoAcademicoFecha` (generando `periodoId = max+1` en frontend cuando no existe), y luego crea la convocatoria con ese `periodoId`; el modal incluye defaults editables por semestre (S1: 01-01/06-30, S2: 07-01/12-31), stepper textual de submit, y mensajes claros si el backend no soporta creación automática del `periodoId`.
-- April 4, 2026: updated the Admisiones “Nueva convocatoria” modal to include required `periodoId` in the real `POST /sapp/convocatoriaAdmision`, added mock-backed period selector (`fetchPeriodos`) and professor selector (`fetchProfesores`) with multi-add/remove UX, and implemented a 2-step submit flow in one action (real convocatoria creation + mock professor assignment with retry on partial failure).
-- April 4, 2026: added a new role-guarded Admisiones configuration flow for convocatorias (`/admisiones/convocatorias`) for `ADMIN`/`COORDINADOR`, including real API integrations for list/create/close (`GET/POST/PUT /sapp/convocatoriaAdmision*`), frontend filters (periodo + vigente), program-grouped tables, inline close confirmation, and a reusable `CreateConvocatoriaModal`; Admisiones home now shows a “Configurar convocatorias” entry point only for allowed roles.
-- April 4, 2026: replaced `/matricula` placeholder with an ESTUDIANTE-only mock workflow under `src/modules/matricula` (typed convocatoria/materias/documentos mocks + async mock service), including convocatoria-open validation, searchable subject selector without duplicates, selected subjects table with removal, required documents checklist (status badges + placeholder actions), and responsive cards/tables with a guarded fallback message for non-student roles.
-- April 4, 2026: adjusted `SolicitudesFiltersBar` alignment so filter items render from left-to-right (no center-distributed empty spaces), and improved responsiveness by switching the bar to a 2-column desktop grid (filters + actions) that collapses cleanly to one column on tablet/mobile.
-- April 4, 2026: applied a global visual polish pass focused on consistency and responsive behavior: unified semantic tokens (radius/shadows/alerts), standardized form control sizing/focus states, harmonized layout spacing in `Layout`/`ModuleLayout`, improved mobile sidebar behavior, and converted Solicitudes table into card-like rows on <=768px to avoid horizontal overflow while preserving desktop table density.
-- April 3, 2026: coordinator `/solicitudes` now supports backend-driven filtering with `estadoId` and `tipoSolicitudId`; the view loads tipos from `GET /sapp/tipoSolicitud`, renders a new reusable `SolicitudesFiltersBar`, and requests `GET /sapp/solicitudesAcademicas` with query params only when selected (no `undefined` params). Student view remains unchanged.
-- April 2, 2026: adjusted Solicitudes estado-change API contract: `EN ESTUDIO` keeps `PUT /cambioEstadoEnEstudio/{id}` without body, while `APROBADA`/`RECHAZADA` now use batch body `{ solicitudesId: [id] }` on `PUT /cambioEstadoAprobada` and `PUT /cambioEstadoRechazada`; detail page now always re-fetches `GET /sapp/solicitudesAcademicas/{id}` after successful estado update and shows a dedicated refresh error if reload fails.
-- April 2, 2026: implemented real coordinator/admin estado transitions in `SolicitudDetallePage` via new PUT service `cambiarEstadoSolicitud` (`EN ESTUDIO` / `APROBADA` / `RECHAZADA`), with loading/error/success UX and detail fallback refresh (`GET /sapp/solicitudesAcademicas/{id}`) when PUT returns `data: null`.
-- April 2, 2026: replaced the detail estado text chip with shared `StatusBadge` to preserve consistent color semantics in solicitud detail.
-- April 2, 2026: strengthened coordinator list refresh on return navigation by re-fetching in `SolicitudesCoordinadorView` when route location changes (including navigation state).
-- April 2, 2026: fixed solicitudes status badge colors so each estado is visually distinct (REGISTRADA azul, EN ESTUDIO ámbar, APROBADA verde, RECHAZADA rojo), and increased CSS specificity to prevent global framework styles from forcing all badges to green.
-- April 2, 2026: expanded `normalizeEstadoSolicitud` to accept backend variants (`EN_ESTUDIO`, `APROBADO`, `RECHAZADO`) so color mapping remains correct even when siglas arrive with underscores or masculine labels.
-- Standardized solicitud status rendering with a new `StatusBadge` component + `normalizeEstadoSolicitud` utility so REGISTRADA/EN ESTUDIO/APROBADA/RECHAZADA/UNKNOWN colors are consistent across table, detail, and card views.
-- Added ESTUDIANTE document editing in `SolicitudDetallePage` (mock-only): required docs are now rendered by `tipoSolicitudId`, students can replace/remove files in edit mode, and docs persist per `solicitudId` in localStorage via `sapp:solicitudes:docs:{id}`.
-- Added reusable `SolicitudDocumentosEditor` with read-only and editable modes, required-doc warning (non-blocking by default), and `Ver/Descargar` actions using shared base64 utilities.
-- Added new solicitud-document contracts and store helpers: `SolicitudDocumentoRequirement` / `SolicitudDocumentoAdjunto` / `SolicitudDocumentoDraft`, plus CRUD helpers in `solicitudDocumentosStore.mock.ts` for load/save/upsert/remove/get.
-- Integrated real Solicitudes API clients using the shared `httpClient` wrapper: `GET /sapp/tipoSolicitud`, `GET /sapp/solicitudesAcademicas`, `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...`, and `POST /sapp/solicitudesAcademicas`, all honoring the standard `{ ok, message, data }` envelope.
-- Migrated `/solicitudes` role views (coordinador + estudiante) from mock listing to backend data and kept loading/error/empty states with row-click navigation to detail.
-- Updated student solicitud creation flow to load real tipos on form mode, submit `estudianteId` from `session.user.estudiante.id`, and refresh the list after a successful POST.
-- Updated student solicitudes listing to always call `GET /sapp/solicitudesAcademicas/estudiante?estudianteId=...` (removed non-`/sapp` fallback path).
-- Added `getSolicitudAcademicaById(solicitudId)` service that calls `GET /sapp/solicitudesAcademicas/{id}` and throws `Solicitud no encontrada` when the envelope has `data: null`.
-- Updated `SolicitudDetallePage` to load detail directly by route param (`/solicitudes/:solicitudId`) through `GET /sapp/solicitudesAcademicas/{id}` and show `ID inválido` on malformed params.
-- Temporarily disabled coordinator state-change action in detail until a real update endpoint is available (read-only detail + existing documentos section remain).
-- Extended SAPP login contracts to persist `data.estudiante` in session (`session.user.estudiante`) with safe typing (`id: number` + additional unknown keys) so downstream modules can consume `estudiante.id` without using `any`.
-- Added `getEstudianteIdFromSession(session)` as the official resolver for student-scoped operations, avoiding fallback to `session.user.id` when backend identity differs from `estudiante.id`.
-- Updated the student solicitudes flow to read `estudianteId` only from `session.user.estudiante.id`; when absent, UI now shows “No hay estudianteId en sesión” and skips data operations requiring `estudianteId`.
-- Added a DEV-only “Estudiante ID (debug)” field in Home → Mi cuenta to validate login persistence safely without exposing sensitive data.
-- Updated solicitudes mock seed to guarantee a visible ESTUDIANTE row in `/solicitudes` (added fallback seed `id=10`, `estudianteId=2`, estado `REGISTRADA`) so the student table never renders empty in the default mock flow.
-- Added ESTUDIANTE edit flow in `SolicitudDetallePage`: editable fields are now limited to `tipoSolicitudId` and `observaciones`, with inline form actions (`Editar solicitud`, `Guardar cambios`, `Cancelar`) and mock persistence.
-- Enforced edit-state guard for estudiantes: edit UI is enabled only when `estadoSigla` is `REGISTRADA` or `EN ESTUDIO`; for `APROBADA`/`RECHAZADA`, no edit action is shown.
-- Added `updateSolicitudEstudianteMock` + async service `updateSolicitudEstudiante` to update `tipoSolicitudId`, `tipoSolicitudCodigo`, `tipoSolicitud`, and `observaciones` while preserving the rest of the solicitud payload.
-- Confirmed list/detail synchronization via shared in-memory solicitudes store; after saving from detail, returning to `/solicitudes` reflects updates through `fetchSolicitudesEstudiante()` re-fetch keyed by `location.key`.
-- Extended `SolicitudDetallePage` (mock flow) with a coordinator/admin-only “Documentos adjuntos” section that loads document lists by `solicitudId`, includes loading/error/empty states, and keeps state change controls intact.
-- Added mock document contracts/services for solicitudes: `SolicitudDocumentoAdjuntoDto`, `solicitudDocumentosById` seeded for IDs `1..4`, and async `fetchSolicitudDocumentos()` with 150ms delay to emulate backend behavior.
-- Added reusable `DocumentosAdjuntos` UI for solicitud detail with accessible actions to `Ver` (PDF-only open in new tab) and `Descargar` (all mime types), reusing shared base64 utilities in `src/shared/files/base64FileUtils.ts`.
-- Extended the `/solicitudes` mock module with click-through row navigation (`/solicitudes/:solicitudId`), a dedicated detail page, and coordinator-only state transitions (`EN ESTUDIO`, `APROBADA`, `RECHAZADA`) backed by a shared in-memory store so list/detail remain synchronized after updates.
-- Fixed TypeScript compilation blockers for auth/document pages: `AspiranteDocumentosPage` now casts `session.user` to `AspiranteUser` after the `session.kind === "ASPIRANTE"` guard before reading `inscripcionAdmisionId`, and both login pages now use `import type { FormEvent }` to comply with `verbatimModuleSyntax`.
-- Fixed the theme baseline to avoid inverted light mode: default startup theme is now `light` (unless `sapp-theme` is already set), `body.light`/`body.dark` tokens were normalized to the UIS palette, and base text remains on `--text-primary` while `--on-primary` is reserved for text over primary surfaces (buttons).
-- Adopted a global institutional design baseline using UIS palette tokens with dual theme support (`body.light`/`body.dark`) and Beer.css-compatible CSS variables (`--primary`, `--on-primary`, `--outline`, `--surface`, `--surface-container-low`, `--inverse-primary`).
-- Refreshed login and aspirante login visuals to match the institutional reference style: rounded cards, soft shadows, clean typography hierarchy, minimal inputs, and pill-shaped primary buttons.
-- Updated shared shell/layout/sidebar surfaces and action styles to consume theme variables instead of hardcoded colors for consistent light/dark behavior.
-- Fixed an infinite request loop in `CreateAspiranteModal` when loading trámite documentos: the fetch now runs once per modal open, waits for the response, and no longer retriggers on each documentos-state update.
-- Se agregó un “probe” de disponibilidad por etapa para Hoja de Vida/Examen/Entrevistas, deshabilitando visualmente las ventanas cuando no hay evaluación y bloqueando navegación directa con un guard de ruta.
-- Inscripción documentos now derives validation from backend `estadoDocumento` (Por revisar/Aprobado/Rechazado), shows rejection reasons, refreshes the checklist after approve/reject, and gates “Continuar evaluación” on required docs being approved.
-- Fixed `DocumentUploadCard` to wire the optional `onRemoveFile` handler correctly, avoiding runtime errors when removing selected files.
-- Require all documents in the “Crear aspirante” modal: removed the optional-selection checkbox and validated that every listed file is attached before allowing submission.
-- Fixed the convocatoria aspirante card grid to use a consistent 4-column layout on wide screens with responsive fallbacks for tablet and mobile widths.
-- Replaced the convocatoria inscripciones table with a responsive card grid that highlights aspirante photos (mocked), quick metadata, and click-through navigation to the inscripción detail view.
-- Added a mock photo utility for aspirantes to provide stable placeholder images (DEV-only) until the backend delivers real photo URLs/base64 payloads.
-- Updated Admisiones convocatoria/inscripción headers to derive titles from navigation state or loaded data (with safe fallbacks) and passed periodo/nombre state through routing for instant titles on navigation.
-- Replaced the inscripción detail navigation cards with accordion-style windows that render child routes inline, keeping deep links and refresh behavior intact.
-- Added a reusable `InscripcionAccordionWindow` component and embedded the documentos/hoja de vida/examen/entrevistas views inside the accordion bodies.
-- Integrated real SAPP login against `/sapp/auth/login` using the standard `{ ok, message, data }` response envelope and mapped it to `AuthSession`.
-- Added API base URL config (`VITE_API_BASE_URL`) with a localhost default and shared API response typing.
-- Persist the auth session in localStorage via `AuthStorage` so reloads restore the session automatically.
-- Updated SAPP login to persist JWT `accessToken`, decode payload claims (username, roles, iat/exp), and map them into `AuthSession`.
-- Adapted SAPP login to the new backend roles format (`roles: string[]`), preferring roles from the login response and falling back to JWT roles when missing.
-- Normalized role checks to compare uppercase string roles and extended the Admisiones guard to allow `ADMIN` alongside Coordinación/Secretaría.
-- Added JWT payload typings and a base64url decoder utility to extract claims without signature verification.
-- Use `rolldown-vite@7.2.5` as the Vite engine via npm alias.
-- Centralize routing in `src/app/routes/index.tsx` with module route files and a `ProtectedRoute` wrapper.
-- Move router/auth providers to `src/main.tsx` and introduce `Layout` for the protected app shell.
-- Export module routes as route elements (not components) so React Router v7 `Routes` accepts them without rendering errors.
-- Added the shared `Sidebar` component to drive navigation and logout across protected routes.
-- Removed the duplicated module-level top navigation so the sidebar is the single source of navigation.
-- Standardized the page folders under `src/pages/Home`, `src/pages/Solicitudes`, `src/pages/Matricula`, and `src/pages/Creditos`.
-- Added top-level barrel exports for components and pages to standardize imports.
-- Updated the Home page to greet the signed-in user by `nombreCompleto || username` and prompt to select a menu option.
-- Added “En construcción” placeholders to Solicitudes, Matrícula, and Créditos module pages.
-- Standardized the login page location to `src/pages/Login` and default redirect to `/` after login.
-- Added aspirante authentication: session kind (`SAPP` vs `ASPIRANTE`) and `/aspirante/*` protected routes with their own layout and placeholder documents page.
-- Switched the aspirante documents checklist to `/sapp/document` with `codigoTipoTramite=1002` and `tramiteId` from `session.user.inscripcionAdmisionId`, mapping `documentoCargado` + `documentoUploadedResponse` into UI status and filename.
-- Implemented a checklist-style aspirante document upload UI with per-document status, file selection, and progress tracking.
-- Added `DocumentUploadCard` component styles and the checklist-driven aspirante upload UI.
-- Replaced the aspirante mock upload with a real `POST /sapp/document` integration that sends base64 content + SHA-256 checksum, updates the UI status, and refreshes the checklist after a successful upload.
-- Added a centralized session store (`src/modules/auth/session/sessionStore.ts`) to read/save/clear the JWT without React hooks.
-- Added a shared HTTP client wrapper (`src/shared/http/httpClient.ts`) that auto-injects Bearer tokens when available, skips auth for public endpoints, and logs out on 401/403.
-- Stubbed module API services in `src/api/solicitudesService.ts`, `src/api/matriculaService.ts`, and `src/api/creditosService.ts` for future integration.
-- Renamed the Trámites module to Solicitudes across routes, pages, and service stubs.
-- Updated the login page so selecting “Soy aspirante” immediately routes to `/login/aspirante` instead of showing a continue button.
-- Updated the aspirante login screen to capture número de inscripción, tipo de documento (loaded from `/sapp/tipoDocumentoIdentificacion`), and número de documento before starting the session.
-- Replaced the aspirante mock login with a real `/sapp/aspirante/consultaInfo` GET and mapped the response into the aspirante session stored in localStorage.
-- Normalize aspirante `numeroInscripcionUis` to a string in session storage to keep rendering/routes consistent.
-- Extend aspirante session data to include nombre, director, grupo de investigación, teléfono, y fecha de registro as returned by the backend.
-- Show the expanded aspirante session metadata (nombre, inscripción, grupo, director, teléfono, email) in the aspirante layout header.
-- Added a “Mi cuenta” panel on Home to visualize username, roles, and token expiration for debugging JWT claims.
-- Added role-based guards for Coordinación/Secretaría and a protected “Admisiones” module route with a placeholder page plus conditional sidebar navigation.
-- Implemented the Admisiones home selector with mock convocatorias, plus a convocatoria detail placeholder and parameterized routes for `/admisiones/convocatoria/:convocatoriaId`.
-- Split the Admisiones selector into two program sections with program-specific current/previous convocatorias and updated the placeholder detail view to show the new program-period metadata.
-- Wired Convocatoria detalle to the real `/sapp/inscripcionAdmision/convocatoria/:convocatoriaId` endpoint and added a placeholder route for inscripcion detail.
-- Added inscripcion detail navigation cards and protected placeholder child routes for documentos, hoja de vida, examen de conocimiento, and entrevistas.
-- Implemented the evaluación de admisión screens for hoja de vida, examen de conocimientos, y entrevista with editable row drafts, inline validation, and mock save handling backed by `/sapp/evaluacionAdmision/info`.
-- Implemented “Documentos cargados” for coordinación/secretaría using the real `/sapp/document` checklist endpoint and added UI-only validation controls plus a stubbed save service.
-- Replaced the coordinador/secretaría validation UI with per-document approve/reject actions, required rejection notes, and `/sapp/document` PUT integration with per-item loading plus refresh on success.
-- Centralized `codigoTipoTramite=1002` in a shared documentos constant and reused it in the aspirante checklist fetch.
-- Added “Ver/Descargar” actions on inscripción documentos to open/download base64 PDFs without extra endpoints, using shared base64-to-Blob utilities.
-- Grouped entrevista evaluation items by entrevistador with a summary section for consolidated results, keeping row-level editing intact.
-- Replaced the Admisiones home mock convocatorias with the real `/sapp/convocatoriaAdmision` service, including loading/error/empty states, dynamic program sections, and a “vigente vs anteriores” selector per program.
-- Added program name helpers to render the long-form program titles (Maestría/Doctorado) while keeping backend `programa` as a subtitle/badge when provided.
-- Implemented the real “Crear aspirante” flow: POST `/sapp/aspirante`, then sequentially upload selected documentos via `/sapp/document` using base64 + SHA-256, with retry support for failed uploads and a success/partial summary.
-- Updated “Crear aspirante” to fetch trámite documents from backend (`/sapp/tramite/document?tipoTramiteId=1`), filter only `ADMISION_COORDINACION`, derive required docs from backend `obligatorio`, and render loading/error/empty states with retry in the modal.
-- Enforced backend-only trámite documents for aspirante creation (filtered by `ADMISION_COORDINACION`) and removed hardcoded fallback requirements so uploaded files always match API configuration.
-- Implemented `/solicitudes` role-priority UI (COORDINADOR/ADMIN over ESTUDIANTE) with typed mocks, dynamic required-document lists per tipo de trámite, form validation for required attachments, and coordinator review cards rendered from async mock services.
-- Replaced `/solicitudes` coordinator cards with a reusable table component and introduced dedicated role-based containers (`SolicitudesCoordinadorView` / `SolicitudesEstudianteView`).
-- Updated the student `/solicitudes` flow to start in “Mis solicitudes” table mode, add a primary “Agregar solicitud” action, and toggle to/from the existing form with “Volver al listado”.
-- Added `fetchSolicitudesEstudiante()` + `solicitudesEstudiante.mock.ts` so student listings are consumed through services (not direct mock imports), and mock form submissions prepend a new `REGISTRADA` row before returning to the list.
+You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
-- April 30, 2026: en `/matricula` (rol `ESTUDIANTE`) cuando la matrícula vigente retorna estado `FINALIZADA` desde `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`, la pantalla pasa a **modo solo lectura**: se muestran materias y documentos, pero se deshabilitan selector/agregado, edición de grupo, eliminación, carga de archivos y botón de confirmación para impedir nuevas operaciones sobre un trámite cerrado.
+## Authors and acknowledgment
+Show your appreciation to those who have contributed to the project.
 
-- April 30, 2026: en `/matricula` (vista `COORDINACION/ADMIN`) se homologó la columna **Estado** del listado con chips de color por estado, siguiendo el patrón visual de admisiones. Se añadieron variantes para `PENDIENTE_DOCUMENTOS` (ámbar), `RADICADA` (azul) y `FINALIZADA` (verde), con fallback neutro para otros valores y compatibilidad con tema claro/oscuro.
-- April 30, 2026: en `/matricula/:matriculaId` (rol `COORDINACION/ADMIN`), al usar el botón **Aprobar documentos** ya no se ejecuta una recarga global de la pantalla (`loadDetalle`). Después del `PUT /sapp/matriculaAcademica/{id}` ahora se refrescan solo los datos requeridos del detalle (matrícula + checklist) en segundo plano, evitando el estado de carga completo y manteniendo el contexto visible.
+## License
+For open source projects, say how it is licensed.
 
-- April 30, 2026: refactor del módulo de Configuración a **Fechas** para enfocarlo en la configuración de fechas académicas. Se cambiaron etiquetas e iconos (calendario), ruta principal `/fechas` y ruta de admisiones `/admisiones/fechas`.
-- April 30, 2026: en `/matricula/:matriculaId` (COORDINACION/ADMIN) se ajustó el estado de carga del bloque **Documentos de la matrícula** para que use una presentación visual más guiada (mensaje principal + texto de contexto), alineada con el estilo aplicado en la carga de documentos al crear aspirantes desde coordinación.
-
-- April 30, 2026: módulo /solicitudes (rol ESTUDIANTE, creación) ahora incluye flujo de crédito condonable con nuevo campo `Departamento/Ciudad de expedición`, previsualización PDF vía `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` (habilitada solo con modalidad + motivos + ciudad diligenciados), visor inline del PDF y acción `Cargar archivo de solicitud` para adjuntar automáticamente la carta generada al requisito documental de crédito condonable.
-
-- April 30, 2026 (latest): en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId` se implementó precarga obligatoria de datos de las 4 ventanitas (Documentos, Hoja de vida, Examen, Entrevistas) durante la carga inicial con loader global; al abrir cada acordeón ya no se dispara fetch inicial adicional. Si una sección falla, el error se muestra solo en esa ventanita y no bloquea las demás. Tras guardar cambios por sección, se mantiene refetch puntual de esa sección.
-
-- April 30, 2026: en `/coordinacion/estudiantes/:estudianteId` (rol COORDINACION), la pestaña **Admisión** dejó de consultar por `estudianteId` y ahora usa `idAspirante` recibido en el listado (`data[].estudiante.idAspirante`) para invocar `GET /sapp/inscripcionAdmision/aspirante/{aspiranteId}`; con esa inscripción se mantiene la carga de documentos asociados por trámite en frontend.
-
-- April 30, 2026 (latest): pantalla `/admisiones/fechas` ajustada para gestión de periodos académicos con backend real: listado principal desde `GET /api/sapp/periodoAcademico/withFechas`, creación de periodos nuevos con `POST /api/sapp/periodoAcademico` (incluyendo `anio` y `periodo` en formulario), y edición de periodos existentes con `PUT /api/sapp/periodoAcademico/{periodoId}` para actualizar fechas/descripción.
-- April 30, 2026 (latest): en `/admisiones/convocatorias`, durante **Nueva convocatoria** se excluyen del selector de profesores `Luis Carlos Gomez` y `Fabio Martinez Carillo`; ambos quedan preagregados visualmente en la lista de seleccionados, pero al finalizar **no** se incluyen en el envío a `POST /sapp/evaluadorConvocatoria` (solo se envían los profesores agregados manualmente por el usuario).
-
-## Recent decisions (changelog-lite)
-
-- **2026-05-19:** En `/aspirante/documentos`, la carga ahora ocurre automáticamente al seleccionar archivo; se removió la acción manual de “Subir” en la tarjeta para este flujo.
-- **2026-05-19:** Para el requisito `ANX-4` (Foto), la tarjeta ocupa todo el ancho de la grilla en desktop (no se agrupa en pares) y fuerza selección de imágenes (`accept="image/*"`).
-- **2026-05-19:** Cuando un documento ya existe en checklist, el CTA principal cambia a “Reemplazar foto/archivo”, manteniendo “Ver documento/foto” según tipo.
-
----
-
-## Update 2026-06-05 — Rediseño perfil académico de estudiante (Coordinación)
-
-### Purpose / Scope actualizado
-- La ruta `/coordinacion/estudiantes/:estudianteId` ahora se presenta como una vista de **perfil académico** para coordinación, orientada a revisar información principal del estudiante, métricas académicas y trazabilidad documental de Matrículas, Admisión y Solicitudes sin abandonar el layout institucional SAPP.
-
-### Arquitectura y contratos involucrados
-- La navegación desde `/coordinacion/estudiantes` envía el objeto `estudiante` por `navigate(..., { state: { estudiante } })` para pintar el encabezado del perfil inmediatamente.
-- El detalle mantiene fallback por servicio con `getEstudianteById(estudianteId)` cuando el usuario recarga o entra directamente por URL.
-- Las pestañas conservan los servicios existentes:
-  - Matrículas: `getMatriculasByEstudiante(estudianteId)`.
-  - Admisión: `getAdmisionesByAspirante(estudiante.idAspirante)`.
-  - Solicitudes: `getSolicitudesByEstudiante(estudianteId)`.
-- La foto del estudiante soporta el contrato `estudiante.foto.contenidoBase64`; si existe, se renderiza como `data:image/png;base64,...`; si no existe, se conserva un placeholder visual “Sin foto”.
-
-### Stack exacto vigente
-- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
-- TypeScript `~5.9.3`.
-- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
-- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
-
-### Cómo correr / validar
-```bash
-npm install
-npm run dev
-npm run build
-npm run lint
-```
-- No hay seeds frontend nuevas para este ajuste. Los datos dependen del backend SAPP y de los mocks existentes en `src/modules/estudiantes/mock/estudiantes.mock` cuando el servicio de detalle no encuentra información en cache.
-
-### Decisiones recientes (changelog-lite)
-- June 5, 2026: `/coordinacion/estudiantes/:estudianteId` deja la tarjeta angosta anterior y adopta dashboard de ancho completo con enlace de regreso, card principal de perfil, grid de datos académicos, tabs grandes y documentos en cards responsivas.
-- June 5, 2026: el listado de estudiantes ahora pasa el objeto completo del estudiante por `location.state`; el detalle lo usa como render optimista y conserva consulta por `id` para recargas o acceso directo.
-- June 5, 2026: el tab **Admisión** separa el resumen del proceso (`Admisión #{id}`, estado, fechas y puntaje) de la grilla **Documentos de admisión**, con acciones Ver/Descargar solo cuando hay archivo base64 disponible.
-
----
-
-## Update 2026-06-05 — Detalle de estudiante: documentos bajo demanda
-
-### Decisión reciente
-- La pantalla `/coordinacion/estudiantes/:id` dejó de precargar documentos desde múltiples consultas de admisión, matrícula, solicitudes y trámites.
-- La fuente documental principal ahora es una sola consulta de metadatos: `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`.
-- El contenido pesado (`contenidoBase64`) se consulta únicamente bajo demanda con `GET /sapp/document/{documentoId}` cuando el usuario pulsa **Ver** o **Descargar**.
-
-### Contratos usados
-- `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` devuelve `{ ok, message, data }`, donde `data` es un arreglo de grupos `{ tipoTramite, periodo, tramiteId, documentos }`.
-- Cada documento de la consulta por estudiante es solo metadata: `id`, `estado`, `fechaCarga`, `mimeType`, `nombreArchivo`, `secuencia`, `tamanoBytes`, `tipoDocumento`, `tipoDocumentoTramiteId`, `version`.
-- `GET /sapp/document/{documentoId}` devuelve `{ ok, message, data }`, donde `data.contenidoBase64`, `data.mimeType` y `data.nombreArchivo` se usan para abrir o descargar el archivo.
-
-### Comportamiento de UI
-- El código enviado al endpoint documental se toma de `estudiante.codigoEstudianteUis`; si no existe, se usa el `codigo` UIS ya normalizado en el modelo frontend.
-- En recarga directa de `/coordinacion/estudiantes/:id`, primero se resuelve el estudiante por el mecanismo actual (`getEstudianteById`) y luego se dispara la consulta documental si existe código UIS.
-- Tab **Admisión**: muestra juntos `ADMISION_ASPIRANTE` y `ADMISION_COORDINACION` en cards, ordenados por tipo de trámite y por `tipoDocumentoTramiteId`, `secuencia`, `id`.
-- Tab **Matrículas**: muestra `MATRICULA` y `MATRICULA_PRIMERA_VEZ` agrupados por periodo cronológico `YYYY-N`; los grupos sin periodo quedan al final como “Matrícula sin periodo”.
-- Las cards de documentos muestran tipo documental, estado, archivo, fecha de carga, tamaño, y botones con loading por card/action.
-
-### Stack y ejecución vigentes
-- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
-- TypeScript `~5.9.3`, ESLint `^9.39.1`, `@vitejs/plugin-react-swc` `^4.2.2`.
-- Vite está fijado vía override a `rolldown-vite@7.2.5`.
-- Comandos base:
-  ```bash
-  npm install
-  npm run dev
-  npm run build
-  npm run lint
-  ```
-- No hay seeds frontend obligatorias para este ajuste; depende de backend con estudiantes que tengan `codigoEstudianteUis` y documentos asociados.
-
----
-
-## Update 2026-06-05 — Carga de documentos pendientes desde detalle de estudiante
-
-### Purpose / Scope actualizado
-- En `/coordinacion/estudiantes/:estudianteId`, las cards documentales de **Matrículas** y **Admisión** ahora permiten cargar archivos cuando el metadata del backend indica un requisito pendiente (`id: null`, sin `nombreArchivo`, con `tipoDocumentoTramiteId` y `tramiteId` del grupo documental).
-
-### Arquitectura y contratos involucrados
-- La fuente principal sigue siendo `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` con grupos `{ tipoTramite, periodo, tramiteId, documentos }`.
-- Cada documento pendiente se enriquece en frontend con el `tramiteId` del grupo para poder llamar `POST /sapp/document` sin consultas adicionales.
-- La carga reutiliza el contrato existente de `src/api/documentUploadService.ts`: `tipoDocumentoTramiteId`, `tramiteId`, `usuarioCargaId`, `aspiranteCargaId: null`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum` SHA-256.
-- Después de una carga exitosa se refresca el checklist completo con `GET /sapp/document/by-estudiante/{codigoEstudianteUis}` para que la card cambie de pendiente a cargada y exponga **Ver** / **Descargar** según el nuevo `id` documental.
-
-### Stack exacto vigente
-- React `^19.2.0`, React DOM `^19.2.0`, React Router DOM `^7.9.2`.
-- TypeScript `~5.9.3`.
-- Vite mediante `rolldown-vite@7.2.5` y `@vitejs/plugin-react-swc@^4.2.2`.
-- ESLint `^9.39.1`, `typescript-eslint@^8.46.4`.
-
-### Cómo correr / validar
-```bash
-npm install
-npm run dev
-npx tsc --noEmit --pretty false
-npm run build
-npm run lint
-```
-- No hay seeds frontend nuevas. Para validar manualmente se requiere backend con un estudiante que retorne al menos un documento pendiente, por ejemplo `tipoDocumento: "Pago_Poliza"`, `id: null`, `documentoCargado: false`, `tipoDocumentoTramiteId: 16`, dentro de un grupo con `tramiteId` no nulo.
-
-### Decisiones recientes (changelog-lite)
-- June 5, 2026: las cards sin archivo ya no muestran solo texto pasivo; si existe `tramiteId` + `tipoDocumentoTramiteId`, muestran el CTA **Cargar documento**.
-- June 5, 2026: el input acepta PDF, Word e imágenes (`pdf`, `doc`, `docx`, `png`, `jpg`, `jpeg`) y convierte el archivo a base64 + checksum con las utilidades compartidas existentes.
-- June 5, 2026: la carga se asocia al usuario SAPP autenticado (`session.user.id`) y no a `aspiranteCargaId`, porque esta pantalla pertenece a Coordinación/Admin.
-
-## Update 2026-06-06 — Detalle visual de convocatoria `/admisiones/convocatoria/:id`
-
-### Purpose / Scope actualizado
-- La pantalla de detalle de convocatoria queda orientada explícitamente a consultar aspirantes inscritos, manteniendo intactos los servicios, endpoints y navegación existente hacia creación de aspirante y detalle de inscripción.
-- El título principal ahora es **Aspirantes inscritos**; el período y programa de la convocatoria se muestran como chips contextuales para separar la acción principal del contexto académico.
-
-### Arquitectura y contratos involucrados
-- La ruta sigue cargando inscripciones con `getInscripcionesByConvocatoria(convocatoriaId)` y contexto de convocatoria con `getConvocatoriasAdmision()` desde los servicios existentes de admisiones.
-- El CTA **Crear aspirante** conserva el mismo `CreateAspiranteModal`, `programaId`, `convocatoriaAdmisionId` y callback `onCreated` para recargar inscripciones.
-- La acción **Ver inscripción** conserva la navegación a `/admisiones/convocatoria/{convocatoriaId}/inscripcion/{inscripcionId}` con el mismo `state` de ruta.
-- La tarjeta visual de aspirante se mantiene en `src/modules/admisiones/components/StudentCard`, pero usa clases `applicant-card*` y formatea `fechaInscripcion` como fecha calendario `YYYY-MM-DD`, devolviendo `—` para valores nulos, vacíos o inválidos.
-
-### Decisiones recientes (changelog-lite)
-- June 6, 2026: se reemplazó el título largo `Convocatoria - período - programa` por **Aspirantes inscritos** con chips de **Período** y **Programa**.
-- June 6, 2026: se añadió una fila de métricas calculadas localmente: aspirantes inscritos, admitidos, en evaluación y no admitidos. Se omitió **Nuevo hoy** por decisión explícita del usuario.
-- June 6, 2026: el listado de aspirantes cambió de grid vertical a board horizontal con `useRef`, botones de scroll izquierda/derecha, `scroll-snap-type: x proximity` y barra horizontal visible.
-- June 6, 2026: las cards de aspirantes se alinearon visualmente con las cards de estudiantes: foto superior, placeholder **Sin foto**, badges de estado/programa, datos resumidos y footer **Ver inscripción**.
-
-### Cómo correr / validar
-```bash
-npm install
-npm run dev
-npm run build
-npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx
-```
-- No hay seeds frontend nuevas. Para ver datos reales en `/admisiones/convocatoria/:id`, el backend debe responder con inscripciones de admisión para la convocatoria seleccionada.
+## Project status
+If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
