@@ -42,6 +42,15 @@
     box-shadow: 0 3px 8px color-mix(in srgb, var(--outline), transparent 75%);
 }
 
+.module-layout__uis-logo {
+    width: clamp(8.75rem, 14vw, 11.5rem);
+    max-height: 5rem;
+    object-fit: contain;
+    border-radius: 12px;
+    background: var(--surface);
+    filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--outline), transparent 78%));
+}
+
 .module-layout__user-name {
     margin: 0;
     font-weight: 600;
@@ -81,5 +90,10 @@
         width: 100%;
         justify-content: space-between;
         text-align: left;
+        flex-wrap: wrap;
+    }
+
+    .module-layout__uis-logo {
+        width: min(100%, 10.5rem);
     }
 }
