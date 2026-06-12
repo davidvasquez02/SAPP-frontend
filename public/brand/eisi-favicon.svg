@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Logo EISI</title>
+  <desc id="desc">Ícono institucional de la Escuela de Ingeniería de Sistemas e Informática.</desc>
+  <rect x="8" y="8" width="496" height="496" rx="64" fill="#ffffff" stroke="#00185f" stroke-width="16"/>
+  <g fill="none" stroke="#030351" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M238 75c-38 48-84 107-112 171-16 38 4 69 43 53l100-39" stroke-width="34" fill="#fff"/>
+    <path d="M288 218c-20 6-42 13-62 20l-11 49 136-12c31-2 53 28 42 57L332 481" stroke-width="34" fill="#030351"/>
+    <path d="M211 327l154-20c36-5 60 33 42 65l-42 76" stroke-width="34"/>
+    <path d="M175 335l137-20" stroke-width="34"/>
+  </g>
+  <circle cx="281" cy="88" r="48" fill="#030351" stroke="#030351" stroke-width="12"/>
+  <circle cx="222" cy="440" r="43" fill="#ffffff" stroke="#030351" stroke-width="12"/>
+</svg>

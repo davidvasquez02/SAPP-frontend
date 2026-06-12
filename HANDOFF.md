@@ -1,3 +1,60 @@
+# Update 2026-06-12 — Logos institucionales EISI/UIS y documentación
+
+## Estado actual
+- Se agregó el logo de **EISI** como favicon del frontend mediante `public/brand/eisi-favicon.svg`; `index.html` ahora apunta a ese asset, usa `lang="es"` y muestra el título `SAPP EISI UIS`.
+- Se agregó el logo de **UIS** al header común de módulos (`ModuleLayout`), ubicado a la derecha de la foto/avatar del usuario autenticado como pidió el usuario.
+- El logo UIS se sirve como asset estático en `public/brand/uis-logo.svg` y se estiliza en `ModuleLayout.css` con tamaño responsivo, fondo basado en `--surface` y sombra suave compatible con la estética institucional.
+- No se cambiaron rutas, servicios, contratos HTTP, roles ni lógica de autenticación.
+- `README.md` fue reescrito para mantener una vista holística y actualizada del frontend: propósito, alcance, arquitectura, stack con versiones observadas, comandos, seeds/mock y decisiones recientes.
+
+## Archivos tocados
+- `index.html`
+- `public/brand/eisi-favicon.svg`
+- `public/brand/uis-logo.svg`
+- `src/components/ModuleLayout/ModuleLayout.tsx`
+- `src/components/ModuleLayout/ModuleLayout.css`
+- `README.md`
+- `HANDOFF.md`
+
+## Retos abiertos
+1. Validar visualmente en navegador real con datos/sesión de usuario si el logo UIS queda del tamaño deseado junto al avatar en resoluciones pequeñas y pantallas amplias.
+2. Si el equipo dispone de archivos oficiales vectoriales de marca UIS/EISI, reemplazar los SVG reconstruidos en `public/brand` por los assets oficiales preservando los mismos nombres o actualizando las rutas en `index.html` y `ModuleLayout`.
+3. Tomar screenshot manual/automatizado cuando el ambiente local tenga navegador disponible; este cambio es perceptible visualmente.
+
+## Próximos pasos recomendados
+1. Ejecutar `npm run dev` y abrir `http://localhost:5173/` para confirmar que la pestaña usa el favicon EISI.
+2. Navegar a una pantalla que use `ModuleLayout` (`/`, `/admisiones`, `/solicitudes`, `/matricula`) y verificar que el logo UIS aparece a la derecha del avatar.
+3. Probar modo claro/oscuro si el tema está disponible en la sesión, confirmando que el contenedor del logo conserva contraste suficiente.
+4. Confirmar con comunicaciones/identidad institucional si las proporciones de los SVG son aceptables o deben sustituirse por archivos oficiales.
+
+## Paths / artefactos / datasets
+- Favicon EISI: `public/brand/eisi-favicon.svg`.
+- Logo UIS del header: `public/brand/uis-logo.svg`.
+- Punto de integración del favicon: `index.html`.
+- Punto de integración del header: `src/components/ModuleLayout/ModuleLayout.tsx`.
+- Estilos del header/logo: `src/components/ModuleLayout/ModuleLayout.css`.
+- No hay datasets nuevos ni migraciones.
+
+## Contratos / esquemas y salidas esperadas
+- Asset estático favicon: `GET /brand/eisi-favicon.svg` debe devolver SVG `image/svg+xml` servido por Vite/public.
+- Asset estático logo UIS: `GET /brand/uis-logo.svg` debe devolver SVG `image/svg+xml`.
+- HTML esperado: `<link rel="icon" type="image/svg+xml" href="/brand/eisi-favicon.svg" />`.
+- `ModuleLayout` esperado: renderiza texto de usuario, avatar actual/fallback y luego `<img className="module-layout__uis-logo" src="/brand/uis-logo.svg" alt="Universidad Industrial de Santander" />`.
+
+## Entorno exacto y paquetes
+- Ruta de trabajo: `/workspace/SAPP-frontend`.
+- Runtime observado: Node.js 24.15.0 y npm 11.4.2.
+- Frontend instalado según `npm list --depth=0` (2026-06-12): React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite `npm:rolldown-vite@7.2.5`, @vitejs/plugin-react-swc 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0.
+- Sin venv/conda/poetry; no crear entornos Python ni duplicar dependencias. Usar `node_modules` de la raíz del repo.
+- npm emite warning no bloqueante conocido: `Unknown env config "http-proxy"`.
+
+## Resultados de pruebas + logs
+- `npm run build` (2026-06-12): OK. Log relevante: `✓ 239 modules transformed`, `dist/index.html 0.47 kB`, `✓ built in 811ms`. npm emitió warning no bloqueante conocido `Unknown env config "http-proxy"`.
+- `npx eslint src/components/ModuleLayout/ModuleLayout.tsx` (2026-06-12): OK. npm emitió warning no bloqueante conocido `Unknown env config "http-proxy"`.
+- Screenshot automatizado (2026-06-12): no tomado porque el contenedor no tiene browser CLI instalado (`which chromium chromium-browser google-chrome google-chrome-stable playwright` no encontró ejecutables).
+
+---
+
 # Update 2026-06-06 — Rediseño visual detalle inscripción/documentos
 
 ## Estado actual

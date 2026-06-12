@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 374 182" role="img" aria-labelledby="title desc">
+  <title id="title">Universidad Industrial de Santander</title>
+  <desc id="desc">Marca institucional UIS con texto y símbolo en color verde.</desc>
+  <rect x="0" y="0" width="183" height="182" rx="10" fill="#93c01f"/>
+  <text x="91.5" y="64" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Universidad</text>
+  <text x="91.5" y="100" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Industrial de</text>
+  <text x="91.5" y="136" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Santander</text>
+  <rect x="194.5" y="2" width="177.5" height="178" rx="10" fill="#ffffff" stroke="#93c01f" stroke-width="4"/>
+  <g fill="#93c01f">
+    <path d="M240 51l15-14v107l-15-13z"/>
+    <path d="M260 34l12-5v122l-12-5z"/>
+    <path d="M278 28l12-2v128l-12-2z"/>
+    <path d="M296 27c9 2 17 5 25 10v61h26v48c-13 8-28 11-43 9v-41h-8zm25 25v31h14V60c-4-3-9-6-14-8z"/>
+    <path d="M307 114h25v23c-7 3-15 5-25 6z"/>
+  </g>
+</svg>
