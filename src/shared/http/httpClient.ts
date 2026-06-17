@@ -1,18 +1,35 @@
 import { clearSession, getToken } from '../../modules/auth/session/sessionStore'
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+import { API_URL } from '../../api/config'
 
 type HttpOptions = RequestInit & {
   auth?: boolean
 }
 
+const isAbsoluteUrl = (path: string) => path.startsWith('http://') || path.startsWith('https://')
+
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
+
+const normalizePath = (path: string) => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const normalizedApiUrl = trimTrailingSlash(API_URL)
+
+  if (normalizedApiUrl.endsWith('/sapp') && normalizedPath.startsWith('/api/sapp/')) {
+    return normalizedPath.replace(/^\/api\/sapp/, '')
+  }
+
+  if (normalizedApiUrl.endsWith('/sapp') && normalizedPath.startsWith('/sapp/')) {
+    return normalizedPath.replace(/^\/sapp/, '')
+  }
+
+  return normalizedPath
+}
+
 const buildUrl = (path: string) => {
-  if (path.startsWith('http://') || path.startsWith('https://')) {
+  if (isAbsoluteUrl(path)) {
     return path
   }
 
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return `${BASE_URL}${normalizedPath}`
+  return `${trimTrailingSlash(API_URL)}${normalizePath(path)}`
 }
 
 const resolveHeaders = (options?: HttpOptions) => {
@@ -85,3 +102,13 @@ export const httpPut = <T>(path: string, body?: unknown, options?: HttpOptions) 
     method: 'PUT',
     body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
+
+export const httpPatch = <T>(path: string, body?: unknown, options?: HttpOptions) =>
+  http<T>(path, {
+    ...options,
+    method: 'PATCH',
+    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+  })
+
+export const httpDelete = <T>(path: string, options?: HttpOptions) =>
+  http<T>(path, { ...options, method: 'DELETE' })
