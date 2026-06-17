@@ -56,12 +56,15 @@ Versiones instaladas en `/workspace/SAPP-frontend` según `npm list --depth=0` e
 - Usar **Node.js + npm** en la raíz del repo.
 - No usar ni crear `venv`, `conda`, `poetry` ni entornos Python duplicados para este frontend.
 - Reutilizar `node_modules` de la raíz cuando exista; si falta, ejecutar `npm install`.
-- Variable opcional: `VITE_API_BASE_URL` para apuntar al backend/gateway. Si no se define, el cliente usa `http://localhost:8080`.
+- `VITE_API_URL` centraliza la ruta base consumida por el cliente HTTP. El valor por defecto versionado es `/api/sapp`, para que dev/prod usen rutas relativas del frontend.
+- `VITE_DEV_PROXY_TARGET` configura únicamente el proxy local de Vite. Si no se define, apunta a `http://localhost:8080`; puede cambiarse sin tocar código fuente.
+- `VITE_API_BASE_URL` se mantiene como fallback transitorio para compatibilidad con ambientes antiguos, pero los nuevos ambientes deben usar `VITE_API_URL`.
 
 Ejemplo `.env.local`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_URL=/api/sapp
+VITE_DEV_PROXY_TARGET=http://localhost:8080
 ```
 
 ## Cómo ejecutar
@@ -95,6 +98,12 @@ Cuando se conecte el contrato real de API Gateway/IDP, este bypass debe desactiv
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-06-17 — URL backend relativa y proxy local
+
+- Se centralizó la base de API en `VITE_API_URL`, con valor default `/api/sapp`.
+- Se configuró proxy local de Vite para reenviar `/api/sapp/*` a `VITE_DEV_PROXY_TARGET` y remover el prefijo cuando el target es localhost.
+- Los servicios siguen usando el cliente HTTP centralizado; este normaliza rutas heredadas `/sapp/*` y rutas ya migradas `/api/sapp/*` para evitar duplicar prefijos.
+
 ### 2026-06-12 — Marca EISI/UIS
 
 - Se reemplazó el favicon de Vite por el ícono EISI en `public/brand/eisi-favicon.svg` y `index.html`.
@@ -118,11 +127,13 @@ Cuando se conecte el contrato real de API Gateway/IDP, este bypass debe desactiv
 
 ## Contratos relevantes
 
-- Base URL: `VITE_API_BASE_URL || http://localhost:8080`.
-- Prefijo backend observado: rutas tipo `/sapp/...`.
-- Programas: `GET /sapp/programaAcademico`.
-- Aspirantes: `POST /sapp/aspirante`.
-- Inscripciones por convocatoria: `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}`.
+- Base URL frontend: `VITE_API_URL || VITE_API_BASE_URL || /api/sapp`.
+- Local: el navegador llama `/api/sapp/...` y Vite reenvía al backend definido por `VITE_DEV_PROXY_TARGET`.
+- Dev/prod: el navegador llama rutas relativas `/api/sapp/...`; la infraestructura debe enrutar ese prefijo al backend.
+- Prefijo backend histórico observado: rutas tipo `/sapp/...`; el cliente centralizado evita duplicar ese segmento cuando `VITE_API_URL` termina en `/sapp`.
+- Programas: `GET /api/sapp/programaAcademico` desde el navegador.
+- Aspirantes: `POST /api/sapp/aspirante` desde el navegador.
+- Inscripciones por convocatoria: `GET /api/sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` desde el navegador.
 - Documentos: operaciones de checklist/prefetch y validación mediante servicios de documentos existentes.
 
 ## Notas visuales de marca

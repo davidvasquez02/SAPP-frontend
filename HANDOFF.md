@@ -137,7 +137,7 @@
 - Build generado localmente en `dist/` por `npm run build` (no versionar si está ignorado).
 
 ### Contratos / esquemas esperados
-- Listado de convocatorias: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/convocatoriaAdmision` con envelope `{ ok, message, data }`.
+- Listado de convocatorias: `GET ${VITE_API_URL || '/api/sapp'}/convocatoriaAdmision` con envelope `{ ok, message, data }`.
 - Item esperado: `ConvocatoriaAdmisionDto` con `{ id, programaId, programa, periodoId, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }`.
 - Fechas aceptadas por UI: strings como `YYYY-MM-DD`, `YYYY-MM-DD HH:mm:ss` o ISO parseable. Valores `null`, `undefined`, vacíos o inválidos renderizan `—`.
 - Navegación esperada al detalle: `/admisiones/convocatoria/{convocatoria.id}` con `state` que conserva `programaId`, `programaNombre`, `periodoLabel`, `periodoAcademico` y `cupos`.
@@ -195,8 +195,8 @@
 - Build generado localmente en `dist/` por `npm run build` (no versionar si está ignorado).
 
 ### Contratos / esquemas esperados
-- Programas: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/programaAcademico` con envelope `{ ok, message, data }`; cada item esperado incluye `{ id, nombre, codigoNombre }`.
-- Estudiantes por programa: `GET ${VITE_API_BASE_URL || 'http://localhost:8080'}/sapp/estudiantes/consulta?programaId={id}&egresados=false` con envelope `{ ok, message, data }`.
+- Programas: `GET ${VITE_API_URL || '/api/sapp'}/programaAcademico` con envelope `{ ok, message, data }`; cada item esperado incluye `{ id, nombre, codigoNombre }`.
+- Estudiantes por programa: `GET ${VITE_API_URL || '/api/sapp'}/estudiantes/consulta?programaId={id}&egresados=false` con envelope `{ ok, message, data }`.
 - Item estudiante esperado: `data[].estudiante` con `{ id, idAspirante, codigoEstudianteUis, cohorte, estado, fechaIngreso, foto }`, `data[].persona` con documento/correo, `nombreCompleto`, `programaId`, `programaCodigoNombre`.
 - Foto: si `foto.contenidoBase64` existe, se normaliza a `data:${mimeType || 'image/jpeg'};base64,...`; si no existe, UI muestra “Sin foto”.
 
@@ -773,3 +773,24 @@ npm run lint
 - If a browser is available in a future environment, capture a screenshot of `/admisiones/convocatoria/:id` with real/mock data because this was a perceptible visual change.
 - Decide whether to expose a program code/código field in the admission DTOs if the UI must show a chip such as `61204 - DCC`; no new backend contract was introduced in this visual-only change.
 - Repository-wide lint remains blocked by unrelated pre-existing issues; fix those separately before treating `npm run lint` as a full quality gate.
+
+## Handoff 2026-06-17 — API relativa y proxy local
+
+### Estado actual
+- El cliente HTTP centralizado usa `VITE_API_URL`, con fallback transitorio a `VITE_API_BASE_URL` y default `/api/sapp`.
+- Los servicios existentes pueden seguir enviando paths heredados `/sapp/...`; el cliente los normaliza para que el navegador llame `/api/sapp/...` cuando la base termina en `/sapp`.
+- `vite.config.ts` define proxy local para `/api/sapp` hacia `VITE_DEV_PROXY_TARGET` (`http://localhost:8080` por defecto). Si el target es local, remueve `/api/sapp` antes de reenviar.
+
+### Entorno
+- `.env`: `VITE_API_URL=/api/sapp`.
+- `.env.local`: `VITE_API_URL=/api/sapp` y `VITE_DEV_PROXY_TARGET=http://localhost:8080` para desarrollo local.
+- `.env.example`: documenta ambas variables.
+- No crear venv/conda/poetry; usar Node.js + npm y `node_modules` en la raíz.
+
+### Próximos pasos
+1. Validar con backend local real que llamadas del navegador a `/api/sapp/*` llegan al backend como `/*` cuando el target es localhost.
+2. Confirmar con infraestructura dev/prod el ruteo externo de `/api/sapp/*` hacia el backend correspondiente.
+
+### Pruebas recientes
+- `npm run build` intentado en esta sesión: bloqueado por entorno porque faltan tipos locales `vite/client` y `node` en `node_modules`. `npm install` quedó colgado al intentar restaurar dependencias y fue detenido; no modificar lockfile por este incidente.
+
