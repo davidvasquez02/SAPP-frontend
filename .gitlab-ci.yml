@@ -9,13 +9,13 @@ variables:
 include:
   - project: "infraestructure/gitlab-ci-templates"
     file: "/build/react-build.yml"
-    ref: v4.0.6
+    ref: v4.3.1
   - project: "infraestructure/gitlab-ci-templates"
     file: "/docker/docker-push.yml"
-    ref: v4.0.6
+    ref: v4.3.1
   - project: "infraestructure/gitlab-ci-templates"
     file: "/deploy/trigger-infra.yml"
-    ref: v4.0.6
+    ref: v4.3.1
 
 react_build:
   variables:
