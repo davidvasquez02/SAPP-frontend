@@ -61,7 +61,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
 
   if (redirectOnUnauthorized && (response.status === 401 || response.status === 403)) {
     clearSession()
-    window.location.assign('/login')
+    window.location.assign('/borrar')
     throw new Error('No autorizado')
   }
 
