@@ -72,7 +72,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/borrar", { replace: true });
+    navigate("/login", { replace: true });
   };
 
   return (
