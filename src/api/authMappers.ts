@@ -1,37 +1,50 @@
-import type { GatewayLoginResponseDto } from './authTypes'
+import type { LoginResponseDto } from './authTypes'
+import type { JwtPayload } from './jwtPayloadTypes'
 import type { AuthSession } from '../context/Auth'
+import { decodeJwtPayload } from '../utils/jwt'
+
+const buildNombreCompleto = (dto: LoginResponseDto) => {
+  const parts = [
+    dto.persona.nombre1,
+    dto.persona.nombre2,
+    dto.persona.apellido1,
+    dto.persona.apellido2,
+  ]
+
+  return parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+}
 
 const normalizeRoles = (roles: string[]) => roles.map((role) => role.toUpperCase())
 
-export const mapGatewayLoginToUserSession = (dto: GatewayLoginResponseDto): AuthSession => ({
-  kind: 'SAPP',
-  // Authentication is handled upstream by the gateway; this marker is never sent as a Bearer token.
-  accessToken: 'NO_TOKEN',
-  issuedAt: Math.floor(Date.now() / 1000),
-  user: {
-    id: dto.id,
-    uuid: dto.uuid,
-    username: dto.username,
-    roles: [...new Set(normalizeRoles([...(dto.roles ?? []), ...(dto.clientRoles ?? [])]))],
-    clientRoles: normalizeRoles(dto.clientRoles ?? []),
-    attributes: dto.attributes ?? {},
-    persona: {
-      id: dto.id,
-      tipoDocumento: '',
-      numeroDocumento: '',
-      nombre1: dto.firstName,
-      nombre2: '',
-      apellido1: dto.lastName,
-      apellido2: '',
-      emailPersonal: null,
-      emailInstitucional: dto.email,
-      telefono: null,
+export const mapLoginToUserSession = (dto: LoginResponseDto): AuthSession => {
+  const payload = decodeJwtPayload<JwtPayload>(dto.token)
+  const username = payload.nombreUsuario ?? payload.sub ?? dto.username
+  const userId = payload.idUsuario ?? dto.id
+  const responseRoles = Array.isArray(dto.roles) ? dto.roles : []
+  const tokenRoles = Array.isArray(payload.roles)
+    ? payload.roles
+    : Array.isArray(payload.rolesUsuario)
+      ? payload.rolesUsuario
+      : []
+  const roles = responseRoles.length > 0 ? responseRoles : tokenRoles
+  const normalizedRoles = normalizeRoles(roles)
+
+  return {
+    kind: 'SAPP',
+    accessToken: dto.token,
+    issuedAt: payload.iat,
+    expiresAt: payload.exp,
+    user: {
+      id: userId,
+      username,
+      roles: normalizedRoles,
+      persona: dto.persona,
+      estudiante: dto.estudiante ?? null,
+      nombreCompleto: buildNombreCompleto(dto),
+      email: dto.persona.emailInstitucional ?? dto.persona.emailPersonal ?? undefined,
+      authId: dto.authId,
+      activo: dto.activo,
+      lastLogin: dto.lastLogin,
     },
-    estudiante: null,
-    nombreCompleto: dto.fullName,
-    programa: dto.attributes?.academicProgram?.[0],
-    email: dto.email,
-    authId: dto.id,
-    activo: true,
-  },
-})
+  }
+}
