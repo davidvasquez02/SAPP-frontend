@@ -3,6 +3,7 @@ import { API_URL } from '../../api/config'
 
 type HttpOptions = RequestInit & {
   auth?: boolean
+  redirectOnUnauthorized?: boolean
 }
 
 const isAbsoluteUrl = (path: string) => path.startsWith('http://') || path.startsWith('https://')
@@ -45,7 +46,7 @@ const resolveHeaders = (options?: HttpOptions) => {
 }
 
 export async function http<T>(path: string, options: HttpOptions = {}): Promise<T> {
-  const { auth = true, ...requestInit } = options
+  const { auth = true, redirectOnUnauthorized = true, ...requestInit } = options
   const headers = resolveHeaders(options)
   const token = auth ? getToken() : null
 
@@ -58,7 +59,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     headers,
   })
 
-  if (response.status === 401 || response.status === 403) {
+  if (redirectOnUnauthorized && (response.status === 401 || response.status === 403)) {
     clearSession()
     window.location.assign('/login')
     throw new Error('No autorizado')
