@@ -1,4 +1,4 @@
-import { httpGet, httpPost } from '../shared/http/httpClient'
+import { httpGet } from '../shared/http/httpClient'
 import type { GatewayLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
 
