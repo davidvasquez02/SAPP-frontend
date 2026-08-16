@@ -4,7 +4,7 @@ import type { ApiResponse } from './types'
 
 /** Initializes the SAPP session from the identity already captured by the gateway. */
 export const loginFromGateway = async (): Promise<GatewayLoginResponseDto> => {
-  const response = await httpPost<ApiResponse<GatewayLoginResponseDto>>('/auth/login', undefined, {
+  const response = await httpPost<ApiResponse<GatewayLoginResponseDto>>('/inicio', undefined, {
     auth: false,
     redirectOnUnauthorized: false,
   })
