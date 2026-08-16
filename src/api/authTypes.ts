@@ -1,8 +1,3 @@
-export interface LoginRequestDto {
-  username: string
-  password: string
-}
-
 export interface PersonaDto {
   id: number
   tipoDocumento: string
@@ -29,17 +24,15 @@ export interface EstudianteDto {
   [key: string]: unknown
 }
 
-export interface UserLoginResponseDto {
+export interface GatewayLoginResponseDto {
   id: number
+  uuid: string
   username: string
-  authId: number
-  activo: boolean
-  fechaCreacion: string
-  lastLogin: string
-  persona: PersonaDto
-  estudiante?: EstudianteDto | null
+  firstName: string
+  lastName: string
+  fullName: string
+  email: string
+  attributes: Record<string, string[]>
   roles: string[]
-  token: string
+  clientRoles: string[]
 }
-
-export type LoginResponseDto = UserLoginResponseDto
