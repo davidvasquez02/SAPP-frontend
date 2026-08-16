@@ -1,24 +1,17 @@
 import { httpPost } from '../shared/http/httpClient'
-import type { LoginRequestDto, UserLoginResponseDto } from './authTypes'
+import type { GatewayLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
 
-export const login = async (username: string, password: string): Promise<UserLoginResponseDto> => {
-  if (!username.trim() || !password.trim()) {
-    throw new Error('Credenciales inválidas')
-  }
-
-  const payload: LoginRequestDto = {
-    username: username.trim(),
-    password,
-  }
-
-  const data = await httpPost<ApiResponse<UserLoginResponseDto>>('/sapp/auth/login', payload, {
+/** Initializes the SAPP session from the identity already captured by the gateway. */
+export const loginFromGateway = async (): Promise<GatewayLoginResponseDto> => {
+  const response = await httpPost<ApiResponse<GatewayLoginResponseDto>>('/auth/login', undefined, {
     auth: false,
+    redirectOnUnauthorized: false,
   })
 
-  if (!data.ok) {
-    throw new Error(data.message || 'Login fallido')
+  if (!response.ok || !response.data) {
+    throw new Error(response.message || 'No fue posible obtener la sesión institucional')
   }
 
-  return data.data
+  return response.data
 }
