@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
 import './LoginPage.css'
 
 const LoginPage = () => {
-  const { login, isAuthenticated, session, initializationError } = useAuth()
+  const { login, isAuthenticated, session } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAspirante, setIsAspirante] = useState(false)
@@ -24,12 +27,13 @@ const LoginPage = () => {
     navigate('/', { replace: true })
   }, [isAuthenticated, navigate, session])
 
-  const handleRetry = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
     try {
-      await login()
+      await login(username, password)
       const redirectPath = (location.state as { from?: { pathname: string } } | undefined)?.from
         ?.pathname
       navigate(redirectPath ?? '/', { replace: true })
@@ -68,14 +72,34 @@ const LoginPage = () => {
           Soy aspirante (no estudiante)
         </label>
         {!isAspirante ? (
-          <div className="login-form">
-            <p className="login-error">
-              {error ?? initializationError ?? 'No fue posible cargar la sesión institucional.'}
-            </p>
-            <button className="login-button" type="button" disabled={isSubmitting} onClick={handleRetry}>
-              {isSubmitting ? 'Validando...' : 'Reintentar'}
+          <form className="login-form" onSubmit={handleSubmit}>
+            <label className="login-field">
+              Usuario
+              <input
+                type="text"
+                name="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="usuario"
+                autoComplete="username"
+              />
+            </label>
+            <label className="login-field">
+              Contraseña
+              <input
+                type="password"
+                name="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </label>
+            {error ? <p className="login-error">{error}</p> : null}
+            <button className="login-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Validando...' : 'Ingresar'}
             </button>
-          </div>
+          </form>
         ) : null}
       </div>
     </div>

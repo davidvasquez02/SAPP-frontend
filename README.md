@@ -20,7 +20,7 @@ Este repositorio contiene únicamente el **frontend React/TypeScript**. La lógi
 
 - **SPA React + TypeScript** servida con Vite/rolldown-vite.
 - **Ruteo** centralizado en `src/app/routes` con rutas protegidas por rol.
-- **Autenticación** en `src/context/Auth`: al arrancar la SPA se inicializa la sesión real desde el API Gateway/IDP y se persiste en storage compartido.
+- **Autenticación** en `src/context/Auth` y persistencia de sesión en storage compartido; actualmente existe un mock temporal ADMIN para pruebas de gateway.
 - **Cliente HTTP** encapsulado en `src/shared/http/httpClient.ts` y servicios por módulo/API.
 - **Módulos de dominio UI** bajo `src/modules` y pantallas bajo `src/pages`.
 - **Layout institucional** con `Sidebar`, `Layout` y `ModuleLayout`; los assets de marca institucional viven en `public/brand`.
@@ -86,16 +86,17 @@ npm run preview
 
 ## Seeds / sesión de pruebas
 
-No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `POST /api/sapp/auth/login`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
+No hay seed de base de datos en este repositorio frontend. Para pruebas locales, el estado actual conserva un mock temporal de autenticación:
+
+- archivo: `src/context/Auth/mockGatewaySession.ts`;
+- bandera: `ENABLE_GATEWAY_AUTH_MOCK = true`;
+- sesión: usuario `Administrador SAPP Mock` con rol `ADMIN`;
+- token: `NO_TOKEN`, filtrado para no enviar un Bearer falso al backend/gateway;
+- storage: `SAPP_AUTH_SESSION`.
+
+Cuando se conecte el contrato real de API Gateway/IDP, este bypass debe desactivarse o reemplazarse por el mapper real de identidad.
 
 ## Decisiones recientes / changelog-lite
-
-### 2026-08-16 — Sesión institucional desde API Gateway/IDP
-
-- Se eliminó la sesión ADMIN mock y el formulario SAPP de usuario/contraseña.
-- El primer montaje llama a `POST /auth/login` sin payload, bloquea el ruteo mientras inicializa y llena la sesión con la respuesta real.
-- La sesión conserva `uuid`, `attributes`, roles generales y `clientRoles`; para autorización UI se usa la unión normalizada y sin duplicados de ambos arreglos.
-- Un fallo de inicialización limpia cualquier sesión obsoleta y muestra una acción de reintento que vuelve a llamar el mismo endpoint sin credenciales.
 
 ### 2026-06-17 — URL backend relativa y proxy local
 
@@ -134,7 +135,6 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Aspirantes: `POST /api/sapp/aspirante` desde el navegador.
 - Inscripciones por convocatoria: `GET /api/sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` desde el navegador.
 - Documentos: operaciones de checklist/prefetch y validación mediante servicios de documentos existentes.
-- Login institucional: `POST /api/sapp/auth/login`, sin body, envelope `{ ok, message, data }`. `data` contiene `{ id, uuid, username, firstName, lastName, fullName, email, attributes: Record<string, string[]>, roles: string[], clientRoles: string[] }`. `id` es el identificador local de `personas_idp`, distinto de `uuid`.
 
 ## Notas visuales de marca
 

@@ -1,41 +1,3 @@
-# Update 2026-08-16 — Bootstrap real de sesión Gateway/IDP
-
-## Estado actual
-- Se eliminó `src/context/Auth/mockGatewaySession.ts` y ya no existe un usuario ADMIN quemado.
-- En el primer montaje, `AuthProvider` llama `POST /auth/login` sin body, transforma el DTO nuevo y persiste `SAPP_AUTH_SESSION`. `App` espera a que finalice este bootstrap antes de renderizar rutas, evitando redirecciones prematuras.
-- El login SAPP manual ya no solicita ni envía usuario/contraseña. Si el bootstrap falla, `/login` muestra el error y **Reintentar** repite la misma llamada vacía. El acceso separado de aspirantes se conserva.
-- Los roles efectivos de la UI son la unión uppercase/sin duplicados de `roles` y `clientRoles`. La sesión también conserva `uuid`, `attributes` y `clientRoles` por separado.
-
-## Retos abiertos y próximos pasos
-1. Validar contra el gateway desplegado que la infraestructura enruta `/api/sapp/auth/login` al backend y propaga el token/identidad que el backend debe capturar.
-2. Confirmar el comportamiento de cierre de sesión del gateway: el botón actual limpia el estado frontend, pero una recarga volverá a crear sesión si la identidad upstream sigue vigente.
-3. Agregar tests de componente/integración cuando el repositorio incorpore Vitest: llamada única inicial, body ausente, mapeo de atributos/roles, estado de error y reintento.
-4. Revisar con backend si algún `clientRole` requiere traducción a nombres internos distintos de uppercase; actualmente se combina tal como llega.
-
-## Paths / artefactos / datasets
-- Servicio y contrato DTO: `src/api/authService.ts`, `src/api/authTypes.ts`.
-- Mapper hacia sesión UI: `src/api/authMappers.ts`.
-- Orquestación de bootstrap: `src/context/Auth/AuthContext.tsx` y `src/context/Auth/types.ts`.
-- Bloqueo de rutas durante carga: `src/app/App.tsx`.
-- Manejo 401/403 sin redirect durante bootstrap: `src/shared/http/httpClient.ts`.
-- Pantalla de fallo/reintento: `src/pages/Login/LoginPage.tsx`.
-- No hay datasets, seeds, venv, conda ni poetry. Reutilizar exclusivamente `node_modules` de `/workspace/SAPP-frontend`.
-
-## Contrato y salida esperada
-- Request navegador: `POST ${VITE_API_URL || '/api/sapp'}/auth/login`, sin body y sin header Bearer agregado por el frontend.
-- Response: `{ ok: true, message: 'Login exitoso.', data: { id: number, uuid: string, username: string, firstName: string, lastName: string, fullName: string, email: string, attributes: Record<string, string[]>, roles: string[], clientRoles: string[] } }`.
-- `id` continúa siendo el id local `personas_idp`; no confundirlo con `uuid` del IDP.
-- Sesión esperada: `kind: 'SAPP'`, datos básicos derivados en `persona`, `programa` desde el primer `attributes.academicProgram`, roles combinados y marcador `NO_TOKEN`. `sessionStore.getToken()` filtra ese marcador para no producir `Authorization: Bearer NO_TOKEN`.
-
-## Entorno exacto y resultados
-- Ruta: `/workspace/SAPP-frontend`. Node.js 24.15.0, npm 11.4.2; React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
-- `npm run build` (2026-08-16): OK; `238 modules transformed`, build en `665ms`.
-- `npx eslint src/api/authTypes.ts src/api/authService.ts src/api/authMappers.ts src/shared/http/httpClient.ts src/context/Auth/types.ts src/context/Auth/AuthContext.tsx src/app/App.tsx src/pages/Login/LoginPage.tsx` (2026-08-16): OK.
-- Warning conocido y no bloqueante en npm: `Unknown env config "http-proxy"`.
-- No se tomó screenshot: no hay Chromium/Chrome/Playwright instalado en el contenedor; el cambio visible se limita al estado de error del login institucional.
-
----
-
 # Update 2026-06-12 — Logos institucionales EISI/UIS y documentación
 
 ## Estado actual
@@ -831,3 +793,4 @@ npm run lint
 
 ### Pruebas recientes
 - `npm run build` intentado en esta sesión: bloqueado por entorno porque faltan tipos locales `vite/client` y `node` en `node_modules`. `npm install` quedó colgado al intentar restaurar dependencias y fue detenido; no modificar lockfile por este incidente.
+
