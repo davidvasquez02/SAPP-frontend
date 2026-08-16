@@ -14,6 +14,9 @@ export interface AuthUser {
   authId: number
   activo: boolean
   lastLogin?: string
+  uuid?: string
+  attributes?: Record<string, string[]>
+  clientRoles?: string[]
 }
 
 export interface AspiranteUser {
@@ -51,7 +54,10 @@ export interface AuthContextValue {
   user: AuthUser | AspiranteUser | null
   token: string | null
   isAuthenticated: boolean
-  login: (username: string, password: string) => Promise<void>
+  isInitializing: boolean
+  initializationError: string | null
+  retryInitialization: () => Promise<void>
+  login: () => Promise<void>
   loginAspirante: (params: AspiranteLoginParams) => Promise<void>
   logout: () => void
 }
