@@ -48,7 +48,7 @@ const LoginPage = () => {
     setIsAspirante(checked)
 
     if (checked) {
-      navigate('/login/aspirante')
+      navigate('/borrar/aspirante')
     }
   }
 

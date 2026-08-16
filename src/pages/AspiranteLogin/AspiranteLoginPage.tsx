@@ -160,7 +160,7 @@ const AspiranteLoginPage = () => {
         <button
           type="button"
           className="aspirante-login__back"
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/borrar')}
           disabled={isFormDisabled}
         >
           Volver

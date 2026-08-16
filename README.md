@@ -90,6 +90,11 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-16 — Ruta de acceso `/borrar` y bootstrap bloqueante
+
+- La ruta de acceso de la SPA cambió de `/login` a `/borrar`; el acceso de aspirantes ahora vive en `/borrar/aspirante` y todas las redirecciones internas usan la ruta nueva.
+- El endpoint de backend **no cambió**: al montar la aplicación se espera la respuesta de `POST /auth/login` antes de renderizar el árbol de rutas. Durante la espera solo se muestra el estado de carga de sesión; luego se decide si hay una sesión autenticada o si debe mostrarse `/borrar`.
+
 ### 2026-08-16 — Sesión institucional desde API Gateway/IDP
 
 - Se eliminó la sesión ADMIN mock y el formulario SAPP de usuario/contraseña.
