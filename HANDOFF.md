@@ -1,33 +1,9 @@
-# Update 2026-08-16 — Ruta `/borrar` y espera del bootstrap de autenticación
-
-## Estado actual
-- La ruta pública de acceso SAPP es `/borrar` y la de aspirantes es `/borrar/aspirante`. Guardas de rutas, logout y respuestas HTTP 401/403 redirigen a `/borrar`; `/login` ya no es una ruta registrada.
-- El nombre del endpoint del backend permanece intacto: `POST /auth/login`. `AuthProvider` espera esa promesa y mantiene `isInitializing=true`; `App` no monta `AppRoutes` hasta que la petición termina, tanto si fue exitosa como si falló.
-- En caso exitoso se persiste la sesión y se cargan las rutas autenticadas. En caso de error se limpia la sesión y `/borrar` ofrece reintentar la petición.
-
-## Retos abiertos y próximos pasos
-1. Validar las rutas nuevas detrás del gateway desplegado, incluyendo refresh directo de `/borrar/aspirante` (la infraestructura debe aplicar fallback de SPA).
-2. Agregar Vitest/React Testing Library si el proyecto adopta un runner: verificar que las rutas no se renderizan mientras `POST /auth/login` está pendiente y que éxito/error desbloquean la UI correcta.
-
-## Archivos y contratos relevantes
-- Rutas: `src/app/routes/index.tsx`; guardas: `src/app/routes/protectedRoute.tsx`, `src/app/routes/aspiranteOnlyRoute.tsx` y `src/routes/RequireRoles/RequireRoles.tsx`.
-- Bootstrap bloqueante: `src/context/Auth/AuthContext.tsx` y `src/app/App.tsx`.
-- Contrato sin cambios: `POST ${VITE_API_URL || '/api/sapp'}/auth/login`, sin body. La ruta `/borrar` pertenece exclusivamente al router del frontend.
-- Entorno: Node.js/npm en `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda ni poetry.
-
-## Resultados de verificación
-- `npm run build` (2026-08-16): OK; 238 módulos transformados y bundle de producción generado.
-- `npm run lint` (2026-08-16): falla por 12 errores y 1 warning preexistentes, entre ellos `no-explicit-any`, reglas de pureza/efectos y parámetros mock sin uso. El cambio de rutas no introduce mensajes nuevos de ESLint.
-- `rg -n '["'"']\/login' src` (2026-08-16): sin coincidencias; el único `login` HTTP esperado permanece en `/auth/login`.
-
----
-
 # Update 2026-08-16 — Bootstrap real de sesión Gateway/IDP
 
 ## Estado actual
 - Se eliminó `src/context/Auth/mockGatewaySession.ts` y ya no existe un usuario ADMIN quemado.
 - En el primer montaje, `AuthProvider` llama `POST /auth/login` sin body, transforma el DTO nuevo y persiste `SAPP_AUTH_SESSION`. `App` espera a que finalice este bootstrap antes de renderizar rutas, evitando redirecciones prematuras.
-- El login SAPP manual ya no solicita ni envía usuario/contraseña. Si el bootstrap falla, `/borrar` muestra el error y **Reintentar** repite la misma llamada vacía. El acceso separado de aspirantes se conserva.
+- El login SAPP manual ya no solicita ni envía usuario/contraseña. Si el bootstrap falla, `/login` muestra el error y **Reintentar** repite la misma llamada vacía. El acceso separado de aspirantes se conserva.
 - Los roles efectivos de la UI son la unión uppercase/sin duplicados de `roles` y `clientRoles`. La sesión también conserva `uuid`, `attributes` y `clientRoles` por separado.
 
 ## Retos abiertos y próximos pasos

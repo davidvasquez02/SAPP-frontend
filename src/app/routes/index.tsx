@@ -42,7 +42,7 @@ export const AppRoutes = () => {
   return (
     <Routes>
       <Route
-        path="/borrar"
+        path="/login"
         element={
           isAuthenticated ? (
             <Navigate to={loginRedirect} replace />
@@ -51,7 +51,7 @@ export const AppRoutes = () => {
           )
         }
       />
-      <Route path="/borrar/aspirante" element={<AspiranteLoginPage />} />
+      <Route path="/login/aspirante" element={<AspiranteLoginPage />} />
       <Route element={<AspiranteOnlyRoute />}>
         <Route element={<AspiranteLayout />} path="/aspirante">
           {aspiranteRoutes}

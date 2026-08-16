@@ -12,7 +12,7 @@ const RequireRoles = ({ allowedRoles, children }: RequireRolesProps) => {
   const { session } = useAuth()
 
   if (!session || session.kind !== 'SAPP') {
-    return <Navigate to="/borrar" replace />
+    return <Navigate to="/login" replace />
   }
 
   if (!hasAnyRole(session.user.roles, allowedRoles)) {

@@ -16,7 +16,7 @@ export const ProtectedRoute = () => {
   }, [isExpired, logout])
 
   if (!isAuthenticated || isExpired) {
-    return <Navigate to="/borrar" replace />
+    return <Navigate to="/login" replace />
   }
 
   if (session?.kind === 'ASPIRANTE') {
