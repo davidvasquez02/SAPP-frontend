@@ -1,10 +1,10 @@
-import { httpPost } from '../shared/http/httpClient'
+import { httpGet, httpPost } from '../shared/http/httpClient'
 import type { GatewayLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
 
 /** Initializes the SAPP session from the identity already captured by the gateway. */
 export const loginFromGateway = async (): Promise<GatewayLoginResponseDto> => {
-  const response = await httpPost<ApiResponse<GatewayLoginResponseDto>>('/inicio', undefined, {
+  const response = await httpGet<ApiResponse<GatewayLoginResponseDto>>('/inicio', {
     auth: false,
     redirectOnUnauthorized: false,
   })
