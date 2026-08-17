@@ -1,4 +1,4 @@
-import type { EstudianteDto, PersonaDto } from '../../api/authTypes'
+import type { EstudianteDto, LoginDetalleDto, PersonaDto } from '../../api/authTypes'
 
 export type SessionKind = 'SAPP'
 
@@ -8,6 +8,7 @@ export interface AuthUser {
   roles: string[]
   persona: PersonaDto
   estudiante?: EstudianteDto | null
+  detalle: LoginDetalleDto
   nombreCompleto?: string
   programa?: string
   email?: string

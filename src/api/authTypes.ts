@@ -24,6 +24,40 @@ export interface EstudianteDto {
   [key: string]: unknown
 }
 
+export interface AspiranteDetalleDto {
+  id: number
+  apellido1: string
+  apellido2: string | null
+  emailPersonal: string | null
+  nombre1: string
+  nombre2: string | null
+  numeroDocumento: string
+  numeroInscripcionUis: number
+  telefono: string | null
+  tipoDocumentoIdentificacion: string
+}
+
+export interface PersonaDetalleDto {
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  fullName: string
+  attributes: Record<string, string[]>
+}
+
+export interface DocenteDetalleDto {
+  id: number
+  [key: string]: unknown
+}
+
+export interface LoginDetalleDto {
+  aspirante: AspiranteDetalleDto | null
+  docente: DocenteDetalleDto | null
+  estudiante: EstudianteDto | null
+  persona: PersonaDetalleDto
+}
+
 export interface GatewayLoginResponseDto {
   id: number
   uuid: string
@@ -35,4 +69,5 @@ export interface GatewayLoginResponseDto {
   attributes: Record<string, string[]>
   roles: string[]
   clientRoles: string[]
+  detalle: LoginDetalleDto
 }
