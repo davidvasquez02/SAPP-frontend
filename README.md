@@ -90,11 +90,17 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-17 — Nombres de aspirante desagregados para el IDP
+
+- El formulario de creación reemplaza el campo único **Nombre** por **Primer nombre**, **Segundo nombre**, **Primer apellido** y **Segundo apellido**.
+- Primer nombre y primer apellido son obligatorios; segundo nombre y segundo apellido son opcionales.
+- `POST /api/sapp/aspirante` ya no envía `nombre`: el contrato vigente usa `{ nombre1, nombre2, apellido1, apellido2, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`. Los campos opcionales de nombre se normalizan a `null` cuando quedan vacíos.
+
 ### 2026-08-17 — Error al crear aspirantes sin abandonar la convocatoria
 
 - `POST /api/sapp/aspirante` desactiva la invalidación/redirección automática ante 401/403: el modal permanece abierto, conserva los datos digitados y muestra el error devuelto por el backend.
 - El cliente HTTP presenta tanto `message`/`error` como listas o mapas `errors` de validación, facilitando identificar rechazos por datos duplicados, contrato, permisos o reglas de convocatoria.
-- El payload vigente continúa siendo `{ nombre, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`. Una falla que persista debe verificarse en Network y logs backend; el frontend ya no oculta la causa navegando al inicio.
+- Una falla que persista debe verificarse en Network y logs backend; el frontend ya no oculta la causa navegando al inicio.
 
 ### 2026-08-17 — Acceso gestionado fuera de la SPA
 
@@ -143,7 +149,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Dev/prod: el navegador llama rutas relativas `/api/sapp/...`; la infraestructura debe enrutar ese prefijo al backend.
 - Prefijo backend histórico observado: rutas tipo `/sapp/...`; el cliente centralizado evita duplicar ese segmento cuando `VITE_API_URL` termina en `/sapp`.
 - Programas: `GET /api/sapp/programaAcademico` desde el navegador.
-- Aspirantes: `POST /api/sapp/aspirante` desde el navegador.
+- Aspirantes: `POST /api/sapp/aspirante` desde el navegador con nombres desagregados en `nombre1`, `nombre2`, `apellido1` y `apellido2`.
 - Inscripciones por convocatoria: `GET /api/sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` desde el navegador.
 - Documentos: operaciones de checklist/prefetch y validación mediante servicios de documentos existentes.
 - Login institucional: `POST /api/sapp/auth/login`, sin body, envelope `{ ok, message, data }`. `data` contiene `{ id, uuid, username, firstName, lastName, fullName, email, attributes: Record<string, string[]>, roles: string[], clientRoles: string[] }`. `id` es el identificador local de `personas_idp`, distinto de `uuid`.

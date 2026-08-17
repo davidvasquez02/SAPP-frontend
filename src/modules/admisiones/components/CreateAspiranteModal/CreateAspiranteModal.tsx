@@ -48,7 +48,10 @@ interface CreateAspiranteResult {
 }
 
 interface FormState {
-  nombre: string
+  nombre1: string
+  nombre2: string
+  apellido1: string
+  apellido2: string
   tipoDocumentoIdentificacionId: string
   numeroDocumento: string
   emailPersonal: string
@@ -58,7 +61,10 @@ interface FormState {
 }
 
 const initialFormState: FormState = {
-  nombre: '',
+  nombre1: '',
+  nombre2: '',
+  apellido1: '',
+  apellido2: '',
   tipoDocumentoIdentificacionId: '',
   numeroDocumento: '',
   emailPersonal: '',
@@ -93,7 +99,7 @@ export const CreateAspiranteModal = ({
   const [createdAspirante, setCreatedAspirante] = useState<AspiranteCreateResponseDto | null>(
     null,
   )
-  const nameInputRef = useRef<HTMLInputElement | null>(null)
+  const firstNameInputRef = useRef<HTMLInputElement | null>(null)
   const wasOpenRef = useRef(false)
 
   const loadTramiteDocumentos = useCallback(async () => {
@@ -198,7 +204,7 @@ export const CreateAspiranteModal = ({
     }
 
     window.addEventListener('keydown', handleKeyDown)
-    nameInputRef.current?.focus()
+    firstNameInputRef.current?.focus()
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
@@ -223,8 +229,12 @@ export const CreateAspiranteModal = ({
     const nextErrors: FormErrors = {}
     const isAspiranteCreated = createdAspirante != null
 
-    if (!isAspiranteCreated && !formState.nombre.trim()) {
-      nextErrors.nombre = 'El nombre es obligatorio.'
+    if (!isAspiranteCreated && !formState.nombre1.trim()) {
+      nextErrors.nombre1 = 'El primer nombre es obligatorio.'
+    }
+
+    if (!isAspiranteCreated && !formState.apellido1.trim()) {
+      nextErrors.apellido1 = 'El primer apellido es obligatorio.'
     }
 
     if (!isAspiranteCreated && !formState.tipoDocumentoIdentificacionId) {
@@ -420,7 +430,10 @@ export const CreateAspiranteModal = ({
 
       if (!created) {
         const payload: AspiranteCreateRequestDto = {
-          nombre: formState.nombre.trim(),
+          nombre1: formState.nombre1.trim(),
+          nombre2: formState.nombre2.trim() || null,
+          apellido1: formState.apellido1.trim(),
+          apellido2: formState.apellido2.trim() || null,
           tipoDocumentoIdentificacionId: Number(formState.tipoDocumentoIdentificacionId),
           numeroDocumento: formState.numeroDocumento.trim(),
           emailPersonal: formState.emailPersonal.trim(),
@@ -538,18 +551,56 @@ export const CreateAspiranteModal = ({
             </p>
           ) : null}
           <label className="create-aspirante-modal__field">
-            <span>Nombre</span>
+            <span>Primer nombre</span>
             <input
-              ref={nameInputRef}
+              ref={firstNameInputRef}
               type="text"
-              placeholder="Nombre completo"
-              value={formState.nombre}
-              onChange={(event) => handleChange('nombre', event.target.value)}
+              placeholder="Primer nombre"
+              autoComplete="given-name"
+              value={formState.nombre1}
+              onChange={(event) => handleChange('nombre1', event.target.value)}
               disabled={isSubmitting || isAspiranteCreated}
             />
-            {errors.nombre ? (
-              <span className="create-aspirante-modal__error">{errors.nombre}</span>
+            {errors.nombre1 ? (
+              <span className="create-aspirante-modal__error">{errors.nombre1}</span>
             ) : null}
+          </label>
+
+          <label className="create-aspirante-modal__field">
+            <span>Segundo nombre <small>(opcional)</small></span>
+            <input
+              type="text"
+              placeholder="Segundo nombre"
+              value={formState.nombre2}
+              onChange={(event) => handleChange('nombre2', event.target.value)}
+              disabled={isSubmitting || isAspiranteCreated}
+            />
+          </label>
+
+          <label className="create-aspirante-modal__field">
+            <span>Primer apellido</span>
+            <input
+              type="text"
+              placeholder="Primer apellido"
+              autoComplete="family-name"
+              value={formState.apellido1}
+              onChange={(event) => handleChange('apellido1', event.target.value)}
+              disabled={isSubmitting || isAspiranteCreated}
+            />
+            {errors.apellido1 ? (
+              <span className="create-aspirante-modal__error">{errors.apellido1}</span>
+            ) : null}
+          </label>
+
+          <label className="create-aspirante-modal__field">
+            <span>Segundo apellido <small>(opcional)</small></span>
+            <input
+              type="text"
+              placeholder="Segundo apellido"
+              value={formState.apellido2}
+              onChange={(event) => handleChange('apellido2', event.target.value)}
+              disabled={isSubmitting || isAspiranteCreated}
+            />
           </label>
 
           <label className="create-aspirante-modal__field">
