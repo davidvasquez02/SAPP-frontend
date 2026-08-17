@@ -34,15 +34,18 @@ export interface InscripcionAdmisionDto {
 }
 
 export interface AdmitirEstudiantePayload {
-  aspiranteId: number
-  programaId: number
-  periodoAcademico: string
-  codigoEstudiante: string
-  correoInstitucional: string
+  idAspirante: number
+  codigoUIS: string
+  emailInstitucional: string
 }
 
 export interface EstudianteCreadoDto {
-  estudianteId: number
+  id: number
+  cohorte: string | null
   estado: string
-  fechaCreacion: string
+  codigoEstudianteUis: string
+  fechaIngreso: string | null
+  fechaEgreso: string | null
+  idAspirante: number
+  foto: DocumentoFotoDto | null
 }

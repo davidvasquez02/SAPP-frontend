@@ -1,3 +1,32 @@
+# Update 2026-08-17 — Creación de estudiante desde convocatoria cerrada
+
+## Estado actual
+- `ConvocatoriaDetallePage` detecta una convocatoria cerrada por `vigente === false` o por estar fuera de sus fechas. Para roles `COORDINACION`, `SECRETARIA` y `ADMIN`, muestra los aspirantes cuyo estado normalizado es `ADMITIDO`.
+- La acción **Crear estudiante** abre un formulario con código UIS y correo institucional obligatorios. Tras crear, muestra el código retornado y deshabilita la acción del aspirante durante la sesión de la página.
+- El correo personal no se captura ni se envía: el backend lo deriva del aspirante.
+
+## Contrato y salida esperada
+- Request del navegador: `POST ${VITE_API_URL || '/api/sapp'}/estudiantes` con `{ idAspirante: number, codigoUIS: string, emailInstitucional: string }`.
+- Respuesta esperada: envelope `{ ok, message, data }`, donde `data` es `{ id: number, cohorte: string | null, estado: string, codigoEstudianteUis: string, fechaIngreso: string | null, fechaEgreso: string | null, idAspirante: number, foto: DocumentoFotoDto | null }`.
+- La pantalla usa `data.idAspirante` para marcar el aspirante procesado y `data.codigoEstudianteUis` para la confirmación. Si el backend devuelve el objeto sin envelope, debe acordarse y ajustarse el servicio; el resto de APIs SAPP actualmente usa envelope.
+
+## Paths, retos y próximos pasos
+- Pantalla y gating: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
+- Formulario: `src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx` y su CSS.
+- Transporte y tipos: `src/modules/admisiones/api/estudianteAdmisionService.ts` y `src/modules/admisiones/api/types.ts`.
+- Validar contra backend real que el endpoint queda efectivamente bajo la base configurada (`/api/sapp/estudiantes`) y que conserva el envelope API.
+- Confirmar cómo informa el backend que un aspirante ya es estudiante al recargar la página; el DTO actual de inscripciones no expone ese indicador, por lo que la prevención persistente depende de la restricción/backend.
+- No se agregaron datasets ni seeds.
+
+## Entorno y pruebas recientes
+- Ruta `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Reutilizar el `node_modules` de la raíz. No crear venv, conda, poetry ni un árbol paralelo de dependencias.
+- `npx eslint src/modules/admisiones/api/types.ts src/modules/admisiones/api/estudianteAdmisionService.ts src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`: OK (solo warning npm conocido por `http-proxy`).
+- `npm run build`: OK; 223 módulos transformados y build en 723 ms.
+- `git diff --check`: OK.
+
+---
+
 # Update 2026-08-17 — Contrato de nombres desagregados al crear aspirantes
 
 ## Estado actual
