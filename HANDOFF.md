@@ -1,3 +1,31 @@
+# Update 2026-08-17 — IDs de las figuras de dominio retornadas por `/inicio`
+
+## Estado actual
+- El contrato TypeScript de inicio ya representa `data.detalle.aspirante`, `docente`, `estudiante` y `persona`, incluyendo sus identificadores locales.
+- `mapGatewayLoginToUserSession` persiste todo el detalle en `session.user.detalle`, asigna `session.user.persona.id = detalle.persona.id` y asigna `session.user.estudiante = detalle.estudiante`. Esto restablece los procesos que leen `session.user.estudiante.id` y evita sustituirlo incorrectamente por el `id` superior de la respuesta.
+- La figura `persona` normalizada combina la identidad de `detalle.persona` con los datos personales de `detalle.aspirante` cuando están disponibles. Si no hay aspirante, utiliza los atributos superiores como fallback; no inventa IDs.
+
+## Contrato y salida esperada
+- Request vigente en código: `GET ${VITE_API_URL || '/api/sapp'}/inicio`, sin body.
+- Response: envelope `{ ok, message, data }`, donde `data.detalle` tiene `{ aspirante: AspiranteDetalleDto | null, docente: DocenteDetalleDto | null, estudiante: EstudianteDto | null, persona: PersonaDetalleDto }`.
+- Para el ejemplo validado conceptualmente, la sesión debe producir `user.persona.id === 38`, `user.estudiante?.id === 10`, `user.detalle.aspirante?.id === 38`, `user.detalle.estudiante?.id === 10` y `user.detalle.persona.id === 38`.
+- Paths principales: `src/api/authTypes.ts`, `src/api/authMappers.ts` y `src/context/Auth/types.ts`. El consumidor que requiere el ID estudiantil está, entre otros, en `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+
+## Retos y próximos pasos
+1. Validar la respuesta contra Gateway/backend real para usuarios que sean solo persona, aspirante, docente y estudiante; las figuras no aplicables deben llegar como `null`.
+2. Confirmar el shape completo de `docente`; por ahora se exige su `id` y se preservan campos adicionales sin acoplar la UI a un contrato todavía no suministrado.
+3. Incorporar Vitest si el equipo desea pruebas unitarias del mapper; el repositorio todavía no incluye runner de tests y esta tanda se validó mediante TypeScript, build y ESLint focalizado.
+4. No volver a derivar `estudiante.id`, `aspirante.id` o `persona.id` desde `data.id`: cada proceso debe usar la figura correspondiente dentro de `detalle`.
+
+## Entorno y pruebas recientes
+- Ruta `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Reutilizar `node_modules` en la raíz. No crear venv, conda, poetry ni otro entorno o árbol de dependencias.
+- `npm run build` (2026-08-17): OK; 223 módulos transformados, build en 647 ms. npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npx eslint src/api/authTypes.ts src/api/authMappers.ts src/context/Auth/types.ts` (2026-08-17): OK; mismo warning no bloqueante de npm.
+- `git diff --check` (2026-08-17): OK.
+
+---
+
 # Update 2026-08-17 — Consultas de aspirantes con nombres desagregados
 
 ## Estado actual y contrato
