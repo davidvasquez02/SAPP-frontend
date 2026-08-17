@@ -1,3 +1,32 @@
+# Update 2026-08-17 — Diagnóstico y manejo de error al crear aspirante
+
+## Estado actual
+- La creación desde `CreateAspiranteModal` permanece en la convocatoria cuando `POST /sapp/aspirante` falla, conserva los campos y muestra el mensaje de servidor en el modal.
+- `createAspirante` usa `redirectOnUnauthorized: false`; un 401/403 de esta operación ya no limpia la sesión local ni convierte el error del formulario en navegación al fallback `/`.
+- El cliente HTTP ahora extrae `message` o `error` y detalles `errors` (arreglo de strings/objetos o mapa campo-mensaje). El error general se desplaza al área visible del diálogo.
+
+## Diagnóstico, retos y próximos pasos
+1. La causa directa del retorno al inicio era el manejo global de 401: limpiaba la sesión ante un rechazo de creación; como la SPA ya no tiene login interno, el guard terminaba en el fallback `/` antes de que el usuario pudiera leer el error.
+2. La causa backend exacta del rechazo no puede determinarse sin la respuesta real del ambiente. Reproducir y revisar Network/logs: ahora la UI debe revelar si es 401/403, constraint de documento/email/inscripción, validación o incompatibilidad del DTO.
+3. Confirmar que backend espera `convocatoriaAdmisionId` (no `convocatoriaId`) y que la respuesta exitosa incluye `data.id` y `data.inscripcionAdmisionId`; ambos son necesarios para cargar documentos.
+4. Validar con rol `COORDINACION` y `ADMIN` contra Gateway real. Si responde 401/403, corregir propagación de identidad/permisos en Gateway/backend, no agregar credenciales ni roles simulados al frontend.
+
+## Paths, contrato y salida esperada
+- UI: `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`.
+- Servicio: `src/modules/admisiones/api/aspiranteService.ts`; cliente: `src/shared/http/httpClient.ts`.
+- Request: `POST ${VITE_API_URL || '/api/sapp'}/aspirante`, JSON `{ nombre, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`.
+- Éxito: envelope `{ ok: true, message, data }`, con al menos `data.id` y `data.inscripcionAdmisionId`. Error: HTTP no-2xx con `message`/`error` y opcional `errors`; debe mostrarse sin cerrar el modal.
+- No hay datasets/seeds nuevos. Usar Node.js/npm y el `node_modules` de `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro entorno duplicado.
+
+## Entorno y pruebas de esta actualización
+- Node.js 24.15.0, npm 11.4.2; React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2.
+- `npm run build`: OK; 220 módulos transformados, build en 674 ms.
+- `npx eslint src/shared/http/httpClient.ts src/modules/admisiones/api/aspiranteService.ts src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`: OK.
+- `npm run lint`: sigue fallando por 11 errores históricos fuera de los archivos modificados y 1 warning (tipos `any`, estados síncronos en effects, mocks/params sin uso, interfaces vacías y dependencia de hook).
+- No se tomó screenshot automatizado: el contenedor no tiene Chromium, Chrome ni Playwright instalado. El cambio visible se limita al mensaje de error ya existente, ahora persistente y anunciado como alerta.
+
+---
+
 # Update 2026-08-17 — Retiro de login, portal aspirante y cierre de sesión internos
 
 ## Estado actual

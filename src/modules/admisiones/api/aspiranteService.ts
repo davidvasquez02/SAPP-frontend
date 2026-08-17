@@ -11,6 +11,9 @@ export const createAspirante = async (
   const response = await httpPost<ApiResponse<AspiranteCreateResponseDto>>(
     '/sapp/aspirante',
     req,
+    // A validation/authorization failure belongs to this form. Keep the current
+    // session and route so coordination can see the backend error and correct it.
+    { redirectOnUnauthorized: false },
   )
 
   if (!response.ok) {

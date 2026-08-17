@@ -6,6 +6,43 @@ type HttpOptions = RequestInit & {
   redirectOnUnauthorized?: boolean
 }
 
+interface ApiErrorBody {
+  message?: string
+  error?: string
+  errors?: unknown
+}
+
+const stringifyValidationErrors = (errors: unknown): string | null => {
+  if (Array.isArray(errors)) {
+    const messages = errors
+      .map((error) => {
+        if (typeof error === 'string') return error
+        if (error && typeof error === 'object') {
+          const detail = error as Record<string, unknown>
+          const field = typeof detail.field === 'string' ? `${detail.field}: ` : ''
+          const message = detail.message ?? detail.defaultMessage
+          return typeof message === 'string' ? `${field}${message}` : null
+        }
+        return null
+      })
+      .filter((message): message is string => Boolean(message))
+
+    return messages.length > 0 ? messages.join(' · ') : null
+  }
+
+  if (errors && typeof errors === 'object') {
+    const messages = Object.entries(errors as Record<string, unknown>)
+      .map(([field, message]) =>
+        typeof message === 'string' ? `${field}: ${message}` : null,
+      )
+      .filter((message): message is string => Boolean(message))
+
+    return messages.length > 0 ? messages.join(' · ') : null
+  }
+
+  return null
+}
+
 const isAbsoluteUrl = (path: string) => path.startsWith('http://') || path.startsWith('https://')
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
@@ -70,10 +107,10 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     let errorMessage = `Error HTTP ${response.status}`
 
     try {
-      const errorBody = (await response.json()) as { message?: string }
-      if (errorBody?.message) {
-        errorMessage = errorBody.message
-      }
+      const errorBody = (await response.json()) as ApiErrorBody
+      const validationDetails = stringifyValidationErrors(errorBody?.errors)
+      const serverMessage = errorBody?.message || errorBody?.error
+      errorMessage = [serverMessage, validationDetails].filter(Boolean).join(': ') || errorMessage
     } catch {
       // Ignore parse errors and keep the default message.
     }
