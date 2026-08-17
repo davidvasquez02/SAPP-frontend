@@ -8,7 +8,9 @@ import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convo
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
 import { CreateAspiranteModal } from "../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal";
+import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
+import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import { resolveProgramaIdFromInscripciones } from "../../modules/admisiones/utils/resolveProgramaId";
 import "./ConvocatoriaDetallePage.css";
 
@@ -31,6 +33,11 @@ const ConvocatoriaDetallePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedAspirante, setSelectedAspirante] =
+    useState<InscripcionAdmisionDto | null>(null);
+  const [createdAspiranteIds, setCreatedAspiranteIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [convocatoria, setConvocatoria] =
     useState<ConvocatoriaAdmisionDto | null>(null);
 
@@ -88,6 +95,16 @@ const ConvocatoriaDetallePage = () => {
   const cuposExcedidos =
     typeof cuposConvocatoria === "number" &&
     inscripciones.length >= cuposConvocatoria;
+  const convocatoriaCerrada = convocatoria
+    ? !convocatoria.vigente || !isConvocatoriaVigente(convocatoria)
+    : false;
+  const aspirantesAdmitidos = useMemo(
+    () =>
+      inscripciones.filter(
+        (inscripcion) => normalizeEstado(inscripcion.estado) === "ADMITIDO",
+      ),
+    [inscripciones],
+  );
   const summaryStats = useMemo(() => {
     const admitidos = inscripciones.filter(
       (inscripcion) => normalizeEstado(inscripcion.estado) === "ADMITIDO",
@@ -348,6 +365,46 @@ const ConvocatoriaDetallePage = () => {
           </div>
         ) : null}
 
+        {!isLoading && !error && convocatoriaCerrada && canCreateAspirante ? (
+          <section className="convocatoria-detalle__admitir-panel" aria-labelledby="crear-estudiantes-title">
+            <div>
+              <p className="admission-detail-header__eyebrow">✓ Convocatoria cerrada</p>
+              <h2 id="crear-estudiantes-title">Crear estudiantes admitidos</h2>
+              <p>Asigna el código UIS y el correo institucional a cada aspirante admitido.</p>
+            </div>
+            {aspirantesAdmitidos.length === 0 ? (
+              <p>No hay aspirantes con estado ADMITIDO en esta convocatoria.</p>
+            ) : (
+              <div className="convocatoria-detalle__table-wrap">
+                <table className="convocatoria-detalle__table">
+                  <thead><tr><th>Aspirante</th><th>Documento</th><th>Acción</th></tr></thead>
+                  <tbody>
+                    {aspirantesAdmitidos.map((aspirante) => {
+                      const wasCreated = createdAspiranteIds.has(aspirante.aspiranteId);
+                      return (
+                        <tr key={aspirante.id}>
+                          <td>{aspirante.nombreAspirante}</td>
+                          <td>{aspirante.numeroDocumento ?? aspirante.cedula ?? "—"}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="convocatoria-detalle__student-button"
+                              onClick={() => setSelectedAspirante(aspirante)}
+                              disabled={wasCreated}
+                            >
+                              {wasCreated ? "Estudiante creado" : "Crear estudiante"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : null}
+
         {isLoading ? (
           <div className="convocatoria-detalle__skeletons" aria-hidden="true">
             {Array.from({ length: 6 }).map((_, index) => (
@@ -435,6 +492,14 @@ const ConvocatoriaDetallePage = () => {
         programaId={resolvedProgramaId}
         convocatoriaAdmisionId={parsedConvocatoriaId}
         onCreated={handleCreated}
+      />
+      <CreateEstudianteModal
+        aspirante={selectedAspirante}
+        onClose={() => setSelectedAspirante(null)}
+        onCreated={(estudiante) => {
+          setCreatedAspiranteIds((current) => new Set(current).add(estudiante.idAspirante));
+          setSuccessMessage(`Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`);
+        }}
       />
     </ModuleLayout>
   );

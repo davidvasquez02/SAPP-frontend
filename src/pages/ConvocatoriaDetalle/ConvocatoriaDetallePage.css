@@ -384,6 +384,9 @@
   background: var(--surface-container-low);
 }
 
+.convocatoria-detalle__admitir-panel h2 { margin: 0.35rem 0; color: var(--text-primary); }
+.convocatoria-detalle__admitir-panel p { color: var(--text-secondary); }
+
 .convocatoria-detalle__table-wrap {
   overflow-x: auto;
 }
@@ -399,6 +402,19 @@
   border-bottom: 1px solid var(--outline);
   text-align: left;
 }
+
+.convocatoria-detalle__student-button {
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.convocatoria-detalle__student-button:disabled { opacity: 0.6; cursor: default; }
 
 .convocatoria-detalle__admitir-form {
   margin-top: 1rem;

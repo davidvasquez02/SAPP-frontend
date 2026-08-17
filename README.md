@@ -90,6 +90,12 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-17 — Creación de estudiantes al cerrar una convocatoria
+
+- El detalle de una convocatoria cerrada muestra a coordinación, secretaría y administración una sección para crear estudiantes a partir de los aspirantes con estado `ADMITIDO`.
+- Cada creación solicita los dos datos institucionales obligatorios y ejecuta `POST /estudiantes` con `{ idAspirante, codigoUIS, emailInstitucional }`; ya no se envían programa, período, correo personal ni los nombres antiguos de los campos.
+- La UI consume el objeto de estudiante retornado en `data`, muestra el código UIS confirmado y bloquea una segunda creación para ese aspirante durante la sesión actual. El backend continúa siendo responsable de la unicidad definitiva.
+
 ### 2026-08-17 — Nombres de aspirante desagregados para el IDP
 
 - El formulario de creación reemplaza el campo único **Nombre** por **Primer nombre**, **Segundo nombre**, **Primer apellido** y **Segundo apellido**.
@@ -150,6 +156,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Prefijo backend histórico observado: rutas tipo `/sapp/...`; el cliente centralizado evita duplicar ese segmento cuando `VITE_API_URL` termina en `/sapp`.
 - Programas: `GET /api/sapp/programaAcademico` desde el navegador.
 - Aspirantes: `POST /api/sapp/aspirante` desde el navegador con nombres desagregados en `nombre1`, `nombre2`, `apellido1` y `apellido2`.
+- Estudiantes desde admisiones: `POST /api/sapp/estudiantes` desde el navegador con `{ idAspirante: number, codigoUIS: string, emailInstitucional: string }`. La respuesta exitosa usa el envelope habitual y `data` contiene `{ id, cohorte, estado, codigoEstudianteUis, fechaIngreso, fechaEgreso, idAspirante, foto }`.
 - Inscripciones por convocatoria: `GET /api/sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` desde el navegador.
 - Documentos: operaciones de checklist/prefetch y validación mediante servicios de documentos existentes.
 - Login institucional: `POST /api/sapp/auth/login`, sin body, envelope `{ ok, message, data }`. `data` contiene `{ id, uuid, username, firstName, lastName, fullName, email, attributes: Record<string, string[]>, roles: string[], clientRoles: string[] }`. `id` es el identificador local de `personas_idp`, distinto de `uuid`.
