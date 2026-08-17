@@ -13,14 +13,10 @@ type ModuleLayoutProps = {
 
 const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
   const { user } = useAuth()
-  const displayName = user
-    ? 'username' in user
-      ? user.nombreCompleto || user.username
-      : user.numeroInscripcionUis || user.numeroDocumento
-    : 'Usuario'
+  const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
   const roleLabel = user?.roles?.[0] ?? 'ESTUDIANTE'
   const estudianteFoto =
-    user && 'username' in user ? user.estudiante?.foto : null
+    user?.estudiante?.foto ?? null
   const avatarSrc = estudianteFoto?.contenidoBase64
     ? `data:${estudianteFoto.mimeType || 'image/jpeg'};base64,${estudianteFoto.contenidoBase64}`
     : FALLBACK_AVATAR

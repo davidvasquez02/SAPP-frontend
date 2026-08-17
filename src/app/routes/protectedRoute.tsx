@@ -1,26 +1,11 @@
-import { useEffect } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
 
 export const ProtectedRoute = () => {
-  const { isAuthenticated, session, logout } = useAuth()
-  const isExpired =
-    session?.kind === 'SAPP' && session.expiresAt
-      ? Math.floor(Date.now() / 1000) >= session.expiresAt
-      : false
+  const { isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    if (isExpired) {
-      logout()
-    }
-  }, [isExpired, logout])
-
-  if (!isAuthenticated || isExpired) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (session?.kind === 'ASPIRANTE') {
-    return <Navigate to="/aspirante/documentos" replace />
+  if (!isAuthenticated) {
+    return <main aria-live="polite">No hay una sesión institucional activa.</main>
   }
 
   return <Outlet />

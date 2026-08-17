@@ -19,7 +19,7 @@ Este repositorio contiene únicamente el **frontend React/TypeScript**. La lógi
 ## Arquitectura breve
 
 - **SPA React + TypeScript** servida con Vite/rolldown-vite.
-- **Ruteo** centralizado en `src/app/routes` con rutas protegidas por rol.
+- **Ruteo** centralizado en `src/app/routes` con rutas protegidas por rol. No se publican rutas de login ni un portal independiente para aspirantes.
 - **Autenticación** en `src/context/Auth`: al arrancar la SPA se inicializa la sesión real desde el API Gateway/IDP y se persiste en storage compartido.
 - **Cliente HTTP** encapsulado en `src/shared/http/httpClient.ts` y servicios por módulo/API.
 - **Módulos de dominio UI** bajo `src/modules` y pantallas bajo `src/pages`.
@@ -27,7 +27,7 @@ Este repositorio contiene únicamente el **frontend React/TypeScript**. La lógi
 
 ## Stack y versiones exactas observadas
 
-Versiones instaladas en `/workspace/SAPP-frontend` según `npm list --depth=0` el **2026-06-12**:
+Versiones instaladas en `/workspace/SAPP-frontend` según `npm list --depth=0` el **2026-08-17**:
 
 | Paquete | Versión |
 | --- | --- |
@@ -90,12 +90,18 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-17 — Acceso gestionado fuera de la SPA
+
+- Se retiraron el formulario/ruta de login, el login de aspirantes y el portal documental de aspirantes; `/login`, `/login/aspirante` y `/aspirante/*` ya no tienen rutas propias y caen en el fallback hacia `/`.
+- Se eliminó la acción de cerrar sesión del sidebar y del contexto de autenticación. El inicio de sesión institucional continúa resolviéndose automáticamente mediante el API Gateway/IDP al montar la aplicación.
+- Las respuestas HTTP 401 limpian la copia local obsoleta de la sesión, pero la SPA ya no redirige a una pantalla de login interna. Los 403 se reportan sin invalidar la sesión.
+
 ### 2026-08-16 — Sesión institucional desde API Gateway/IDP
 
 - Se eliminó la sesión ADMIN mock y el formulario SAPP de usuario/contraseña.
 - El primer montaje llama a `POST /auth/login` sin payload, bloquea el ruteo mientras inicializa y llena la sesión con la respuesta real.
 - La sesión conserva `uuid`, `attributes`, roles generales y `clientRoles`; para autorización UI se usa la unión normalizada y sin duplicados de ambos arreglos.
-- Un fallo de inicialización limpia cualquier sesión obsoleta y muestra una acción de reintento que vuelve a llamar el mismo endpoint sin credenciales.
+- Un fallo de inicialización limpia cualquier sesión obsoleta; desde 2026-08-17 ya no existe una pantalla interna de login o reintento.
 
 ### 2026-06-17 — URL backend relativa y proxy local
 
