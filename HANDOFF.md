@@ -1,3 +1,27 @@
+# Update 2026-08-17 — Consultas de aspirantes con nombres desagregados
+
+## Estado actual y contrato
+- `src/modules/admisiones/api/aspiranteService.ts` expone `getAspirantes()`, `getAspiranteById(id)` y `getAspiranteConsultaInfo()` para `GET /aspirante`, `GET /aspirante/{id}` y `GET /aspirante/consultaInfo`, respectivamente.
+- Las tres respuestas mantienen el envelope `{ ok: boolean, message: string, data: T }`. El listado usa `data: AspiranteConsultaResponseDto[]`; las consultas individual y de información usan un solo DTO.
+- `AspiranteConsultaResponseDto` reemplaza el antiguo `nombre` por `nombre1: string`, `nombre2: string | null`, `apellido1: string` y `apellido2: string | null`; los demás campos conocidos se conservan.
+- `getNombreCompletoAspirante(dto)` genera texto de presentación omitiendo partes nulas o vacías. No debe enviarse esa composición nuevamente al backend como `nombre`.
+- La respuesta del POST continúa tipada por separado como `AspiranteCreateResponseDto`: no cambiarla sin confirmación del contrato de creación, pues esta tanda solo especificó respuestas GET.
+
+## Retos, paths y próximos pasos
+- Validar las tres consultas contra el backend/Gateway real y confirmar si `consultaInfo` devuelve exactamente un aspirante o un shape adicional. No hubo backend, dataset ni sesión institucional disponibles para una prueba HTTP end-to-end.
+- Migrar futuros consumidores de consultas para que utilicen el helper de nombre completo; no añadir compatibilidad silenciosa con el campo retirado `nombre`.
+- Contratos: `src/modules/admisiones/api/aspiranteCreateTypes.ts`. Transporte y helper: `src/modules/admisiones/api/aspiranteService.ts`.
+- No se agregaron seeds ni artefactos. Reutilizar Node.js/npm y `node_modules` en `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni dependencias paralelas.
+
+## Entorno y pruebas
+- Node.js 24.15.0, npm 11.4.2; React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npx eslint src/modules/admisiones/api/aspiranteCreateTypes.ts src/modules/admisiones/api/aspiranteService.ts` (2026-08-17): OK; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-17): OK; TypeScript y rolldown-vite transformaron 223 módulos y completaron el build en 667 ms.
+- `git diff --check` (2026-08-17): OK, sin errores de whitespace.
+- `npm run lint` (2026-08-17): continúa fallando por 11 errores históricos y 1 warning fuera de los archivos modificados (`no-explicit-any`, estados síncronos en effects, parámetros/mocks sin uso, interfaces vacías y una dependencia de hook). El lint dirigido de esta tanda sí pasa.
+
+---
+
 # Update 2026-08-17 — Creación de estudiante desde convocatoria cerrada
 
 ## Estado actual
