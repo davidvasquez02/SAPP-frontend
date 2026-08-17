@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { loginFromGateway } from '../../api/authService'
 import { mapGatewayLoginToUserSession } from '../../api/authMappers'
-import { consultaInfoAspirante } from '../../api/aspiranteAuthService'
-import { mapAspiranteInfoToSession } from '../../api/aspiranteAuthMappers'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
 import { AuthContext } from './context'
-import type { AspiranteLoginParams, AuthContextValue, AuthSession } from './types'
+import type { AuthContextValue, AuthSession } from './types'
 
 const getInitialSession = () => {
   const storedSession = getSession()
@@ -51,20 +49,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     void initializeFromGateway()
   }, [initializeFromGateway])
 
-  const login = initializeFromGateway
-
-  const loginAspirante = useCallback(async (params: AspiranteLoginParams) => {
-    const info = await consultaInfoAspirante(params)
-    const authenticatedSession = mapAspiranteInfoToSession(info)
-    setSessionState(authenticatedSession)
-    saveSession(authenticatedSession)
-  }, [])
-
-  const logout = useCallback(() => {
-    clearSession()
-    setSessionState(null)
-  }, [])
-
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -74,11 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isInitializing,
       initializationError,
       retryInitialization: initializeFromGateway,
-      login,
-      loginAspirante,
-      logout,
     }),
-    [session, isInitializing, initializationError, initializeFromGateway, login, loginAspirante, logout],
+    [session, isInitializing, initializationError, initializeFromGateway],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

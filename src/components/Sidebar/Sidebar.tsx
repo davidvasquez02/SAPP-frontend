@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { hasAnyRole, isProfesor, ROLES } from "../../auth/roleGuards";
 import "./Sidebar.css";
@@ -11,8 +11,7 @@ interface SidebarItem {
 }
 
 const Sidebar = () => {
-  const { session, logout } = useAuth();
-  const navigate = useNavigate();
+  const { session } = useAuth();
 
   const canSeeAdmisiones =
     session?.kind === "SAPP" &&
@@ -70,11 +69,6 @@ const Sidebar = () => {
     },
   ];
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
-
   return (
     <aside className="sidebar" aria-label="Navegación principal">
       <NavLink to="/" className="sidebar__brand" title="Ir al inicio" aria-label="Ir al inicio">
@@ -100,20 +94,6 @@ const Sidebar = () => {
             </NavLink>
           ))}
       </nav>
-
-      <div className="sidebar__footer">
-        <button
-          type="button"
-          className="sidebar__logout"
-          onClick={handleLogout}
-          title="Cerrar sesión"
-        >
-          <span className="sidebar__icon" aria-hidden="true">
-            🚪
-          </span>
-          <span className="sidebar__label">Cerrar sesión</span>
-        </button>
-      </div>
     </aside>
   );
 };

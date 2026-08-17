@@ -1,6 +1,6 @@
 import type { EstudianteDto, PersonaDto } from '../../api/authTypes'
 
-export type SessionKind = 'SAPP' | 'ASPIRANTE'
+export type SessionKind = 'SAPP'
 
 export interface AuthUser {
   id: number
@@ -19,45 +19,20 @@ export interface AuthUser {
   clientRoles?: string[]
 }
 
-export interface AspiranteUser {
-  id: number
-  roles: string[]
-  numeroInscripcionUis: string
-  nombre?: string
-  director?: string
-  grupoInvestigacion?: string
-  telefono?: string
-  tipoDocumentoIdentificacion: string
-  numeroDocumento: string
-  emailPersonal?: string
-  fechaRegistro?: string
-  observaciones?: string | null
-  inscripcionAdmisionId?: number | null
-}
-
-export interface AspiranteLoginParams {
-  numeroInscripcion: string
-  tipoDocumentoId: number
-  numeroDocumento: string
-}
-
 export interface AuthSession {
   kind: SessionKind
   accessToken: string
   issuedAt?: number
   expiresAt?: number
-  user: AuthUser | AspiranteUser
+  user: AuthUser
 }
 
 export interface AuthContextValue {
   session: AuthSession | null
-  user: AuthUser | AspiranteUser | null
+  user: AuthUser | null
   token: string | null
   isAuthenticated: boolean
   isInitializing: boolean
   initializationError: string | null
   retryInitialization: () => Promise<void>
-  login: () => Promise<void>
-  loginAspirante: (params: AspiranteLoginParams) => Promise<void>
-  logout: () => void
 }

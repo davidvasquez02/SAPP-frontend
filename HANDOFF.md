@@ -1,14 +1,41 @@
+# Update 2026-08-17 — Retiro de login, portal aspirante y cierre de sesión internos
+
+## Estado actual
+- La SPA ya no declara rutas para `/login`, `/login/aspirante` ni `/aspirante/*`; todas quedan cubiertas por el fallback general que navega a `/`.
+- Se eliminaron los componentes `Login`, `AspiranteLogin`, `AspiranteDocumentos` y `AspiranteLayout`, junto con los guards/servicios exclusivos del login de aspirantes.
+- `AuthProvider` conserva únicamente la inicialización institucional automática vía Gateway/IDP. Ya no expone `login`, `loginAspirante` ni `logout`.
+- El sidebar no ofrece cierre de sesión y el cliente HTTP no redirige respuestas 401/403 a `/login`.
+
+## Decisión funcional y contrato esperado
+- La autenticación y su finalización se administran fuera de SAPP. Al montar la SPA se mantiene `GET /inicio` (a través de `loginFromGateway`) para obtener la identidad institucional existente.
+- Solo se admite una sesión de tipo `SAPP`; ya no existe sesión frontend de tipo `ASPIRANTE`.
+- Una URL retirada debe terminar en `/` mediante la ruta comodín, nunca renderizar un formulario de acceso ni el portal del aspirante.
+
+## Archivos y próximos pasos
+- Ruteo: `src/app/routes/index.tsx` y `src/app/routes/protectedRoute.tsx`.
+- Sesión: `src/context/Auth/AuthContext.tsx`, `src/context/Auth/types.ts` y `src/shared/http/httpClient.ts`.
+- Navegación: `src/components/Sidebar/Sidebar.tsx` y `Sidebar.css`.
+- Validar con el Gateway real el comportamiento de una sesión institucional ausente/expirada y acordar con infraestructura la pantalla externa de acceso, sin reintroducir URLs internas.
+- Entorno: usar exclusivamente Node.js/npm y el `node_modules` de `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro árbol de dependencias.
+
+## Pruebas recientes
+- `npm run build` (2026-08-17): OK; `tsc -b` y `rolldown-vite v7.2.5` completaron con 220 módulos transformados.
+- `npm run lint` (2026-08-17): falla por 11 errores históricos fuera de este cambio (`no-explicit-any`, efectos con actualizaciones síncronas, mocks con variables sin uso y tipos vacíos) y 1 warning de dependencia de hook.
+- `rg -n -i "logout|log.?out|cerrar sesión|/login|/aspirante" src --glob '*.{ts,tsx,css}'` (2026-08-17): no encuentra logout, cierre de sesión ni rutas retiradas; conserva únicamente usos de “aspirante” propios del dominio de admisiones.
+
+---
+
 # Update 2026-08-16 — Bootstrap real de sesión Gateway/IDP
 
 ## Estado actual
 - Se eliminó `src/context/Auth/mockGatewaySession.ts` y ya no existe un usuario ADMIN quemado.
 - En el primer montaje, `AuthProvider` llama `POST /auth/login` sin body, transforma el DTO nuevo y persiste `SAPP_AUTH_SESSION`. `App` espera a que finalice este bootstrap antes de renderizar rutas, evitando redirecciones prematuras.
-- El login SAPP manual ya no solicita ni envía usuario/contraseña. Si el bootstrap falla, `/login` muestra el error y **Reintentar** repite la misma llamada vacía. El acceso separado de aspirantes se conserva.
+- **Supersedido por el update 2026-08-17:** ya no existe `/login`, acción de reintento en una página interna ni acceso separado de aspirantes.
 - Los roles efectivos de la UI son la unión uppercase/sin duplicados de `roles` y `clientRoles`. La sesión también conserva `uuid`, `attributes` y `clientRoles` por separado.
 
 ## Retos abiertos y próximos pasos
 1. Validar contra el gateway desplegado que la infraestructura enruta `/api/sapp/auth/login` al backend y propaga el token/identidad que el backend debe capturar.
-2. Confirmar el comportamiento de cierre de sesión del gateway: el botón actual limpia el estado frontend, pero una recarga volverá a crear sesión si la identidad upstream sigue vigente.
+2. Confirmar con infraestructura cómo se presenta el acceso externo cuando no existe identidad upstream; no reintroducir cierre de sesión dentro de SAPP.
 3. Agregar tests de componente/integración cuando el repositorio incorpore Vitest: llamada única inicial, body ausente, mapeo de atributos/roles, estado de error y reintento.
 4. Revisar con backend si algún `clientRole` requiere traducción a nombres internos distintos de uppercase; actualmente se combina tal como llega.
 
