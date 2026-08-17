@@ -453,6 +453,14 @@ export const CreateAspiranteModal = ({
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No fue posible crear el aspirante.'
       setErrors((prev) => ({ ...prev, general: message }))
+      // Keep the dialog and entered values visible. In particular, an HTTP 401/403
+      // must not turn a recoverable create error into an unexpected navigation.
+      requestAnimationFrame(() => {
+        document.querySelector('.create-aspirante-modal__error--general')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        })
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -720,7 +728,11 @@ export const CreateAspiranteModal = ({
           ) : null}
 
           {errors.general ? (
-            <p className="create-aspirante-modal__error create-aspirante-modal__error--general">
+            <p
+              className="create-aspirante-modal__error create-aspirante-modal__error--general"
+              role="alert"
+              aria-live="assertive"
+            >
               {errors.general}
             </p>
           ) : null}

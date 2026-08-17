@@ -90,6 +90,12 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-17 — Error al crear aspirantes sin abandonar la convocatoria
+
+- `POST /api/sapp/aspirante` desactiva la invalidación/redirección automática ante 401/403: el modal permanece abierto, conserva los datos digitados y muestra el error devuelto por el backend.
+- El cliente HTTP presenta tanto `message`/`error` como listas o mapas `errors` de validación, facilitando identificar rechazos por datos duplicados, contrato, permisos o reglas de convocatoria.
+- El payload vigente continúa siendo `{ nombre, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`. Una falla que persista debe verificarse en Network y logs backend; el frontend ya no oculta la causa navegando al inicio.
+
 ### 2026-08-17 — Acceso gestionado fuera de la SPA
 
 - Se retiraron el formulario/ruta de login, el login de aspirantes y el portal documental de aspirantes; `/login`, `/login/aspirante` y `/aspirante/*` ya no tienen rutas propias y caen en el fallback hacia `/`.
