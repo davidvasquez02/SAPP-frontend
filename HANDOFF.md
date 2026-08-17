@@ -1,3 +1,36 @@
+# Update 2026-08-17 — Contrato de nombres desagregados al crear aspirantes
+
+## Estado actual
+- `CreateAspiranteModal` muestra cuatro campos en lugar del antiguo campo único `nombre`: primer nombre, segundo nombre, primer apellido y segundo apellido.
+- La UI exige `nombre1` y `apellido1`; `nombre2` y `apellido2` son opcionales. El foco inicial queda en primer nombre y los errores obligatorios aparecen junto a sus respectivos controles.
+- El DTO y el payload de creación quedaron alineados con la delegación de usuarios al IDP externo: el frontend dejó de enviar `nombre`.
+
+## Contrato y salida esperada
+- Request: `POST ${VITE_API_URL || '/api/sapp'}/aspirante` con JSON `{ nombre1: string, nombre2: string | null, apellido1: string, apellido2: string | null, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`.
+- `nombre1` y `apellido1` deben contener texto no vacío. Los dos campos opcionales se recortan y se envían como `null` si el usuario no los diligencia.
+- La respuesta no fue modificada por esta tanda: la UI continúa esperando el envelope exitoso con `data.id` y `data.inscripcionAdmisionId` para asociar los documentos. `AspiranteCreateResponseDto.nombre` se conserva mientras el backend aún lo entregue como nombre de presentación.
+- El backend también informó el mismo cambio para `PUT /aspirante`; no existe en esta UI un formulario general de edición de datos personales. `src/api/aspiranteService.ts` contiene un PUT limitado a grupo/director de investigación y no se amplió sin un contrato completo de esa operación.
+
+## Paths, artefactos y próximos pasos
+- Formulario y validación: `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`.
+- Contrato TypeScript: `src/modules/admisiones/api/aspiranteCreateTypes.ts`.
+- Transporte POST existente: `src/modules/admisiones/api/aspiranteService.ts`.
+- No se agregaron datasets, seeds ni artefactos generados. Validar el POST contra el backend/IDP real y confirmar si los opcionales deben omitirse en vez de enviarse como `null`.
+- Si se incorpora edición general de aspirantes, reutilizar exactamente los cuatro campos y su validación para el PUT; no confundirlo con la actualización acotada de información de investigación.
+
+## Entorno exacto
+- Ruta: `/workspace/SAPP-frontend`; Node.js 24.15.0 y npm 11.4.2.
+- Instalado: React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Usar el `node_modules` existente en la raíz. No crear venv, conda, poetry ni un segundo entorno de dependencias.
+
+## Pruebas recientes
+- `npx eslint src/modules/admisiones/api/aspiranteCreateTypes.ts src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx` (2026-08-17): OK; npm solo emitió el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-17): OK; TypeScript y rolldown-vite completaron con 220 módulos transformados y build en 691 ms.
+- `git diff --check` (2026-08-17): OK, sin errores de whitespace.
+- No se tomó screenshot automatizado porque el contenedor no tiene Chromium, Chrome ni Playwright instalado; la validación visual queda pendiente en un navegador con sesión y backend disponibles.
+
+---
+
 # Update 2026-08-17 — Diagnóstico y manejo de error al crear aspirante
 
 ## Estado actual
@@ -14,7 +47,7 @@
 ## Paths, contrato y salida esperada
 - UI: `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`.
 - Servicio: `src/modules/admisiones/api/aspiranteService.ts`; cliente: `src/shared/http/httpClient.ts`.
-- Request: `POST ${VITE_API_URL || '/api/sapp'}/aspirante`, JSON `{ nombre, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`.
+- **Supersedido por el contrato documentado arriba:** el request actual de `POST ${VITE_API_URL || '/api/sapp'}/aspirante` usa `nombre1`, `nombre2`, `apellido1` y `apellido2`; ya no envía `nombre`.
 - Éxito: envelope `{ ok: true, message, data }`, con al menos `data.id` y `data.inscripcionAdmisionId`. Error: HTTP no-2xx con `message`/`error` y opcional `errors`; debe mostrarse sin cerrar el modal.
 - No hay datasets/seeds nuevos. Usar Node.js/npm y el `node_modules` de `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro entorno duplicado.
 
