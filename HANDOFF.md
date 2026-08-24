@@ -1001,3 +1001,34 @@ npm run lint
 
 ### Pruebas recientes
 - `npm run build` intentado en esta sesión: bloqueado por entorno porque faltan tipos locales `vite/client` y `node` en `node_modules`. `npm install` quedó colgado al intentar restaurar dependencias y fue detenido; no modificar lockfile por este incidente.
+
+## Handoff 2026-08-24 — UUID de docentes evaluadores en convocatorias
+
+### Estado actual y decisiones
+- La creación de convocatorias ya no consulta `GET /sapp/docentes?query=`: usa `GET /sapp/docentes/estado?skip=0` mediante el cliente HTTP centralizado.
+- `ProfesorOption` conserva `uuid`, `id` nullable, `existeEnSapp` y `nombre`. La UI identifica las opciones, la selección, la eliminación y la asignación pendiente por `uuid`, no por el ID local de SAPP.
+- La asociación envía un POST independiente por docente a `/sapp/evaluadorConvocatoria` con `evaluadorUuid`; esto permite elegir docentes cuyo `id` es `null` y `existeEnSapp` es `false`.
+- No hubo cambio visual perceptible: se mantuvo el selector y los chips existentes, por lo que no se requirió screenshot.
+
+### Archivos y contratos
+- `src/modules/admisiones/services/profesoresMockService.ts`: consulta y normalización del catálogo.
+- `src/modules/admisiones/mock/profesores.mock.ts`: contrato compartido `ProfesorOption` y datos mock compatibles.
+- `src/modules/admisiones/services/convocatoriaProfesoresMockService.ts`: payload de asociación por UUID.
+- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`: estado del formulario, selección, reintento y envío por UUID.
+- Catálogo esperado: `GET /sapp/docentes/estado?skip=0` responde `{ ok, message, data: Array<{ existeEnSapp: boolean, id: number | null, nombre: string, uuid: string }> }`.
+- Asociación esperada: `POST /sapp/evaluadorConvocatoria` recibe `{ evaluadorUuid: string, convocatoriaId: number }` y responde el envelope `{ ok, message, data }`.
+- Las filas del catálogo sin nombre o sin UUID válido se omiten. Un `id: null` no impide seleccionar ni asociar al docente.
+
+### Resultados recientes
+- `npm run build` (2026-08-24): PASS; TypeScript y `rolldown-vite v7.2.5` compilaron 223 módulos y generaron `dist/assets/index-CvGWTBFJ.css` y `dist/assets/index-CaVFkm13.js`.
+- `node --version`: `v24.15.0`; `npm --version`: `11.4.2` (npm muestra la advertencia no bloqueante `Unknown env config "http-proxy"`).
+- `npm list --depth=0`: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+### Retos y próximos pasos
+1. Validar contra backend real que el endpoint de estado incluye a todos los docentes y acepta UUID de personas que todavía no existen en SAPP.
+2. Crear una convocatoria con varios docentes y confirmar en Network un POST por cada UUID seleccionado.
+3. Forzar un error parcial y verificar que el botón de reintento conserva y vuelve a enviar exactamente los UUID pendientes.
+
+### Entorno
+- Usar exclusivamente Node.js/npm y el `node_modules` existente en `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro entorno Python.
+- Ejecutar instalación, si fuese necesaria, una sola vez desde la raíz con `npm install`; no crear árboles de dependencias duplicados en subdirectorios.
