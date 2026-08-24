@@ -2,19 +2,19 @@ import { httpPost } from '../../../shared/http/httpClient'
 import type { ApiResponse } from '../api/types'
 
 type EvaluadorConvocatoriaRequest = {
-  evaluadorId: number
+  evaluadorUuid: string
   convocatoriaId: number
 }
 
 export async function assignProfesoresToConvocatoria(params: {
   convocatoriaId: number
-  profesoresId: number[]
+  profesoresUuid: string[]
 }): Promise<void> {
-  const { convocatoriaId, profesoresId } = params
+  const { convocatoriaId, profesoresUuid } = params
 
-  for (const profesorId of profesoresId) {
+  for (const profesorUuid of profesoresUuid) {
     const payload: EvaluadorConvocatoriaRequest = {
-      evaluadorId: profesorId,
+      evaluadorUuid: profesorUuid,
       convocatoriaId,
     }
 

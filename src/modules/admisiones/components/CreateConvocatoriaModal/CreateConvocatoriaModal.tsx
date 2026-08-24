@@ -20,7 +20,7 @@ type ProgramaOption = {
 
 type PendingAssignment = {
   convocatoriaId: number
-  profesoresId: number[]
+  profesoresUuid: string[]
 }
 
 type CreateConvocatoriaModalProps = {
@@ -41,7 +41,7 @@ type FormState = {
   fechaInicio: string
   fechaFin: string
   observaciones: string
-  profesorId: string
+  profesorUuid: string
 }
 
 type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string; warning?: string }
@@ -113,7 +113,7 @@ const initialFormState: FormState = {
   fechaInicio: initialDates.inicio,
   fechaFin: initialDates.fin,
   observaciones: '',
-  profesorId: '',
+  profesorUuid: '',
 }
 
 export const CreateConvocatoriaModal = ({
@@ -270,7 +270,7 @@ export const CreateConvocatoriaModal = ({
     }
 
     if (selectedProfesores.length === 0) {
-      nextErrors.profesorId = 'Debe seleccionar al menos un profesor.'
+      nextErrors.profesorUuid = 'Debe seleccionar al menos un profesor.'
     }
 
     return nextErrors
@@ -287,30 +287,30 @@ export const CreateConvocatoriaModal = ({
   }
 
   const handleAddProfesor = () => {
-    const selectedId = Number(formState.profesorId)
-    if (!selectedId) {
+    const selectedUuid = formState.profesorUuid
+    if (!selectedUuid) {
       return
     }
 
-    const profesor = profesores.find((item) => item.id === selectedId)
+    const profesor = profesores.find((item) => item.uuid === selectedUuid)
     if (!profesor) {
       return
     }
 
     setSelectedProfesores((prev) => {
-      if (prev.some((item) => item.id === profesor.id)) {
+      if (prev.some((item) => item.uuid === profesor.uuid)) {
         return prev
       }
 
       return [...prev, profesor]
     })
 
-    setFormState((prev) => ({ ...prev, profesorId: '' }))
-    setErrors((prev) => ({ ...prev, profesorId: undefined }))
+    setFormState((prev) => ({ ...prev, profesorUuid: '' }))
+    setErrors((prev) => ({ ...prev, profesorUuid: undefined }))
   }
 
-  const handleRemoveProfesor = (profesorId: number) => {
-    setSelectedProfesores((prev) => prev.filter((item) => item.id !== profesorId))
+  const handleRemoveProfesor = (profesorUuid: string) => {
+    setSelectedProfesores((prev) => prev.filter((item) => item.uuid !== profesorUuid))
     setErrors((prev) => ({ ...prev, warning: undefined }))
   }
 
@@ -341,8 +341,8 @@ export const CreateConvocatoriaModal = ({
     return match.id
   }
 
-  const runAssignProfesores = async (convocatoriaId: number, profesoresId: number[]) => {
-    await assignProfesoresToConvocatoria({ convocatoriaId, profesoresId })
+  const runAssignProfesores = async (convocatoriaId: number, profesoresUuid: string[]) => {
+    await assignProfesoresToConvocatoria({ convocatoriaId, profesoresUuid })
     setPendingAssignment(null)
   }
 
@@ -352,7 +352,7 @@ export const CreateConvocatoriaModal = ({
     if (pendingAssignment) {
       try {
         setIsSubmitting(true)
-        await runAssignProfesores(pendingAssignment.convocatoriaId, pendingAssignment.profesoresId)
+        await runAssignProfesores(pendingAssignment.convocatoriaId, pendingAssignment.profesoresUuid)
         await onRefreshConvocatorias()
         onSuccess('Convocatoria creada y profesores asociados correctamente.')
         onClose()
@@ -413,15 +413,15 @@ export const CreateConvocatoriaModal = ({
 
       const created = await createConvocatoriaAdmision(payload)
       const convocatoriaId = await resolveCreatedConvocatoriaId(payload, created)
-      const profesoresId = selectedProfesores
+      const profesoresUuid = selectedProfesores
         .filter((profesor) => !excludedProfesorNames.has(normalizeName(profesor.nombre)))
-        .map((profesor) => profesor.id)
+        .map((profesor) => profesor.uuid)
 
-      if (profesoresId.length > 0) {
+      if (profesoresUuid.length > 0) {
         try {
-          await runAssignProfesores(convocatoriaId, profesoresId)
+          await runAssignProfesores(convocatoriaId, profesoresUuid)
         } catch (error) {
-          setPendingAssignment({ convocatoriaId, profesoresId })
+          setPendingAssignment({ convocatoriaId, profesoresUuid })
           setErrors({
             warning:
               error instanceof Error
@@ -435,7 +435,7 @@ export const CreateConvocatoriaModal = ({
       setSubmitStep('done')
       await onRefreshConvocatorias()
       onSuccess(
-        profesoresId.length > 0
+        profesoresUuid.length > 0
           ? 'Convocatoria creada y profesores asociados correctamente.'
           : 'Convocatoria creada correctamente.'
       )
@@ -454,7 +454,7 @@ export const CreateConvocatoriaModal = ({
   }
 
   const availableProfesores = profesores.filter(
-    (profesor) => !selectedProfesores.some((selected) => selected.id === profesor.id)
+    (profesor) => !selectedProfesores.some((selected) => selected.uuid === profesor.uuid)
   )
 
   const periodoSeleccionado = `${formState.anio}-${formState.semestre}`
@@ -581,13 +581,13 @@ export const CreateConvocatoriaModal = ({
             <span>Profesores</span>
             <div className="create-convocatoria-modal__profesor-picker">
               <select
-                value={formState.profesorId}
-                onChange={(event) => handleField('profesorId', event.target.value)}
+                value={formState.profesorUuid}
+                onChange={(event) => handleField('profesorUuid', event.target.value)}
                 disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
               >
                 <option value="">Seleccione profesor...</option>
                 {availableProfesores.map((profesor) => (
-                  <option key={profesor.id} value={profesor.id}>
+                  <option key={profesor.uuid} value={profesor.uuid}>
                     {profesor.nombre}
                     {profesor.email ? ` (${profesor.email})` : ''}
                   </option>
@@ -597,7 +597,7 @@ export const CreateConvocatoriaModal = ({
                 type="button"
                 className="create-convocatoria-modal__button create-convocatoria-modal__button--ghost"
                 onClick={handleAddProfesor}
-                disabled={!formState.profesorId || isSubmitting || Boolean(pendingAssignment)}
+                disabled={!formState.profesorUuid || isSubmitting || Boolean(pendingAssignment)}
               >
                 Agregar
               </button>
@@ -608,14 +608,14 @@ export const CreateConvocatoriaModal = ({
                 <span className="create-convocatoria-modal__hint">Aún no se han agregado profesores.</span>
               ) : (
                 selectedProfesores.map((profesor) => (
-                  <div key={profesor.id} className="create-convocatoria-modal__chip">
+                  <div key={profesor.uuid} className="create-convocatoria-modal__chip">
                     <div>
                       <strong>{profesor.nombre}</strong>
                       {profesor.email ? <small>{profesor.email}</small> : null}
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleRemoveProfesor(profesor.id)}
+                      onClick={() => handleRemoveProfesor(profesor.uuid)}
                       disabled={isSubmitting || Boolean(pendingAssignment)}
                     >
                       Quitar
@@ -624,8 +624,8 @@ export const CreateConvocatoriaModal = ({
                 ))
               )}
             </div>
-            {errors.profesorId ? (
-              <span className="create-convocatoria-modal__error">{errors.profesorId}</span>
+            {errors.profesorUuid ? (
+              <span className="create-convocatoria-modal__error">{errors.profesorUuid}</span>
             ) : null}
           </div>
 
