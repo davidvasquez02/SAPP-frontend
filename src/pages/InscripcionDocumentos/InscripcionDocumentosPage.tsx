@@ -44,7 +44,8 @@ const getDocumentIcon = (documentName: string, mimeType?: string | null) => {
 
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
-  const { isEstadoFinal } = useOutletContext<InscripcionDetalleOutletContext>()
+  const { isEstadoFinal, onEvaluacionStarted } =
+    useOutletContext<InscripcionDetalleOutletContext>()
   const navigate = useNavigate()
   const { session, user } = useAuth()
   const [documentos, setDocumentos] = useState<DocumentoTramiteUiItem[]>([])
@@ -295,9 +296,11 @@ const InscripcionDocumentosPage = () => {
     try {
       await iniciarEvaluacion(tramiteId)
       invalidateEvaluacionAvailabilityCache(tramiteId)
+      let evaluacionStarted = false
       for (let attempt = 0; attempt < EVALUACION_RETRY_ATTEMPTS; attempt += 1) {
         const estado = await getEvaluacionEstado(tramiteId)
         if (estado.status === 'STARTED') {
+          evaluacionStarted = true
           break
         }
 
@@ -307,6 +310,14 @@ const InscripcionDocumentosPage = () => {
           })
         }
       }
+
+      if (!evaluacionStarted) {
+        throw new Error(
+          'La evaluación se inició, pero sus componentes aún no están disponibles. Intenta nuevamente.',
+        )
+      }
+
+      await onEvaluacionStarted()
       navigate(`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}/hoja-vida`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
