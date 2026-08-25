@@ -2,6 +2,7 @@ import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
+const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="%23e6e9ef"/><circle cx="60" cy="46" r="20" fill="%2399a1ad"/><path d="M22 98c6-18 20-28 38-28s32 10 38 28" fill="%2399a1ad"/></svg>'
@@ -14,7 +15,9 @@ type ModuleLayoutProps = {
 const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
   const { user } = useAuth()
   const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
-  const roleLabel = user?.roles?.[0] ?? 'ESTUDIANTE'
+  const roleLabel =
+    user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE) ??
+    'SIN ROL ASIGNADO'
   const estudianteFoto =
     user?.estudiante?.foto ?? null
   const avatarSrc = estudianteFoto?.contenidoBase64

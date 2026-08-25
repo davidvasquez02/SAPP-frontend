@@ -1032,3 +1032,30 @@ npm run lint
 ### Entorno
 - Usar exclusivamente Node.js/npm y el `node_modules` existente en `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro entorno Python.
 - Ejecutar instalación, si fuese necesaria, una sola vez desde la raíz con `npm install`; no crear árboles de dependencias duplicados en subdirectorios.
+# Update 2026-08-25 — Rol principal visible sin el rol genérico del sistema
+
+## Estado actual y decisión
+- `ModuleLayout`, encabezado compartido por la pantalla de inicio y los módulos, ya no presenta `DEFAULT-ROLES-EISI` como rol principal.
+- La selección respeta el orden de `session.user.roles`, omite el rol genérico mediante comparación case-insensitive y muestra el primer rol funcional.
+- Si solo llega el rol genérico o no llega ningún rol, la salida visible es `SIN ROL ASIGNADO`; no se inventa `ESTUDIANTE` como fallback.
+
+## Paths, contrato y salida esperada
+- Implementación: `src/components/ModuleLayout/ModuleLayout.tsx`.
+- Entrada: `AuthUser.roles: string[]`, unión normalizada de `roles` y `clientRoles` del contrato `GET /api/sapp/inicio`.
+- Ejemplo: para `['DEFAULT-ROLES-EISI', 'COORDINACION']`, el encabezado debe mostrar `COORDINACION`; para `['DEFAULT-ROLES-EISI']`, debe mostrar `SIN ROL ASIGNADO`.
+- No se modificaron contratos HTTP, rutas, datasets, seeds ni assets.
+
+## Retos y próximos pasos
+- Validar visualmente con una sesión real que contenga el rol genérico seguido de cada rol funcional relevante.
+- Si negocio define prioridades diferentes al orden enviado por el backend, acordar una tabla explícita de prioridad antes de reordenar roles en frontend.
+
+## Entorno
+- Reutilizar Node.js 24.15.0, npm 11.4.2 y el `node_modules` existente en `/workspace/SAPP-frontend`; no crear venv, conda, poetry ni otro árbol de dependencias.
+- Paquetes instalados relevantes: React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+
+## Pruebas recientes
+- `npm run build` (2026-08-25): OK; TypeScript y rolldown-vite transformaron 223 módulos y completaron el build en 743 ms.
+- `npx eslint src/components/ModuleLayout/ModuleLayout.tsx` (2026-08-25): OK; npm solo emitió el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-08-25): OK.
+- `npm run lint` (2026-08-25): continúa fallando por 11 errores históricos y 1 warning fuera de los archivos modificados (`no-explicit-any`, estados síncronos en effects, parámetros mock sin uso, interfaces vacías y dependencia de hook).
+- No se tomó screenshot automatizado porque el contenedor no dispone de Chromium, Chrome, Playwright ni Puppeteer; queda pendiente validar la salida con una sesión real.
