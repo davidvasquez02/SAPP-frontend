@@ -52,6 +52,7 @@ type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 export interface InscripcionDetalleOutletContext {
   isEstadoFinal: boolean
   evaluacionStatus: 'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
+  onEvaluacionStarted: () => Promise<void>
 }
 
 const formatDisplayDate = (value?: string | null, options?: Intl.DateTimeFormatOptions) => {
@@ -313,6 +314,13 @@ const InscripcionAdmisionDetallePage = () => {
     setSectionErrors(errors)
   }, [parsedInscripcionId])
 
+  const handleEvaluacionStarted = useCallback(async () => {
+    setEvaluacionStatus('STARTED')
+    setEvaluacionMsg(null)
+    await prefetchAllSections()
+    setComponentReloadVersion((prev) => prev + 1)
+  }, [prefetchAllSections])
+
   useEffect(() => {
     if (Number.isNaN(parsedInscripcionId)) {
       setIsInitialLoading(false)
@@ -437,10 +445,7 @@ const InscripcionAdmisionDetallePage = () => {
       invalidateEvaluacionAvailabilityCache(parsedInscripcionId)
       const isStarted = await waitForEvaluacionStarted()
       if (isStarted) {
-        setEvaluacionStatus('STARTED')
-        setEvaluacionMsg(null)
-        await prefetchAllSections()
-        setComponentReloadVersion((prev) => prev + 1)
+        await handleEvaluacionStarted()
       } else {
         await loadEvaluacionEstado()
       }
@@ -451,7 +456,7 @@ const InscripcionAdmisionDetallePage = () => {
     } finally {
       setStarting(false)
     }
-  }, [inscripcionId, loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, waitForEvaluacionStarted])
+  }, [handleEvaluacionStarted, inscripcionId, loadEvaluacionEstado, parsedInscripcionId, waitForEvaluacionStarted])
 
   const handleFinalizarInscripcion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(parsedInscripcionId)) {
@@ -530,7 +535,15 @@ const InscripcionAdmisionDetallePage = () => {
     [activeKey, basePath, navigate, sectionAvailability],
   )
 
-  const outlet = <Outlet context={{ isEstadoFinal, evaluacionStatus } satisfies InscripcionDetalleOutletContext} />
+  const outlet = (
+    <Outlet
+      context={{
+        isEstadoFinal,
+        evaluacionStatus,
+        onEvaluacionStarted: handleEvaluacionStarted,
+      } satisfies InscripcionDetalleOutletContext}
+    />
+  )
   const sectionsToRender = isProfesorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS

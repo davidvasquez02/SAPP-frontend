@@ -1059,3 +1059,39 @@ npm run lint
 - `git diff --check` (2026-08-25): OK.
 - `npm run lint` (2026-08-25): continúa fallando por 11 errores históricos y 1 warning fuera de los archivos modificados (`no-explicit-any`, estados síncronos en effects, parámetros mock sin uso, interfaces vacías y dependencia de hook).
 - No se tomó screenshot automatizado porque el contenedor no dispone de Chromium, Chrome, Playwright ni Puppeteer; queda pendiente validar la salida con una sesión real.
+
+## Update 2026-08-25 — Componentes de evaluación después de validar documentos
+
+### Estado actual y decisión
+- Corregido el flujo de coordinación/administración en `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/documentos`.
+- El botón **Continuar con evaluación** inicia la evaluación, consulta hasta cinco veces su estado y solo navega a Hoja de vida después de recibir `STARTED`.
+- La página hija notifica al detalle padre mediante `onEvaluacionStarted`. El padre cambia inmediatamente su estado local a `STARTED`, precarga Hoja de vida, Examen de conocimiento y Entrevistas, incrementa la versión de montaje y habilita los acordeones inferiores sin exigir una recarga del navegador.
+- Si no se observa `STARTED` tras los reintentos, la UI conserva la pantalla documental y muestra un error; ya no navega hacia componentes que el detalle aún considera deshabilitados.
+
+### Paths y artefactos
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: confirmación del estado, manejo del timeout lógico y notificación al padre antes de navegar.
+- `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: contrato del outlet y refresco compartido del estado/componentes.
+- `README.md` y `HANDOFF.md`: trazabilidad de la decisión.
+- No se agregaron datasets, seeds, migraciones, variables de entorno ni dependencias.
+
+### Contratos y salida esperada
+- `iniciarEvaluacion(inscripcionId)` conserva el contrato HTTP existente para iniciar el proceso.
+- `getEvaluacionEstado(inscripcionId)` debe resolver `{ status: 'STARTED' | 'NOT_STARTED', message?: string }` conforme al mapper existente.
+- El nuevo contrato interno de React Router es `InscripcionDetalleOutletContext.onEvaluacionStarted: () => Promise<void>`.
+- Salida esperada: tras una respuesta confirmada como `STARTED`, se abre `/hoja-vida` y quedan habilitados debajo los acordeones **Hoja de vida**, **Examen de conocimiento** y **Entrevistas**.
+
+### Pruebas recientes y logs
+- `npm run build` (2026-08-25): PASS; TypeScript y rolldown-vite 7.2.5 compilaron 223 módulos y generaron `dist/assets/index-Dnch33aw.js`.
+- `git diff --check` (2026-08-25, antes de actualizar documentación): PASS.
+- La validación visual con el backend real sigue pendiente; la pantalla requiere sesión institucional y datos de inscripción/documentos. Este cambio no introduce estilos visuales nuevos.
+
+### Retos y próximos pasos
+1. Validar con una inscripción cuyos documentos obligatorios estén aprobados que el POST/PUT de inicio sea seguido por la consulta de estado y la apertura automática de Hoja de vida.
+2. Confirmar que Examen y Entrevistas se abren inmediatamente después, sin refrescar la pestaña.
+3. Probar latencia del backend superior a 2,5 segundos; si es habitual, acordar aumentar o reemplazar el polling actual (5 intentos cada 500 ms).
+
+### Entorno exacto; evitar duplicados
+- Raíz única: `/workspace/SAPP-frontend`; usar el `node_modules` existente y ejecutar npm solo desde esta ruta.
+- Node.js 24.15.0 y npm 11.4.2.
+- React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, `@vitejs/plugin-react-swc` 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- No crear `venv`, conda, poetry, entornos Python ni árboles `node_modules` en subdirectorios.
