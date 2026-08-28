@@ -1,3 +1,32 @@
+# Update 2026-08-28 — Fotografías de estudiantes por inscripción de admisión
+
+## Estado actual y decisiones
+- `/coordinacion/estudiantes` carga el listado principal mediante `getEstudiantesByPrograma`, lo publica inmediatamente con `fotoUrl: null` y ejecuta después la carga secundaria de retratos. La ausencia de foto no bloquea ni oculta tarjetas.
+- Por estudiante, la relación correcta es `estudiante.idAspirante → GET /sapp/inscripcionAdmision/aspirante/{idAspirante} → inscripcion.id`. La consulta documental usa `codigoTipoTramite: 1002`, `codigoTipoDocumentoTramite: 'ANX-4'` y `tramiteId: inscripcion.id`; nunca debe sustituirse este último por `idAspirante`.
+- Hay un máximo de cuatro cadenas inscripción/documento en vuelo. Cada foto válida actualiza solo su estudiante; ausencia de aspirante, inscripción, documento o base64, así como un error individual, conserva **Sin foto** sin modificar el error general.
+- El cleanup del effect invalida la tanda anterior al cambiar de programa. Las peticiones HTTP no se abortan físicamente porque el cliente actual no expone `AbortSignal`, pero sus respuestas obsoletas no actualizan estado.
+
+## Paths, contratos y salida esperada
+- Listado y coordinación asíncrona: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Mapeo inicial (incluye `idAspirante`, acepta `estudiante.foto` opcional y fuerza `fotoUrl: null`): `src/modules/estudiantes/services/estudiantesMockService.ts`.
+- Consulta de inscripción: `src/modules/admisiones/api/inscripcionAdmisionService.ts`; respuesta esperada `{ ok, message, data: InscripcionAdmisionDto | null }`.
+- Foto documental: `src/modules/documentos/api/documentoFotoService.ts`; ahora propaga el filtro `codigoTipoDocumentoTramite` a `GET /sapp/document?...` y retorna un data URI o `null`.
+- Salida esperada: las tarjetas aparecen al terminar la consulta de estudiantes; las imágenes disponibles reemplazan progresivamente el placeholder y cualquier respuesta de un programa anterior se descarta.
+
+## Retos y próximos pasos
+1. Validar contra backend real que `/inscripcionAdmision/aspirante/{id}` conserva el envelope y devuelve una inscripción singular o `null`.
+2. Para cohortes grandes, solicitar un endpoint batch que acepte aspirantes/estudiantes y devuelva las fotos asociadas; el límite de concurrencia reduce presión, pero no elimina las dos consultas por estudiante.
+3. Agregar pruebas con un runner cuando se incorpore Vitest: deben cubrir actualización progresiva, errores aislados y cambio rápido de programa. No hay datasets ni seeds nuevos.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry ni un segundo árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npx eslint src/modules/estudiantes/services/estudiantesMockService.ts src/modules/admisiones/api/inscripcionAdmisionService.ts src/modules/documentos/api/documentoFotoService.ts src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` (2026-08-28): PASS; solo apareció el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 227 módulos y generaron el build en 1.10 s.
+- `git diff --check` (2026-08-28): PASS. No se tomó screenshot porque el cambio visual es únicamente la aparición progresiva de datos reales y el entorno no dispone de backend/sesión/navegador para reproducirlo.
+
+---
+
 # Update 2026-08-28 — Fotografías más altas en tarjetas de aspirantes y estudiantes
 
 ## Estado actual y decisión visual

@@ -34,7 +34,7 @@ type EstudianteConsultaBackend = {
     cohorte: number | null
     estado: string | null
     fechaIngreso: string
-    foto: {
+    foto?: {
       contenidoBase64: string | null
       mimeType: string | null
     } | null
@@ -100,16 +100,6 @@ const resolveCorreo = (persona: EstudianteConsultaBackend['persona']) => {
   return persona.emailInstitucional?.trim() || persona.emailPersonal?.trim() || 'Sin correo registrado'
 }
 
-const buildFotoUrl = (foto: EstudianteConsultaBackend['estudiante']['foto']) => {
-  const contenidoBase64 = foto?.contenidoBase64?.trim()
-  if (!contenidoBase64) {
-    return null
-  }
-
-  const mimeType = foto?.mimeType?.trim() || 'image/jpeg'
-  return `data:${mimeType};base64,${contenidoBase64}`
-}
-
 const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCoordinacion => {
   const programaNombre = item.programaCodigoNombre?.trim() || `Programa ${item.programaId}`
 
@@ -119,8 +109,8 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     codigo: item.estudiante.codigoEstudianteUis?.trim() || `EST-${item.estudiante.id}`,
     codigoEstudianteUis: item.estudiante.codigoEstudianteUis?.trim() || null,
     nombreCompleto: item.nombreCompleto.trim(),
-    fotoUrl: buildFotoUrl(item.estudiante.foto),
-    foto: item.estudiante.foto,
+    fotoUrl: null,
+    foto: item.estudiante.foto ?? null,
     tipoDocumento: item.persona.tipoDocumento?.trim() || 'N/A',
     numeroDocumento: item.persona.numeroDocumento?.trim() || 'N/A',
     correoInstitucional: resolveCorreo(item.persona),
