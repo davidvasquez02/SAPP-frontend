@@ -66,9 +66,39 @@ const sortByPeriodoDesc = (
   return periodoB.semestre - periodoA.semestre;
 };
 
-const getConvocatoriaVigente = (
+const getPeriodoAcademicoActual = (): { anio: number; semestre: number } => {
+  const parts = new Intl.DateTimeFormat("es-CO", {
+    timeZone: "America/Bogota",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(new Date());
+  const anio = Number(parts.find((part) => part.type === "year")?.value);
+  const mes = Number(parts.find((part) => part.type === "month")?.value);
+
+  return { anio, semestre: mes <= 6 ? 1 : 2 };
+};
+
+const getConvocatoriaDestacada = (
   convocatorias: ConvocatoriaAdmisionDto[],
 ): ConvocatoriaAdmisionDto | null => {
+  const periodoActual = getPeriodoAcademicoActual();
+  const delPeriodoActual = convocatorias.filter((convocatoria) => {
+    const periodo = parsePeriodo(convocatoria.periodo);
+
+    return (
+      periodo.anio === periodoActual.anio &&
+      periodo.semestre === periodoActual.semestre
+    );
+  });
+
+  if (delPeriodoActual.length > 0) {
+    return [...delPeriodoActual].sort(
+      (a, b) =>
+        Number(isConvocatoriaVigente(b)) -
+        Number(isConvocatoriaVigente(a)),
+    )[0];
+  }
+
   const vigentes = convocatorias.filter((convocatoria) =>
     isConvocatoriaVigente(convocatoria),
   );
@@ -252,13 +282,25 @@ const AdmisionesHomePage = () => {
           {!isLoading && !error && convocatorias.length > 0 ? (
             <div className="admisiones-program-grid">
               {programas.map((programa) => {
-                const convocatoriaVigente = getConvocatoriaVigente(
+                const convocatoriaDestacada = getConvocatoriaDestacada(
                   programa.convocatorias,
                 );
-                const anteriores = convocatoriaVigente
+                const convocatoriaEstaAbierta = convocatoriaDestacada
+                  ? isConvocatoriaVigente(convocatoriaDestacada)
+                  : false;
+                const periodoActual = getPeriodoAcademicoActual();
+                const periodoDestacado = convocatoriaDestacada
+                  ? parsePeriodo(convocatoriaDestacada.periodo)
+                  : null;
+                const convocatoriaEsDelPeriodoActual = Boolean(
+                  periodoDestacado &&
+                    periodoDestacado.anio === periodoActual.anio &&
+                    periodoDestacado.semestre === periodoActual.semestre,
+                );
+                const anteriores = convocatoriaDestacada
                   ? programa.convocatorias.filter(
                       (convocatoria) =>
-                        convocatoria.id !== convocatoriaVigente.id,
+                        convocatoria.id !== convocatoriaDestacada.id,
                     )
                   : programa.convocatorias;
                 const anterioresOrdenadas = [...anteriores].sort(
@@ -302,20 +344,26 @@ const AdmisionesHomePage = () => {
                             className="admisiones-current-callout__dot"
                             aria-hidden="true"
                           />
-                          Convocatoria vigente
+                          {convocatoriaEsDelPeriodoActual
+                            ? "Convocatoria del período actual"
+                            : "Convocatoria abierta"}
                         </span>
                         <span
                           className={`admisiones-current-callout__badge ${
-                            convocatoriaVigente
+                            convocatoriaEstaAbierta
                               ? "admisiones-current-callout__badge--active"
                               : "admisiones-current-callout__badge--inactive"
                           }`}
                         >
-                          {convocatoriaVigente ? "VIGENTE" : "SIN VIGENCIA"}
+                          {convocatoriaDestacada
+                            ? convocatoriaEstaAbierta
+                              ? "ABIERTA"
+                              : "CERRADA"
+                            : "NO DISPONIBLE"}
                         </span>
                       </div>
 
-                      {convocatoriaVigente ? (
+                      {convocatoriaDestacada ? (
                         <div className="admisiones-date-grid">
                           <div className="admisiones-date-item">
                             <span
@@ -329,7 +377,7 @@ const AdmisionesHomePage = () => {
                                 Fecha de inicio
                               </span>
                               <strong className="admisiones-date-item__value">
-                                {formatDateOnly(convocatoriaVigente.fechaInicio)}
+                                {formatDateOnly(convocatoriaDestacada.fechaInicio)}
                               </strong>
                             </div>
                           </div>
@@ -345,24 +393,25 @@ const AdmisionesHomePage = () => {
                                 Fecha de fin
                               </span>
                               <strong className="admisiones-date-item__value">
-                                {formatDateOnly(convocatoriaVigente.fechaFin)}
+                                {formatDateOnly(convocatoriaDestacada.fechaFin)}
                               </strong>
                             </div>
                           </div>
                         </div>
                       ) : (
                         <p className="admisiones-current-callout__empty">
-                          No hay convocatoria vigente para este programa.
+                          No hay convocatoria para el período actual ni una
+                          convocatoria abierta para este programa.
                         </p>
                       )}
 
                       <button
                         type="button"
                         className="admisiones-enter-button"
-                        disabled={!convocatoriaVigente}
+                        disabled={!convocatoriaDestacada}
                         onClick={() =>
-                          convocatoriaVigente &&
-                          handleNavigate(convocatoriaVigente, programaNombre)
+                          convocatoriaDestacada &&
+                          handleNavigate(convocatoriaDestacada, programaNombre)
                         }
                       >
                         Entrar a la convocatoria

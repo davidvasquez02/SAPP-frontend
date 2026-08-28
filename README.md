@@ -90,6 +90,12 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-08-28 — Convocatoria cerrada del período actual visible
+
+- La pantalla `/admisiones` destaca primero la convocatoria que corresponde al semestre calendario actual en Colombia (enero-junio: período 1; julio-diciembre: período 2), aunque sus fechas hayan terminado o su estado sea cerrado.
+- La tarjeta diferencia explícitamente **ABIERTA** y **CERRADA**, conserva las fechas y permite entrar al detalle en ambos estados. Solo recurre a una convocatoria abierta de otro período cuando no existe una convocatoria para el período actual.
+- La convocatoria destacada se excluye del selector de convocatorias anteriores para evitar mostrarla dos veces; el contrato HTTP de `GET /api/sapp/convocatoriaAdmision` no cambió.
+
 ### 2026-08-26 — Edición de fechas de convocatorias
 
 - El listado de configuración de convocatorias incorpora la acción **Editar** en cada fila y abre un diálogo con las fechas actuales de inicio y fin.
