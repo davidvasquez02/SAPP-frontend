@@ -3,6 +3,7 @@ import { Layout } from "../../components";
 import { useAuth } from "../../context/Auth";
 import {
   AdmisionesHomePage,
+  ActasPage,
   AdmisionesProfesorPage,
   ConvocatoriaDetallePage,
   ConvocatoriasAdmisionConfigPage,
@@ -126,6 +127,14 @@ export const AppRoutes = () => {
               }
             />
           </Route>
+          <Route
+            path="/actas"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <ActasPage />
+              </RequireRoles>
+            }
+          />
           <Route
             path="/fechas"
             element={
