@@ -15,6 +15,7 @@ export interface DocumentoFotoDto {
 export interface InscripcionAdmisionDto {
   id: number
   aspiranteId: number
+  idPersona?: number | null
   nombreAspirante: string
   estado: string
   fechaInscripcion: string

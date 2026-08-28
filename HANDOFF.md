@@ -1,3 +1,32 @@
+# Update 2026-08-28 — Creación de estudiante condicionada por `idPersona`
+
+## Estado actual y decisión
+- En la sección **Crear estudiantes admitidos** del detalle de una convocatoria cerrada, cada fila consulta el `idPersona` que ya viene en la inscripción cargada.
+- Si `idPersona` es un número, el botón aparece deshabilitado con el texto **Estudiante creado**. Solo una inscripción con `idPersona` ausente o `null` puede abrir el formulario **Crear estudiante**.
+- La colección local `createdAspiranteIds` sigue bloqueando inmediatamente una segunda creación dentro de la sesión actual. Al recargar, `idPersona` entregado por backend pasa a ser la fuente persistente.
+
+## Paths, contrato y salida esperada
+- Contrato: `src/modules/admisiones/api/types.ts`, donde `InscripcionAdmisionDto.idPersona` es opcional y acepta `number | null` para tolerar registros antiguos.
+- Gating de UI: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
+- Entrada: `GET ${VITE_API_URL || '/api/sapp'}/inscripcionAdmision/convocatoria/{convocatoriaId}`, envelope `{ ok, message, data: InscripcionAdmisionDto[] }`.
+- Salida esperada: un admitido con `idPersona: 87` no puede volver a crearse; un admitido con `idPersona: null` o sin el campo mantiene disponible la acción, siempre que se cumplan los demás permisos y condiciones de convocatoria.
+- No se agregaron dependencias, schemas de base de datos, datasets, seeds ni artefactos generados.
+
+## Retos y próximos pasos
+1. Validar con backend real que toda creación exitosa haga que la siguiente consulta por convocatoria devuelva `idPersona` para esa inscripción.
+2. El backend debe conservar la restricción de unicidad y rechazar duplicados: el bloqueo frontend evita acciones accidentales, pero no sustituye la regla de dominio ante concurrencia o clientes alternos.
+3. Agregar una prueba de componente cuando se incorpore Vitest, cubriendo `idPersona` numérico, `null`, ausente y el bloqueo inmediato posterior al POST.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npx eslint src/modules/admisiones/api/types.ts src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 228 módulos y generaron `dist/assets/index-DDldkzx9.js` en 727 ms.
+- `git diff --check` (2026-08-28): PASS.
+- Screenshot automatizado pendiente: la validación requiere navegador, sesión institucional y respuesta backend de una convocatoria cerrada con ambos casos de `idPersona`.
+
+---
+
 # Update 2026-08-28 — Orden por período y filtros de estudiantes
 
 ## Estado actual y decisión
