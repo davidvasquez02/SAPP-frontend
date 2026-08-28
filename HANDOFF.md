@@ -1386,3 +1386,23 @@ npm run lint
 - Screenshot automatizado pendiente: el contenedor no dispone de Chromium, Chrome ni Firefox, y la ruta requiere backend y sesión institucional.
 
 ---
+# Update 2026-08-28 — Orden descendente del listado de actas
+
+## Estado actual y decisión
+- `/actas` ordena la respuesta completa de `GET /sapp/actas` antes de aplicar filtros y paginación local.
+- El criterio primario es el código base (el valor de `codigo` sin el sufijo `-{año}`), en orden descendente y con comparación numérica; para el mismo código base, el año también se ordena de forma descendente. El código completo actúa como desempate estable.
+- Ejemplo de salida esperada: `ACT-010-2025`, `ACT-002-2026`, `ACT-002-2024`, `ACT-001-2026`. El nombre del acta ya no interviene en el orden.
+
+## Paths, contrato y próximos pasos
+- Implementación: `src/pages/Actas/ActasPage.tsx`, funciones `getActaYear`, `getActaCode` y `compareActas`.
+- Contrato sin cambios: `ActaDto.codigo` continúa siendo un `string` con formato esperado `ACT-{consecutivo}-{año}`; la pantalla tolera códigos sin sufijo anual y los desempata por el valor completo.
+- No se agregaron endpoints, schemas, dependencias, seeds, datasets ni artefactos. Queda pendiente validar con datos reales si backend admite códigos base no numéricos y agregar pruebas unitarias cuando el proyecto incorpore Vitest.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Versiones verificadas: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npx eslint src/pages/Actas/ActasPage.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 232 módulos y generaron `dist/assets/index-CvPyPw3E.css` y `dist/assets/index-Dj342yfa.js` en 842 ms.
+- `git diff --check` y `npm list --depth=0` (2026-08-28): PASS. No se tomó screenshot porque el cambio solo altera el orden de datos y su validación visual requiere backend, sesión institucional y registros de actas.
+
+---
