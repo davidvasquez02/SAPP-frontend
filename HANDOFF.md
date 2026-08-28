@@ -1,3 +1,26 @@
+# Update 2026-08-28 — Fotografías más altas en tarjetas de aspirantes y estudiantes
+
+## Estado actual y decisión visual
+- En `/admisiones/convocatoria/:convocatoriaId`, la zona de foto de cada tarjeta de aspirante mide ahora 240 px de alto en escritorio y 220 px en pantallas de hasta 640 px.
+- En `/coordinacion/estudiantes`, la tarjeta de estudiante aplica las mismas alturas. Se mantiene el ancho de cada tarjeta, el carrusel horizontal y `object-fit: cover`, por lo que la imagen conserva sus proporciones y ocupa un área vertical mayor.
+- No se modificaron componentes React, contratos HTTP, rutas, schemas, datasets, seeds, variables de entorno ni dependencias.
+
+## Paths, salida esperada y próximos pasos
+- Aspirantes: `src/modules/admisiones/components/StudentCard/StudentCard.css`.
+- Estudiantes: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css`.
+- Salida esperada: ambas pantallas muestran 50 px adicionales de fotografía en escritorio y 40 px adicionales en móvil, sin ensanchar las tarjetas ni alterar sus datos.
+- Validar visualmente con fotografías reales y sesión institucional en modo claro, oscuro y viewport móvil; comprobar especialmente que el encuadre `cover` resulte adecuado para retratos con distintos tamaños de origen.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y el `node_modules` existente. No crear venv, conda, poetry, entornos Python ni árboles de dependencias en subdirectorios.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 226 módulos y generaron `dist/assets/index-Cpk5iGGf.css` y `dist/assets/index-DLu8cAeb.js`.
+- `npx eslint src/modules/admisiones/components/StudentCard/StudentCard.tsx src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-08-28): PASS.
+- Screenshot automatizado pendiente: el entorno no contiene Chromium, Chrome, Firefox, Playwright ni Puppeteer y las rutas requieren sesión institucional/backend.
+
+---
+
 # Update 2026-08-28 — Convocatoria del período actual aunque esté cerrada
 
 ## Estado actual y decisión funcional
