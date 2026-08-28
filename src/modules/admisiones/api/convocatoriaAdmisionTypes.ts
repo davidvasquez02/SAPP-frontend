@@ -22,6 +22,12 @@ export type CreateConvocatoriaRequest = {
   periodoId: number
 }
 
+export type UpdateConvocatoriaFechasRequest = {
+  fechaInicio?: string
+  fechaFin?: string
+}
+
 export type ConvocatoriaAdmisionListResponse = ApiResponse<ConvocatoriaAdmisionDto[]>
 export type ConvocatoriaAdmisionCreateResponse = ApiResponse<ConvocatoriaAdmisionDto | null>
 export type ConvocatoriaAdmisionCloseResponse = ApiResponse<null>
+export type ConvocatoriaAdmisionDatesUpdateResponse = ApiResponse<ConvocatoriaAdmisionDto | null>

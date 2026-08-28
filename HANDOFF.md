@@ -1095,3 +1095,31 @@ npm run lint
 - Node.js 24.15.0 y npm 11.4.2.
 - React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, `@vitejs/plugin-react-swc` 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
 - No crear `venv`, conda, poetry, entornos Python ni árboles `node_modules` en subdirectorios.
+
+## Update 2026-08-26 — Edición de fechas de convocatorias
+
+### Estado actual y decisión
+- La tabla de `/admisiones/convocatorias` (componente `ConvocatoriasAdmisionConfigPage`) ofrece **Editar** para todas las convocatorias, vigentes o cerradas, además de las acciones preexistentes.
+- La acción abre un diálogo independiente que precarga `fechaInicio` y `fechaFin`, valida campos obligatorios y orden cronológico, y evita envíos si el usuario no cambió nada.
+- El request es parcial: se incluye únicamente cada fecha cuyo valor cambió. Tras el éxito, el diálogo se cierra, se refresca `GET /sapp/convocatoriaAdmision` y aparece feedback en el listado.
+
+### Paths, contrato y salida esperada
+- UI: `src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx`.
+- Diálogo: `src/modules/admisiones/components/EditConvocatoriaFechasModal/`.
+- Servicio/tipos: `src/modules/admisiones/api/convocatoriaAdmisionService.ts` y `convocatoriaAdmisionTypes.ts`.
+- Request navegador: `PUT /api/sapp/convocatoriaAdmision/fechas/{id}` (el servicio conserva la ruta normalizada `/sapp/...`) con `{ fechaInicio?: string, fechaFin?: string }`, formato `YYYY-MM-DD` y al menos una propiedad.
+- Respuesta esperada: envelope `{ ok: boolean, message: string, data: ConvocatoriaAdmisionDto | null }`. Ante `ok: false`, el diálogo queda abierto y presenta `message`; ante éxito, el listado vuelve a cargar.
+- No se agregaron datasets, seeds, dependencias, migraciones ni variables de entorno.
+
+### Retos y próximos pasos
+1. Confirmar contra el backend real que el método del endpoint es `PUT` y que acepta un payload parcial, tal como el ejemplo entregado con solo `fechaFin`.
+2. Validar permisos para coordinación/secretaría y la regla backend al reabrir efectivamente una convocatoria cerrada mediante una nueva fecha fin.
+3. Probar visualmente el diálogo en modo claro/oscuro y móvil con sesión institucional y datos reales; el contenedor no dispone de navegador automatizable.
+
+### Entorno exacto y resultados recientes
+- Raíz única `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- Reutilizar el `node_modules` existente; no crear venv, conda, poetry, entornos Python ni dependencias en subdirectorios.
+- `npm run build` (2026-08-26): PASS; 226 módulos transformados, assets `index-DWphQe2z.css` e `index-fIZdI5Os.js`, build en 739 ms.
+- `npx eslint src/modules/admisiones/api/convocatoriaAdmisionService.ts src/modules/admisiones/api/convocatoriaAdmisionTypes.ts src/modules/admisiones/components/EditConvocatoriaFechasModal/EditConvocatoriaFechasModal.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx` (2026-08-26): PASS.
+- `git diff --check` (2026-08-26): PASS.
+- Screenshot: pendiente por limitación de ambiente; `command -v chromium chromium-browser google-chrome playwright` no encontró navegador ni Playwright CLI.

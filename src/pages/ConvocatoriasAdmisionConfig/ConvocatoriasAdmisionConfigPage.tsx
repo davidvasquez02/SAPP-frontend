@@ -7,6 +7,7 @@ import {
 } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { CreateConvocatoriaModal } from "../../modules/admisiones/components/CreateConvocatoriaModal";
+import { EditConvocatoriaFechasModal } from "../../modules/admisiones/components/EditConvocatoriaFechasModal";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import "./ConvocatoriasAdmisionConfigPage.css";
 
@@ -63,6 +64,8 @@ const ConvocatoriasAdmisionConfigPage = () => {
   const [periodoFilter, setPeriodoFilter] = useState("TODOS");
   const [vigenteFilter, setVigenteFilter] = useState<VigenteFilter>("TODOS");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingConvocatoria, setEditingConvocatoria] =
+    useState<ConvocatoriaAdmisionDto | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadConvocatorias = useCallback(
@@ -331,6 +334,14 @@ const ConvocatoriasAdmisionConfigPage = () => {
                                 >
                                   Ver inscripciones
                                 </button>
+                                <button
+                                  type="button"
+                                  className="convocatorias-config__action convocatorias-config__action--ghost"
+                                  onClick={() => setEditingConvocatoria(item)}
+                                  disabled={isRefreshing}
+                                >
+                                  Editar
+                                </button>
                                 {convocatoriaVigente ? (
                                   <button
                                     type="button"
@@ -363,6 +374,15 @@ const ConvocatoriasAdmisionConfigPage = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onRefreshConvocatorias={() => loadConvocatorias(true)}
         onSuccess={(message) => setFeedback(message)}
+      />
+      <EditConvocatoriaFechasModal
+        convocatoria={editingConvocatoria}
+        onClose={() => setEditingConvocatoria(null)}
+        onSuccess={async (message) => {
+          setEditingConvocatoria(null);
+          await loadConvocatorias(true);
+          setFeedback(message);
+        }}
       />
     </ModuleLayout>
   );
