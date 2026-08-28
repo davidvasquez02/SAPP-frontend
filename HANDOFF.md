@@ -1,3 +1,31 @@
+# Update 2026-08-28 — Ajustes del listado y archivos de actas
+
+## Estado actual y decisiones
+- `/actas` ordena el listado por `nombre` ascendente (comparación española, natural e insensible a mayúsculas/tildes), luego por el año descendente extraído del sufijo `-YYYY` de `codigo` y finalmente por código. La paginación local se mantiene en 10 filas.
+- Tanto las opciones del filtro **Año** como su evaluación usan el año del código/nombre institucional (`ACT-{consecutivo}-{año}`), nunca el año de `fechaCreacion`. La fecha de creación sigue visible en una columna separada.
+- Se eliminó el texto de conteo “N actas encontradas”. La confirmación `El acta ... fue creada correctamente.` permanece accesible con `role=status` y se limpia automáticamente a los 5 segundos.
+- Cada fila muestra botones pill **Ver** y **Descargar**, compatibles con tokens claro/oscuro. Al accionarlos, se consulta el documento por `documentoContenidoId`; se abre un Blob en una pestaña o se descarga con el nombre del backend y fallback `{codigo}.pdf`. Mientras una acción está en curso se bloquean las demás y se muestra su estado.
+
+## Paths, contratos y salida esperada
+- Pantalla y lógica: `src/pages/Actas/ActasPage.tsx`; estilos: `src/pages/Actas/ActasPage.css`.
+- Listado: `GET ${VITE_API_URL || '/api/sapp'}/actas` → `{ ok, message, data: ActaDto[] }`; cada DTO debe incluir `codigo`, `fechaCreacion` y `documentoContenidoId`.
+- Archivo: `GET ${VITE_API_URL || '/api/sapp'}/document/{documentoContenidoId}` → `{ ok, message, data: { contenidoBase64, mimeType, nombreArchivo, ... } }`.
+- Salida esperada: un acta `ACT-001-2024` creada en 2026 aparece bajo el filtro **2024**, no **2026**; nombres iguales muestran primero el año más reciente; al crear se muestra la confirmación durante 5 segundos; **Ver** abre el PDF y **Descargar** lo guarda.
+
+## Retos y próximos pasos
+1. Validar con backend real que `ActaDto.documentoContenidoId` es el identificador aceptado por `GET /document/{id}`. Si el backend expone un endpoint específico de actas, encapsular el cambio en `src/modules/actas/api.ts` sin llevar detalles HTTP al componente.
+2. Probar con más de 10 actas, nombres repetidos y una fecha de creación cuyo año difiera del sufijo del código.
+3. Validar visualmente en modos claro/oscuro y móvil con sesión `COORDINADOR` o `ADMIN`. No hay runner Vitest, datasets ni seeds nuevos.
+
+## Entorno y pruebas recientes
+- Raíz única `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Reutilizar `node_modules` de la raíz. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/api.ts src/modules/actas/types.ts` (2026-08-28): PASS; solo apareció el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 232 módulos y generaron `dist/assets/index-DXwu2Mkt.css` y `dist/assets/index-BEx_EwDv.js` en 497 ms.
+- `git diff --check` (2026-08-28): PASS. Screenshot pendiente porque el contenedor no dispone de navegador y la ruta requiere backend/sesión institucional.
+
+---
+
 # Update 2026-08-28 — Módulo de listado y carga de actas
 
 ## Estado actual y decisiones

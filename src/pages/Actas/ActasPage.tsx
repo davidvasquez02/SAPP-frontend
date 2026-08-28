@@ -2,10 +2,15 @@ import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "
 import { ModuleLayout } from "../../components";
 import { crearActa, getActas } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
+import { getDocumentById } from "../../modules/documentos/api/documentosService";
+import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import "./ActasPage.css";
 
 const PAGE_SIZE = 10;
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
+const SUCCESS_MESSAGE_DURATION_MS = 5_000;
+
+type FileAction = "view" | "download";
 
 const getColombiaToday = () => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -27,6 +32,16 @@ const formatSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const getActaYear = (acta: ActaDto) => acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
+
+const compareActas = (a: ActaDto, b: ActaDto) => {
+  const byName = a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
+  if (byName !== 0) return byName;
+
+  const byYear = getActaYear(b).localeCompare(getActaYear(a));
+  return byYear || a.codigo.localeCompare(b.codigo, "es", { numeric: true, sensitivity: "base" });
 };
 
 const fileToBase64 = (file: File) =>
@@ -61,13 +76,14 @@ const ActasPage = () => {
   const [anio, setAnio] = useState(currentYear);
   const [observaciones, setObservaciones] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [fileAction, setFileAction] = useState<{ actaId: number; action: FileAction } | null>(null);
 
   const loadActas = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await getActas();
-      setActas([...data].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion) || b.id - a.id));
+      setActas([...data].sort(compareActas));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No fue posible cargar las actas.");
     } finally {
@@ -79,16 +95,23 @@ const ActasPage = () => {
     void loadActas();
   }, []);
 
+  useEffect(() => {
+    if (!success) return;
+
+    const timeoutId = window.setTimeout(() => setSuccess(null), SUCCESS_MESSAGE_DURATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [success]);
+
   const codigo = `ACT-${codigoActa.trim().toUpperCase()}-${anio}`;
   const years = useMemo(
-    () => Array.from(new Set(actas.map((acta) => acta.fechaCreacion.slice(0, 4)))).sort().reverse(),
+    () => Array.from(new Set(actas.map(getActaYear).filter(Boolean))).sort().reverse(),
     [actas],
   );
   const filteredActas = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("es");
     return actas.filter(
       (acta) =>
-        (!yearFilter || acta.fechaCreacion.startsWith(yearFilter)) &&
+        (!yearFilter || getActaYear(acta) === yearFilter) &&
         (!term ||
           acta.nombre.toLocaleLowerCase("es").includes(term) ||
           acta.codigo.toLocaleLowerCase("es").includes(term)),
@@ -98,6 +121,33 @@ const ActasPage = () => {
   const visibleActas = filteredActas.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => setPage(1), [search, yearFilter]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const handleFileAction = async (acta: ActaDto, action: FileAction) => {
+    setError(null);
+    setFileAction({ actaId: acta.id, action });
+    try {
+      const document = await getDocumentById(acta.documentoContenidoId);
+      if (!document.contenidoBase64) {
+        throw new Error("El acta todavía no tiene un archivo disponible.");
+      }
+
+      const mimeType = document.mimeType || acta.mimeType || "application/pdf";
+      const filename = document.nombreArchivo || `${acta.codigo}.pdf`;
+      if (action === "view") {
+        openBase64InNewTab(document.contenidoBase64, mimeType, filename);
+      } else {
+        downloadBase64File(document.contenidoBase64, mimeType, filename);
+      }
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : "No fue posible obtener el archivo del acta.");
+    } finally {
+      setFileAction(null);
+    }
+  };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
@@ -179,14 +229,18 @@ const ActasPage = () => {
         ) : null}
 
         <section className="actas-list" aria-labelledby="actas-list-title">
-          <div className="actas-list__heading"><div><h2 id="actas-list-title">Listado de actas</h2><p>{filteredActas.length} acta{filteredActas.length === 1 ? "" : "s"} encontrada{filteredActas.length === 1 ? "" : "s"}</p></div></div>
+          <div className="actas-list__heading"><h2 id="actas-list-title">Listado de actas</h2></div>
           <div className="sapp-filters-panel">
             <label className="sapp-filter-field"><span>Buscar por nombre o código</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ej. ACT-001" /></label>
             <label className="sapp-filter-field"><span>Año</span><select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}><option value="">Todos</option>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>
           </div>
           {isLoading ? <p className="actas-page__empty">Cargando actas...</p> : null}
           {!isLoading && visibleActas.length === 0 ? <p className="actas-page__empty">No hay actas que coincidan con los filtros.</p> : null}
-          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Nombre</th><th>Fecha</th><th>Observaciones</th><th>Archivo</th></tr></thead><tbody>{visibleActas.map((acta) => <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.nombre}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td></tr>)}</tbody></table></div> : null}
+          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
+            const isViewing = fileAction?.actaId === acta.id && fileAction.action === "view";
+            const isDownloading = fileAction?.actaId === acta.id && fileAction.action === "download";
+            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" disabled={fileAction !== null} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" disabled={fileAction !== null} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button></div></td></tr>;
+          })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>
       </section>
