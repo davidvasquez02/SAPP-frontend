@@ -14,6 +14,7 @@ import {
   type DocumentosEstudianteGrupoDto,
 } from '../../modules/documentos/api/documentosService'
 import { getEstudianteById } from '../../modules/estudiantes/services/estudiantesMockService'
+import { clearEstudiantesListCache } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import './EstudianteDetalleCoordinacionPage.css'
 
@@ -549,6 +550,14 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [activeDocumentAction, setActiveDocumentAction] = useState<ActiveDocumentAction>(null)
   const [uploadingDocumentAction, setUploadingDocumentAction] = useState<UploadingDocumentAction>(null)
   const loadedDocumentsCodeRef = useRef<string | null>(null)
+
+  useEffect(() => () => {
+    window.setTimeout(() => {
+      if (window.location.pathname !== '/coordinacion/estudiantes') {
+        clearEstudiantesListCache()
+      }
+    }, 0)
+  }, [])
 
   useEffect(() => {
     const id = Number(estudianteId)
