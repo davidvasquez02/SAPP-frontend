@@ -1,3 +1,31 @@
+# Update 2026-08-28 — Orden por período y filtros de estudiantes
+
+## Estado actual y decisión
+- `/coordinacion/estudiantes` presenta las tarjetas ordenadas por `cohorte` (período) de forma descendente y desempata alfabéticamente por `nombreCompleto`.
+- Sobre los datos cargados se pueden combinar tres filtros locales: período exacto, coincidencia parcial de nombre y coincidencia parcial de código UIS. Nombre y código se normalizan para ignorar tildes y diferencias de mayúsculas/minúsculas.
+- La UI informa cuántos estudiantes coinciden, ofrece **Limpiar filtros**, muestra un estado vacío específico cuando no hay coincidencias y reinicia los filtros al cambiar de programa. No se agregaron endpoints, dependencias, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Lógica y controles: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Estilos responsive y compatibles con tokens claro/oscuro: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.css`.
+- Entrada vigente: `GET ${VITE_API_URL || '/api/sapp'}/estudiantes/consulta?programaId={id}&egresados=false`, envelope `{ ok, message, data: EstudianteConsultaBackend[] }`. El período mostrado/filtrado proviene de `data[].estudiante.cohorte`, convertido a texto por el mapper existente.
+- Salida esperada: sin filtros, períodos recientes primero; los tres criterios se intersectan; el carrusel recibe únicamente coincidencias y conserva la navegación/caché de detalle existente.
+
+## Retos y próximos pasos
+1. Validar con datos reales si dominio prefiere llamar **Período** o **Cohorte** al campo backend `cohorte`, y confirmar que sus valores siempre tienen un formato ordenable numéricamente (por ejemplo, `20262`).
+2. Para volúmenes que requieran paginación backend, mover filtros y orden al endpoint sin cambiar su semántica visible; actualmente operan sobre la colección completa retornada.
+3. Validar visualmente en claro, oscuro y móvil con sesión institucional. No hay runner Vitest configurado; sería útil extraer y probar normalización, intersección de filtros y orden.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Reutilizar `node_modules` en la raíz. No crear venv, conda, poetry, entornos Python ni un segundo árbol de dependencias.
+- `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 228 módulos y generaron `dist/assets/index-BCkaXDBj.css` y `dist/assets/index-YJoqk_0Z.js` en 665 ms.
+- `git diff --check` (2026-08-28): PASS.
+- Screenshot automatizado pendiente: el contenedor no dispone de Chromium, Chrome ni Firefox, y la ruta requiere backend y sesión institucional para mostrar datos reales.
+
+---
+
 # Update 2026-08-28 — Caché efímera listado → detalle → listado de estudiantes
 
 ## Estado actual y decisión
