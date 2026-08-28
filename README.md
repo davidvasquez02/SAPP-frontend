@@ -13,6 +13,7 @@ SAPP centraliza y estandariza la trazabilidad de procesos académicos y administ
 - examen de candidatura;
 - trabajos de grado;
 - configuración de fechas y notificaciones.
+- consulta y carga de actas institucionales por coordinación y administración.
 
 Este repositorio contiene únicamente el **frontend React/TypeScript**. La lógica de dominio, persistencia y contratos principales viven en el backend Spring Boot/PostgreSQL consumido por API HTTP.
 
@@ -89,6 +90,13 @@ npm run preview
 No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `GET /api/sapp/inicio`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
 
 ## Decisiones recientes / changelog-lite
+
+### 2026-08-28 — Módulo de actas
+
+- Se incorporó la ruta protegida `/actas` para los roles `COORDINADOR` y `ADMIN`, con acceso desde la navegación principal.
+- El módulo consume `GET /actas`, permite buscar por nombre/código, filtrar por año y pagina localmente los resultados.
+- La creación consume `POST /actas`. La interfaz arma el código `ACT-{código}-{año}`, fija `fechaCreacion` con la fecha actual en `America/Bogota`, convierte el PDF a base64 y calcula su checksum SHA-256 antes de enviarlo. Solo admite PDF de hasta 15 MB.
+- No se agregaron seeds ni dependencias. El contrato y transporte están encapsulados en `src/modules/actas`; la pantalla está en `src/pages/Actas`.
 
 ### 2026-08-28 — Bloqueo de creación de aspirantes en convocatorias cerradas
 

@@ -1,3 +1,35 @@
+# Update 2026-08-28 — Módulo de listado y carga de actas
+
+## Estado actual y decisiones
+- Existe una nueva ruta `/actas`, visible y autorizada exclusivamente para `COORDINADOR` (`ROLES.COORDINACION`) y `ADMIN`. La protección se aplica tanto en `AppRoutes` como en el ítem del sidebar.
+- La pantalla lista actas ordenadas por fecha/ID descendente, permite filtro local por nombre o código, filtro por año y paginación de 10 filas. Expone estados de carga, vacío, error y confirmación.
+- **Cargar acta** abre un formulario para nombre, segmento de código, año, observaciones y PDF. El código final se genera como `ACT-{segmento}-{año}`; `fechaCreacion` se calcula al enviar usando `America/Bogota`.
+- El navegador convierte el archivo a base64 sin el prefijo data URI, informa MIME/tamaño y calcula SHA-256 hexadecimal mediante Web Crypto. Se restringe la selección a PDF y 15 MB para evitar cargas accidentales excesivas.
+
+## Paths, contratos y salida esperada
+- Pantalla/estilos: `src/pages/Actas/ActasPage.tsx` y `src/pages/Actas/ActasPage.css`.
+- Transporte/tipos: `src/modules/actas/api.ts` y `src/modules/actas/types.ts`.
+- Ruteo/export: `src/app/routes/index.tsx`, `src/pages/index.ts`; navegación: `src/components/Sidebar/Sidebar.tsx`.
+- Listado: `GET ${VITE_API_URL || '/api/sapp'}/actas` → `{ ok, message, data: ActaDto[] }`.
+- Creación: `POST ${VITE_API_URL || '/api/sapp'}/actas` con `{ nombre, codigo, fechaCreacion, observaciones, contenidoBase64, mimeType, tamanoBytes, checksum }`. El servicio tolera por ahora una respuesta creada directa o dentro de `{ ok, message, data }`, porque no se suministró el shape de respuesta del POST.
+- Salida esperada: al crear correctamente, el formulario se limpia/cierra, aparece confirmación y el listado se consulta nuevamente. No hay descarga porque no se proporcionó endpoint para obtener `documentoContenidoId`.
+
+## Retos y próximos pasos
+1. Validar con backend real el envelope exacto del POST y confirmar si checksum debe ser SHA-256 hexadecimal; retirar la compatibilidad dual cuando el contrato sea definitivo.
+2. Confirmar el límite funcional de archivo (la UI adoptó 15 MB) y si el campo `nombre` debe ser texto libre o un catálogo suministrado por backend.
+3. Solicitar el endpoint de descarga/visualización para hacer accionable `documentoContenidoId`; el GET actual solo entrega metadatos.
+4. Agregar pruebas de componente/servicio cuando se incorpore Vitest. No hay seeds, datasets, migraciones ni dependencias nuevas.
+
+## Entorno y pruebas recientes
+- Raíz única `/workspace/SAPP-frontend`; Node.js 24.15.0 y npm 11.4.2. Reutilizar el `node_modules` existente; no crear venv, conda, poetry ni otro árbol de dependencias.
+- Dependencias principales instaladas: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npm run build` (2026-08-28): PASS; 232 módulos transformados, build completado en 480 ms.
+- `npx eslint src/modules/actas src/pages/Actas src/app/routes/index.tsx src/components/Sidebar/Sidebar.tsx src/pages/index.ts` (2026-08-28): PASS; solo se mostró el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run lint` (2026-08-28): FAIL por 11 errores y 1 warning históricos fuera del módulo de actas (`no-explicit-any`, estados síncronos en effects, mocks/parámetros sin uso, interfaces vacías y dependencia de hook). El lint focalizado de los archivos modificados sí pasa.
+- Validación HTTP y screenshot pendientes: el módulo requiere backend/sesión institucional y el contenedor no dispone de navegador automatizable.
+
+---
+
 # Update 2026-08-28 — Creación de estudiante condicionada por `idPersona`
 
 ## Estado actual y decisión

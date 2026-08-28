@@ -1,4 +1,5 @@
 export { AdmisionesHomePage } from "./AdmisionesHome";
+export { ActasPage } from "./Actas";
 export { AdmisionesProfesorPage } from "./AdmisionesProfesor";
 export { AdmisionesPage } from "./AdmisionesPage";
 export { ConvocatoriaDetallePage } from "./ConvocatoriaDetalle";
