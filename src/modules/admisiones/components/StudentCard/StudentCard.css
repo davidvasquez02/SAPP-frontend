@@ -30,7 +30,7 @@
 .applicant-card__media,
 .applicant-card-photo {
   width: 100%;
-  height: 190px;
+  height: 240px;
   overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 32%);
   background: color-mix(
@@ -211,6 +211,6 @@
 
   .applicant-card__media,
   .applicant-card-photo {
-    height: 180px;
+    height: 220px;
   }
 }
