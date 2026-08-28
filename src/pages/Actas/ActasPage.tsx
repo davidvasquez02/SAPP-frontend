@@ -1,8 +1,7 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { ModuleLayout } from "../../components";
-import { crearActa, eliminarActa, getActas } from "../../modules/actas/api";
+import { crearActa, eliminarActa, getActas, getDocumentoActa } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
-import { getDocumentById } from "../../modules/documentos/api/documentosService";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import "./ActasPage.css";
 
@@ -131,7 +130,7 @@ const ActasPage = () => {
     setError(null);
     setFileAction({ actaId: acta.id, action });
     try {
-      const document = await getDocumentById(acta.documentoContenidoId);
+      const document = await getDocumentoActa(acta.id);
       if (!document.contenidoBase64) {
         throw new Error("El acta todavía no tiene un archivo disponible.");
       }

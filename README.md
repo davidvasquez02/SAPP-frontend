@@ -96,7 +96,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Se incorporó la ruta protegida `/actas` para los roles `COORDINADOR` y `ADMIN`, con acceso desde la navegación principal.
 - El módulo consume `GET /actas`, permite buscar por nombre/código y pagina localmente los resultados en grupos de 10. Las actas se ordenan alfabéticamente por nombre y, para nombres iguales, por el año descendente incluido en el código `ACT-{consecutivo}-{año}`.
 - El filtro de año y la columna **Año** se derivan del sufijo del código del acta, no de `fechaCreacion`. El conteo textual de resultados fue retirado.
-- Cada fila permite **Ver** o **Descargar** el PDF. La acción consulta el contenido mediante `GET /document/{documentoContenidoId}` y usa el nombre retornado o, como fallback, `{codigo}.pdf`.
+- Cada fila permite **Ver** o **Descargar** el PDF. La acción consulta el contenido mediante `GET /actas/{actaId}` usando el `id` del acta (no `documentoContenidoId`) y usa el nombre retornado o, como fallback, `{codigo}.pdf`.
 - Cada fila también permite **Eliminar**. Antes de enviar `DELETE /actas/{id}`, la interfaz solicita confirmación mostrando el nombre y el código del acta; al completarse, retira el registro del listado y presenta una confirmación temporal.
 - La creación consume `POST /actas`. La interfaz arma el código `ACT-{código}-{año}`, fija `fechaCreacion` con la fecha actual en `America/Bogota`, convierte el PDF a base64 y calcula su checksum SHA-256 antes de enviarlo. Solo admite PDF de hasta 15 MB.
 - La confirmación de creación se oculta automáticamente después de 5 segundos.
@@ -254,7 +254,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Estudiantes desde admisiones: `POST /api/sapp/estudiantes` desde el navegador con `{ idAspirante: number, codigoUIS: string, emailInstitucional: string }`. La respuesta exitosa usa el envelope habitual y `data` contiene `{ id, cohorte, estado, codigoEstudianteUis, fechaIngreso, fechaEgreso, idAspirante, foto }`.
 - Inscripciones por convocatoria: `GET /api/sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` desde el navegador. Cada elemento puede incluir `idPersona: number | null`; un valor numérico indica que el aspirante ya existe como estudiante y bloquea una nueva creación.
 - Documentos: operaciones de checklist/prefetch y validación mediante servicios de documentos existentes.
-- Archivo de un acta: `GET /api/sapp/document/{documentoContenidoId}`; se espera el envelope `{ ok, message, data }`, con `data.contenidoBase64`, `data.mimeType` y `data.nombreArchivo` para visualizar o descargar el PDF.
+- Archivo de un acta: `GET /api/sapp/actas/{actaId}`; el path usa `ActaDto.id`, no `documentoContenidoId`. Se espera el envelope `{ ok, message, data }`, con `data.contenidoBase64`, `data.mimeType` y `data.nombreArchivo` para visualizar o descargar el PDF.
 - Login institucional: `GET /api/sapp/inicio`, sin body, envelope `{ ok, message, data }`. Además de los campos de identidad superiores, `data.detalle` contiene `{ aspirante, docente, estudiante, persona }`. `detalle.persona.id` alimenta `session.user.persona.id`, `detalle.estudiante?.id` alimenta `session.user.estudiante?.id` y el detalle completo queda disponible en `session.user.detalle`; no usar el `data.id` superior como sustituto de esos identificadores de dominio.
 
 ## Notas visuales de marca
