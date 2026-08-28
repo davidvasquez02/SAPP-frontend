@@ -381,6 +381,9 @@ const ConvocatoriaDetallePage = () => {
                   <tbody>
                     {aspirantesAdmitidos.map((aspirante) => {
                       const wasCreated = createdAspiranteIds.has(aspirante.aspiranteId);
+                      const alreadyExistsAsEstudiante = aspirante.idPersona != null;
+                      const cannotCreateEstudiante =
+                        alreadyExistsAsEstudiante || wasCreated;
                       return (
                         <tr key={aspirante.id}>
                           <td>{aspirante.nombreAspirante}</td>
@@ -390,9 +393,11 @@ const ConvocatoriaDetallePage = () => {
                               type="button"
                               className="convocatoria-detalle__student-button"
                               onClick={() => setSelectedAspirante(aspirante)}
-                              disabled={wasCreated}
+                              disabled={cannotCreateEstudiante}
                             >
-                              {wasCreated ? "Estudiante creado" : "Crear estudiante"}
+                              {cannotCreateEstudiante
+                                ? "Estudiante creado"
+                                : "Crear estudiante"}
                             </button>
                           </td>
                         </tr>
