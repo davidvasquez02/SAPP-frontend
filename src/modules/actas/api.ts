@@ -1,10 +1,12 @@
 import { httpDelete, httpGet, httpPost } from "../../shared/http/httpClient";
+import type { DocumentoCompletoDto } from "../documentos/api/documentosService";
 import type {
   ActaDto,
   ActasListResponse,
   CrearActaRequest,
   CrearActaResponse,
 } from "./types";
+import type { ApiResponse } from "../../api/types";
 
 export const getActas = async (): Promise<ActaDto[]> => {
   const response = await httpGet<ActasListResponse>("/sapp/actas");
@@ -32,4 +34,14 @@ export const crearActa = async (payload: CrearActaRequest): Promise<ActaDto> => 
 
 export const eliminarActa = async (actaId: number): Promise<void> => {
   await httpDelete<unknown>(`/sapp/actas/${actaId}`);
+};
+
+export const getDocumentoActa = async (actaId: number): Promise<DocumentoCompletoDto> => {
+  const response = await httpGet<ApiResponse<DocumentoCompletoDto>>(`/sapp/actas/${actaId}`);
+
+  if (!response.ok) {
+    throw new Error(response.message || "No fue posible cargar el archivo del acta.");
+  }
+
+  return response.data;
 };

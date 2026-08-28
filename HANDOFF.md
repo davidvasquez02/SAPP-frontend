@@ -1,5 +1,11 @@
 # Update 2026-08-28 — Ajustes del listado y archivos de actas
 
+## Corrección — Consulta del archivo por ID del acta
+- **Ver** y **Descargar** ahora ejecutan `GET ${VITE_API_URL || '/api/sapp'}/actas/{actaId}` con `ActaDto.id`. No deben usar `documentoContenidoId` ni el endpoint genérico `/document/{id}`.
+- El transporte quedó encapsulado en `getDocumentoActa` (`src/modules/actas/api.ts`); la pantalla solo entrega `acta.id`. El contrato esperado conserva `{ ok, message, data: { contenidoBase64, mimeType, nombreArchivo, ... } }`.
+- No se agregaron dependencias, seeds, datasets ni variables de entorno. La validación integrada con un backend autenticado continúa pendiente.
+- Pruebas de esta corrección: `npx eslint src/modules/actas/api.ts src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts` PASS; `npm run build` PASS (232 módulos, assets `index-CvPyPw3E.css` e `index-BVSvXJki.js`, 1.19 s); `git diff --check` PASS. npm solo mostró el warning de entorno ya conocido `Unknown env config "http-proxy"`.
+
 ## Actualización — Eliminación de actas
 - Cada fila de `/actas` incluye el botón destructivo **Eliminar**. Su confirmación nativa identifica el acta por `nombre` y `codigo` y advierte que la acción no puede deshacerse.
 - Al confirmar se ejecuta `DELETE ${VITE_API_URL || '/api/sapp'}/actas/{id}`. El cliente admite la respuesta `204 No Content`; tras el éxito elimina el DTO del estado local, reajusta automáticamente la paginación existente y muestra `El acta {codigo} fue eliminada correctamente.` durante 5 segundos.
@@ -12,16 +18,16 @@
 - `/actas` ordena el listado por `nombre` ascendente (comparación española, natural e insensible a mayúsculas/tildes), luego por el año descendente extraído del sufijo `-YYYY` de `codigo` y finalmente por código. La paginación local se mantiene en 10 filas.
 - Tanto las opciones del filtro **Año** como su evaluación usan el año del código/nombre institucional (`ACT-{consecutivo}-{año}`), nunca el año de `fechaCreacion`. La fecha de creación sigue visible en una columna separada.
 - Se eliminó el texto de conteo “N actas encontradas”. La confirmación `El acta ... fue creada correctamente.` permanece accesible con `role=status` y se limpia automáticamente a los 5 segundos.
-- Cada fila muestra botones pill **Ver** y **Descargar**, compatibles con tokens claro/oscuro. Al accionarlos, se consulta el documento por `documentoContenidoId`; se abre un Blob en una pestaña o se descarga con el nombre del backend y fallback `{codigo}.pdf`. Mientras una acción está en curso se bloquean las demás y se muestra su estado.
+- Cada fila muestra botones pill **Ver** y **Descargar**, compatibles con tokens claro/oscuro. Al accionarlos, se consulta el documento por el `id` del acta mediante `/actas/{actaId}`; se abre un Blob en una pestaña o se descarga con el nombre del backend y fallback `{codigo}.pdf`. Mientras una acción está en curso se bloquean las demás y se muestra su estado.
 
 ## Paths, contratos y salida esperada
 - Pantalla y lógica: `src/pages/Actas/ActasPage.tsx`; estilos: `src/pages/Actas/ActasPage.css`.
 - Listado: `GET ${VITE_API_URL || '/api/sapp'}/actas` → `{ ok, message, data: ActaDto[] }`; cada DTO debe incluir `codigo`, `fechaCreacion` y `documentoContenidoId`.
-- Archivo: `GET ${VITE_API_URL || '/api/sapp'}/document/{documentoContenidoId}` → `{ ok, message, data: { contenidoBase64, mimeType, nombreArchivo, ... } }`.
+- Archivo: `GET ${VITE_API_URL || '/api/sapp'}/actas/{actaId}` → `{ ok, message, data: { contenidoBase64, mimeType, nombreArchivo, ... } }`; `{actaId}` corresponde a `ActaDto.id`, no a `documentoContenidoId`.
 - Salida esperada: un acta `ACT-001-2024` creada en 2026 aparece bajo el filtro **2024**, no **2026**; nombres iguales muestran primero el año más reciente; al crear se muestra la confirmación durante 5 segundos; **Ver** abre el PDF y **Descargar** lo guarda.
 
 ## Retos y próximos pasos
-1. Validar con backend real que `ActaDto.documentoContenidoId` es el identificador aceptado por `GET /document/{id}`. Si el backend expone un endpoint específico de actas, encapsular el cambio en `src/modules/actas/api.ts` sin llevar detalles HTTP al componente.
+1. Validar con backend real el shape y nombre de archivo retornados por `GET /actas/{actaId}` para las acciones **Ver** y **Descargar**.
 2. Probar con más de 10 actas, nombres repetidos y una fecha de creación cuyo año difiera del sufijo del código.
 3. Validar visualmente en modos claro/oscuro y móvil con sesión `COORDINADOR` o `ADMIN`. No hay runner Vitest, datasets ni seeds nuevos.
 
