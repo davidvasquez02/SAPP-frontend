@@ -24,6 +24,7 @@ export const getFotoDocumentoByTramite = async ({
 }: DocumentoFotoParams): Promise<string | null> => {
   const documentos = await getDocumentosByTramiteParams({
     codigoTipoTramite,
+    codigoTipoDocumentoTramite,
     tramiteId,
   })
 

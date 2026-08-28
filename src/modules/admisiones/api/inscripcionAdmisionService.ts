@@ -28,3 +28,17 @@ export const getInscripcionByConvocatoriaAndId = async (
 
   return inscripcion
 }
+
+export const getInscripcionByAspirante = async (
+  aspiranteId: number,
+): Promise<InscripcionAdmisionDto | null> => {
+  const response = await httpGet<ApiResponse<InscripcionAdmisionDto | null>>(
+    `/sapp/inscripcionAdmision/aspirante/${encodeURIComponent(aspiranteId)}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'Error al obtener la inscripción del aspirante')
+  }
+
+  return response.data
+}

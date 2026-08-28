@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
+import { getInscripcionByAspirante } from '../../modules/admisiones/api/inscripcionAdmisionService'
+import { getFotoDocumentoByTramite } from '../../modules/documentos/api/documentoFotoService'
 import ProgramTypeToggle, { type ProgramType } from '../../modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle'
 import StudentHorizontalBoard from '../../modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard'
 import {
@@ -9,6 +11,26 @@ import {
 } from '../../modules/estudiantes/services/estudiantesMockService'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import './EstudiantesCoordinacionPage.css'
+
+const FOTO_CONCURRENCY_LIMIT = 4
+
+const loadWithConcurrencyLimit = async <T,>(
+  items: T[],
+  task: (item: T) => Promise<void>,
+): Promise<void> => {
+  let nextIndex = 0
+  const worker = async () => {
+    while (nextIndex < items.length) {
+      const item = items[nextIndex]
+      nextIndex += 1
+      await task(item)
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(FOTO_CONCURRENCY_LIMIT, items.length) }, () => worker()),
+  )
+}
 
 const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
   const nombre = programa.nombre.trim().toLowerCase()
@@ -58,9 +80,13 @@ const EstudiantesCoordinacionPage = () => {
   )
 
   useEffect(() => {
+    let isCurrentRequest = true
+
     if (!programaSeleccionado) {
       setEstudiantes([])
-      return
+      return () => {
+        isCurrentRequest = false
+      }
     }
 
     const loadEstudiantes = async () => {
@@ -69,15 +95,62 @@ const EstudiantesCoordinacionPage = () => {
 
       try {
         const data = await getEstudiantesByPrograma(programaSeleccionado.id)
+        if (!isCurrentRequest) {
+          return
+        }
+
         setEstudiantes(data)
+
+        const estudiantesConAspirante = data.filter(
+          (estudiante): estudiante is EstudianteCoordinacion & { idAspirante: number } =>
+            estudiante.idAspirante !== null,
+        )
+
+        void loadWithConcurrencyLimit(estudiantesConAspirante, async (estudiante) => {
+          try {
+            const inscripcion = await getInscripcionByAspirante(estudiante.idAspirante)
+            if (!inscripcion || !isCurrentRequest) {
+              return
+            }
+
+            const fotoUrl = await getFotoDocumentoByTramite({
+              codigoTipoTramite: 1002,
+              codigoTipoDocumentoTramite: 'ANX-4',
+              tramiteId: inscripcion.id,
+            })
+
+            if (!fotoUrl || !isCurrentRequest) {
+              return
+            }
+
+            setEstudiantes((current) =>
+              current.map((currentEstudiante) =>
+                currentEstudiante.id === estudiante.id
+                  ? { ...currentEstudiante, fotoUrl }
+                  : currentEstudiante,
+              ),
+            )
+          } catch {
+            // Un fallo individual conserva el placeholder sin afectar el listado.
+          }
+        })
       } catch (err) {
+        if (!isCurrentRequest) {
+          return
+        }
         setError(err instanceof Error ? err.message : 'No fue posible cargar los estudiantes.')
       } finally {
-        setIsLoadingEstudiantes(false)
+        if (isCurrentRequest) {
+          setIsLoadingEstudiantes(false)
+        }
       }
     }
 
     loadEstudiantes()
+
+    return () => {
+      isCurrentRequest = false
+    }
   }, [programaSeleccionado])
 
   const isEmptyStateVisible =
