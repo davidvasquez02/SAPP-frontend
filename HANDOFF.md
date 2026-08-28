@@ -1285,3 +1285,30 @@ npm run lint
 - `npx eslint src/modules/admisiones/api/convocatoriaAdmisionService.ts src/modules/admisiones/api/convocatoriaAdmisionTypes.ts src/modules/admisiones/components/EditConvocatoriaFechasModal/EditConvocatoriaFechasModal.tsx src/pages/ConvocatoriasAdmisionConfig/ConvocatoriasAdmisionConfigPage.tsx` (2026-08-26): PASS.
 - `git diff --check` (2026-08-26): PASS.
 - Screenshot: pendiente por limitación de ambiente; `command -v chromium chromium-browser google-chrome playwright` no encontró navegador ni Playwright CLI.
+# Update 2026-08-28 — Convocatorias cerradas no admiten nuevos aspirantes
+
+## Estado actual y decisión
+- El detalle `/admisiones/convocatoria/:convocatoriaId` sigue accesible para consultar una convocatoria cerrada y para crear estudiantes a partir de aspirantes admitidos.
+- **Crear aspirante** queda deshabilitado cuando la convocatoria tiene `vigente === false` o está fuera del rango inclusivo `fechaInicio`/`fechaFin`. La pantalla muestra el mensaje “La convocatoria está cerrada. No se pueden crear nuevos aspirantes.”
+- La regla se protege en tres niveles de UI: estado `disabled` del botón, guarda en `handleOpenCreateAspirante` y condición `open` de `CreateAspiranteModal`. Esto evita que un estado transitorio o una apertura previa deje enviar el formulario.
+
+## Paths, contrato y salida esperada
+- Implementación: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
+- Cálculo temporal reutilizado: `src/modules/admisiones/utils/convocatoriaEstado.ts`.
+- Contrato: `GET ${VITE_API_URL || '/api/sapp'}/convocatoriaAdmision` devuelve convocatorias con `vigente`, `fechaInicio` y `fechaFin`; no cambió ningún endpoint ni DTO.
+- Salida esperada: una convocatoria cerrada permite entrar y consultar aspirantes, pero nunca abrir el modal de alta de aspirante. La sección **Crear estudiantes admitidos** conserva su comportamiento.
+
+## Retos y próximos pasos
+1. Validar la pantalla con backend y sesión institucional, incluyendo cierre por `vigente: false`, fecha vencida y convocatoria abierta.
+2. La regla debe imponerse también en backend para impedir llamadas POST directas; este repositorio solo puede garantizar el bloqueo de interfaz.
+3. No hay seeds, datasets, migraciones ni dependencias nuevas.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry ni otro árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 228 módulos y generaron el build en 1.38 s.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-08-28): PASS.
+- Screenshot automatizado pendiente: el contenedor no dispone de Chromium, Chrome ni Firefox, y la ruta requiere backend y sesión institucional.
+
+---
