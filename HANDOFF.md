@@ -1,5 +1,13 @@
 # Update 2026-08-28 — Ajustes del listado y archivos de actas
 
+## Actualización — Eliminación de actas
+- Cada fila de `/actas` incluye el botón destructivo **Eliminar**. Su confirmación nativa identifica el acta por `nombre` y `codigo` y advierte que la acción no puede deshacerse.
+- Al confirmar se ejecuta `DELETE ${VITE_API_URL || '/api/sapp'}/actas/{id}`. El cliente admite la respuesta `204 No Content`; tras el éxito elimina el DTO del estado local, reajusta automáticamente la paginación existente y muestra `El acta {codigo} fue eliminada correctamente.` durante 5 segundos.
+- Mientras se elimina un acta se deshabilitan las acciones de archivo y eliminación del listado para evitar operaciones concurrentes. Si el backend rechaza la solicitud, el registro se conserva y se muestra el mensaje normalizado por el cliente HTTP.
+- Paths: transporte en `src/modules/actas/api.ts`; estado, confirmación y UI en `src/pages/Actas/ActasPage.tsx`; estilo destructivo basado en `--danger` en `src/pages/Actas/ActasPage.css`. No se agregaron dependencias, seeds, datasets ni variables de entorno.
+- Pendiente para validación integrada: confirmar con backend real la autorización de `COORDINADOR`/`ADMIN`, la eliminación coherente del documento asociado y el status/body exacto del endpoint.
+- Pruebas de esta actualización: `npx eslint src/modules/actas/api.ts src/pages/Actas/ActasPage.tsx` PASS; `npm run build` PASS (232 módulos, assets `index-CvPyPw3E.css` e `index-Cc8iae3n.js`, 699 ms); `git diff --check` PASS. No se tomó screenshot porque el contenedor no tiene Chromium, Chrome, Firefox, Playwright ni Puppeteer y la ruta necesita backend/sesión institucional.
+
 ## Estado actual y decisiones
 - `/actas` ordena el listado por `nombre` ascendente (comparación española, natural e insensible a mayúsculas/tildes), luego por el año descendente extraído del sufijo `-YYYY` de `codigo` y finalmente por código. La paginación local se mantiene en 10 filas.
 - Tanto las opciones del filtro **Año** como su evaluación usan el año del código/nombre institucional (`ACT-{consecutivo}-{año}`), nunca el año de `fechaCreacion`. La fecha de creación sigue visible en una columna separada.

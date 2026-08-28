@@ -97,6 +97,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - El módulo consume `GET /actas`, permite buscar por nombre/código y pagina localmente los resultados en grupos de 10. Las actas se ordenan alfabéticamente por nombre y, para nombres iguales, por el año descendente incluido en el código `ACT-{consecutivo}-{año}`.
 - El filtro de año y la columna **Año** se derivan del sufijo del código del acta, no de `fechaCreacion`. El conteo textual de resultados fue retirado.
 - Cada fila permite **Ver** o **Descargar** el PDF. La acción consulta el contenido mediante `GET /document/{documentoContenidoId}` y usa el nombre retornado o, como fallback, `{codigo}.pdf`.
+- Cada fila también permite **Eliminar**. Antes de enviar `DELETE /actas/{id}`, la interfaz solicita confirmación mostrando el nombre y el código del acta; al completarse, retira el registro del listado y presenta una confirmación temporal.
 - La creación consume `POST /actas`. La interfaz arma el código `ACT-{código}-{año}`, fija `fechaCreacion` con la fecha actual en `America/Bogota`, convierte el PDF a base64 y calcula su checksum SHA-256 antes de enviarlo. Solo admite PDF de hasta 15 MB.
 - La confirmación de creación se oculta automáticamente después de 5 segundos.
 - No se agregaron seeds ni dependencias. El contrato y transporte están encapsulados en `src/modules/actas`; la pantalla está en `src/pages/Actas`.

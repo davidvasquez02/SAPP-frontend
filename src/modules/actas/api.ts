@@ -1,4 +1,4 @@
-import { httpGet, httpPost } from "../../shared/http/httpClient";
+import { httpDelete, httpGet, httpPost } from "../../shared/http/httpClient";
 import type {
   ActaDto,
   ActasListResponse,
@@ -28,4 +28,8 @@ export const crearActa = async (payload: CrearActaRequest): Promise<ActaDto> => 
   }
 
   return response;
+};
+
+export const eliminarActa = async (actaId: number): Promise<void> => {
+  await httpDelete<unknown>(`/sapp/actas/${actaId}`);
 };

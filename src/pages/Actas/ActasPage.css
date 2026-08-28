@@ -22,6 +22,8 @@
 .actas-table__actions button { border: 1px solid var(--primary); border-radius: 999px; padding: .45rem .8rem; background: transparent; color: var(--primary); font-weight: 700; cursor: pointer; white-space: nowrap; }
 .actas-table__actions button:hover:not(:disabled), .actas-table__actions button:focus-visible { background: color-mix(in srgb, var(--primary), transparent 90%); }
 .actas-table__actions button:disabled { opacity: .55; cursor: wait; }
+.actas-table__actions .actas-table__delete { border-color: var(--danger); color: var(--danger); }
+.actas-table__actions .actas-table__delete:hover:not(:disabled), .actas-table__actions .actas-table__delete:focus-visible { background: color-mix(in srgb, var(--danger), transparent 90%); }
 .actas-pagination { display: flex; justify-content: flex-end; align-items: center; gap: .7rem; }
 .actas-pagination button { border: 1px solid var(--outline); background: var(--surface); padding: .45rem .85rem; cursor: pointer; }
 .actas-pagination button:disabled { opacity: .5; cursor: not-allowed; }

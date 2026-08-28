@@ -1,6 +1,6 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { ModuleLayout } from "../../components";
-import { crearActa, getActas } from "../../modules/actas/api";
+import { crearActa, eliminarActa, getActas } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
 import { getDocumentById } from "../../modules/documentos/api/documentosService";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
@@ -77,6 +77,7 @@ const ActasPage = () => {
   const [observaciones, setObservaciones] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileAction, setFileAction] = useState<{ actaId: number; action: FileAction } | null>(null);
+  const [deletingActaId, setDeletingActaId] = useState<number | null>(null);
 
   const loadActas = async () => {
     setIsLoading(true);
@@ -146,6 +147,27 @@ const ActasPage = () => {
       setError(actionError instanceof Error ? actionError.message : "No fue posible obtener el archivo del acta.");
     } finally {
       setFileAction(null);
+    }
+  };
+
+  const handleDelete = async (acta: ActaDto) => {
+    const confirmed = window.confirm(
+      `¿Está seguro de que desea eliminar el acta "${acta.nombre}" (${acta.codigo})? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) return;
+
+    setError(null);
+    setSuccess(null);
+    setDeletingActaId(acta.id);
+    try {
+      await eliminarActa(acta.id);
+      setActas((currentActas) => currentActas.filter((currentActa) => currentActa.id !== acta.id));
+      setSuccess(`El acta ${acta.codigo} fue eliminada correctamente.`);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "No fue posible eliminar el acta.");
+    } finally {
+      setDeletingActaId(null);
     }
   };
 
@@ -239,7 +261,9 @@ const ActasPage = () => {
           {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
             const isViewing = fileAction?.actaId === acta.id && fileAction.action === "view";
             const isDownloading = fileAction?.actaId === acta.id && fileAction.action === "download";
-            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" disabled={fileAction !== null} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" disabled={fileAction !== null} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button></div></td></tr>;
+            const isDeleting = deletingActaId === acta.id;
+            const actionsDisabled = fileAction !== null || deletingActaId !== null;
+            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td></tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>
