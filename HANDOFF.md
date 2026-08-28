@@ -1,3 +1,25 @@
+# Update 2026-08-28 — Convocatoria del período actual aunque esté cerrada
+
+## Estado actual y decisión funcional
+- `/admisiones` ya no interpreta “sin convocatoria vigente” como ausencia de convocatoria del semestre. Por cada programa, selecciona primero la convocatoria cuyo `periodo` coincide con el semestre calendario actual de Colombia (enero-junio = 1, julio-diciembre = 2), incluso si `vigente` es falso o las fechas ya cerraron.
+- La tarjeta muestra **ABIERTA** o **CERRADA**, mantiene visibles sus fechas y habilita **Entrar a la convocatoria** en ambos casos. Si no existe convocatoria del período actual, conserva como fallback la convocatoria abierta más reciente; si tampoco existe, presenta el estado vacío.
+- La convocatoria destacada se retira del selector de anteriores, por lo que no aparece duplicada. No hubo cambios de API, DTO, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Implementación: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`; estilos reutilizados: `src/pages/AdmisionesHome/AdmisionesHomePage.css`.
+- Entrada vigente: `GET ${VITE_API_URL || '/api/sapp'}/convocatoriaAdmision`, envelope `{ ok, message, data: ConvocatoriaAdmisionDto[] }`. Cada convocatoria mantiene `{ id, programaId, programa, periodoId, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }`.
+- Ejemplo esperado en agosto de 2026: una convocatoria `periodo: '2026-2'` cerrada aparece en la tarjeta principal con badge **CERRADA** y su botón navega a `/admisiones/convocatoria/{id}`.
+
+## Retos, próximos pasos, entorno y pruebas
+- Validar visualmente con una sesión institucional y datos reales que incluyan una convocatoria cerrada del período actual. Confirmar con dominio si las fronteras calendario enero/julio deben sustituirse en el futuro por el período académico configurado por backend.
+- Ruta del repo: `/workspace/SAPP-frontend`. Reutilizar Node.js/npm y el `node_modules` de la raíz; no crear venv, conda, poetry ni otro árbol de dependencias. Las versiones exactas siguen documentadas en `README.md`.
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx` (2026-08-28): OK; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): OK; TypeScript y rolldown-vite transformaron 226 módulos y completaron el build en 773 ms.
+- `git diff --check` (2026-08-28): OK. No existe runner Vitest configurado en este repositorio.
+- No se pudo tomar screenshot automatizado porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer; queda pendiente validarlo con navegador, sesión institucional y backend.
+
+---
+
 # Update 2026-08-17 — IDs de las figuras de dominio retornadas por `/inicio`
 
 ## Estado actual
