@@ -254,8 +254,13 @@ const ConvocatoriaDetallePage = () => {
   );
 
   const handleOpenCreateAspirante = useCallback(() => {
-    // AJUSTE TEMPORAL PARA PRUEBAS (2026-06-02): permitir crear aspirantes aunque la convocatoria esté cerrada.
-    // Revertir después de las pruebas para restaurar el bloqueo por convocatoria cerrada.
+    if (!convocatoria || convocatoriaCerrada) {
+      window.alert(
+        "No es posible crear aspirantes porque la convocatoria está cerrada.",
+      );
+      return;
+    }
+
     if (cuposExcedidos) {
       window.alert(
         `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`,
@@ -264,7 +269,7 @@ const ConvocatoriaDetallePage = () => {
     }
 
     setIsCreateModalOpen(true);
-  }, [cuposConvocatoria, cuposExcedidos]);
+  }, [convocatoria, convocatoriaCerrada, cuposConvocatoria, cuposExcedidos]);
 
   return (
     <ModuleLayout title="Admisiones">
@@ -310,8 +315,6 @@ const ConvocatoriaDetallePage = () => {
 
           {canCreateAspirante ? (
             <div className="convocatoria-detalle__actions">
-              {/* AJUSTE TEMPORAL PARA PRUEBAS (2026-06-02): antes este botón se ocultaba cuando la convocatoria estaba cerrada.
-                  Revertir tras validar creación de aspirantes/estudiantes en convocatorias cerradas. */}
               <button
                 type="button"
                 className="convocatoria-detalle__create-button"
@@ -319,6 +322,8 @@ const ConvocatoriaDetallePage = () => {
                 disabled={
                   !resolvedProgramaId ||
                   !parsedConvocatoriaId ||
+                  !convocatoria ||
+                  convocatoriaCerrada ||
                   isLoading ||
                   cuposExcedidos
                 }
@@ -337,6 +342,12 @@ const ConvocatoriaDetallePage = () => {
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden
                   registrar más aspirantes.
+                </p>
+              ) : null}
+              {convocatoriaCerrada ? (
+                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
+                  La convocatoria está cerrada. No se pueden crear nuevos
+                  aspirantes.
                 </p>
               ) : null}
             </div>
@@ -492,7 +503,7 @@ const ConvocatoriaDetallePage = () => {
       </section>
 
       <CreateAspiranteModal
-        open={isCreateModalOpen}
+        open={isCreateModalOpen && Boolean(convocatoria) && !convocatoriaCerrada}
         onClose={() => setIsCreateModalOpen(false)}
         programaId={resolvedProgramaId}
         convocatoriaAdmisionId={parsedConvocatoriaId}
