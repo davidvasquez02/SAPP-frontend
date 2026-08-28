@@ -1,3 +1,34 @@
+# Update 2026-08-28 — Caché efímera listado → detalle → listado de estudiantes
+
+## Estado actual y decisión
+- `/coordinacion/estudiantes` consume, al montarse, un snapshot en memoria si la navegación inmediatamente anterior fue la apertura del detalle de un estudiante. El snapshot restaura programas, selector de maestría/doctorado, estudiantes y `fotoUrl` ya cargadas sin repetir solicitudes HTTP.
+- La caché se crea exclusivamente en `onStudentClick`, justo antes de navegar a `/coordinacion/estudiantes/:estudianteId`. Al volver se consume y borra de inmediato; el estado React de la pantalla conserva los datos mientras el listado siga montado.
+- Al salir del detalle hacia una ruta distinta de `/coordinacion/estudiantes`, el cleanup aplazado comprueba el nuevo `window.location.pathname` y elimina el snapshot. Una recarga completa también lo descarta porque no se persiste fuera de memoria.
+- Se retiró el `Map` indefinido de estudiantes del servicio. El detalle abierto desde el listado sigue recibiendo el estudiante mediante `location.state`; una URL directa conserva únicamente el fallback mock preexistente.
+
+## Paths, contrato y salida esperada
+- Caché efímera: `src/modules/estudiantes/services/estudiantesListCache.ts`.
+- Productor/consumidor del snapshot: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Limpieza al abandonar el detalle: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+- Servicio sin caché permanente: `src/modules/estudiantes/services/estudiantesMockService.ts`.
+- Contrato interno: `{ programas: ProgramaCoordinacion[], programTypeSeleccionado: ProgramType, estudiantes: EstudianteCoordinacion[] }`. No hay cambios en los contratos HTTP existentes.
+- Salida esperada: listado → detalle → **Volver al listado** restaura inmediatamente las tarjetas y fotos; listado → detalle → cualquier otro módulo descarta los datos y una futura entrada vuelve a consultar backend.
+
+## Retos y próximos pasos
+1. Validar el recorrido con sesión institucional y Network abierto, comprobando que al volver no se repiten `/programaAcademico`, `/estudiantes/consulta`, `/inscripcionAdmision/aspirante/*` ni las consultas documentales.
+2. La caché es deliberadamente de una sola navegación y no sobrevive refresh, pestañas ni aperturas directas. No convertirla en persistencia temporal sin definir invalidación y límites de memoria.
+3. Si se agrega edición de estudiantes desde el detalle, invalidar explícitamente el snapshot para evitar restaurar datos anteriores a la mutación.
+4. No hay runner Vitest, datasets ni seeds nuevos; conviene cubrir en el futuro consumo único, cambio a otra ruta y restauración del selector.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- Reutilizar exclusivamente `node_modules` en la raíz. No crear venv, conda, poetry ni un segundo árbol de dependencias.
+- `npx eslint src/modules/estudiantes/services/estudiantesListCache.ts src/modules/estudiantes/services/estudiantesMockService.ts src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-08-28): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-08-28): PASS; TypeScript y rolldown-vite transformaron 228 módulos y generaron el build en 540 ms.
+- `git diff --check` (2026-08-28): PASS. La validación HTTP/visual requiere backend, sesión institucional y navegador disponibles.
+
+---
+
 # Update 2026-08-28 — Fotografías de estudiantes por inscripción de admisión
 
 ## Estado actual y decisiones

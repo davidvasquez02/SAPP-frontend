@@ -50,8 +50,6 @@ type EstudianteConsultaBackend = {
   programaCodigoNombre: string | null
 }
 
-const estudiantesCache = new Map<number, EstudianteCoordinacion>()
-
 const toProgramaCoordinacion = (programa: ProgramaAcademicoBackend): ProgramaCoordinacion | null => {
   const nombreCorto = programa.nombre.trim().toUpperCase()
   const definicion = PROGRAMAS_COORDINACION[nombreCorto]
@@ -156,20 +154,11 @@ export const getEstudiantesByPrograma = async (
 
   const estudiantes = (response.data ?? []).map((item) => toEstudianteCoordinacion(item))
 
-  estudiantes.forEach((estudiante) => {
-    estudiantesCache.set(estudiante.id, estudiante)
-  })
-
   return estudiantes
 }
 
 export const getEstudianteById = async (
   estudianteId: number
 ): Promise<EstudianteCoordinacion | null> => {
-  const fromCache = estudiantesCache.get(estudianteId)
-  if (fromCache) {
-    return fromCache
-  }
-
   return estudiantesMock.find((estudiante) => estudiante.id === estudianteId) ?? null
 }

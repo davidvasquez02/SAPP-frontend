@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { getInscripcionByAspirante } from '../../modules/admisiones/api/inscripcionAdmisionService'
@@ -9,6 +9,10 @@ import {
   getEstudiantesByPrograma,
   getProgramasCoordinacion,
 } from '../../modules/estudiantes/services/estudiantesMockService'
+import {
+  cacheEstudiantesListForDetail,
+  consumeEstudiantesListFromDetail,
+} from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import './EstudiantesCoordinacionPage.css'
 
@@ -49,14 +53,22 @@ const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => 
 
 const EstudiantesCoordinacionPage = () => {
   const navigate = useNavigate()
-  const [programas, setProgramas] = useState<ProgramaCoordinacion[]>([])
-  const [programTypeSeleccionado, setProgramTypeSeleccionado] = useState<ProgramType>('doctorado')
-  const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>([])
-  const [isLoadingProgramas, setIsLoadingProgramas] = useState(true)
+  const [initialSnapshot] = useState(consumeEstudiantesListFromDetail)
+  const shouldReuseInitialStudents = useRef(Boolean(initialSnapshot))
+  const [programas, setProgramas] = useState<ProgramaCoordinacion[]>(initialSnapshot?.programas ?? [])
+  const [programTypeSeleccionado, setProgramTypeSeleccionado] = useState<ProgramType>(
+    initialSnapshot?.programTypeSeleccionado ?? 'doctorado',
+  )
+  const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>(initialSnapshot?.estudiantes ?? [])
+  const [isLoadingProgramas, setIsLoadingProgramas] = useState(!initialSnapshot)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (initialSnapshot) {
+      return
+    }
+
     const loadProgramas = async () => {
       setIsLoadingProgramas(true)
       setError(null)
@@ -72,7 +84,7 @@ const EstudiantesCoordinacionPage = () => {
     }
 
     loadProgramas()
-  }, [])
+  }, [initialSnapshot])
 
   const programaSeleccionado = useMemo(
     () => programas.find((programa) => getProgramaType(programa) === programTypeSeleccionado) ?? null,
@@ -81,6 +93,13 @@ const EstudiantesCoordinacionPage = () => {
 
   useEffect(() => {
     let isCurrentRequest = true
+
+    if (shouldReuseInitialStudents.current) {
+      shouldReuseInitialStudents.current = false
+      return () => {
+        isCurrentRequest = false
+      }
+    }
 
     if (!programaSeleccionado) {
       setEstudiantes([])
@@ -188,11 +207,16 @@ const EstudiantesCoordinacionPage = () => {
         {!isLoadingEstudiantes && estudiantes.length > 0 ? (
           <StudentHorizontalBoard
             estudiantes={estudiantes}
-            onStudentClick={(estudiante) =>
+            onStudentClick={(estudiante) => {
+              cacheEstudiantesListForDetail({
+                programas,
+                programTypeSeleccionado,
+                estudiantes,
+              })
               navigate(`/coordinacion/estudiantes/${estudiante.id}`, {
                 state: { estudiante },
               })
-            }
+            }}
           />
         ) : null}
       </section>
