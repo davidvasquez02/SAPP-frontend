@@ -35,12 +35,17 @@ const formatSize = (bytes: number) => {
 
 const getActaYear = (acta: ActaDto) => acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
 
+const getActaCode = (acta: ActaDto) => acta.codigo.replace(/-\d{4}$/, "");
+
 const compareActas = (a: ActaDto, b: ActaDto) => {
-  const byName = a.nombre.localeCompare(b.nombre, "es", { numeric: true, sensitivity: "base" });
-  if (byName !== 0) return byName;
+  const byCode = getActaCode(b).localeCompare(getActaCode(a), "es", {
+    numeric: true,
+    sensitivity: "base",
+  });
+  if (byCode !== 0) return byCode;
 
   const byYear = getActaYear(b).localeCompare(getActaYear(a));
-  return byYear || a.codigo.localeCompare(b.codigo, "es", { numeric: true, sensitivity: "base" });
+  return byYear || b.codigo.localeCompare(a.codigo, "es", { numeric: true, sensitivity: "base" });
 };
 
 const fileToBase64 = (file: File) =>

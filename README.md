@@ -94,7 +94,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 ### 2026-08-28 — Módulo de actas
 
 - Se incorporó la ruta protegida `/actas` para los roles `COORDINADOR` y `ADMIN`, con acceso desde la navegación principal.
-- El módulo consume `GET /actas`, permite buscar por nombre/código y pagina localmente los resultados en grupos de 10. Las actas se ordenan alfabéticamente por nombre y, para nombres iguales, por el año descendente incluido en el código `ACT-{consecutivo}-{año}`.
+- El módulo consume `GET /actas`, permite buscar por nombre/código y pagina localmente los resultados en grupos de 10. Las actas se ordenan por código de forma descendente y, cuando el código base coincide, por el año descendente incluido en `ACT-{consecutivo}-{año}`; el orden se aplica antes de filtrar y paginar.
 - El filtro de año y la columna **Año** se derivan del sufijo del código del acta, no de `fechaCreacion`. El conteo textual de resultados fue retirado.
 - Cada fila permite **Ver** o **Descargar** el PDF. La acción consulta el contenido mediante `GET /actas/{actaId}` usando el `id` del acta (no `documentoContenidoId`) y usa el nombre retornado o, como fallback, `{codigo}.pdf`.
 - Cada fila también permite **Eliminar**. Antes de enviar `DELETE /actas/{id}`, la interfaz solicita confirmación mostrando el nombre y el código del acta; al completarse, retira el registro del listado y presenta una confirmación temporal.
