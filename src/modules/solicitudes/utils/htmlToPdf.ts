@@ -13,6 +13,7 @@ const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^UklGR/, 'image/webp'],
 ]
 const SAFE_DATA_IMAGE_PATTERN = /^data:image\/(?:jpeg|png|gif|webp);base64,/i
+const RESOURCE_ATTRIBUTES = ['src', 'href', 'xlink:href', 'srcset', 'poster', 'background'] as const
 
 const waitForFrame = (frame: HTMLIFrameElement): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -41,8 +42,11 @@ const dataUrlToBytes = (dataUrl: string): Uint8Array => {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0))
 }
 
-const resolveRawBase64Image = (source: string): string | null => {
+const resolveSafeImageSource = (source: string): string | null => {
   const compactSource = source.replace(/\s/g, '')
+  if (SAFE_DATA_IMAGE_PATTERN.test(compactSource)) {
+    return compactSource
+  }
   const match = BASE64_IMAGE_TYPES.find(([pattern]) => pattern.test(compactSource))
   return match ? `data:${match[1]};base64,${compactSource}` : null
 }
@@ -56,6 +60,11 @@ const removeExternalCssUrls = (css: string): string =>
 const prepareHtmlForRendering = (html: string): string => {
   const parsed = new DOMParser().parseFromString(html, 'text/html')
 
+  const contentSecurityPolicy = parsed.createElement('meta')
+  contentSecurityPolicy.httpEquiv = 'Content-Security-Policy'
+  contentSecurityPolicy.content = "default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+  parsed.head.prepend(contentSecurityPolicy)
+
   parsed.querySelectorAll('script, link, iframe, object, embed, video, audio, source').forEach((element) => element.remove())
   parsed.querySelectorAll('style').forEach((style) => {
     style.textContent = removeExternalCssUrls(style.textContent ?? '')
@@ -66,18 +75,18 @@ const prepareHtmlForRendering = (html: string): string => {
 
   Array.from(parsed.images).forEach((image) => {
     const source = image.getAttribute('src')?.trim() ?? ''
-    const rawBase64Image = resolveRawBase64Image(source)
-    if (rawBase64Image) {
-      image.setAttribute('src', rawBase64Image)
-      return
-    }
-    if (!SAFE_DATA_IMAGE_PATTERN.test(source)) {
+    const safeImageSource = resolveSafeImageSource(source)
+    if (safeImageSource) {
+      image.setAttribute('src', safeImageSource)
+    } else {
       image.removeAttribute('src')
     }
+    // A srcset takes precedence over src and could turn a raw JPEG base64 value into a relative URL.
+    image.removeAttribute('srcset')
   })
 
   parsed.querySelectorAll('*').forEach((element) => {
-    for (const attribute of ['src', 'href', 'xlink:href']) {
+    for (const attribute of RESOURCE_ATTRIBUTES) {
       const value = element.getAttribute(attribute)?.trim()
       const safeImageSource = element.tagName === 'IMG' && value != null && SAFE_DATA_IMAGE_PATTERN.test(value)
       if (value && !safeImageSource && !value.startsWith('#')) {

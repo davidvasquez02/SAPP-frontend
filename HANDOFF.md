@@ -1464,3 +1464,25 @@ npm run lint
 - Screenshot automatizado pendiente por limitación del entorno: no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados, y la reproducción completa requiere backend y sesión institucional.
 
 ---
+
+# Update 2026-09-02 — Base64 de imágenes y canvas seguro
+
+## Estado actual y causa corregida
+- Un JPEG base64 crudo comienza normalmente por `/9j/`. Si llega en `srcset` o en otro atributo de recurso sin prefijo `data:image/jpeg;base64,`, el navegador lo resuelve como una ruta relativa y genera una solicitud enorme a `GET /9j/...`, que termina en HTTP 414.
+- Si cualquier recurso externo alcanza el SVG/`foreignObject`, el canvas puede quedar marcado como no confiable y `canvas.toDataURL()` lanza `SecurityError: Tainted canvases may not be exported`.
+- El sanitizador ahora compacta tanto data URI como base64 crudo, elimina `srcset` y los restantes atributos de recursos no permitidos, y añade CSP al documento aislado (`default-src 'none'; img-src data:; style-src 'unsafe-inline'`).
+
+## Paths, contrato y salida esperada
+- Implementación: `src/modules/solicitudes/utils/htmlToPdf.ts`, antes de asignar `iframe.srcdoc`.
+- El contrato HTTP no cambia. Las imágenes soportadas siguen siendo JPEG, PNG, GIF y WebP embebidas en base64.
+- Salida esperada: no se producen solicitudes `/9j/...`; las firmas embebidas se conservan; el canvas permanece exportable y genera el Blob `application/pdf` con los márgenes verticales existentes.
+
+## Retos, entorno y validación
+- Validar con la respuesta real que originó el 414, inspeccionando Network para confirmar que no existe ninguna petición documental adicional durante la conversión.
+- No se agregaron dependencias, seeds ni datasets. Reutilizar Node.js/npm y `node_modules` de `/workspace/SAPP-frontend`; no crear entornos Python.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02): PASS; únicamente se mostró el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CvPyPw3E.css` y `dist/assets/index-yef4x4Uf.js` en 725 ms.
+- `git diff --check` (2026-09-02): PASS.
+- La validación visual/HTTP con la respuesta real continúa pendiente porque requiere backend, sesión institucional y un navegador no disponible en este contenedor.
+
+---
