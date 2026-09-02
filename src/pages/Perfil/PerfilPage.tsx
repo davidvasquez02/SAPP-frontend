@@ -4,8 +4,7 @@ import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import {
-  getFirmaPerfil,
-  updateFirmaPerfil,
+  guardarFirmaUsuario,
   type FirmaPerfil,
 } from '../../modules/perfil/services/firmaPerfilService'
 import './PerfilPage.css'
@@ -47,10 +46,9 @@ const formatDateInColombia = (value: string | undefined) => {
 
 const PerfilPage = () => {
   const { user } = useAuth()
-  const [savedSignature, setSavedSignature] = useState<FirmaPerfil | null>(() =>
-    user ? getFirmaPerfil(user.id) : null,
-  )
+  const [savedSignature, setSavedSignature] = useState<FirmaPerfil | null>(null)
   const [selectedSignature, setSelectedSignature] = useState<FirmaPerfil | null>(null)
+  const [isSavingSignature, setIsSavingSignature] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const roles = user?.roles ?? []
@@ -84,18 +82,35 @@ const PerfilPage = () => {
       return
     }
     try {
-      setSelectedSignature(await readFile(file))
+      const firma = await readFile(file)
+      setSelectedSignature(firma)
+      await saveSignature(firma)
     } catch (readError) {
       setError(readError instanceof Error ? readError.message : 'No fue posible leer la imagen.')
     }
   }
 
-  const handleUpdate = () => {
-    if (!user || !selectedSignature) return
-    updateFirmaPerfil(user.id, selectedSignature)
-    setSavedSignature(selectedSignature)
-    setSelectedSignature(null)
-    setMessage('La firma se actualizó correctamente en este dispositivo.')
+  const saveSignature = async (firma: FirmaPerfil) => {
+    if (!user) return
+
+    setIsSavingSignature(true)
+    setMessage('')
+    setError('')
+
+    try {
+      await guardarFirmaUsuario(user.id, firma)
+      setSavedSignature(firma)
+      setSelectedSignature(null)
+      setMessage('La firma se actualizó correctamente.')
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No fue posible guardar la firma.')
+    } finally {
+      setIsSavingSignature(false)
+    }
+  }
+
+  const handleRetry = () => {
+    if (selectedSignature) void saveSignature(selectedSignature)
   }
 
   if (!user) return null
@@ -149,14 +164,14 @@ const PerfilPage = () => {
               {signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}
             </div>
             <div className="profile-page__signature-actions">
-              <label className="profile-page__file-button">Seleccionar imagen<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} /></label>
+              <label className="profile-page__file-button">{isSavingSignature ? 'Guardando firma…' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature} /></label>
               <small>PNG o JPG, máximo 2 MB. Se recomienda fondo blanco.</small>
-              <button type="button" onClick={handleUpdate} disabled={!selectedSignature}>Actualizar firma</button>
+              {error && selectedSignature && <button type="button" onClick={handleRetry} disabled={isSavingSignature}>Reintentar carga</button>}
             </div>
           </div>
           {error && <p className="profile-page__feedback profile-page__feedback--error" role="alert">{error}</p>}
           {message && <p className="profile-page__feedback" role="status">{message}</p>}
-          <p className="profile-page__mock-note">Almacenamiento temporal local; se conectará al servicio documental cuando el endpoint esté disponible.</p>
+          <p className="profile-page__mock-note">Pendiente: integrar el servicio de consulta para mostrar la firma vigente al abrir el perfil.</p>
         </section>
       </div>
     </ModuleLayout>

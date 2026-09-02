@@ -1,4 +1,4 @@
-const FIRMA_STORAGE_PREFIX = 'SAPP_FIRMA_PERFIL'
+import { httpPost } from '../../../shared/http/httpClient'
 
 export interface FirmaPerfil {
   nombreArchivo: string
@@ -6,19 +6,23 @@ export interface FirmaPerfil {
   contenidoBase64: string
 }
 
-const storageKey = (usuarioId: number) => `${FIRMA_STORAGE_PREFIX}:${usuarioId}`
-
-export const getFirmaPerfil = (usuarioId: number): FirmaPerfil | null => {
-  const storedValue = localStorage.getItem(storageKey(usuarioId))
-  if (!storedValue) return null
-
-  try {
-    return JSON.parse(storedValue) as FirmaPerfil
-  } catch {
-    return null
-  }
+export interface GuardarFirmaUsuarioRequest {
+  contenidoFirma: string
 }
 
-export const updateFirmaPerfil = (usuarioId: number, firma: FirmaPerfil): void => {
-  localStorage.setItem(storageKey(usuarioId), JSON.stringify(firma))
+/**
+ * Persiste la firma del UsuarioSapp autenticado.
+ *
+ * Pendiente de backend: incorporar el servicio de consulta de firma para poder
+ * precargar aquí la firma vigente cuando se abra el selector del perfil.
+ */
+export const guardarFirmaUsuario = async (
+  usuarioId: number,
+  firma: FirmaPerfil,
+): Promise<void> => {
+  const payload: GuardarFirmaUsuarioRequest = {
+    contenidoFirma: `data:${firma.mimeType};base64,${firma.contenidoBase64}`,
+  }
+
+  await httpPost<unknown>(`/sapp/firmaUsuario/${usuarioId}`, payload)
 }
