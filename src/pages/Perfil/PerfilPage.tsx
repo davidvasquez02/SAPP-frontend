@@ -124,7 +124,7 @@ const PerfilPage = () => {
         </section>
 
         <section className="profile-page__card" aria-labelledby="personal-title">
-          <div className="profile-page__heading"><span aria-hidden="true">▣</span><div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div></div>
           <dl className="profile-page__data-grid">
             <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>
             <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>
