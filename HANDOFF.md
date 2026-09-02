@@ -1437,3 +1437,30 @@ npm run lint
 - `git diff --check` y `npm list --depth=0` (2026-08-28): PASS. No se tomó screenshot porque el cambio solo altera el orden de datos y su validación visual requiere backend, sesión institucional y registros de actas.
 
 ---
+# Update 2026-09-02 — Márgenes verticales de la previsualización PDF
+
+## Estado actual y decisión
+- La conversión HTML → PDF de solicitudes de crédito condonable conserva el tamaño carta de `816 × 1056 px` (`612 × 792 pt`) y reserva `72 px` (`0.75 in`) de margen tanto arriba como abajo de cada página.
+- El contenido útil por página es de `912 px`. Cada página toma el siguiente tramo consecutivo del render HTML y lo dibuja desde `y = 72`, evitando omisiones o duplicados al paginar.
+- El cambio está limitado al conversor local. Si `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` responde un MIME distinto de HTML, el Blob del backend se conserva intacto.
+
+## Paths, contrato y salida esperada
+- Conversor: `src/modules/solicitudes/utils/htmlToPdf.ts`.
+- Consumidor: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Entrada relevante: documento base64 con `mimeTypeDocumentoContenido: "text/html"` dentro de la respuesta de `POST /sapp/solicitudesAcademicas/pdf-previsualizacion`.
+- Salida esperada: Blob `application/pdf` tamaño carta, con una franja blanca de `0.75 in` arriba y abajo en todas las páginas y sin perder segmentos del HTML entre una página y la siguiente.
+
+## Retos y próximos pasos
+1. Validar visualmente con la plantilla real y una solicitud de dos o más páginas que encabezados, firmas y párrafos tengan el espacio esperado.
+2. La rasterización aún corta el flujo en el límite del área útil; si el dominio exige mantener bloques completos unidos, será necesario introducir reglas de salto basadas en elementos antes de rasterizar.
+3. No se agregaron dependencias, datasets ni seeds.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0 y npm 11.4.2; las versiones exactas de paquetes instalados permanecen documentadas en `README.md`.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CvPyPw3E.css` y `dist/assets/index-nM5AwOQ1.js` en 743 ms.
+- `git diff --check` (2026-09-02): PASS.
+- Screenshot automatizado pendiente por limitación del entorno: no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados, y la reproducción completa requiere backend y sesión institucional.
+
+---
