@@ -21,7 +21,7 @@ export async function getPeriodosAcademicos(): Promise<PeriodoAcademicoDto[]> {
 
 export async function getPeriodosAcademicosWithFechas(): Promise<PeriodoAcademicoWithFechasDto[]> {
   const response = await http<ApiResponse<PeriodoAcademicoWithFechasDto[]>>(
-    '/  sapp/periodoAcademico/withFechas',
+    '/sapp/periodoAcademico/withFechas',
     {
       method: 'GET',
     }

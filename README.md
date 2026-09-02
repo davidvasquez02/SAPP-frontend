@@ -21,6 +21,8 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-02:** se corrigió la ruta de períodos con fechas para eliminar dos espacios que el navegador codificaba como `%20%20`; la solicitud vuelve a resolverse como `GET /api/sapp/periodoAcademico/withFechas`.
+
 - **2026-09-02:** el selector de firma del perfil valida y previsualiza el archivo y persiste inmediatamente el data URI mediante `POST /api/sapp/firmaUsuario/{usuarioSappId}`; se retiró la persistencia provisional en `localStorage`.
 - **2026-09-02:** el perfil aprovecha el contrato real de `/inicio`: código UIS, programa, cohorte, estado, fecha de ingreso, correo personal y teléfono, con fallback a `attributes` cuando corresponde.
 - La firma no se incorpora a la sesión. Queda anotada como integración pendiente la consulta backend de la firma vigente para precargarla en el selector.
@@ -116,6 +118,12 @@ npm run preview
 No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `GET /api/sapp/inicio`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
 
 ## Decisiones recientes / changelog-lite
+
+### 2026-09-02 — Ruta de períodos con fechas sin espacios codificados
+
+- `getPeriodosAcademicosWithFechas()` usa la ruta lógica `/sapp/periodoAcademico/withFechas`, sin espacios antes de `sapp`.
+- Con la base relativa predeterminada `/api/sapp`, el cliente HTTP normaliza la llamada a `GET /api/sapp/periodoAcademico/withFechas`; ya no genera `/%20%20sapp/periodoAcademico/withFechas`.
+- No cambiaron el DTO, el envelope `{ ok, message, data }`, las dependencias, los seeds ni los datasets.
 
 ### 2026-09-02 — Previsualización y carga de múltiples documentos generados
 
