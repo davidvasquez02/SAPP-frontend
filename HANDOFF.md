@@ -1546,3 +1546,32 @@ npm run lint
 - La validación visual/HTTP con la respuesta real continúa pendiente porque requiere backend, sesión institucional y un navegador no disponible en este contenedor.
 
 ---
+# Update 2026-09-02 — Persistencia de firma de UsuarioSapp
+
+## Estado actual y decisión
+- En `/perfil`, seleccionar una imagen PNG/JPEG válida de hasta 2 MB muestra su vista previa y dispara inmediatamente la persistencia; ya no se guarda la firma en `localStorage` ni se requiere una segunda confirmación.
+- El servicio usa el `user.id` de la sesión, que corresponde al ID principal de `UsuarioSapp`, y mantiene el transporte fuera del componente.
+- Mientras el POST está activo se deshabilita el selector y se muestra **Guardando firma…**. Un error conserva la vista previa y habilita **Reintentar carga**; un éxito muestra confirmación y conserva la imagen durante la visita actual.
+
+## Paths, contrato y salida esperada
+- UI: `src/pages/Perfil/PerfilPage.tsx`.
+- Servicio y DTO: `src/modules/perfil/services/firmaPerfilService.ts`.
+- Request: `POST ${VITE_API_URL || '/api/sapp'}/firmaUsuario/{usuarioSappId}` con `Content-Type: application/json` y body `{ "contenidoFirma": "data:image/jpeg;base64,/9j/..." }` (PNG conserva `data:image/png;base64,...`). La normalización del cliente permite escribir la ruta como `/sapp/firmaUsuario/{id}` sin duplicar `/api/sapp`.
+- La respuesta del POST no se usa como fuente de estado; cualquier respuesta HTTP exitosa completa la carga. Los errores HTTP se presentan en la tarjeta y permiten reintentar.
+- No se añadieron dependencias, seeds, datasets, migraciones ni variables de entorno.
+
+## Pendiente crítico y próximos pasos
+1. **El backend todavía debe proporcionar el servicio que indique si el usuario ya tiene firma y devuelva su contenido.** Cuando exista, integrarlo al montar `/perfil` para mostrar la firma vigente en el selector; no volver a introducir una copia en `localStorage`.
+2. Confirmar con backend el envelope/respuesta exactos del POST y si reemplaza de forma idempotente una firma anterior.
+3. Validar con una sesión institucional real que `user.id` coincide con el `{usuarioSappId}` esperado y probar JPEG/PNG, error de red y reemplazo de firma.
+4. Añadir pruebas de componente/servicio cuando el proyecto incorpore Vitest.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; Node.js 24.15.0 y npm 11.4.2. Reutilizar el `node_modules` de esta raíz; no crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Paquetes principales instalados: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0. Las versiones completas están en `README.md`.
+- `npx eslint src/pages/Perfil/PerfilPage.tsx src/modules/perfil/services/firmaPerfilService.ts` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 237 módulos y generaron `dist/assets/index-ZvyW5o5r.css` y `dist/assets/index-CSK9kqD1.js` en 784 ms.
+- `git diff --check` (2026-09-02): PASS.
+- La validación HTTP y visual con datos reales permanece pendiente porque requiere backend y sesión institucional; la pantalla no recibió cambios de estilo.
+
+---

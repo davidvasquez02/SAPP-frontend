@@ -2,7 +2,7 @@
 
 ## Estado funcional (2026-09-02)
 
-La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. También permite previsualizar y actualizar una firma PNG/JPG (máximo 2 MB); mientras se define el endpoint documental, se guarda por usuario únicamente en `localStorage`.
+La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al seleccionar una firma PNG/JPG (máximo 2 MB), la pantalla la previsualiza y la envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Continúa pendiente el endpoint de consulta que permitirá mostrar la firma ya registrada al abrir el perfil.
 
 ### Stack instalado y ejecución rápida
 
@@ -17,13 +17,13 @@ npm run lint    # revisión estática global
 npm run preview # sirve el build
 ```
 
-Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No hay seeds ni datasets propios: la información proviene del gateway/API, salvo mocks explícitos y la firma temporal local. `VITE_API_URL` configura la API cuando corresponda; varios servicios conservan `/api/sapp` como fallback.
+Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No hay seeds ni datasets propios: la información proviene del gateway/API, salvo mocks explícitos. `VITE_API_URL` configura la API cuando corresponda; varios servicios conservan `/api/sapp` como fallback.
 
 ### Decisiones recientes (changelog-lite)
 
-- **2026-09-02:** perfil accesible desde el avatar, vistas contextualizadas para coordinación/estudiante y carga local temporal de firma con validación y vista previa.
+- **2026-09-02:** el selector de firma del perfil valida y previsualiza el archivo y persiste inmediatamente el data URI mediante `POST /api/sapp/firmaUsuario/{usuarioSappId}`; se retiró la persistencia provisional en `localStorage`.
 - **2026-09-02:** el perfil aprovecha el contrato real de `/inicio`: código UIS, programa, cohorte, estado, fecha de ingreso, correo personal y teléfono, con fallback a `attributes` cuando corresponde.
-- La firma no se incorpora a la sesión ni se envía a un endpoint inexistente; el servicio aislado permite sustituir `localStorage` por la API documental.
+- La firma no se incorpora a la sesión. Queda anotada como integración pendiente la consulta backend de la firma vigente para precargarla en el selector.
 - Los estilos nuevos consumen tokens semánticos y se adaptan a móvil y modos claro/oscuro.
 
 Frontend del **Sistema de Apoyo para la gestión de trámites de posgrados (SAPP)** de la Escuela de Ingeniería de Sistemas e Informática (**EISI**) de la Universidad Industrial de Santander (**UIS**).
