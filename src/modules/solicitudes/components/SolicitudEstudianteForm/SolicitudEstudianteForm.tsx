@@ -41,13 +41,22 @@ export interface SolicitudEstudiantePayload {
 interface SolicitudEstudianteFormProps {
   tipos: TipoSolicitudDto[]
   estudianteId: number
+  telefonoEstudiante: string
+  correoEstudiante: string
   onPreviewCreditoCondonable: (payload: {
     estudianteId: number
     tipoSolicitudId: number
     observaciones: string
     modalidadId: number
-    motivos: string[]
+    motivos?: string[]
     ciudadExpedicionDocumento: string
+    actividadesCreditoCondonable?: string[]
+    periodoAcademicoInicioCreditoCon?: string
+    direccionEstudiante?: string
+    telefonoEstudiante?: string
+    correoEstudiante?: string
+    intensidadHorariaSemanal?: number
+    horasSemestre?: number
   }) => Promise<PreviewSolicitudCreditoResponseDto[]>
   onSubmit?: (payload: SolicitudEstudiantePayload) => Promise<void> | void
 }
@@ -115,7 +124,16 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
   return `${normalized || `documento-${index + 1}`}.pdf`
 }
 
-const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonable, onSubmit }: SolicitudEstudianteFormProps) => {
+const RENOVACION_CREDITO_CONDONABLE_ID = 12
+
+const SolicitudEstudianteForm = ({
+  tipos,
+  estudianteId,
+  telefonoEstudiante,
+  correoEstudiante,
+  onPreviewCreditoCondonable,
+  onSubmit,
+}: SolicitudEstudianteFormProps) => {
   const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
   const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
@@ -132,6 +150,10 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
+  const [direccionEstudiante, setDireccionEstudiante] = useState('')
+  const [periodoAcademicoInicioCreditoCon, setPeriodoAcademicoInicioCreditoCon] = useState('')
+  const [intensidadHorariaSemanal, setIntensidadHorariaSemanal] = useState<number | null>(null)
+  const [horasSemestre, setHorasSemestre] = useState<number | null>(null)
   const [previewDocumentos, setPreviewDocumentos] = useState<PreviewDocumento[]>([])
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -146,10 +168,25 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
     [selectedTipo],
   )
   const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
+  const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
+  const periodoRenovacionValido = /^\d{4}-[12]$/.test(periodoAcademicoInicioCreditoCon.trim())
+  const camposRenovacionValidos =
+    direccionEstudiante.trim().length > 0 &&
+    telefonoEstudiante.trim().length > 0 &&
+    correoEstudiante.trim().length > 0 &&
+    periodoRenovacionValido &&
+    intensidadHorariaSemanal !== null &&
+    intensidadHorariaSemanal > 0 &&
+    horasSemestre !== null &&
+    horasSemestre > 0
   const canPreviewCredito =
-    isCreditoCondonable && modalidadId !== null && motivosCreditoValidos.length > 0 && ciudadExpedicionDocumento.trim().length > 0
+    isCreditoCondonable &&
+    modalidadId !== null &&
+    motivosCreditoValidos.length > 0 &&
+    ciudadExpedicionDocumento.trim().length > 0 &&
+    (!isRenovacionCreditoCondonable || camposRenovacionValidos)
 
   useEffect(() => () => previewDocumentos.forEach((documento) => URL.revokeObjectURL(documento.pdfUrl)), [previewDocumentos])
 
@@ -318,7 +355,11 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
       }
       const motivosValidos = motivosCredito.map((item) => item.trim()).filter(Boolean)
       if (motivosValidos.length === 0) {
-        setErrorMsg('Debes agregar al menos un motivo para la solicitud de crédito condonable.')
+        setErrorMsg(
+          isRenovacionCreditoCondonable
+            ? 'Debes agregar al menos una actividad del crédito condonable.'
+            : 'Debes agregar al menos un motivo para la solicitud de crédito condonable.',
+        )
         return false
       }
     }
@@ -365,6 +406,10 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
     setNuevaAsignaturaNombre('')
     setMotivosCredito([''])
     setCiudadExpedicionDocumento('')
+    setDireccionEstudiante('')
+    setPeriodoAcademicoInicioCreditoCon('')
+    setIntensidadHorariaSemanal(null)
+    setHorasSemestre(null)
     setPreviewDocumentos([])
     setSelectedPreviewIndex(0)
   }
@@ -380,7 +425,17 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
         tipoSolicitudId,
         observaciones: observaciones || 'Solicitud de crédito condonable',
         modalidadId,
-        motivos: motivosCreditoValidos,
+        ...(isRenovacionCreditoCondonable
+          ? {
+              actividadesCreditoCondonable: motivosCreditoValidos,
+              periodoAcademicoInicioCreditoCon: periodoAcademicoInicioCreditoCon.trim(),
+              direccionEstudiante: direccionEstudiante.trim(),
+              telefonoEstudiante: telefonoEstudiante.trim(),
+              correoEstudiante: correoEstudiante.trim(),
+              intensidadHorariaSemanal: intensidadHorariaSemanal as number,
+              horasSemestre: horasSemestre as number,
+            }
+          : { motivos: motivosCreditoValidos }),
         ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
       })
       const previews = await Promise.all(
@@ -592,13 +647,17 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
           )}
 
           <div className="solicitud-estudiante-form__motivos">
-            <label>Motivos para la solicitud del crédito condonable *</label>
+            <label>
+              {isRenovacionCreditoCondonable
+                ? 'Actividades del crédito condonable *'
+                : 'Motivos para la solicitud del crédito condonable *'}
+            </label>
             {motivosCredito.map((motivo, index) => (
               <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
                 <input
                   value={motivo}
                   onChange={(event) => updateMotivo(index, event.target.value)}
-                  placeholder={`Motivo ${index + 1}`}
+                  placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
                 />
                 <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
                   −
@@ -606,7 +665,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
               </div>
             ))}
             <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
-              + Agregar motivo
+              + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
             </button>
           </div>
           <label htmlFor="ciudadExpedicionDocumento">Departamento/Ciudad de expedición del documento *</label>
@@ -616,6 +675,62 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
             onChange={(event) => setCiudadExpedicionDocumento(event.target.value)}
             placeholder="Ej: Bucaramanga"
           />
+          {isRenovacionCreditoCondonable && (
+            <>
+              <label htmlFor="direccionEstudiante">Dirección de residencia *</label>
+              <input
+                id="direccionEstudiante"
+                value={direccionEstudiante}
+                onChange={(event) => setDireccionEstudiante(event.target.value)}
+                placeholder="Ej: Cra 32a #19-18, Barrio San Alonso"
+                required
+              />
+              <label htmlFor="periodoAcademicoInicioCreditoCon">Periodo de inicio del crédito condonable *</label>
+              <input
+                id="periodoAcademicoInicioCreditoCon"
+                value={periodoAcademicoInicioCreditoCon}
+                onChange={(event) => setPeriodoAcademicoInicioCreditoCon(event.target.value)}
+                placeholder="AAAA-P (ej: 2023-2)"
+                pattern="\d{4}-[12]"
+                title="Ingresa el periodo en formato año-periodo, por ejemplo 2023-2."
+                required
+              />
+              <div className="solicitud-estudiante-form__renewal-numbers">
+                <div>
+                  <label htmlFor="intensidadHorariaSemanal">Intensidad horaria semanal *</label>
+                  <input
+                    id="intensidadHorariaSemanal"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={intensidadHorariaSemanal ?? ''}
+                    onChange={(event) => setIntensidadHorariaSemanal(event.target.value ? Number(event.target.value) : null)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="horasSemestre">Horas del semestre *</label>
+                  <input
+                    id="horasSemestre"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={horasSemestre ?? ''}
+                    onChange={(event) => setHorasSemestre(event.target.value ? Number(event.target.value) : null)}
+                    required
+                  />
+                </div>
+              </div>
+              <p className="solicitud-estudiante-form__help">
+                El teléfono y el correo institucional se tomarán automáticamente de la sesión.
+              </p>
+              {(!telefonoEstudiante.trim() || !correoEstudiante.trim()) && (
+                <p className="solicitud-estudiante-form__doc-error">
+                  La sesión no contiene teléfono y correo suficientes para generar la previsualización.
+                </p>
+              )}
+            </>
+          )}
           <button
             type="button"
             className="solicitud-estudiante-form__add-inline"

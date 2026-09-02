@@ -1546,6 +1546,37 @@ npm run lint
 - La validación visual/HTTP con la respuesta real continúa pendiente porque requiere backend, sesión institucional y un navegador no disponible en este contenedor.
 
 ---
+# Update 2026-09-02 — Previsualización de renovación de crédito condonable
+
+## Estado actual y decisión de alcance
+- El formulario de nueva solicitud reconoce exclusivamente `tipoSolicitudId === 12` como **RENOVACION CREDITO CONDONABLE** (catálogo informado: `tramiteId: 17`). Los campos nuevos no se muestran ni se envían para otros tipos; los demás créditos condonables mantienen el flujo previo de motivos.
+- Para el tipo 12 se muestran modalidad, ciudad de expedición, lista dinámica de actividades, dirección, periodo académico de inicio (`AAAA-P`), intensidad horaria semanal y horas del semestre.
+- Teléfono y correo no son editables ni se duplican como estado del formulario: se leen de `session.user.persona`; el correo prioriza `emailInstitucional`, luego `user.email` y finalmente `emailPersonal`. Si falta cualquiera, se informa el problema y se bloquea la previsualización.
+- No se modificó el contrato de creación de una solicitud; este ajuste corresponde únicamente a la construcción del body de previsualización PDF.
+
+## Paths, contrato y salida esperada
+- UI y validación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Estilos responsive: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.css`.
+- Lectura de sesión y adaptación del callback: `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+- DTO HTTP: `src/modules/solicitudes/api/types.ts`; transporte sin cambio: `src/modules/solicitudes/api/solicitudesAcademicasService.ts`.
+- Request: `POST ${VITE_API_URL || '/api/sapp'}/sapp/solicitudesAcademicas/pdf-previsualizacion`. Para tipo 12, el body esperado contiene `estudianteId`, `tipoSolicitudId`, `observaciones`, `modalidadId`, `ciudadExpedicionDocumento`, `actividadesCreditoCondonable`, `periodoAcademicoInicioCreditoCon`, `direccionEstudiante`, `telefonoEstudiante`, `correoEstudiante`, `intensidadHorariaSemanal`, `horasSemestre` y `solicitudHomologacionesAsignaturas: []`. No debe contener `motivos`.
+- La respuesta continúa siendo `{ ok, message, data: PreviewSolicitudCreditoResponseDto[] }`, con compatibilidad para el objeto único legado. La salida visual sigue siendo uno o varios PDF seleccionables y cargables como documentos de la solicitud.
+
+## Retos y próximos pasos
+1. Validar con backend y sesión institucional que el catálogo entrega ID `12`, que teléfono/correo están poblados y que el POST omite `motivos` en este caso.
+2. Confirmar con producto/backend si las actividades y demás datos de renovación deberán persistirse también al crear la solicitud; por ahora solo forman parte de la previsualización, tal como se solicitó.
+3. Probar límites de intensidad/horas y periodos inválidos con un runner de componentes cuando se incorpore Vitest/React Testing Library.
+4. Realizar validación visual en navegador autenticado; el contenedor no dispone de Chromium/Chrome y el formulario depende del gateway, por lo que no se generó captura automatizada.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; Node.js 24.15.0 y npm 11.4.2. Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Paquetes instalados: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes, seeds, datasets, schemas ni artefactos persistentes.
+- `npm run build` (2026-09-02): PASS; 237 módulos transformados, `dist/assets/index-Dwn94egS.css` y `dist/assets/index-D8nYHMcl.js`.
+- `npx eslint src/modules/solicitudes/api/types.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx` (2026-09-02): PASS; solo apareció el warning conocido de npm sobre `http-proxy`.
+- `npm run lint` (2026-09-02): FAIL por 11 errores y 1 warning preexistentes en archivos ajenos al cambio (`src/api/*Service.ts`, rutas de admisiones/coordinación, mocks, validación de documentos y tipos de solicitudes). Los archivos modificados pasan ESLint dirigido.
+- `git diff --check` (2026-09-02): PASS.
+
+---
 # Update 2026-09-02 — Persistencia de firma de UsuarioSapp
 
 ## Estado actual y decisión

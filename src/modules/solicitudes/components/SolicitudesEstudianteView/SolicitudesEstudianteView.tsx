@@ -59,6 +59,9 @@ const SolicitudesEstudianteView = () => {
   const [currentPage, setCurrentPage] = useState(1)
 
   const usuarioSappId = session && session.kind === 'SAPP' ? session.user.id : null
+  const telefonoEstudiante = session?.user.persona.telefono ?? ''
+  const correoEstudiante =
+    session?.user.persona.emailInstitucional ?? session?.user.email ?? session?.user.persona.emailPersonal ?? ''
 
   const loadSolicitudes = async (targetEstudianteId: number) => {
     const solicitudes = await getSolicitudesAcademicasByEstudiante(targetEstudianteId)
@@ -337,6 +340,8 @@ const SolicitudesEstudianteView = () => {
           <SolicitudEstudianteForm
             tipos={tiposSolicitud}
             estudianteId={estudianteId as number}
+            telefonoEstudiante={telefonoEstudiante}
+            correoEstudiante={correoEstudiante}
             onPreviewCreditoCondonable={async (previewPayload) =>
               previsualizarSolicitudCredito({
                 estudianteId: previewPayload.estudianteId,
@@ -345,6 +350,13 @@ const SolicitudesEstudianteView = () => {
                 modalidadId: previewPayload.modalidadId,
                 motivos: previewPayload.motivos,
                 ciudadExpedicionDocumento: previewPayload.ciudadExpedicionDocumento,
+                actividadesCreditoCondonable: previewPayload.actividadesCreditoCondonable,
+                periodoAcademicoInicioCreditoCon: previewPayload.periodoAcademicoInicioCreditoCon,
+                direccionEstudiante: previewPayload.direccionEstudiante,
+                telefonoEstudiante: previewPayload.telefonoEstudiante,
+                correoEstudiante: previewPayload.correoEstudiante,
+                intensidadHorariaSemanal: previewPayload.intensidadHorariaSemanal,
+                horasSemestre: previewPayload.horasSemestre,
                 solicitudHomologacionesAsignaturas: [],
               })
             }

@@ -56,8 +56,15 @@ export interface PreviewSolicitudCreditoRequestDto {
   tipoSolicitudId: number
   observaciones: string
   modalidadId: number
-  motivos: string[]
+  motivos?: string[]
   ciudadExpedicionDocumento: string
+  actividadesCreditoCondonable?: string[]
+  periodoAcademicoInicioCreditoCon?: string
+  direccionEstudiante?: string
+  telefonoEstudiante?: string
+  correoEstudiante?: string
+  intensidadHorariaSemanal?: number
+  horasSemestre?: number
   solicitudHomologacionesAsignaturas: SolicitudHomologacionAsignaturaRequestDto[]
 }
 
