@@ -1,5 +1,31 @@
 # SAPP Frontend — EISI UIS
 
+## Estado funcional (2026-09-02)
+
+La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. También permite previsualizar y actualizar una firma PNG/JPG (máximo 2 MB); mientras se define el endpoint documental, se guarda por usuario únicamente en `localStorage`.
+
+### Stack instalado y ejecución rápida
+
+- React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- Componentes/páginas en `src/components` y `src/pages`; módulos de dominio en `src/modules`; sesión en `src/context/Auth`; transporte en `src/shared/http`.
+
+```bash
+npm ci          # instala exactamente package-lock.json
+npm run dev     # servidor Vite
+npm run build   # TypeScript + producción
+npm run lint    # revisión estática global
+npm run preview # sirve el build
+```
+
+Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No hay seeds ni datasets propios: la información proviene del gateway/API, salvo mocks explícitos y la firma temporal local. `VITE_API_URL` configura la API cuando corresponda; varios servicios conservan `/api/sapp` como fallback.
+
+### Decisiones recientes (changelog-lite)
+
+- **2026-09-02:** perfil accesible desde el avatar, vistas contextualizadas para coordinación/estudiante y carga local temporal de firma con validación y vista previa.
+- **2026-09-02:** el perfil aprovecha el contrato real de `/inicio`: código UIS, programa, cohorte, estado, fecha de ingreso, correo personal y teléfono, con fallback a `attributes` cuando corresponde.
+- La firma no se incorpora a la sesión ni se envía a un endpoint inexistente; el servicio aislado permite sustituir `localStorage` por la API documental.
+- Los estilos nuevos consumen tokens semánticos y se adaptan a móvil y modos claro/oscuro.
+
 Frontend del **Sistema de Apoyo para la gestión de trámites de posgrados (SAPP)** de la Escuela de Ingeniería de Sistemas e Informática (**EISI**) de la Universidad Industrial de Santander (**UIS**).
 
 ## Propósito y alcance

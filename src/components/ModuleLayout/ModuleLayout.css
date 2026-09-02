@@ -42,6 +42,21 @@
     box-shadow: 0 3px 8px color-mix(in srgb, var(--outline), transparent 75%);
 }
 
+.module-layout__profile-link {
+    display: inline-flex;
+    border-radius: 999px;
+    outline: 3px solid transparent;
+    transition: transform 160ms ease, outline-color 160ms ease;
+}
+
+.module-layout__profile-link:hover {
+    transform: scale(1.04);
+}
+
+.module-layout__profile-link:focus-visible {
+    outline-color: var(--primary);
+}
+
 .module-layout__uis-logo {
     max-height: 6.2rem;
     padding-left: 1rem;

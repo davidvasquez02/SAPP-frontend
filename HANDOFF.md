@@ -1,3 +1,33 @@
+# Update 2026-09-02 — Perfil contextual y firma
+
+## Estado actual
+- El avatar de todos los encabezados `ModuleLayout` es un enlace accesible a la ruta protegida `/perfil`.
+- El contrato real de login ya está tipado para `estudiante.codigoEstudianteUis`, `cohorte`, `estado`, `fechaIngreso`, `idAspirante`, `programaCodigoNombre` y `programaId`. El perfil usa esos campos y completa correo personal, teléfono y código desde `attributes` cuando la proyección de persona/estudiante no los trae.
+- `PerfilPage` muestra identidad de la sesión y bloques condicionales: coordinación (`COORDINADOR`/`ADMIN`) ve programa, unidad, estado y último ingreso; estudiante (rol `ESTUDIANTE` o DTO `estudiante`) ve código, programa, cohorte y estado. Los valores ausentes se rotulan como pendientes/provisionales.
+- Se puede elegir una firma PNG/JPG de hasta 2 MB, verla antes de guardar y pulsar **Actualizar firma**. El mock persiste por usuario en `localStorage` bajo `SAPP_FIRMA_PERFIL:{userId}`.
+
+## Paths, contratos y salida esperada
+- Ruta/export: `src/app/routes/index.tsx`, `src/pages/index.ts`.
+- Página/estilos: `src/pages/Perfil/PerfilPage.tsx`, `src/pages/Perfil/PerfilPage.css`.
+- Persistencia sustituible: `src/modules/perfil/services/firmaPerfilService.ts`; contrato `{ nombreArchivo, mimeType, contenidoBase64 }`.
+- Acceso: `src/components/ModuleLayout/ModuleLayout.tsx` y `.css`.
+- Al seleccionar el avatar se abre `/perfil`; solo aparecen bloques relevantes para el rol y una firma se persiste únicamente después de pulsar el botón.
+
+## Retos y próximos pasos
+1. Definir endpoints autenticados `GET/PUT /api/v1/perfil/firma` (o contrato documental equivalente) y reemplazar el mock local.
+2. Confirmar con un login de coordinación si su proyección incluye un programa específico y fecha de último ingreso; los campos del estudiante ya coinciden con el contrato real suministrado.
+3. Agregar Vitest/React Testing Library para roles, formato/tamaño, previsualización y persistencia; validar visualmente con sesiones reales.
+4. La firma local no es una firma digital ni almacenamiento definitivo; no usarla como evidencia de autenticidad.
+
+## Entorno y resultados recientes
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entorno Python ni otro árbol npm.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm run build` (2026-09-02, ajuste al contrato real de login): PASS; 237 módulos, assets `index-ZvyW5o5r.css` y `index-C6wN6vlE.js`, 979 ms.
+- `npx eslint src/api/authTypes.ts src/pages/Perfil/PerfilPage.tsx` (2026-09-02): PASS; solo warning npm conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-02): PASS. La validación visual requiere un navegador y sesiones reales del gateway.
+
+---
+
 # Update 2026-09-02 — Previsualización y carga de múltiples documentos generados
 
 ## Estado actual y decisión

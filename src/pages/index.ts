@@ -8,6 +8,7 @@ export { CreditosPage } from "./Creditos";
 export { EstudianteDetalleCoordinacionPage } from "./EstudianteDetalleCoordinacion";
 export { EstudiantesCoordinacionPage } from "./EstudiantesCoordinacion";
 export { HomePage } from "./Home";
+export { PerfilPage } from "./Perfil";
 export { InscripcionAdmisionDetallePage } from "./InscripcionAdmisionDetalle";
 export { InscripcionDocumentosPage } from "./InscripcionDocumentos";
 export { InscripcionEntrevistasPage } from "./InscripcionEntrevistas";

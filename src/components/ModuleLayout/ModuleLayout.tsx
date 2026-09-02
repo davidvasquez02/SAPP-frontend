@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
@@ -35,7 +36,9 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
             <p className="module-layout__user-name">{displayName}</p>
             <p className="module-layout__user-role">{roleLabel}</p>
           </div>
-          <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />
+          <Link className="module-layout__profile-link" to="/perfil" aria-label="Abrir mi perfil">
+            <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />
+          </Link>
           <img
             className="module-layout__uis-logo"
             src={UIS_LOGO_SRC}
