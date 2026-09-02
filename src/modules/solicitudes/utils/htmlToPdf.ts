@@ -9,6 +9,7 @@ const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^R0lGOD/, 'image/gif'],
   [/^UklGR/, 'image/webp'],
 ]
+const SAFE_DATA_IMAGE_PATTERN = /^data:image\/(?:jpeg|png|gif|webp);base64,/i
 
 const waitForFrame = (frame: HTMLIFrameElement): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -37,46 +38,52 @@ const dataUrlToBytes = (dataUrl: string): Uint8Array => {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0))
 }
 
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('No fue posible leer una imagen del documento.'))
-    reader.readAsDataURL(blob)
-  })
-
 const resolveRawBase64Image = (source: string): string | null => {
   const compactSource = source.replace(/\s/g, '')
   const match = BASE64_IMAGE_TYPES.find(([pattern]) => pattern.test(compactSource))
   return match ? `data:${match[1]};base64,${compactSource}` : null
 }
 
-const inlineDocumentImages = async (frameDocument: Document): Promise<void> => {
-  await Promise.all(
-    Array.from(frameDocument.images).map(async (image) => {
-      const source = image.getAttribute('src')?.trim() ?? ''
-      if (!source || source.startsWith('data:') || source.startsWith('blob:')) {
-        return
-      }
-
-      const rawBase64Image = resolveRawBase64Image(source)
-      if (rawBase64Image) {
-        image.src = rawBase64Image
-        return
-      }
-
-      try {
-        const response = await fetch(image.src, { credentials: 'include' })
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-        image.src = await blobToDataUrl(await response.blob())
-      } catch {
-        // An external image left in the SVG would taint the canvas and prevent PDF export.
-        image.removeAttribute('src')
-      }
-    }),
+const removeExternalCssUrls = (css: string): string =>
+  css.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi, (declaration, _quote: string, url: string) =>
+    SAFE_DATA_IMAGE_PATTERN.test(url.trim()) ? declaration : 'none',
   )
+
+/** Sanitizes resources before the HTML ever reaches a live document, so it cannot issue requests or taint a canvas. */
+const prepareHtmlForRendering = (html: string): string => {
+  const parsed = new DOMParser().parseFromString(html, 'text/html')
+
+  parsed.querySelectorAll('script, link, iframe, object, embed, video, audio, source').forEach((element) => element.remove())
+  parsed.querySelectorAll('style').forEach((style) => {
+    style.textContent = removeExternalCssUrls(style.textContent ?? '')
+  })
+  parsed.querySelectorAll<HTMLElement>('[style]').forEach((element) => {
+    element.setAttribute('style', removeExternalCssUrls(element.getAttribute('style') ?? ''))
+  })
+
+  Array.from(parsed.images).forEach((image) => {
+    const source = image.getAttribute('src')?.trim() ?? ''
+    const rawBase64Image = resolveRawBase64Image(source)
+    if (rawBase64Image) {
+      image.setAttribute('src', rawBase64Image)
+      return
+    }
+    if (!SAFE_DATA_IMAGE_PATTERN.test(source)) {
+      image.removeAttribute('src')
+    }
+  })
+
+  parsed.querySelectorAll('*').forEach((element) => {
+    for (const attribute of ['src', 'href', 'xlink:href']) {
+      const value = element.getAttribute(attribute)?.trim()
+      const safeImageSource = element.tagName === 'IMG' && value != null && SAFE_DATA_IMAGE_PATTERN.test(value)
+      if (value && !safeImageSource && !value.startsWith('#')) {
+        element.removeAttribute(attribute)
+      }
+    }
+  })
+
+  return `<!doctype html>${parsed.documentElement.outerHTML}`
 }
 
 const createPdf = (pages: Uint8Array[]): Blob => {
@@ -133,6 +140,7 @@ const createPdf = (pages: Uint8Array[]): Blob => {
 
 /** Converts the backend HTML template to a rasterized, printable Letter-size PDF in the browser. */
 export async function htmlToPdf(html: string): Promise<Blob> {
+  const preparedHtml = prepareHtmlForRendering(html)
   const frame = document.createElement('iframe')
   frame.setAttribute('sandbox', 'allow-same-origin')
   frame.style.cssText = `position:fixed;left:-10000px;top:0;width:${LETTER_WIDTH_PX}px;height:${LETTER_HEIGHT_PX}px;border:0;`
@@ -140,7 +148,7 @@ export async function htmlToPdf(html: string): Promise<Blob> {
 
   try {
     const loaded = waitForFrame(frame)
-    frame.srcdoc = html
+    frame.srcdoc = preparedHtml
     await loaded
 
     const frameDocument = frame.contentDocument
@@ -148,7 +156,6 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       throw new Error('No fue posible acceder al documento HTML generado.')
     }
     await frameDocument.fonts?.ready
-    await inlineDocumentImages(frameDocument)
     await Promise.all(
       Array.from(frameDocument.images).map(
         (image) =>

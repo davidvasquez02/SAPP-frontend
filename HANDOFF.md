@@ -4,7 +4,7 @@
 - El backend `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` ahora entrega una colección de documentos; el servicio frontend selecciona el primer elemento y el documento puede tener `mimeTypeDocumentoContenido: "text/html"` con HTML codificado en base64.
 - `SolicitudEstudianteForm` decodifica la respuesta. Cuando el MIME contiene `html`, llama a `htmlToPdf`; si ya es otro MIME (incluido PDF), conserva el Blob recibido. El resultado siempre se previsualiza mediante una URL Blob y **Cargar archivo de solicitud** crea `carta-solicitud-credito-condonable.pdf` desde ese mismo Blob PDF.
 - `htmlToPdf` carga el HTML en un `iframe` sandbox sin permiso para scripts, espera fuentes e imágenes, serializa/renderiza el documento, lo pagina en tamaño Letter y construye un PDF rasterizado JPEG sin librerías externas. Las URLs temporales son revocadas por el ciclo de vida del formulario.
-- Corrección posterior: las firmas del backend pueden llegar como base64 crudo en `src` (un JPEG comienza por `/9j/`). El navegador lo interpretaba como `https://sapp.eisi.online/9j/...`, y al dibujarlo dejaba el canvas contaminado, causando `Failed to execute 'toDataURL' on 'HTMLCanvasElement': Tainted canvases may not be exported`. Antes de serializar, el conversor ahora detecta JPEG/PNG/GIF/WebP base64 y agrega el data URI correcto. También intenta incorporar imágenes URL mediante `fetch`; si CORS/autorización impide obtenerlas, elimina su `src` para garantizar que el PDF pueda exportarse.
+- Corrección definitiva: las firmas del backend pueden llegar como base64 crudo en `src` (un JPEG comienza por `/9j/`). Insertar primero ese HTML en el `iframe` hacía que el navegador solicitara `https://sapp.eisi.online/9j/...` antes de que la corrección posterior alcanzara a ejecutarse, produciendo HTTP 414 y contaminando el canvas. Ahora el HTML pasa primero por `DOMParser`, todavía inerte: allí se convierten JPEG/PNG/GIF/WebP crudos a data URI y se eliminan scripts y todos los recursos externos —incluidos URLs CSS—. Solo después se asigna el HTML preparado a `srcdoc`; la conversión no hace `fetch` ni permite solicitudes remotas.
 
 ## Paths, contrato y salida esperada
 - Conversor: `src/modules/solicitudes/utils/htmlToPdf.ts`.
@@ -22,8 +22,8 @@
 ## Entorno y pruebas de esta actualización
 - Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
 - Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2. No se agregaron paquetes.
-- `npm run build` (2026-09-02, corrección de canvas): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CUPSb1PT.js` en 975 ms.
-- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02, corrección de canvas): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02, saneamiento previo): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CA-fxli-.js` en 951 ms.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02, saneamiento previo): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
 - Actualización de rama solicitada: se ejecutó `git fetch --all --prune`, pero este checkout no tiene remotos configurados ni referencias `main`/`origin/main`; el único ref local disponible es `work`. El commit de la entrega anterior ya es el padre directo de esta corrección. En un checkout conectado, rebasar esta rama sobre `origin/main` antes de integrarla.
 - Validación visual pendiente: este contenedor no incluye navegador y el flujo requiere sesión/backend institucional. Los intentos de instalar `html2pdf.js`/`html2canvas` fueron bloqueados por el registry con HTTP 403, por lo que se implementó el conversor sin dependencias.
 
