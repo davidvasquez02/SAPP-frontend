@@ -1437,3 +1437,52 @@ npm run lint
 - `git diff --check` y `npm list --depth=0` (2026-08-28): PASS. No se tomó screenshot porque el cambio solo altera el orden de datos y su validación visual requiere backend, sesión institucional y registros de actas.
 
 ---
+# Update 2026-09-02 — Márgenes verticales de la previsualización PDF
+
+## Estado actual y decisión
+- La conversión HTML → PDF de solicitudes de crédito condonable conserva el tamaño carta de `816 × 1056 px` (`612 × 792 pt`) y reserva `72 px` (`0.75 in`) de margen tanto arriba como abajo de cada página.
+- El contenido útil por página es de `912 px`. Cada página toma el siguiente tramo consecutivo del render HTML y lo dibuja desde `y = 72`, evitando omisiones o duplicados al paginar.
+- El cambio está limitado al conversor local. Si `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` responde un MIME distinto de HTML, el Blob del backend se conserva intacto.
+
+## Paths, contrato y salida esperada
+- Conversor: `src/modules/solicitudes/utils/htmlToPdf.ts`.
+- Consumidor: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Entrada relevante: documento base64 con `mimeTypeDocumentoContenido: "text/html"` dentro de la respuesta de `POST /sapp/solicitudesAcademicas/pdf-previsualizacion`.
+- Salida esperada: Blob `application/pdf` tamaño carta, con una franja blanca de `0.75 in` arriba y abajo en todas las páginas y sin perder segmentos del HTML entre una página y la siguiente.
+
+## Retos y próximos pasos
+1. Validar visualmente con la plantilla real y una solicitud de dos o más páginas que encabezados, firmas y párrafos tengan el espacio esperado.
+2. La rasterización aún corta el flujo en el límite del área útil; si el dominio exige mantener bloques completos unidos, será necesario introducir reglas de salto basadas en elementos antes de rasterizar.
+3. No se agregaron dependencias, datasets ni seeds.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0 y npm 11.4.2; las versiones exactas de paquetes instalados permanecen documentadas en `README.md`.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CvPyPw3E.css` y `dist/assets/index-nM5AwOQ1.js` en 743 ms.
+- `git diff --check` (2026-09-02): PASS.
+- Screenshot automatizado pendiente por limitación del entorno: no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados, y la reproducción completa requiere backend y sesión institucional.
+
+---
+
+# Update 2026-09-02 — Base64 de imágenes y canvas seguro
+
+## Estado actual y causa corregida
+- Un JPEG base64 crudo comienza normalmente por `/9j/`. Si llega en `srcset` o en otro atributo de recurso sin prefijo `data:image/jpeg;base64,`, el navegador lo resuelve como una ruta relativa y genera una solicitud enorme a `GET /9j/...`, que termina en HTTP 414.
+- Si cualquier recurso externo alcanza el SVG/`foreignObject`, el canvas puede quedar marcado como no confiable y `canvas.toDataURL()` lanza `SecurityError: Tainted canvases may not be exported`.
+- El sanitizador ahora compacta tanto data URI como base64 crudo, elimina `srcset` y los restantes atributos de recursos no permitidos, y añade CSP al documento aislado (`default-src 'none'; img-src data:; style-src 'unsafe-inline'`).
+
+## Paths, contrato y salida esperada
+- Implementación: `src/modules/solicitudes/utils/htmlToPdf.ts`, antes de asignar `iframe.srcdoc`.
+- El contrato HTTP no cambia. Las imágenes soportadas siguen siendo JPEG, PNG, GIF y WebP embebidas en base64.
+- Salida esperada: no se producen solicitudes `/9j/...`; las firmas embebidas se conservan; el canvas permanece exportable y genera el Blob `application/pdf` con los márgenes verticales existentes.
+
+## Retos, entorno y validación
+- Validar con la respuesta real que originó el 414, inspeccionando Network para confirmar que no existe ninguna petición documental adicional durante la conversión.
+- No se agregaron dependencias, seeds ni datasets. Reutilizar Node.js/npm y `node_modules` de `/workspace/SAPP-frontend`; no crear entornos Python.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-02): PASS; únicamente se mostró el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CvPyPw3E.css` y `dist/assets/index-yef4x4Uf.js` en 725 ms.
+- `git diff --check` (2026-09-02): PASS.
+- La validación visual/HTTP con la respuesta real continúa pendiente porque requiere backend, sesión institucional y un navegador no disponible en este contenedor.
+
+---

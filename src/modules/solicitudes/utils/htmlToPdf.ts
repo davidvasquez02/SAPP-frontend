@@ -2,6 +2,9 @@ const LETTER_WIDTH_PT = 612
 const LETTER_HEIGHT_PT = 792
 const LETTER_WIDTH_PX = 816
 const LETTER_HEIGHT_PX = 1056
+// 0.75 in at the 96 DPI used to rasterize the Letter-size document.
+const VERTICAL_PAGE_MARGIN_PX = 72
+const PAGE_CONTENT_HEIGHT_PX = LETTER_HEIGHT_PX - (VERTICAL_PAGE_MARGIN_PX * 2)
 
 const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^\/9j\//, 'image/jpeg'],
@@ -10,6 +13,7 @@ const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^UklGR/, 'image/webp'],
 ]
 const SAFE_DATA_IMAGE_PATTERN = /^data:image\/(?:jpeg|png|gif|webp);base64,/i
+const RESOURCE_ATTRIBUTES = ['src', 'href', 'xlink:href', 'srcset', 'poster', 'background'] as const
 
 const waitForFrame = (frame: HTMLIFrameElement): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -38,8 +42,11 @@ const dataUrlToBytes = (dataUrl: string): Uint8Array => {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0))
 }
 
-const resolveRawBase64Image = (source: string): string | null => {
+const resolveSafeImageSource = (source: string): string | null => {
   const compactSource = source.replace(/\s/g, '')
+  if (SAFE_DATA_IMAGE_PATTERN.test(compactSource)) {
+    return compactSource
+  }
   const match = BASE64_IMAGE_TYPES.find(([pattern]) => pattern.test(compactSource))
   return match ? `data:${match[1]};base64,${compactSource}` : null
 }
@@ -53,6 +60,11 @@ const removeExternalCssUrls = (css: string): string =>
 const prepareHtmlForRendering = (html: string): string => {
   const parsed = new DOMParser().parseFromString(html, 'text/html')
 
+  const contentSecurityPolicy = parsed.createElement('meta')
+  contentSecurityPolicy.httpEquiv = 'Content-Security-Policy'
+  contentSecurityPolicy.content = "default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+  parsed.head.prepend(contentSecurityPolicy)
+
   parsed.querySelectorAll('script, link, iframe, object, embed, video, audio, source').forEach((element) => element.remove())
   parsed.querySelectorAll('style').forEach((style) => {
     style.textContent = removeExternalCssUrls(style.textContent ?? '')
@@ -63,18 +75,18 @@ const prepareHtmlForRendering = (html: string): string => {
 
   Array.from(parsed.images).forEach((image) => {
     const source = image.getAttribute('src')?.trim() ?? ''
-    const rawBase64Image = resolveRawBase64Image(source)
-    if (rawBase64Image) {
-      image.setAttribute('src', rawBase64Image)
-      return
-    }
-    if (!SAFE_DATA_IMAGE_PATTERN.test(source)) {
+    const safeImageSource = resolveSafeImageSource(source)
+    if (safeImageSource) {
+      image.setAttribute('src', safeImageSource)
+    } else {
       image.removeAttribute('src')
     }
+    // A srcset takes precedence over src and could turn a raw JPEG base64 value into a relative URL.
+    image.removeAttribute('srcset')
   })
 
   parsed.querySelectorAll('*').forEach((element) => {
-    for (const attribute of ['src', 'href', 'xlink:href']) {
+    for (const attribute of RESOURCE_ATTRIBUTES) {
       const value = element.getAttribute(attribute)?.trim()
       const safeImageSource = element.tagName === 'IMG' && value != null && SAFE_DATA_IMAGE_PATTERN.test(value)
       if (value && !safeImageSource && !value.startsWith('#')) {
@@ -172,7 +184,7 @@ export async function htmlToPdf(html: string): Promise<Blob> {
     const serialized = new XMLSerializer().serializeToString(frameDocument.documentElement)
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LETTER_WIDTH_PX}" height="${height}"><foreignObject width="100%" height="100%">${serialized}</foreignObject></svg>`
     const rendered = await loadSvgImage(svg)
-    const pageCount = Math.ceil(height / LETTER_HEIGHT_PX)
+    const pageCount = Math.ceil(height / PAGE_CONTENT_HEIGHT_PX)
     const pages: Uint8Array[] = []
 
     for (let page = 0; page < pageCount; page += 1) {
@@ -185,7 +197,19 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       }
       context.fillStyle = '#ffffff'
       context.fillRect(0, 0, canvas.width, canvas.height)
-      context.drawImage(rendered, 0, -(page * LETTER_HEIGHT_PX))
+      const sourceY = page * PAGE_CONTENT_HEIGHT_PX
+      const sourceHeight = Math.min(PAGE_CONTENT_HEIGHT_PX, height - sourceY)
+      context.drawImage(
+        rendered,
+        0,
+        sourceY,
+        LETTER_WIDTH_PX,
+        sourceHeight,
+        0,
+        VERTICAL_PAGE_MARGIN_PX,
+        LETTER_WIDTH_PX,
+        sourceHeight,
+      )
       pages.push(dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.95)))
     }
 

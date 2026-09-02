@@ -91,6 +91,17 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-09-02 — Bloqueo de recursos externos durante la conversión PDF
+
+- Las firmas/imágenes JPEG entregadas como base64 crudo (`/9j/...`) o como data URI se normalizan a un data URI compacto antes de cargar el HTML.
+- Se elimina `srcset` y cualquier atributo de recursos no permitido, y el documento aislado incorpora una política CSP que solo admite imágenes `data:` y estilos inline. Esto impide que el navegador interprete el base64 como una URL relativa (`GET /9j/...`) y evita contaminar el canvas antes de `toDataURL`.
+
+### 2026-09-02 — Márgenes verticales en el PDF generado
+
+- Cada página carta generada en el navegador reserva ahora `0.75 in` (`72 px` a 96 DPI) en la parte superior e inferior.
+- La paginación usa únicamente el área imprimible entre esos márgenes (`912 px` por página) y recorta el HTML por tramos consecutivos, por lo que no se pierde contenido entre páginas.
+- El ajuste aplica solo a la conversión de respuestas HTML; los documentos que el backend ya entrega como PDF continúan utilizándose sin modificación.
+
 ### 2026-09-02 — Conversión local de la previsualización HTML a PDF
 
 - `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` puede retornar `data` como una lista cuyo documento contiene `base64DocumentoContenido` y `mimeTypeDocumentoContenido: "text/html"`; el servicio conserva la selección del primer documento generado.
