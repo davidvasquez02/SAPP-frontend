@@ -2,6 +2,9 @@ const LETTER_WIDTH_PT = 612
 const LETTER_HEIGHT_PT = 792
 const LETTER_WIDTH_PX = 816
 const LETTER_HEIGHT_PX = 1056
+// 0.75 in at the 96 DPI used to rasterize the Letter-size document.
+const VERTICAL_PAGE_MARGIN_PX = 72
+const PAGE_CONTENT_HEIGHT_PX = LETTER_HEIGHT_PX - (VERTICAL_PAGE_MARGIN_PX * 2)
 
 const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^\/9j\//, 'image/jpeg'],
@@ -172,7 +175,7 @@ export async function htmlToPdf(html: string): Promise<Blob> {
     const serialized = new XMLSerializer().serializeToString(frameDocument.documentElement)
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LETTER_WIDTH_PX}" height="${height}"><foreignObject width="100%" height="100%">${serialized}</foreignObject></svg>`
     const rendered = await loadSvgImage(svg)
-    const pageCount = Math.ceil(height / LETTER_HEIGHT_PX)
+    const pageCount = Math.ceil(height / PAGE_CONTENT_HEIGHT_PX)
     const pages: Uint8Array[] = []
 
     for (let page = 0; page < pageCount; page += 1) {
@@ -185,7 +188,19 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       }
       context.fillStyle = '#ffffff'
       context.fillRect(0, 0, canvas.width, canvas.height)
-      context.drawImage(rendered, 0, -(page * LETTER_HEIGHT_PX))
+      const sourceY = page * PAGE_CONTENT_HEIGHT_PX
+      const sourceHeight = Math.min(PAGE_CONTENT_HEIGHT_PX, height - sourceY)
+      context.drawImage(
+        rendered,
+        0,
+        sourceY,
+        LETTER_WIDTH_PX,
+        sourceHeight,
+        0,
+        VERTICAL_PAGE_MARGIN_PX,
+        LETTER_WIDTH_PX,
+        sourceHeight,
+      )
       pages.push(dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.95)))
     }
 
