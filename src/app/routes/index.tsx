@@ -12,6 +12,7 @@ import {
   EstudianteDetalleCoordinacionPage,
   EstudiantesCoordinacionPage,
   HomePage,
+  PerfilPage,
   InscripcionAdmisionDetallePage,
   InscripcionDocumentosPage,
   InscripcionEntrevistasPage,
@@ -39,6 +40,7 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/perfil" element={<PerfilPage />} />
           <Route
             path="/admisiones"
             element={
