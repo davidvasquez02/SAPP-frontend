@@ -5,7 +5,11 @@ import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
 import { getAsignaturasCatalogo } from '../../api/asignaturasService'
 import { getModalidadesContraprestacion } from '../../api/modalidadContraprestacionService'
-import type { AsignaturaCatalogoDto, ModalidadContraprestacionDto } from '../../api/types'
+import type {
+  AsignaturaCatalogoDto,
+  ModalidadContraprestacionDto,
+  PreviewSolicitudCreditoResponseDto,
+} from '../../api/types'
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
@@ -44,12 +48,13 @@ interface SolicitudEstudianteFormProps {
     modalidadId: number
     motivos: string[]
     ciudadExpedicionDocumento: string
-  }) => Promise<{ base64DocumentoContenido: string; mimeTypeDocumentoContenido: string }>
+  }) => Promise<PreviewSolicitudCreditoResponseDto[]>
   onSubmit?: (payload: SolicitudEstudiantePayload) => Promise<void> | void
 }
 
 const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumentoDraft => ({
   id: documento.id,
+  codigo: documento.codigo,
   nombre: documento.nombre,
   obligatorio: documento.obligatorio,
   file: null,
@@ -58,7 +63,7 @@ const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumento
 
 const mapDraftToCardItem = (documento: SolicitudDocumentoDraft): DocumentUploadItem => ({
   id: documento.id,
-  codigo: '',
+  codigo: documento.codigo,
   nombre: documento.nombre,
   obligatorio: documento.obligatorio,
   status: documento.file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
@@ -91,6 +96,25 @@ const isHomologacionTipo = (tipo: TipoSolicitudDto | null): boolean => {
   return normalizeText(descriptor).includes('HOMOLOG')
 }
 
+interface PreviewDocumento extends PreviewSolicitudCreditoResponseDto {
+  pdfBlob: Blob
+  pdfUrl: string
+}
+
+const getPreviewDocumentLabel = (documento: PreviewDocumento, index: number): string =>
+  documento.tipoDocumentoNombre?.trim() || documento.tipoDocumentoCodigo?.trim() || `Documento ${index + 1}`
+
+const getPreviewFileName = (documento: PreviewDocumento, index: number): string => {
+  const descriptor = documento.tipoDocumentoCodigo || documento.tipoDocumentoNombre || `documento-${index + 1}`
+  const normalized = descriptor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+  return `${normalized || `documento-${index + 1}`}.pdf`
+}
+
 const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonable, onSubmit }: SolicitudEstudianteFormProps) => {
   const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
   const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
@@ -108,8 +132,8 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
-  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null)
-  const [previewPdfBlob, setPreviewPdfBlob] = useState<Blob | null>(null)
+  const [previewDocumentos, setPreviewDocumentos] = useState<PreviewDocumento[]>([])
+  const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -127,14 +151,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   const canPreviewCredito =
     isCreditoCondonable && modalidadId !== null && motivosCreditoValidos.length > 0 && ciudadExpedicionDocumento.trim().length > 0
 
-  useEffect(
-    () => () => {
-      if (previewPdfUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(previewPdfUrl)
-      }
-    },
-    [previewPdfUrl],
-  )
+  useEffect(() => () => previewDocumentos.forEach((documento) => URL.revokeObjectURL(documento.pdfUrl)), [previewDocumentos])
 
   useEffect(() => {
     if (selectedTipo == null) {
@@ -348,8 +365,8 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
     setNuevaAsignaturaNombre('')
     setMotivosCredito([''])
     setCiudadExpedicionDocumento('')
-    setPreviewPdfUrl(null)
-    setPreviewPdfBlob(null)
+    setPreviewDocumentos([])
+    setSelectedPreviewIndex(0)
   }
 
   const handlePreviewCredito = async () => {
@@ -366,18 +383,23 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
         motivos: motivosCreditoValidos,
         ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
       })
-      const sourceBlob = await fetch(
-        `data:${response.mimeTypeDocumentoContenido};base64,${response.base64DocumentoContenido}`,
-      ).then((result) => result.blob())
-      const pdfBlob = response.mimeTypeDocumentoContenido.toLowerCase().includes('html')
-        ? await htmlToPdf(await sourceBlob.text())
-        : sourceBlob
-      setPreviewPdfBlob(pdfBlob)
-      setPreviewPdfUrl(URL.createObjectURL(pdfBlob))
+      const previews = await Promise.all(
+        response.map(async (documento) => {
+          const sourceBlob = await fetch(
+            `data:${documento.mimeTypeDocumentoContenido};base64,${documento.base64DocumentoContenido}`,
+          ).then((result) => result.blob())
+          const pdfBlob = documento.mimeTypeDocumentoContenido.toLowerCase().includes('html')
+            ? await htmlToPdf(await sourceBlob.text())
+            : sourceBlob
+          return { ...documento, pdfBlob, pdfUrl: URL.createObjectURL(pdfBlob) }
+        }),
+      )
+      setPreviewDocumentos(previews)
+      setSelectedPreviewIndex(0)
       setErrorMsg(null)
     } catch (previewError) {
-      setPreviewPdfUrl(null)
-      setPreviewPdfBlob(null)
+      setPreviewDocumentos([])
+      setSelectedPreviewIndex(0)
       setErrorMsg(previewError instanceof Error ? previewError.message : 'No fue posible generar la previsualización.')
     } finally {
       setPreviewLoading(false)
@@ -385,16 +407,39 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   }
 
   const handleCargarDocumentoSolicitud = async () => {
-    if (!previewPdfBlob) {
+    if (previewDocumentos.length === 0) {
       return
     }
-    const requirement = documentosDraft.find((item) => item.id === 18 || normalizeText(item.nombre).includes('CARTA SOLICITUD'))
-    if (!requirement) {
-      setErrorMsg('No se encontró el requisito de carta de solicitud de crédito condonable en el listado de documentos.')
+    const matches = previewDocumentos.flatMap((documento, index) => {
+      const codigo = normalizeText(documento.tipoDocumentoCodigo ?? '')
+      const requirement = documentosDraft.find(
+        (item) => item.id === documento.tipoDocumentoId || (codigo !== '' && normalizeText(item.codigo) === codigo),
+      )
+      return requirement ? [{ documento, requirement, index }] : []
+    })
+    if (matches.length === 0) {
+      setErrorMsg('Ningún documento generado coincide por tipoDocumentoId o tipoDocumentoCodigo con el listado de documentos.')
       return
     }
-    const file = new File([previewPdfBlob], 'carta-solicitud-credito-condonable.pdf', { type: 'application/pdf' })
-    handleFileChange(requirement.id, file)
+    setDocumentosDraft((current) =>
+      current.map((requirement) => {
+        const match = matches.find((item) => item.requirement.id === requirement.id)
+        return match
+          ? {
+              ...requirement,
+              file: new File([match.documento.pdfBlob], getPreviewFileName(match.documento, match.index), {
+                type: 'application/pdf',
+              }),
+              error: null,
+            }
+          : requirement
+      }),
+    )
+    setErrorMsg(
+      matches.length < previewDocumentos.length
+        ? `Se cargaron ${matches.length} de ${previewDocumentos.length} documentos; algunos no coinciden con el listado.`
+        : null,
+    )
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -579,11 +624,28 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
           >
             {previewLoading ? 'Generando previsualización...' : 'Previsualizar documento de solicitud'}
           </button>
-          {previewPdfUrl && (
+          {previewDocumentos.length > 0 && (
             <div className="solicitud-estudiante-form__preview">
-              <iframe title="Previsualización solicitud crédito condonable" src={previewPdfUrl} />
+              {previewDocumentos.length > 1 && (
+                <div className="solicitud-estudiante-form__preview-selector" aria-label="Documentos generados">
+                  {previewDocumentos.map((documento, index) => (
+                    <button
+                      type="button"
+                      className={index === selectedPreviewIndex ? 'is-active' : undefined}
+                      onClick={() => setSelectedPreviewIndex(index)}
+                      key={`${documento.tipoDocumentoId ?? 'sin-id'}-${documento.tipoDocumentoCodigo ?? index}`}
+                    >
+                      {getPreviewDocumentLabel(documento, index)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <iframe
+                title={`Previsualización de ${getPreviewDocumentLabel(previewDocumentos[selectedPreviewIndex], selectedPreviewIndex)}`}
+                src={previewDocumentos[selectedPreviewIndex].pdfUrl}
+              />
               <button type="button" className="solicitud-estudiante-form__add-inline" onClick={handleCargarDocumentoSolicitud}>
-                Cargar archivo de solicitud
+                Cargar todos los documentos generados
               </button>
             </div>
           )}

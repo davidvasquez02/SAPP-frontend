@@ -1,7 +1,37 @@
+# Update 2026-09-02 — Previsualización y carga de múltiples documentos generados
+
+## Estado actual y decisión
+- `previsualizarSolicitudCredito` retorna siempre `PreviewSolicitudCreditoResponseDto[]`: conserva toda la colección de `data` y normaliza el contrato legado de objeto único a una lista.
+- `SolicitudEstudianteForm` convierte en PDF todos los documentos HTML en paralelo y conserva los PDF que ya entrega el backend. Si hay más de uno, muestra botones selectores sobre un único `iframe`; el documento activo cambia sin abrir ventanas o visores adicionales.
+- **Cargar todos los documentos generados** busca para cada resultado un requisito del listado. Hay coincidencia cuando `tipoDocumentoId === requisito.id` **o** cuando `tipoDocumentoCodigo` coincide con `requisito.codigo` sin distinguir mayúsculas/tildes. Esto cubre explícitamente `{ tipoDocumentoId: 18, tipoDocumentoCodigo: "ANX-17" }` y también los otros documentos de la respuesta.
+- Todos los resultados coincidentes se convierten en `File` PDF y se asignan en una sola acción. Si la coincidencia es parcial, se cargan los encontrados y se informa cuántos faltaron; si no coincide ninguno, se muestra error y no se modifica el listado.
+
+## Paths, contrato y salida esperada
+- Transporte: `src/modules/solicitudes/api/solicitudesAcademicasService.ts`; DTO: `src/modules/solicitudes/api/types.ts`.
+- Estado, conversión, selector y asociación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`; estilos: archivo CSS hermano.
+- El código del requisito se conserva desde `TramiteDocumentoDto.codigo` en `SolicitudDocumentoDraft.codigo` (`src/modules/solicitudes/types.ts`).
+- Response: `{ ok, message, data: [{ tipoDocumentoId, tipoDocumentoCodigo, tipoDocumentoNombre, plantillaSigla, base64DocumentoContenido, mimeTypeDocumentoContenido }, ...] }`.
+- Salida esperada: una pestaña por documento, un `iframe` PDF visible y un archivo `application/pdf` adjunto en cada card coincidente. El nombre se deriva del código o nombre documental (por ejemplo, `ANX-17` produce `anx-17.pdf`).
+
+## Retos y próximos pasos
+1. Validar con backend autenticado que los `codigo` de `GET /sapp/tramite/document?tipoTramiteId=...` sean exactamente `ANX-17`, `ANX-23`, etc.; el ID permite continuar aunque el código difiera.
+2. Agregar una prueba de navegador cuando exista runner DOM/canvas. No hay Vitest ni dataset/seed en este repositorio.
+3. Confirmar si backend puede duplicar un mismo tipo documental; actualmente cada resultado se asocia al primer requisito coincidente y el último resultado del mismo requisito prevalecería.
+
+## Entorno y pruebas de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; usar el `node_modules` existente. No crear venv, conda, poetry ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2. No se agregaron paquetes.
+- `npm run build`: PASS, 233 módulos, salida `index-Zgfrlk6K.js`, 818 ms.
+- `npm run lint`: FAIL por 11 errores preexistentes y un warning fuera de los archivos modificados (entre otros, `no-explicit-any`, `set-state-in-effect` y tipos vacíos en `src/modules/solicitudes/types.ts`). Ejecutar ESLint dirigido a los archivos modificados para distinguir regresiones.
+- `git diff --check`: no se alcanzó en la cadena `build && lint && git diff --check` debido al fallo conocido de lint global; debe ejecutarse por separado antes del commit.
+- La captura visual queda pendiente: el flujo requiere la sesión y la respuesta del backend institucional y el contenedor no ofrece automatización de navegador configurada.
+
+---
+
 # Update 2026-09-02 — Previsualización HTML convertida a PDF en solicitudes
 
 ## Estado actual y decisión
-- El backend `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` ahora entrega una colección de documentos; el servicio frontend selecciona el primer elemento y el documento puede tener `mimeTypeDocumentoContenido: "text/html"` con HTML codificado en base64.
+- El backend `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` entrega una colección de documentos; esta sección describe la conversión HTML original. La actualización superior reemplaza la selección histórica del primer elemento por el manejo de toda la colección.
 - `SolicitudEstudianteForm` decodifica la respuesta. Cuando el MIME contiene `html`, llama a `htmlToPdf`; si ya es otro MIME (incluido PDF), conserva el Blob recibido. El resultado siempre se previsualiza mediante una URL Blob y **Cargar archivo de solicitud** crea `carta-solicitud-credito-condonable.pdf` desde ese mismo Blob PDF.
 - `htmlToPdf` carga el HTML en un `iframe` sandbox sin permiso para scripts, espera fuentes e imágenes, serializa/renderiza el documento, lo pagina en tamaño Letter y construye un PDF rasterizado JPEG sin librerías externas. Las URLs temporales son revocadas por el ciclo de vida del formulario.
 - Corrección definitiva: las firmas del backend pueden llegar como base64 crudo en `src` (un JPEG comienza por `/9j/`). Insertar primero ese HTML en el `iframe` hacía que el navegador solicitara `https://sapp.eisi.online/9j/...` antes de que la corrección posterior alcanzara a ejecutarse, produciendo HTTP 414 y contaminando el canvas. Ahora el HTML pasa primero por `DOMParser`, todavía inerte: allí se convierten JPEG/PNG/GIF/WebP crudos a data URI y se eliminan scripts y todos los recursos externos —incluidos URLs CSS—. Solo después se asigna el HTML preparado a `srcdoc`; la conversión no hace `fetch` ni permite solicitudes remotas.

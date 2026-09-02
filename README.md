@@ -91,6 +91,13 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-09-02 — Previsualización y carga de múltiples documentos generados
+
+- La previsualización de crédito condonable conserva ahora todos los elementos de `data` retornados por `POST /sapp/solicitudesAcademicas/pdf-previsualizacion`; una respuesta histórica con un único objeto continúa normalizándose a una lista.
+- El visor presenta un selector tipo pestañas cuando se generan varios documentos, permitiendo alternar entre ellos sin abrir ventanas adicionales. Cada HTML se convierte localmente a PDF y cada PDF recibido se conserva.
+- **Cargar todos los documentos generados** asocia cada archivo al requisito del listado comparando primero `tipoDocumentoId` con el ID del requisito o `tipoDocumentoCodigo` con su código. Así, por ejemplo, `{ tipoDocumentoId: 18, tipoDocumentoCodigo: "ANX-17" }` funciona con cualquiera de los dos identificadores.
+- Si algún documento no tiene requisito coincidente, los demás sí se cargan y la interfaz informa la carga parcial. No se agregaron dependencias ni seeds.
+
 ### 2026-09-02 — Bloqueo de recursos externos durante la conversión PDF
 
 - Las firmas/imágenes JPEG entregadas como base64 crudo (`/9j/...`) o como data URI se normalizan a un data URI compacto antes de cargar el HTML.
@@ -104,7 +111,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ### 2026-09-02 — Conversión local de la previsualización HTML a PDF
 
-- `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` puede retornar `data` como una lista cuyo documento contiene `base64DocumentoContenido` y `mimeTypeDocumentoContenido: "text/html"`; el servicio conserva la selección del primer documento generado.
+- `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` puede retornar `data` como una lista cuyos documentos contienen `base64DocumentoContenido` y `mimeTypeDocumentoContenido: "text/html"`; el servicio conserva toda la colección generada.
 - Para solicitudes de crédito condonable, el navegador decodifica ese HTML, lo renderiza en un `iframe` aislado sin scripts y genera un PDF tamaño carta paginado. La conversión no requiere dependencias ni servicios externos.
 - El previsualizador recibe una URL Blob con MIME `application/pdf`. **Cargar archivo de solicitud** adjunta exactamente ese mismo Blob como `carta-solicitud-credito-condonable.pdf`, en vez de renombrar contenido HTML como si fuera PDF.
 - La compatibilidad con respuestas que ya contienen PDF se mantiene: cualquier MIME distinto de HTML se usa directamente. Las URLs Blob se revocan al regenerar, reiniciar o desmontar el formulario.
