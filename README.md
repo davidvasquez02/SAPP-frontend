@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-02:** únicamente el tipo de solicitud `12` (**RENOVACION CREDITO CONDONABLE**, trámite `17`) solicita los datos adicionales de renovación y envía `actividadesCreditoCondonable`, dirección, periodo inicial, intensidad y horas a la previsualización PDF; teléfono y correo se obtienen de la sesión. Los demás tipos conservan su formulario y contrato anteriores.
 - **2026-09-02:** la consulta de matrícula vigente interpreta el nuevo objeto `{ periodoId, puedeCrear }`: bloquea el formulario y muestra que no hay fechas habilitadas cuando `puedeCrear` es `false`; cuando es `true`, usa el `periodoId` entregado por esa misma validación en el POST de creación.
 - **2026-09-02:** se corrigió la ruta de períodos con fechas para eliminar dos espacios que el navegador codificaba como `%20%20`; la solicitud vuelve a resolverse como `GET /api/sapp/periodoAcademico/withFechas`.
 
@@ -119,6 +120,13 @@ npm run preview
 No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `GET /api/sapp/inicio`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
 
 ## Decisiones recientes / changelog-lite
+
+### 2026-09-02 — Datos de previsualización para renovación de crédito condonable
+
+- El tratamiento especial está delimitado por `tipoSolicitudId: 12` (**RENOVACION CREDITO CONDONABLE**, asociado al trámite `17`); no se infiere a partir del nombre y no altera los demás tipos de solicitud.
+- El formulario reutiliza la modalidad y ciudad de expedición del flujo de crédito condonable, reemplaza visualmente los motivos por una lista dinámica de actividades y agrega dirección, periodo académico inicial en formato `AAAA-P`, intensidad horaria semanal y horas del semestre.
+- Para este tipo, `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` recibe `actividadesCreditoCondonable` y no `motivos`; también recibe los campos adicionales, mientras `telefonoEstudiante` y `correoEstudiante` provienen de la sesión SAPP (con preferencia por correo institucional).
+- No se agregaron dependencias, variables de entorno, seeds ni datasets.
 
 ### 2026-09-02 — Disponibilidad y período de creación de matrícula
 

@@ -135,6 +135,24 @@
   align-items: center;
 }
 
+.solicitud-estudiante-form__renewal-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.solicitud-estudiante-form__renewal-numbers > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .solicitud-estudiante-form__renewal-numbers {
+    grid-template-columns: 1fr;
+  }
+}
+
 .solicitud-estudiante-form__motivo-row button,
 .solicitud-estudiante-form__add-inline {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
