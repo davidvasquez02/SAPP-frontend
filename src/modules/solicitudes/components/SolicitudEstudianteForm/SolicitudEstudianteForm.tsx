@@ -8,6 +8,7 @@ import { getModalidadesContraprestacion } from '../../api/modalidadContraprestac
 import type { AsignaturaCatalogoDto, ModalidadContraprestacionDto } from '../../api/types'
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
+import { htmlToPdf } from '../../utils/htmlToPdf'
 import './SolicitudEstudianteForm.css'
 
 interface HomologacionAsignaturaFormItem {
@@ -108,6 +109,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null)
+  const [previewPdfBlob, setPreviewPdfBlob] = useState<Blob | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -124,6 +126,15 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
   const canPreviewCredito =
     isCreditoCondonable && modalidadId !== null && motivosCreditoValidos.length > 0 && ciudadExpedicionDocumento.trim().length > 0
+
+  useEffect(
+    () => () => {
+      if (previewPdfUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewPdfUrl)
+      }
+    },
+    [previewPdfUrl],
+  )
 
   useEffect(() => {
     if (selectedTipo == null) {
@@ -338,6 +349,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
     setMotivosCredito([''])
     setCiudadExpedicionDocumento('')
     setPreviewPdfUrl(null)
+    setPreviewPdfBlob(null)
   }
 
   const handlePreviewCredito = async () => {
@@ -354,10 +366,18 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
         motivos: motivosCreditoValidos,
         ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
       })
-      setPreviewPdfUrl(`data:${response.mimeTypeDocumentoContenido};base64,${response.base64DocumentoContenido}`)
+      const sourceBlob = await fetch(
+        `data:${response.mimeTypeDocumentoContenido};base64,${response.base64DocumentoContenido}`,
+      ).then((result) => result.blob())
+      const pdfBlob = response.mimeTypeDocumentoContenido.toLowerCase().includes('html')
+        ? await htmlToPdf(await sourceBlob.text())
+        : sourceBlob
+      setPreviewPdfBlob(pdfBlob)
+      setPreviewPdfUrl(URL.createObjectURL(pdfBlob))
       setErrorMsg(null)
     } catch (previewError) {
       setPreviewPdfUrl(null)
+      setPreviewPdfBlob(null)
       setErrorMsg(previewError instanceof Error ? previewError.message : 'No fue posible generar la previsualización.')
     } finally {
       setPreviewLoading(false)
@@ -365,7 +385,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
   }
 
   const handleCargarDocumentoSolicitud = async () => {
-    if (!previewPdfUrl) {
+    if (!previewPdfBlob) {
       return
     }
     const requirement = documentosDraft.find((item) => item.id === 18 || normalizeText(item.nombre).includes('CARTA SOLICITUD'))
@@ -373,9 +393,7 @@ const SolicitudEstudianteForm = ({ tipos, estudianteId, onPreviewCreditoCondonab
       setErrorMsg('No se encontró el requisito de carta de solicitud de crédito condonable en el listado de documentos.')
       return
     }
-    const response = await fetch(previewPdfUrl)
-    const blob = await response.blob()
-    const file = new File([blob], 'carta-solicitud-credito-condonable.pdf', { type: 'application/pdf' })
+    const file = new File([previewPdfBlob], 'carta-solicitud-credito-condonable.pdf', { type: 'application/pdf' })
     handleFileChange(requirement.id, file)
   }
 

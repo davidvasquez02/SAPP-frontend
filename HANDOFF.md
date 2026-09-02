@@ -1,3 +1,32 @@
+# Update 2026-09-02 — Previsualización HTML convertida a PDF en solicitudes
+
+## Estado actual y decisión
+- El backend `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` ahora entrega una colección de documentos; el servicio frontend selecciona el primer elemento y el documento puede tener `mimeTypeDocumentoContenido: "text/html"` con HTML codificado en base64.
+- `SolicitudEstudianteForm` decodifica la respuesta. Cuando el MIME contiene `html`, llama a `htmlToPdf`; si ya es otro MIME (incluido PDF), conserva el Blob recibido. El resultado siempre se previsualiza mediante una URL Blob y **Cargar archivo de solicitud** crea `carta-solicitud-credito-condonable.pdf` desde ese mismo Blob PDF.
+- `htmlToPdf` carga el HTML en un `iframe` sandbox sin permiso para scripts, espera fuentes e imágenes, serializa/renderiza el documento, lo pagina en tamaño Letter y construye un PDF rasterizado JPEG sin librerías externas. Las URLs temporales son revocadas por el ciclo de vida del formulario.
+
+## Paths, contrato y salida esperada
+- Conversor: `src/modules/solicitudes/utils/htmlToPdf.ts`.
+- Integración de previsualización/carga: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Transporte y normalización de la lista: `src/modules/solicitudes/api/solicitudesAcademicasService.ts`; tipos: `src/modules/solicitudes/api/types.ts`.
+- Request: `POST ${VITE_API_URL || '/api/sapp'}/sapp/solicitudesAcademicas/pdf-previsualizacion`. Response vigente: `{ ok, message, data: [{ tipoDocumentoId, tipoDocumentoCodigo, tipoDocumentoNombre, plantillaSigla, base64DocumentoContenido, mimeTypeDocumentoContenido }] }`.
+- Salida esperada: el `iframe` visible muestra `application/pdf`; al cargar, el requisito **Carta solicitud crédito condonable** recibe un `File` llamado `carta-solicitud-credito-condonable.pdf`, MIME `application/pdf`, cuyos bytes comienzan con `%PDF-1.4`.
+
+## Retos y próximos pasos
+1. Validar visualmente con la respuesta real, especialmente saltos de página, firmas base64 y plantillas mayores a una hoja. El PDF es rasterizado: prioriza fidelidad visual, no selección de texto.
+2. El HTML suministrado contiene placeholders de firma como `{{firma_director_tg}}`; deben ser resueltos por backend antes de generar la respuesta si se espera que aparezcan en el documento.
+3. Confirmar que el ID/código del requisito de carta se mantiene estable; la carga actualmente lo localiza por `id === 18` o por nombre normalizado, lógica preexistente.
+4. No se incorporó runner Vitest ni datasets/seeds. Conviene agregar una prueba de navegador del encabezado PDF y del archivo cargado cuando exista infraestructura DOM/canvas real.
+
+## Entorno y pruebas de esta actualización
+- Raíz única: `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2. No se agregaron paquetes.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 233 módulos y generaron `dist/assets/index-CjNYp4cO.js` en 643 ms.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` (2026-09-02): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- Validación visual pendiente: este contenedor no incluye navegador y el flujo requiere sesión/backend institucional. Los intentos de instalar `html2pdf.js`/`html2canvas` fueron bloqueados por el registry con HTTP 403, por lo que se implementó el conversor sin dependencias.
+
+---
+
 # Update 2026-08-28 — Ajustes del listado y archivos de actas
 
 ## Corrección — Consulta del archivo por ID del acta
