@@ -2,9 +2,6 @@ const LETTER_WIDTH_PT = 612
 const LETTER_HEIGHT_PT = 792
 const LETTER_WIDTH_PX = 816
 const LETTER_HEIGHT_PX = 1056
-const PAGE_TOP_MARGIN_PX = 89
-const PAGE_BOTTOM_MARGIN_PX = 83
-const PAGE_CONTENT_HEIGHT_PX = LETTER_HEIGHT_PX - PAGE_TOP_MARGIN_PX - PAGE_BOTTOM_MARGIN_PX
 
 const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^\/9j\//, 'image/jpeg'],
@@ -63,10 +60,6 @@ const prepareHtmlForRendering = (html: string): string => {
   parsed.querySelectorAll<HTMLElement>('[style]').forEach((element) => {
     element.setAttribute('style', removeExternalCssUrls(element.getAttribute('style') ?? ''))
   })
-
-  const paginationStyles = parsed.createElement('style')
-  paginationStyles.textContent = 'main { padding-top: 0 !important; padding-bottom: 0 !important; }'
-  parsed.head.appendChild(paginationStyles)
 
   Array.from(parsed.images).forEach((image) => {
     const source = image.getAttribute('src')?.trim() ?? ''
@@ -150,7 +143,7 @@ export async function htmlToPdf(html: string): Promise<Blob> {
   const preparedHtml = prepareHtmlForRendering(html)
   const frame = document.createElement('iframe')
   frame.setAttribute('sandbox', 'allow-same-origin')
-  frame.style.cssText = `position:fixed;left:-10000px;top:0;width:${LETTER_WIDTH_PX}px;height:1px;border:0;`
+  frame.style.cssText = `position:fixed;left:-10000px;top:0;width:${LETTER_WIDTH_PX}px;height:${LETTER_HEIGHT_PX}px;border:0;`
   document.body.appendChild(frame)
 
   try {
@@ -175,11 +168,11 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       ),
     )
 
-    const height = Math.max(frameDocument.documentElement.scrollHeight, frameDocument.body.scrollHeight, 1)
+    const height = Math.max(frameDocument.documentElement.scrollHeight, frameDocument.body.scrollHeight, LETTER_HEIGHT_PX)
     const serialized = new XMLSerializer().serializeToString(frameDocument.documentElement)
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LETTER_WIDTH_PX}" height="${height}"><foreignObject width="100%" height="100%">${serialized}</foreignObject></svg>`
     const rendered = await loadSvgImage(svg)
-    const pageCount = Math.ceil(height / PAGE_CONTENT_HEIGHT_PX)
+    const pageCount = Math.ceil(height / LETTER_HEIGHT_PX)
     const pages: Uint8Array[] = []
 
     for (let page = 0; page < pageCount; page += 1) {
@@ -192,19 +185,7 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       }
       context.fillStyle = '#ffffff'
       context.fillRect(0, 0, canvas.width, canvas.height)
-      const sourceY = page * PAGE_CONTENT_HEIGHT_PX
-      const sourceHeight = Math.min(PAGE_CONTENT_HEIGHT_PX, height - sourceY)
-      context.drawImage(
-        rendered,
-        0,
-        sourceY,
-        LETTER_WIDTH_PX,
-        sourceHeight,
-        0,
-        PAGE_TOP_MARGIN_PX,
-        LETTER_WIDTH_PX,
-        sourceHeight,
-      )
+      context.drawImage(rendered, 0, -(page * LETTER_HEIGHT_PX))
       pages.push(dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.95)))
     }
 
