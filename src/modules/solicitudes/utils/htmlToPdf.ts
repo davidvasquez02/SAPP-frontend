@@ -3,6 +3,13 @@ const LETTER_HEIGHT_PT = 792
 const LETTER_WIDTH_PX = 816
 const LETTER_HEIGHT_PX = 1056
 
+const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
+  [/^\/9j\//, 'image/jpeg'],
+  [/^iVBORw0KGgo/, 'image/png'],
+  [/^R0lGOD/, 'image/gif'],
+  [/^UklGR/, 'image/webp'],
+]
+
 const waitForFrame = (frame: HTMLIFrameElement): Promise<void> =>
   new Promise((resolve, reject) => {
     frame.onload = () => resolve()
@@ -28,6 +35,48 @@ const dataUrlToBytes = (dataUrl: string): Uint8Array => {
   const encoded = dataUrl.slice(dataUrl.indexOf(',') + 1)
   const binary = atob(encoded)
   return Uint8Array.from(binary, (character) => character.charCodeAt(0))
+}
+
+const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('No fue posible leer una imagen del documento.'))
+    reader.readAsDataURL(blob)
+  })
+
+const resolveRawBase64Image = (source: string): string | null => {
+  const compactSource = source.replace(/\s/g, '')
+  const match = BASE64_IMAGE_TYPES.find(([pattern]) => pattern.test(compactSource))
+  return match ? `data:${match[1]};base64,${compactSource}` : null
+}
+
+const inlineDocumentImages = async (frameDocument: Document): Promise<void> => {
+  await Promise.all(
+    Array.from(frameDocument.images).map(async (image) => {
+      const source = image.getAttribute('src')?.trim() ?? ''
+      if (!source || source.startsWith('data:') || source.startsWith('blob:')) {
+        return
+      }
+
+      const rawBase64Image = resolveRawBase64Image(source)
+      if (rawBase64Image) {
+        image.src = rawBase64Image
+        return
+      }
+
+      try {
+        const response = await fetch(image.src, { credentials: 'include' })
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+        image.src = await blobToDataUrl(await response.blob())
+      } catch {
+        // An external image left in the SVG would taint the canvas and prevent PDF export.
+        image.removeAttribute('src')
+      }
+    }),
+  )
 }
 
 const createPdf = (pages: Uint8Array[]): Blob => {
@@ -99,15 +148,16 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       throw new Error('No fue posible acceder al documento HTML generado.')
     }
     await frameDocument.fonts?.ready
+    await inlineDocumentImages(frameDocument)
     await Promise.all(
       Array.from(frameDocument.images).map(
         (image) =>
           image.complete
             ? Promise.resolve()
             : new Promise<void>((resolve) => {
-                image.addEventListener('load', () => resolve(), { once: true })
-                image.addEventListener('error', () => resolve(), { once: true })
-              }),
+              image.addEventListener('load', () => resolve(), { once: true })
+              image.addEventListener('error', () => resolve(), { once: true })
+            }),
       ),
     )
 

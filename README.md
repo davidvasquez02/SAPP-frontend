@@ -97,6 +97,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Para solicitudes de crédito condonable, el navegador decodifica ese HTML, lo renderiza en un `iframe` aislado sin scripts y genera un PDF tamaño carta paginado. La conversión no requiere dependencias ni servicios externos.
 - El previsualizador recibe una URL Blob con MIME `application/pdf`. **Cargar archivo de solicitud** adjunta exactamente ese mismo Blob como `carta-solicitud-credito-condonable.pdf`, en vez de renombrar contenido HTML como si fuera PDF.
 - La compatibilidad con respuestas que ya contienen PDF se mantiene: cualquier MIME distinto de HTML se usa directamente. Las URLs Blob se revocan al regenerar, reiniciar o desmontar el formulario.
+- Las imágenes base64 sin prefijo `data:` (por ejemplo, firmas JPEG que empiezan por `/9j/`) se normalizan antes de renderizar. Las imágenes URL se descargan y convierten a data URI; si el navegador no permite descargarlas, se omiten para impedir que contaminen el canvas y bloqueen la exportación PDF.
 
 ### 2026-08-28 — Módulo de actas
 
