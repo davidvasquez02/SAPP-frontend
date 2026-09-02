@@ -1,3 +1,33 @@
+# Update 2026-09-02 — Aprobación automática de documentos de matrícula
+
+## Estado actual y decisión
+- En `/matricula/:matriculaId`, para `COORDINADOR`/`ADMIN`, ya no existe el botón manual **Aprobar documentos**.
+- Después de aprobar individualmente el último documento obligatorio, la recarga del checklist hace que la pantalla ejecute automáticamente `aprobarMatriculaAcademica(matricula.id)`. El mismo comportamiento se aplica al abrir una matrícula pendiente cuyos documentos obligatorios ya estaban aprobados.
+- La transición automática exige al menos un documento obligatorio y que todos estén cargados en estado `APROBADO`. Un `ref` por matrícula evita duplicar el `PUT` por renderizados o por React Strict Mode; durante la transición se bloquean las validaciones documentales concurrentes.
+- Si el `PUT` automático falla, se muestra el error normalizado y no se reintenta en bucle dentro del mismo montaje. Recargar la pantalla permite un nuevo intento.
+
+## Paths, contrato y salida esperada
+- Lógica y UI: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
+- Checklist: `GET /sapp/document?codigoTipoTramite={codigoMatricula}&tramiteId={matriculaId}` mediante `getDocumentosMatriculaAcademica`; el cliente HTTP antepone/normaliza la base configurada.
+- Aprobación documental individual: `PUT /sapp/document` mediante `aprobarRechazarDocumento`, con `{ documentoId, aprobado: true, observaciones: null }`.
+- Transición automática: `PUT /sapp/matriculaAcademica/{matriculaId}`, envelope esperado `{ ok, message, data }`.
+- Salida: al aprobar el último obligatorio se ejecuta una sola transición, se refrescan matrícula/documentos y aparece el mensaje `Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.`
+
+## Retos y próximos pasos
+1. Validar con backend y sesión institucional que la transición cambie el estado de la matrícula (normalmente a `RADICADA`) y que sea idempotente ante una matrícula que ya tenga todos sus soportes aprobados.
+2. Confirmar con dominio si documentos opcionales cargados deben aprobarse también antes de avanzar; el criterio conserva la regla anterior del botón: únicamente todos los **obligatorios**.
+3. Agregar una prueba de componente para último documento, carga inicial ya aprobada, lista sin obligatorios, error del POST y protección contra solicitudes duplicadas cuando se incorpore Vitest.
+
+## Entorno y pruebas de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entorno Python ni otro árbol npm.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No se agregaron paquetes, seeds ni datasets.
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; 242 módulos transformados, assets `index-wdrRG1Ts.css` e `index-DjkTXSLa.js`, 726 ms. Vite advirtió que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-02): PASS.
+- Screenshot pendiente por limitación de entorno: no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados, y la ruta necesita sesión/backend institucional.
+
+---
+
 # Update 2026-09-02 — Perfil contextual y firma
 
 ## Estado actual

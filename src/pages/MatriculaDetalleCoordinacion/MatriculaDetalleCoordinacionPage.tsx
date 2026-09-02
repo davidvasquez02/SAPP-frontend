@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
@@ -108,6 +108,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [rejectErrors, setRejectErrors] = useState<Record<number, string | null>>({})
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
+  const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
 
@@ -140,11 +141,12 @@ const MatriculaDetalleCoordinacionPage = () => {
 
   const loadDocumentos = useCallback(async () => {
     if (Number.isNaN(parsedMatriculaId)) {
-      return
+      return []
     }
 
     const documentosData = await getDocumentosMatriculaAcademica(parsedMatriculaId)
     setDocumentos(documentosData)
+    return documentosData
   }, [parsedMatriculaId])
 
   const loadDetalle = useCallback(async () => {
@@ -393,22 +395,40 @@ const MatriculaDetalleCoordinacionPage = () => {
     )
   }, [parsedMatriculaId])
 
-  const handleAprobarDocumentos = async () => {
-    if (!matricula) {
+  useEffect(() => {
+    if (
+      !matricula ||
+      requiredDocs.length === 0 ||
+      !allRequiredApproved ||
+      disableDocumentValidation ||
+      automaticApprovalMatriculaIdRef.current === matricula.id
+    ) {
       return
     }
 
+    automaticApprovalMatriculaIdRef.current = matricula.id
     setIsApprovingMatricula(true)
-    try {
-      await aprobarMatriculaAcademica(matricula.id)
-      await refreshMatriculaAfterApproval()
-      window.alert('La matrícula fue aprobada correctamente.')
-    } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
-    } finally {
-      setIsApprovingMatricula(false)
-    }
-  }
+
+    void aprobarMatriculaAcademica(matricula.id)
+      .then(async () => {
+        await refreshMatriculaAfterApproval()
+        window.alert(
+          'Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.',
+        )
+      })
+      .catch((requestError: unknown) => {
+        window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      })
+      .finally(() => {
+        setIsApprovingMatricula(false)
+      })
+  }, [
+    allRequiredApproved,
+    disableDocumentValidation,
+    matricula,
+    refreshMatriculaAfterApproval,
+    requiredDocs.length,
+  ])
 
   const updateAsignaturaDecision = (
     asignaturaId: number,
@@ -562,7 +582,12 @@ const MatriculaDetalleCoordinacionPage = () => {
                     const filename =
                       documentoResponse?.nombreArchivoDocumento ??
                       `documento_${documento.idTipoDocumentoTramite}.pdf`
-                    const disableValidation = !uploaded || isLoadingDecision || disableDocumentValidation
+                    const disableValidation =
+                      !uploaded ||
+                      isLoadingDecision ||
+                      busyDocumentoId !== null ||
+                      isApprovingMatricula ||
+                      disableDocumentValidation
                     const isRejectMode = documentoId != null && rejectingDocId === documentoId
                     const currentRejectNote =
                       documentoId != null
@@ -675,14 +700,6 @@ const MatriculaDetalleCoordinacionPage = () => {
                         </p>
                       ) : null}
                     </div>
-                    <button
-                      type="button"
-                      className="matricula-detalle__approve-button"
-                      onClick={() => void handleAprobarDocumentos()}
-                      disabled={!allRequiredApproved || isApprovingMatricula || disableDocumentValidation}
-                    >
-                      {isApprovingMatricula ? 'Aprobando documentos...' : 'Aprobar documentos'}
-                    </button>
                   </footer>
                 </div>
               )}
