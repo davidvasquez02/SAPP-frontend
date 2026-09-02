@@ -1,0 +1,23 @@
+.reports { display: grid; gap: 1.25rem; }
+.reports__header, .reports__form { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid color-mix(in srgb, var(--outline), transparent 35%); border-radius: 22px; background: var(--surface-container-low); box-shadow: 0 12px 30px color-mix(in srgb, var(--outline), transparent 88%); }
+.reports__header h1, .reports__form h2 { margin: 0; }
+.reports__header > p:last-child { margin: .5rem 0 0; color: var(--text-secondary); }
+.reports__eyebrow { margin: 0 0 .35rem; color: var(--primary); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.reports__processes { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.reports__process { display: grid; gap: .3rem; padding: 1rem; text-align: left; color: inherit; border: 1px solid color-mix(in srgb, var(--outline), transparent 30%); border-radius: 18px; background: var(--surface); cursor: pointer; }
+.reports__process span, .reports__form-heading span { color: var(--text-secondary); font-size: .88rem; }
+.reports__process--active { border-color: var(--primary); background: color-mix(in srgb, var(--surface), var(--primary) 9%); box-shadow: inset 0 0 0 1px var(--primary); }
+.reports__form { display: grid; gap: 1.25rem; }
+.reports__form-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.reports__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.reports__fields label { display: grid; gap: .5rem; font-weight: 650; }
+.reports__fields select { width: 100%; min-height: 3rem; padding: .65rem .8rem; color: inherit; border: 1px solid var(--outline); border-radius: 12px; background: var(--surface); }
+.reports__fields select:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 72%); border-color: var(--primary); }
+.reports__fields select:disabled { opacity: .6; cursor: not-allowed; }
+.reports__feedback { margin: 0; padding: .8rem 1rem; border-radius: 12px; }
+.reports__feedback--error { color: var(--error, #b3261e); border: 1px solid currentColor; }
+.reports__feedback--success { color: var(--primary); background: color-mix(in srgb, var(--primary), transparent 92%); }
+.reports__actions { display: flex; justify-content: flex-end; }
+.reports__actions button { padding: .7rem 1.3rem; color: var(--on-primary); border: 0; border-radius: 999px; background: var(--primary); font-weight: 700; cursor: pointer; }
+.reports__actions button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 780px) { .reports__processes, .reports__fields { grid-template-columns: 1fr; } .reports__form-heading { align-items: flex-start; flex-direction: column; } }

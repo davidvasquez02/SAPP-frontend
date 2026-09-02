@@ -9,6 +9,7 @@ export { EstudianteDetalleCoordinacionPage } from "./EstudianteDetalleCoordinaci
 export { EstudiantesCoordinacionPage } from "./EstudiantesCoordinacion";
 export { HomePage } from "./Home";
 export { PerfilPage } from "./Perfil";
+export { ReportesPage } from "./Reportes";
 export { InscripcionAdmisionDetallePage } from "./InscripcionAdmisionDetalle";
 export { InscripcionDocumentosPage } from "./InscripcionDocumentos";
 export { InscripcionEntrevistasPage } from "./InscripcionEntrevistas";

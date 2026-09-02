@@ -13,6 +13,7 @@ import {
   EstudiantesCoordinacionPage,
   HomePage,
   PerfilPage,
+  ReportesPage,
   InscripcionAdmisionDetallePage,
   InscripcionDocumentosPage,
   InscripcionEntrevistasPage,
@@ -142,6 +143,14 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
                 <FechasModulePage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/reportes"
+            element={
+              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+                <ReportesPage />
               </RequireRoles>
             }
           />
