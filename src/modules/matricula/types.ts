@@ -105,6 +105,7 @@ export type MatriculaVigenteValidationResult =
   | {
       status: 'CAN_CREATE'
       message: string
+      periodoId: number
     }
   | {
       status: 'NO_ACTIVE_PERIOD'

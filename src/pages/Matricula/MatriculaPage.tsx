@@ -163,11 +163,11 @@ const MatriculaPage = () => {
     string | null
   >(null);
   const [canCreateMatricula, setCanCreateMatricula] = useState(false);
+  const [hasActiveMatriculaDates, setHasActiveMatriculaDates] = useState(true);
   const [hasExistingMatricula, setHasExistingMatricula] = useState(false);
   const [isReadOnlyMatriculaFinalizada, setIsReadOnlyMatriculaFinalizada] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [periodoId, setPeriodoId] = useState<number>(1);
 
   const [isLoadingListado, setIsLoadingListado] = useState(false);
   const [errorListado, setErrorListado] = useState<string | null>(null);
@@ -204,6 +204,7 @@ const MatriculaPage = () => {
     materias: MateriaDto[],
   ) => {
     if (validation.status === "EXISTS") {
+      setHasActiveMatriculaDates(true);
       setCanCreateMatricula(false);
       setHasExistingMatricula(true);
       setIsReadOnlyMatriculaFinalizada(
@@ -214,7 +215,6 @@ const MatriculaPage = () => {
           ? "Tu proceso de matrícula se encuentra finalizado."
           : "El estudiante ya tiene matrícula para el periodo vigente.",
       );
-      setPeriodoId(validation.matricula.periodoId);
       setConvocatoria((current) =>
         current
           ? {
@@ -246,6 +246,7 @@ const MatriculaPage = () => {
     }
 
     if (validation.status === "NO_ACTIVE_PERIOD") {
+      setHasActiveMatriculaDates(false);
       setCanCreateMatricula(false);
       setHasExistingMatricula(false);
       setIsReadOnlyMatriculaFinalizada(false);
@@ -253,6 +254,7 @@ const MatriculaPage = () => {
       return;
     }
 
+    setHasActiveMatriculaDates(true);
     setCanCreateMatricula(true);
     setHasExistingMatricula(false);
     setIsReadOnlyMatriculaFinalizada(false);
@@ -321,6 +323,11 @@ const MatriculaPage = () => {
 
         loadedConvocatoria = true;
         setConvocatoria(convocatoriaResult);
+
+        applyMatriculaValidation(matriculaValidation, []);
+        if (matriculaValidation.status === "NO_ACTIVE_PERIOD") {
+          return;
+        }
 
         if (!convocatoriaResult.isOpen) {
           return;
@@ -437,7 +444,6 @@ const MatriculaPage = () => {
       const latestValidation =
         await getMatriculaVigenteValidationByEstudiante(estudianteId);
       applyMatriculaValidation(latestValidation, materiasCatalogo);
-      await loadDocumentosMatricula(latestValidation);
 
       if (latestValidation.status === "NO_ACTIVE_PERIOD") {
         setErrorForm(
@@ -446,6 +452,8 @@ const MatriculaPage = () => {
         );
         return;
       }
+
+      await loadDocumentosMatricula(latestValidation);
 
       if (latestValidation.status === "CAN_CREATE") {
         const missingRequiredDocument = documentos.some(
@@ -463,7 +471,7 @@ const MatriculaPage = () => {
 
         await crearMatriculaAcademica({
           estudianteId,
-          periodoId,
+          periodoId: latestValidation.periodoId,
           asignaturas: selectedMaterias.map((materia) => ({
             asignaturaId: materia.id,
           })),
@@ -827,11 +835,17 @@ const MatriculaPage = () => {
           <p className="matricula-page__error">{errorConvocatoria}</p>
         ) : null}
 
-        {!loadingConvocatoria && convocatoria && !convocatoria.isOpen ? (
-          <MatriculaClosedState message={convocatoria.mensaje} />
+        {!loadingConvocatoria && convocatoria && (!convocatoria.isOpen || !hasActiveMatriculaDates) ? (
+          <MatriculaClosedState
+            message={
+              !hasActiveMatriculaDates
+                ? matriculaValidationMessage ?? undefined
+                : convocatoria.mensaje
+            }
+          />
         ) : null}
 
-        {!loadingConvocatoria && convocatoria?.isOpen ? (
+        {!loadingConvocatoria && convocatoria?.isOpen && hasActiveMatriculaDates ? (
           <>
             <section className="matricula-page__card">
               {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
