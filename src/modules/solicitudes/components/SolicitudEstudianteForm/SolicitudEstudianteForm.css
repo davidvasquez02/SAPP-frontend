@@ -155,6 +155,26 @@
   margin-top: 0.5rem;
 }
 
+.solicitud-estudiante-form__preview-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.solicitud-estudiante-form__preview-selector button {
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface-container-low);
+  color: inherit;
+  padding: 0.45rem 0.85rem;
+}
+
+.solicitud-estudiante-form__preview-selector button.is-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
 .solicitud-estudiante-form__preview iframe {
   width: 100%;
   min-height: 420px;

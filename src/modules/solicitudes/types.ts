@@ -25,6 +25,7 @@ export interface SolicitudEstudianteRowDto extends SolicitudTableRow {}
 
 export interface SolicitudDocumentoItem {
   id: number
+  codigo: string
   nombre: string
   obligatorio: boolean
 }
