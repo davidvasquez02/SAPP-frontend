@@ -62,6 +62,10 @@ export interface PreviewSolicitudCreditoRequestDto {
 }
 
 export interface PreviewSolicitudCreditoResponseDto {
+  tipoDocumentoId?: number
+  tipoDocumentoCodigo?: string
+  tipoDocumentoNombre?: string
+  plantillaSigla?: string
   base64DocumentoContenido: string
   mimeTypeDocumentoContenido: string
 }
