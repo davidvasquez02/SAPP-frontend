@@ -1602,3 +1602,32 @@ npm run lint
 - La verificación HTTP en producción sigue pendiente porque requiere backend y sesión institucional. No se tomó screenshot: el cambio corrige exclusivamente la URL de red y no produce una modificación visual perceptible.
 
 ---
+# Update 2026-09-02 — Disponibilidad y período de creación de matrícula
+
+## Estado actual y decisiones
+- La pantalla de matrícula del estudiante ya consume el nuevo resultado sin matrícula de `GET /api/sapp/matriculaAcademica/vigente/estudiante/{estudianteId}`: `{ ok, message, data: { periodoId, puedeCrear } }`.
+- `puedeCrear: false` es autoritativo: no se cargan ni muestran el formulario de materias, documentos o botón de confirmación. Se reutiliza `MatriculaClosedState` para mostrar **No hay fechas de matrícula habilitadas actualmente** y el `message` del backend.
+- `puedeCrear: true` habilita el flujo. Antes de crear se repite el GET y el POST usa directamente el `periodoId` de esa respuesta reciente, evitando el valor fijo anterior (`1`) o un período obsoleto.
+- Las respuestas con matrícula existente siguen mapeándose a `EXISTS`. Un booleano histórico `true` se rechaza porque no contiene el `periodoId` obligatorio; `false` aún se interpreta como ausencia de período activo.
+
+## Paths, contratos y salida esperada
+- Transporte y normalización: `src/modules/matricula/services/matriculaAcademicaService.ts`.
+- Unión discriminada: `src/modules/matricula/types.ts`; `CAN_CREATE` incluye ahora `periodoId: number`.
+- Orquestación/pantalla: `src/pages/Matricula/MatriculaPage.tsx`; estado cerrado: `src/modules/matricula/components/MatriculaClosedState/MatriculaClosedState.tsx`.
+- GET esperado sin matrícula: `{ "ok": true, "message": "El estudiante no tiene matricula en el periodo vigente", "data": { "periodoId": 2, "puedeCrear": true } }`.
+- POST esperado al confirmar ese caso: `/api/sapp/matriculaAcademica` con `{ estudianteId, periodoId: 2, asignaturas: [{ asignaturaId }] }`.
+- Con `puedeCrear: false`, la salida esperada es únicamente la pantalla informativa de fechas cerradas; no debe poder enviarse el POST.
+
+## Retos y próximos pasos
+1. Validar ambos valores de `puedeCrear` con backend y sesión real de estudiante, incluyendo un cambio de período entre la carga de pantalla y la confirmación.
+2. Confirmar si backend siempre entrega un `periodoId` numérico incluso cuando `puedeCrear` es `false`; el frontend solo lo exige para el caso `true`.
+3. Agregar pruebas de componente/servicio cuando se incorpore Vitest. No hay runner de tests, seeds, datasets ni dependencias nuevas.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`; usar Node.js/npm y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+- `npx eslint src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/types.ts src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/MatriculaClosedState/MatriculaClosedState.tsx` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 237 módulos y generaron `dist/assets/index-ZvyW5o5r.css` y `dist/assets/index-b8jbBVol.js` en 838 ms.
+- `git diff --check` (2026-09-02): PASS. La captura automatizada queda limitada por la ausencia de navegador y porque el estado requiere sesión/backend institucional.
+
+---

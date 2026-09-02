@@ -26,6 +26,11 @@ type AsignaturaApiDto = {
   programaId: number
 }
 
+type MatriculaCreacionDisponibilidadDto = {
+  periodoId: number
+  puedeCrear: boolean
+}
+
 export const getAsignaturasPorPrograma = async (programaId: number): Promise<MateriaDto[]> => {
   const response = await httpGet<ApiResponse<AsignaturaApiDto[]>>(`/sapp/asignaturas?programaId=${programaId}`)
 
@@ -75,7 +80,13 @@ export const getMatriculaVigenteByEstudiante = async (estudianteId: number): Pro
 export const getMatriculaVigenteValidationByEstudiante = async (
   estudianteId: number,
 ): Promise<MatriculaVigenteValidationResult> => {
-  const response = await httpGet<ApiResponse<MatriculaAcademicaVigenteDto[] | MatriculaAcademicaVigenteDto | boolean | string>>(
+  const response = await httpGet<ApiResponse<
+    MatriculaAcademicaVigenteDto[]
+    | MatriculaAcademicaVigenteDto
+    | MatriculaCreacionDisponibilidadDto
+    | boolean
+    | string
+  >>(
     `/sapp/matriculaAcademica/vigente/estudiante/${estudianteId}`,
   )
 
@@ -97,6 +108,25 @@ export const getMatriculaVigenteValidationByEstudiante = async (
   }
 
   if (typeof response.data === 'object' && response.data !== null) {
+    if ('puedeCrear' in response.data) {
+      if (!response.data.puedeCrear) {
+        return {
+          status: 'NO_ACTIVE_PERIOD',
+          message: response.message || 'No hay fechas de matrícula habilitadas actualmente.',
+        }
+      }
+
+      if (!Number.isFinite(response.data.periodoId)) {
+        throw new Error('La respuesta no contiene un periodo válido para crear la matrícula.')
+      }
+
+      return {
+        status: 'CAN_CREATE',
+        message: response.message || 'El estudiante puede crear matrícula en el periodo vigente.',
+        periodoId: response.data.periodoId,
+      }
+    }
+
     return {
       status: 'EXISTS',
       message: response.message || 'El estudiante ya tiene matrícula en el periodo vigente.',
@@ -105,10 +135,7 @@ export const getMatriculaVigenteValidationByEstudiante = async (
   }
 
   if (response.data === true || response.data === 'true') {
-    return {
-      status: 'CAN_CREATE',
-      message: response.message || 'El estudiante puede crear matrícula en el periodo vigente.',
-    }
+    throw new Error('La respuesta no contiene el periodo requerido para crear la matrícula.')
   }
 
   if (response.data === false || response.data === 'false') {

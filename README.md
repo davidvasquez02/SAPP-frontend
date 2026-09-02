@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-02:** la consulta de matrícula vigente interpreta el nuevo objeto `{ periodoId, puedeCrear }`: bloquea el formulario y muestra que no hay fechas habilitadas cuando `puedeCrear` es `false`; cuando es `true`, usa el `periodoId` entregado por esa misma validación en el POST de creación.
 - **2026-09-02:** se corrigió la ruta de períodos con fechas para eliminar dos espacios que el navegador codificaba como `%20%20`; la solicitud vuelve a resolverse como `GET /api/sapp/periodoAcademico/withFechas`.
 
 - **2026-09-02:** el selector de firma del perfil valida y previsualiza el archivo y persiste inmediatamente el data URI mediante `POST /api/sapp/firmaUsuario/{usuarioSappId}`; se retiró la persistencia provisional en `localStorage`.
@@ -118,6 +119,13 @@ npm run preview
 No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `GET /api/sapp/inicio`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
 
 ## Decisiones recientes / changelog-lite
+
+### 2026-09-02 — Disponibilidad y período de creación de matrícula
+
+- `GET /api/sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` puede responder, cuando no existe matrícula vigente, `data: { periodoId, puedeCrear }`.
+- Si `puedeCrear` es `false`, la pantalla de estudiante no carga ni presenta materias, documentos o la acción de confirmación; en su lugar informa que no hay fechas de matrícula habilitadas actualmente.
+- Si `puedeCrear` es `true`, el frontend conserva el `periodoId` de la validación y lo envía como `periodoId` en `POST /api/sapp/matriculaAcademica`. La validación se repite justo antes del POST para no crear con una disponibilidad o período obsoletos.
+- Se mantiene compatibilidad con la respuesta que contiene una matrícula existente. La antigua respuesta booleana `true` ya no permite crear porque carece del período obligatorio; no se agregaron dependencias, seeds ni datasets.
 
 ### 2026-09-02 — Ruta de períodos con fechas sin espacios codificados
 
