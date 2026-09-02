@@ -121,6 +121,13 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-09-02 — Informes a dependencias para coordinación
+
+- Se incorporó la ruta protegida `/coordinacion/reportes`, disponible para coordinación y administración, con informes de admisión, matrícula y créditos condonables.
+- Los selectores consumen los servicios de programas, convocatorias, períodos y actas. En admisión, el programa filtra las convocatorias; en matrícula y créditos, se preselecciona el período vigente por fechas o, como fallback, el más reciente.
+- La generación está encapsulada en `informesMockService.ts`. Su request usa IDs numéricos y discrimina el proceso; debe sustituirse por el endpoint definitivo sin llevar lógica HTTP a la pantalla.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets.
+
 ### 2026-09-02 — Datos de previsualización para renovación de crédito condonable
 
 - El tratamiento especial está delimitado por `tipoSolicitudId: 12` (**RENOVACION CREDITO CONDONABLE**, asociado al trámite `17`); no se infiere a partir del nombre y no altera los demás tipos de solicitud.

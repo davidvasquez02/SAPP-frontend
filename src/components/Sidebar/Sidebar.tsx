@@ -35,6 +35,7 @@ const Sidebar = () => {
   const canSeeActas =
     session?.kind === "SAPP" &&
     hasAnyRole(session.user.roles, [ROLES.COORDINACION, ROLES.ADMIN]);
+  const canSeeReportes = canSeeActas;
   const isProfesorOnly =
     session?.kind === "SAPP" &&
     isProfesor(session.user.roles) &&
@@ -63,6 +64,12 @@ const Sidebar = () => {
       label: "Admisiones",
       icon: "📋",
       visible: canSeeAdmisiones,
+    },
+    {
+      to: "/coordinacion/reportes",
+      label: "Reportes",
+      icon: "📊",
+      visible: canSeeReportes,
     },
     {
       to: "/actas",

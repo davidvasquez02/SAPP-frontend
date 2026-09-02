@@ -1662,3 +1662,32 @@ npm run lint
 - `git diff --check` (2026-09-02): PASS. La captura automatizada queda limitada por la ausencia de navegador y porque el estado requiere sesión/backend institucional.
 
 ---
+# Update 2026-09-02 — Módulo de informes a dependencias
+
+## Estado actual y decisiones
+- `/coordinacion/reportes` está protegido para `COORDINADOR` y `ADMIN` y aparece como **Reportes** en el sidebar únicamente para dichos roles.
+- Permite escoger `ADMISION`, `MATRICULA` o `CREDITOS_CONDONABLES`. Todos requieren `programaId` y `actaId`; admisión requiere `convocatoriaId`, mientras matrícula y créditos requieren `periodoId`.
+- Los catálogos se cargan en paralelo desde los servicios reales. Las convocatorias se filtran localmente por `programaId`. El período predeterminado contiene la fecha actual según `fechaInicio`/`fechaFin`; si ninguno coincide, se usa el período más reciente.
+- La generación sigue siendo mock y devuelve una referencia `MOCK-{tipo}-{timestamp}`. No descarga un archivo todavía.
+
+## Paths, contratos y salida esperada
+- Pantalla y estilos: `src/pages/Reportes/ReportesPage.tsx`, `src/pages/Reportes/ReportesPage.css`.
+- Catálogo de programas: `src/modules/reportes/api/programaAcademicoService.ts`; se reutilizan los servicios de convocatorias, períodos y actas existentes.
+- Mock: `src/modules/reportes/services/informesMockService.ts` recibe `{ tipoProceso, programaId, actaId, convocatoriaId? | periodoId? }` con IDs numéricos.
+- Integración: `src/app/routes/index.tsx`, `src/components/Sidebar/Sidebar.tsx` y `src/pages/index.ts`.
+- Salida esperada: admisión nunca ofrece convocatorias de otro programa; matrícula y créditos abren con el período actual seleccionado; el envío completo muestra confirmación y referencia mock.
+
+## Retos y próximos pasos
+1. Sustituir `generarInforme` por el endpoint real y acordar si la respuesta será descarga PDF, job asíncrono o documento persistido.
+2. Confirmar si el backend debe filtrar actas por proceso, programa o período; actualmente se muestra el catálogo completo porque no se entregó ese criterio.
+3. Agregar pruebas de componente cuando exista Vitest y validar visualmente claro/oscuro, móvil y con sesión institucional.
+
+## Entorno y pruebas de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry ni un segundo entorno/dependency tree.
+- No se agregaron paquetes, variables, seeds ni datasets. Las versiones exactas continúan documentadas en `README.md` y `package-lock.json`.
+- La primera ejecución de `npm run build` detectó el import de tipo `FormEvent` no marcado como `type`; se corrigió antes de la validación final.
+- `npx eslint src/pages/Reportes src/modules/reportes src/app/routes/index.tsx src/components/Sidebar/Sidebar.tsx src/pages/index.ts`: PASS (solo warning conocido de npm sobre `http-proxy`).
+- `npm run build`: PASS; 242 módulos transformados, con warning no bloqueante por un chunk JS mayor a 500 kB.
+- `git diff --check`: PASS. Screenshot pendiente: este contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida necesita sesión/backend institucional.
+
+---
