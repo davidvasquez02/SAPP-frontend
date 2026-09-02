@@ -1575,3 +1575,30 @@ npm run lint
 - La validación HTTP y visual con datos reales permanece pendiente porque requiere backend y sesión institucional; la pantalla no recibió cambios de estilo.
 
 ---
+# Update 2026-09-02 — Corrección de la ruta de períodos con fechas
+
+## Estado actual y causa corregida
+- `getPeriodosAcademicosWithFechas()` contenía dos espacios dentro del literal `'/  sapp/periodoAcademico/withFechas'`. El navegador los codificaba como `%20%20` y el backend intentaba resolver el recurso inexistente `/%20%20sapp/periodoAcademico/withFechas`.
+- El literal ahora es `/sapp/periodoAcademico/withFechas`. El normalizador del cliente elimina el segmento `/sapp` cuando la base ya termina en `/sapp`, por lo que con la configuración predeterminada la URL del navegador es `/api/sapp/periodoAcademico/withFechas` (en producción: `https://sapp.eisi.online/api/sapp/periodoAcademico/withFechas`).
+
+## Paths, contrato y salida esperada
+- Servicio corregido: `src/modules/configFechas/api/periodoAcademicoService.ts`.
+- Normalización compartida sin cambios: `src/shared/http/httpClient.ts`; base predeterminada: `src/api/config.ts`.
+- Request: `GET ${VITE_API_URL || VITE_API_BASE_URL || '/api/sapp'}/periodoAcademico/withFechas`.
+- Respuesta esperada: `{ ok: boolean, message: string, data: PeriodoAcademicoWithFechasDto[] }`. El servicio devuelve `data ?? []` si `ok` es verdadero y lanza el mensaje del backend si `ok` es falso.
+- No se agregaron schemas, migraciones, dependencias, seeds, datasets ni artefactos.
+
+## Próximos pasos y entorno
+1. Verificar en Network, con backend y sesión institucional, que la configuración de fechas solicita exactamente `/api/sapp/periodoAcademico/withFechas` y recibe el envelope esperado.
+2. Si vuelven a aparecer rutas con `%20`, buscar espacios dentro de los literales de cada servicio; no compensarlos creando rutas backend alternativas.
+3. Reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol de dependencias.
+
+## Pruebas de esta actualización
+- Entorno verificado: Node.js 24.15.0 y npm 11.4.2. Paquetes principales instalados: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm list --depth=0` (2026-09-02): PASS; confirmó un único árbol de dependencias completo. npm mostró el warning conocido `Unknown env config "http-proxy"`.
+- `npx eslint src/modules/configFechas/api/periodoAcademicoService.ts` (2026-09-02): PASS; npm mostró únicamente el mismo warning de configuración.
+- `npm run build` (2026-09-02): PASS; TypeScript y rolldown-vite transformaron 237 módulos y generaron `dist/assets/index-ZvyW5o5r.css` y `dist/assets/index-wiudiPYW.js` en 1.01 s.
+- `git diff --check` (2026-09-02): PASS.
+- La verificación HTTP en producción sigue pendiente porque requiere backend y sesión institucional. No se tomó screenshot: el cambio corrige exclusivamente la URL de red y no produce una modificación visual perceptible.
+
+---
