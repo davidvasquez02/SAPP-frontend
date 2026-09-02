@@ -114,14 +114,14 @@ const PerfilPage = () => {
             <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>
             <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>
             <div><dt>Correo institucional</dt><dd>{user.persona.emailInstitucional ?? user.email ?? 'No registrado'}</dd></div>
-            <div><dt>Usuario</dt><dd>{user.username}</dd></div>
+            {/* <div><dt>Usuario</dt><dd>{user.username}</dd></div> */}
             <div><dt>Correo personal</dt><dd>{personalEmail ?? 'No registrado'}</dd></div>
             <div><dt>Teléfono</dt><dd>{phone ?? 'No registrado'}</dd></div>
           </dl>
         </section>
 
         {isCoordination && <section className="profile-page__card" aria-labelledby="coord-title">
-          <div className="profile-page__heading"><span aria-hidden="true">◎</span><div><h2 id="coord-title">Información de coordinación</h2><p>Contexto académico disponible para tu rol.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="coord-title">Información de coordinación</h2><p>Contexto académico disponible para tu rol.</p></div></div>
           <dl className="profile-page__data-grid">
             <div><dt>Programa a cargo</dt><dd>{user.programa ?? 'Posgrados EISI (dato provisional)'}</dd></div>
             <div><dt>Unidad académica</dt><dd>Escuela de Ingeniería de Sistemas e Informática</dd></div>
@@ -131,7 +131,7 @@ const PerfilPage = () => {
         </section>}
 
         {isStudent && <section className="profile-page__card" aria-labelledby="student-title">
-          <div className="profile-page__heading"><span aria-hidden="true">◇</span><div><h2 id="student-title">Información académica</h2><p>Resumen de tu vinculación como estudiante.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="student-title">Información académica</h2><p>Resumen de tu vinculación como estudiante.</p></div></div>
           <dl className="profile-page__data-grid">
             <div><dt>Código UIS</dt><dd>{valueOrPending(studentCode)}</dd></div>
             <div><dt>Programa</dt><dd>{valueOrPending(academicProgram)}</dd></div>
