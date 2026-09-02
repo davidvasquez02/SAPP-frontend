@@ -20,6 +20,13 @@ export interface EstudianteFotoDto {
 
 export interface EstudianteDto {
   id: number
+  codigoEstudianteUis: string
+  cohorte: number
+  estado: string
+  fechaIngreso: string
+  idAspirante: number | null
+  programaCodigoNombre: string
+  programaId: number
   foto?: EstudianteFotoDto | null
   [key: string]: unknown
 }

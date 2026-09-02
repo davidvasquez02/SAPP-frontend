@@ -30,6 +30,21 @@ const readFile = (file: File): Promise<FirmaPerfil> =>
 const valueOrPending = (value: unknown) =>
   typeof value === 'string' || typeof value === 'number' ? String(value) : 'Pendiente de integración'
 
+const firstAttribute = (attributes: Record<string, string[]> | undefined, key: string) =>
+  attributes?.[key]?.[0]?.trim() || null
+
+const formatDateInColombia = (value: string | undefined) => {
+  if (!value) return 'Pendiente de integración'
+
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return value
+
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'long',
+    timeZone: 'America/Bogota',
+  }).format(new Date(Date.UTC(year, month - 1, day)))
+}
+
 const PerfilPage = () => {
   const { user } = useAuth()
   const [savedSignature, setSavedSignature] = useState<FirmaPerfil | null>(() =>
@@ -41,6 +56,10 @@ const PerfilPage = () => {
   const roles = user?.roles ?? []
   const isCoordination = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
   const isStudent = roles.some((role) => role.toUpperCase() === 'ESTUDIANTE') || Boolean(user?.estudiante)
+  const personalEmail = user?.persona.emailPersonal ?? firstAttribute(user?.attributes, 'personalEmail')
+  const phone = user?.persona.telefono ?? firstAttribute(user?.attributes, 'phone')
+  const studentCode = user?.estudiante?.codigoEstudianteUis ?? firstAttribute(user?.attributes, 'studentCode')
+  const academicProgram = user?.estudiante?.programaCodigoNombre ?? user?.programa
   const signature = selectedSignature ?? savedSignature
   const signatureSrc = signature
     ? `data:${signature.mimeType};base64,${signature.contenidoBase64}`
@@ -96,6 +115,8 @@ const PerfilPage = () => {
             <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>
             <div><dt>Correo institucional</dt><dd>{user.persona.emailInstitucional ?? user.email ?? 'No registrado'}</dd></div>
             <div><dt>Usuario</dt><dd>{user.username}</dd></div>
+            <div><dt>Correo personal</dt><dd>{personalEmail ?? 'No registrado'}</dd></div>
+            <div><dt>Teléfono</dt><dd>{phone ?? 'No registrado'}</dd></div>
           </dl>
         </section>
 
@@ -112,10 +133,12 @@ const PerfilPage = () => {
         {isStudent && <section className="profile-page__card" aria-labelledby="student-title">
           <div className="profile-page__heading"><span aria-hidden="true">◇</span><div><h2 id="student-title">Información académica</h2><p>Resumen de tu vinculación como estudiante.</p></div></div>
           <dl className="profile-page__data-grid">
-            <div><dt>Código UIS</dt><dd>{valueOrPending(user.estudiante?.codigo)}</dd></div>
-            <div><dt>Programa</dt><dd>{user.programa ?? valueOrPending(user.estudiante?.programa)}</dd></div>
+            <div><dt>Código UIS</dt><dd>{valueOrPending(studentCode)}</dd></div>
+            <div><dt>Programa</dt><dd>{valueOrPending(academicProgram)}</dd></div>
             <div><dt>Cohorte</dt><dd>{valueOrPending(user.estudiante?.cohorte)}</dd></div>
             <div><dt>Estado académico</dt><dd>{valueOrPending(user.estudiante?.estado)}</dd></div>
+            <div><dt>Fecha de ingreso</dt><dd>{formatDateInColombia(user.estudiante?.fechaIngreso)}</dd></div>
+            {/* <div><dt>ID de estudiante</dt><dd>{valueOrPending(user.estudiante?.id)}</dd></div> */}
           </dl>
         </section>}
 

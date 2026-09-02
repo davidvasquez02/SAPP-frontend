@@ -22,6 +22,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 ### Decisiones recientes (changelog-lite)
 
 - **2026-09-02:** perfil accesible desde el avatar, vistas contextualizadas para coordinación/estudiante y carga local temporal de firma con validación y vista previa.
+- **2026-09-02:** el perfil aprovecha el contrato real de `/inicio`: código UIS, programa, cohorte, estado, fecha de ingreso, correo personal y teléfono, con fallback a `attributes` cuando corresponde.
 - La firma no se incorpora a la sesión ni se envía a un endpoint inexistente; el servicio aislado permite sustituir `localStorage` por la API documental.
 - Los estilos nuevos consumen tokens semánticos y se adaptan a móvil y modos claro/oscuro.
 
