@@ -1,3 +1,25 @@
+# Update 2026-09-02 — Detalle de matrícula finalizada y nombre de archivo
+
+## Estado actual y decisión
+- En `/matricula/:matriculaId`, una matrícula cuyo estado normalizado es `FINALIZADA` ya no presenta botones **Aprobar/Rechazar** en documentos ni asignaturas, ni el botón para guardar la validación de asignaturas. Las acciones de consulta **Ver/Descargar** se conservan.
+- Cada documento cargado muestra `documentoUploadedResponse.nombreArchivoDocumento` bajo su tipo documental. El mismo valor continúa usándose para abrir y descargar; solo se recurre a `documento_{tipo}.pdf` si el API no entrega nombre.
+
+## Paths, contrato y salida esperada
+- Implementación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
+- Entrada relevante del checklist: `documentoCargado: true` y `documentoUploadedResponse.nombreArchivoDocumento`, por ejemplo `0002_20260902_Pago_Liquidacion_Matricula_2026-2.pdf`.
+- Salida esperada: el nombre se ve en la columna **Documento** y una matrícula finalizada queda en modo de consulta, sin controles que sugieran nuevas decisiones.
+
+## Retos, próximos pasos y entorno
+1. Verificar el resultado con la matrícula institucional `183` y los roles `COORDINADOR`/`ADMIN`; la ruta requiere sesión y backend reales.
+2. No crear entornos adicionales: reutilizar `/workspace/SAPP-frontend/node_modules`; este frontend usa npm, no venv, conda ni poetry. No se agregaron paquetes, seeds o datasets.
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` (2026-09-02): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run lint` (2026-09-02): FAIL por 11 errores y 1 warning preexistentes fuera de esta pantalla (principalmente `no-explicit-any`, `set-state-in-effect` y utilidades mock con parámetros sin uso); el archivo modificado sí supera ESLint aislado.
+- `npm run build` (2026-09-02): PASS; 242 módulos transformados, assets `index-wdrRG1Ts.css` e `index-DuoItnsL.js`, 744 ms. Vite advirtió que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-02): PASS.
+- Screenshot pendiente: no se dispone de la sesión institucional necesaria para abrir `/matricula/183` con sus datos reales.
+
+---
+
 # Update 2026-09-02 — Aprobación automática de documentos de matrícula
 
 ## Estado actual y decisión

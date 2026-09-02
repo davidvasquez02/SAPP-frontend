@@ -608,6 +608,11 @@ const MatriculaDetalleCoordinacionPage = () => {
                           <p className="matricula-detalle__doc-meta">
                             {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
                           </p>
+                          {uploaded ? (
+                            <p className="matricula-detalle__doc-meta">
+                              <strong>Archivo:</strong> {filename}
+                            </p>
+                          ) : null}
                         </div>
 
                         <div>
@@ -622,36 +627,40 @@ const MatriculaDetalleCoordinacionPage = () => {
                           )}
                         </div>
 
-                        <ValidationButtons
-                          estadoUi={validacionEstado}
-                          disabled={disableValidation}
-                          onApprove={() =>
-                            documentoId && void handleApproveDoc(documentoId, disableValidation)
-                          }
-                          onRejectStart={() =>
-                            documentoId &&
-                            handleRejectStart(
-                              documentoId,
-                              disableValidation,
-                              documentoResponse?.observacionesDocumento ?? '',
-                            )
-                          }
-                          isRejectMode={isRejectMode}
-                          onRejectCancel={() => documentoId && handleRejectCancel(documentoId)}
-                          onRejectConfirm={(note) =>
-                            documentoId && void handleRejectConfirm(documentoId, note)
-                          }
-                          rejectNote={currentRejectNote}
-                          setRejectNote={(note) =>
-                            documentoId &&
-                            setRejectNotes((prev) => ({
-                              ...prev,
-                              [documentoId]: note,
-                            }))
-                          }
-                          rejectError={currentRejectError}
-                          textareaId={documentoId ? `matricula-doc-${documentoId}` : undefined}
-                        />
+                        {isFinalizada ? (
+                          <span className="matricula-detalle__obs-empty">—</span>
+                        ) : (
+                          <ValidationButtons
+                            estadoUi={validacionEstado}
+                            disabled={disableValidation}
+                            onApprove={() =>
+                              documentoId && void handleApproveDoc(documentoId, disableValidation)
+                            }
+                            onRejectStart={() =>
+                              documentoId &&
+                              handleRejectStart(
+                                documentoId,
+                                disableValidation,
+                                documentoResponse?.observacionesDocumento ?? '',
+                              )
+                            }
+                            isRejectMode={isRejectMode}
+                            onRejectCancel={() => documentoId && handleRejectCancel(documentoId)}
+                            onRejectConfirm={(note) =>
+                              documentoId && void handleRejectConfirm(documentoId, note)
+                            }
+                            rejectNote={currentRejectNote}
+                            setRejectNote={(note) =>
+                              documentoId &&
+                              setRejectNotes((prev) => ({
+                                ...prev,
+                                [documentoId]: note,
+                              }))
+                            }
+                            rejectError={currentRejectError}
+                            textareaId={documentoId ? `matricula-doc-${documentoId}` : undefined}
+                          />
+                        )}
 
                         <div>
                           {currentRejectNote.trim() ? (
@@ -734,36 +743,42 @@ const MatriculaDetalleCoordinacionPage = () => {
                         <td>{asignatura.asignaturaNombre}</td>
                         <td>{asignatura.estado}</td>
                         <td>
-                          <div className="matricula-detalle__decision-group">
-                            <button
-                              type="button"
-                              className={`matricula-detalle__decision-button matricula-detalle__decision-button--approve ${
-                                currentDecision === 'APROBADA'
-                                  ? 'matricula-detalle__decision-button--active'
-                                  : ''
-                              }`}
-                              onClick={() =>
-                                updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
-                              }
-                              disabled={disableAsignaturasValidation}
-                            >
-                              {currentDecision === 'APROBADA' ? 'Aprobada' : 'Aprobar'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`matricula-detalle__decision-button matricula-detalle__decision-button--reject ${
-                                isRejectSelected
-                                  ? 'matricula-detalle__decision-button--active'
-                                  : ''
-                              }`}
-                              onClick={() =>
-                                updateAsignaturaDecision(asignatura.id, { decision: 'NO_MATRICULADA' })
-                              }
-                              disabled={disableAsignaturasValidation}
-                            >
-                              {isRejectSelected ? 'Rechazada' : 'Rechazar'}
-                            </button>
-                          </div>
+                          {isFinalizada ? (
+                            <span className="matricula-detalle__obs-empty">—</span>
+                          ) : (
+                            <div className="matricula-detalle__decision-group">
+                              <button
+                                type="button"
+                                className={`matricula-detalle__decision-button matricula-detalle__decision-button--approve ${
+                                  currentDecision === 'APROBADA'
+                                    ? 'matricula-detalle__decision-button--active'
+                                    : ''
+                                }`}
+                                onClick={() =>
+                                  updateAsignaturaDecision(asignatura.id, { decision: 'APROBADA' })
+                                }
+                                disabled={disableAsignaturasValidation}
+                              >
+                                {currentDecision === 'APROBADA' ? 'Aprobada' : 'Aprobar'}
+                              </button>
+                              <button
+                                type="button"
+                                className={`matricula-detalle__decision-button matricula-detalle__decision-button--reject ${
+                                  isRejectSelected
+                                    ? 'matricula-detalle__decision-button--active'
+                                    : ''
+                                }`}
+                                onClick={() =>
+                                  updateAsignaturaDecision(asignatura.id, {
+                                    decision: 'NO_MATRICULADA',
+                                  })
+                                }
+                                disabled={disableAsignaturasValidation}
+                              >
+                                {isRejectSelected ? 'Rechazada' : 'Rechazar'}
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td>
                           <textarea
@@ -784,16 +799,18 @@ const MatriculaDetalleCoordinacionPage = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="matricula-detalle__asignatura-actions">
-                <button
-                  type="button"
-                  className="matricula-detalle__approve-button"
-                  onClick={() => void handleGuardarValidacionAsignaturas()}
-                  disabled={isSavingAsignaturas || disableAsignaturasValidation}
-                >
-                  {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
-                </button>
-              </div>
+              {!isFinalizada ? (
+                <div className="matricula-detalle__asignatura-actions">
+                  <button
+                    type="button"
+                    className="matricula-detalle__approve-button"
+                    onClick={() => void handleGuardarValidacionAsignaturas()}
+                    disabled={isSavingAsignaturas || disableAsignaturasValidation}
+                  >
+                    {isSavingAsignaturas ? 'Guardando...' : 'Guardar validación de asignaturas'}
+                  </button>
+                </div>
+              ) : null}
             </article>
 
           </>
