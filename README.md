@@ -91,6 +91,15 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-09-02 — Conversión local de la previsualización HTML a PDF
+
+- `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` puede retornar `data` como una lista cuyo documento contiene `base64DocumentoContenido` y `mimeTypeDocumentoContenido: "text/html"`; el servicio conserva la selección del primer documento generado.
+- Para solicitudes de crédito condonable, el navegador decodifica ese HTML, lo renderiza en un `iframe` aislado sin scripts y genera un PDF tamaño carta paginado. La conversión no requiere dependencias ni servicios externos.
+- El previsualizador recibe una URL Blob con MIME `application/pdf`. **Cargar archivo de solicitud** adjunta exactamente ese mismo Blob como `carta-solicitud-credito-condonable.pdf`, en vez de renombrar contenido HTML como si fuera PDF.
+- La compatibilidad con respuestas que ya contienen PDF se mantiene: cualquier MIME distinto de HTML se usa directamente. Las URLs Blob se revocan al regenerar, reiniciar o desmontar el formulario.
+- Antes de insertar el HTML en un documento activo, se normalizan las imágenes base64 sin prefijo `data:` (por ejemplo, firmas JPEG que empiezan por `/9j/`) y se eliminan recursos externos. Así, la conversión procesa únicamente el HTML recibido, no genera solicitudes como `GET /9j/...` y ningún recurso remoto puede contaminar el canvas.
+- La paginación reserva en cada hoja Letter márgenes verticales equivalentes a los definidos por la plantilla (aproximadamente 2,35 cm arriba y 2,2 cm abajo); el contenido se recorta por el alto útil y se dibuja dentro de esa zona, evitando que texto y firmas queden pegados o cortados por el límite entre páginas.
+
 ### 2026-08-28 — Módulo de actas
 
 - Se incorporó la ruta protegida `/actas` para los roles `COORDINADOR` y `ADMIN`, con acceso desde la navegación principal.

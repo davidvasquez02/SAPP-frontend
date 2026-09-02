@@ -81,12 +81,13 @@ export async function createSolicitudAcademica(req: CreateSolicitudRequestDto): 
 export async function previsualizarSolicitudCredito(
   req: PreviewSolicitudCreditoRequestDto,
 ): Promise<PreviewSolicitudCreditoResponseDto> {
-  const response = await httpPost<ApiResponse<PreviewSolicitudCreditoResponseDto>>(
+  const response = await httpPost<ApiResponse<PreviewSolicitudCreditoResponseDto[] | PreviewSolicitudCreditoResponseDto>>(
     '/sapp/solicitudesAcademicas/pdf-previsualizacion',
     req,
   )
-  if (!response.ok || !response.data) {
+  const document = Array.isArray(response.data) ? response.data[0] : response.data
+  if (!response.ok || !document?.base64DocumentoContenido || !document.mimeTypeDocumentoContenido) {
     throw new Error(response.message || 'No fue posible generar la previsualización del documento.')
   }
-  return response.data
+  return document
 }
