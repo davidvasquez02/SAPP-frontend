@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import {
   guardarFirmaUsuario,
+  obtenerFirmaUsuario,
   type FirmaPerfil,
 } from '../../modules/perfil/services/firmaPerfilService'
 import './PerfilPage.css'
@@ -48,6 +49,8 @@ const PerfilPage = () => {
   const { user } = useAuth()
   const [savedSignature, setSavedSignature] = useState<FirmaPerfil | null>(null)
   const [selectedSignature, setSelectedSignature] = useState<FirmaPerfil | null>(null)
+  const [signatureTitle, setSignatureTitle] = useState('')
+  const [isLoadingSignature, setIsLoadingSignature] = useState(true)
   const [isSavingSignature, setIsSavingSignature] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -63,6 +66,34 @@ const PerfilPage = () => {
     ? `data:${signature.mimeType};base64,${signature.contenidoBase64}`
     : null
 
+  useEffect(() => {
+    if (!user) return
+    let active = true
+
+    const loadSignature = async () => {
+      setIsLoadingSignature(true)
+      setError('')
+      try {
+        const currentSignature = await obtenerFirmaUsuario(user.id)
+        if (!active || !currentSignature) return
+        const match = currentSignature.contenidoFirma.match(/^data:([^;]+);base64,(.+)$/)
+        setSavedSignature({
+          nombreArchivo: 'firma-registrada',
+          mimeType: match?.[1] ?? 'image/jpeg',
+          contenidoBase64: match?.[2] ?? currentSignature.contenidoFirma,
+        })
+        setSignatureTitle(currentSignature.titulo)
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'No fue posible consultar la firma.')
+      } finally {
+        if (active) setIsLoadingSignature(false)
+      }
+    }
+
+    void loadSignature()
+    return () => { active = false }
+  }, [user])
+
   const fullName = useMemo(() => {
     if (!user) return 'Usuario'
     return user.nombreCompleto || [user.persona.nombre1, user.persona.nombre2, user.persona.apellido1, user.persona.apellido2].filter(Boolean).join(' ')
@@ -73,6 +104,11 @@ const PerfilPage = () => {
     setError('')
     const file = event.target.files?.[0]
     if (!file) return
+    if (!signatureTitle.trim()) {
+      setError('Ingresa el título que acompañará la firma.')
+      event.target.value = ''
+      return
+    }
     if (!['image/png', 'image/jpeg'].includes(file.type)) {
       setError('Selecciona una imagen PNG o JPG.')
       return
@@ -98,7 +134,7 @@ const PerfilPage = () => {
     setError('')
 
     try {
-      await guardarFirmaUsuario(user.id, firma)
+      await guardarFirmaUsuario(user.id, signatureTitle, firma)
       setSavedSignature(firma)
       setSelectedSignature(null)
       setMessage('La firma se actualizó correctamente.')
@@ -161,17 +197,17 @@ const PerfilPage = () => {
           <div className="profile-page__heading"><span aria-hidden="true">✎</span><div><h2 id="signature-title">Firma</h2><p>Carga la imagen que se utilizará para firmar documentos autorizados.</p></div></div>
           <div className="profile-page__signature-content">
             <div className="profile-page__signature-preview">
-              {signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}
+              {isLoadingSignature ? <span>Cargando firma…</span> : signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}
             </div>
             <div className="profile-page__signature-actions">
-              <label className="profile-page__file-button">{isSavingSignature ? 'Guardando firma…' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature} /></label>
+              <label className="profile-page__title-field"><span>Título</span><input type="text" value={signatureTitle} onChange={(event) => setSignatureTitle(event.target.value)} placeholder="Ej. PhD." maxLength={100} disabled={isSavingSignature || isLoadingSignature} /></label>
+              <label className="profile-page__file-button">{isSavingSignature ? 'Guardando firma…' : signatureSrc ? 'Reemplazar imagen' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature || isLoadingSignature} /></label>
               <small>PNG o JPG, máximo 2 MB. Se recomienda fondo blanco.</small>
               {error && selectedSignature && <button type="button" onClick={handleRetry} disabled={isSavingSignature}>Reintentar carga</button>}
             </div>
           </div>
           {error && <p className="profile-page__feedback profile-page__feedback--error" role="alert">{error}</p>}
           {message && <p className="profile-page__feedback" role="status">{message}</p>}
-          <p className="profile-page__mock-note">Pendiente: integrar el servicio de consulta para mostrar la firma vigente al abrir el perfil.</p>
         </section>
       </div>
     </ModuleLayout>
