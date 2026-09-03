@@ -27,6 +27,30 @@
 
 ---
 
+# Update 2026-09-03 — Nombre de motivos en previsualización de crédito condonable
+
+## Estado actual y decisión
+- El contrato frontend de `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` cambió la propiedad genérica `motivos` por `motivosCreditoCondonable` para las solicitudes de crédito condonable que usan motivos.
+- La renovación de crédito condonable (`tipoSolicitudId === 12`) no cambia: continúa enviando `actividadesCreditoCondonable` junto con sus campos adicionales.
+
+## Paths, contrato y salida esperada
+- Contrato: `src/modules/solicitudes/api/types.ts`; construcción del payload: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`; adaptación hacia el servicio HTTP: `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+- Para un crédito condonable distinto de renovación, el request esperado contiene `motivosCreditoCondonable: string[]` y no contiene `motivos`. Para el tipo 12 contiene `actividadesCreditoCondonable` y no contiene ninguna de esas dos propiedades de motivos.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar el request con una sesión institucional y el backend para confirmar que el DTO del endpoint ya consume `motivosCreditoCondonable`.
+2. Incorporar una prueba del payload cuando el proyecto agregue Vitest; actualmente no existe un script de tests.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `git diff --check`: PASS.
+- `npx eslint src/modules/solicitudes/api/types.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 244 módulos y generaron el build. Warning no bloqueante por el chunk JS de 508.49 kB.
+
+---
+
 # Update 2026-09-03 — Limpieza integral al cerrar sesión
 
 ## Estado actual y decisión
