@@ -460,18 +460,6 @@ const SolicitudDetallePage = () => {
                       </button>
                     )}
 
-                    <SolicitudDocumentosEditor
-                      solicitudId={solicitud.id}
-                      codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
-                      usuarioCargaId={usuarioSappId}
-                      editable={editableSolicitud}
-                      onDocsCommitted={() => {
-                        const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
-                        if (codigoTipoTramite) {
-                          void loadDocumentos(solicitud.id, codigoTipoTramite)
-                        }
-                      }}
-                    />
                   </>
                 ) : (
                   <div className="solicitud-detalle-page__student-editor">
