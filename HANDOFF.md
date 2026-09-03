@@ -1,3 +1,31 @@
+# Update 2026-09-03 — Reparación del build del conversor HTML a PDF
+
+## Estado actual y decisión
+- Se reparó `src/modules/solicitudes/utils/htmlToPdf.ts` después de que una integración mezclara las dos estrategias históricas de renderizado: había dos declaraciones de `loadDataImage`, `collectTextRuns`/`paintDocumentPage` quedaban sin uso y se invocaba un `loadSvgImage` inexistente.
+- La implementación activa es la estrategia directa y segura acordada: el iframe recibe HTML sanitizado; las imágenes `data:` permitidas y los fragmentos de texto se recopilan desde su layout; fondos, bordes, imágenes y texto se pintan directamente en páginas canvas de tamaño Letter. No se vuelve a introducir SVG `foreignObject`, por lo que se mantiene la mitigación del canvas contaminado.
+- No cambiaron la interfaz pública `htmlToPdf(html: string): Promise<Blob>`, contratos HTTP, dependencias, variables de entorno, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Implementación corregida: `src/modules/solicitudes/utils/htmlToPdf.ts`.
+- Consumidores: buscar `htmlToPdf` dentro de `src/modules/solicitudes`; reciben HTML persistido o previsualizado y esperan un `Blob` con MIME `application/pdf` para las acciones **Ver/Descargar**.
+- Recursos aceptados dentro del HTML: imágenes JPEG, PNG, GIF o WebP como data URI base64 (o base64 crudo reconocido). Scripts, documentos embebidos y recursos externos se eliminan antes de montar el iframe.
+- Salida: PDF 1.4 rasterizado, páginas Letter de 612 × 792 pt (canvas 816 × 1056 px), margen vertical de 72 px y cada página incluida como JPEG.
+
+## Retos y próximos pasos
+1. Validar **Ver** y **Descargar** en Chromium con una solicitud real que contenga firma, texto multilínea, bordes, fondos y más de una página; este contenedor no dispone de la sesión/backend institucional necesarios para una comprobación funcional completa.
+2. Agregar pruebas DOM/browser del sanitizador, paginación y generación cuando el repositorio incorpore Vitest y un navegador de pruebas. Actualmente `package.json` no define un script `test`.
+3. Vigilar conflictos futuros en este archivo: no combinar la estrategia SVG (`loadSvgImage`/`foreignObject`) con el pintado directo (`collectTextRuns`/`paintDocumentPage`).
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 245 módulos y generaron `dist/assets/index-CI7kim7r.css` e `index-DLwL1ixL.js`. Persiste únicamente el warning no bloqueante del chunk JavaScript de 509.78 kB.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-03): PASS.
+- No se tomó captura: el arreglo no cambia la UI visible y la ruta protegida requiere datos/sesión institucionales.
+
+---
+
 # Update 2026-09-03 — Orden determinista y visibilidad para PROFESOR en Solicitudes
 
 ## Estado actual y decisiones
