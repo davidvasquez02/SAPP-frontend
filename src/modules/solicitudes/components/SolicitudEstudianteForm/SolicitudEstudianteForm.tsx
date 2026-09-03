@@ -48,7 +48,7 @@ interface SolicitudEstudianteFormProps {
     tipoSolicitudId: number
     observaciones: string
     modalidadId: number
-    motivos?: string[]
+    motivosCreditoCondonable?: string[]
     ciudadExpedicionDocumento: string
     actividadesCreditoCondonable?: string[]
     periodoAcademicoInicioCreditoCon?: string
@@ -436,7 +436,7 @@ const SolicitudEstudianteForm = ({
               intensidadHorariaSemanal: intensidadHorariaSemanal as number,
               horasSemestre: horasSemestre as number,
             }
-          : { motivos: motivosCreditoValidos }),
+          : { motivosCreditoCondonable: motivosCreditoValidos }),
         ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
       })
       const previews = await Promise.all(

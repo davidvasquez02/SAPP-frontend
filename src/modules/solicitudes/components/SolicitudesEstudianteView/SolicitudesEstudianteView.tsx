@@ -348,7 +348,7 @@ const SolicitudesEstudianteView = () => {
                 tipoSolicitudId: previewPayload.tipoSolicitudId,
                 observaciones: previewPayload.observaciones,
                 modalidadId: previewPayload.modalidadId,
-                motivos: previewPayload.motivos,
+                motivosCreditoCondonable: previewPayload.motivosCreditoCondonable,
                 ciudadExpedicionDocumento: previewPayload.ciudadExpedicionDocumento,
                 actividadesCreditoCondonable: previewPayload.actividadesCreditoCondonable,
                 periodoAcademicoInicioCreditoCon: previewPayload.periodoAcademicoInicioCreditoCon,
