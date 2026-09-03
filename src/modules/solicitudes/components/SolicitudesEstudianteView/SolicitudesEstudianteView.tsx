@@ -265,7 +265,7 @@ const SolicitudesEstudianteView = () => {
   return (
     <section className="solicitudes-estudiante-view">
       <header className="solicitudes-estudiante-view__header">
-        <h3>{viewMode === 'LIST' ? 'Mis solicitudes' : 'Nueva solicitud'}</h3>
+        {/* <h3>{viewMode === 'LIST' ? 'Mis solicitudes' : 'Nueva solicitud'}</h3> */}
         {viewMode === 'LIST' ? (
           <button
             className="solicitudes-estudiante-view__primary"
