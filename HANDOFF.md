@@ -1,3 +1,28 @@
+# Update 2026-09-03 — Tipo de documento y cohorte única en estudiantes
+
+## Estado actual y decisión
+- El mapper de `GET /sapp/estudiantes/consulta` acepta el tipo documental en `data[].tipoDocumento` o `data[].tipoDocumentoIdentificacion`, como lo entrega la proyección superior observada, y solo después recurre a `data[].persona.tipoDocumento`. El número conserva su resolución superior existente.
+- Tanto las tarjetas del listado como el perfil usan el mismo `EstudianteCoordinacion`, por lo que ya no deben presentar `N/A 213214` cuando alguno de esos campos superiores contiene el tipo.
+- En el perfil se retiró la primera fila **Cohorte**, ubicada sobre **Correo institucional**. La cohorte permanece una sola vez como **Cohorte de ingreso** en la cuadrícula académica.
+
+## Contrato y salida esperada
+- Entrada tolerada: `{ tipoDocumento?: string, tipoDocumentoIdentificacion?: string, numeroDocumento, persona: { tipoDocumento?: string, ... }, ... }` dentro de `ApiResponse.data[]`.
+- Prioridad del tipo: `tipoDocumento` → `tipoDocumentoIdentificacion` → `persona.tipoDocumento` → `N/A`. Para `{ tipoDocumento: "CC", numeroDocumento: "213214" }`, listado y detalle muestran `CC 213214`.
+- Paths: `src/modules/estudiantes/services/estudiantesMockService.ts` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+
+## Retos, próximos pasos y entorno
+1. Confirmar con Network y sesión institucional cuál de los dos nombres superiores usa definitivamente el backend; la tolerancia actual permite ambos sin acoplar la UI a una sola variante.
+2. Validar visualmente listado y detalle con un registro real. No crear venv/conda/poetry ni otro árbol npm: reutilizar `/workspace/SAPP-frontend/node_modules`.
+3. No hay seeds/datasets ni runner Vitest; los datos provienen del backend. Versiones: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5.
+
+## Pruebas de esta actualización
+- `npx eslint src/modules/estudiantes/services/estudiantesMockService.ts src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS (`tsc -b && vite build`); no se registraron errores de TypeScript ni de empaquetado.
+- `git diff --check` (2026-09-03): PASS.
+- Captura pendiente por limitación del entorno: la vista protegida necesita sesión institucional y datos del backend para reproducir el registro reportado.
+
+---
+
 # Update 2026-09-03 — Contrato real del listado y detalle de estudiantes
 
 ## Estado actual y decisión
