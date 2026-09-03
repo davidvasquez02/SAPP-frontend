@@ -17,13 +17,13 @@ const PAGE_SIZE = 10
 
 interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
-  // readOnly?: boolean
+  readOnly?: boolean
   assignedOnly?: boolean
 }
 
 const SolicitudesCoordinadorView = ({
   usuarioSappId,
-  // readOnly = false,
+  readOnly = false,
   assignedOnly = false,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
@@ -141,11 +141,9 @@ const SolicitudesCoordinadorView = ({
 
   return (
     <section className="solicitudes-coordinador-view">
-      {/* {readOnly ? (
-        <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">
-          Vista de solo lectura.
-        </p>
-      ) : null} */}
+      {readOnly ? (
+        <p />
+      ) : null}
       <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
         <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
         {assignedLoading ? (
