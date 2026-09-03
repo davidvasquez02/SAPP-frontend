@@ -1,4 +1,3 @@
-import { estudiantesMock } from '../mock/estudiantes.mock'
 import type { ApiResponse } from '../../../api/types'
 import { httpGet } from '../../../shared/http/httpClient'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
@@ -31,20 +30,26 @@ type EstudianteConsultaBackend = {
     id: number
     idAspirante: number | null
     codigoEstudianteUis: string | null
-    cohorte: number | null
+    cohorte: string | number | null
     estado: string | null
-    fechaIngreso: string
+    fechaIngreso: string | null
+    fechaEgreso: string | null
     foto?: {
       contenidoBase64: string | null
       mimeType: string | null
     } | null
   }
   nombreCompleto: string
+  numeroDocumento: string | null
+  correoInstitucional: string | null
+  correoPersonal: string | null
   persona: {
-    tipoDocumento: string | null
-    numeroDocumento: string | null
-    emailInstitucional: string | null
-    emailPersonal: string | null
+    id: number
+    idpId: string | null
+    tipoDocumento?: string | null
+    numeroDocumento?: string | null
+    emailInstitucional?: string | null
+    emailPersonal?: string | null
   }
   programaId: number
   programaCodigoNombre: string | null
@@ -86,7 +91,7 @@ const normalizarEstadoAcademico = (estado: string | null): EstudianteCoordinacio
   return normalized
 }
 
-const buildCohorte = (cohorte: number | null): string => {
+const buildCohorte = (cohorte: string | number | null): string => {
   if (cohorte === null) {
     return 'Sin cohorte'
   }
@@ -94,8 +99,16 @@ const buildCohorte = (cohorte: number | null): string => {
   return String(cohorte)
 }
 
-const resolveCorreo = (persona: EstudianteConsultaBackend['persona']) => {
-  return persona.emailInstitucional?.trim() || persona.emailPersonal?.trim() || 'Sin correo registrado'
+const resolveCorreoInstitucional = (item: EstudianteConsultaBackend) => {
+  return item.correoInstitucional?.trim()
+    || item.persona.emailInstitucional?.trim()
+    || 'Sin correo institucional registrado'
+}
+
+const resolveCorreoPersonal = (item: EstudianteConsultaBackend) => {
+  return item.correoPersonal?.trim()
+    || item.persona.emailPersonal?.trim()
+    || 'Sin correo personal registrado'
 }
 
 const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCoordinacion => {
@@ -110,8 +123,11 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     fotoUrl: null,
     foto: item.estudiante.foto ?? null,
     tipoDocumento: item.persona.tipoDocumento?.trim() || 'N/A',
-    numeroDocumento: item.persona.numeroDocumento?.trim() || 'N/A',
-    correoInstitucional: resolveCorreo(item.persona),
+    numeroDocumento: item.numeroDocumento?.trim() || item.persona.numeroDocumento?.trim() || 'N/A',
+    correoInstitucional: resolveCorreoInstitucional(item),
+    correoPersonal: resolveCorreoPersonal(item),
+    personaId: item.persona.id ?? null,
+    personaIdpId: item.persona.idpId?.trim() || null,
     estadoAcademico: normalizarEstadoAcademico(item.estudiante.estado),
     cohorte: buildCohorte(item.estudiante.cohorte),
     promedioAcumulado: 0,
@@ -120,6 +136,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     programaId: item.programaId,
     programaNombre,
     fechaIngreso: item.estudiante.fechaIngreso,
+    fechaEgreso: item.estudiante.fechaEgreso,
   }
 }
 
@@ -160,5 +177,14 @@ export const getEstudiantesByPrograma = async (
 export const getEstudianteById = async (
   estudianteId: number
 ): Promise<EstudianteCoordinacion | null> => {
-  return estudiantesMock.find((estudiante) => estudiante.id === estudianteId) ?? null
+  const response = await httpGet<ApiResponse<EstudianteConsultaBackend[]>>(
+    `${ESTUDIANTES_CONSULTA_ENDPOINT}?estudianteId=${estudianteId}`
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar el detalle del estudiante.')
+  }
+
+  const estudiante = (response.data ?? []).find((item) => item.estudiante.id === estudianteId)
+  return estudiante ? toEstudianteCoordinacion(estudiante) : null
 }

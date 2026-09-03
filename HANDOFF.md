@@ -1,3 +1,31 @@
+# Update 2026-09-03 — Contrato real del listado y detalle de estudiantes
+
+## Estado actual y decisión
+- `src/modules/estudiantes/services/estudiantesMockService.ts` tipa y normaliza el payload observado de coordinación. Los correos y el número de documento llegan en el nivel superior, no dentro de `persona`; se mantienen fallbacks para tolerar el contrato anterior.
+- La proyección conserva `persona.id`, `persona.idpId`, `estudiante.fechaEgreso`, `fechaIngreso` nullable y `cohorte` tanto string (`2026-1`) como numérica. El listado recibe así código, nombre, documento, correo, programa, estado y cohorte correctos.
+- Una navegación desde el listado sigue pasando el estudiante en `location.state`. Al recargar o entrar directamente a `/coordinacion/estudiantes/:estudianteId`, `getEstudianteById` ya no consulta `estudiantes.mock.ts`: ejecuta `GET /sapp/estudiantes/consulta?estudianteId={id}` y selecciona el registro por `estudiante.id`.
+- El encabezado del detalle muestra por separado correo institucional y correo personal, además de los datos académicos ya existentes. No se agregaron paquetes, seeds ni datasets.
+
+## Contrato y salida esperada
+- Entrada: `{ correoInstitucional, correoPersonal, nombreCompleto, numeroDocumento, persona: { id, idpId }, estudiante: { id, idAspirante, codigoEstudianteUis, cohorte, estado, fechaIngreso, fechaEgreso }, programaId, programaCodigoNombre }` dentro de `ApiResponse.data[]`.
+- Listado: una respuesta con `numeroDocumento: "1005324324"`, `correoInstitucional: "ana2248061test@uis.edu.co"` y `cohorte: "2026-1"` debe mostrar esos valores, sin reemplazarlos por `N/A`, correo ausente o `Sin cohorte`.
+- Detalle: el mismo registro debe mostrar ambos correos, documento, programa, cohorte, estado y fechas; un valor de fecha `null` se representa como `—`.
+- Paths principales: `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/estudiantes/types.ts`, `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; fixture actualizado en `src/modules/estudiantes/mock/estudiantes.mock.ts`.
+
+## Retos y próximos pasos
+1. Confirmar con backend autenticado que el filtro `estudianteId` del endpoint de consulta está habilitado y devuelve una lista, incluso con un único resultado. Si el backend define un endpoint dedicado, cambiar solo `getEstudianteById` y reutilizar el mapper existente.
+2. Validar visualmente listado, navegación y recarga directa con el payload real. No hay navegador/sesión institucional disponibles en este contenedor.
+3. Incorporar pruebas del mapper cuando el repositorio agregue Vitest; hoy no existe runner de tests unitarios.
+
+## Entorno
+- Raíz única `/workspace/SAPP-frontend`; usar npm y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0. No se modificaron dependencias.
+- `npx eslint src/modules/estudiantes/services/estudiantesMockService.ts src/modules/estudiantes/types.ts src/modules/estudiantes/mock/estudiantes.mock.ts src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 241 módulos y generaron `dist/assets/index-8f10ieLX.js` en 665 ms. Vite advirtió que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-03): PASS.
+
+---
+
 # Update 2026-09-03 — Orden de descarga de fotos de estudiantes
 
 ## Estado actual y decisión

@@ -18,6 +18,9 @@ export interface EstudianteCoordinacion {
   tipoDocumento: string
   numeroDocumento: string
   correoInstitucional: string
+  correoPersonal: string
+  personaId: number | null
+  personaIdpId: string | null
   estadoAcademico: 'ACTIVO' | 'EN_TRABAJO_DE_GRADO' | 'EN_ESPERA_CANDIDATURA' | string
   cohorte: string
   promedioAcumulado: number
@@ -25,7 +28,7 @@ export interface EstudianteCoordinacion {
   creditosPendientes: number
   programaId: number
   programaNombre: string
-  fechaIngreso: string
+  fechaIngreso: string | null
   fechaEgreso?: string | null
 }
 
