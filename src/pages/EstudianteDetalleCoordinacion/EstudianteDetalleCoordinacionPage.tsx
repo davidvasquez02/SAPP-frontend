@@ -469,6 +469,10 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
           <dd>{estudiante.correoInstitucional || 'Sin información'}</dd>
         </div>
         <div>
+          <dt>Correo personal</dt>
+          <dd>{estudiante.correoPersonal || 'Sin información'}</dd>
+        </div>
+        <div>
           <dt>Documento</dt>
           <dd>
             {estudiante.tipoDocumento || EMPTY_VALUE} {estudiante.numeroDocumento || ''}
