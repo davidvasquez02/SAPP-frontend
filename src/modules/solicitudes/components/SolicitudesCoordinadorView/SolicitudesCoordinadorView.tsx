@@ -10,6 +10,7 @@ import {
 } from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
+import { sortSolicitudesDesc } from '../../utils/ordenSolicitudes'
 import './SolicitudesCoordinadorView.css'
 
 const PAGE_SIZE = 10
@@ -17,23 +18,14 @@ const PAGE_SIZE = 10
 interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
   readOnly?: boolean
+  assignedOnly?: boolean
 }
 
-const parseDateToEpoch = (value: string | null) => {
-  if (!value) {
-    return 0
-  }
-
-  const epoch = Date.parse(value)
-  return Number.isNaN(epoch) ? 0 : epoch
-}
-
-const sortByMostRecent = (solicitudes: SolicitudCoordinadorDto[]) =>
-  [...solicitudes].sort(
-    (left, right) => parseDateToEpoch(right.fechaRegistro) - parseDateToEpoch(left.fechaRegistro),
-  )
-
-const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: SolicitudesCoordinadorViewProps) => {
+const SolicitudesCoordinadorView = ({
+  usuarioSappId,
+  readOnly = false,
+  assignedOnly = false,
+}: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [estadoId, setEstadoId] = useState<number | null>(null)
@@ -51,8 +43,6 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
 
   useEffect(() => {
     let mounted = true
-
-    setTiposError(null)
 
     Promise.all([getTiposSolicitud(), getEstadosSolicitudCatalog()])
       .then(([tipos, estados]) => {
@@ -85,7 +75,7 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
       .then((solicitudes) => {
         if (mounted) {
           setAssignedError(null)
-          setAssignedRows(sortByMostRecent(solicitudes))
+          setAssignedRows(sortSolicitudesDesc(solicitudes))
         }
       })
       .catch((fetchError) => {
@@ -107,10 +97,11 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
   }, [usuarioSappId, location.key, location.state])
 
   useEffect(() => {
-    let mounted = true
+    if (assignedOnly) {
+      return
+    }
 
-    setLoading(true)
-    setError(null)
+    let mounted = true
 
     getSolicitudesAcademicasFiltered({
       estadoId: estadoId ?? undefined,
@@ -120,7 +111,7 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
         if (!mounted) {
           return
         }
-        setRows(sortByMostRecent(solicitudes))
+        setRows(sortSolicitudesDesc(solicitudes))
         setCurrentPage(1)
       })
       .catch((fetchError) => {
@@ -138,7 +129,7 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
     return () => {
       mounted = false
     }
-  }, [estadoId, tipoSolicitudId, location.key, location.state])
+  }, [assignedOnly, estadoId, tipoSolicitudId, location.key, location.state])
 
   const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
   const availableRows = rows.filter((solicitud) => !assignedIds.has(solicitud.id))
@@ -175,6 +166,7 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
           />
         )}
       </section>
+      {!assignedOnly ? (
       <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
       <h3 id="solicitudes-title">Solicitudes</h3>
       <SolicitudesFiltersBar
@@ -184,6 +176,8 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
         tiposSolicitud={tiposSolicitud}
         disabled={loading || assignedLoading}
         onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
+          setLoading(true)
+          setError(null)
           setEstadoId(nextEstadoId)
           setTipoSolicitudId(nextTipoSolicitudId)
         }}
@@ -226,6 +220,7 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
         </>
       )}
       </section>
+      ) : null}
     </section>
   )
 }

@@ -22,18 +22,10 @@ import {
   type EstadoSolicitudCatalogItem,
 } from '../../utils/estadoSolicitud'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
+import { compareSolicitudesDesc } from '../../utils/ordenSolicitudes'
 import './SolicitudesEstudianteView.css'
 
 const PAGE_SIZE = 10
-
-const parseDateToEpoch = (value: string | null) => {
-  if (!value) {
-    return 0
-  }
-
-  const epoch = Date.parse(value)
-  return Number.isNaN(epoch) ? 0 : epoch
-}
 
 const SolicitudesEstudianteView = () => {
   const navigate = useNavigate()
@@ -255,7 +247,7 @@ const SolicitudesEstudianteView = () => {
       return estadosCatalog.some((estado) => estado.id === estadoId && estado.sigla === normalized)
     })
     .filter((row) => (tipoSolicitudId === null ? true : row.tipoSolicitudId === tipoSolicitudId))
-    .sort((left, right) => parseDateToEpoch(right.fechaRegistro) - parseDateToEpoch(left.fechaRegistro))
+    .sort(compareSolicitudesDesc)
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE))
   const safeCurrentPage = Math.min(currentPage, totalPages)
