@@ -23,6 +23,33 @@
 
 ---
 
+# Update 2026-09-03 — Encabezado descriptivo del detalle de solicitudes
+
+## Estado actual y decisión
+- La pantalla compartida `/solicitudes/:solicitudId` presenta ahora `Solicitud {id} — {tipoSolicitud}` en un único `h2`.
+- Se eliminaron del encabezado el símbolo `#`, el campo técnico `tipoSolicitudCodigo` y el párrafo separado que repetía el nombre descriptivo. El resultado esperado para la solicitud 47 es **Solicitud 47 — RENOVACION CREDITO CONDONABLE**.
+- El cambio no depende del rol: estudiantes, coordinación y administración reciben el mismo encabezado cuando sus permisos les permiten acceder a esta pantalla.
+
+## Paths, contrato y salida esperada
+- UI: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- Ruta protegida compartida: `src/app/routes/solicitudesRoutes.tsx`.
+- Fuente de datos sin cambios: `getSolicitudAcademicaById()` entrega `id`, `tipoSolicitud` y `tipoSolicitudCodigo`; el encabezado consume únicamente `id` y el nombre descriptivo `tipoSolicitud`.
+- No se agregaron dependencias, variables de entorno, seeds, datasets, migraciones ni contratos HTTP.
+
+## Retos y próximos pasos
+1. Validar el texto con sesiones institucionales de cada rol autorizado y con nombres largos de tipos de solicitud.
+2. Incorporar una prueba de componente cuando el repositorio disponga de Vitest/React Testing Library; actualmente no hay runner de tests configurado.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`. Reutilizar Node.js/npm y `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Las versiones exactas continúan documentadas en `README.md` y bloqueadas en `package-lock.json`.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 241 módulos y generaron `dist/assets/index-BLymDgBm.js` en 639 ms. Vite advirtió de forma no bloqueante que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-03): PASS.
+- Captura pendiente por limitación del entorno: no hay Chromium, Chrome ni Firefox instalado, y la ruta protegida requiere sesión/backend institucional.
+
+---
+
 # Update 2026-09-03 — Contrato real del listado y detalle de estudiantes
 
 ## Estado actual y decisión
