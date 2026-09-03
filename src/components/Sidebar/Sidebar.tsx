@@ -11,7 +11,7 @@ interface SidebarItem {
 }
 
 const Sidebar = () => {
-  const { session } = useAuth();
+  const { session, logout } = useAuth();
 
   const canSeeAdmisiones =
     session?.kind === "SAPP" &&
@@ -110,6 +110,20 @@ const Sidebar = () => {
             </NavLink>
           ))}
       </nav>
+
+      <div className="sidebar__footer">
+        <button
+          type="button"
+          className="sidebar__logout"
+          onClick={logout}
+          title="Cerrar sesión"
+        >
+          <span className="sidebar__icon" aria-hidden="true">
+            🚪
+          </span>
+          <span className="sidebar__label">Cerrar sesión</span>
+        </button>
+      </div>
     </aside>
   );
 };

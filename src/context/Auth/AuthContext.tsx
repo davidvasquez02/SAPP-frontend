@@ -49,6 +49,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     void initializeFromGateway()
   }, [initializeFromGateway])
 
+  const logout = useCallback(() => {
+    clearSession()
+    setSessionState(null)
+
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+
+    const cookiePaths = window.location.pathname
+      .split('/')
+      .reduce<string[]>((paths, segment) => {
+        if (!segment) return paths
+        const parent = paths.at(-1) ?? ''
+        return [...paths, `${parent}/${segment}`]
+      }, ['/'])
+    const hostnameParts = window.location.hostname.split('.')
+    const cookieDomains = hostnameParts.flatMap((_, index) => {
+      const domain = hostnameParts.slice(index).join('.')
+      return domain.includes('.') ? [domain, `.${domain}`] : [domain]
+    })
+
+    document.cookie.split(';').forEach((cookie) => {
+      const separatorIndex = cookie.indexOf('=')
+      const name = (separatorIndex >= 0 ? cookie.slice(0, separatorIndex) : cookie).trim()
+      if (!name) return
+
+      cookiePaths.forEach((path) => {
+        document.cookie = `${name}=; Max-Age=0; path=${path}; SameSite=Lax`
+        cookieDomains.forEach((domain) => {
+          document.cookie = `${name}=; Max-Age=0; path=${path}; domain=${domain}; SameSite=Lax`
+        })
+      })
+    })
+
+    window.location.reload()
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -58,8 +94,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isInitializing,
       initializationError,
       retryInitialization: initializeFromGateway,
+      logout,
     }),
-    [session, isInitializing, initializationError, initializeFromGateway],
+    [session, isInitializing, initializationError, initializeFromGateway, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

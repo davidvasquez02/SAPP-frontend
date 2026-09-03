@@ -36,4 +36,5 @@ export interface AuthContextValue {
   isInitializing: boolean
   initializationError: string | null
   retryInitialization: () => Promise<void>
+  logout: () => void
 }
