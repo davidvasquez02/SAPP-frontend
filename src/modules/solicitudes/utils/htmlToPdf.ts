@@ -5,6 +5,22 @@ const LETTER_HEIGHT_PX = 1056
 // 0.75 in at the 96 DPI used to rasterize the Letter-size document.
 const VERTICAL_PAGE_MARGIN_PX = 72
 const PAGE_CONTENT_HEIGHT_PX = LETTER_HEIGHT_PX - (VERTICAL_PAGE_MARGIN_PX * 2)
+const MINIMUM_PAGE_OCCUPANCY = 0.25
+const KEEP_TOGETHER_SELECTOR = [
+  'p',
+  'li',
+  'tr',
+  'table',
+  'figure',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  '.pdf-keep-together',
+  '[data-pdf-keep-together]',
+].join(',')
 
 const BASE64_IMAGE_TYPES: Array<[RegExp, string]> = [
   [/^\/9j\//, 'image/jpeg'],
@@ -42,6 +58,16 @@ interface TextRun {
   left: number
   top: number
   style: CSSStyleDeclaration
+}
+
+interface DocumentRect {
+  top: number
+  bottom: number
+}
+
+export interface PdfPageRange {
+  sourceY: number
+  sourceHeight: number
 }
 
 const isVisibleColor = (color: string): boolean =>
@@ -82,6 +108,78 @@ const collectTextRuns = (document: Document): TextRun[] => {
   }
 
   return runs
+}
+
+const toDocumentRect = (rect: DOMRect, document: Document): DocumentRect => ({
+  top: rect.top + document.documentElement.scrollTop,
+  bottom: rect.bottom + document.documentElement.scrollTop,
+})
+
+/** Collects the browser's actual line boxes, including every wrapped line in a text node. */
+const collectTextLineRects = (document: Document): DocumentRect[] => {
+  const rects: DocumentRect[] = []
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text
+    const parent = node.parentElement
+    if (!parent || !node.data.trim()) continue
+    const style = getComputedStyle(parent)
+    if (style.visibility === 'hidden' || style.display === 'none') continue
+
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    Array.from(range.getClientRects()).forEach((rect) => {
+      if (rect.width > 0 && rect.height > 0) rects.push(toDocumentRect(rect, document))
+    })
+    range.detach()
+  }
+
+  return rects
+}
+
+const collectKeepTogetherRects = (document: Document): DocumentRect[] =>
+  Array.from(document.body.querySelectorAll<HTMLElement>(KEEP_TOGETHER_SELECTOR)).flatMap((element) => {
+    const style = getComputedStyle(element)
+    const rect = element.getBoundingClientRect()
+    return style.visibility !== 'hidden' && style.display !== 'none' && rect.height > 0
+      ? [toDocumentRect(rect, document)]
+      : []
+  })
+
+/** Calculates contiguous source slices without cutting a line or a reasonably sized semantic block. */
+export const calculatePdfPageRanges = (
+  totalHeight: number,
+  protectedRects: DocumentRect[],
+): PdfPageRange[] => {
+  const ranges: PdfPageRange[] = []
+  const minimumHeight = PAGE_CONTENT_HEIGHT_PX * MINIMUM_PAGE_OCCUPANCY
+  let sourceStart = 0
+
+  while (sourceStart < totalHeight) {
+    const idealLimit = Math.min(sourceStart + PAGE_CONTENT_HEIGHT_PX, totalHeight)
+    let pageLimit = idealLimit
+
+    if (idealLimit < totalHeight) {
+      const intersectedTops = protectedRects
+        .filter(({ top, bottom }) => (
+          top < idealLimit
+          && bottom > idealLimit
+          && bottom - top <= PAGE_CONTENT_HEIGHT_PX
+          && top > sourceStart
+        ))
+        .map(({ top }) => top)
+      const safeLimit = intersectedTops.length > 0 ? Math.min(...intersectedTops) : idealLimit
+      if (safeLimit - sourceStart >= minimumHeight) pageLimit = safeLimit
+    }
+
+    // Oversized blocks and pathological geometry must never prevent forward progress.
+    if (pageLimit <= sourceStart) pageLimit = idealLimit
+    ranges.push({ sourceY: sourceStart, sourceHeight: pageLimit - sourceStart })
+    sourceStart = pageLimit
+  }
+
+  return ranges
 }
 
 const paintDocumentPage = (
@@ -304,10 +402,14 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       }),
     )
     const textRuns = collectTextRuns(frameDocument)
-    const pageCount = Math.ceil(height / PAGE_CONTENT_HEIGHT_PX)
+    const protectedRects = [
+      ...collectTextLineRects(frameDocument),
+      ...collectKeepTogetherRects(frameDocument),
+    ]
+    const pageRanges = calculatePdfPageRanges(height, protectedRects)
     const pages: Uint8Array[] = []
 
-    for (let page = 0; page < pageCount; page += 1) {
+    for (const { sourceY, sourceHeight } of pageRanges) {
       const canvas = document.createElement('canvas')
       canvas.width = LETTER_WIDTH_PX
       canvas.height = LETTER_HEIGHT_PX
@@ -317,8 +419,6 @@ export async function htmlToPdf(html: string): Promise<Blob> {
       }
       context.fillStyle = '#ffffff'
       context.fillRect(0, 0, canvas.width, canvas.height)
-      const sourceY = page * PAGE_CONTENT_HEIGHT_PX
-      const sourceHeight = Math.min(PAGE_CONTENT_HEIGHT_PX, height - sourceY)
       paintDocumentPage(context, frameDocument, embeddedImages, textRuns, sourceY, sourceHeight)
       pages.push(dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.95)))
     }
