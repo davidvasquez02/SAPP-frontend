@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** se restituyó **Cerrar sesión** exclusivamente en el pie del sidebar. La acción elimina la sesión SAPP y los storages del origen, expira las cookies accesibles para la SPA y recarga la página para que el Gateway vuelva a resolver la autenticación institucional.
 - **2026-09-03:** el listado y el detalle de estudiantes omiten los marcadores técnicos `N/A`/`NA` al presentar el documento de identidad. El formato se centralizó para mostrar únicamente las partes disponibles (por ejemplo, `1005324324` cuando no existe tipo documental) y `—` solo cuando tampoco existe número.
 - **2026-09-03:** el encabezado del detalle de solicitudes presenta en una sola línea `Solicitud {id} — {tipoSolicitud}` para todos los roles autorizados; se retiraron el símbolo `#`, el código técnico y la repetición del nombre descriptivo.
 - **2026-09-03:** el perfil consulta la firma vigente mediante `GET /api/sapp/firmaUsuario/{usuarioSappId}`, muestra su imagen y título, y permite reemplazarla. El POST ahora usa el contrato `{ titulo, contenidoFirma }`; el título es obligatorio en la interfaz antes de seleccionar una imagen.
@@ -308,7 +309,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 ### 2026-08-17 — Acceso gestionado fuera de la SPA
 
 - Se retiraron el formulario/ruta de login, el login de aspirantes y el portal documental de aspirantes; `/login`, `/login/aspirante` y `/aspirante/*` ya no tienen rutas propias y caen en el fallback hacia `/`.
-- Se eliminó la acción de cerrar sesión del sidebar y del contexto de autenticación. El inicio de sesión institucional continúa resolviéndose automáticamente mediante el API Gateway/IDP al montar la aplicación.
+- El inicio de sesión institucional continúa resolviéndose automáticamente mediante el API Gateway/IDP al montar la aplicación. Desde 2026-09-03, el sidebar vuelve a ofrecer una salida local que limpia el estado del origen y recarga la SPA; no se reintrodujo una pantalla de login interna.
 - Las respuestas HTTP 401 limpian la copia local obsoleta de la sesión, pero la SPA ya no redirige a una pantalla de login interna. Los 403 se reportan sin invalidar la sesión.
 
 ### 2026-08-16 — Sesión institucional desde API Gateway/IDP

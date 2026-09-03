@@ -22,6 +22,35 @@
 - Captura pendiente por limitación del entorno: la vista protegida necesita sesión institucional y datos del backend para reproducir el registro reportado.
 
 ---
+# Update 2026-09-03 — Cierre de sesión desde el sidebar
+
+## Estado actual y decisiones
+- Se restituyó el botón **Cerrar sesión** únicamente en el pie del sidebar. En escritorio permanece pegado a la parte inferior; en el layout móvil aparece después de la navegación.
+- `AuthContext` vuelve a exponer `logout()`. La acción limpia el caché y las claves de sesión conocidas, vacía `localStorage` y `sessionStorage`, intenta expirar las cookies visibles para JavaScript en las rutas y variantes de dominio aplicables, actualiza el estado React y ejecuta `window.location.reload()`.
+- La recarga, en vez de una navegación a un login interno, permite que el Gateway intercepte la nueva carga y redirija al proveedor de identidad. No se añadieron rutas de login, dependencias, variables de entorno, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Contexto y contrato: `src/context/Auth/AuthContext.tsx` y `src/context/Auth/types.ts`.
+- Presentación: `src/components/Sidebar/Sidebar.tsx` y `src/components/Sidebar/Sidebar.css`.
+- Entrada: clic en **Cerrar sesión**. Salida: se eliminan datos locales del origen y cookies no `HttpOnly`, y la página se recarga de inmediato.
+- Restricción web: JavaScript no puede borrar cookies marcadas `HttpOnly`. Si la sesión institucional del Gateway reside en una cookie `HttpOnly`, el Gateway debe invalidarla mediante su endpoint/cabecera de cierre de sesión; integrar ese contrato cuando backend confirme su URL y método.
+
+## Retos y próximos pasos
+1. Validar el flujo completo desplegado frente al Gateway/IDP, en particular si la cookie institucional es `HttpOnly` y requiere una llamada de invalidación del lado servidor.
+2. Agregar una prueba de interacción cuando el repositorio incorpore Vitest/React Testing Library; actualmente no existe script de tests.
+3. Validar visualmente escritorio, móvil y ambos temas con una sesión institucional real.
+
+## Entorno y pruebas de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; usar Node.js/npm y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0.
+- No existen artifacts ni datasets nuevos; `dist/` es generado y no debe versionarse.
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/context/Auth/AuthContext.tsx src/context/Auth/types.ts` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 242 módulos. Se mantiene el warning no bloqueante del chunk JS mayor a 500 kB.
+- `npm run lint` (2026-09-03): FAIL por 11 errores y un warning preexistentes en módulos no modificados (`creditosService`, `matriculaService`, `solicitudesService`, rutas de admisiones, mocks y vistas de solicitudes); el lint dirigido de esta actualización sí pasa.
+- `git diff --check` (2026-09-03): PASS.
+- Captura pendiente por limitación del entorno: no hay Chromium, Chrome ni Firefox instalado, y la vista protegida requiere sesión/backend institucional.
+
+---
 
 # Update 2026-09-03 — Encabezado descriptivo del detalle de solicitudes
 
