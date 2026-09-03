@@ -175,15 +175,17 @@ const SolicitudDetallePage = () => {
     }
   }, [])
 
+  const solicitudTramiteId = solicitud?.id
+  const codigoTipoTramite = solicitud?.tipoTramiteCodigo?.trim()
+
   useEffect(() => {
-    if (!solicitud) {
+    if (solicitudTramiteId == null) {
       setDocumentos([])
       setDocsError(null)
       setDocsLoading(false)
       return
     }
 
-    const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
     if (!codigoTipoTramite) {
       setDocumentos([])
       setDocsLoading(false)
@@ -191,8 +193,8 @@ const SolicitudDetallePage = () => {
       return
     }
 
-    void loadDocumentos(solicitud.id, codigoTipoTramite)
-  }, [loadDocumentos, solicitud])
+    void loadDocumentos(solicitudTramiteId, codigoTipoTramite)
+  }, [codigoTipoTramite, loadDocumentos, solicitudTramiteId])
 
   const editableSolicitud =
     isEstudiante &&
@@ -276,23 +278,49 @@ const SolicitudDetallePage = () => {
       return
     }
 
+    let firmaCompletada = false
     setIsSigning(true)
     setSignError(null)
     setSignSuccess(null)
 
     try {
       await firmarDocumentosSolicitudAcademica(solicitud.id)
-      setSignSuccess('Todos los documentos fueron firmados correctamente.')
+      firmaCompletada = true
+      setDocsLoading(true)
+      setDocsError(null)
 
-      try {
-        const refreshed = await getSolicitudAcademicaById(solicitud.id)
-        setSolicitud(refreshed)
-      } catch {
-        setSignSuccess('Los documentos fueron firmados, pero no fue posible recargar el detalle.')
+      const solicitudActualizada = await getSolicitudAcademicaById(solicitud.id)
+      const codigoTipoTramiteActualizado = solicitudActualizada.tipoTramiteCodigo?.trim()
+
+      if (!codigoTipoTramiteActualizado) {
+        throw new Error('No fue posible determinar el tipo de trámite para actualizar los documentos.')
       }
+
+      const documentosActualizados = await getSolicitudDocumentosAdjuntos({
+        tramiteId: solicitudActualizada.id,
+        codigoTipoTramite: codigoTipoTramiteActualizado,
+      })
+
+      setSolicitud(solicitudActualizada)
+      setDocumentos(documentosActualizados)
+      setEstadoTarget(() => {
+        const estadoActualizado = normalizeEstadoSolicitud(
+          solicitudActualizada.estadoSigla || solicitudActualizada.estado,
+        )
+        return estadoActualizado === 'UNKNOWN' ? 'EN_REVISION' : estadoActualizado
+      })
+      setSignSuccess('Todos los documentos fueron firmados y la información fue actualizada correctamente.')
     } catch (signingError) {
-      setSignError(getErrorMessage(signingError, 'No fue posible firmar los documentos de la solicitud.'))
+      setSignError(
+        firmaCompletada
+          ? getErrorMessage(
+              signingError,
+              'Los documentos fueron firmados, pero no fue posible actualizar la información en pantalla.',
+            )
+          : getErrorMessage(signingError, 'No fue posible firmar los documentos de la solicitud.'),
+      )
     } finally {
+      setDocsLoading(false)
       setIsSigning(false)
     }
   }
