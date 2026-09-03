@@ -5,13 +5,14 @@ export interface DocumentoUploadedResponseDto {
   nombreArchivoDocumento: string
   versionDocumento: number
   fechaCargaDocumento: string
+  fechaRevisionDocumento?: string | null
   estadoDocumento?: string | null
   observacionesDocumento?: string | null
   mimeTypeDocumentoContenido?: string
   base64DocumentoContenido?: string
   mimeType?: string
   contenidoBase64?: string
-  aspiranteCargaDocumento?: number
+  aspiranteCargaDocumento?: number | null
   usuarioCargaDocumento?: number | null
 }
 
