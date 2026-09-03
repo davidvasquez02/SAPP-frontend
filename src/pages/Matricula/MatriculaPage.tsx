@@ -121,7 +121,7 @@ const mapDocumentoCargadoToRequerido = (
     documento.nombreTipoDocumentoTramite,
   obligatorio: documento.obligatorioTipoDocumentoTramite,
   estado: mapEstadoDocumento(documento),
-  fechaRevision: documento.documentoUploadedResponse?.fechaCargaDocumento ?? null,
+  fechaRevision: documento.documentoUploadedResponse?.fechaRevisionDocumento ?? null,
   observaciones: documento.documentoUploadedResponse?.observacionesDocumento ?? null,
   selectedFile: null,
   uploadStatus: documento.documentoCargado ? "UPLOADED" : "NOT_SELECTED",

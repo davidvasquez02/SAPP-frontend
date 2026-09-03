@@ -1,6 +1,6 @@
 # SAPP Frontend — EISI UIS
 
-## Estado funcional (2026-09-02)
+## Estado funcional (2026-09-03)
 
 La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al seleccionar una firma PNG/JPG (máximo 2 MB), la pantalla la previsualiza y la envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Continúa pendiente el endpoint de consulta que permitirá mostrar la firma ya registrada al abrir el perfil.
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** el detalle de matrícula de coordinación presenta en **Estado** el valor real de `documentoUploadedResponse.estadoDocumento` (por ejemplo, `APROBADO`) en lugar de reducir todo documento existente a `Cargado`. La columna **Validación** fue reemplazada por **Fecha de revisión**, obtenida de `fechaRevisionDocumento`; los controles para aprobar o rechazar siguen disponibles dentro de **Acciones**. La vista del estudiante también usa ahora la fecha de revisión real, no la fecha de carga, y ambos listados comparten el mismo tratamiento visual de tabla, estados, bordes, espaciado y botones.
 - **2026-09-02:** cuando una matrícula está `FINALIZADA`, el detalle de coordinación oculta las acciones **Aprobar/Rechazar** de documentos y asignaturas, así como el guardado de validaciones. Los documentos cargados muestran el nombre original entregado por `nombreArchivoDocumento`.
 - **2026-09-02:** en el detalle de matrícula de coordinación, aprobar el último documento obligatorio ejecuta automáticamente la aprobación de la matrícula (`PUT /sapp/matriculaAcademica/{id}`). Se eliminó el botón manual **Aprobar documentos** y se bloquean las demás validaciones documentales mientras finaliza la transición para evitar solicitudes concurrentes.
 - **2026-09-02:** únicamente el tipo de solicitud `12` (**RENOVACION CREDITO CONDONABLE**, trámite `17`) solicita los datos adicionales de renovación y envía `actividadesCreditoCondonable`, dirección, periodo inicial, intensidad y horas a la previsualización PDF; teléfono y correo se obtienen de la sesión. Los demás tipos conservan su formulario y contrato anteriores.
@@ -122,6 +123,13 @@ npm run preview
 No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesión SAPP se obtiene al cargar la SPA mediante `GET /api/sapp/inicio`, sin body. Para desarrollo se necesita un backend/gateway que capture la identidad institucional y responda el contrato descrito abajo. La sesión normalizada se guarda en `localStorage['SAPP_AUTH_SESSION']`; `NO_TOKEN` es solo un marcador local y nunca se envía como Bearer porque la autenticación se resuelve en el gateway.
 
 ## Decisiones recientes / changelog-lite
+
+### 2026-09-03 — Estado y fecha reales de documentos de matrícula
+
+- En `/matricula/:matriculaId`, la columna **Estado** consume directamente `documentoUploadedResponse.estadoDocumento`; solo usa `EN_REVISION` como fallback para un archivo cargado sin estado y `PENDIENTE` cuando aún no existe archivo.
+- La antigua columna **Validación** se sustituyó por **Fecha de revisión**, alimentada por `documentoUploadedResponse.fechaRevisionDocumento`. Aprobar/rechazar no desaparece del flujo: sus controles se agruparon con **Ver** y **Descargar** en **Acciones**.
+- La tabla documental del estudiante dejó de mostrar `fechaCargaDocumento` bajo el rótulo de revisión y ahora usa el mismo campo `fechaRevisionDocumento`. El listado de coordinación adoptó el contenedor, separadores, badges y adaptación móvil del listado estudiantil.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets.
 
 ### 2026-09-02 — Informes a dependencias para coordinación
 

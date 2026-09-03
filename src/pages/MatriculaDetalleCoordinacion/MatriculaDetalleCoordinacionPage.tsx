@@ -70,6 +70,32 @@ const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEst
   return 'POR_REVISAR'
 }
 
+const getEstadoDocumentoLabel = (documento: DocumentoTramiteItemDto) => {
+  if (!documento.documentoCargado) {
+    return 'PENDIENTE'
+  }
+
+  return documento.documentoUploadedResponse?.estadoDocumento?.trim().toUpperCase() || 'EN_REVISION'
+}
+
+const getEstadoDocumentoClassName = (documento: DocumentoTramiteItemDto) => {
+  const estado = getEstadoDocumentoLabel(documento)
+
+  if (estado.includes('APROB')) {
+    return 'matricula-detalle__badge matricula-detalle__badge--approved'
+  }
+
+  if (estado.includes('RECHAZ')) {
+    return 'matricula-detalle__badge matricula-detalle__badge--rejected'
+  }
+
+  if (estado.includes('REVISION') || estado.includes('ESTUDIO')) {
+    return 'matricula-detalle__badge matricula-detalle__badge--review'
+  }
+
+  return 'matricula-detalle__badge matricula-detalle__badge--pending'
+}
+
 
 const getEstadoBadgeClassName = (estado: string) => {
   const normalizedEstado = estado.toUpperCase()
@@ -561,7 +587,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <div className="matricula-detalle__documents-header">
                     <span>Documento</span>
                     <span>Estado</span>
-                    <span>Validación</span>
+                    <span>Fecha de revisión</span>
                     <span>Observaciones</span>
                     <span>Acciones</span>
                   </div>
@@ -615,54 +641,17 @@ const MatriculaDetalleCoordinacionPage = () => {
                           ) : null}
                         </div>
 
-                        <div>
-                          {uploaded ? (
-                            <span className="matricula-detalle__badge matricula-detalle__badge--loaded">
-                              Cargado
-                            </span>
-                          ) : (
-                            <span className="matricula-detalle__badge matricula-detalle__badge--pending">
-                              Pendiente
-                            </span>
-                          )}
+                        <div data-label="Estado">
+                          <span className={getEstadoDocumentoClassName(documento)}>
+                            {getEstadoDocumentoLabel(documento)}
+                          </span>
                         </div>
 
-                        {isFinalizada ? (
-                          <span className="matricula-detalle__obs-empty">—</span>
-                        ) : (
-                          <ValidationButtons
-                            estadoUi={validacionEstado}
-                            disabled={disableValidation}
-                            onApprove={() =>
-                              documentoId && void handleApproveDoc(documentoId, disableValidation)
-                            }
-                            onRejectStart={() =>
-                              documentoId &&
-                              handleRejectStart(
-                                documentoId,
-                                disableValidation,
-                                documentoResponse?.observacionesDocumento ?? '',
-                              )
-                            }
-                            isRejectMode={isRejectMode}
-                            onRejectCancel={() => documentoId && handleRejectCancel(documentoId)}
-                            onRejectConfirm={(note) =>
-                              documentoId && void handleRejectConfirm(documentoId, note)
-                            }
-                            rejectNote={currentRejectNote}
-                            setRejectNote={(note) =>
-                              documentoId &&
-                              setRejectNotes((prev) => ({
-                                ...prev,
-                                [documentoId]: note,
-                              }))
-                            }
-                            rejectError={currentRejectError}
-                            textareaId={documentoId ? `matricula-doc-${documentoId}` : undefined}
-                          />
-                        )}
+                        <div className="matricula-detalle__review-date" data-label="Fecha de revisión">
+                          {formatDateTime(documentoResponse?.fechaRevisionDocumento ?? null)}
+                        </div>
 
-                        <div>
+                        <div data-label="Observaciones">
                           {currentRejectNote.trim() ? (
                             <p className="matricula-detalle__validation-note">{currentRejectNote.trim()}</p>
                           ) : (
@@ -670,7 +659,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                           )}
                         </div>
 
-                        <div className="matricula-detalle__doc-actions">
+                        <div className="matricula-detalle__doc-actions" data-label="Acciones">
                           <button
                             type="button"
                             className="matricula-detalle__view-button"
@@ -693,6 +682,38 @@ const MatriculaDetalleCoordinacionPage = () => {
                           >
                             {actionState?.downloading ? 'Descargando...' : 'Descargar'}
                           </button>
+                          {!isFinalizada ? (
+                            <ValidationButtons
+                              estadoUi={validacionEstado}
+                              disabled={disableValidation}
+                              onApprove={() =>
+                                documentoId && void handleApproveDoc(documentoId, disableValidation)
+                              }
+                              onRejectStart={() =>
+                                documentoId &&
+                                handleRejectStart(
+                                  documentoId,
+                                  disableValidation,
+                                  documentoResponse?.observacionesDocumento ?? '',
+                                )
+                              }
+                              isRejectMode={isRejectMode}
+                              onRejectCancel={() => documentoId && handleRejectCancel(documentoId)}
+                              onRejectConfirm={(note) =>
+                                documentoId && void handleRejectConfirm(documentoId, note)
+                              }
+                              rejectNote={currentRejectNote}
+                              setRejectNote={(note) =>
+                                documentoId &&
+                                setRejectNotes((prev) => ({
+                                  ...prev,
+                                  [documentoId]: note,
+                                }))
+                              }
+                              rejectError={currentRejectError}
+                              textareaId={documentoId ? `matricula-doc-${documentoId}` : undefined}
+                            />
+                          ) : null}
                         </div>
                       </div>
                     )

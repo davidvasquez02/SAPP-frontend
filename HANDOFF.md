@@ -1,3 +1,31 @@
+# Update 2026-09-03 — Estado real y estilos de documentos de matrícula
+
+## Estado actual y decisiones
+- En el detalle de coordinación `/matricula/:matriculaId`, **Estado** ya no se calcula únicamente desde `documentoCargado`. Se muestra el valor normalizado de `documentoUploadedResponse.estadoDocumento` (por ejemplo `APROBADO` o `RECHAZADO`), con fallback `EN_REVISION` si hay archivo sin estado y `PENDIENTE` si no está cargado.
+- La columna documental **Validación** fue reemplazada por **Fecha de revisión** y muestra `documentoUploadedResponse.fechaRevisionDocumento`. Los controles de aprobar/rechazar permanecen operativos, pero ahora están agrupados en **Acciones** con **Ver/Descargar**; en matrículas `FINALIZADA` siguen ocultos según la decisión anterior.
+- La vista del estudiante también mapea su columna **Fecha de revisión** desde `fechaRevisionDocumento`, corrigiendo el uso previo de `fechaCargaDocumento`.
+- El listado de coordinación se alineó visualmente con el estudiantil: contenedor con borde y sombra suave, filas separadas, badges semánticos, botones pill y etiquetas de columna en la versión móvil. Los estilos consumen tokens globales y contemplan temas claro/oscuro.
+
+## Paths y contrato esperado
+- Coordinación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y su CSS hermano.
+- Estudiante: mapper en `src/pages/Matricula/MatriculaPage.tsx`; tabla compartida en `src/modules/matricula/components/DocumentosRequeridosTable`.
+- Entrada: `GET /sapp/document?codigoTipoTramite={codigoMatricula}&tramiteId={matriculaId}` → `{ message, data: DocumentoTramiteItemDto[] }`. Para un documento cargado se esperan `documentoUploadedResponse.estadoDocumento` y `fechaRevisionDocumento`; el caso reportado para matrícula `183` contiene `estadoDocumento: "APROBADO"` y `fechaRevisionDocumento: "2026-09-02 11:19:12"`.
+- Salida esperada: esa fila presenta badge `APROBADO` y la fecha de revisión formateada, no el texto genérico `Cargado`. Un documento todavía no revisado presenta `EN_REVISION` y fecha `—`.
+
+## Retos y próximos pasos
+1. Validar `/matricula/183` con una sesión real `COORDINADOR` y comparar estados/fechas con la respuesta de red.
+2. Validar visualmente las dos vistas en claro, oscuro y ancho móvil. El contenedor actual no incluye navegador ni la sesión institucional, por lo que no se generó captura.
+3. Agregar pruebas de componente cuando se incorpore Vitest/Testing Library; actualmente el repositorio no tiene runner de tests ni seeds/datasets.
+
+## Entorno y pruebas de esta actualización
+- Usar exclusivamente `/workspace/SAPP-frontend` con npm y el `node_modules` existente; no crear venv, conda, poetry, entornos Python ni un segundo árbol de dependencias.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0. No se agregaron paquetes.
+- `npx eslint src/modules/documentos/api/types.ts src/pages/Matricula/MatriculaPage.tsx src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 242 módulos y generaron `dist/assets/index-DAWMGqcG.css` e `index-CcNiQirt.js` en 871 ms. Vite advirtió que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-03): PASS.
+
+---
+
 # Update 2026-09-02 — Detalle de matrícula finalizada y nombre de archivo
 
 ## Estado actual y decisión
