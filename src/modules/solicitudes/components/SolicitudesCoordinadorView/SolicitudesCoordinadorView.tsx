@@ -17,13 +17,13 @@ const PAGE_SIZE = 10
 
 interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
-  readOnly?: boolean
+  // readOnly?: boolean
   assignedOnly?: boolean
 }
 
 const SolicitudesCoordinadorView = ({
   usuarioSappId,
-  readOnly = false,
+  // readOnly = false,
   assignedOnly = false,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
