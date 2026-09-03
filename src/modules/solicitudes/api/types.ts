@@ -56,7 +56,7 @@ export interface PreviewSolicitudCreditoRequestDto {
   tipoSolicitudId: number
   observaciones: string
   modalidadId: number
-  motivos?: string[]
+  motivosCreditoCondonable?: string[]
   ciudadExpedicionDocumento: string
   actividadesCreditoCondonable?: string[]
   periodoAcademicoInicioCreditoCon?: string
