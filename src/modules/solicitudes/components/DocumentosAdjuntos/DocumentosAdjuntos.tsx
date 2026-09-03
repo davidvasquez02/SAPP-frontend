@@ -45,7 +45,6 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
             <thead>
               <tr>
                 <th scope="col">Nombre archivo</th>
-                <th scope="col">Tipo</th>
                 <th scope="col">Acciones</th>
               </tr>
             </thead>
@@ -62,7 +61,6 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
                         <p className="documentos-adjuntos__description">{documento.descripcion}</p>
                       )}
                     </td>
-                    <td>{documento.mimeType}</td>
                     <td>
                       <div className="documentos-adjuntos__actions">
                         <button

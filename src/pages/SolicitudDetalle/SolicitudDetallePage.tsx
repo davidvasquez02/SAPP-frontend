@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
-import { getSolicitudAcademicaById } from '../../modules/solicitudes/api/solicitudesAcademicasService'
+import {
+  firmarDocumentosSolicitudAcademica,
+  getSolicitudAcademicaById,
+} from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import {
   cambiarEstadoSolicitud,
   type SolicitudEstadoTarget,
@@ -37,6 +40,7 @@ const formatDate = (value: string | null) => {
 
 const SolicitudDetallePage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
@@ -64,6 +68,11 @@ const SolicitudDetallePage = () => {
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
+  const [isSigning, setIsSigning] = useState(false)
+  const [signError, setSignError] = useState<string | null>(null)
+  const [signSuccess, setSignSuccess] = useState<string | null>(null)
+
+  const fromAssigned = Boolean((location.state as { fromAssigned?: boolean } | null)?.fromAssigned)
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
@@ -167,7 +176,7 @@ const SolicitudDetallePage = () => {
   }, [])
 
   useEffect(() => {
-    if (!(isCoordinador || isEstudiante) || !solicitud) {
+    if (!solicitud) {
       setDocumentos([])
       setDocsError(null)
       setDocsLoading(false)
@@ -183,7 +192,7 @@ const SolicitudDetallePage = () => {
     }
 
     void loadDocumentos(solicitud.id, codigoTipoTramite)
-  }, [isCoordinador, isEstudiante, loadDocumentos, solicitud])
+  }, [loadDocumentos, solicitud])
 
   const editableSolicitud =
     isEstudiante &&
@@ -256,6 +265,37 @@ const SolicitudDetallePage = () => {
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
   const isSameTargetAsCurrentEstado = currentEstado !== 'UNKNOWN' && estadoTarget === currentEstado
+  const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
+    estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
+  )
+  const canSignAllDocuments =
+    fromAssigned && estadoPermiteFirma
+
+  const handleFirmarDocumentos = async () => {
+    if (!solicitud) {
+      return
+    }
+
+    setIsSigning(true)
+    setSignError(null)
+    setSignSuccess(null)
+
+    try {
+      await firmarDocumentosSolicitudAcademica(solicitud.id)
+      setSignSuccess('Todos los documentos fueron firmados correctamente.')
+
+      try {
+        const refreshed = await getSolicitudAcademicaById(solicitud.id)
+        setSolicitud(refreshed)
+      } catch {
+        setSignSuccess('Los documentos fueron firmados, pero no fue posible recargar el detalle.')
+      }
+    } catch (signingError) {
+      setSignError(getErrorMessage(signingError, 'No fue posible firmar los documentos de la solicitud.'))
+    } finally {
+      setIsSigning(false)
+    }
+  }
 
   const handleGuardarEstado = async () => {
     if (!solicitud) {
@@ -352,6 +392,27 @@ const SolicitudDetallePage = () => {
                 </dd>
               </div>
             </dl>
+
+            {(canSignAllDocuments || signError || signSuccess) && (
+              <section className="solicitud-detalle-page__signature-actions">
+                {canSignAllDocuments && (
+                  <button
+                    className="solicitud-detalle-page__save"
+                    type="button"
+                    onClick={handleFirmarDocumentos}
+                    disabled={isSigning}
+                  >
+                    {isSigning ? 'Firmando documentos...' : 'Firmar todos los documentos'}
+                  </button>
+                )}
+                {signError && (
+                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                    {signError}
+                  </p>
+                )}
+                {signSuccess && <p className="solicitud-detalle-page__success">{signSuccess}</p>}
+              </section>
+            )}
 
             {isEstudiante && (
               <section className="solicitud-detalle-page__estado-editor">
@@ -492,19 +553,20 @@ const SolicitudDetallePage = () => {
                   {updateSuccess && <p className="solicitud-detalle-page__success">{updateSuccess}</p>}
                 </section>
 
-                <DocumentosAdjuntos
-                  documentos={documentos}
-                  isLoading={docsLoading}
-                  error={docsError}
-                  onRetry={() => {
-                    const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
-                    if (codigoTipoTramite) {
-                      void loadDocumentos(solicitud.id, codigoTipoTramite)
-                    }
-                  }}
-                />
               </>
             )}
+
+            <DocumentosAdjuntos
+              documentos={documentos}
+              isLoading={docsLoading}
+              error={docsError}
+              onRetry={() => {
+                const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
+                if (codigoTipoTramite) {
+                  void loadDocumentos(solicitud.id, codigoTipoTramite)
+                }
+              }}
+            />
           </>
         )}
       </section>

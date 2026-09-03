@@ -81,6 +81,16 @@ export async function getSolicitudAcademicaById(solicitudId: number): Promise<So
   return response.data
 }
 
+export async function firmarDocumentosSolicitudAcademica(solicitudId: number): Promise<void> {
+  const response = await httpPost<ApiResponse<unknown>>(
+    `/sapp/firmasDocumento/solicitudesAcademicas/${solicitudId}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible firmar los documentos de la solicitud.')
+  }
+}
+
 export async function createSolicitudAcademica(req: CreateSolicitudRequestDto): Promise<CreateSolicitudResponseDto | null> {
   const response = await httpPost<ApiResponse<CreateSolicitudResponseDto>>('/sapp/solicitudesAcademicas', req)
 
