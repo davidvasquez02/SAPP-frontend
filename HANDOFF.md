@@ -1,3 +1,29 @@
+# Update 2026-09-03 — Orden de descarga de fotos de estudiantes
+
+## Estado actual y decisión
+- En `/coordinacion/estudiantes`, la respuesta de estudiantes se ordena por `cohorte` descendente y luego por `nombreCompleto` antes de guardarse en estado y antes de construir la cola de fotos. La descarga progresiva queda así programada en el mismo orden por semestre que el listado visible.
+- Se conserva el máximo de cuatro tareas concurrentes. Cada tarea consulta primero `getInscripcionByAspirante(idAspirante)` y después la foto `ANX-4`; un error individual mantiene el placeholder y no detiene las demás descargas.
+- El filtro visible reutiliza exactamente el mismo comparador, evitando que el orden de presentación y el de la cola diverjan. No se modificaron estilos, contratos, dependencias, seeds ni datasets.
+
+## Paths, contratos y salida esperada
+- Implementación: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Estudiantes: `GET ${VITE_API_URL || '/api/sapp'}/sapp/estudiantes/consulta?programaId={id}&egresados=false`; `data[].estudiante.cohorte` determina el semestre y `idAspirante` permite resolver la inscripción.
+- Foto: inscripción por aspirante y luego documento con `codigoTipoTramite: 1002`, `codigoTipoDocumentoTramite: 'ANX-4'` y `tramiteId: inscripcion.id`.
+- Salida esperada: para cohortes `20262`, `20261` y `20252`, las tarjetas y la programación de sus fotos comienzan en ese orden; dentro de una misma cohorte se usa el nombre ascendente.
+
+## Retos y próximos pasos
+1. Validar mediante la pestaña Network y un backend autenticado que las primeras solicitudes pertenecen a los primeros estudiantes del listado; la concurrencia permite que las respuestas finalicen en distinto orden.
+2. Agregar una prueba del comparador y de la cola cuando el repositorio incorpore Vitest. Actualmente no hay runner de tests.
+3. Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; este proyecto usa npm, no venv, conda ni poetry, y no debe crearse otro entorno.
+
+## Entorno y pruebas de esta actualización
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0; plugin React SWC 4.2.2.
+- `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 242 módulos y generaron `dist/assets/index-DAWMGqcG.css` e `index-BNa1qg7t.js` en 859 ms. Vite advirtió que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-03): PASS.
+
+---
+
 # Update 2026-09-03 — Estado real y estilos de documentos de matrícula
 
 ## Estado actual y decisiones

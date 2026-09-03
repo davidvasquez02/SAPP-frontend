@@ -28,6 +28,17 @@ const normalizarTextoBusqueda = (value: string) =>
 const compararPeriodosDescendente = (left: string, right: string) =>
   right.localeCompare(left, 'es-CO', { numeric: true, sensitivity: 'base' })
 
+const compararEstudiantesPorSemestre = (
+  left: EstudianteCoordinacion,
+  right: EstudianteCoordinacion,
+) => {
+  const periodoComparison = compararPeriodosDescendente(left.cohorte, right.cohorte)
+  return periodoComparison || left.nombreCompleto.localeCompare(right.nombreCompleto, 'es-CO')
+}
+
+const ordenarEstudiantesPorSemestre = (estudiantes: EstudianteCoordinacion[]) =>
+  [...estudiantes].sort(compararEstudiantesPorSemestre)
+
 const loadWithConcurrencyLimit = async <T,>(
   items: T[],
   task: (item: T) => Promise<void>,
@@ -131,9 +142,11 @@ const EstudiantesCoordinacionPage = () => {
           return
         }
 
-        setEstudiantes(data)
+        const estudiantesOrdenados = ordenarEstudiantesPorSemestre(data)
+        setEstudiantes(estudiantesOrdenados)
 
-        const estudiantesConAspirante = data.filter(
+        // La cola de fotos debe conservar el mismo orden por semestre que ve coordinación.
+        const estudiantesConAspirante = estudiantesOrdenados.filter(
           (estudiante): estudiante is EstudianteCoordinacion & { idAspirante: number } =>
             estudiante.idAspirante !== null,
         )
@@ -205,10 +218,7 @@ const EstudiantesCoordinacionPage = () => {
       .filter((estudiante) =>
         !codigoNormalizado || normalizarTextoBusqueda(estudiante.codigo).includes(codigoNormalizado),
       )
-      .sort((left, right) => {
-        const periodoComparison = compararPeriodosDescendente(left.cohorte, right.cohorte)
-        return periodoComparison || left.nombreCompleto.localeCompare(right.nombreCompleto, 'es-CO')
-      })
+      .sort(compararEstudiantesPorSemestre)
   }, [codigoFiltro, estudiantes, nombreFiltro, periodoFiltro])
 
   const filtrosActivos = Boolean(periodoFiltro || nombreFiltro.trim() || codigoFiltro.trim())
