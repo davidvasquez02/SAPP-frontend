@@ -1959,6 +1959,32 @@ npm run lint
 - `git diff --check`: PASS. Screenshot pendiente: este contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida necesita sesión/backend institucional.
 
 ---
+# Update 2026-09-03 — Persistencia HTML y presentación PDF de solicitudes
+
+## Estado actual y decisiones
+- El endpoint `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` puede devolver contenido `text/html` en base64. El formulario conserva ese Blob fuente sin alteraciones y crea un PDF separado, solo en memoria, para el `iframe` de previsualización.
+- Al elegir **Cargar todos los documentos generados**, el draft recibe un `File` construido con el Blob original, extensión `.html` y el MIME entregado por el backend. El flujo de creación existente lo carga después mediante `uploadDocument`; por tanto, `documentos_contenido` conserva el HTML y no el PDF rasterizado.
+- Al consultar un documento guardado con MIME `text/html`, tanto el listado `DocumentosAdjuntos` como el editor convierten su base64 a PDF en el navegador antes de **Ver** o **Descargar**. El usuario recibe un `.pdf`; los PDF ya persistidos y otros formatos mantienen su comportamiento previo.
+
+## Paths, contratos y salida esperada
+- Captura de fuente y PDF temporal: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Conversión al consumir documentos persistidos: `src/modules/solicitudes/utils/solicitudDocumentFile.ts`, reutilizando `src/modules/solicitudes/utils/htmlToPdf.ts`.
+- Consumidores: `src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx` y `src/modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor.tsx`.
+- Entrada de previsualización: `{ ..., data: [{ base64DocumentoContenido, mimeTypeDocumentoContenido: "text/html", tipoDocumentoId?, tipoDocumentoCodigo?, tipoDocumentoNombre? }] }` (también se tolera el objeto único legado).
+- Persistencia esperada: el upload conserva `contenidoBase64` correspondiente al HTML y `mimeType: "text/html"`; metadatos y contenido deben persistirse transaccionalmente en backend. Salida de **Ver/Descargar**: Blob `application/pdf` y nombre con extensión `.pdf`, sin actualizar la fuente almacenada.
+
+## Retos y próximos pasos
+1. Validar extremo a extremo con backend que el endpoint de carga no reescriba el MIME/contenido y que `GET /sapp/document` devuelva nuevamente el HTML base64.
+2. Confirmar si el backend necesita conservar un nombre `.html` o si debe exponer un nombre lógico independiente de la extensión; el frontend fuerza `.pdf` únicamente al descargar.
+3. Agregar pruebas unitarias/de componente cuando se incorpore Vitest, cubriendo HTML, PDF, MIME con parámetros y errores del conversor.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0. No se agregaron paquetes, variables, seeds ni datasets.
+- `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 243 módulos y generaron el build. Warning no bloqueante: chunk JS de 506.96 kB.
+- La validación visual/HTTP requiere navegador, sesión institucional y backend; no está disponible como prueba automatizada local.
+
+---
 # Update 2026-09-03 — Presentación del documento de identidad de estudiantes
 
 ## Estado actual y decisión
