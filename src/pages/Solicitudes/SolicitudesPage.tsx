@@ -12,8 +12,10 @@ const SolicitudesPage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoord = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
   const isProfesorRole = isProfesor(roles)
+  const isDirector = hasAnyRole(roles, ['DIRECTOR'])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
-  const canUseCoordinadorList = isCoord || isProfesorRole
+  const canUseCoordinadorList = isCoord || isProfesorRole || isDirector
+  const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
 
 
   useEffect(() => {
@@ -27,7 +29,11 @@ const SolicitudesPage = () => {
       {isEstudiante ? (
         <SolicitudesEstudianteView />
       ) : canUseCoordinadorList ? (
-        <SolicitudesCoordinadorView readOnly={!isCoord} />
+        usuarioSappId === null ? (
+          <p className="solicitudes-page__status">No fue posible identificar el usuario.</p>
+        ) : (
+          <SolicitudesCoordinadorView usuarioSappId={usuarioSappId} readOnly={!isCoord} />
+        )
       ) : (
         <p className="solicitudes-page__status">No tienes permisos.</p>
       )}

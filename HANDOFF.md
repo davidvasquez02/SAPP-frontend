@@ -1957,3 +1957,30 @@ npm run lint
 - `git diff --check` (2026-09-03): PASS. La validación visual requiere navegador, sesión y backend institucionales.
 
 ---
+# Update 2026-09-03 — Solicitudes asignadas por usuario
+
+## Estado actual y decisiones
+- `/solicitudes` muestra a `PROFESOR`/`DOCENTE`, `COORDINADOR` y `DIRECTOR` un bloque inicial **Solicitudes asignadas** y, debajo, el listado general existente con sus filtros y paginación.
+- El bloque asignado consulta el ID principal `session.user.id` (`usuarios_sapp.id`). Los IDs que aparecen allí se eliminan localmente del listado general, incluso cuando este se vuelve a cargar por filtros, para no duplicar solicitudes.
+- Ambos listados conservan acceso al detalle. Un error en asignadas se presenta dentro de su bloque y no impide consultar el listado general. `COORDINADOR`/`ADMIN` conserva edición; profesor/docente/director usa la vista de solo lectura.
+
+## Paths, contrato y salida esperada
+- Transporte: `src/modules/solicitudes/api/solicitudesAcademicasService.ts`.
+- Orquestación, exclusión por ID y UI: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`; estilos temáticos en su CSS hermano.
+- Resolución de sesión/roles: `src/pages/Solicitudes/SolicitudesPage.tsx`.
+- Request: `GET ${VITE_API_URL || '/api/sapp'}/sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}`. Response: `{ ok, message, data: SolicitudAcademicaDto[] }`; cada elemento requiere al menos `id`, estudiante, código UIS, tipo, estado, fechas, programa y observaciones conforme al contrato ya usado por la tabla.
+- Salida: asignadas primero; luego solicitudes generales menos la unión de IDs asignados. No hay seeds, datasets, paquetes ni variables nuevas.
+
+## Retos y próximos pasos
+1. Validar con sesiones institucionales `PROFESOR`, `COORDINADOR` y `DIRECTOR` que el gateway autoriza el endpoint y que `session.user.id` corresponde a `usuarios_sapp.id`.
+2. Confirmar si `ADMIN` también debe consultar asignadas; actualmente mantiene el acceso histórico de coordinación y usa el nuevo bloque por compartir la vista.
+3. Incorporar pruebas de componente/servicio cuando exista Vitest, en particular respuesta vacía, error parcial, IDs repetidos y cambios de filtros.
+
+## Entorno
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 242 módulos. Warning no bloqueante por el chunk JS de 504.93 kB.
+- `npm run lint` (2026-09-03): FAIL por 11 errores y un warning preexistentes; en `SolicitudesCoordinadorView` permanecen únicamente los dos errores históricos `set-state-in-effect` de las cargas anteriores.
+- `git diff --check` (2026-09-03): PASS. No se tomó captura porque el contenedor no dispone de Chromium/Chrome/Firefox y la pantalla requiere sesión/backend institucionales.
+
+---
