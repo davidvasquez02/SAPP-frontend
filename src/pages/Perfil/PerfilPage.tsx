@@ -56,7 +56,8 @@ const PerfilPage = () => {
   const [error, setError] = useState('')
   const roles = user?.roles ?? []
   const isCoordination = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
-  const isStudent = roles.some((role) => role.toUpperCase() === 'ESTUDIANTE') || Boolean(user?.estudiante)
+  const hasStudentRole = hasAnyRole(roles, [ROLES.ESTUDIANTE])
+  const isStudent = hasStudentRole || Boolean(user?.estudiante)
   const personalEmail = user?.persona.emailPersonal ?? firstAttribute(user?.attributes, 'personalEmail')
   const phone = user?.persona.telefono ?? firstAttribute(user?.attributes, 'phone')
   const studentCode = user?.estudiante?.codigoEstudianteUis ?? firstAttribute(user?.attributes, 'studentCode')
@@ -104,7 +105,7 @@ const PerfilPage = () => {
     setError('')
     const file = event.target.files?.[0]
     if (!file) return
-    if (!signatureTitle.trim()) {
+    if (!hasStudentRole && !signatureTitle.trim()) {
       setError('Ingresa el título que acompañará la firma.')
       event.target.value = ''
       return
@@ -134,7 +135,7 @@ const PerfilPage = () => {
     setError('')
 
     try {
-      await guardarFirmaUsuario(user.id, signatureTitle, firma)
+      await guardarFirmaUsuario(user.id, hasStudentRole ? undefined : signatureTitle, firma)
       setSavedSignature(firma)
       setSelectedSignature(null)
       setMessage('La firma se actualizó correctamente.')
@@ -200,7 +201,7 @@ const PerfilPage = () => {
               {isLoadingSignature ? <span>Cargando firma…</span> : signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}
             </div>
             <div className="profile-page__signature-actions">
-              <label className="profile-page__title-field"><span>Título</span><input type="text" value={signatureTitle} onChange={(event) => setSignatureTitle(event.target.value)} placeholder="Ej. PhD." maxLength={100} disabled={isSavingSignature || isLoadingSignature} /></label>
+              {!hasStudentRole && <label className="profile-page__title-field"><span>Título</span><input type="text" value={signatureTitle} onChange={(event) => setSignatureTitle(event.target.value)} placeholder="Ej. PhD." maxLength={100} disabled={isSavingSignature || isLoadingSignature} /></label>}
               <label className="profile-page__file-button">{isSavingSignature ? 'Guardando firma…' : signatureSrc ? 'Reemplazar imagen' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature || isLoadingSignature} /></label>
               <small>PNG o JPG, máximo 2 MB. Se recomienda fondo blanco.</small>
               {error && selectedSignature && <button type="button" onClick={handleRetry} disabled={isSavingSignature}>Reintentar carga</button>}

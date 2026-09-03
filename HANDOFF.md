@@ -22,6 +22,32 @@
 - Captura pendiente por limitación del entorno: la vista protegida necesita sesión institucional y datos del backend para reproducir el registro reportado.
 
 ---
+# Update 2026-09-03 — Firma sin título para ESTUDIANTE
+
+## Estado actual y decisiones
+- En `/perfil`, cualquier sesión cuyo arreglo `user.roles` incluya `ESTUDIANTE` ve únicamente el selector y la previsualización de la firma; el campo **Título** no se renderiza ni se valida.
+- Al seleccionar o reintentar una imagen con ese rol, el POST omite la propiedad `titulo` por completo. Los demás roles conservan el campo obligatorio y el contrato anterior.
+- La detección para esta regla depende explícitamente del rol `ESTUDIANTE`, no de la existencia accidental de la proyección `user.estudiante`. La proyección sigue siendo un fallback independiente para mostrar el bloque de información académica.
+
+## Paths, contratos y salida esperada
+- UI y condición de rol: `src/pages/Perfil/PerfilPage.tsx`; catálogo compartido de roles: `src/auth/roleGuards.ts`; construcción del DTO: `src/modules/perfil/services/firmaPerfilService.ts`.
+- Request de `ESTUDIANTE`: `POST ${VITE_API_URL || VITE_API_BASE_URL || '/api/sapp'}/firmaUsuario/{usuarioSappId}` con `{ "contenidoFirma": "data:image/png;base64,..." }`; la llave `titulo` no debe aparecer, ni siquiera como cadena vacía, `null` o `undefined` serializado.
+- Request para los demás roles: la misma ruta con `{ "titulo": "PhD.", "contenidoFirma": "data:image/png;base64,..." }`; la selección continúa bloqueada hasta diligenciar el título.
+- El GET no cambió: puede devolver `titulo`; en un perfil `ESTUDIANTE` se conserva internamente para compatibilidad, pero no se muestra ni se reenvía. No se agregaron paquetes, seeds, datasets, variables de entorno ni artefactos persistentes.
+
+## Retos y próximos pasos
+1. Validar con una sesión institucional `ESTUDIANTE` en Network que el JSON del POST contiene exactamente `contenidoFirma` y que backend acepta la ausencia de `titulo`.
+2. Validar con un rol no estudiante que **Título** sigue visible, obligatorio y presente en el POST.
+3. Incorporar pruebas de componente/servicio cuando el repositorio adopte Vitest. No existe actualmente un script `test`.
+
+## Entorno y resultados recientes
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y el `node_modules` existente. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 242 módulos y generaron `dist/assets/index-BeWbqwSs.css` e `index-BEmylqxX.js`. Warning no bloqueante: chunk JS de 504.98 kB supera 500 kB.
+- `npx eslint src/pages/Perfil/PerfilPage.tsx src/modules/perfil/services/firmaPerfilService.ts src/auth/roleGuards.ts` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-03): PASS. No se tomó captura: no hay Chromium, Chrome ni Firefox instalado y la ruta protegida requiere una sesión/backend institucionales.
+
+---
 # Update 2026-09-03 — Cierre de sesión desde el sidebar
 
 ## Estado actual y decisiones

@@ -8,7 +8,7 @@ export interface FirmaPerfil {
 }
 
 export interface GuardarFirmaUsuarioRequest {
-  titulo: string
+  titulo?: string
   contenidoFirma: string
 }
 
@@ -42,11 +42,11 @@ export const obtenerFirmaUsuario = async (usuarioId: number): Promise<FirmaUsuar
 
 export const guardarFirmaUsuario = async (
   usuarioId: number,
-  titulo: string,
+  titulo: string | undefined,
   firma: FirmaPerfil,
 ): Promise<void> => {
   const payload: GuardarFirmaUsuarioRequest = {
-    titulo: titulo.trim(),
+    ...(titulo !== undefined ? { titulo: titulo.trim() } : {}),
     contenidoFirma: `data:${firma.mimeType};base64,${firma.contenidoBase64}`,
   }
 
