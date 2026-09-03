@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { loginFromGateway } from '../../api/authService'
+import { loginFromGateway, logoutFromGateway } from '../../api/authService'
 import { mapGatewayLoginToUserSession } from '../../api/authMappers'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
+import { clearBrowserSession } from '../../modules/auth/session/clearBrowserSession'
 import { AuthContext } from './context'
 import type { AuthContextValue, AuthSession } from './types'
 
@@ -49,40 +50,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     void initializeFromGateway()
   }, [initializeFromGateway])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     clearSession()
     setSessionState(null)
 
-    window.localStorage.clear()
-    window.sessionStorage.clear()
-
-    const cookiePaths = window.location.pathname
-      .split('/')
-      .reduce<string[]>((paths, segment) => {
-        if (!segment) return paths
-        const parent = paths.at(-1) ?? ''
-        return [...paths, `${parent}/${segment}`]
-      }, ['/'])
-    const hostnameParts = window.location.hostname.split('.')
-    const cookieDomains = hostnameParts.flatMap((_, index) => {
-      const domain = hostnameParts.slice(index).join('.')
-      return domain.includes('.') ? [domain, `.${domain}`] : [domain]
-    })
-
-    document.cookie.split(';').forEach((cookie) => {
-      const separatorIndex = cookie.indexOf('=')
-      const name = (separatorIndex >= 0 ? cookie.slice(0, separatorIndex) : cookie).trim()
-      if (!name) return
-
-      cookiePaths.forEach((path) => {
-        document.cookie = `${name}=; Max-Age=0; path=${path}; SameSite=Lax`
-        cookieDomains.forEach((domain) => {
-          document.cookie = `${name}=; Max-Age=0; path=${path}; domain=${domain}; SameSite=Lax`
-        })
-      })
-    })
-
-    window.location.reload()
+    try {
+      await logoutFromGateway()
+    } finally {
+      await clearBrowserSession()
+      window.location.replace('/')
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(
