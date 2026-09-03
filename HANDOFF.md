@@ -2186,12 +2186,12 @@ npm run lint
 - `git diff --check`: PASS. No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox, y la validación de esta ruta requiere backend y sesión institucional.
 
 ---
-# Update 2026-09-03 — Canvas seguro al convertir documentos HTML a PDF (revisión final)
+# Update 2026-09-03 — Canvas seguro al convertir documentos HTML a PDF
 
 ## Estado actual y decisión
 - Se corrigió el `SecurityError: Tainted canvases may not be exported` que aparecía al abrir o descargar documentos persistidos como `text/html`, especialmente cartas con firmas base64 embebidas.
-- El primer intento, que solo retiraba las imágenes del SVG, no resolvió el problema: el navegador reportado sigue considerando inseguro un SVG que contiene `foreignObject`. La implementación final eliminó por completo esa ruta de rasterización.
-- `htmlToPdf` mantiene el saneamiento previo de recursos externos, usa el iframe únicamente para calcular el layout y pinta fondos, bordes, texto e imágenes `data:` directamente en canvases nuevos. Ningún recurso SVG/HTML se dibuja en ellos, por lo que permanecen exportables; las firmas siguen presentes y se recortan correctamente si cruzan una página.
+- `htmlToPdf` mantiene el saneamiento previo de recursos externos. Además, antes de construir el SVG `foreignObject`, obtiene la geometría de cada imagen `data:`, sustituye su copia serializada por un placeholder del mismo tamaño y carga la imagen como recurso local independiente.
+- Durante el paginado, cada imagen se compone directamente sobre el canvas dentro del área imprimible. El SVG nunca contiene el recurso que contaminaba el canvas y `canvas.toDataURL` puede exportar el JPEG; las firmas siguen presentes y se recortan correctamente si cruzan una página.
 - No cambió el contrato HTTP, el HTML almacenado ni el MIME fuente. No se agregaron dependencias, variables, seeds o datasets.
 
 ## Paths, contrato y salida esperada
@@ -2201,7 +2201,7 @@ npm run lint
 - Salida esperada: Blob `application/pdf`, nombre de descarga `.pdf`, páginas Letter blancas con el contenido y sus firmas. Recursos HTTP/HTTPS continúan eliminándose deliberadamente para impedir peticiones y contaminación de origen.
 
 ## Retos y próximos pasos
-1. Validar en el navegador institucional los documentos existentes, incluido `idDocumento: 1126`, mediante **Ver** y **Descargar**, comprobando visualmente ambas firmas, tipografías y saltos de página.
+1. Validar en el navegador institucional los documentos existentes, incluido `idDocumento: 1126`, mediante **Ver** y **Descargar**, comprobando visualmente ambas firmas.
 2. Agregar una prueba de navegador cuando el proyecto incorpore Vitest/browser runner; jsdom por sí solo no implementa rasterización real de canvas/SVG.
 3. Si el backend comienza a entregar fuentes o imágenes externas, convertirlas allí a `data:` confiable; no relajar el saneamiento CORS en el frontend.
 
@@ -2209,6 +2209,5 @@ npm run lint
 - Raíz única `/workspace/SAPP-frontend`; reutilizar npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
 - Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0.
 - `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-03): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
-- `npm run build` (2026-09-03, revisión final): PASS; TypeScript y Vite transformaron 245 módulos y generaron `dist/assets/index-DK1rwj5C.js` (509.91 kB). El tamaño supera el umbral informativo habitual, sin bloquear el build.
+- `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 245 módulos y generaron `dist/assets/index-DTG9rVIh.js` (509.09 kB). El tamaño supera el umbral informativo habitual, sin bloquear el build.
 - `git diff --check` (2026-09-03): PASS. No se tomó captura porque el cambio no altera la interfaz visual y el escenario requiere navegador, sesión y backend institucionales.
-- No existe una referencia a `startTime` en `src`; el segundo error `et.reportAllChanges (<anonymous>)` no nace del bundle de SAPP y es compatible con instrumentación/extensión inyectada. Debe verificarse en una ventana sin extensiones, pero es independiente del fallo de exportación corregido aquí.
