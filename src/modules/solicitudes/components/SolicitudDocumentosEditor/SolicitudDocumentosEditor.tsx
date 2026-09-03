@@ -4,7 +4,7 @@ import type { DocumentChecklistItemDto } from '../../../../api/documentChecklist
 import { uploadDocument } from '../../../../api/documentUploadService'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
-import { downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
+import { downloadSolicitudDocument, openSolicitudDocument } from '../../utils/solicitudDocumentFile'
 import './SolicitudDocumentosEditor.css'
 
 const ENFORCE_REQUIRED_DOCS = false
@@ -167,7 +167,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                           type="button"
                           aria-label={`Ver ${current.nombreArchivoDocumento}`}
                           onClick={() =>
-                            openBase64InNewTab(
+                            void openSolicitudDocument(
                               current.base64DocumentoContenido,
                               current.mimeTypeDocumentoContenido,
                               current.nombreArchivoDocumento,
@@ -180,7 +180,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                           type="button"
                           aria-label={`Descargar ${current.nombreArchivoDocumento}`}
                           onClick={() =>
-                            downloadBase64File(
+                            void downloadSolicitudDocument(
                               current.base64DocumentoContenido,
                               current.mimeTypeDocumentoContenido,
                               current.nombreArchivoDocumento,

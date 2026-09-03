@@ -1,5 +1,9 @@
-import { downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import type { SolicitudDocumentoAdjuntoDto } from '../../types/documentosAdjuntos'
+import {
+  canPreviewSolicitudDocument,
+  downloadSolicitudDocument,
+  openSolicitudDocument,
+} from '../../utils/solicitudDocumentFile'
 import './DocumentosAdjuntos.css'
 
 interface DocumentosAdjuntosProps {
@@ -9,15 +13,13 @@ interface DocumentosAdjuntosProps {
   onRetry?: () => void
 }
 
-const PDF_MIME_TYPE = 'application/pdf'
-
 const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: DocumentosAdjuntosProps) => {
   const handleOpen = (documento: SolicitudDocumentoAdjuntoDto) => {
-    openBase64InNewTab(documento.base64Contenido, documento.mimeType, documento.nombreArchivo)
+    void openSolicitudDocument(documento.base64Contenido, documento.mimeType, documento.nombreArchivo)
   }
 
   const handleDownload = (documento: SolicitudDocumentoAdjuntoDto) => {
-    downloadBase64File(documento.base64Contenido, documento.mimeType, documento.nombreArchivo)
+    void downloadSolicitudDocument(documento.base64Contenido, documento.mimeType, documento.nombreArchivo)
   }
 
   return (
@@ -51,7 +53,7 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
             <tbody>
               {documentos.map((documento) => {
                 const hasFileData = Boolean(documento.base64Contenido && documento.mimeType)
-                const canOpen = hasFileData && documento.mimeType.toLowerCase() === PDF_MIME_TYPE
+                const canOpen = hasFileData && canPreviewSolicitudDocument(documento.mimeType)
 
                 return (
                   <tr key={documento.idDocumento}>
@@ -68,7 +70,7 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
                           onClick={() => handleOpen(documento)}
                           disabled={!canOpen}
                           aria-label={`Ver ${documento.nombreArchivo}`}
-                          title={canOpen ? 'Abrir documento en una pestaña nueva' : 'Disponible solo para PDF'}
+                          title={canOpen ? 'Abrir documento como PDF en una pestaña nueva' : 'Vista previa no disponible'}
                         >
                           Ver
                         </button>

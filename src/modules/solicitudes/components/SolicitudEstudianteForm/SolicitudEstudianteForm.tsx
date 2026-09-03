@@ -108,6 +108,7 @@ const isHomologacionTipo = (tipo: TipoSolicitudDto | null): boolean => {
 interface PreviewDocumento extends PreviewSolicitudCreditoResponseDto {
   pdfBlob: Blob
   pdfUrl: string
+  sourceBlob: Blob
 }
 
 const getPreviewDocumentLabel = (documento: PreviewDocumento, index: number): string =>
@@ -446,7 +447,7 @@ const SolicitudEstudianteForm = ({
           const pdfBlob = documento.mimeTypeDocumentoContenido.toLowerCase().includes('html')
             ? await htmlToPdf(await sourceBlob.text())
             : sourceBlob
-          return { ...documento, pdfBlob, pdfUrl: URL.createObjectURL(pdfBlob) }
+          return { ...documento, sourceBlob, pdfBlob, pdfUrl: URL.createObjectURL(pdfBlob) }
         }),
       )
       setPreviewDocumentos(previews)
@@ -482,9 +483,15 @@ const SolicitudEstudianteForm = ({
         return match
           ? {
               ...requirement,
-              file: new File([match.documento.pdfBlob], getPreviewFileName(match.documento, match.index), {
-                type: 'application/pdf',
-              }),
+              file: new File(
+                [match.documento.sourceBlob],
+                match.documento.mimeTypeDocumentoContenido.toLowerCase().includes('html')
+                  ? getPreviewFileName(match.documento, match.index).replace(/\.pdf$/i, '.html')
+                  : getPreviewFileName(match.documento, match.index),
+                {
+                  type: match.documento.mimeTypeDocumentoContenido,
+                },
+              ),
               error: null,
             }
           : requirement
