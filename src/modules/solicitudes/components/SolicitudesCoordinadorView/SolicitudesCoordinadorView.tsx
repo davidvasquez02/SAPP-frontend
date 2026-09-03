@@ -141,11 +141,11 @@ const SolicitudesCoordinadorView = ({
 
   return (
     <section className="solicitudes-coordinador-view">
-      {readOnly ? (
+      {/* {readOnly ? (
         <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">
           Vista de solo lectura.
         </p>
-      ) : null}
+      ) : null} */}
       <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
         <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
         {assignedLoading ? (
@@ -167,59 +167,59 @@ const SolicitudesCoordinadorView = ({
         )}
       </section>
       {!assignedOnly ? (
-      <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
-      <h3 id="solicitudes-title">Solicitudes</h3>
-      <SolicitudesFiltersBar
-        estadoId={estadoId}
-        tipoSolicitudId={tipoSolicitudId}
-        estadosCatalog={estadosCatalog}
-        tiposSolicitud={tiposSolicitud}
-        disabled={loading || assignedLoading}
-        onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
-          setLoading(true)
-          setError(null)
-          setEstadoId(nextEstadoId)
-          setTipoSolicitudId(nextTipoSolicitudId)
-        }}
-      />
-      {tiposError ? (
-        <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">{tiposError}</p>
-      ) : null}
-      {loading || assignedLoading ? (
-        <p className="solicitudes-coordinador-view__status">Cargando solicitudes...</p>
-      ) : error ? (
-        <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">{error}</p>
-      ) : availableRows.length === 0 ? (
-        <p className="solicitudes-coordinador-view__status">No hay resultados con los filtros seleccionados.</p>
-      ) : (
-        <>
-          <SolicitudesTable
-            mode="COORDINADOR"
-            rows={paginatedRows}
-            onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+        <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
+          <h3 id="solicitudes-title">Solicitudes</h3>
+          <SolicitudesFiltersBar
+            estadoId={estadoId}
+            tipoSolicitudId={tipoSolicitudId}
+            estadosCatalog={estadosCatalog}
+            tiposSolicitud={tiposSolicitud}
+            disabled={loading || assignedLoading}
+            onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
+              setLoading(true)
+              setError(null)
+              setEstadoId(nextEstadoId)
+              setTipoSolicitudId(nextTipoSolicitudId)
+            }}
           />
-          <footer className="solicitudes-coordinador-view__pagination" aria-label="Paginación de solicitudes">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={safeCurrentPage <= 1}
-            >
-              Anterior
-            </button>
-            <span>
-              Página {safeCurrentPage} de {totalPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={safeCurrentPage >= totalPages}
-            >
-              Siguiente
-            </button>
-          </footer>
-        </>
-      )}
-      </section>
+          {tiposError ? (
+            <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">{tiposError}</p>
+          ) : null}
+          {loading || assignedLoading ? (
+            <p className="solicitudes-coordinador-view__status">Cargando solicitudes...</p>
+          ) : error ? (
+            <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">{error}</p>
+          ) : availableRows.length === 0 ? (
+            <p className="solicitudes-coordinador-view__status">No hay resultados con los filtros seleccionados.</p>
+          ) : (
+            <>
+              <SolicitudesTable
+                mode="COORDINADOR"
+                rows={paginatedRows}
+                onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+              />
+              <footer className="solicitudes-coordinador-view__pagination" aria-label="Paginación de solicitudes">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={safeCurrentPage <= 1}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {safeCurrentPage} de {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                >
+                  Siguiente
+                </button>
+              </footer>
+            </>
+          )}
+        </section>
       ) : null}
     </section>
   )
