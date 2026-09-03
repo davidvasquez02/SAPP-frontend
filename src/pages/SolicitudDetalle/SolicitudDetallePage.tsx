@@ -266,7 +266,7 @@ const SolicitudDetallePage = () => {
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
   const isSameTargetAsCurrentEstado = currentEstado !== 'UNKNOWN' && estadoTarget === currentEstado
   const canSignAllDocuments =
-    fromAssigned && (solicitud?.estadoSigla || solicitud?.estado || '').toLocaleUpperCase().includes('POR FIRMAR')
+    fromAssigned && (solicitud?.estadoSigla || solicitud?.estado || '').toLocaleUpperCase().includes('POR FIRMA')
 
   const handleFirmarDocumentos = async () => {
     if (!solicitud) {
