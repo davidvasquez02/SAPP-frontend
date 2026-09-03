@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react'
 import type { EstudianteCoordinacion } from '../../types'
+import { formatDocumentoIdentidad } from '../../utils/formatDocumentoIdentidad'
 import './EstudianteCard.css'
 
 interface EstudianteCardProps {
@@ -73,7 +74,10 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
         </p>
         <p className="estudiante-card__meta">
           <span className="estudiante-card__meta-icon" aria-hidden="true">▤</span>
-          <span><strong>Documento:</strong> {estudiante.tipoDocumento} {estudiante.numeroDocumento}</span>
+          <span>
+            <strong>Documento:</strong>{' '}
+            {formatDocumentoIdentidad(estudiante.tipoDocumento, estudiante.numeroDocumento)}
+          </span>
         </p>
         <p className="estudiante-card__meta estudiante-card__meta--break">
           <span className="estudiante-card__meta-icon" aria-hidden="true">✉</span>

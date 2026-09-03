@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** el listado y el detalle de estudiantes omiten los marcadores técnicos `N/A`/`NA` al presentar el documento de identidad. El formato se centralizó para mostrar únicamente las partes disponibles (por ejemplo, `1005324324` cuando no existe tipo documental) y `—` solo cuando tampoco existe número.
 - **2026-09-03:** el encabezado del detalle de solicitudes presenta en una sola línea `Solicitud {id} — {tipoSolicitud}` para todos los roles autorizados; se retiraron el símbolo `#`, el código técnico y la repetición del nombre descriptivo.
 - **2026-09-03:** el perfil consulta la firma vigente mediante `GET /api/sapp/firmaUsuario/{usuarioSappId}`, muestra su imagen y título, y permite reemplazarla. El POST ahora usa el contrato `{ titulo, contenidoFirma }`; el título es obligatorio en la interfaz antes de seleccionar una imagen.
 - **2026-09-03:** el listado y detalle de estudiantes de coordinación resuelven el tipo de documento desde los campos superiores `tipoDocumento` o `tipoDocumentoIdentificacion` del contrato real, conservando `persona.tipoDocumento` como fallback; así se evita mostrar `N/A` junto a un número válido. En el detalle se eliminó la cohorte duplicada sobre el correo institucional y se conserva únicamente **Cohorte de ingreso** en los datos académicos.

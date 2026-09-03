@@ -1904,3 +1904,27 @@ npm run lint
 - `git diff --check`: PASS. Screenshot pendiente: este contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida necesita sesión/backend institucional.
 
 ---
+# Update 2026-09-03 — Presentación del documento de identidad de estudiantes
+
+## Estado actual y decisión
+- Se corrigieron las tarjetas de `/coordinacion/estudiantes` y el encabezado de `/coordinacion/estudiantes/:estudianteId`: los valores sentinela `N/A` y `NA`, sin importar mayúsculas/minúsculas ni espacios, ya no se presentan como si fueran un tipo o número de documento real.
+- `src/modules/estudiantes/utils/formatDocumentoIdentidad.ts` centraliza el contrato de presentación. Une tipo y número cuando ambos son válidos, muestra solo la parte disponible y devuelve `—` cuando no hay ningún dato utilizable.
+- No cambió el contrato HTTP ni el mapper: el frontend sigue tolerando los fallbacks existentes y limpia los marcadores únicamente en la capa de presentación. No se agregaron dependencias, seeds ni datasets.
+
+## Contrato y salida esperada
+- Entradas `(tipoDocumento: "N/A", numeroDocumento: "1005324324")` o `(tipoDocumento: null, numeroDocumento: "1005324324")` producen `1005324324` tanto en listado como en detalle.
+- Una entrada válida `(tipoDocumento: "CC", numeroDocumento: "1005324324")` produce `CC 1005324324`; si ambas partes son vacías o marcadores `N/A`/`NA`, produce `—`.
+- Paths: `src/modules/estudiantes/utils/formatDocumentoIdentidad.ts`, `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+
+## Retos y próximos pasos
+1. Validar listado y detalle con una sesión institucional y el registro reportado; la ruta protegida y sus datos dependen del backend/gateway.
+2. Agregar pruebas unitarias del formateador cuando el proyecto incorpore Vitest; actualmente no existe un script de tests.
+
+## Entorno
+- Raíz única `/workspace/SAPP-frontend`; usar npm y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npx eslint src/modules/estudiantes/utils/formatDocumentoIdentidad.ts src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-03): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y rolldown-vite transformaron 242 módulos y generaron `dist/assets/index-DsX57pki.css` e `index-CQp7aA7v.js` en 724 ms. Vite advirtió de forma no bloqueante que el chunk JS supera 500 kB.
+- `git diff --check` (2026-09-03): PASS. La validación visual requiere navegador, sesión y backend institucionales.
+
+---

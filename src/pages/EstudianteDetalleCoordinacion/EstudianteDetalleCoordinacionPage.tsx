@@ -16,6 +16,7 @@ import {
 import { getEstudianteById } from '../../modules/estudiantes/services/estudiantesMockService'
 import { clearEstudiantesListCache } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
+import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
 
 const EMPTY_VALUE = '—'
@@ -470,9 +471,7 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
         </div>
         <div>
           <dt>Documento</dt>
-          <dd>
-            {estudiante.tipoDocumento || EMPTY_VALUE} {estudiante.numeroDocumento || ''}
-          </dd>
+          <dd>{formatDocumentoIdentidad(estudiante.tipoDocumento, estudiante.numeroDocumento, EMPTY_VALUE)}</dd>
         </div>
       </dl>
     </article>
