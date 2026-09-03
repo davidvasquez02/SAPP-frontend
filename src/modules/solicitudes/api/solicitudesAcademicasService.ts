@@ -10,6 +10,7 @@ import type {
 
 const ENDPOINT_BY_ESTUDIANTE = '/sapp/solicitudesAcademicas/estudiante'
 const ENDPOINT_SOLICITUDES = '/sapp/solicitudesAcademicas'
+const ENDPOINT_SOLICITUDES_ASIGNADAS = `${ENDPOINT_SOLICITUDES}/asignadas`
 
 export type SolicitudesFilter = {
   estadoId?: number
@@ -18,6 +19,18 @@ export type SolicitudesFilter = {
 
 export async function getSolicitudesAcademicas(): Promise<SolicitudAcademicaDto[]> {
   return getSolicitudesAcademicasFiltered({})
+}
+
+export async function getSolicitudesAcademicasAsignadas(idUsuario: number): Promise<SolicitudAcademicaDto[]> {
+  const response = await httpGet<ApiResponse<SolicitudAcademicaDto[]>>(
+    `${ENDPOINT_SOLICITUDES_ASIGNADAS}?idUsuario=${encodeURIComponent(idUsuario)}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar las solicitudes asignadas.')
+  }
+
+  return response.data ?? []
 }
 
 export async function getSolicitudesAcademicasFiltered(filters: SolicitudesFilter): Promise<SolicitudAcademicaDto[]> {

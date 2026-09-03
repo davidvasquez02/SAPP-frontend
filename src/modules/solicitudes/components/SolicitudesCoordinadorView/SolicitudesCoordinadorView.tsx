@@ -4,7 +4,10 @@ import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../../types'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
 import { DEFAULT_ESTADOS_SOLICITUD_CATALOG, type EstadoSolicitudCatalogItem } from '../../utils/estadoSolicitud'
-import { getSolicitudesAcademicasFiltered } from '../../api/solicitudesAcademicasService'
+import {
+  getSolicitudesAcademicasAsignadas,
+  getSolicitudesAcademicasFiltered,
+} from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
 import './SolicitudesCoordinadorView.css'
@@ -12,6 +15,7 @@ import './SolicitudesCoordinadorView.css'
 const PAGE_SIZE = 10
 
 interface SolicitudesCoordinadorViewProps {
+  usuarioSappId: number
   readOnly?: boolean
 }
 
@@ -24,7 +28,12 @@ const parseDateToEpoch = (value: string | null) => {
   return Number.isNaN(epoch) ? 0 : epoch
 }
 
-const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinadorViewProps) => {
+const sortByMostRecent = (solicitudes: SolicitudCoordinadorDto[]) =>
+  [...solicitudes].sort(
+    (left, right) => parseDateToEpoch(right.fechaRegistro) - parseDateToEpoch(left.fechaRegistro),
+  )
+
+const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [estadoId, setEstadoId] = useState<number | null>(null)
@@ -32,6 +41,9 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [estadosCatalog, setEstadosCatalog] = useState<EstadoSolicitudCatalogItem[]>(DEFAULT_ESTADOS_SOLICITUD_CATALOG)
   const [rows, setRows] = useState<SolicitudCoordinadorDto[]>([])
+  const [assignedRows, setAssignedRows] = useState<SolicitudCoordinadorDto[]>([])
+  const [assignedLoading, setAssignedLoading] = useState(true)
+  const [assignedError, setAssignedError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tiposError, setTiposError] = useState<string | null>(null)
@@ -69,6 +81,34 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
   useEffect(() => {
     let mounted = true
 
+    getSolicitudesAcademicasAsignadas(usuarioSappId)
+      .then((solicitudes) => {
+        if (mounted) {
+          setAssignedError(null)
+          setAssignedRows(sortByMostRecent(solicitudes))
+        }
+      })
+      .catch((fetchError) => {
+        if (mounted) {
+          setAssignedError(
+            fetchError instanceof Error ? fetchError.message : 'No fue posible cargar las solicitudes asignadas.',
+          )
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setAssignedLoading(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [usuarioSappId, location.key, location.state])
+
+  useEffect(() => {
+    let mounted = true
+
     setLoading(true)
     setError(null)
 
@@ -80,10 +120,7 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
         if (!mounted) {
           return
         }
-        const sortedRows = [...solicitudes].sort(
-          (left, right) => parseDateToEpoch(right.fechaRegistro) - parseDateToEpoch(left.fechaRegistro),
-        )
-        setRows(sortedRows)
+        setRows(sortByMostRecent(solicitudes))
         setCurrentPage(1)
       })
       .catch((fetchError) => {
@@ -103,25 +140,47 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
     }
   }, [estadoId, tipoSolicitudId, location.key, location.state])
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
+  const availableRows = rows.filter((solicitud) => !assignedIds.has(solicitud.id))
+
+  const totalPages = Math.max(1, Math.ceil(availableRows.length / PAGE_SIZE))
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const startIndex = (safeCurrentPage - 1) * PAGE_SIZE
-  const paginatedRows = rows.slice(startIndex, startIndex + PAGE_SIZE)
+  const paginatedRows = availableRows.slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
     <section className="solicitudes-coordinador-view">
-      <h3>Solicitudes</h3>
       {readOnly ? (
         <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">
           Vista de solo lectura.
         </p>
       ) : null}
+      <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
+        <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
+        {assignedLoading ? (
+          <p className="solicitudes-coordinador-view__status">Cargando solicitudes asignadas...</p>
+        ) : assignedError ? (
+          <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">
+            {assignedError}
+          </p>
+        ) : assignedRows.length === 0 ? (
+          <p className="solicitudes-coordinador-view__status">No tienes solicitudes asignadas.</p>
+        ) : (
+          <SolicitudesTable
+            mode="COORDINADOR"
+            rows={assignedRows}
+            onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+          />
+        )}
+      </section>
+      <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
+      <h3 id="solicitudes-title">Solicitudes</h3>
       <SolicitudesFiltersBar
         estadoId={estadoId}
         tipoSolicitudId={tipoSolicitudId}
         estadosCatalog={estadosCatalog}
         tiposSolicitud={tiposSolicitud}
-        disabled={loading}
+        disabled={loading || assignedLoading}
         onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
           setEstadoId(nextEstadoId)
           setTipoSolicitudId(nextTipoSolicitudId)
@@ -130,11 +189,11 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
       {tiposError ? (
         <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--warning">{tiposError}</p>
       ) : null}
-      {loading ? (
+      {loading || assignedLoading ? (
         <p className="solicitudes-coordinador-view__status">Cargando solicitudes...</p>
       ) : error ? (
         <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">{error}</p>
-      ) : rows.length === 0 ? (
+      ) : availableRows.length === 0 ? (
         <p className="solicitudes-coordinador-view__status">No hay resultados con los filtros seleccionados.</p>
       ) : (
         <>
@@ -164,6 +223,7 @@ const SolicitudesCoordinadorView = ({ readOnly = false }: SolicitudesCoordinador
           </footer>
         </>
       )}
+      </section>
     </section>
   )
 }
