@@ -304,9 +304,8 @@ const SolicitudDetallePage = () => {
           <>
             <header className="solicitud-detalle-page__header">
               <h2>
-                Solicitud #{solicitud.id} — {solicitud.tipoSolicitudCodigo}
+                Solicitud {solicitud.id} — {solicitud.tipoSolicitud}
               </h2>
-              <p>{solicitud.tipoSolicitud}</p>
             </header>
 
             <dl className="solicitud-detalle-page__grid">
