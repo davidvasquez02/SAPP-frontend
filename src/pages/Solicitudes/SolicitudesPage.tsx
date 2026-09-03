@@ -15,6 +15,7 @@ const SolicitudesPage = () => {
   const isDirector = hasAnyRole(roles, ['DIRECTOR'])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const canUseCoordinadorList = isCoord || isProfesorRole || isDirector
+  const isProfesorOnly = hasAnyRole(roles, ['PROFESOR']) && !isCoord && !isDirector
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
 
 
@@ -32,7 +33,11 @@ const SolicitudesPage = () => {
         usuarioSappId === null ? (
           <p className="solicitudes-page__status">No fue posible identificar el usuario.</p>
         ) : (
-          <SolicitudesCoordinadorView usuarioSappId={usuarioSappId} readOnly={!isCoord} />
+          <SolicitudesCoordinadorView
+            usuarioSappId={usuarioSappId}
+            readOnly={!isCoord}
+            assignedOnly={isProfesorOnly}
+          />
         )
       ) : (
         <p className="solicitudes-page__status">No tienes permisos.</p>

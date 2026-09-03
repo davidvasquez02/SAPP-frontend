@@ -1,3 +1,32 @@
+# Update 2026-09-03 — Orden determinista y visibilidad para PROFESOR en Solicitudes
+
+## Estado actual y decisiones
+- Los listados de solicitudes de estudiante, solicitudes asignadas y solicitudes generales usan un comparador compartido: primero `fechaRegistro` descendente y, si las fechas coinciden (o ambas son inválidas), `id` descendente.
+- En `/solicitudes`, una sesión con el rol exacto `PROFESOR`, sin `COORDINADOR`, `ADMIN` ni `DIRECTOR`, recibe `assignedOnly`; la vista carga y muestra únicamente `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarioSappId}`. El bloque general, sus filtros, paginación y su request a `GET /sapp/solicitudesAcademicas` quedan ocultos.
+- La restricción no se extiende al alias `DOCENTE` ni a los roles elevados. Esto implementa literalmente “solo para el rol PROFESOR” y evita retirar capacidades a una sesión que además tenga coordinación, administración o dirección.
+
+## Paths, contratos y salida esperada
+- Comparador: `src/modules/solicitudes/utils/ordenSolicitudes.ts`.
+- Listados: `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx` y `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`.
+- Decisión por roles: `src/pages/Solicitudes/SolicitudesPage.tsx`; roles de entrada en `session.user.roles`, identificador del request asignado en `session.user.id`.
+- Ejemplo de salida: con solicitudes `(fechaRegistro: 2026-09-03, id: 41)`, `(2026-09-03, id: 52)` y `(2026-09-02, id: 90)`, el orden es `52, 41, 90`.
+- No cambiaron schemas ni endpoints HTTP, y no se agregaron paquetes, variables de entorno, seeds, datasets o artefactos persistentes.
+
+## Retos y próximos pasos
+1. Validar con una sesión institucional exclusivamente `PROFESOR` que Network no registre el request al listado general y que solo aparezcan las solicitudes devueltas por `/asignadas`.
+2. Confirmar con producto si `DOCENTE` debe considerarse equivalente a `PROFESOR` para esta restricción; actualmente se excluye deliberadamente por el requisito literal.
+3. Agregar pruebas unitarias del comparador y una prueba de render por roles cuando se incorpore Vitest/React Testing Library; el repositorio aún no tiene script `test`.
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npx eslint src/modules/solicitudes/utils/ordenSolicitudes.ts src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx src/pages/Solicitudes/SolicitudesPage.tsx` (2026-09-03): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; 245 módulos transformados y bundle `dist/assets/index-rXNY63gu.js` generado. Persiste el warning no bloqueante del chunk JavaScript de 508.21 kB.
+- `git diff --check` (2026-09-03): PASS.
+- No se tomó captura: no cambió la presentación visual, y la verificación de visibilidad necesita una sesión institucional/backend.
+
+---
+
 # Update 2026-09-03 — Refresco de solicitud y documentos después de firmar
 
 ## Estado actual y decisión
