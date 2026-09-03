@@ -36,6 +36,14 @@ const loadSvgImage = (svg: string): Promise<HTMLImageElement> =>
     image.src = blobUrl
   })
 
+const loadDataImage = (source: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('No fue posible renderizar una imagen incluida en el documento.'))
+    image.src = source
+  })
+
 const dataUrlToBytes = (dataUrl: string): Uint8Array => {
   const encoded = dataUrl.slice(dataUrl.indexOf(',') + 1)
   const binary = atob(encoded)
@@ -181,7 +189,38 @@ export async function htmlToPdf(html: string): Promise<Blob> {
     )
 
     const height = Math.max(frameDocument.documentElement.scrollHeight, frameDocument.body.scrollHeight, LETTER_HEIGHT_PX)
-    const serialized = new XMLSerializer().serializeToString(frameDocument.documentElement)
+    // Chromium may mark a canvas as tainted when a data image is nested inside an SVG
+    // foreignObject, even though the original resource is local. Render those images
+    // independently and leave dimension-preserving placeholders in the SVG.
+    const embeddedImages = await Promise.all(
+      Array.from(frameDocument.images).flatMap((image) => {
+        const source = image.getAttribute('src') ?? ''
+        if (!SAFE_DATA_IMAGE_PATTERN.test(source)) {
+          return []
+        }
+        const rect = image.getBoundingClientRect()
+        return [(async () => ({
+          image: await loadDataImage(source),
+          left: rect.left + frameDocument.documentElement.scrollLeft,
+          top: rect.top + frameDocument.documentElement.scrollTop,
+          width: rect.width,
+          height: rect.height,
+        }))()]
+      }),
+    )
+    const documentClone = frameDocument.documentElement.cloneNode(true) as HTMLElement
+    Array.from(documentClone.querySelectorAll('img')).forEach((image, index) => {
+      const original = frameDocument.images[index]
+      const rect = original?.getBoundingClientRect()
+      image.removeAttribute('src')
+      image.removeAttribute('srcset')
+      image.setAttribute('alt', '')
+      if (rect) {
+        image.style.width = `${rect.width}px`
+        image.style.height = `${rect.height}px`
+      }
+    })
+    const serialized = new XMLSerializer().serializeToString(documentClone)
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LETTER_WIDTH_PX}" height="${height}"><foreignObject width="100%" height="100%">${serialized}</foreignObject></svg>`
     const rendered = await loadSvgImage(svg)
     const pageCount = Math.ceil(height / PAGE_CONTENT_HEIGHT_PX)
@@ -210,6 +249,23 @@ export async function htmlToPdf(html: string): Promise<Blob> {
         LETTER_WIDTH_PX,
         sourceHeight,
       )
+      context.save()
+      context.beginPath()
+      context.rect(0, VERTICAL_PAGE_MARGIN_PX, LETTER_WIDTH_PX, PAGE_CONTENT_HEIGHT_PX)
+      context.clip()
+      for (const embedded of embeddedImages) {
+        if (embedded.top + embedded.height <= sourceY || embedded.top >= sourceY + sourceHeight) {
+          continue
+        }
+        context.drawImage(
+          embedded.image,
+          embedded.left,
+          embedded.top - sourceY + VERTICAL_PAGE_MARGIN_PX,
+          embedded.width,
+          embedded.height,
+        )
+      }
+      context.restore()
       pages.push(dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.95)))
     }
 
