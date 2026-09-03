@@ -21,20 +21,126 @@ const waitForFrame = (frame: HTMLIFrameElement): Promise<void> =>
     frame.onerror = () => reject(new Error('No fue posible interpretar el documento HTML.'))
   })
 
-const loadSvgImage = (svg: string): Promise<HTMLImageElement> =>
+const loadDataImage = (source: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
-    const blobUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
     const image = new Image()
-    image.onload = () => {
-      URL.revokeObjectURL(blobUrl)
-      resolve(image)
-    }
-    image.onerror = () => {
-      URL.revokeObjectURL(blobUrl)
-      reject(new Error('No fue posible renderizar el documento HTML.'))
-    }
-    image.src = blobUrl
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('No fue posible renderizar una imagen incluida en el documento.'))
+    image.src = source
   })
+
+interface PaintableImage {
+  image: HTMLImageElement
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+interface TextRun {
+  text: string
+  left: number
+  top: number
+  style: CSSStyleDeclaration
+}
+
+const isVisibleColor = (color: string): boolean =>
+  color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)' && color !== 'rgba(0,0,0,0)'
+
+const collectTextRuns = (document: Document): TextRun[] => {
+  const runs: TextRun[] = []
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text
+    const parent = node.parentElement
+    if (!parent || !node.data.trim() || getComputedStyle(parent).visibility === 'hidden') {
+      continue
+    }
+    const style = getComputedStyle(parent)
+    let current: TextRun | null = null
+    Array.from(node.data).forEach((character, index) => {
+      const range = document.createRange()
+      range.setStart(node, index)
+      range.setEnd(node, index + 1)
+      const rect = range.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) {
+        return
+      }
+      const transformed = style.textTransform === 'uppercase'
+        ? character.toUpperCase()
+        : style.textTransform === 'lowercase'
+          ? character.toLowerCase()
+          : character
+      if (current && Math.abs(current.top - rect.top) < 0.5) {
+        current.text += transformed
+      } else {
+        current = { text: transformed, left: rect.left, top: rect.top, style }
+        runs.push(current)
+      }
+    })
+  }
+
+  return runs
+}
+
+const paintDocumentPage = (
+  context: CanvasRenderingContext2D,
+  document: Document,
+  images: PaintableImage[],
+  textRuns: TextRun[],
+  sourceY: number,
+  sourceHeight: number,
+): void => {
+  context.save()
+  context.beginPath()
+  context.rect(0, VERTICAL_PAGE_MARGIN_PX, LETTER_WIDTH_PX, PAGE_CONTENT_HEIGHT_PX)
+  context.clip()
+  context.translate(0, VERTICAL_PAGE_MARGIN_PX - sourceY)
+
+  Array.from(document.body.querySelectorAll<HTMLElement>('*')).forEach((element) => {
+    if (element.tagName === 'IMG') return
+    const rect = element.getBoundingClientRect()
+    if (rect.bottom <= sourceY || rect.top >= sourceY + sourceHeight) return
+    const style = getComputedStyle(element)
+    if (style.visibility === 'hidden' || style.display === 'none') return
+    if (isVisibleColor(style.backgroundColor)) {
+      context.fillStyle = style.backgroundColor
+      context.fillRect(rect.left, rect.top, rect.width, rect.height)
+    }
+    const borders = [
+      [style.borderTopWidth, style.borderTopColor, rect.left, rect.top, rect.width, 0],
+      [style.borderRightWidth, style.borderRightColor, rect.right, rect.top, 0, rect.height],
+      [style.borderBottomWidth, style.borderBottomColor, rect.left, rect.bottom, rect.width, 0],
+      [style.borderLeftWidth, style.borderLeftColor, rect.left, rect.top, 0, rect.height],
+    ] as const
+    borders.forEach(([width, color, x1, y1, xLength, yLength]) => {
+      const numericWidth = Number.parseFloat(width)
+      if (numericWidth > 0 && isVisibleColor(color)) {
+        context.beginPath()
+        context.strokeStyle = color
+        context.lineWidth = numericWidth
+        context.moveTo(x1, y1)
+        context.lineTo(x1 + xLength, y1 + yLength)
+        context.stroke()
+      }
+    })
+  })
+
+  images.forEach((embedded) => {
+    if (embedded.top + embedded.height > sourceY && embedded.top < sourceY + sourceHeight) {
+      context.drawImage(embedded.image, embedded.left, embedded.top, embedded.width, embedded.height)
+    }
+  })
+  textRuns.forEach((run) => {
+    if (run.top < sourceY || run.top >= sourceY + sourceHeight) return
+    context.fillStyle = run.style.color
+    context.font = run.style.font
+    context.textBaseline = 'top'
+    context.fillText(run.text, run.left, run.top)
+  })
+  context.restore()
+}
 
 const loadDataImage = (source: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
