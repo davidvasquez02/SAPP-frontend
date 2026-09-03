@@ -1,4 +1,5 @@
-import { httpPost } from '../../../shared/http/httpClient'
+import { httpGet, httpPost } from '../../../shared/http/httpClient'
+import type { ApiResponse } from '../../../api/types'
 
 export interface FirmaPerfil {
   nombreArchivo: string
@@ -7,20 +8,45 @@ export interface FirmaPerfil {
 }
 
 export interface GuardarFirmaUsuarioRequest {
+  titulo: string
   contenidoFirma: string
 }
 
-/**
- * Persiste la firma del UsuarioSapp autenticado.
- *
- * Pendiente de backend: incorporar el servicio de consulta de firma para poder
- * precargar aquí la firma vigente cuando se abra el selector del perfil.
- */
+interface FirmaUsuarioDto {
+  titulo: string
+  contenidoFirma: string
+}
+
+export interface FirmaUsuario {
+  titulo: string
+  contenidoFirma: string
+}
+
+export const obtenerFirmaUsuario = async (usuarioId: number): Promise<FirmaUsuario | null> => {
+  const response = await httpGet<ApiResponse<FirmaUsuarioDto | null> | FirmaUsuarioDto>(
+    `/sapp/firmaUsuario/${usuarioId}`,
+  )
+  const firma = 'data' in response ? response.data : response
+
+  if ('ok' in response && !response.ok) {
+    throw new Error(response.message || 'No fue posible consultar la firma.')
+  }
+
+  if (!firma?.contenidoFirma) return null
+
+  return {
+    titulo: firma.titulo ?? '',
+    contenidoFirma: firma.contenidoFirma,
+  }
+}
+
 export const guardarFirmaUsuario = async (
   usuarioId: number,
+  titulo: string,
   firma: FirmaPerfil,
 ): Promise<void> => {
   const payload: GuardarFirmaUsuarioRequest = {
+    titulo: titulo.trim(),
     contenidoFirma: `data:${firma.mimeType};base64,${firma.contenidoBase64}`,
   }
 

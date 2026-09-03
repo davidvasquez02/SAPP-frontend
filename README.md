@@ -2,7 +2,7 @@
 
 ## Estado funcional (2026-09-03)
 
-La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al seleccionar una firma PNG/JPG (máximo 2 MB), la pantalla la previsualiza y la envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Continúa pendiente el endpoint de consulta que permitirá mostrar la firma ya registrada al abrir el perfil.
+La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al abrirla consulta `GET /api/sapp/firmaUsuario/{usuarioSappId}` y precarga la firma y su título si existen. El usuario puede indicar o editar el título y seleccionar una firma PNG/JPG (máximo 2 MB); la imagen se previsualiza y se envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}` junto con el título.
 
 ### Stack instalado y ejecución rápida
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** el perfil consulta la firma vigente mediante `GET /api/sapp/firmaUsuario/{usuarioSappId}`, muestra su imagen y título, y permite reemplazarla. El POST ahora usa el contrato `{ titulo, contenidoFirma }`; el título es obligatorio en la interfaz antes de seleccionar una imagen.
 - **2026-09-03:** el listado y detalle de estudiantes de coordinación resuelven el tipo de documento desde los campos superiores `tipoDocumento` o `tipoDocumentoIdentificacion` del contrato real, conservando `persona.tipoDocumento` como fallback; así se evita mostrar `N/A` junto a un número válido. En el detalle se eliminó la cohorte duplicada sobre el correo institucional y se conserva únicamente **Cohorte de ingreso** en los datos académicos.
 - **2026-09-03:** la proyección de coordinación para estudiantes se alineó con el contrato real de `GET /sapp/estudiantes/consulta`: `numeroDocumento`, `correoInstitucional` y `correoPersonal` se leen desde el nivel superior; `persona.id`/`persona.idpId`, `estudiante.fechaEgreso` y cohortes con formato `YYYY-N` también se conservan. El detalle dejó de recurrir a datos mock al abrirse directamente y consulta el mismo recurso por `estudianteId`; además muestra ambos correos.
 - **2026-09-03:** el listado de estudiantes de coordinación ordena la colección por semestre/cohorte descendente antes de iniciar la cola de descarga de fotos. De este modo, las consultas de fotos se programan en el mismo orden que las tarjetas visibles, con desempate alfabético por nombre y manteniendo el límite existente de cuatro tareas concurrentes.
@@ -33,7 +34,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 - **2026-09-02:** el selector de firma del perfil valida y previsualiza el archivo y persiste inmediatamente el data URI mediante `POST /api/sapp/firmaUsuario/{usuarioSappId}`; se retiró la persistencia provisional en `localStorage`.
 - **2026-09-02:** el perfil aprovecha el contrato real de `/inicio`: código UIS, programa, cohorte, estado, fecha de ingreso, correo personal y teléfono, con fallback a `attributes` cuando corresponde.
-- La firma no se incorpora a la sesión. Queda anotada como integración pendiente la consulta backend de la firma vigente para precargarla en el selector.
+- La firma no se incorpora a la sesión: se consulta directamente al abrir el perfil y no se duplica en `localStorage`.
 - Los estilos nuevos consumen tokens semánticos y se adaptan a móvil y modos claro/oscuro.
 
 Frontend del **Sistema de Apoyo para la gestión de trámites de posgrados (SAPP)** de la Escuela de Ingeniería de Sistemas e Informática (**EISI**) de la Universidad Industrial de Santander (**UIS**).

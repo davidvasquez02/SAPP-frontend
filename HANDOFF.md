@@ -1792,6 +1792,33 @@ npm run lint
 - La verificación HTTP en producción sigue pendiente porque requiere backend y sesión institucional. No se tomó screenshot: el cambio corrige exclusivamente la URL de red y no produce una modificación visual perceptible.
 
 ---
+# Update 2026-09-03 — Consulta y título de firma de UsuarioSapp
+
+## Estado actual y decisiones
+- `/perfil` consulta al montarse `GET /api/sapp/firmaUsuario/{usuarioSappId}`. Si existe una firma, precarga tanto la imagen como `titulo`; durante la consulta bloquea el selector y muestra **Cargando firma…**.
+- El servicio acepta el envelope SAPP `{ ok, message, data }` y también el DTO directo para tolerar ambos formatos del gateway. Un `data` nulo se interpreta como usuario sin firma.
+- El campo **Título** es obligatorio antes de seleccionar/reemplazar la imagen. El guardado inmediato ejecuta el POST con `{ titulo, contenidoFirma }`; un fallo conserva la previsualización y permite reintentar.
+- No se usa `localStorage` para la firma y no se agregaron dependencias, seeds, datasets, variables de entorno ni artefactos persistentes.
+
+## Paths, contratos y salida esperada
+- Transporte/DTO: `src/modules/perfil/services/firmaPerfilService.ts`.
+- Estado y UI: `src/pages/Perfil/PerfilPage.tsx`; estilos temáticos: `src/pages/Perfil/PerfilPage.css`.
+- GET: `${VITE_API_URL || VITE_API_BASE_URL || '/api/sapp'}/firmaUsuario/{usuarioSappId}`. Respuesta esperada: `{ "ok": true, "message": "...", "data": { "titulo": "PhD.", "contenidoFirma": "data:image/jpeg;base64,/9j/..." } }`; también se tolera el DTO sin envelope y `data: null`.
+- POST: la misma ruta con body `{ "titulo": "PhD.", "contenidoFirma": "data:image/jpeg;base64,/9j/..." }`. PNG conserva `data:image/png;base64,...`.
+- Salida esperada: al entrar se ven el título y firma existentes; al elegir otra imagen con título diligenciado, se reemplaza y aparece **La firma se actualizó correctamente.**
+
+## Retos y próximos pasos
+1. Validar con backend/sesión institucional el envelope exacto del GET y el comportamiento cuando no hay firma (idealmente `200` con `data: null`; un `404` actualmente se presenta como error de consulta).
+2. Confirmar que el POST reemplaza idempotentemente la firma existente y si el backend exige una longitud o catálogo específico para `titulo` (la UI limita a 100 caracteres).
+3. Agregar pruebas de componente/servicio cuando se incorpore Vitest; hoy el repositorio no incluye runner de tests.
+
+## Entorno y pruebas recientes
+- Raíz única: `/workspace/SAPP-frontend`. Reutilizar Node.js/npm y `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol de dependencias.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm list --depth=0` (2026-09-03): PASS; único árbol completo, con el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; 241 módulos transformados en 771 ms. Warning no bloqueante: chunk JS de 502.29 kB supera 500 kB.
+
+---
 # Update 2026-09-02 — Disponibilidad y período de creación de matrícula
 
 ## Estado actual y decisiones
