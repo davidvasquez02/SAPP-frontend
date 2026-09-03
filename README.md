@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** el cierre de sesión ahora solicita primero `POST VITE_LOGOUT_URL` (o, por defecto, `POST ${VITE_API_URL}/logout`) con credenciales para que el Gateway invalide la sesión y las cookies `HttpOnly`. Incluso si esa solicitud falla, la SPA elimina sesión y caché en memoria, `localStorage`, `sessionStorage`, cookies visibles, Cache Storage, bases IndexedDB y registros de service workers antes de reemplazar la navegación por `/`. `VITE_LOGOUT_URL` permite adaptar el endpoint sin cambiar código.
 - **2026-09-03:** los documentos generados por `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` se convierten a PDF únicamente para su previsualización. Al registrar la solicitud se carga el HTML original, con MIME `text/html`, y las acciones posteriores **Ver/Descargar** lo convierten de nuevo a PDF en el navegador; así la base de datos conserva la fuente HTML sin exponerla como formato de descarga.
 - **2026-09-03:** el detalle de cualquier solicitud carga y presenta **Documentos adjuntos** para todos los roles autorizados, reutilizando el listado antes exclusivo de coordinación y omitiendo la columna técnica **Tipo**. Al entrar desde **Solicitudes asignadas**, un estado descriptivo que contiene `POR FIRMA` (incluido `POR FIRMA DIRECTOR DE TG`) habilita **Firmar todos los documentos**, aunque `estadoSigla` tenga un código como `PFIR_DIR_TG`; la acción ejecuta `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` y recarga el detalle tras el éxito.
 - **2026-09-03:** el perfil de un usuario con rol `ESTUDIANTE` solicita únicamente la imagen de firma y omite por completo `titulo` en el POST de creación. Los demás roles conservan el título obligatorio y el contrato `{ titulo, contenidoFirma }`.
@@ -110,6 +111,8 @@ Ejemplo `.env.local`:
 ```env
 VITE_API_URL=/api/sapp
 VITE_DEV_PROXY_TARGET=http://localhost:8080
+# Opcional; el valor predeterminado es /api/sapp/logout
+VITE_LOGOUT_URL=/api/sapp/logout
 ```
 
 ## Cómo ejecutar

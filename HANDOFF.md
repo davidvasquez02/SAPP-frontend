@@ -1,3 +1,29 @@
+# Update 2026-09-03 — Limpieza integral al cerrar sesión
+
+## Estado actual y decisión
+- `AuthContext.logout()` es asíncrono: elimina inmediatamente la sesión SAPP en memoria y luego intenta `POST` al endpoint de logout del Gateway con `credentials: 'include'`, `cache: 'no-store'` y `keepalive`.
+- El endpoint predeterminado es `${VITE_API_URL}/logout` (normalmente `/api/sapp/logout`) y se puede reemplazar con `VITE_LOGOUT_URL`. El Gateway debe invalidar allí la sesión servidor y cualquier cookie `HttpOnly`; JavaScript no puede borrar directamente una cookie `HttpOnly`.
+- El bloque `finally` garantiza la limpieza local aunque el Gateway no responda: vacía `localStorage`, `sessionStorage`, cookies visibles en paths/dominios aplicables, Cache Storage e IndexedDB, y desregistra service workers. Repite storages/cookies al final para cubrir escrituras de requests que estuvieran en vuelo y termina con `window.location.replace('/')`.
+
+## Paths, contrato y salida esperada
+- Orquestación React: `src/context/Auth/AuthContext.tsx`; contrato `logout: () => Promise<void>` en `src/context/Auth/types.ts`.
+- Invalidación remota: `src/api/authService.ts`. Request esperado: `POST VITE_LOGOUT_URL` o, si no está definido, `POST ${VITE_API_URL}/logout`, con cookies incluidas y sin body.
+- Limpieza del origen: `src/modules/auth/session/clearBrowserSession.ts`. Configuración documentada en `.env.example` y `README.md`.
+- Salida esperada al pulsar **Cerrar sesión**: la sesión remota queda invalidada, no quedan datos locales accesibles a la SPA y `/` no debe reconstruir al usuario anterior. No se agregaron dependencias, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Confirmar con el Gateway desplegado que acepta `POST /api/sapp/logout`; si usa otra URL, definir `VITE_LOGOUT_URL`. La respuesta debería invalidar cookies `HttpOnly` y puede incluir `Clear-Site-Data` para cubrir caché HTTP administrada exclusivamente por el navegador.
+2. Validar en Network que el POST incluye la cookie institucional y que la posterior llamada a `/inicio` ya no devuelve al usuario anterior.
+3. Cuando se incorpore Vitest, probar cleanup con dobles de Cache Storage, IndexedDB, cookies y service workers. Actualmente no existe script `test`.
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Versiones: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm run build` (2026-09-03): PASS; 244 módulos transformados. Persiste solo el warning no bloqueante del chunk JS de 508.06 kB.
+- `npx eslint src/api/authService.ts src/context/Auth/AuthContext.tsx src/context/Auth/types.ts src/modules/auth/session/clearBrowserSession.ts` (2026-09-03): PASS; npm emitió únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-03): PASS.
+
+---
 # Update 2026-09-03 — Tipo de documento y cohorte única en estudiantes
 
 ## Estado actual y decisión
