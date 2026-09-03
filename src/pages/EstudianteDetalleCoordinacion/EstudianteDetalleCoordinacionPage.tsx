@@ -461,10 +461,6 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
 
       <dl className="estudiante-detalle__profile-meta">
         <div>
-          <dt>Cohorte</dt>
-          <dd>{estudiante.cohorte || EMPTY_VALUE}</dd>
-        </div>
-        <div>
           <dt>Correo institucional</dt>
           <dd>{estudiante.correoInstitucional || 'Sin información'}</dd>
         </div>

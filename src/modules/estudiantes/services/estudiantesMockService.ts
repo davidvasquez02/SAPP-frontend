@@ -40,6 +40,8 @@ type EstudianteConsultaBackend = {
     } | null
   }
   nombreCompleto: string
+  tipoDocumento?: string | null
+  tipoDocumentoIdentificacion?: string | null
   numeroDocumento: string | null
   correoInstitucional: string | null
   correoPersonal: string | null
@@ -111,6 +113,13 @@ const resolveCorreoPersonal = (item: EstudianteConsultaBackend) => {
     || 'Sin correo personal registrado'
 }
 
+const resolveTipoDocumento = (item: EstudianteConsultaBackend) => {
+  return item.tipoDocumento?.trim()
+    || item.tipoDocumentoIdentificacion?.trim()
+    || item.persona.tipoDocumento?.trim()
+    || 'N/A'
+}
+
 const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCoordinacion => {
   const programaNombre = item.programaCodigoNombre?.trim() || `Programa ${item.programaId}`
 
@@ -122,7 +131,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     nombreCompleto: item.nombreCompleto.trim(),
     fotoUrl: null,
     foto: item.estudiante.foto ?? null,
-    tipoDocumento: item.persona.tipoDocumento?.trim() || 'N/A',
+    tipoDocumento: resolveTipoDocumento(item),
     numeroDocumento: item.numeroDocumento?.trim() || item.persona.numeroDocumento?.trim() || 'N/A',
     correoInstitucional: resolveCorreoInstitucional(item),
     correoPersonal: resolveCorreoPersonal(item),
