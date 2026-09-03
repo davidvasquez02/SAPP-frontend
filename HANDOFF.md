@@ -2239,3 +2239,29 @@ npm run lint
 - `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-03): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
 - `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 245 módulos y generaron `dist/assets/index-DTG9rVIh.js` (509.09 kB). El tamaño supera el umbral informativo habitual, sin bloquear el build.
 - `git diff --check` (2026-09-03): PASS. No se tomó captura porque el cambio no altera la interfaz visual y el escenario requiere navegador, sesión y backend institucionales.
+
+---
+# Update 2026-09-03 — Paginación PDF basada en geometría DOM
+
+## Estado actual y decisión
+- `src/modules/solicitudes/utils/htmlToPdf.ts` conserva el contrato `htmlToPdf(html: string): Promise<Blob>`, el canvas Letter de 816×1056 px y los márgenes verticales de 72 px (área útil de 912 px).
+- Tras esperar fuentes e imágenes, el conversor recopila todas las cajas de línea reales con `Range.getClientRects()`, además de la geometría de `p`, `li`, `tr`, `table`, `figure`, `h1`–`h6`, `.pdf-keep-together` y `[data-pdf-keep-together]`.
+- `calculatePdfPageRanges` parte del límite ideal de cada página y lo retrocede al inicio del rectángulo atravesado. Solo retrocede si conserva al menos el 25 % del área útil; los bloques de más de 912 px se pueden dividir. El resultado son rangos `{ sourceY, sourceHeight }` consecutivos que el pintor consume directamente, sin calcular `page * PAGE_CONTENT_HEIGHT_PX`.
+- La prueba `tests/browser/htmlToPdf.pagination.browser.html` es un harness de navegador sin dependencias: al servir el repositorio con Vite, abrir `/tests/browser/htmlToPdf.pagination.browser.html`. Construye un documento con dos firmas cuyo contenedor comienza cerca del final de la primera página y muestra `PASS (5 assertions)` solamente si ambas quedan completas en la segunda página, los rangos no tienen huecos ni solapamientos y cubren toda la altura.
+
+## Contratos, plantillas y salida esperada
+- Entrada/salida pública sin cambios: HTML del endpoint `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` → `Promise<Blob>` con MIME `application/pdf`.
+- Las plantillas de ese servicio no existen en este repositorio frontend. El equipo backend debe añadir `data-pdf-keep-together` al **contenedor completo** de cada bloque de firmas y a tablas pequeñas o secciones institucionales que no deban separarse; el selector ya está soportado por el frontend y el fixture demuestra el contrato.
+- Resultado esperado: una firma que comienza cerca de un corte se desplaza completa junto con las demás firmas de su contenedor; el contenido anterior y posterior aparece exactamente una vez. Un bloque mayor que una página sí se corta para garantizar progreso.
+
+## Retos y próximos pasos
+1. Aplicar el atributo en las plantillas reales del repositorio backend de `pdf-previsualizacion`; no duplicar dichas plantillas en este frontend.
+2. Ejecutar el harness en Chrome/Chromium y validar visualmente una respuesta institucional real. Este contenedor no incluye navegador y la descarga de Playwright fue rechazada con HTTP 403, por lo que la validación visual local queda pendiente.
+3. Cuando el entorno disponga de Playwright, automatizar la apertura del harness sin crear otro árbol npm; no crear venv, conda ni poetry.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, ESLint 9.39.2 y typescript-eslint 8.51.0. Reutilizar `node_modules`; no existen seeds/datasets nuevos ni entornos Python.
+- La instalación de `@playwright/test@1.55.0` no modificó `package.json`/lockfile y falló por la política de red (`403 Forbidden`). El harness se dejó libre de paquetes adicionales para poder ejecutarse con cualquier navegador servido por Vite.
+- `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-03): PASS; solo apareció el warning conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 245 módulos. Warning no bloqueante por el chunk JS de 510.86 kB.
+- `git diff --check` (2026-09-03): PASS.
