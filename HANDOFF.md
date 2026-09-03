@@ -2140,3 +2140,18 @@ npm run lint
 - `git diff --check`: PASS. El lint dirigido que incluyó `SolicitudesCoordinadorView.tsx` reportó sus dos errores históricos `react-hooks/set-state-in-effect` (líneas 55 y 112), sin relación con el cambio de navegación. La validación HTTP/visual depende del backend, sesión institucional y navegador no disponibles en el contenedor.
 
 ---
+
+# Update 2026-09-03 — Listado documental único para el estudiante
+
+## Estado actual y salida esperada
+- En `/solicitudes/:solicitudId`, un usuario con rol `ESTUDIANTE` que consulta una solicitud ya creada ve únicamente **Documentos adjuntos**; se ocultó el primer checklist redundante titulado **Documentos** del modo de consulta.
+- Al pulsar **Editar solicitud**, `SolicitudDocumentosEditor` continúa renderizándose dentro del formulario y conserva la carga/actualización documental. No se modificó el flujo de creación ni la presentación para otros roles.
+
+## Paths, contratos y próximos pasos
+- Cambio de renderizado: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- El listado visible continúa usando `DocumentosAdjuntos` y `GET /sapp/document?tramiteId={id}&codigoTipoTramite={codigo}`; no cambió ningún request, response, schema, dependencia, seed ni dataset.
+- Validar visualmente con una sesión institucional `ESTUDIANTE`: abrir una solicitud creada, comprobar que existe un solo listado documental y entrar a edición para confirmar que el editor reaparece.
+- Reutilizar `/workspace/SAPP-frontend`, npm y `node_modules`; no crear venv, conda, poetry ni instalaciones paralelas.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 244 módulos. Vite emitió el warning no bloqueante por un chunk de 508.30 kB.
+- `git diff --check`: PASS. No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox, y la validación de esta ruta requiere backend y sesión institucional.

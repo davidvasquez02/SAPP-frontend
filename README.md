@@ -140,6 +140,12 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 ## Decisiones recientes / changelog-lite
 
+### 2026-09-03 — Listado documental único en el detalle estudiantil
+
+- Al consultar una solicitud ya creada desde el perfil `ESTUDIANTE`, la vista de detalle oculta el checklist redundante titulado **Documentos** y conserva únicamente la tabla **Documentos adjuntos**.
+- El editor de documentos sigue disponible al activar **Editar solicitud**; el cambio no afecta la creación, la edición, la carga de archivos ni las vistas de otros roles.
+- No cambiaron contratos de API, dependencias, variables de entorno, seeds ni datasets.
+
 ### 2026-09-03 — Encabezado descriptivo del detalle de solicitudes
 
 - La ruta compartida `/solicitudes/:solicitudId` muestra el encabezado `Solicitud {id} — {tipoSolicitud}` sin el símbolo `#` ni el código técnico `tipoSolicitudCodigo`.
