@@ -2010,3 +2010,31 @@ npm run lint
 - `git diff --check` (2026-09-03): PASS. No se tomó captura porque el contenedor no dispone de Chromium/Chrome/Firefox y la pantalla requiere sesión/backend institucionales.
 
 ---
+
+# Update 2026-09-03 — Documentos y firma masiva en detalle de solicitud
+
+## Estado actual y decisiones
+- `/solicitudes/:solicitudId` consulta los documentos adjuntos para cualquier rol que pueda abrir el detalle; ya no limita la carga a coordinación o estudiante. Todos reutilizan `DocumentosAdjuntos` y la tabla omite la columna MIME **Tipo**, conservando nombre, descripción y acciones **Ver/Descargar**.
+- La navegación desde el bloque **Solicitudes asignadas** lleva `location.state.fromAssigned: true`. Solo en ese contexto, y cuando `estadoSigla` o `estado` contiene `POR FIRMAR` sin distinguir mayúsculas, aparece **Firmar todos los documentos**.
+- La firma ejecuta `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` sin body. Durante la petición el botón queda bloqueado; se presentan mensajes de error/éxito y, tras responder correctamente, se vuelve a consultar el detalle para reflejar el nuevo estado.
+
+## Paths, contratos y salida esperada
+- Detalle y estilos: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`.
+- Transporte: `firmarDocumentosSolicitudAcademica` en `src/modules/solicitudes/api/solicitudesAcademicasService.ts`.
+- Origen asignado: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`.
+- Listado común: `src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx`; documentos obtenidos mediante `GET /sapp/document?tramiteId={id}&codigoTipoTramite={codigo}`.
+- Contrato esperado de firma: envelope `{ ok, message, data }`; solo `ok: true` se considera éxito. No se envía payload. La ruta del cliente HTTP se resuelve contra `VITE_API_URL` (fallback `/api/sapp`).
+
+## Retos y próximos pasos
+1. Validar el POST con backend y una sesión institucional desde una solicitud asignada en estado `POR FIRMAR`; confirmar el envelope y el estado resultante.
+2. Confirmar si el backend necesita que el botón sobreviva una recarga directa del detalle. Actualmente “pertenece al listado asignado” se preserva mediante estado de navegación y se pierde al recargar la URL; si se requiere persistencia, consultar asignadas en el detalle o incluir el origen en la URL.
+3. Probar visualmente roles de coordinación, profesor/docente, director y estudiante con documentos PDF/no PDF. No existe runner de componentes ni dataset/seed local.
+
+## Entorno y pruebas de esta actualización
+- Usar únicamente `/workspace/SAPP-frontend`, npm y el `node_modules` existente. No crear venv, conda, poetry, entornos Python ni un árbol npm duplicado.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; ESLint 9.39.2; typescript-eslint 8.51.0. No se agregaron dependencias, seeds ni datasets.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/solicitudesAcademicasService.ts src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 242 módulos y generaron `dist/assets/index-CI7kim7r.css` e `index-DtwPpq-y.js`. Warning no bloqueante por el chunk JS mayor a 500 kB.
+- `git diff --check`: PASS. El lint dirigido que incluyó `SolicitudesCoordinadorView.tsx` reportó sus dos errores históricos `react-hooks/set-state-in-effect` (líneas 55 y 112), sin relación con el cambio de navegación. La validación HTTP/visual depende del backend, sesión institucional y navegador no disponibles en el contenedor.
+
+---

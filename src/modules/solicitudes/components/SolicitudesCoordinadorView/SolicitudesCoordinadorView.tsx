@@ -169,7 +169,9 @@ const SolicitudesCoordinadorView = ({ usuarioSappId, readOnly = false }: Solicit
           <SolicitudesTable
             mode="COORDINADOR"
             rows={assignedRows}
-            onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+            onRowClick={(solicitudId) =>
+              navigate(`/solicitudes/${solicitudId}`, { state: { fromAssigned: true } })
+            }
           />
         )}
       </section>
