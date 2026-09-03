@@ -2,7 +2,7 @@
 
 ## Estado funcional (2026-09-03)
 
-La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al abrirla consulta `GET /api/sapp/firmaUsuario/{usuarioSappId}` y precarga la firma y su título si existen. El usuario puede indicar o editar el título y seleccionar una firma PNG/JPG (máximo 2 MB); la imagen se previsualiza y se envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}` junto con el título.
+La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al abrirla consulta `GET /api/sapp/firmaUsuario/{usuarioSappId}` y precarga la firma y su título si existen. El usuario puede seleccionar una firma PNG/JPG (máximo 2 MB), que se previsualiza y se envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Para usuarios distintos de `ESTUDIANTE`, la interfaz también exige y envía el título; para `ESTUDIANTE`, el campo se oculta y el body contiene únicamente `contenidoFirma`.
 
 ### Stack instalado y ejecución rápida
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-03:** el perfil de un usuario con rol `ESTUDIANTE` solicita únicamente la imagen de firma y omite por completo `titulo` en el POST de creación. Los demás roles conservan el título obligatorio y el contrato `{ titulo, contenidoFirma }`.
 - **2026-09-03:** los perfiles `PROFESOR`/`DOCENTE`, `COORDINADOR` y `DIRECTOR` ven primero **Solicitudes asignadas**, obtenidas con `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}`. El listado general excluye por `id` las solicitudes ya asignadas al usuario para evitar duplicados en pantalla.
 - **2026-09-03:** se restituyó **Cerrar sesión** exclusivamente en el pie del sidebar. La acción elimina la sesión SAPP y los storages del origen, expira las cookies accesibles para la SPA y recarga la página para que el Gateway vuelva a resolver la autenticación institucional.
 - **2026-09-03:** el listado y el detalle de estudiantes omiten los marcadores técnicos `N/A`/`NA` al presentar el documento de identidad. El formato se centralizó para mostrar únicamente las partes disponibles (por ejemplo, `1005324324` cuando no existe tipo documental) y `—` solo cuando tampoco existe número.

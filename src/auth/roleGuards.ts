@@ -6,6 +6,7 @@ export const ROLES = {
   ADMIN: 'ADMIN',
   PROFESOR: 'PROFESOR',
   DOCENTE: 'DOCENTE',
+  ESTUDIANTE: 'ESTUDIANTE',
 } as const
 
 export { hasAnyRole, isProfesor }
