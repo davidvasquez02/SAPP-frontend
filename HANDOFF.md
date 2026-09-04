@@ -1,3 +1,30 @@
+# Update 2026-09-04 — Resolución restringida de solicitudes por coordinación
+
+## Estado actual y decisiones
+- En `/solicitudes/:solicitudId`, la acción para cambiar el estado se muestra exclusivamente si la sesión contiene el rol exacto `COORDINADOR` y el estado normalizado de la solicitud es `ENVIADA`, cuya etiqueta de catálogo es **ENVIADA A COMITE ASESOR DE POSGRADOS**. `ADMIN`, estudiantes y los demás roles no reciben estos controles por esa sola condición.
+- Se eliminó el combo del catálogo y su consulta desde esta pantalla. Los únicos destinos disponibles son `APROBADA` mediante **Aprobar** y `RECHAZADA` mediante **Rechazar**. El handler vuelve a comprobar la precondición antes del PUT y bloquea ambos botones durante la operación.
+- El badge de estado del bloque de detalle admite salto de línea, limita su ancho al contenedor y puede cortar cadenas excepcionalmente largas; la tarjeta/grid usa `min-width: 0` para no desbordarse.
+
+## Paths, contrato y salida esperada
+- Lógica y UI: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; estilos: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`.
+- Request al decidir: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA|RECHAZADA`, mediante `cambiarEstadoSolicitud`, seguido de `GET /sapp/solicitudesAcademicas/{solicitudId}` para refrescar el detalle.
+- No cambiaron schemas, dependencias, variables de entorno, seeds ni datasets. La autorización definitiva y la validación de transiciones deben seguir aplicándose también en backend; esta actualización restringe la interfaz y su flujo de invocación.
+
+## Retos y próximos pasos
+1. Validar con sesiones institucionales `COORDINADOR` y `ADMIN`, y solicitudes en estados `ENVIADA`, `EN_REVISION`, `APROBADA` y `RECHAZADA`, que los controles solo aparezcan en la combinación autorizada.
+2. Confirmar en Network que cada botón transmite su sigla correspondiente y que backend rechaza de forma independiente roles/transiciones no autorizados.
+3. Agregar pruebas de componente por rol/estado cuando el repositorio incorpore Vitest y React Testing Library; `package.json` aún no define script `test`.
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npm run build` (2026-09-04): PASS; 245 módulos transformados. Persiste el warning no bloqueante del chunk JavaScript de 510.69 kB.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-04): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-04): PASS.
+- Captura pendiente: la ruta es protegida y este contenedor no dispone de una sesión `COORDINADOR` ni datos/backend institucionales para reproducir de forma fiel el estado requerido.
+
+---
+
 # Update 2026-09-03 — Reparación del build del conversor HTML a PDF
 
 ## Estado actual y decisión
