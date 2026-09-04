@@ -71,7 +71,7 @@ export const AppRoutes = () => {
             }
           />
           <Route
-            path="/admisiones/fechas"
+            path="/fechas/periodos"
             element={
               <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
                 <ConfigFechasAdmisionesPage />

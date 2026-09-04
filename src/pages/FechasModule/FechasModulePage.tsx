@@ -22,7 +22,8 @@ const formatFecha = (value: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
-const ITEMS_PER_PAGE = 8;
+const PERIODOS_PER_PAGE = 4;
+const CONVOCATORIAS_PER_PAGE = 8;
 
 const FechasModulePage = () => {
   const navigate = useNavigate();
@@ -92,20 +93,23 @@ const FechasModulePage = () => {
     };
   }, []);
 
-  const totalPagesPeriodos = Math.max(1, Math.ceil(periodos.length / ITEMS_PER_PAGE));
+  const totalPagesPeriodos = Math.max(
+    1,
+    Math.ceil(periodos.length / PERIODOS_PER_PAGE),
+  );
   const totalPagesConvocatorias = Math.max(
     1,
-    Math.ceil(convocatorias.length / ITEMS_PER_PAGE),
+    Math.ceil(convocatorias.length / CONVOCATORIAS_PER_PAGE),
   );
 
   const periodosPreview = useMemo(() => {
-    const start = (periodosPage - 1) * ITEMS_PER_PAGE;
-    return periodos.slice(start, start + ITEMS_PER_PAGE);
+    const start = (periodosPage - 1) * PERIODOS_PER_PAGE;
+    return periodos.slice(start, start + PERIODOS_PER_PAGE);
   }, [periodos, periodosPage]);
 
   const convocatoriasPreview = useMemo(() => {
-    const start = (convocatoriasPage - 1) * ITEMS_PER_PAGE;
-    return convocatorias.slice(start, start + ITEMS_PER_PAGE);
+    const start = (convocatoriasPage - 1) * CONVOCATORIAS_PER_PAGE;
+    return convocatorias.slice(start, start + CONVOCATORIAS_PER_PAGE);
   }, [convocatorias, convocatoriasPage]);
 
   return (
@@ -141,7 +145,7 @@ const FechasModulePage = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => navigate("/admisiones/fechas")}
+                  onClick={() => navigate("/fechas/periodos")}
                 >
                   Crear período académico
                 </button>
@@ -177,7 +181,7 @@ const FechasModulePage = () => {
                               type="button"
                               className="config-module__edit-button"
                               onClick={() =>
-                                navigate(`/admisiones/fechas?periodoId=${item.periodo.id}`)
+                                navigate(`/fechas/periodos?periodoId=${item.periodo.id}`)
                               }
                               aria-label={`Editar período ${item.periodo.anioPeriodo}`}
                             >
