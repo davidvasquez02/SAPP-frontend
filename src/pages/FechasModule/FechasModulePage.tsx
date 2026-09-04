@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
-import { getPeriodosAcademicos } from "../../modules/configFechas/api/periodoAcademicoService";
-import type { PeriodoAcademicoDto } from "../../modules/configFechas/api/types";
+import { getPeriodosAcademicosWithFechas } from "../../modules/configFechas/api/periodoAcademicoService";
+import type { PeriodoAcademicoWithFechasDto } from "../../modules/configFechas/api/types";
+import { TIPO_TRAMITE_ADMISIONES } from "../../modules/configFechas/constants";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import "./FechasModulePage.css";
 
@@ -21,11 +22,11 @@ const formatFecha = (value: string | null) => {
   return `${day}/${month}/${year}`;
 };
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 8;
 
 const FechasModulePage = () => {
   const navigate = useNavigate();
-  const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
+  const [periodos, setPeriodos] = useState<PeriodoAcademicoWithFechasDto[]>([]);
   const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>(
     [],
   );
@@ -43,7 +44,7 @@ const FechasModulePage = () => {
 
       try {
         const [periodosResult, convocatoriasResult] = await Promise.all([
-          getPeriodosAcademicos(),
+          getPeriodosAcademicosWithFechas(),
           getConvocatoriasAdmision(),
         ]);
 
@@ -52,11 +53,11 @@ const FechasModulePage = () => {
         }
 
         const sortedPeriodos = [...periodosResult].sort((a, b) => {
-            if (a.anio !== b.anio) {
-              return b.anio - a.anio;
+            if (a.periodo.anio !== b.periodo.anio) {
+              return b.periodo.anio - a.periodo.anio;
             }
 
-            return b.periodo - a.periodo;
+            return b.periodo.periodo - a.periodo.periodo;
           });
 
         const sortedConvocatorias = [...convocatoriasResult].sort((a, b) =>
@@ -142,7 +143,7 @@ const FechasModulePage = () => {
                   type="button"
                   onClick={() => navigate("/admisiones/fechas")}
                 >
-                  Gestionar períodos
+                  Crear período académico
                 </button>
               </div>
 
@@ -153,16 +154,39 @@ const FechasModulePage = () => {
                       <th>Período</th>
                       <th>Fecha inicio</th>
                       <th>Fecha fin</th>
+                      <th>Inicio matrículas</th>
+                      <th>Fin matrículas</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {periodosPreview.map((periodo) => (
-                      <tr key={periodo.id}>
-                        <td>{periodo.anioPeriodo}</td>
-                        <td>{formatFecha(periodo.fechaInicio)}</td>
-                        <td>{formatFecha(periodo.fechaFin)}</td>
-                      </tr>
-                    ))}
+                    {periodosPreview.map((item) => {
+                      const fechaMatricula = item.fechas.find(
+                        (fecha) => fecha.tipoTramite.id === TIPO_TRAMITE_ADMISIONES,
+                      );
+
+                      return (
+                        <tr key={item.periodo.id}>
+                          <td>{item.periodo.anioPeriodo}</td>
+                          <td>{formatFecha(item.periodo.fechaInicio)}</td>
+                          <td>{formatFecha(item.periodo.fechaFin)}</td>
+                          <td>{formatFecha(fechaMatricula?.fechaInicio ?? null)}</td>
+                          <td>{formatFecha(fechaMatricula?.fechaFin ?? null)}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="config-module__edit-button"
+                              onClick={() =>
+                                navigate(`/admisiones/fechas?periodoId=${item.periodo.id}`)
+                              }
+                              aria-label={`Editar período ${item.periodo.anioPeriodo}`}
+                            >
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

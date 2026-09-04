@@ -1,3 +1,31 @@
+# Update 2026-09-04 — Listado y edición directa de períodos académicos
+
+## Estado actual y decisiones
+- `/fechas` obtiene los períodos con sus fechas asociadas desde `GET /sapp/periodoAcademico/withFechas`. La tabla muestra período, inicio/fin del semestre e inicio/fin de matrículas; la fecha de matrícula se identifica por `tipoTramite.id === TIPO_TRAMITE_ADMISIONES` (actualmente `2`), sin asumir que sea el primer elemento del arreglo.
+- Los listados de períodos y convocatorias se paginan en cliente de a 8 registros. Cada período incluye **Editar**, que navega a `/admisiones/fechas?periodoId={id}`; el botón superior abre esa ruta sin query para crear.
+- `/admisiones/fechas` se presenta como **Crear período académico** o **Editar período académico** según el query param. Se eliminó el selector “Gestión de periodo”; en edición se precargan todos los campos y año/semestre permanecen bloqueados para respetar la identidad del período.
+- Al editar se ejecuta `PUT /sapp/periodoAcademico/{id}` para el rango del semestre y luego `POST /sapp/periodoAcademicoFecha` para crear/actualizar el rango de matrículas. Al crear se conserva `POST /sapp/periodoAcademico` con el arreglo `fechas` incluido.
+
+## Paths, contratos y salida esperada
+- Listado y paginación: `src/pages/FechasModule/FechasModulePage.tsx` y `.css`.
+- Formulario: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`.
+- Servicios/contratos existentes: `src/modules/configFechas/api/periodoAcademicoService.ts`, `periodoAcademicoFechaService.ts`, `types.ts` y `constants.ts`.
+- `withFechas` debe devolver `PeriodoAcademicoWithFechasDto[]`, cada elemento con `{ periodo, fechas }`; la UI presenta `—` cuando no existe una fecha de matrícula tipo `2`.
+
+## Retos y próximos pasos
+1. Validar con backend institucional que `POST /sapp/periodoAcademicoFecha` tenga semántica de upsert cuando ya existe la combinación período/tipo de trámite; es el contrato que utiliza la edición completa.
+2. Validar visualmente creación, edición y las páginas 1/2 con al menos nueve registros reales. La ruta es protegida y no hay navegador instalado en este entorno.
+3. Incorporar pruebas de interacción al adoptar Vitest/React Testing Library; actualmente `package.json` no define script `test`.
+
+## Entorno, datos y resultados
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets; los datos provienen del API institucional.
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/modules/configFechas/api/periodoAcademicoFechaService.ts`: PASS (solo warning npm conocido sobre `http-proxy`).
+- `npm run build`: PASS; 246 módulos transformados, con warning no bloqueante por chunk JS de 511.01 kB.
+- `git diff --check`: PASS.
+
+---
+
 # Update 2026-09-04 — Resolución restringida de solicitudes por coordinación
 
 ## Estado actual y decisiones
