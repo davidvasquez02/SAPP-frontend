@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import {
   createPeriodoAcademico,
@@ -33,6 +33,7 @@ const EMPTY_FORM: FormState = {
 }
 
 const ConfigFechasAdmisionesPage = () => {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const requestedPeriodoId = Number(searchParams.get('periodoId'))
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -213,6 +214,14 @@ const ConfigFechasAdmisionesPage = () => {
           <div className="config-fechas-admisiones__actions">
             <button type="button" onClick={handleSave} disabled={isSaving || isLoading}>
               {isSaving ? 'Guardando...' : form.periodoId === null ? 'Crear período' : 'Actualizar período'}
+            </button>
+            <button
+              type="button"
+              className="config-fechas-admisiones__ghost"
+              onClick={() => navigate('/fechas')}
+              disabled={isSaving}
+            >
+              Atrás
             </button>
           </div>
 
