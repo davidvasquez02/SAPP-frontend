@@ -1,3 +1,27 @@
+# Update 2026-09-04 — Período actual en matrículas y marca lateral simplificada
+
+## Estado actual y decisiones
+- En el listado de coordinación de `/matricula`, tras recibir `GET /sapp/matriculaAcademica`, el filtro **Periodo** busca entre los valores realmente devueltos el año y semestre actuales. La fecha se calcula en `America/Bogota`: enero–junio corresponde al semestre `1` y julio–diciembre al `2`. Si el período actual no tiene registros, el fallback deliberado es **TODOS**, evitando un `select` con un valor inexistente.
+- El sidebar contraído ya no muestra el círculo con la letra **M**. La marca queda vacía en ese estado y muestra **Minerva** al expandirse mediante hover/foco; en la presentación móvil permanece visible.
+
+## Paths, contratos y salida esperada
+- Selección del período: `src/pages/Matricula/MatriculaPage.tsx`; reutiliza `parsePeriodo` y no cambia el contrato `MatriculaAcademicaListadoDto` ni el endpoint existente.
+- Marca: `src/components/Sidebar/Sidebar.tsx` y `src/components/Sidebar/Sidebar.css`; no se agregaron assets.
+- No cambiaron dependencias, variables de entorno, schemas, seeds ni datasets. Los datos siguen viniendo del API institucional.
+
+## Retos y próximos pasos
+1. Validar con una sesión institucional de coordinación y registros del período actual que el selector adopte exactamente la etiqueta entregada por el backend.
+2. Agregar pruebas de componente/fecha cuando el repositorio incorpore Vitest y React Testing Library; `package.json` no define actualmente un script `test`.
+3. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. El stack instalado permanece en Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación de esta actualización
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx src/components/Sidebar/Sidebar.tsx` (2026-09-04): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-04): PASS; transformó 248 módulos y generó `dist/assets/index-uxDr--ln.js`. Persiste el warning no bloqueante del chunk JavaScript de 514.90 kB.
+- `git diff --check` (2026-09-04): PASS.
+- No se pudo tomar captura: la ruta es protegida y el contenedor no incluye Chromium, Chrome ni Firefox para reproducir la interfaz.
+
+---
+
 # Update 2026-09-04 — Gestión de convocatorias integrada en Fechas
 
 ## Estado actual y decisiones
