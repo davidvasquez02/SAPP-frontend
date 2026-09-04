@@ -40,6 +40,34 @@
   text-decoration: none;
 }
 
+.sidebar__brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--on-primary), transparent 65%);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--on-primary), transparent 88%);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sidebar__brand-name {
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.18s ease;
+}
+
+.sidebar:hover .sidebar__brand-name,
+.sidebar:focus-within .sidebar__brand-name {
+  width: auto;
+  opacity: 1;
+}
+
 .sidebar__brand-icon,
 .sidebar__icon {
   display: inline-flex;
@@ -140,6 +168,13 @@
   .sidebar__brand {
     margin-bottom: 16px;
     font-size: 18px;
+  }
+
+  .sidebar__brand-name,
+  .sidebar:hover .sidebar__brand-name,
+  .sidebar:focus-within .sidebar__brand-name {
+    width: auto;
+    opacity: 1;
   }
 
   .sidebar__nav {

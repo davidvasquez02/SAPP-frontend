@@ -2349,3 +2349,24 @@ npm run lint
 - `npx eslint src/modules/solicitudes/utils/htmlToPdf.ts` (2026-09-03): PASS; solo apareció el warning conocido de npm `Unknown env config "http-proxy"`.
 - `npm run build` (2026-09-03): PASS; TypeScript y Vite transformaron 245 módulos. Warning no bloqueante por el chunk JS de 510.86 kB.
 - `git diff --check` (2026-09-03): PASS.
+
+---
+
+# Update 2026-09-04 — Cambio de marca visual a Minerva
+
+## Estado actual y decisión
+- La marca que se presenta a las personas usuarias es **Minerva**. El nombre anterior, **SAPP**, continúa intacto en URLs (`/api/sapp`, `/sapp`), contratos, `SessionKind`, claves de storage, nombres de clases CSS y demás identificadores técnicos para evitar una migración incompatible.
+- El sidebar muestra una **M** circular cuando está contraído y revela **Minerva** al recibir hover/foco. En la disposición móvil, donde no hay expansión lateral, se muestran la marca y el nombre completo permanentemente.
+- También se actualizaron el título HTML y los dos mensajes visibles que todavía nombraban a un “Usuario SAPP”.
+
+## Paths, salida esperada y próximos pasos
+- Marca del sidebar: `src/components/Sidebar/Sidebar.tsx` y `src/components/Sidebar/Sidebar.css`.
+- Título de pestaña: `index.html`. Textos de usuario: `src/pages/Perfil/PerfilPage.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+- Salida esperada en escritorio: **M** dentro del sidebar de 84 px y **M Minerva** dentro del sidebar expandido de 260 px. En pantallas de hasta 900 px: **M Minerva** siempre visible.
+- Validar visualmente ambos temas y los breakpoints con backend/sesión institucional. No sustituir ocurrencias técnicas de `SAPP` ni renombrar URLs, aunque una búsqueda global todavía las encuentre.
+- Entorno único: `/workspace/SAPP-frontend`, Node.js/npm y el `node_modules` existente. No crear venv, conda, poetry ni otro árbol de dependencias. No se agregaron paquetes, seeds o datasets.
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/pages/Perfil/PerfilPage.tsx src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`: PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 246 módulos. Warning informativo no bloqueante por el chunk JavaScript de 514.72 kB.
+- `git diff --check`: PASS. No se tomó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox; la comprobación integral requiere además la sesión institucional.
+
+---
