@@ -22,8 +22,7 @@ import SolicitudDocumentosEditor, {
 import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
-import { getEstadosSolicitudCatalog } from '../../modules/solicitudes/api/estadoSolicitudService'
-import { DEFAULT_ESTADOS_SOLICITUD_CATALOG, normalizeEstadoSolicitud, type EstadoSolicitudCatalogItem } from '../../modules/solicitudes/utils/estadoSolicitud'
+import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -44,14 +43,13 @@ const SolicitudDetallePage = () => {
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isCoordinador = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
+  const isCoordinador = hasAnyRole(roles, ['COORDINADOR'])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
-  const [estadosCatalog, setEstadosCatalog] = useState<EstadoSolicitudCatalogItem[]>(DEFAULT_ESTADOS_SOLICITUD_CATALOG)
   const [editMode, setEditMode] = useState(false)
   const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
   const [draftObservaciones, setDraftObservaciones] = useState('')
@@ -64,7 +62,6 @@ const SolicitudDetallePage = () => {
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
-  const [estadoTarget, setEstadoTarget] = useState<SolicitudEstadoTarget>('EN_REVISION')
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
@@ -95,8 +92,6 @@ const SolicitudDetallePage = () => {
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
         setDraftMotivosCredito(response.motivosCreditoCondonable?.length ? response.motivosCreditoCondonable : [''])
-        const normalizedEstado = normalizeEstadoSolicitud(response.estadoSigla || response.estado)
-        setEstadoTarget(normalizedEstado === 'UNKNOWN' ? 'EN_REVISION' : normalizedEstado)
         setEditMode(false)
       })
       .catch((fetchError) => {
@@ -139,25 +134,6 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [isEstudiante])
-
-
-  useEffect(() => {
-    let mounted = true
-
-    getEstadosSolicitudCatalog()
-      .then((estados) => {
-        if (mounted && estados.length > 0) {
-          setEstadosCatalog(estados)
-        }
-      })
-      .catch(() => {
-        // fallback al catálogo por defecto
-      })
-
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramite: string) => {
     setDocsLoading(true)
@@ -266,7 +242,7 @@ const SolicitudDetallePage = () => {
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
-  const isSameTargetAsCurrentEstado = currentEstado !== 'UNKNOWN' && estadoTarget === currentEstado
+  const canResolveSolicitud = isCoordinador && currentEstado === 'ENVIADA'
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
   )
@@ -303,12 +279,6 @@ const SolicitudDetallePage = () => {
 
       setSolicitud(solicitudActualizada)
       setDocumentos(documentosActualizados)
-      setEstadoTarget(() => {
-        const estadoActualizado = normalizeEstadoSolicitud(
-          solicitudActualizada.estadoSigla || solicitudActualizada.estado,
-        )
-        return estadoActualizado === 'UNKNOWN' ? 'EN_REVISION' : estadoActualizado
-      })
       setSignSuccess('Todos los documentos fueron firmados y la información fue actualizada correctamente.')
     } catch (signingError) {
       setSignError(
@@ -325,8 +295,8 @@ const SolicitudDetallePage = () => {
     }
   }
 
-  const handleGuardarEstado = async () => {
-    if (!solicitud) {
+  const handleResolverSolicitud = async (target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>) => {
+    if (!solicitud || !canResolveSolicitud) {
       return
     }
 
@@ -335,7 +305,7 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, estadoTarget)
+      await cambiarEstadoSolicitud(solicitud.id, target)
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -535,34 +505,32 @@ const SolicitudDetallePage = () => {
               </section>
             )}
 
-            {isCoordinador && !isEstudiante && (
+            {(canResolveSolicitud || updateError || updateSuccess) && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
-                  <h3>Cambiar estado</h3>
-                  <div className="solicitud-detalle-page__estado-controls">
-                    <select
-                      value={estadoTarget}
-                      onChange={(event) => {
-                        setEstadoTarget(event.target.value as SolicitudEstadoTarget)
-                        setUpdateError(null)
-                        setUpdateSuccess(null)
-                      }}
-                    >
-                      {estadosCatalog.map((estado) => (
-                        <option key={estado.id} value={estado.sigla}>
-                          {estado.label}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      className="solicitud-detalle-page__save"
-                      type="button"
-                      onClick={handleGuardarEstado}
-                      disabled={isUpdatingEstado || isSameTargetAsCurrentEstado}
-                    >
-                      {isUpdatingEstado ? 'Guardando...' : 'Guardar estado'}
-                    </button>
-                  </div>
+                  {canResolveSolicitud && (
+                    <>
+                      <h3>Resolver solicitud</h3>
+                      <div className="solicitud-detalle-page__estado-controls">
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                          type="button"
+                          onClick={() => void handleResolverSolicitud('APROBADA')}
+                          disabled={isUpdatingEstado}
+                        >
+                          {isUpdatingEstado ? 'Procesando...' : 'Aprobar'}
+                        </button>
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
+                          type="button"
+                          onClick={() => void handleResolverSolicitud('RECHAZADA')}
+                          disabled={isUpdatingEstado}
+                        >
+                          {isUpdatingEstado ? 'Procesando...' : 'Rechazar'}
+                        </button>
+                      </div>
+                    </>
+                  )}
                   {updateError && (
                     <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{updateError}</p>
                   )}
