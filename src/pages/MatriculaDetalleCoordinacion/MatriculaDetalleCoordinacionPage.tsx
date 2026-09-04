@@ -659,7 +659,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                         <div className="matricula-detalle__doc-actions" data-label="Acciones">
                           <button
                             type="button"
-                            className="matricula-detalle__view-button"
+                            className="sapp-document-action matricula-detalle__view-button"
                             onClick={() =>
                               documentoId &&
                               void handleViewDocumento(documentoId, base64, mimeType, filename)
@@ -670,7 +670,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                           </button>
                           <button
                             type="button"
-                            className="matricula-detalle__download-button"
+                            className="sapp-document-action matricula-detalle__download-button"
                             onClick={() =>
                               documentoId &&
                               void handleDownloadDocumento(documentoId, base64, mimeType, filename)

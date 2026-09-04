@@ -67,6 +67,7 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
                       <div className="documentos-adjuntos__actions">
                         <button
                           type="button"
+                          className="sapp-document-action"
                           onClick={() => handleOpen(documento)}
                           disabled={!canOpen}
                           aria-label={`Ver ${documento.nombreArchivo}`}
@@ -76,6 +77,7 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
                         </button>
                         <button
                           type="button"
+                          className="sapp-document-action"
                           onClick={() => handleDownload(documento)}
                           disabled={!hasFileData}
                           aria-label={`Descargar ${documento.nombreArchivo}`}
