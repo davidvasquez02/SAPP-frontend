@@ -32,9 +32,32 @@ import type {
   MatriculaAcademicaListadoDto,
   MatriculaConvocatoria,
 } from "../../modules/matricula/types";
+import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import "./MatriculaPage.css";
 
 const TIPO_TRAMITE_ID_MATRICULA = 2;
+
+const resolvePeriodoActual = (periodos: string[]): string => {
+  const colombiaDateParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Bogota",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(new Date());
+  const anioActual = Number(
+    colombiaDateParts.find((part) => part.type === "year")?.value,
+  );
+  const mesActual = Number(
+    colombiaDateParts.find((part) => part.type === "month")?.value,
+  );
+  const semestreActual = mesActual <= 6 ? 1 : 2;
+
+  return (
+    periodos.find((periodo) => {
+      const { anio, semestre } = parsePeriodo(periodo);
+      return anio === anioActual && semestre === semestreActual;
+    }) ?? "TODOS"
+  );
+};
 
 const PROGRAMAS_COORDINACION_LABELS: Record<string, string> = {
   MISI: "Maestría en Ingeniería de Sistemas e Informática",
@@ -392,6 +415,9 @@ const MatriculaPage = () => {
         }
 
         setMatriculas(response);
+        setPeriodoFilter(
+          resolvePeriodoActual(response.map((item) => item.periodoAcademico)),
+        );
       } catch (error) {
         const message =
           error instanceof Error
