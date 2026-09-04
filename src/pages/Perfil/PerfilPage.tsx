@@ -157,7 +157,7 @@ const PerfilPage = () => {
       <div className="profile-page">
         <section className="profile-page__intro">
           <span className="profile-page__icon" aria-hidden="true">{fullName.charAt(0).toUpperCase()}</span>
-          <div><h1>{fullName}</h1><p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario SAPP'}</p></div>
+          <div><h1>{fullName}</h1><p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario Minerva'}</p></div>
         </section>
 
         <section className="profile-page__card" aria-labelledby="personal-title">

@@ -707,7 +707,7 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
 
     if (!usuarioCargaId) {
-      setDocumentActionError('No se encontró el usuario SAPP que realiza la carga.')
+      setDocumentActionError('No se encontró el usuario Minerva que realiza la carga.')
       return
     }
 
