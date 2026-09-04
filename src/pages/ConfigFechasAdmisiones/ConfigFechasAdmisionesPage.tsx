@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useSearchParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import {
   createPeriodoAcademico,
   getPeriodosAcademicosWithFechas,
@@ -33,7 +33,6 @@ const EMPTY_FORM: FormState = {
 }
 
 const ConfigFechasAdmisionesPage = () => {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const requestedPeriodoId = Number(searchParams.get('periodoId'))
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -145,6 +144,7 @@ const ConfigFechasAdmisionesPage = () => {
   return (
     <ModuleLayout title={form.periodoId === null ? 'Crear período académico' : 'Editar período académico'}>
       <section className="config-fechas-admisiones">
+        <BackButton to="/fechas">Volver a fechas</BackButton>
         <header className="config-fechas-admisiones__header">
           <div>
             <h1>{form.periodoId === null ? 'Crear período académico' : 'Editar período académico'}</h1>
@@ -214,14 +214,6 @@ const ConfigFechasAdmisionesPage = () => {
           <div className="config-fechas-admisiones__actions">
             <button type="button" onClick={handleSave} disabled={isSaving || isLoading}>
               {isSaving ? 'Guardando...' : form.periodoId === null ? 'Crear período' : 'Actualizar período'}
-            </button>
-            <button
-              type="button"
-              className="config-fechas-admisiones__ghost"
-              onClick={() => navigate('/fechas')}
-              disabled={isSaving}
-            >
-              Atrás
             </button>
           </div>
 

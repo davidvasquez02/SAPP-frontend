@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
@@ -551,12 +551,9 @@ const InscripcionAdmisionDetallePage = () => {
   return (
     <ModuleLayout title="Admisiones">
       <section className="inscripcion-detalle">
-        <Link
-          className="inscripcion-detalle__back"
-          to={`/admisiones/convocatoria/${convocatoriaId}`}
-        >
-          ← Volver a Convocatoria
-        </Link>
+        <BackButton to={`/admisiones/convocatoria/${convocatoriaId}`}>
+          Volver a convocatoria
+        </BackButton>
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
 

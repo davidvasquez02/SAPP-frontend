@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useOutletContext, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../../../components'
+import { useOutletContext, useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../../../components'
 import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
 import type { AuthUser } from '../../../../context/Auth/types'
@@ -320,12 +320,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     >
       {!embedded ? (
         <>
-          <Link
-            className="evaluacion-etapa-page__back"
-            to={`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`}
-          >
-            ← Volver a Inscripción
-          </Link>
+          <BackButton to={`/admisiones/convocatoria/${convocatoriaId}/inscripcion/${inscripcionId}`}>
+            Volver a inscripción
+          </BackButton>
           <div className="evaluacion-etapa-page__header">
             <h1 className="evaluacion-etapa-page__title">{title}</h1>
           </div>

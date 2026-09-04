@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
@@ -118,7 +118,6 @@ const getEstadoBadgeClassName = (estado: string) => {
 const MatriculaDetalleCoordinacionPage = () => {
   const { session } = useAuth()
   const { matriculaId } = useParams()
-  const navigate = useNavigate()
   const parsedMatriculaId = useMemo(() => Number(matriculaId), [matriculaId])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
@@ -525,9 +524,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   return (
     <ModuleLayout title="Matrícula">
       <section className="matricula-detalle">
-        <Link to="/matricula" className="matricula-detalle__back">
-          ← Volver al listado
-        </Link>
+        <BackButton to="/matricula">Volver al listado</BackButton>
 
         {isLoading ? <p className="matricula-detalle__status">Cargando detalle de matrícula...</p> : null}
         {!isLoading && error ? (
@@ -842,9 +839,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         ) : null}
 
         {!isLoading && !Number.isNaN(parsedMatriculaId) && !matricula ? (
-          <button type="button" className="matricula-detalle__back-button" onClick={() => navigate('/matricula')}>
-            Volver
-          </button>
+          <BackButton to="/matricula">Volver al listado</BackButton>
         ) : null}
       </section>
     </ModuleLayout>

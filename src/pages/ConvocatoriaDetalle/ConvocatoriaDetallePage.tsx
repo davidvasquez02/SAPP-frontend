@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { ModuleLayout } from "../../components";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
@@ -274,12 +274,7 @@ const ConvocatoriaDetallePage = () => {
   return (
     <ModuleLayout title="Admisiones">
       <section className="admission-detail-page convocatoria-detalle">
-        <Link
-          className="admission-detail-page__back convocatoria-detalle__back"
-          to="/admisiones"
-        >
-          ← Volver a convocatorias
-        </Link>
+        <BackButton to="/admisiones">Volver a convocatorias</BackButton>
 
         <header className="admission-detail-header convocatoria-detalle__header">
           <div className="admission-detail-header__content">
