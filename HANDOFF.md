@@ -1,3 +1,30 @@
+# Update 2026-09-04 — Gestión de convocatorias integrada en Fechas
+
+## Estado actual y decisiones
+- `/fechas` ya no muestra el resumen plano de convocatorias. Ahora incluye los filtros **Período** y **Vigente**, agrupa las convocatorias por programa y ofrece las acciones **Ver inscripciones**, **Editar** y **Cerrar**.
+- El botón **Crear convocatoria**, con el mismo patrón visual del botón **Crear período académico**, abre `CreateConvocatoriaModal` sin salir del módulo. La edición reutiliza `EditConvocatoriaFechasModal` y el cierre solicita confirmación antes de invocar el servicio.
+- Cada sección de programa tiene paginación independiente de 4 elementos. Cambiar cualquier filtro reinicia todas las páginas de programa para evitar páginas vacías o fuera de rango.
+
+## Paths, contratos y salida esperada
+- Implementación y estilos: `src/pages/FechasModule/FechasModulePage.tsx` y `src/pages/FechasModule/FechasModulePage.css`.
+- Lectura: `GET /sapp/convocatoriaAdmision`; creación y edición conservan los contratos encapsulados en los modales existentes; cierre usa `PUT /sapp/convocatoriaAdmision/cerrar/{id}` a través de `cerrarConvocatoriaAdmision`.
+- Salida esperada: una tabla por programa con hasta 4 filas visibles, controles de página propios y recarga silenciosa después de crear, editar o cerrar. No se modificaron schemas del backend.
+
+## Retos y próximos pasos
+1. Validar el flujo con una sesión institucional y al menos cinco convocatorias del mismo programa, incluido el reinicio de paginación al cambiar filtros.
+2. Confirmar creación, edición, cierre y navegación a inscripciones contra el backend desplegado.
+3. Agregar pruebas de interacción cuando se incorpore Vitest/React Testing Library; actualmente no existe script `test`.
+
+## Entorno, datos y resultados
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un árbol npm adicional. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets; la información proviene del API institucional.
+- `npm run build` (2026-09-04): PASS; transformó 246 módulos y generó `dist/assets/index-CStv-leG.js`. Persiste el warning no bloqueante por el chunk JS de 514.63 kB.
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx` (2026-09-04): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-04): PASS.
+- Captura pendiente por limitación del entorno: la ruta es protegida y requiere sesión/backend institucionales; no hay navegador instalado para una reproducción fiel.
+
+---
+
 # Update 2026-09-04 — Navegación y paginación de períodos académicos
 
 ## Estado actual y decisiones
