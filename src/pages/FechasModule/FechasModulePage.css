@@ -68,7 +68,23 @@
   background: var(--surface);
   border-radius: 14px;
   overflow: hidden;
-  min-width: 560px;
+  min-width: 860px;
+}
+
+.config-module__table .config-module__edit-button {
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary);
+  padding: 0.38rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.config-module__table .config-module__edit-button:hover,
+.config-module__table .config-module__edit-button:focus-visible {
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 .config-module__table th,
