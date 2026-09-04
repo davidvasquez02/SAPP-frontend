@@ -2370,3 +2370,24 @@ npm run lint
 - `git diff --check`: PASS. No se tomó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox; la comprobación integral requiere además la sesión institucional.
 
 ---
+# Update 2026-09-04 — Navegación de regreso estandarizada
+
+## Estado actual y decisión
+- Se creó `src/components/BackButton/BackButton.tsx` con su estilo temático en `BackButton.css`. El componente renderiza un `Link` cuando recibe `to` y un `button` cuando recibe `onClick`; conserva etiquetas contextuales, una flecha uniforme y foco accesible.
+- Los regresos de detalles de convocatoria, inscripción, etapa de evaluación, estudiante, matrícula y solicitud ahora usan este componente. También se movieron al inicio superior izquierdo los regresos de crear/editar período y del formulario interno de nueva solicitud.
+- No se cambiaron rutas, contratos HTTP, schemas, dependencias, variables de entorno, seeds ni datasets. El resultado esperado es que todos esos controles se vean como una píldora institucional idéntica en temas claro y oscuro, antes del contenido principal.
+
+## Paths, retos y próximos pasos
+- Componente y contrato: `src/components/BackButton/BackButton.tsx`, exportado por `src/components/index.ts`; estilos globalmente reutilizables en `src/components/BackButton/BackButton.css`.
+- Consumidores modificados: páginas de detalle bajo `src/pages/{ConvocatoriaDetalle,InscripcionAdmisionDetalle,EstudianteDetalleCoordinacion,MatriculaDetalleCoordinacion,SolicitudDetalle}`, `src/modules/admisiones/pages/EvaluacionEtapaPage`, `src/pages/ConfigFechasAdmisiones` y `src/modules/solicitudes/components/SolicitudesEstudianteView`.
+- Próximo paso recomendado: validar visualmente cada ruta con sesiones institucionales de coordinación, profesor y estudiante, en escritorio/móvil y temas claro/oscuro. Las rutas están protegidas y el contenedor no dispone de sesión ni backend para capturarlas con datos reales.
+- Para regresos nuevos, reutilizar `BackButton`; no volver a crear clases locales de “back”. Si el destino es una ruta, pasar `to` (y opcionalmente `state`); si solo cambia estado local, pasar `onClick`.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npm run build` (2026-09-04): PASS; 248 módulos transformados y archivos `dist/assets/index-Jv30iAcw.css` e `index-OMmJdaeV.js`. Persiste únicamente el warning no bloqueante por el chunk JS de 514.65 kB.
+- `git diff --check` (2026-09-04): PASS.
+- Captura pendiente por limitación del entorno funcional: todas las vistas modificadas requieren autenticación institucional y datos del backend.
+
+---

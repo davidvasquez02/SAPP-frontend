@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../context/Auth'
+import { BackButton } from '../../../../components'
 import { uploadDocument } from '../../../../api/documentUploadService'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
@@ -256,6 +257,9 @@ const SolicitudesEstudianteView = () => {
 
   return (
     <section className="solicitudes-estudiante-view">
+      {viewMode === 'FORM' ? (
+        <BackButton onClick={() => setViewMode('LIST')}>Volver al listado</BackButton>
+      ) : null}
       <header className="solicitudes-estudiante-view__header">
         {/* <h3>{viewMode === 'LIST' ? 'Mis solicitudes' : 'Nueva solicitud'}</h3> */}
         {viewMode === 'LIST' ? (
@@ -270,11 +274,7 @@ const SolicitudesEstudianteView = () => {
           >
             Agregar solicitud
           </button>
-        ) : (
-          <button className="solicitudes-estudiante-view__secondary" onClick={() => setViewMode('LIST')} type="button">
-            Volver al listado
-          </button>
-        )}
+        ) : null}
       </header>
 
       {loading ? (

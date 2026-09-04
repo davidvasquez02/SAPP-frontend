@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useLocation, useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import { hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
@@ -38,7 +38,6 @@ const formatDate = (value: string | null) => {
 }
 
 const SolicitudDetallePage = () => {
-  const navigate = useNavigate()
   const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
@@ -324,13 +323,7 @@ const SolicitudDetallePage = () => {
   return (
     <ModuleLayout title="Detalle de solicitud">
       <section className="solicitud-detalle-page">
-        <button
-          className="solicitud-detalle-page__back"
-          onClick={() => navigate('/solicitudes', { state: { refreshAt: Date.now() } })}
-          type="button"
-        >
-          Volver
-        </button>
+        <BackButton to="/solicitudes" state={{ refreshAt: Date.now() }}>Volver a solicitudes</BackButton>
 
         {loading ? (
           <p className="solicitud-detalle-page__status">Cargando solicitud...</p>

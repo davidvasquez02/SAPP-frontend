@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useLocation, useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import { uploadDocument } from '../../api/documentUploadService'
 import { useAuth } from '../../context/Auth'
 import { fileToBase64 } from '../../utils/fileToBase64'
@@ -823,9 +823,7 @@ const EstudianteDetalleCoordinacionPage = () => {
   return (
     <ModuleLayout title="Estudiantes">
       <section className="estudiante-detalle">
-        <Link to="/coordinacion/estudiantes" className="estudiante-detalle__back">
-          ← Volver al listado
-        </Link>
+        <BackButton to="/coordinacion/estudiantes">Volver al listado</BackButton>
 
         {isLoading ? <p className="estudiante-detalle__status">Cargando información...</p> : null}
 

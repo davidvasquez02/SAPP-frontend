@@ -1,0 +1,42 @@
+.sapp-back-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  min-height: 2.5rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 12%);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: var(--surface-container-low);
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sapp-back-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary), transparent 48%);
+  background: color-mix(in srgb, var(--surface-container-low), var(--primary) 8%);
+  transform: translateX(-2px);
+}
+
+.sapp-back-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 65%);
+  outline-offset: 2px;
+}
+
+.sapp-back-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sapp-back-button__icon {
+  font-size: 1.15rem;
+  line-height: 0;
+}
