@@ -363,7 +363,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 <div className="evaluacion-etapa-page__pdf-actions">
                   <button
                     type="button"
-                    className="evaluacion-etapa-page__pdf-action"
+                    className="sapp-document-action evaluacion-etapa-page__pdf-action"
                     disabled={!hojaVidaPreviewDoc || isEstadoFinal}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
@@ -378,7 +378,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                   </button>
                   <button
                     type="button"
-                    className="evaluacion-etapa-page__pdf-action"
+                    className="sapp-document-action evaluacion-etapa-page__pdf-action"
                     disabled={!hojaVidaPreviewDoc || isEstadoFinal}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return

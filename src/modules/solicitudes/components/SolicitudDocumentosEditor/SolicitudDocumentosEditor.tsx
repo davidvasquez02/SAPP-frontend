@@ -165,6 +165,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                       <>
                         <button
                           type="button"
+                          className="sapp-document-action"
                           aria-label={`Ver ${current.nombreArchivoDocumento}`}
                           onClick={() =>
                             void openSolicitudDocument(
@@ -178,6 +179,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                         </button>
                         <button
                           type="button"
+                          className="sapp-document-action"
                           aria-label={`Descargar ${current.nombreArchivoDocumento}`}
                           onClick={() =>
                             void downloadSolicitudDocument(

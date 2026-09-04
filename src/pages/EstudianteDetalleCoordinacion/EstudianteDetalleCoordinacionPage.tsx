@@ -368,10 +368,10 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
       <footer className="estudiante-detalle__document-actions">
         {hasFile && documento.id ? (
           <>
-            <button type="button" disabled={isProcessing} onClick={() => onView(documento.id as number)}>
+            <button type="button" className="sapp-document-action" disabled={isProcessing} onClick={() => onView(documento.id as number)}>
               {isViewing ? 'Abriendo...' : 'Ver'}
             </button>
-            <button type="button" disabled={isProcessing} onClick={() => onDownload(documento.id as number)}>
+            <button type="button" className="sapp-document-action" disabled={isProcessing} onClick={() => onDownload(documento.id as number)}>
               {isDownloading ? 'Descargando...' : 'Descargar'}
             </button>
           </>

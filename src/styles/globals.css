@@ -162,6 +162,29 @@ table {
   background: color-mix(in srgb, var(--primary), transparent 94%);
 }
 
+/* Acción secundaria estándar para abrir o descargar documentos. */
+.sapp-document-action {
+  border: 1px solid var(--primary) !important;
+  border-radius: 999px !important;
+  padding: 0.45rem 0.8rem !important;
+  background: transparent !important;
+  color: var(--primary) !important;
+  font: inherit !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.sapp-document-action:hover:not(:disabled),
+.sapp-document-action:focus-visible {
+  background: color-mix(in srgb, var(--primary), transparent 90%) !important;
+}
+
+.sapp-document-action:disabled {
+  opacity: 0.55 !important;
+  cursor: wait !important;
+}
+
 .sapp-filters-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

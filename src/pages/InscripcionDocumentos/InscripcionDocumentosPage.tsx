@@ -469,7 +469,7 @@ const InscripcionDocumentosPage = () => {
                   <div className="inscripcion-documentos__docActions">
                     <button
                       type="button"
-                      className="inscripcion-documentos__view-button"
+                      className="sapp-document-action inscripcion-documentos__view-button"
                       onClick={() =>
                         documentoId && handleViewDocumento(documentoId, base64, mimeType, filename)
                       }
@@ -480,7 +480,7 @@ const InscripcionDocumentosPage = () => {
                     </button>
                     <button
                       type="button"
-                      className="inscripcion-documentos__download-button"
+                      className="sapp-document-action inscripcion-documentos__download-button"
                       onClick={() =>
                         documentoId && handleDownloadDocumento(documentoId, base64, mimeType, filename)
                       }

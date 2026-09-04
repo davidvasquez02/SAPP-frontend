@@ -1,3 +1,30 @@
+# Update 2026-09-04 — Acciones documentales Ver/Descargar estandarizadas
+
+## Estado actual y decisión
+- Los botones **Ver/Abrir** y **Descargar** de los listados de actas, inscripción documental, matrícula, detalle estudiantil, documentos de solicitudes y evaluación de admisión usan la utilidad global `sapp-document-action`.
+- La utilidad reproduce el patrón visual aprobado en Actas: borde y texto `--primary`, fondo transparente, radio pill, peso tipográfico fuerte y estados hover/foco/disabled basados en tokens semánticos. Las reglas globales tienen prioridad intencional sobre skins locales heredados.
+- El cambio es exclusivamente presentacional: no se alteraron callbacks, condiciones `disabled`, permisos, carga/descarga base64, nombres de archivo, contratos HTTP ni modelos TypeScript.
+
+## Paths, artefactos y salida esperada
+- Estilo canónico: `src/styles/globals.css`, clase `.sapp-document-action`.
+- Consumidores actualizados: `src/pages/Actas`, `src/pages/InscripcionDocumentos`, `src/pages/MatriculaDetalleCoordinacion`, `src/pages/EstudianteDetalleCoordinacion`, `src/modules/matricula/components/DocumentosRequeridosTable`, `src/modules/solicitudes/components/DocumentosAdjuntos`, `src/modules/solicitudes/components/SolicitudDocumentosEditor` y `src/modules/admisiones/pages/EvaluacionEtapaPage`.
+- Salida esperada: todas esas acciones se ven como botones secundarios pill con contorno institucional en temas claro y oscuro; cada acción continúa ejecutando exactamente su handler previo.
+- No hay nuevos paquetes, schemas, endpoints, variables, seeds, datasets ni artefactos persistentes.
+
+## Retos y próximos pasos
+1. Validar visualmente las rutas protegidas con sesiones reales de estudiante, coordinación y evaluador, especialmente estados deshabilitados y textos transitorios `Abriendo...`/`Descargando...`.
+2. Si aparecen nuevos listados documentales, aplicar `sapp-document-action` solo a las acciones de apertura/descarga; no usarla para acciones destructivas, carga, aprobación o rechazo.
+3. El repositorio no incorpora Vitest/React Testing Library ni un script `test`; cuando se agreguen, cubrir que las condiciones y callbacks de estas acciones permanezcan sin cambios.
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Entorno observado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2.
+- `npm run build` (2026-09-04): PASS; 248 módulos transformados. Persiste el warning no bloqueante del chunk JavaScript de 515.36 kB.
+- `npm run lint` (2026-09-04): FAIL por 9 errores y 1 warning preexistentes fuera del alcance visual (servicios con `any`, efecto de guard, mocks/utilidades sin uso y tipos vacíos, entre otros).
+- Captura pendiente: las pantallas afectadas son protegidas y el contenedor no dispone de sesión ni backend institucional para presentar listados documentales reales sin alterar el flujo de autenticación.
+
+---
+
 # Update 2026-09-04 — Período actual en matrículas y marca lateral simplificada
 
 ## Estado actual y decisiones

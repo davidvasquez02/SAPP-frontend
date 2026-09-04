@@ -92,7 +92,7 @@ const DocumentosRequeridosTable = ({
               {showActions ? (
                 <td>
                   <div className="documentos-requeridos-table__actions">
-                    <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
+                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
                       Ver
                     </button>
                     <button
@@ -105,7 +105,7 @@ const DocumentosRequeridosTable = ({
                     >
                       Subir
                     </button>
-                    <button type="button" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
+                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
                       Descargar
                     </button>
                     <input
