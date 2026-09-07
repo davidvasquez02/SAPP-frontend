@@ -1,6 +1,6 @@
 # Minerva Frontend — EISI UIS
 
-## Estado funcional (2026-09-04)
+## Estado funcional (2026-09-07)
 
 La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al abrirla consulta `GET /api/sapp/firmaUsuario/{usuarioSappId}` y precarga la firma y su título si existen. El usuario puede seleccionar una firma PNG/JPG (máximo 2 MB), que se previsualiza y se envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Para usuarios distintos de `ESTUDIANTE`, la interfaz también exige y envía el título; para `ESTUDIANTE`, el campo se oculta y el body contiene únicamente `contenidoFirma`.
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-07:** la edición de un período académico usa un único `PUT /sapp/periodoAcademico/{id}`, donde el identificador se envía exclusivamente en la URL. El body se alineó con la última versión del backend: `{ fechaInicio, fechaFin, descripcion, fechas: [{ tipoTramiteId, fechaInicio, fechaFin, descripcion }] }`, sin IDs, año ni número de período. La creación conserva su `POST`.
 - **2026-09-04:** las tarjetas de convocatorias en `/admisiones` diferencian ahora todo el bloque por vigencia, no solo la insignia: las abiertas usan acento de éxito y explican que reciben aspirantes; las cerradas usan acento de advertencia, informan que las inscripciones finalizaron y reemplazan la acción primaria por **Consultar convocatoria**. La distinción combina color, texto y símbolos para no depender únicamente de la percepción cromática y funciona con los temas claro/oscuro.
 - **2026-09-04:** las acciones **Ver/Abrir** y **Descargar** de los listados documentales comparten la clase global `sapp-document-action`, basada en la apariencia del listado de actas: contorno primario, forma pill y estados hover, foco y espera compatibles con tema claro/oscuro. Se conservaron intactos los handlers, permisos, estados de carga y contratos HTTP de cada pantalla.
 - **2026-09-04:** el listado de matrículas de coordinación preselecciona, después de cargar los registros, el período correspondiente a la fecha actual en Colombia (`año-1` entre enero y junio; `año-2` entre julio y diciembre). Si el API no devuelve matrículas de ese período, conserva **TODOS**. El sidebar ya no presenta la insignia circular **M** cuando está contraído; el nombre **Minerva** aparece únicamente al expandirlo y permanece visible en móvil.

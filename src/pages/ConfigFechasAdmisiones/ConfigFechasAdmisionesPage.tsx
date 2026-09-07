@@ -7,7 +7,6 @@ import {
   updatePeriodoAcademico,
 } from '../../modules/configFechas/api/periodoAcademicoService'
 import { TIPO_TRAMITE_ADMISIONES } from '../../modules/configFechas/constants'
-import { savePeriodoAcademicoFecha } from '../../modules/configFechas/api/periodoAcademicoFechaService'
 import './ConfigFechasAdmisionesPage.css'
 
 type FormState = {
@@ -121,14 +120,15 @@ const ConfigFechasAdmisionesPage = () => {
         await updatePeriodoAcademico(form.periodoId, {
           fechaInicio: form.fechaInicio,
           fechaFin: form.fechaFin,
-          descripcion: form.descripcion.trim() || `Periodo ${form.anio}-${form.periodo}`,
-        })
-        await savePeriodoAcademicoFecha({
-          periodoId: form.periodoId,
-          tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-          fechaInicio: form.fechaInicioMatricula,
-          fechaFin: form.fechaFinMatricula,
-          descripcion: form.descripcion.trim() || `Fechas matrículas ${form.anio}-${form.periodo}`,
+          descripcion: `Periodo ${form.anio}-${form.periodo}`,
+          fechas: [
+            {
+              tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
+              fechaInicio: form.fechaInicioMatricula,
+              fechaFin: form.fechaFinMatricula,
+              descripcion: form.descripcion.trim() || `Fechas matrículas ${form.anio}-${form.periodo}`,
+            },
+          ],
         })
         setFeedback('Periodo académico actualizado correctamente.')
       }

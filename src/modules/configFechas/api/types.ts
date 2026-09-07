@@ -45,6 +45,12 @@ export type UpdatePeriodoAcademicoRequestDto = {
   fechaInicio: string
   fechaFin: string
   descripcion: string
+  fechas: Array<{
+    tipoTramiteId: number
+    fechaInicio: string
+    fechaFin: string
+    descripcion: string
+  }>
 }
 
 export type PeriodoAcademicoFechaRequestDto = {

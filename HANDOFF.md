@@ -1,3 +1,31 @@
+# Update 2026-09-07 — Contrato vigente del PUT de períodos académicos
+
+## Estado actual y decisión
+- La ruta protegida `/fechas/periodos?periodoId={id}` obtiene el identificador del período desde `GET /sapp/periodoAcademico/withFechas` y lo usa únicamente como parámetro de ruta.
+- La creación no cambió: ejecuta `POST /sapp/periodoAcademico` y omite identificadores. La edición ejecuta una sola solicitud `PUT /sapp/periodoAcademico/{id}`; ya no encadena el PUT parcial del período con un POST independiente a `/sapp/periodoAcademicoFecha`.
+- De acuerdo con el contrato vigente del backend, el body de edición no incluye el id del período, el id de la fecha, `anio` ni `periodo`. La descripción del período se genera como `Periodo {anio}-{periodo}` y la descripción capturada se conserva en la fecha de matrícula.
+
+## Paths, contrato y salida esperada
+- Formulario/orquestación: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`.
+- Tipos del contrato: `src/modules/configFechas/api/types.ts`; transporte: `src/modules/configFechas/api/periodoAcademicoService.ts`; tipo de trámite: `src/modules/configFechas/constants.ts`.
+- Body exacto de edición: `{ fechaInicio, fechaFin, descripcion, fechas: [{ tipoTramiteId, fechaInicio, fechaFin, descripcion }] }`. El id aparece únicamente en `/sapp/periodoAcademico/{id}`; se espera una respuesta exitosa bajo el envelope `ApiResponse<null>`.
+- No se agregaron dependencias, variables de entorno, seeds, datasets ni cambios visuales. Los datos reales continúan viniendo del API institucional.
+
+## Retos y próximos pasos
+1. Confirmar contra el backend desplegado que `PUT /sapp/periodoAcademico/{id}` acepta el DTO integral y persiste período y fechas de manera transaccional.
+2. Validar en Network con un período real que ningún identificador, `anio` ni `periodo` aparezca en el body, y que no se emita ningún POST a `periodoAcademicoFecha` al editar.
+3. Agregar una prueba del servicio/formulario cuando el repositorio incorpore Vitest/React Testing Library; `package.json` todavía no define un script `test`.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npx eslint src/modules/configFechas/api/types.ts src/modules/configFechas/api/periodoAcademicoService.ts src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx` (2026-09-07): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-07): PASS; TypeScript y rolldown-vite transformaron 247 módulos y generaron `dist/assets/index-snGL7imV.js`. Persiste el warning no bloqueante del chunk JavaScript de 515.68 kB.
+- `git diff --check` (2026-09-07): PASS.
+- No se tomó captura porque el cambio afecta únicamente el método y body HTTP, no la presentación visible; la comprobación funcional completa requiere sesión y backend institucionales.
+
+---
+
 # Update 2026-09-04 — Estados visuales de convocatorias abiertas y cerradas
 
 ## Estado actual y decisión
