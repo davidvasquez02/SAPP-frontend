@@ -3,7 +3,7 @@ import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
-const EISI_LOGO_SRC = '/brand/svg.svg'
+const EISI_LOGO_SRC = '/brand/eisi-favicon.svg'
 const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
