@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-07:** la pestaña del navegador se identifica como **Minerva | Posgrados** y conserva el favicon EISI. El encabezado compartido muestra ahora los logotipos EISI y UIS juntos, en ese orden y con la misma altura responsiva para mantener una proporción visual consistente en escritorio y móvil.
 - **2026-09-07:** la edición de un período académico usa un único `PUT /sapp/periodoAcademico/{id}`, donde el identificador se envía exclusivamente en la URL. El body se alineó con la última versión del backend: `{ fechaInicio, fechaFin, descripcion, fechas: [{ tipoTramiteId, fechaInicio, fechaFin, descripcion }] }`, sin IDs, año ni número de período. La creación conserva su `POST`.
 - **2026-09-04:** las tarjetas de convocatorias en `/admisiones` diferencian ahora todo el bloque por vigencia, no solo la insignia: las abiertas usan acento de éxito y explican que reciben aspirantes; las cerradas usan acento de advertencia, informan que las inscripciones finalizaron y reemplazan la acción primaria por **Consultar convocatoria**. La distinción combina color, texto y símbolos para no depender únicamente de la percepción cromática y funciona con los temas claro/oscuro.
 - **2026-09-04:** las acciones **Ver/Abrir** y **Descargar** de los listados documentales comparten la clase global `sapp-document-action`, basada en la apariencia del listado de actas: contorno primario, forma pill y estados hover, foco y espera compatibles con tema claro/oscuro. Se conservaron intactos los handlers, permisos, estados de carga y contratos HTTP de cada pantalla.
@@ -352,11 +353,11 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Se configuró proxy local de Vite para reenviar `/api/sapp/*` a `VITE_DEV_PROXY_TARGET` y remover el prefijo cuando el target es localhost.
 - Los servicios siguen usando el cliente HTTP centralizado; este normaliza rutas heredadas `/sapp/*` y rutas ya migradas `/api/sapp/*` para evitar duplicar prefijos.
 
-### 2026-06-12 — Marca EISI/UIS
+### 2026-06-12 — Marca EISI/UIS (actualizada 2026-09-07)
 
 - Se reemplazó el favicon de Vite por el ícono EISI en `public/brand/eisi-favicon.svg` y `index.html`.
-- Se agregó el logo UIS en el encabezado de módulos, a la derecha de la foto del usuario autenticado, usando `public/brand/uis-logo.svg` y estilos responsivos en `ModuleLayout`.
-- Se actualizó el título del documento a `SAPP EISI UIS` y el idioma HTML a español.
+- El encabezado de módulos presenta el logo EISI a la izquierda del logo UIS, ambos con altura responsiva concordante, usando `public/brand/svg.svg`, `public/brand/LOGO UIS_PNG.png` y estilos compartidos en `ModuleLayout`.
+- El título vigente del documento es `Minerva | Posgrados`; el idioma HTML permanece configurado en español.
 
 ### 2026-06-06 — Rediseños visuales de admisiones/documentos
 

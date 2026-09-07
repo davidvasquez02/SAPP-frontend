@@ -2498,3 +2498,31 @@ npm run lint
 - Captura pendiente por limitación del entorno funcional: todas las vistas modificadas requieren autenticación institucional y datos del backend.
 
 ---
+
+# Update 2026-09-07 — Título Minerva y pareja de logos EISI/UIS
+
+## Estado actual y decisión
+- `index.html` presenta el título exacto **Minerva | Posgrados** y mantiene como favicon el logo EISI de `public/brand/eisi-favicon.svg`.
+- El encabezado compartido de `ModuleLayout` muestra, después del perfil, el logo EISI a la izquierda del logo UIS. Ambos usan una única clase y la misma altura responsiva; se preserva su relación de aspecto con `width: auto` y `object-fit: contain`.
+- No se modificaron rutas, contratos HTTP, schemas, dependencias, variables de entorno, seeds ni datasets.
+
+## Paths, contrato visual y salida esperada
+- Documento y favicon: `index.html` y `public/brand/eisi-favicon.svg`.
+- Assets del encabezado: `public/brand/svg.svg` (EISI) y `public/brand/LOGO UIS_PNG.png` (UIS); ambos assets fuente tienen lienzo de 1197×733.
+- Integración y estilos: `src/components/ModuleLayout/ModuleLayout.tsx` y `src/components/ModuleLayout/ModuleLayout.css`.
+- Salida esperada: en la esquina superior derecha, después del nombre y avatar, aparece **EISI → UIS** con alturas iguales; en móvil el grupo permanece unido, se alinea a la derecha y reduce su altura fluidamente.
+
+## Retos y próximos pasos
+1. Validar el encabezado en una ruta protegida con sesión institucional, en escritorio y móvil, y en temas claro/oscuro.
+2. Si los archivos oficiales se reemplazan, conservar sus rutas o actualizar ambas constantes en `ModuleLayout.tsx`; no volver a estilizar cada logo con alturas independientes.
+
+## Entorno y resultados
+- Raíz única: `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. No existen seeds o datasets para este cambio.
+- `npx eslint src/components/ModuleLayout/ModuleLayout.tsx` (2026-09-07): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-07): PASS; TypeScript y Vite transformaron 247 módulos y generaron `dist/assets/index-BF2FxPwU.css` e `index-C6bSK8Xj.js`. Persiste el warning informativo no bloqueante por el chunk JS de 515.95 kB.
+- `git diff --check` (2026-09-07): PASS.
+- `npm run lint` global (2026-09-07): FAIL por 9 errores y 1 warning preexistentes fuera de este cambio (`no-explicit-any`, `set-state-in-effect`, variables sin uso, interfaces vacías y una dependencia de hook faltante). El archivo TSX modificado sí pasa ESLint de forma aislada.
+- No se pudo tomar la captura solicitada: el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer, y el encabezado real requiere además una sesión institucional en una ruta protegida.
+
+---
