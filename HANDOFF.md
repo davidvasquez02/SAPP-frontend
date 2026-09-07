@@ -25,6 +25,28 @@
 - No se tomó captura porque el cambio afecta únicamente el método y body HTTP, no la presentación visible; la comprobación funcional completa requiere sesión y backend institucionales.
 
 ---
+# Update 2026-09-07 — Homologación con materias externas
+
+## Estado actual y contrato
+- El formulario de solicitud de homologación carga en paralelo el catálogo destino del programa (`GET /sapp/asignaturas?programaId=1`) y las materias origen registradas (`GET /sapp/homologaciones/asignaturas-externas/activas`). La respuesta de materias externas esperada es `{ ok, message, data: [{ id, codigo, nombre, activo }] }`.
+- Cada fila permite elegir **Del listado** o **No la encuentro**. En el primer caso el POST contiene `{ asignatura_origen_id, asignatura_destino_id }`; en el segundo contiene `{ nombreAsignaturaExterna, codigoAsignaturaExterna?, asignatura_destino_id }`. El nombre manual y el destino siempre son obligatorios; el código manual es opcional.
+- El arreglo se envía como `solicitudHomologacionesAsignaturas` a `POST /sapp/solicitudesAcademicas`. No se envían simultáneamente el ID de origen y los datos manuales. Se eliminó la creación mock de materias.
+- Paths principales: `src/modules/solicitudes/api/{asignaturasService.ts,types.ts}` y `src/modules/solicitudes/components/SolicitudEstudianteForm/{SolicitudEstudianteForm.tsx,SolicitudEstudianteForm.css}`.
+
+## Retos y próximos pasos
+1. Confirmar con backend si el programa debe resolverse desde la sesión en lugar de conservar el `programaId=1` preexistente.
+2. Validar con una sesión de estudiante ambos payloads contra el backend y comprobar nombres/códigos nulos en el desplegable.
+3. Agregar pruebas de componente cuando el repositorio incorpore Vitest/Testing Library; actualmente no hay script de tests ni esas dependencias.
+
+## Entorno y resultados
+- Entorno único `/workspace/SAPP-frontend`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no crear venv, conda, poetry ni otro árbol npm. No hay seeds o datasets locales: los catálogos provienen del API.
+- `npm run build` (2026-09-07): PASS; 247 módulos transformados. Persiste el warning informativo del chunk JavaScript superior a 500 kB.
+- `npx eslint src/modules/solicitudes/api/asignaturasService.ts src/modules/solicitudes/api/types.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` (2026-09-07): PASS; solo apareció el warning conocido de npm sobre `http-proxy`.
+- `npm run lint` global (2026-09-07): FAIL por 9 errores y 1 warning preexistentes en archivos ajenos a este cambio.
+- `git diff --check` (2026-09-07): PASS.
+- Captura pendiente: la ruta requiere autenticación institucional y datos del backend, y este contenedor no dispone de navegador instalado.
+
+---
 
 # Update 2026-09-04 — Estados visuales de convocatorias abiertas y cerradas
 

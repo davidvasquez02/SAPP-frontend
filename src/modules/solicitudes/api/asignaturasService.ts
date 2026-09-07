@@ -1,5 +1,5 @@
 import { httpGet } from '../../../shared/http/httpClient'
-import type { ApiResponse, AsignaturaCatalogoDto } from './types'
+import type { ApiResponse, AsignaturaCatalogoDto, AsignaturaExternaDto } from './types'
 
 type AsignaturaApiDto = {
   id: number
@@ -7,6 +7,8 @@ type AsignaturaApiDto = {
   nombre?: string | null
   codigoNombre?: string | null
 }
+
+type AsignaturaExternaApiDto = AsignaturaApiDto & { activo?: boolean }
 
 const DEFAULT_PROGRAMA_ID = 1
 
@@ -17,6 +19,18 @@ const mapAsignatura = (item: AsignaturaApiDto): AsignaturaCatalogoDto => {
     codigo: item.codigo ?? null,
     nombre,
   }
+}
+
+export async function getAsignaturasExternasActivas(): Promise<AsignaturaExternaDto[]> {
+  const response = await httpGet<ApiResponse<AsignaturaExternaApiDto[]>>(
+    '/sapp/homologaciones/asignaturas-externas/activas',
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar las asignaturas externas.')
+  }
+
+  return (response.data ?? []).map((item) => ({ ...mapAsignatura(item), activo: item.activo ?? true }))
 }
 
 export async function getAsignaturasCatalogo(programaId = DEFAULT_PROGRAMA_ID): Promise<AsignaturaCatalogoDto[]> {

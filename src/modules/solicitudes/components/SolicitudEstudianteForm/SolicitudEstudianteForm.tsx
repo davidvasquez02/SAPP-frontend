@@ -3,12 +3,14 @@ import { DocumentUploadCard } from '../../../../components'
 import { getDocumentosPorTipoTramite } from '../../../../api/tramiteDocumentService'
 import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
-import { getAsignaturasCatalogo } from '../../api/asignaturasService'
+import { getAsignaturasCatalogo, getAsignaturasExternasActivas } from '../../api/asignaturasService'
 import { getModalidadesContraprestacion } from '../../api/modalidadContraprestacionService'
 import type {
   AsignaturaCatalogoDto,
+  AsignaturaExternaDto,
   ModalidadContraprestacionDto,
   PreviewSolicitudCreditoResponseDto,
+  SolicitudHomologacionAsignaturaRequestDto,
 } from '../../api/types'
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
@@ -17,7 +19,10 @@ import './SolicitudEstudianteForm.css'
 
 interface HomologacionAsignaturaFormItem {
   id: string
+  origenModo: 'catalogo' | 'manual'
   asignaturaOrigenId: number | null
+  nombreAsignaturaExterna: string
+  codigoAsignaturaExterna: string
   asignaturaDestinoId: number | null
 }
 
@@ -26,10 +31,7 @@ export interface SolicitudEstudiantePayload {
   observaciones: string
   modalidadId: number | null
   motivosCreditoCondonable: string[]
-  solicitudHomologacionesAsignaturas: Array<{
-    asignatura_origen_id: number
-    asignatura_destino_id: number
-  }>
+  solicitudHomologacionesAsignaturas: SolicitudHomologacionAsignaturaRequestDto[]
   documentos: Array<{
     id: number
     nombre: string
@@ -79,15 +81,6 @@ const mapDraftToCardItem = (documento: SolicitudDocumentoDraft): DocumentUploadI
   selectedFile: documento.file,
   errorMessage: documento.error ?? undefined,
 })
-
-const nextMockAsignaturaId = (() => {
-  let current = -1
-  return () => {
-    const value = current
-    current -= 1
-    return value
-  }
-})()
 
 const normalizeText = (value: string): string =>
   value
@@ -145,9 +138,9 @@ const SolicitudEstudianteForm = ({
   const [loadingModalidades, setLoadingModalidades] = useState(false)
   const [modalidadesError, setModalidadesError] = useState<string | null>(null)
   const [asignaturasCatalogo, setAsignaturasCatalogo] = useState<AsignaturaCatalogoDto[]>([])
+  const [asignaturasExternas, setAsignaturasExternas] = useState<AsignaturaExternaDto[]>([])
   const [loadingAsignaturas, setLoadingAsignaturas] = useState(false)
   const [asignaturasError, setAsignaturasError] = useState<string | null>(null)
-  const [nuevaAsignaturaNombre, setNuevaAsignaturaNombre] = useState('')
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
@@ -282,8 +275,8 @@ const SolicitudEstudianteForm = ({
   useEffect(() => {
     if (!isHomologacion) {
       setAsignaturasCatalogo([])
+      setAsignaturasExternas([])
       setHomologaciones([])
-      setNuevaAsignaturaNombre('')
       setLoadingAsignaturas(false)
       setAsignaturasError(null)
       return
@@ -293,14 +286,15 @@ const SolicitudEstudianteForm = ({
     setLoadingAsignaturas(true)
     setAsignaturasError(null)
 
-    getAsignaturasCatalogo()
-      .then((asignaturas) => {
+    Promise.all([getAsignaturasCatalogo(), getAsignaturasExternasActivas()])
+      .then(([asignaturas, externas]) => {
         if (mounted) {
           setAsignaturasCatalogo(asignaturas)
+          setAsignaturasExternas(externas)
           setHomologaciones((current) =>
             current.length > 0
               ? current
-              : [{ id: crypto.randomUUID(), asignaturaOrigenId: null, asignaturaDestinoId: null }],
+              : [{ id: crypto.randomUUID(), origenModo: 'catalogo', asignaturaOrigenId: null, nombreAsignaturaExterna: '', codigoAsignaturaExterna: '', asignaturaDestinoId: null }],
           )
         }
       })
@@ -309,6 +303,7 @@ const SolicitudEstudianteForm = ({
           return
         }
         setAsignaturasCatalogo([])
+        setAsignaturasExternas([])
         setAsignaturasError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar asignaturas.')
       })
       .finally(() => {
@@ -373,11 +368,12 @@ const SolicitudEstudianteForm = ({
         setErrorMsg('Agrega al menos un par de asignaturas para homologación.')
         return false
       }
-      const missingPair = homologaciones.some(
-        (item) => item.asignaturaOrigenId == null || item.asignaturaDestinoId == null,
+      const missingPair = homologaciones.some((item) =>
+        item.asignaturaDestinoId == null ||
+        (item.origenModo === 'catalogo' ? item.asignaturaOrigenId == null : item.nombreAsignaturaExterna.trim() === ''),
       )
       if (missingPair) {
-        setErrorMsg('Cada fila de homologación debe tener asignatura origen y destino.')
+        setErrorMsg('Cada homologación debe tener una materia de origen válida y una materia de destino.')
         return false
       }
     }
@@ -404,7 +400,6 @@ const SolicitudEstudianteForm = ({
     setObservaciones('')
     setModalidadId(null)
     setHomologaciones([])
-    setNuevaAsignaturaNombre('')
     setMotivosCredito([''])
     setCiudadExpedicionDocumento('')
     setDireccionEstudiante('')
@@ -518,11 +513,14 @@ const SolicitudEstudianteForm = ({
       modalidadId,
       motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
       solicitudHomologacionesAsignaturas: homologaciones
-        .filter((item) => item.asignaturaOrigenId !== null && item.asignaturaDestinoId !== null)
-        .map((item) => ({
-          asignatura_origen_id: item.asignaturaOrigenId as number,
-          asignatura_destino_id: item.asignaturaDestinoId as number,
-        })),
+        .filter((item) => item.asignaturaDestinoId !== null)
+        .map((item) => item.origenModo === 'catalogo'
+          ? { asignatura_origen_id: item.asignaturaOrigenId as number, asignatura_destino_id: item.asignaturaDestinoId as number }
+          : {
+              nombreAsignaturaExterna: item.nombreAsignaturaExterna.trim(),
+              ...(item.codigoAsignaturaExterna.trim() ? { codigoAsignaturaExterna: item.codigoAsignaturaExterna.trim() } : {}),
+              asignatura_destino_id: item.asignaturaDestinoId as number,
+            }),
       documentos: documentosDraft.map((documento) => ({
         id: documento.id,
         nombre: documento.nombre,
@@ -553,7 +551,7 @@ const SolicitudEstudianteForm = ({
   }
 
   const addHomologacionRow = () => {
-    setHomologaciones((current) => [...current, { id: crypto.randomUUID(), asignaturaOrigenId: null, asignaturaDestinoId: null }])
+    setHomologaciones((current) => [...current, { id: crypto.randomUUID(), origenModo: 'catalogo', asignaturaOrigenId: null, nombreAsignaturaExterna: '', codigoAsignaturaExterna: '', asignaturaDestinoId: null }])
   }
 
   const removeHomologacionRow = (rowId: string) => {
@@ -562,10 +560,9 @@ const SolicitudEstudianteForm = ({
 
   const updateHomologacionRow = (
     rowId: string,
-    key: 'asignaturaOrigenId' | 'asignaturaDestinoId',
-    value: number | null,
+    changes: Partial<Omit<HomologacionAsignaturaFormItem, 'id'>>,
   ) => {
-    setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, [key]: value } : item)))
+    setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, ...changes } : item)))
   }
 
 
@@ -579,20 +576,6 @@ const SolicitudEstudianteForm = ({
 
   const removeMotivo = (index: number) => {
     setMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
-  }
-
-  const addMockAsignatura = () => {
-    const nombre = nuevaAsignaturaNombre.trim()
-    if (!nombre) {
-      return
-    }
-    const newItem: AsignaturaCatalogoDto = {
-      id: nextMockAsignaturaId(),
-      codigo: null,
-      nombre,
-    }
-    setAsignaturasCatalogo((current) => [newItem, ...current])
-    setNuevaAsignaturaNombre('')
   }
 
   return (
@@ -778,19 +761,8 @@ const SolicitudEstudianteForm = ({
         <div className="solicitud-estudiante-form__section">
           <h4>Asignaturas de homologación</h4>
           <p className="solicitud-estudiante-form__help">
-            Selecciona pares de asignatura origen/destino. También puedes crear asignaturas nuevas de forma temporal
-            (mock).
+            Indica la materia que ya cursaste y la materia de tu programa por la cual deseas homologarla.
           </p>
-          <div className="solicitud-estudiante-form__mock-create">
-            <input
-              value={nuevaAsignaturaNombre}
-              onChange={(event) => setNuevaAsignaturaNombre(event.target.value)}
-              placeholder="Nueva asignatura (mock)"
-            />
-            <button type="button" onClick={addMockAsignatura}>
-              Agregar asignatura mock
-            </button>
-          </div>
           {loadingAsignaturas ? (
             <p className="solicitud-estudiante-form__empty">Cargando asignaturas...</p>
           ) : asignaturasError ? (
@@ -803,36 +775,39 @@ const SolicitudEstudianteForm = ({
             <div className="solicitud-estudiante-form__homologaciones">
               {homologaciones.map((item, index) => (
                 <div key={item.id} className="solicitud-estudiante-form__homologacion-row">
-                  <span className="solicitud-estudiante-form__homologacion-index">Par #{index + 1}</span>
-                  <select
-                    value={item.asignaturaOrigenId ?? ''}
-                    onChange={(event) =>
-                      updateHomologacionRow(item.id, 'asignaturaOrigenId', event.target.value ? Number(event.target.value) : null)
-                    }
-                  >
-                    <option value="">Asignatura a homologar (origen)</option>
-                    {asignaturasCatalogo.map((asignatura) => (
-                      <option key={`origen-${asignatura.id}`} value={asignatura.id}>
-                        {asignatura.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={item.asignaturaDestinoId ?? ''}
-                    onChange={(event) =>
-                      updateHomologacionRow(item.id, 'asignaturaDestinoId', event.target.value ? Number(event.target.value) : null)
-                    }
-                  >
-                    <option value="">Asignatura homologable (destino)</option>
-                    {asignaturasCatalogo.map((asignatura) => (
-                      <option key={`destino-${asignatura.id}`} value={asignatura.id}>
-                        {asignatura.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" onClick={() => removeHomologacionRow(item.id)}>
+                  <div className="solicitud-estudiante-form__homologacion-heading">
+                    <strong>Homologación #{index + 1}</strong>
+                    <button type="button" onClick={() => removeHomologacionRow(item.id)}>
                     Quitar
-                  </button>
+                    </button>
+                  </div>
+                  <div className="solicitud-estudiante-form__homologacion-fields">
+                    <fieldset className="solicitud-estudiante-form__origen">
+                      <legend>Materia origen *</legend>
+                      <div className="solicitud-estudiante-form__source-toggle">
+                        <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Del listado</button>
+                        <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>No la encuentro</button>
+                      </div>
+                      {item.origenModo === 'catalogo' ? (
+                        <select aria-label={`Materia origen ${index + 1}`} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
+                          <option value="">Selecciona la materia cursada</option>
+                          {asignaturasExternas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
+                        </select>
+                      ) : (
+                        <div className="solicitud-estudiante-form__manual-origin">
+                          <input aria-label={`Código materia origen ${index + 1}`} value={item.codigoAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { codigoAsignaturaExterna: event.target.value })} placeholder="Código (opcional)" />
+                          <input aria-label={`Nombre materia origen ${index + 1}`} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
+                        </div>
+                      )}
+                    </fieldset>
+                    <label className="solicitud-estudiante-form__destino">
+                      <span>Materia destino del programa *</span>
+                      <select value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
+                        <option value="">Selecciona la materia a homologar</option>
+                        {asignaturasCatalogo.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
+                      </select>
+                    </label>
+                  </div>
                 </div>
               ))}
               <button type="button" onClick={addHomologacionRow}>

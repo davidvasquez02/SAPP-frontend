@@ -2,7 +2,7 @@
 
 ## Estado funcional (2026-09-07)
 
-La pantalla protegida `/perfil` se abre al seleccionar la foto del usuario en el encabezado. Presenta los datos disponibles de identidad y, según el rol, un resumen específico para coordinación o estudiante. Los campos académicos que todavía no entrega la sesión se identifican como pendientes/provisionales. Al abrirla consulta `GET /api/sapp/firmaUsuario/{usuarioSappId}` y precarga la firma y su título si existen. El usuario puede seleccionar una firma PNG/JPG (máximo 2 MB), que se previsualiza y se envía inmediatamente a `POST /api/sapp/firmaUsuario/{usuarioSappId}`. Para usuarios distintos de `ESTUDIANTE`, la interfaz también exige y envía el título; para `ESTUDIANTE`, el campo se oculta y el body contiene únicamente `contenidoFirma`.
+El formulario de solicitudes académicas soporta la homologación de una o más parejas de materias. La materia destino se elige del catálogo del programa; la materia origen se elige del catálogo externo activo o se registra en el formulario mediante nombre obligatorio y código opcional. El alta envía cada origen existente mediante `asignatura_origen_id`, o cada origen nuevo mediante `nombreAsignaturaExterna` y, cuando se diligencia, `codigoAsignaturaExterna`.
 
 ### Stack instalado y ejecución rápida
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-07:** homologación separa los catálogos de origen y destino. Los orígenes se consultan en `GET /sapp/homologaciones/asignaturas-externas/activas`, los destinos permanecen en `GET /sapp/asignaturas?programaId=1` y cada fila permite alternar entre una materia externa registrada y el alta manual. `POST /sapp/solicitudesAcademicas` recibe ambas variantes dentro de `solicitudHomologacionesAsignaturas`; ya no se crean opciones mock en memoria.
 - **2026-09-07:** la pestaña del navegador se identifica como **Minerva | Posgrados** y conserva el favicon EISI. El encabezado compartido muestra ahora los logotipos EISI y UIS juntos, en ese orden y con la misma altura responsiva para mantener una proporción visual consistente en escritorio y móvil.
 - **2026-09-07:** la edición de un período académico usa un único `PUT /sapp/periodoAcademico/{id}`, donde el identificador se envía exclusivamente en la URL. El body se alineó con la última versión del backend: `{ fechaInicio, fechaFin, descripcion, fechas: [{ tipoTramiteId, fechaInicio, fechaFin, descripcion }] }`, sin IDs, año ni número de período. La creación conserva su `POST`.
 - **2026-09-04:** las tarjetas de convocatorias en `/admisiones` diferencian ahora todo el bloque por vigencia, no solo la insignia: las abiertas usan acento de éxito y explican que reciben aspirantes; las cerradas usan acento de advertencia, informan que las inscripciones finalizaron y reemplazan la acción primaria por **Consultar convocatoria**. La distinción combina color, texto y símbolos para no depender únicamente de la percepción cromática y funciona con los temas claro/oscuro.
