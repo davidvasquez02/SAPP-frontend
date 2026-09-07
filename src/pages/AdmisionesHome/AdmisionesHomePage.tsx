@@ -334,7 +334,18 @@ const AdmisionesHomePage = () => {
                     </div>
                   </header>
 
-                  <section className="admisiones-current-callout">
+                  <section
+                    className={`admisiones-current-callout ${
+                      convocatoriaEstaAbierta
+                        ? "admisiones-current-callout--active"
+                        : "admisiones-current-callout--inactive"
+                    }`}
+                    aria-label={
+                      convocatoriaDestacada
+                        ? `Convocatoria ${convocatoriaEstaAbierta ? "abierta" : "cerrada"} de ${programaNombre}`
+                        : `Convocatoria no disponible de ${programaNombre}`
+                    }
+                  >
                     <div className="admisiones-current-callout__header">
                       <span
                         className="admisiones-current-callout__label"
@@ -354,6 +365,9 @@ const AdmisionesHomePage = () => {
                           : "admisiones-current-callout__badge--inactive"
                           }`}
                       >
+                        <span aria-hidden="true">
+                          {convocatoriaEstaAbierta ? "✓" : "—"}
+                        </span>
                         {convocatoriaDestacada
                           ? convocatoriaEstaAbierta
                             ? "ABIERTA"
@@ -361,6 +375,14 @@ const AdmisionesHomePage = () => {
                           : "NO DISPONIBLE"}
                       </span>
                     </div>
+
+                    {convocatoriaDestacada ? (
+                      <p className="admisiones-current-callout__status-copy">
+                        {convocatoriaEstaAbierta
+                          ? "Inscripciones habilitadas. Esta convocatoria está recibiendo aspirantes."
+                          : "Inscripciones finalizadas. La convocatoria permanece disponible para consulta."}
+                      </p>
+                    ) : null}
 
                     {convocatoriaDestacada ? (
                       <div className="admisiones-date-grid">
@@ -406,14 +428,20 @@ const AdmisionesHomePage = () => {
 
                     <button
                       type="button"
-                      className="admisiones-enter-button"
+                      className={`admisiones-enter-button ${
+                        !convocatoriaEstaAbierta
+                          ? "admisiones-enter-button--inactive"
+                          : ""
+                      }`}
                       disabled={!convocatoriaDestacada}
                       onClick={() =>
                         convocatoriaDestacada &&
                         handleNavigate(convocatoriaDestacada, programaNombre)
                       }
                     >
-                      Entrar a la convocatoria
+                      {convocatoriaEstaAbierta
+                        ? "Entrar a la convocatoria"
+                        : "Consultar convocatoria"}
                       <span aria-hidden="true">→</span>
                     </button>
                   </section>
