@@ -3,6 +3,7 @@ import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
+const EISI_LOGO_SRC = '/brand/svg.svg'
 const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
@@ -39,11 +40,18 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
           <Link className="module-layout__profile-link" to="/perfil" aria-label="Abrir mi perfil">
             <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />
           </Link>
-          <img
-            className="module-layout__uis-logo"
-            src={UIS_LOGO_SRC}
-            alt="Universidad Industrial de Santander"
-          />
+          <div className="module-layout__institutional-logos" aria-label="Identidad institucional">
+            <img
+              className="module-layout__institutional-logo"
+              src={EISI_LOGO_SRC}
+              alt="Escuela de Ingeniería de Sistemas e Informática"
+            />
+            <img
+              className="module-layout__institutional-logo"
+              src={UIS_LOGO_SRC}
+              alt="Universidad Industrial de Santander"
+            />
+          </div>
         </div>
       </header>
       <main className="module-layout__content">{children}</main>
