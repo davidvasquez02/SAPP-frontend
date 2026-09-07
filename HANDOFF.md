@@ -1,3 +1,23 @@
+# Update 2026-09-07 — Marca EISI en el sidebar
+
+## Estado actual y decisión
+- El enlace de inicio del sidebar usa `/brand/eisi-favicon.svg` como marca visible en estado contraído y expandido. Al expandirse por hover/foco muestra el título exacto **Minerva | Posgrados**; en el layout móvil se ven permanentemente el logo y el título.
+- El SVG es decorativo dentro del enlace (`alt=""` y `aria-hidden="true"`), porque el destino ya cuenta con el nombre accesible **Ir al inicio**. No cambiaron navegación, permisos, contratos HTTP ni estado de sesión.
+
+## Paths, salida esperada y próximos pasos
+- Renderizado: `src/components/Sidebar/Sidebar.tsx`; dimensiones, espaciado y comportamiento responsive: `src/components/Sidebar/Sidebar.css`; asset reutilizado: `public/brand/eisi-favicon.svg`.
+- Salida esperada: logo EISI de 38 × 38 px siempre visible; texto oculto con el sidebar contraído y visible al expandirlo; logo y texto visibles en viewports de hasta 900 px.
+- Validar con sesión institucional los estados claro/oscuro, hover, navegación por teclado y presentación móvil. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+- Entorno único: reutilizar `/workspace/SAPP-frontend/node_modules` con Node.js 24.15.0 y npm 11.4.2; no crear venv, conda, poetry, entornos Python ni otro árbol npm.
+
+## Verificación de esta actualización
+- `npx eslint src/components/Sidebar/Sidebar.tsx` (2026-09-07): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-07): PASS; TypeScript y rolldown-vite transformaron 247 módulos y generaron `dist/assets/index-16Ne2VSA.css` e `index-Wumom0Ey.js`. Persiste el warning informativo por el chunk JS de 517.80 kB.
+- `git diff --check` (2026-09-07): PASS.
+- Captura pendiente por limitación del entorno: no hay Chromium, Chrome ni Firefox instalados. La revisión visual debe realizarse en una sesión institucional, sin modificar el flujo de autenticación.
+
+---
+
 # Update 2026-09-07 — Contrato vigente del PUT de períodos académicos
 
 ## Estado actual y decisión

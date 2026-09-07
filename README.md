@@ -357,6 +357,7 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 ### 2026-06-12 — Marca EISI/UIS (actualizada 2026-09-07)
 
 - Se reemplazó el favicon de Vite por el ícono EISI en `public/brand/eisi-favicon.svg` y `index.html`.
+- El sidebar muestra el ícono EISI tanto contraído como expandido y presenta la marca completa `Minerva | Posgrados` al expandirse; en móvil ambos permanecen visibles.
 - El encabezado de módulos presenta el logo EISI a la izquierda del logo UIS, ambos con altura responsiva concordante, usando `public/brand/svg.svg`, `public/brand/LOGO UIS_PNG.png` y estilos compartidos en `ModuleLayout`.
 - El título vigente del documento es `Minerva | Posgrados`; el idioma HTML permanece configurado en español.
 
