@@ -77,10 +77,16 @@ export interface PreviewSolicitudCreditoResponseDto {
   mimeTypeDocumentoContenido: string
 }
 
-export interface SolicitudHomologacionAsignaturaRequestDto {
-  asignatura_origen_id: number
-  asignatura_destino_id: number
-}
+export type SolicitudHomologacionAsignaturaRequestDto =
+  | {
+      asignatura_origen_id: number
+      asignatura_destino_id: number
+    }
+  | {
+      nombreAsignaturaExterna: string
+      codigoAsignaturaExterna?: string
+      asignatura_destino_id: number
+    }
 
 export interface ModalidadContraprestacionDto {
   id: number
@@ -91,4 +97,8 @@ export interface AsignaturaCatalogoDto {
   id: number
   codigo: string | null
   nombre: string
+}
+
+export interface AsignaturaExternaDto extends AsignaturaCatalogoDto {
+  activo: boolean
 }

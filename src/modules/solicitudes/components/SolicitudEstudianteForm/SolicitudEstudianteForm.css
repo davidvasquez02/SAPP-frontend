@@ -97,14 +97,10 @@
   color: #1e8e3e;
 }
 
-.solicitud-estudiante-form__mock-create,
 .solicitud-estudiante-form__homologacion-row {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.6rem;
-}
-
-.solicitud-estudiante-form__mock-create {
-  grid-template-columns: 1fr auto;
 }
 
 .solicitud-estudiante-form__homologaciones {
@@ -114,13 +110,65 @@
 }
 
 .solicitud-estudiante-form__homologacion-row {
-  grid-template-columns: auto 1fr 1fr auto;
-  align-items: center;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+  border-radius: 1rem;
+  background: var(--surface);
 }
 
-.solicitud-estudiante-form__homologacion-index {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+.solicitud-estudiante-form__homologacion-heading,
+.solicitud-estudiante-form__source-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.solicitud-estudiante-form__homologacion-heading button,
+.solicitud-estudiante-form__source-toggle button {
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  background: var(--surface-container-low);
+  color: inherit;
+  cursor: pointer;
+}
+
+.solicitud-estudiante-form__source-toggle {
+  justify-content: flex-start;
+}
+
+.solicitud-estudiante-form__source-toggle button.is-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.solicitud-estudiante-form__homologacion-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.solicitud-estudiante-form__origen {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.solicitud-estudiante-form__origen,
+.solicitud-estudiante-form__destino,
+.solicitud-estudiante-form__manual-origin {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.solicitud-estudiante-form__origen legend,
+.solicitud-estudiante-form__destino span {
+  margin-bottom: 0.55rem;
+  font-weight: 600;
 }
 .solicitud-estudiante-form__motivos {
   display: flex;
@@ -148,7 +196,8 @@
 }
 
 @media (max-width: 640px) {
-  .solicitud-estudiante-form__renewal-numbers {
+  .solicitud-estudiante-form__renewal-numbers,
+  .solicitud-estudiante-form__homologacion-fields {
     grid-template-columns: 1fr;
   }
 }
