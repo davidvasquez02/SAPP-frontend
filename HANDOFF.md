@@ -1,3 +1,31 @@
+# Update 2026-09-04 — Estados visuales de convocatorias abiertas y cerradas
+
+## Estado actual y decisión
+- En `/admisiones`, el bloque destacado de cada programa comunica la vigencia mediante varias señales redundantes: borde lateral, fondo de cabecera, punto, badge con símbolo y texto explicativo. Una convocatoria abierta usa el token `--success` y anuncia **Inscripciones habilitadas**; una cerrada usa `--warning` y anuncia **Inscripciones finalizadas**.
+- La acción conserva la navegación y disponibilidad existentes. Para una convocatoria abierta muestra **Entrar a la convocatoria** como botón primario; para una cerrada muestra **Consultar convocatoria** con tratamiento secundario de advertencia. No se alteró la selección de convocatoria destacada ni el acceso a convocatorias anteriores.
+- Los estilos usan exclusivamente tokens semánticos y `color-mix`, por lo que son compatibles con `body.light` y `body.dark`. La semántica no depende solo del color: incluye `ABIERTA`/`CERRADA`, símbolos y una descripción textual.
+
+## Paths, contratos y salida esperada
+- Renderizado y semántica accesible: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`.
+- Estados visuales y comportamiento responsive: `src/pages/AdmisionesHome/AdmisionesHomePage.css`.
+- Fuente de datos sin cambios: `GET /sapp/convocatoriaAdmision`, proyectado como `ConvocatoriaAdmisionDto`; la vigencia continúa resolviéndose con `isConvocatoriaVigente`.
+- No cambiaron endpoints, schemas, dependencias, variables de entorno, seeds ni datasets. Los datos reales siguen viniendo del API institucional.
+
+## Retos y próximos pasos
+1. Validar en el despliegue protegido una convocatoria abierta y otra cerrada, en temas claro y oscuro y en viewport móvil.
+2. Confirmar con producto si una convocatoria cerrada debe seguir siendo consultable; esta actualización conserva deliberadamente la navegación previa y solo cambia su etiqueta/jerarquía visual.
+3. Incorporar una prueba de componente para las variantes cuando el repositorio adopte Vitest/React Testing Library; `package.json` no define un script `test`.
+
+## Entorno y resultados de esta actualización
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `/workspace/SAPP-frontend/node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx` (2026-09-04): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-04): PASS; 248 módulos transformados y artefactos `dist/assets/index-DCoFCRQE.css` e `index-CJr8Y3m9.js`. Persiste el warning no bloqueante del chunk JavaScript de 515.92 kB.
+- `git diff --check` (2026-09-04): PASS.
+- Captura pendiente por limitación del entorno: no hay Chromium, Chrome ni Firefox instalados y la ruta requiere una sesión/backend institucionales para reproducir las convocatorias de la referencia.
+
+---
+
 # Update 2026-09-04 — Acciones documentales Ver/Descargar estandarizadas
 
 ## Estado actual y decisión
