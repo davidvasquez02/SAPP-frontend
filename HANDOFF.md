@@ -1,3 +1,32 @@
+# Update 2026-09-08 - PDF binario en Informes a dependencias
+
+## Estado actual y decision
+- En `/coordinacion/reportes`, el proceso **Admision** ahora genera el informe con `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}` sin body y mapea la respuesta como archivo binario, no como `ApiResponse` JSON. El caso reportado por usuario fue `actaId=2` y `convocatoriaId=68`, cuyo body empieza con `%PDF-1.4`.
+- La pantalla guarda el resultado en memoria como `Blob` (`ReporteAdmisionGenerado`) y, debajo del boton **Generar informe**, muestra un bloque **PDF generado** con icono PDF, nombre de archivo, fecha en zona `America/Bogota` y botones estandarizados **Ver**/**Descargar** usando `.sapp-document-action`.
+- Si el backend envia `Content-Disposition`, se respeta su filename. Si no, el fallback es `informe-admision-acta-{actaId}-convocatoria-{convocatoriaId}.pdf`. Si `Content-Type` no contiene `pdf`, el frontend fuerza el MIME del `Blob` a `application/pdf` porque el contenido esperado es el PDF crudo.
+- Matricula y creditos condonables siguen temporalmente en `src/modules/reportes/services/informesMockService.ts`; no reutilizar el endpoint de admision para esos procesos.
+
+## Paths, contratos y salida esperada
+- Transporte binario generico: `src/shared/http/httpClient.ts`, nuevos `httpFile` y `httpPostFile`. Conservan autenticacion, normalizacion de rutas `/sapp`/`/api/sapp`, manejo 401/403 y parsing de errores no exitosos.
+- Utilidades de archivo: `src/shared/files/base64FileUtils.ts`, nuevos `openBlobInNewTab` y `downloadBlobFile`; las funciones base64 existentes quedaron delegando en estas.
+- Servicio de admision: `src/modules/reportes/services/reporteAdmisionService.ts`.
+- UI y estilos: `src/pages/Reportes/ReportesPage.tsx` y `src/pages/Reportes/ReportesPage.css`.
+- Contrato esperado: `POST ${VITE_API_URL || '/api/sapp'}/reportesAdmision/generar?actaId={number}&convocatoriaId={number}` -> body binario PDF (`%PDF-1.4...`), opcional `Content-Type: application/pdf`, opcional `Content-Disposition: attachment; filename="..."`.
+
+## Retos y proximos pasos
+1. Validar con sesion institucional real que `actaId=2&convocatoriaId=68` abre y descarga un PDF legible desde los botones nuevos.
+2. Confirmar si backend puede enviar siempre `Content-Type: application/pdf` y `Content-Disposition` con nombre institucional; el frontend ya tolera que falten.
+3. Cuando existan endpoints reales de matricula y creditos, repetir el patron binario si tambien devuelven PDF crudo.
+
+## Entorno y resultados
+- Raiz unica: `/workspace/SAPP-frontend` en el contenedor, equivalente al workspace Windows `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`. Reutilizar Node.js/npm y `node_modules`; no crear venv, conda, poetry, entornos Python ni otro arbol npm.
+- Versiones relevantes: Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0. No se agregaron dependencias, variables de entorno, seeds ni datasets.
+- `npm run build` (2026-09-08): PASS; TypeScript y rolldown-vite transformaron 251 modulos y generaron `dist/assets/index-BooR2Eh6.css` e `index-Bp5SJfzo.js`. Warnings no bloqueantes: configs npm `msvs_version`/`python` y chunk JS mayor a 500 kB.
+- `npm run dev -- --host 127.0.0.1` (2026-09-08): el intento sandbox fallo con `spawn EPERM`; reintentado con permisos elevados quedo activo en `http://127.0.0.1:5173/`.
+- Validacion funcional con backend real pendiente por requerir sesion institucional y acceso al gateway desde navegador autenticado.
+
+---
+
 # Update 2026-09-08 - Logo EISI PNG
 
 ## Estado actual y decision
@@ -2660,13 +2689,13 @@ npm run lint
 
 ## Estado, contrato y salida esperada
 - El botón **Generar informe** de `/coordinacion/reportes`, cuando el proceso es **Admisión**, ya no usa el mock. Ejecuta `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}` sin body mediante el cliente HTTP compartido y su autenticación.
-- El backend debe responder con el envelope `ApiResponse<unknown>`: `{ ok: boolean, message: string, data: unknown }`. `ok: false` presenta `message` como error; `ok: true` muestra ese mensaje o el fallback **El informe de admisión fue generado correctamente.**
+- Nota posterior del 2026-09-08: el backend responde con el PDF crudo (`%PDF-1.4...`) y el frontend actual lo conserva como `Blob`; no se espera el envelope `ApiResponse<unknown>` para esta operación exitosa.
 - La selección de programa continúa siendo necesaria para filtrar convocatorias, pero `programaId` no forma parte del POST. Matrícula y créditos condonables conservan por ahora `informesMockService.ts`.
 
 ## Paths, retos y próximos pasos
 - Integración HTTP: `src/modules/reportes/services/reporteAdmisionService.ts`.
 - Orquestación y feedback: `src/pages/Reportes/ReportesPage.tsx`.
-- Validar con backend una combinación real (referencia conocida: `actaId=2`, `convocatoriaId=68`) y confirmar el envelope. Si el backend devuelve 204 en vez de JSON, se deberá acordar el contrato o adaptar el transporte.
+- Validar con backend una combinación real (referencia conocida: `actaId=2`, `convocatoriaId=68`) y confirmar que el PDF abre y descarga correctamente.
 - Sustituir los mocks de matrícula y créditos cuando existan sus endpoints; no reutilizar el endpoint de admisión para esos procesos.
 
 ## Entorno y resultados

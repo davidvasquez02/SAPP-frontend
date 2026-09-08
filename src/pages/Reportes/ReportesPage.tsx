@@ -15,7 +15,11 @@ import {
   generarInforme,
   type TipoInforme,
 } from '../../modules/reportes/services/informesMockService'
-import { generarReporteAdmision } from '../../modules/reportes/services/reporteAdmisionService'
+import {
+  generarReporteAdmision,
+  type ReporteAdmisionGenerado,
+} from '../../modules/reportes/services/reporteAdmisionService'
+import { downloadBlobFile, openBlobInNewTab } from '../../shared/files/base64FileUtils'
 import './ReportesPage.css'
 
 const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string; description: string }> = [
@@ -33,6 +37,13 @@ const findCurrentPeriodoId = (periodos: PeriodoAcademicoDto[]): string => {
   return String(current?.id ?? latest?.id ?? '')
 }
 
+const formatGeneratedAt = (value: string) =>
+  new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/Bogota',
+  }).format(new Date(value))
+
 const ReportesPage = () => {
   const [tipo, setTipo] = useState<TipoInforme>('ADMISION')
   const [programaId, setProgramaId] = useState('')
@@ -47,6 +58,7 @@ const ReportesPage = () => {
   const [generating, setGenerating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [generatedPdf, setGeneratedPdf] = useState<ReporteAdmisionGenerado | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -65,7 +77,9 @@ const ReportesPage = () => {
         setPeriodoId(findCurrentPeriodoId(periodosData))
       })
       .catch((loadError: unknown) => {
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'No fue posible cargar los catálogos del informe.')
+        if (!cancelled) {
+          setError(loadError instanceof Error ? loadError.message : 'No fue posible cargar los catálogos del informe.')
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -78,6 +92,11 @@ const ReportesPage = () => {
     [convocatorias, programaId],
   )
 
+  const selectedActa = useMemo(
+    () => actas.find((acta) => String(acta.id) === actaId) ?? null,
+    [actaId, actas],
+  )
+
   const selectTipo = (nextTipo: TipoInforme) => {
     setTipo(nextTipo)
     setProgramaId('')
@@ -85,12 +104,14 @@ const ReportesPage = () => {
     setActaId('')
     setMessage(null)
     setError(null)
+    setGeneratedPdf(null)
   }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setMessage(null)
     setError(null)
+    setGeneratedPdf(null)
     if (!programaId || !actaId || (tipo === 'ADMISION' ? !convocatoriaId : !periodoId)) {
       setError('Complete todos los parámetros requeridos para generar el informe.')
       return
@@ -98,11 +119,12 @@ const ReportesPage = () => {
     setGenerating(true)
     try {
       if (tipo === 'ADMISION') {
-        const successMessage = await generarReporteAdmision({
+        const pdf = await generarReporteAdmision({
           actaId: Number(actaId),
           convocatoriaId: Number(convocatoriaId),
         })
-        setMessage(successMessage)
+        setGeneratedPdf(pdf)
+        setMessage('El informe de admisión fue generado correctamente.')
         return
       }
 
@@ -143,28 +165,28 @@ const ReportesPage = () => {
           {!loading ? (
             <div className="reports__fields">
               <label>Programa académico
-                <select value={programaId} onChange={(event) => { setProgramaId(event.target.value); setConvocatoriaId('') }} required>
+                <select value={programaId} onChange={(event) => { setProgramaId(event.target.value); setConvocatoriaId(''); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un programa</option>
                   {programas.map((programa) => <option key={programa.id} value={programa.id}>{programa.codigoNombre || programa.nombre}</option>)}
                 </select>
               </label>
               {tipo === 'ADMISION' ? (
                 <label>Convocatoria
-                  <select value={convocatoriaId} onChange={(event) => setConvocatoriaId(event.target.value)} disabled={!programaId} required>
+                  <select value={convocatoriaId} onChange={(event) => { setConvocatoriaId(event.target.value); setGeneratedPdf(null) }} disabled={!programaId} required>
                     <option value="">{programaId ? 'Seleccione una convocatoria' : 'Primero seleccione un programa'}</option>
                     {convocatoriasFiltradas.map((convocatoria) => <option key={convocatoria.id} value={convocatoria.id}>{convocatoria.periodo} · {convocatoria.vigente ? 'Vigente' : 'Cerrada'}</option>)}
                   </select>
                 </label>
               ) : (
                 <label>Período académico
-                  <select value={periodoId} onChange={(event) => setPeriodoId(event.target.value)} required>
+                  <select value={periodoId} onChange={(event) => { setPeriodoId(event.target.value); setGeneratedPdf(null) }} required>
                     <option value="">Seleccione un período</option>
                     {periodos.map((periodo) => <option key={periodo.id} value={periodo.id}>{periodo.anioPeriodo}</option>)}
                   </select>
                 </label>
               )}
               <label>Acta asociada
-                <select value={actaId} onChange={(event) => setActaId(event.target.value)} required>
+                <select value={actaId} onChange={(event) => { setActaId(event.target.value); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un acta</option>
                   {actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} · {acta.nombre}</option>)}
                 </select>
@@ -175,6 +197,25 @@ const ReportesPage = () => {
           {message ? <p className="reports__feedback reports__feedback--success" role="status">{message}</p> : null}
           <div className="reports__actions"><button type="submit" disabled={loading || generating}>{generating ? 'Generando...' : 'Generar informe'}</button></div>
         </form>
+
+        {generatedPdf ? (
+          <section className="reports__generated" aria-label="PDF generado">
+            <div className="reports__pdf-icon" aria-hidden="true"><span>PDF</span></div>
+            <div className="reports__generated-info">
+              <h2>PDF generado</h2>
+              <p>{generatedPdf.filename}</p>
+              <span>{selectedActa ? `${selectedActa.codigo} · ` : ''}{formatGeneratedAt(generatedPdf.generatedAt)}</span>
+            </div>
+            <div className="reports__generated-actions">
+              <button type="button" className="sapp-document-action" onClick={() => openBlobInNewTab(generatedPdf.blob, generatedPdf.filename)}>
+                Ver
+              </button>
+              <button type="button" className="sapp-document-action" onClick={() => downloadBlobFile(generatedPdf.blob, generatedPdf.filename)}>
+                Descargar
+              </button>
+            </div>
+          </section>
+        ) : null}
       </section>
     </ModuleLayout>
   )

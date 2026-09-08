@@ -6,6 +6,12 @@ type HttpOptions = RequestInit & {
   redirectOnUnauthorized?: boolean
 }
 
+export interface HttpFileResponse {
+  blob: Blob
+  contentType: string
+  filename: string | null
+}
+
 interface ApiErrorBody {
   message?: string
   error?: string
@@ -70,6 +76,23 @@ const buildUrl = (path: string) => {
   return `${trimTrailingSlash(API_URL)}${normalizePath(path)}`
 }
 
+const parseContentDispositionFilename = (contentDisposition: string | null): string | null => {
+  if (!contentDisposition) {
+    return null
+  }
+
+  const encodedFilename = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+  if (encodedFilename) {
+    try {
+      return decodeURIComponent(encodedFilename.replace(/^"|"$/g, ''))
+    } catch {
+      return encodedFilename.replace(/^"|"$/g, '')
+    }
+  }
+
+  return contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null
+}
+
 const resolveHeaders = (options?: HttpOptions) => {
   const headers = new Headers(options?.headers)
   const body = options?.body
@@ -125,11 +148,69 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
   return (await response.json()) as T
 }
 
+export async function httpFile(path: string, options: HttpOptions = {}): Promise<HttpFileResponse> {
+  const { auth = true, redirectOnUnauthorized = true, ...requestInit } = options
+  const headers = resolveHeaders(options)
+  const token = auth ? getToken() : null
+
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  const response = await fetch(buildUrl(path), {
+    ...requestInit,
+    headers,
+  })
+
+  if (redirectOnUnauthorized && (response.status === 401 || response.status === 403)) {
+    if (response.status === 401) {
+      clearSession()
+    }
+    throw new Error('No autorizado')
+  }
+
+  if (!response.ok) {
+    let errorMessage = `Error HTTP ${response.status}`
+
+    try {
+      const responseText = await response.text()
+      if (responseText) {
+        try {
+          const errorBody = JSON.parse(responseText) as ApiErrorBody
+          const validationDetails = stringifyValidationErrors(errorBody?.errors)
+          const serverMessage = errorBody?.message || errorBody?.error
+          errorMessage = [serverMessage, validationDetails].filter(Boolean).join(': ') || errorMessage
+        } catch {
+          errorMessage = responseText
+        }
+      }
+    } catch {
+      // Ignore parse errors and keep the default message.
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
+  return {
+    blob: await response.blob(),
+    contentType,
+    filename: parseContentDispositionFilename(response.headers.get('Content-Disposition')),
+  }
+}
+
 export const httpGet = <T>(path: string, options?: HttpOptions) =>
   http<T>(path, { ...options, method: 'GET' })
 
 export const httpPost = <T>(path: string, body?: unknown, options?: HttpOptions) =>
   http<T>(path, {
+    ...options,
+    method: 'POST',
+    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
+  })
+
+export const httpPostFile = (path: string, body?: unknown, options?: HttpOptions) =>
+  httpFile(path, {
     ...options,
     method: 'POST',
     body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
