@@ -15,6 +15,7 @@ import {
   generarInforme,
   type TipoInforme,
 } from '../../modules/reportes/services/informesMockService'
+import { generarReporteAdmision } from '../../modules/reportes/services/reporteAdmisionService'
 import './ReportesPage.css'
 
 const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string; description: string }> = [
@@ -96,11 +97,20 @@ const ReportesPage = () => {
     }
     setGenerating(true)
     try {
+      if (tipo === 'ADMISION') {
+        const successMessage = await generarReporteAdmision({
+          actaId: Number(actaId),
+          convocatoriaId: Number(convocatoriaId),
+        })
+        setMessage(successMessage)
+        return
+      }
+
       const response = await generarInforme({
         tipoProceso: tipo,
         programaId: Number(programaId),
         actaId: Number(actaId),
-        ...(tipo === 'ADMISION' ? { convocatoriaId: Number(convocatoriaId) } : { periodoId: Number(periodoId) }),
+        periodoId: Number(periodoId),
       })
       setMessage(`${response.mensaje} Referencia: ${response.solicitudId}.`)
     } catch (submitError) {

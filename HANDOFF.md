@@ -2594,3 +2594,24 @@ npm run lint
 - No se pudo tomar la captura solicitada: el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer, y el encabezado real requiere además una sesión institucional en una ruta protegida.
 
 ---
+# Update 2026-09-08 — Generación real del informe de admisión
+
+## Estado, contrato y salida esperada
+- El botón **Generar informe** de `/coordinacion/reportes`, cuando el proceso es **Admisión**, ya no usa el mock. Ejecuta `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}` sin body mediante el cliente HTTP compartido y su autenticación.
+- El backend debe responder con el envelope `ApiResponse<unknown>`: `{ ok: boolean, message: string, data: unknown }`. `ok: false` presenta `message` como error; `ok: true` muestra ese mensaje o el fallback **El informe de admisión fue generado correctamente.**
+- La selección de programa continúa siendo necesaria para filtrar convocatorias, pero `programaId` no forma parte del POST. Matrícula y créditos condonables conservan por ahora `informesMockService.ts`.
+
+## Paths, retos y próximos pasos
+- Integración HTTP: `src/modules/reportes/services/reporteAdmisionService.ts`.
+- Orquestación y feedback: `src/pages/Reportes/ReportesPage.tsx`.
+- Validar con backend una combinación real (referencia conocida: `actaId=2`, `convocatoriaId=68`) y confirmar el envelope. Si el backend devuelve 204 en vez de JSON, se deberá acordar el contrato o adaptar el transporte.
+- Sustituir los mocks de matrícula y créditos cuando existan sus endpoints; no reutilizar el endpoint de admisión para esos procesos.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, seeds o datasets.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2; typescript-eslint 8.51.0.
+- `npx eslint src/pages/Reportes/ReportesPage.tsx src/modules/reportes/services/reporteAdmisionService.ts`: PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 249 módulos y generaron `dist/assets/index-16Ne2VSA.css` e `index-DNqqTw6i.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 517.61 kB.
+- `git diff --check`: PASS. No se tomó captura porque la integración no cambia la presentación visual y su verificación funcional requiere backend y sesión institucionales.
+
+---
