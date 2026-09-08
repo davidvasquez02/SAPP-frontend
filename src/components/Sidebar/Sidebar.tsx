@@ -1,7 +1,14 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/Auth";
 import { getPrimaryNavigationItems } from "../../app/navigationItems";
+import { SidebarModuleIcon } from "./SidebarModuleIcon";
 import "./Sidebar.css";
+
+const modulesWithOutlineIcon = new Set([
+  "/solicitudes",
+  "/admisiones",
+  "/coordinacion/reportes",
+]);
 
 const Sidebar = () => {
   const { session, logout } = useAuth();
@@ -32,7 +39,11 @@ const Sidebar = () => {
               title={item.label}
             >
               <span className="sidebar__icon" aria-hidden="true">
-                {item.icon}
+                {modulesWithOutlineIcon.has(item.to) ? (
+                  <SidebarModuleIcon modulePath={item.to} />
+                ) : (
+                  item.icon
+                )}
               </span>
               <span className="sidebar__label">{item.label}</span>
             </NavLink>
