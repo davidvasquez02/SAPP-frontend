@@ -43,13 +43,13 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
           <div className="module-layout__institutional-logos" aria-label="Identidad institucional">
             <img
               className="module-layout__institutional-logo"
-              src={EISI_LOGO_SRC}
-              alt="Escuela de Ingeniería de Sistemas e Informática"
+              src={UIS_LOGO_SRC}
+              alt="Universidad Industrial de Santander"
             />
             <img
               className="module-layout__institutional-logo"
-              src={UIS_LOGO_SRC}
-              alt="Universidad Industrial de Santander"
+              src={EISI_LOGO_SRC}
+              alt="Escuela de Ingeniería de Sistemas e Informática"
             />
           </div>
         </div>
