@@ -2706,3 +2706,23 @@ npm run lint
 - `git diff --check`: PASS. No se tomó captura porque la integración no cambia la presentación visual y su verificación funcional requiere backend y sesión institucionales.
 
 ---
+
+# Update 2026-09-08 — Iconos definitivos en el menú de Inicio
+
+## Estado actual y decisión
+- El menú de tarjetas de `/` ya no presenta emojis: comparte los mismos SVG definitivos del sidebar para todos los módulos visibles según el rol.
+- `src/components/Sidebar/SidebarModuleIcon.tsx` es la fuente única de iconografía. Incluye los trazos propios de Solicitudes, Admisiones e Informes, y el mapeo Lucide de Matrícula, Estudiantes, Actas y Fechas; acepta una clase CSS opcional para adaptarse a cada contexto.
+- `src/components/Sidebar/Sidebar.tsx` y `src/pages/Home/HomePage.tsx` consumen ese componente. El inicio aplica tamaño de 2 rem y color `--primary` desde `src/pages/Home/HomePage.css`.
+- No cambiaron rutas, visibilidad por roles, APIs, schemas, variables de entorno, paquetes, seeds ni datasets. La salida esperada es correspondencia visual uno a uno entre cada enlace del sidebar y su tarjeta de inicio, en temas claro y oscuro.
+
+## Próximos pasos y entorno
+- Validar visualmente `/` con roles de estudiante, profesor y coordinación, en escritorio/móvil y ambos temas. Este contenedor no incluye Chromium, Chrome ni Firefox, por lo que no fue posible generar una captura local.
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Entorno comprobado: Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+
+## Resultados recientes
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/components/Sidebar/SidebarModuleIcon.tsx src/pages/Home/HomePage.tsx`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 253 módulos y generaron `dist/assets/index-D-63uBWd.css` e `index-D3jf2rz7.js`. Persiste el warning informativo por el chunk JavaScript de 524.46 kB.
+- `git diff --check`: PASS.
+
+---

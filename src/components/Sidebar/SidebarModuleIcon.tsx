@@ -1,5 +1,8 @@
+import { CalendarDays, GraduationCap, ScrollText, UsersRound } from 'lucide-react'
+
 interface SidebarModuleIconProps {
   modulePath: string
+  className?: string
 }
 
 const iconPaths: Record<string, React.ReactNode> = {
@@ -25,14 +28,28 @@ const iconPaths: Record<string, React.ReactNode> = {
   ),
 }
 
-export const SidebarModuleIcon = ({ modulePath }: SidebarModuleIconProps) => {
+const lucideIcons = {
+  '/matricula': GraduationCap,
+  '/coordinacion/estudiantes': UsersRound,
+  '/actas': ScrollText,
+  '/fechas': CalendarDays,
+} as const
+
+export const SidebarModuleIcon = ({
+  modulePath,
+  className = 'sidebar__module-icon',
+}: SidebarModuleIconProps) => {
   const paths = iconPaths[modulePath]
 
-  if (!paths) return null
+  if (!paths) {
+    const ModuleIcon = lucideIcons[modulePath as keyof typeof lucideIcons]
+
+    return ModuleIcon ? <ModuleIcon className={className} /> : null
+  }
 
   return (
     <svg
-      className="sidebar__module-icon"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

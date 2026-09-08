@@ -407,3 +407,9 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Mantener compatibilidad con tokens CSS globales y modo claro/oscuro.
 - Evitar colores hardcodeados en componentes nuevos cuando exista token semántico equivalente.
 - Los logos institucionales agregados en `public/brand` se sirven desde `public` y no requieren imports desde TypeScript; el logo EISI vigente es el PNG `/brand/eisi%20imagen.png`.
+
+### 2026-09-08 — Iconografía unificada entre sidebar e inicio
+
+- Las tarjetas de acceso rápido de **Inicio** usan ahora exactamente los iconos definitivos del sidebar para Solicitudes, Matrícula, Estudiantes, Admisiones, Informes a dependencias, Actas y Fechas.
+- `SidebarModuleIcon` centraliza tanto los trazos propios como los iconos Lucide de los módulos; sidebar e inicio consumen esa única fuente para evitar que vuelvan a divergir.
+- Los iconos del inicio heredan `--primary` y conservan trazos vectoriales nítidos en modo claro y oscuro. No se modificaron rutas, permisos, contratos HTTP, dependencias, seeds ni datasets.
