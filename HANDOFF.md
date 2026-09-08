@@ -1,3 +1,25 @@
+# Update 2026-09-08 — Iconos Lucide restantes del sidebar
+
+## Estado actual y decisión
+- El sidebar importa `GraduationCap`, `UsersRound`, `ScrollText`, `CalendarDays` y `LogOut` desde `lucide-react` y los asigna, respectivamente, a **Matrícula**, **Estudiantes**, **Actas**, **Fechas** y **Cerrar sesión**. Ya no renderiza emoji para estas cinco opciones.
+- Los componentes reutilizan `.sidebar__module-icon` (20 × 20 px y `currentColor`) dentro del contenedor `.sidebar__icon`; por ello conservan alineación, separación, color heredado y estados normal, hover y seleccionado. No se tocaron los iconos de Solicitudes, Admisiones e Informes a dependencias, ni la marca Minerva.
+- `src/app/navigationItems.ts` conserva los pictogramas usados por la pantalla Inicio: esta decisión limita el cambio solicitado al menú lateral y mantiene intacta la fuente compartida de etiquetas, rutas, permisos y orden.
+
+## Entorno, paths y próximos pasos
+- Implementación: `src/components/Sidebar/Sidebar.tsx`; tamaño y herencia visual existentes: `src/components/Sidebar/Sidebar.css`; dependencia local: `vendor/lucide-react`; registro reproducible: `package.json` y `package-lock.json`.
+- El registro npm respondió HTTP 403 al intentar instalar el paquete remoto. Se añadió una distribución local mínima `lucide-react@0.468.0-local`, con los cinco componentes y trazos Lucide requeridos. Reutilizar `/workspace/SAPP-frontend/node_modules`; ejecutar `npm ci` desde esta raíz y no crear otro árbol npm, venv, conda o poetry.
+- No hay endpoints, schemas, contratos HTTP, variables de entorno, seeds ni datasets nuevos. La salida esperada son SVG monocromáticos de contorno, 20 px, en las cinco opciones indicadas.
+- Pendiente: validar visualmente con una sesión institucional el sidebar contraído/expandido, móvil y temas claro/oscuro. El contenedor no dispone de navegador compatible, por lo que no se pudo generar captura.
+
+## Resultados de esta actualización
+- `npm ci` (2026-09-08): PASS; instaló 219 paquetes desde el lockfile y enlazó la dependencia local sin consultar el paquete remoto.
+- `npx eslint src/components/Sidebar/Sidebar.tsx vendor/lucide-react/index.js` (2026-09-08): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-08): PASS; TypeScript y Vite transformaron 251 módulos y generaron `dist/assets/index-D61X9_eD.css` e `index-DYW2QVif.js`. Persiste el warning no bloqueante por el chunk JS de 520.60 kB.
+- `if rg -n '🎓|👥|📜|🗓️|🚪' src/components/Sidebar/Sidebar.tsx; then exit 1; fi` (2026-09-08): PASS; ninguno de los cinco emoji permanece en el sidebar.
+- `git diff --check` (2026-09-08): PASS.
+
+---
+
 # Update 2026-09-08 — Iconos de contorno en tres módulos del sidebar
 
 ## Estado actual y decisión
