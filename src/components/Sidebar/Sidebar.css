@@ -35,9 +35,11 @@
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 32px;
-  min-height: 32px;
+  min-height: 38px;
+  padding-inline: 6px;
   color: inherit;
   text-decoration: none;
+  transition: gap 0.24s ease;
 }
 
 .sidebar__brand-logo {
@@ -46,21 +48,45 @@
   min-width: 38px;
   border-radius: 9px;
   object-fit: contain;
+  transform-origin: center;
+  transition:
+    opacity 0.2s ease,
+    transform 0.24s ease,
+    width 0.24s ease,
+    min-width 0.24s ease;
+}
+
+.sidebar:hover .sidebar__brand,
+.sidebar:focus-within .sidebar__brand {
+  gap: 0;
+}
+
+.sidebar:hover .sidebar__brand-logo,
+.sidebar:focus-within .sidebar__brand-logo {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  transform: translateX(-4px) scale(0.72);
 }
 
 .sidebar__brand-name {
-  width: 0;
+  max-width: 0;
   overflow: hidden;
   opacity: 0;
   white-space: nowrap;
   line-height: 1.2;
-  transition: opacity 0.18s ease;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.2s ease 0.08s,
+    max-width 0.24s ease,
+    transform 0.24s ease;
 }
 
 .sidebar:hover .sidebar__brand-name,
 .sidebar:focus-within .sidebar__brand-name {
-  width: auto;
+  max-width: 210px;
   opacity: 1;
+  transform: translateX(0);
 }
 
 .sidebar__brand-icon,
@@ -171,13 +197,24 @@
   .sidebar__brand {
     margin-bottom: 16px;
     font-size: 18px;
+    gap: 10px;
+  }
+
+  .sidebar__brand-logo,
+  .sidebar:hover .sidebar__brand-logo,
+  .sidebar:focus-within .sidebar__brand-logo {
+    width: 38px;
+    min-width: 38px;
+    opacity: 1;
+    transform: none;
   }
 
   .sidebar__brand-name,
   .sidebar:hover .sidebar__brand-name,
   .sidebar:focus-within .sidebar__brand-name {
-    width: auto;
+    max-width: none;
     opacity: 1;
+    transform: none;
   }
 
   .sidebar__nav {
