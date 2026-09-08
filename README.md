@@ -1,6 +1,6 @@
 # Minerva Frontend — EISI UIS
 
-## Estado funcional (2026-09-07)
+## Estado funcional (2026-09-08)
 
 El formulario de solicitudes académicas soporta la homologación de una o más parejas de materias. La materia destino se elige del catálogo del programa; la materia origen se elige del catálogo externo activo o se registra en el formulario mediante nombre obligatorio y código opcional. El alta envía cada origen existente mediante `asignatura_origen_id`, o cada origen nuevo mediante `nombreAsignaturaExterna` y, cuando se diligencia, `codigoAsignaturaExterna`.
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-08:** el sidebar y los accesos de inicio comparten una única definición de navegación, de modo que cada módulo permitido por rol aparece en ambos lugares con el mismo nombre e icono. Se incorporaron en inicio los accesos antes ausentes a **Informes a dependencias** y **Actas**, se revisaron los pictogramas según el significado de cada proceso y el nombre visible **Reportes** se reemplazó por **Informes a dependencias** sin cambiar la ruta técnica `/coordinacion/reportes`.
 - **2026-09-07:** homologación separa los catálogos de origen y destino. Los orígenes se consultan en `GET /sapp/homologaciones/asignaturas-externas/activas`, los destinos permanecen en `GET /sapp/asignaturas?programaId=1` y cada fila permite alternar entre una materia externa registrada y el alta manual. `POST /sapp/solicitudesAcademicas` recibe ambas variantes dentro de `solicitudHomologacionesAsignaturas`; ya no se crean opciones mock en memoria.
 - **2026-09-07:** la pestaña del navegador se identifica como **Minerva | Posgrados** y conserva el favicon EISI. El encabezado compartido muestra ahora los logotipos EISI y UIS juntos, en ese orden y con la misma altura responsiva para mantener una proporción visual consistente en escritorio y móvil.
 - **2026-09-07:** la edición de un período académico usa un único `PUT /sapp/periodoAcademico/{id}`, donde el identificador se envía exclusivamente en la URL. El body se alineó con la última versión del backend: `{ fechaInicio, fechaFin, descripcion, fechas: [{ tipoTramiteId, fechaInicio, fechaFin, descripcion }] }`, sin IDs, año ni número de período. La creación conserva su `POST`.

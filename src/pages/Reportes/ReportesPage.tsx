@@ -111,7 +111,7 @@ const ReportesPage = () => {
   }
 
   return (
-    <ModuleLayout title="Reportes">
+    <ModuleLayout title="Informes a dependencias">
       <section className="reports">
         <header className="reports__header">
           <p className="reports__eyebrow">Coordinación académica</p>

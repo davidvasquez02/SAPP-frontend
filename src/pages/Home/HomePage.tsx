@@ -1,48 +1,21 @@
 import { Link } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
+import { getPrimaryNavigationItems } from '../../app/navigationItems'
 import { useAuth } from '../../context/Auth'
 import './HomePage.css'
-
-interface HomeShortcut {
-  to: string
-  label: string
-  icon: string
-  visible: boolean
-}
 
 const HomePage = () => {
   const { session } = useAuth()
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const canSeeAdmisiones = hasAnyRole(roles, [
-    ROLES.COORDINACION,
-    ROLES.SECRETARIA,
-    ROLES.ADMIN,
-    ROLES.PROFESOR,
-    ROLES.DOCENTE,
-  ])
-  const canSeeGestionEstudiantes = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
-  const canSeeFechas = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
-
-  const shortcuts: HomeShortcut[] = [
-    { to: '/solicitudes', label: 'Solicitudes', icon: '📝', visible: true },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
-    { to: '/coordinacion/estudiantes', label: 'Estudiantes', icon: '👥', visible: canSeeGestionEstudiantes },
-    { to: '/admisiones', label: 'Admisiones', icon: '📋', visible: canSeeAdmisiones },
-    { to: '/fechas', label: 'Fechas', icon: '📅', visible: canSeeFechas },
-  ]
-
-  const visibleShortcuts = shortcuts.filter((item) => item.visible)
+  const shortcuts = getPrimaryNavigationItems(roles)
 
   return (
     <ModuleLayout title="Inicio">
       <p className="home-page__lead">Sistema de apoyo a procesos de posgrado. Acá puedes atender los siguientes procesos: </p>
 
       <section className="home-page__shortcuts" aria-label="Accesos del sistema">
-        {visibleShortcuts.map((item) => (
+        {shortcuts.map((item) => (
           <Link key={item.to} to={item.to} className="home-page__shortcut-card" title={item.label}>
             <span className="home-page__shortcut-icon" aria-hidden="true">
               {item.icon}

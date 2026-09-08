@@ -1,3 +1,29 @@
+# Update 2026-09-08 — Navegación consistente e Informes a dependencias
+
+## Estado actual y decisión
+- El sidebar y la pantalla de inicio consumen `getPrimaryNavigationItems(roles)`, por lo que presentan exactamente los mismos módulos autorizados, etiquetas e iconos. Inicio ahora incluye **Informes a dependencias** y **Actas** para coordinación/administración; continúa respetando la visibilidad anterior por rol.
+- Los iconos se ajustaron por semántica: solicitudes recibidas (`📨`), matrícula/grado (`🎓`), comunidad estudiantil (`👥`), aspirantes (`🧑‍🎓`), dependencias institucionales (`🏛️`), actas (`📜`) y calendario de fechas (`🗓️`).
+- El nombre visible del antiguo módulo **Reportes** es ahora **Informes a dependencias** tanto en navegación como en su `ModuleLayout`. Se conservan deliberadamente la ruta `/coordinacion/reportes`, el componente `ReportesPage` y `src/modules/reportes` para no romper enlaces ni identificadores técnicos.
+
+## Paths, contratos y salida esperada
+- Fuente canónica: `src/app/navigationItems.ts`; consumidores: `src/components/Sidebar/Sidebar.tsx` y `src/pages/Home/HomePage.tsx`; título del módulo: `src/pages/Reportes/ReportesPage.tsx`.
+- `getPrimaryNavigationItems(roles: string[])` devuelve objetos `{ to, label, icon }` ya filtrados. Coordinación/administración reciben los siete accesos; otros roles reciben el subconjunto permitido. Cualquier módulo primario futuro debe agregarse en esta fuente compartida, no por separado en Sidebar/Home.
+- No cambiaron APIs, schemas, autenticación, rutas, dependencias, variables de entorno, seeds ni datasets. Los datos continúan llegando del gateway/API institucional.
+
+## Retos y próximos pasos
+1. Validar con sesiones reales de coordinación, administración, secretaría, profesor y estudiante que sidebar e inicio contienen el mismo subconjunto y que todas las tarjetas navegan correctamente.
+2. Revisar los emoji en los sistemas operativos objetivo, ya que su representación depende de la fuente/plataforma; si producto requiere trazo idéntico, migrar en conjunto a un set SVG accesible.
+3. Validar visualmente temas claro/oscuro y móvil. No se generó captura en el contenedor porque no hay Chromium, Chrome ni Firefox instalado y la aplicación requiere sesión institucional.
+
+## Entorno y resultados
+- Entorno único `/workspace/SAPP-frontend`: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2. Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- `npx eslint src/app/navigationItems.ts src/components/Sidebar/Sidebar.tsx src/pages/Home/HomePage.tsx src/pages/Reportes/ReportesPage.tsx` (2026-09-08): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-08): PASS; 248 módulos transformados y artefactos `dist/assets/index-16Ne2VSA.css` e `index-DrB_Pgx_.js`. Persiste el warning no bloqueante del chunk JavaScript de 517.25 kB.
+- `npm run lint` global (2026-09-08): FAIL por 9 errores y 1 warning preexistentes en archivos ajenos a esta actualización; el lint focalizado de los cuatro archivos TypeScript modificados sí pasa.
+- `git diff --check` (2026-09-08): PASS.
+
+---
+
 # Update 2026-09-07 — Marca EISI en el sidebar
 
 ## Estado actual y decisión
