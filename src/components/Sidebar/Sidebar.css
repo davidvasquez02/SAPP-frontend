@@ -73,6 +73,14 @@
   font-size: 16px;
 }
 
+.sidebar__module-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+  flex: none;
+}
+
 .sidebar__nav {
   display: flex;
   flex-direction: column;

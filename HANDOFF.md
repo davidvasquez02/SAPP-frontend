@@ -1,3 +1,22 @@
+# Update 2026-09-08 — Iconos de contorno en tres módulos del sidebar
+
+## Estado actual y decisión
+- `src/components/Sidebar/Sidebar.tsx` continúa construyendo el menú a partir de `getPrimaryNavigationItems(roles)`. Solo al renderizar las rutas `/solicitudes`, `/admisiones` y `/coordinacion/reportes` sustituye sus emoji por los SVG monocromáticos `ClipboardList`, `FileUser` y `FolderOpen`, respectivamente.
+- Los trazos basados en Lucide están encapsulados en `src/components/Sidebar/SidebarModuleIcon.tsx`; usan `currentColor`, contorno de 2 px y caja uniforme de 20 × 20 px definida en `Sidebar.css`. Así heredan el color del enlace normal/seleccionado sin alterar espaciado o alineación.
+- No cambiaron textos, rutas, permisos, orden, selección ni los iconos de los otros módulos. La pantalla Inicio también conserva deliberadamente sus iconos actuales, pues la solicitud se limitó al menú lateral.
+
+## Entorno, artefactos y próximos pasos
+- `lucide-react` no existía en el proyecto y `npm install lucide-react` devolvió HTTP 403 por política del registro. Para conservar un build reproducible se copiaron únicamente los trazos SVG públicos de los tres iconos requeridos y no se modificaron `package.json` ni `package-lock.json`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No hay nuevos endpoints, schemas, variables, seeds, datasets ni artefactos persistentes.
+- Pendiente: validar visualmente con una sesión institucional los temas claro/oscuro, el estado seleccionado, el sidebar contraído/expandido y móvil. El contenedor no dispone de Chromium, Chrome ni Firefox y las rutas requieren autenticación, por lo que no se generó captura.
+
+## Resultados de esta actualización
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/components/Sidebar/SidebarModuleIcon.tsx` (2026-09-08): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-08): PASS; TypeScript y Vite transformaron 250 módulos y generaron `dist/assets/index-D61X9_eD.css` e `index-zF9B5YXD.js`. Persiste el warning no bloqueante por el chunk JS de 518.83 kB.
+- `git diff --check` (2026-09-08): PASS.
+
+---
+
 # Update 2026-09-08 — Navegación consistente e Informes a dependencias
 
 ## Estado actual y decisión
