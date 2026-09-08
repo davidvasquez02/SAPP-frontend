@@ -71,6 +71,10 @@
     object-fit: contain;
 }
 
+.module-layout__institutional-logo--eisi {
+    border-radius: 12%;
+}
+
 .module-layout__user-name {
     margin: 0;
     font-weight: 600;

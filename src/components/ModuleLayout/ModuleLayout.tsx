@@ -3,7 +3,7 @@ import { useAuth } from '../../context/Auth'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
-const EISI_LOGO_SRC = '/brand/eisi-favicon.svg'
+const EISI_LOGO_SRC = '/brand/eisi%20imagen.png'
 const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
@@ -47,7 +47,7 @@ const ModuleLayout = ({ title, children }: ModuleLayoutProps) => {
               alt="Universidad Industrial de Santander"
             />
             <img
-              className="module-layout__institutional-logo"
+              className="module-layout__institutional-logo module-layout__institutional-logo--eisi"
               src={EISI_LOGO_SRC}
               alt="Escuela de Ingeniería de Sistemas e Informática"
             />

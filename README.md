@@ -21,6 +21,8 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-08:** el logo EISI activo cambio de `public/brand/eisi-favicon.svg` a `public/brand/eisi imagen.png`, servido como `/brand/eisi%20imagen.png` por el espacio en el nombre. Se usa como favicon PNG en `index.html`, marca del sidebar en `src/components/Sidebar/Sidebar.tsx` y logo EISI del encabezado compartido en `src/components/ModuleLayout/ModuleLayout.tsx`. El sidebar conserva `object-fit: contain` y `border-radius: 9px`; el encabezado agrega `module-layout__institutional-logo--eisi` con `border-radius: 12%` solo para EISI, sin tocar el logo UIS.
+  Verificacion: `npx eslint src/components/ModuleLayout/ModuleLayout.tsx src/components/Sidebar/Sidebar.tsx`, `npm run build`, `git diff --check` y `rg -n "eisi-favicon\\.svg" index.html src` pasaron el 2026-09-08; no hubo captura porque Chrome/Edge/Chromium no estan en `PATH` y no hay Playwright/Puppeteer instalado.
 - **2026-09-08:** los iconos restantes del menú lateral se unificaron con el lenguaje visual de contorno de Lucide: **Matrícula** usa `GraduationCap`, **Estudiantes** usa `UsersRound`, **Actas** usa `ScrollText`, **Fechas** usa `CalendarDays` y **Cerrar sesión** usa `LogOut`. Todos heredan `currentColor` y reutilizan la caja existente de 20 px, sin cambiar etiquetas, rutas, permisos, orden, espaciado, estados del menú, los tres iconos modernizados anteriormente ni la marca Minerva. Debido al HTTP 403 del registro npm, `lucide-react` queda disponible como dependencia local reproducible en `vendor/lucide-react`, con únicamente los cinco componentes requeridos.
 - **2026-09-08:** el menú lateral reemplaza exclusivamente los pictogramas de **Solicitudes**, **Admisiones** e **Informes a dependencias** por iconos SVG de contorno basados en Lucide (`ClipboardList`, `FileUser` y `FolderOpen`). Los tres usan `currentColor`, 20 px y el mismo alineado tanto en estado normal como seleccionado; los demás iconos, etiquetas, rutas, permisos, orden y comportamiento permanecen intactos. La instalación de `lucide-react` fue bloqueada por la política del registro npm (HTTP 403), por lo que se incorporaron localmente solo los trazos SVG requeridos, sin añadir una dependencia que impidiera compilar.
 - **2026-09-08:** **Generar informe** usa el servicio real de admisiones: `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}`, sin body y con los valores seleccionados en pantalla. El formulario bloquea reenvíos mientras espera, presenta el mensaje del envelope `{ ok, message, data }` y conserva temporalmente el mock solo para matrícula y créditos condonables.
@@ -93,7 +95,7 @@ Este repositorio contiene únicamente el **frontend React/TypeScript**. La lógi
 
 ## Stack y versiones exactas observadas
 
-Versiones instaladas en `/workspace/SAPP-frontend` según `npm list --depth=0` el **2026-08-17**:
+Versiones instaladas en `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend` según `npm list --depth=0` el **2026-09-08**:
 
 | Paquete | Versión |
 | --- | --- |
@@ -102,6 +104,7 @@ Versiones instaladas en `/workspace/SAPP-frontend` según `npm list --depth=0` e
 | react | 19.2.3 |
 | react-dom | 19.2.3 |
 | react-router-dom | 7.11.0 |
+| lucide-react | 0.468.0-local -> .\vendor\lucide-react |
 | typescript | 5.9.3 |
 | vite | npm:rolldown-vite@7.2.5 |
 | @vitejs/plugin-react-swc | 4.2.2 |
@@ -358,11 +361,11 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Se configuró proxy local de Vite para reenviar `/api/sapp/*` a `VITE_DEV_PROXY_TARGET` y remover el prefijo cuando el target es localhost.
 - Los servicios siguen usando el cliente HTTP centralizado; este normaliza rutas heredadas `/sapp/*` y rutas ya migradas `/api/sapp/*` para evitar duplicar prefijos.
 
-### 2026-06-12 — Marca EISI/UIS (actualizada 2026-09-07)
+### 2026-06-12 — Marca EISI/UIS (actualizada 2026-09-08)
 
-- Se reemplazó el favicon de Vite por el ícono EISI en `public/brand/eisi-favicon.svg` y `index.html`.
-- El sidebar muestra el ícono EISI tanto contraído como expandido y presenta la marca completa `Minerva | Posgrados` al expandirse; en móvil ambos permanecen visibles.
-- El encabezado de módulos presenta el logo EISI a la izquierda del logo UIS, ambos con altura responsiva concordante, usando `public/brand/svg.svg`, `public/brand/LOGO UIS_PNG.png` y estilos compartidos en `ModuleLayout`.
+- Se reemplazó el favicon de Vite por el logo EISI PNG en `public/brand/eisi imagen.png`; `index.html` lo sirve como `/brand/eisi%20imagen.png` con MIME `image/png`.
+- El sidebar muestra el logo EISI PNG tanto contraído como expandido y presenta la marca completa `Minerva | Posgrados` al expandirse; en móvil ambos permanecen visibles. El logo conserva `object-fit: contain` y `border-radius: 9px`.
+- El encabezado de módulos presenta el logo UIS y el logo EISI con altura responsiva concordante. EISI usa `/brand/eisi%20imagen.png` y la clase `module-layout__institutional-logo--eisi` con `border-radius: 12%`; UIS conserva `public/brand/LOGO UIS_PNG.png` sin ese radio.
 - El título vigente del documento es `Minerva | Posgrados`; el idioma HTML permanece configurado en español.
 
 ### 2026-06-06 — Rediseños visuales de admisiones/documentos
@@ -401,4 +404,4 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 
 - Mantener compatibilidad con tokens CSS globales y modo claro/oscuro.
 - Evitar colores hardcodeados en componentes nuevos cuando exista token semántico equivalente.
-- Los logos institucionales agregados en `public/brand` son SVG ligeros y no requieren imports desde TypeScript.
+- Los logos institucionales agregados en `public/brand` se sirven desde `public` y no requieren imports desde TypeScript; el logo EISI vigente es el PNG `/brand/eisi%20imagen.png`.

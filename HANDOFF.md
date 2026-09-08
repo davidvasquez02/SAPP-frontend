@@ -1,3 +1,24 @@
+# Update 2026-09-08 - Logo EISI PNG
+
+## Estado actual y decision
+- El asset EISI activo cambio de `public/brand/eisi-favicon.svg` a `public/brand/eisi imagen.png`. En codigo se usa la ruta web exacta `/brand/eisi%20imagen.png` para respetar el espacio del nombre sin renombrar, recrear, convertir ni sobrescribir el PNG.
+- Lugares actualizados: favicon en `index.html` con `type="image/png"`, marca del sidebar en `src/components/Sidebar/Sidebar.tsx` y logo EISI del encabezado compartido en `src/components/ModuleLayout/ModuleLayout.tsx`.
+- El sidebar conserva `object-fit: contain` y `border-radius: 9px`. El encabezado agrega la clase especifica `module-layout__institutional-logo--eisi` con `border-radius: 12%`; el logo UIS mantiene solo `module-layout__institutional-logo`, por lo que no recibe ese radio.
+
+## Paths, contratos y salida esperada
+- Asset usado: `public/brand/eisi imagen.png`; ruta publica esperada: `GET /brand/eisi%20imagen.png`.
+- Implementacion: `index.html`, `src/components/Sidebar/Sidebar.tsx`, `src/components/ModuleLayout/ModuleLayout.tsx` y `src/components/ModuleLayout/ModuleLayout.css`.
+- No cambiaron navegacion, roles, permisos, autenticacion, contratos HTTP, variables de entorno, seeds ni datasets. Reutilizar el entorno npm del repo; no crear venv, conda, poetry ni otro arbol npm.
+
+## Verificaciones de esta actualizacion
+- `npx eslint src/components/ModuleLayout/ModuleLayout.tsx src/components/Sidebar/Sidebar.tsx` (2026-09-08): PASS; npm mostro solo warnings de configuracion local `msvs_version`/`python`.
+- `npm run build` (2026-09-08): PASS; TypeScript y rolldown-vite transformaron 251 modulos y generaron `dist/assets/index-DT-ZNTNe.css` e `index-CH5XerqE.js`. Persiste el warning no bloqueante del chunk JS de 520.64 kB.
+- `git diff --check` (2026-09-08): PASS; Git mostro avisos de normalizacion LF -> CRLF, sin errores de whitespace.
+- `rg -n "eisi-favicon\\.svg" index.html src` (2026-09-08): PASS; exit code 1 sin salida, es decir, cero referencias activas al SVG antiguo en `index.html` o `src`.
+- Captura visual: no realizada porque `where.exe chrome`, `where.exe msedge` y `where.exe chromium` no encontraron navegador en `PATH`, y `node_modules` no contiene Playwright ni Puppeteer.
+
+---
+
 # Update 2026-09-08 — Iconos Lucide restantes del sidebar
 
 ## Estado actual y decisión

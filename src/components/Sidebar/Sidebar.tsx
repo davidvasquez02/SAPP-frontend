@@ -29,7 +29,7 @@ const Sidebar = () => {
       <NavLink to="/" className="sidebar__brand" title="Ir al inicio" aria-label="Ir al inicio">
         <img
           className="sidebar__brand-logo"
-          src="/brand/eisi-favicon.svg"
+          src="/brand/eisi%20imagen.png"
           alt=""
           aria-hidden="true"
         />
