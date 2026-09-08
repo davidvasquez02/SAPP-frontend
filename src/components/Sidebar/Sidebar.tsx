@@ -1,22 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { CalendarDays, GraduationCap, LogOut, ScrollText, UsersRound } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "../../context/Auth";
 import { getPrimaryNavigationItems } from "../../app/navigationItems";
 import { SidebarModuleIcon } from "./SidebarModuleIcon";
 import "./Sidebar.css";
-
-const modulesWithOutlineIcon = new Set([
-  "/solicitudes",
-  "/admisiones",
-  "/coordinacion/reportes",
-]);
-
-const remainingModuleIcons = {
-  "/matricula": GraduationCap,
-  "/coordinacion/estudiantes": UsersRound,
-  "/actas": ScrollText,
-  "/fechas": CalendarDays,
-} as const;
 
 const Sidebar = () => {
   const { session, logout } = useAuth();
@@ -38,8 +25,6 @@ const Sidebar = () => {
 
       <nav className="sidebar__nav">
         {sidebarItems.map((item) => {
-          const ModuleIcon = remainingModuleIcons[item.to as keyof typeof remainingModuleIcons];
-
           return (
             <NavLink
               key={item.to}
@@ -50,13 +35,7 @@ const Sidebar = () => {
               title={item.label}
             >
               <span className="sidebar__icon" aria-hidden="true">
-                {modulesWithOutlineIcon.has(item.to) ? (
-                  <SidebarModuleIcon modulePath={item.to} />
-                ) : ModuleIcon ? (
-                  <ModuleIcon className="sidebar__module-icon" />
-                ) : (
-                  item.icon
-                )}
+                <SidebarModuleIcon modulePath={item.to} />
               </span>
               <span className="sidebar__label">{item.label}</span>
             </NavLink>

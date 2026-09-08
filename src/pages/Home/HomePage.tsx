@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { getPrimaryNavigationItems } from '../../app/navigationItems'
 import { useAuth } from '../../context/Auth'
+import { SidebarModuleIcon } from '../../components/Sidebar/SidebarModuleIcon'
 import './HomePage.css'
 
 const HomePage = () => {
@@ -18,7 +19,10 @@ const HomePage = () => {
         {shortcuts.map((item) => (
           <Link key={item.to} to={item.to} className="home-page__shortcut-card" title={item.label}>
             <span className="home-page__shortcut-icon" aria-hidden="true">
-              {item.icon}
+              <SidebarModuleIcon
+                modulePath={item.to}
+                className="home-page__shortcut-icon-svg"
+              />
             </span>
             <span className="home-page__shortcut-label">{item.label}</span>
           </Link>
