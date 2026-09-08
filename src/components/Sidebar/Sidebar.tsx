@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { CalendarDays, GraduationCap, LogOut, ScrollText, UsersRound } from "lucide-react";
 import { useAuth } from "../../context/Auth";
 import { getPrimaryNavigationItems } from "../../app/navigationItems";
 import { SidebarModuleIcon } from "./SidebarModuleIcon";
@@ -9,6 +10,13 @@ const modulesWithOutlineIcon = new Set([
   "/admisiones",
   "/coordinacion/reportes",
 ]);
+
+const remainingModuleIcons = {
+  "/matricula": GraduationCap,
+  "/coordinacion/estudiantes": UsersRound,
+  "/actas": ScrollText,
+  "/fechas": CalendarDays,
+} as const;
 
 const Sidebar = () => {
   const { session, logout } = useAuth();
@@ -29,7 +37,10 @@ const Sidebar = () => {
       </NavLink>
 
       <nav className="sidebar__nav">
-        {sidebarItems.map((item) => (
+        {sidebarItems.map((item) => {
+          const ModuleIcon = remainingModuleIcons[item.to as keyof typeof remainingModuleIcons];
+
+          return (
             <NavLink
               key={item.to}
               to={item.to}
@@ -41,13 +52,16 @@ const Sidebar = () => {
               <span className="sidebar__icon" aria-hidden="true">
                 {modulesWithOutlineIcon.has(item.to) ? (
                   <SidebarModuleIcon modulePath={item.to} />
+                ) : ModuleIcon ? (
+                  <ModuleIcon className="sidebar__module-icon" />
                 ) : (
                   item.icon
                 )}
               </span>
               <span className="sidebar__label">{item.label}</span>
             </NavLink>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="sidebar__footer">
@@ -58,7 +72,7 @@ const Sidebar = () => {
           title="Cerrar sesión"
         >
           <span className="sidebar__icon" aria-hidden="true">
-            🚪
+            <LogOut className="sidebar__module-icon" />
           </span>
           <span className="sidebar__label">Cerrar sesión</span>
         </button>

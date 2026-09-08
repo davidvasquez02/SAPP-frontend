@@ -6,7 +6,7 @@ El formulario de solicitudes académicas soporta la homologación de una o más 
 
 ### Stack instalado y ejecución rápida
 
-- React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide React 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
 - Componentes/páginas en `src/components` y `src/pages`; módulos de dominio en `src/modules`; sesión en `src/context/Auth`; transporte en `src/shared/http`.
 
 ```bash
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-08:** los iconos restantes del menú lateral se unificaron con el lenguaje visual de contorno de Lucide: **Matrícula** usa `GraduationCap`, **Estudiantes** usa `UsersRound`, **Actas** usa `ScrollText`, **Fechas** usa `CalendarDays` y **Cerrar sesión** usa `LogOut`. Todos heredan `currentColor` y reutilizan la caja existente de 20 px, sin cambiar etiquetas, rutas, permisos, orden, espaciado, estados del menú, los tres iconos modernizados anteriormente ni la marca Minerva. Debido al HTTP 403 del registro npm, `lucide-react` queda disponible como dependencia local reproducible en `vendor/lucide-react`, con únicamente los cinco componentes requeridos.
 - **2026-09-08:** el menú lateral reemplaza exclusivamente los pictogramas de **Solicitudes**, **Admisiones** e **Informes a dependencias** por iconos SVG de contorno basados en Lucide (`ClipboardList`, `FileUser` y `FolderOpen`). Los tres usan `currentColor`, 20 px y el mismo alineado tanto en estado normal como seleccionado; los demás iconos, etiquetas, rutas, permisos, orden y comportamiento permanecen intactos. La instalación de `lucide-react` fue bloqueada por la política del registro npm (HTTP 403), por lo que se incorporaron localmente solo los trazos SVG requeridos, sin añadir una dependencia que impidiera compilar.
 - **2026-09-08:** **Generar informe** usa el servicio real de admisiones: `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}`, sin body y con los valores seleccionados en pantalla. El formulario bloquea reenvíos mientras espera, presenta el mensaje del envelope `{ ok, message, data }` y conserva temporalmente el mock solo para matrícula y créditos condonables.
 - **2026-09-08:** el sidebar y los accesos de inicio comparten una única definición de navegación, de modo que cada módulo permitido por rol aparece en ambos lugares con el mismo nombre e icono. Se incorporaron en inicio los accesos antes ausentes a **Informes a dependencias** y **Actas**, se revisaron los pictogramas según el significado de cada proceso y el nombre visible **Reportes** se reemplazó por **Informes a dependencias** sin cambiar la ruta técnica `/coordinacion/reportes`.
