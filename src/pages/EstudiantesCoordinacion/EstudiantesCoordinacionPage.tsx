@@ -233,7 +233,7 @@ const EstudiantesCoordinacionPage = () => {
     <ModuleLayout title="Estudiantes">
       <section className="estudiantes-coordinacion">
         <header className="estudiantes-coordinacion__header">
-          <h1 className="estudiantes-coordinacion__title">Listado de estudiantes</h1>
+          {/* <h1 className="estudiantes-coordinacion__title">Listado de estudiantes</h1> */}
           <ProgramTypeToggle
             value={programTypeSeleccionado}
             onChange={(programType) => {

@@ -227,9 +227,9 @@ const AdmisionesHomePage = () => {
       >
         <header className="admisiones-section-header">
           <div className="admisiones-section-header__content">
-            <span className="admisiones-section-header__icon" aria-hidden="true">
+            {/* <span className="admisiones-section-header__icon" aria-hidden="true">
               📣
-            </span>
+            </span> */}
             <div>
               <h2
                 id="admisiones-section-title"
@@ -318,12 +318,12 @@ const AdmisionesHomePage = () => {
                   className="admisiones-program-card"
                 >
                   <header className="admisiones-program-card__header">
-                    <span
+                    {/* <span
                       className="admisiones-program-card__icon"
                       aria-hidden="true"
                     >
                       {programaMeta?.icon ?? "🎓"}
-                    </span>
+                    </span> */}
                     <div>
                       <h3 className="admisiones-program-card__title">
                         {programaNombre}
@@ -335,11 +335,10 @@ const AdmisionesHomePage = () => {
                   </header>
 
                   <section
-                    className={`admisiones-current-callout ${
-                      convocatoriaEstaAbierta
-                        ? "admisiones-current-callout--active"
-                        : "admisiones-current-callout--inactive"
-                    }`}
+                    className={`admisiones-current-callout ${convocatoriaEstaAbierta
+                      ? "admisiones-current-callout--active"
+                      : "admisiones-current-callout--inactive"
+                      }`}
                     aria-label={
                       convocatoriaDestacada
                         ? `Convocatoria ${convocatoriaEstaAbierta ? "abierta" : "cerrada"} de ${programaNombre}`
@@ -428,11 +427,10 @@ const AdmisionesHomePage = () => {
 
                     <button
                       type="button"
-                      className={`admisiones-enter-button ${
-                        !convocatoriaEstaAbierta
-                          ? "admisiones-enter-button--inactive"
-                          : ""
-                      }`}
+                      className={`admisiones-enter-button ${!convocatoriaEstaAbierta
+                        ? "admisiones-enter-button--inactive"
+                        : ""
+                        }`}
                       disabled={!convocatoriaDestacada}
                       onClick={() =>
                         convocatoriaDestacada &&
