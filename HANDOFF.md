@@ -1,3 +1,24 @@
+# Update 2026-09-09 — Filtro de estados disponible en Solicitudes
+
+## Estado actual y decisión
+- En `/solicitudes`, tanto la vista de estudiante como la vista de coordinación entregan a `SolicitudesFiltersBar` únicamente los estados presentes en el listado correspondiente. La opción general **Todos** permanece disponible.
+- `getEstadosPresentesEnSolicitudes` centraliza el cruce entre resultados y catálogo, acepta `estadoId` cuando viene en el DTO y usa como respaldo la sigla normalizada. Así se toleran las variantes existentes (`REGISTRADA`, `EN ESTUDIO`, etc.) sin inventar estados.
+- Al seleccionar un tipo de solicitud, las opciones de estado se recalculan con las solicitudes de ese tipo. En coordinación se consulta el backend solo por tipo y se filtra el estado localmente; esto evita que una consulta ya filtrada por estado reduzca artificialmente el selector a una sola opción.
+
+## Paths, contratos y salida esperada
+- Utilidad: `src/modules/solicitudes/utils/estadoSolicitud.ts`.
+- Consumidores: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+- Componente presentacional sin cambios: `src/modules/solicitudes/components/SolicitudesFiltersBar/SolicitudesFiltersBar.tsx`.
+- Contratos HTTP existentes: coordinación usa `GET /sapp/solicitudesAcademicas?tipoSolicitudId={id}` (o sin query para todos); estudiante usa `GET /sapp/solicitudesAcademicas/estudiante?estudianteId={id}`. No hubo cambios de backend, schemas, seeds, datasets ni variables de entorno.
+- Salida esperada: cada opción de **Estado** distinta de **Todos** representa al menos una solicitud del listado actual (y del tipo seleccionado, si aplica). Un estado del catálogo con cero resultados no debe renderizarse.
+
+## Próximos pasos y entorno
+- Validar con sesiones institucionales de estudiante y coordinación que las opciones coincidan con los datos reales, incluidas solicitudes asignadas (que continúan separadas del listado general de coordinación).
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El proyecto usa Node/npm, con las versiones exactas registradas en `package-lock.json` y resumidas en `README.md`.
+- No se añadieron paquetes ni artefactos persistentes. Verificaciones del 2026-09-09: `npx eslint src/modules/solicitudes/utils/estadoSolicitud.ts src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx` pasó; `npm run build` pasó (253 módulos, `dist/assets/index-Cab8csvh.js`) con el warning no bloqueante del chunk mayor a 500 kB; `git diff --check` pasó. npm mostró el warning ambiental conocido `Unknown env config "http-proxy"`.
+
+---
+
 # Update 2026-09-09 — PDF de matrícula y créditos condonables
 
 ## Estado actual y decisiones

@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
 import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../../types'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
-import { DEFAULT_ESTADOS_SOLICITUD_CATALOG, type EstadoSolicitudCatalogItem } from '../../utils/estadoSolicitud'
+import {
+  DEFAULT_ESTADOS_SOLICITUD_CATALOG,
+  getEstadosPresentesEnSolicitudes,
+  normalizeEstadoSolicitud,
+  type EstadoSolicitudCatalogItem,
+} from '../../utils/estadoSolicitud'
 import {
   getSolicitudesAcademicasAsignadas,
   getSolicitudesAcademicasFiltered,
@@ -104,7 +109,6 @@ const SolicitudesCoordinadorView = ({
     let mounted = true
 
     getSolicitudesAcademicasFiltered({
-      estadoId: estadoId ?? undefined,
       tipoSolicitudId: tipoSolicitudId ?? undefined,
     })
       .then((solicitudes) => {
@@ -129,15 +133,30 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [assignedOnly, estadoId, tipoSolicitudId, location.key, location.state])
+  }, [assignedOnly, tipoSolicitudId, location.key, location.state])
 
-  const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
-  const availableRows = rows.filter((solicitud) => !assignedIds.has(solicitud.id))
+  const availableRows = useMemo(() => {
+    const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
+    return rows.filter((solicitud) => !assignedIds.has(solicitud.id))
+  }, [assignedRows, rows])
+  const estadosPresentes = useMemo(
+    () => getEstadosPresentesEnSolicitudes(estadosCatalog, availableRows),
+    [availableRows, estadosCatalog],
+  )
+  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
+  const estadoSiglaActiva = estadosPresentes.find((estado) => estado.id === estadoIdActivo)?.sigla
+  const filteredRows = availableRows.filter((solicitud) => {
+    if (!estadoSiglaActiva) {
+      return true
+    }
 
-  const totalPages = Math.max(1, Math.ceil(availableRows.length / PAGE_SIZE))
+    return normalizeEstadoSolicitud(solicitud.estadoSigla || solicitud.estado) === estadoSiglaActiva
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE))
   const safeCurrentPage = Math.min(currentPage, totalPages)
   const startIndex = (safeCurrentPage - 1) * PAGE_SIZE
-  const paginatedRows = availableRows.slice(startIndex, startIndex + PAGE_SIZE)
+  const paginatedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
     <section className="solicitudes-coordinador-view">
@@ -168,16 +187,19 @@ const SolicitudesCoordinadorView = ({
         <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
           <h3 id="solicitudes-title">Solicitudes</h3>
           <SolicitudesFiltersBar
-            estadoId={estadoId}
+            estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosCatalog}
+            estadosCatalog={estadosPresentes}
             tiposSolicitud={tiposSolicitud}
             disabled={loading || assignedLoading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
-              setLoading(true)
+              if (nextTipoSolicitudId !== tipoSolicitudId) {
+                setLoading(true)
+              }
               setError(null)
               setEstadoId(nextEstadoId)
               setTipoSolicitudId(nextTipoSolicitudId)
+              setCurrentPage(1)
             }}
           />
           {tiposError ? (
@@ -187,7 +209,7 @@ const SolicitudesCoordinadorView = ({
             <p className="solicitudes-coordinador-view__status">Cargando solicitudes...</p>
           ) : error ? (
             <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">{error}</p>
-          ) : availableRows.length === 0 ? (
+          ) : filteredRows.length === 0 ? (
             <p className="solicitudes-coordinador-view__status">No hay resultados con los filtros seleccionados.</p>
           ) : (
             <>

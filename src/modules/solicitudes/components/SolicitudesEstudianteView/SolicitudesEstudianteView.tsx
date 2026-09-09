@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../context/Auth'
 import { BackButton } from '../../../../components'
@@ -19,6 +19,7 @@ import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
 import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
+  getEstadosPresentesEnSolicitudes,
   normalizeEstadoSolicitud,
   type EstadoSolicitudCatalogItem,
 } from '../../utils/estadoSolicitud'
@@ -234,9 +235,19 @@ const SolicitudesEstudianteView = () => {
   }
 
 
+  const rowsDelTipoSeleccionado = useMemo(
+    () => rows.filter((row) => (tipoSolicitudId === null ? true : row.tipoSolicitudId === tipoSolicitudId)),
+    [rows, tipoSolicitudId],
+  )
+  const estadosPresentes = useMemo(
+    () => getEstadosPresentesEnSolicitudes(estadosCatalog, rowsDelTipoSeleccionado),
+    [estadosCatalog, rowsDelTipoSeleccionado],
+  )
+  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
+
   const filteredRows = rows
     .filter((row) => {
-      if (estadoId === null) {
+      if (estadoIdActivo === null) {
         return true
       }
 
@@ -245,7 +256,7 @@ const SolicitudesEstudianteView = () => {
         return false
       }
 
-      return estadosCatalog.some((estado) => estado.id === estadoId && estado.sigla === normalized)
+      return estadosCatalog.some((estado) => estado.id === estadoIdActivo && estado.sigla === normalized)
     })
     .filter((row) => (tipoSolicitudId === null ? true : row.tipoSolicitudId === tipoSolicitudId))
     .sort(compareSolicitudesDesc)
@@ -284,9 +295,9 @@ const SolicitudesEstudianteView = () => {
       ) : viewMode === 'LIST' ? (
         <>
           <SolicitudesFiltersBar
-            estadoId={estadoId}
+            estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosCatalog}
+            estadosCatalog={estadosPresentes}
             tiposSolicitud={tiposSolicitud}
             disabled={loading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {

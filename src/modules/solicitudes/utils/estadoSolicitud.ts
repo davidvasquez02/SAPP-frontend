@@ -81,3 +81,28 @@ export function getEstadoSolicitudLabel(value: string | null | undefined): strin
 
   return estadoBySigla.get(sigla)?.label ?? sigla
 }
+
+type SolicitudConEstado = {
+  estadoId?: number | null
+  estadoSigla?: string | null
+  estado?: string | null
+}
+
+/** Retorna únicamente los estados que están representados en el listado recibido. */
+export function getEstadosPresentesEnSolicitudes(
+  catalog: EstadoSolicitudCatalogItem[],
+  solicitudes: SolicitudConEstado[],
+): EstadoSolicitudCatalogItem[] {
+  const estadoIds = new Set(
+    solicitudes
+      .map((solicitud) => solicitud.estadoId)
+      .filter((estadoId): estadoId is number => typeof estadoId === 'number'),
+  )
+  const estadoSiglas = new Set(
+    solicitudes
+      .map((solicitud) => normalizeEstadoSolicitud(solicitud.estadoSigla || solicitud.estado))
+      .filter((sigla): sigla is EstadoSolicitudSigla => sigla !== 'UNKNOWN'),
+  )
+
+  return catalog.filter((estado) => estadoIds.has(estado.id) || estadoSiglas.has(estado.sigla))
+}
