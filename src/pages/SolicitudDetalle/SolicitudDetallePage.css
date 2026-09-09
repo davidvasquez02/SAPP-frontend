@@ -200,6 +200,57 @@
   padding-left: 1rem;
 }
 
+.solicitud-detalle-page__homologaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.solicitud-detalle-page__homologaciones h3,
+.solicitud-detalle-page__homologaciones p {
+  margin: 0;
+}
+
+.solicitud-detalle-page__table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--outline);
+  border-radius: 0.9rem;
+}
+
+.solicitud-detalle-page__homologaciones table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  background: var(--surface-container-low);
+}
+
+.solicitud-detalle-page__homologaciones th,
+.solicitud-detalle-page__homologaciones td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--outline);
+}
+
+.solicitud-detalle-page__homologaciones th {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.solicitud-detalle-page__homologaciones tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.solicitud-detalle-page__homologaciones td strong,
+.solicitud-detalle-page__homologaciones td span {
+  display: block;
+}
+
+.solicitud-detalle-page__homologaciones td span {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
 .solicitud-detalle-page__motivo-row {
   display: grid;
   grid-template-columns: 1fr auto;

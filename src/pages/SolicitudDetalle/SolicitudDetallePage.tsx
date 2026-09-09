@@ -37,6 +37,14 @@ const formatDate = (value: string | null) => {
   return `${day}/${month}/${year}`
 }
 
+const CREDIT_TYPE_CODES = new Set(['CRED_COND', 'RENOV_CRED_COND'])
+
+const isCreditoCondonable = (codigo: string | null | undefined) =>
+  CREDIT_TYPE_CODES.has(codigo?.trim().toLocaleUpperCase() ?? '')
+
+const getTipoSolicitudCode = (tipo: TipoSolicitudDto | undefined) =>
+  tipo?.codigoNombre?.split(' - ', 1)[0]?.trim().toLocaleUpperCase() ?? ''
+
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
@@ -192,7 +200,9 @@ const SolicitudDetallePage = () => {
       const updated = await updateSolicitudEstudiante(solicitud.id, {
         tipoSolicitudId: draftTipoSolicitudId,
         observaciones: draftObservaciones.trim(),
-        motivosCreditoCondonable: draftMotivosCredito.map((item) => item.trim()).filter(Boolean),
+        motivosCreditoCondonable: showDraftMotivosCredito
+          ? draftMotivosCredito.map((item) => item.trim()).filter(Boolean)
+          : [],
       })
 
       if (documentosEditorRef.current) {
@@ -241,6 +251,11 @@ const SolicitudDetallePage = () => {
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
+  const showMotivosCredito = isCreditoCondonable(solicitud?.tipoSolicitudCodigo)
+  const draftTipoSolicitud = tiposSolicitud.find((tipo) => tipo.id === draftTipoSolicitudId)
+  const showDraftMotivosCredito = draftTipoSolicitud
+    ? isCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
+    : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
   const canResolveSolicitud = isCoordinador && currentEstado === 'ENVIADA'
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
@@ -368,21 +383,57 @@ const SolicitudDetallePage = () => {
                 <dt>Observaciones</dt>
                 <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
               </div>
-              <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                <dt>Motivos para la solicitud del crédito condonable</dt>
-                <dd>
-                  {solicitud.motivosCreditoCondonable?.length ? (
-                    <ul className="solicitud-detalle-page__motivos-list">
-                      {solicitud.motivosCreditoCondonable.map((motivo, index) => (
-                        <li key={`${motivo}-${index}`}>{motivo}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    'No aplica.'
-                  )}
-                </dd>
-              </div>
+              {showMotivosCredito && (
+                <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                  <dt>Motivos para la solicitud del crédito condonable</dt>
+                  <dd>
+                    {solicitud.motivosCreditoCondonable?.length ? (
+                      <ul className="solicitud-detalle-page__motivos-list">
+                        {solicitud.motivosCreditoCondonable.map((motivo, index) => (
+                          <li key={`${motivo}-${index}`}>{motivo}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      'Sin motivos registrados.'
+                    )}
+                  </dd>
+                </div>
+              )}
             </dl>
+
+            {solicitud.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG' && (
+              <section className="solicitud-detalle-page__homologaciones" aria-labelledby="homologaciones-title">
+                <h3 id="homologaciones-title">Materias solicitadas para homologación</h3>
+                {solicitud.solicitudHomologacionesAsignaturas?.length ? (
+                  <div className="solicitud-detalle-page__table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th scope="col">Materia de origen</th>
+                          <th scope="col">Materia de destino</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {solicitud.solicitudHomologacionesAsignaturas.map((homologacion) => (
+                          <tr key={homologacion.id}>
+                            <td>
+                              <strong>{homologacion.asignaturaOrigenNombre}</strong>
+                              <span>{homologacion.asignaturaOrigenCodigo || 'Sin código'}</span>
+                            </td>
+                            <td>
+                              <strong>{homologacion.asignaturaDestinoNombre}</strong>
+                              <span>{homologacion.asignaturaDestinoCodigo || 'Sin código'}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p>No hay materias de homologación registradas.</p>
+                )}
+              </section>
+            )}
 
             {(canSignAllDocuments || signError || signSuccess) && (
               <section className="solicitud-detalle-page__signature-actions">
@@ -454,7 +505,7 @@ const SolicitudDetallePage = () => {
                         onChange={(event) => setDraftObservaciones(event.target.value)}
                       />
                     </label>
-                    <div className="solicitud-detalle-page__field">
+                    {showDraftMotivosCredito && <div className="solicitud-detalle-page__field">
                       <span>Motivos para la solicitud del crédito condonable</span>
                       {draftMotivosCredito.map((motivo, index) => (
                         <div key={`edit-motivo-${index}`} className="solicitud-detalle-page__motivo-row">
@@ -463,7 +514,7 @@ const SolicitudDetallePage = () => {
                         </div>
                       ))}
                       <button type="button" className="solicitud-detalle-page__back" onClick={addDraftMotivo}>+ Agregar motivo</button>
-                    </div>
+                    </div>}
 
                     {draftTipoSolicitudId && (
                       <SolicitudDocumentosEditor

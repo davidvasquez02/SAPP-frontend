@@ -20,6 +20,29 @@
 
 ---
 
+# Update 2026-09-09 — Detalle de materias homologadas
+
+## Estado, contrato y salida esperada
+- `GET /sapp/solicitudesAcademicas/{id}` puede incluir `solicitudHomologacionesAsignaturas`, una lista cuyos elementos exponen `id`, `asignaturaOrigenId`, `asignaturaOrigenCodigo`, `asignaturaOrigenNombre`, `asignaturaDestinoId`, `asignaturaDestinoCodigo` y `asignaturaDestinoNombre`.
+- Cuando `tipoSolicitudCodigo` es `HOMOLOG`, `SolicitudDetallePage` muestra esas parejas en una tabla de **Materia de origen** y **Materia de destino**, incluyendo nombre y código. Una lista ausente o vacía produce un estado vacío explícito.
+- **Motivos para la solicitud del crédito condonable** solo se renderiza para `CRED_COND` y `RENOV_CRED_COND`, tanto en lectura como en edición. Al editar y seleccionar otro tipo, el payload mock recibe `motivosCreditoCondonable: []` para no conservar motivos ocultos.
+
+## Paths y próximos pasos
+- Contrato: `src/modules/solicitudes/api/types.ts`.
+- Presentación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `src/pages/SolicitudDetalle/SolicitudDetallePage.css`.
+- Validar con una sesión institucional el caso de referencia `GET /sapp/solicitudesAcademicas/61`, además de solicitudes reales de ambos códigos de crédito. Revisar la tabla en escritorio/móvil y temas claro/oscuro.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. No existen seeds ni datasets locales para este flujo.
+- Node.js 24.15.0; npm 11.4.2; React/React DOM 19.2.3; React Router DOM 7.11.0; TypeScript 5.9.3; Vite/rolldown-vite 7.2.5; plugin React SWC 4.2.2; ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/types.ts`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 253 módulos transformados y artefactos `dist/assets/index-D9TbtAAh.css` e `index-Cnzgyi_S.js`. Persiste el warning informativo por el chunk JavaScript de 526.42 kB.
+- `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning históricos fuera de los archivos de este cambio (`src/api/*Service.ts`, admisiones, documentos, `SolicitudDocumentosEditor` y `src/modules/solicitudes/types.ts`). El lint focalizado de los archivos TypeScript modificados sí pasa.
+- Captura pendiente: la ruta requiere autenticación y datos del backend institucional; el contenedor tampoco dispone de un navegador compatible instalado.
+
+---
+
 # Update 2026-09-08 - PDF binario en Informes a dependencias
 
 ## Estado actual y decision
