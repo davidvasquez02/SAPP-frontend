@@ -38,6 +38,13 @@ body {
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  /* Roles tipograficos compartidos por todas las vistas. Estos alias son la
+     unica fuente de verdad para titulos y subtitulos de la aplicacion. */
+  --font-size-page-title: var(--font-size-heading-1);
+  --font-size-section-title: var(--font-size-heading-2);
+  --font-size-subsection-title: var(--font-size-heading-3);
+  --font-size-component-title: var(--font-size-heading-4);
+  --font-size-subtitle: var(--font-size-body);
   margin: 0;
   font-family: var(--font-family-sans);
   font-size: var(--font-size-body);
@@ -149,21 +156,51 @@ h6 {
 }
 
 h1 {
-  font-size: var(--font-size-heading-1);
+  font-size: var(--font-size-page-title) !important;
 }
 
 h2 {
-  font-size: var(--font-size-heading-2);
+  font-size: var(--font-size-section-title) !important;
 }
 
 h3 {
-  font-size: var(--font-size-heading-3);
+  font-size: var(--font-size-subsection-title) !important;
 }
 
 h4,
 h5,
 h6 {
-  font-size: var(--font-size-heading-4);
+  font-size: var(--font-size-component-title) !important;
+}
+
+/*
+ * Contrato visual de encabezados
+ * ------------------------------
+ * Las hojas de cada modulo pueden decidir margenes y distribucion, pero no
+ * deben cambiar tamano, peso, color ni ritmo de un encabezado semantico. Se
+ * usa !important de forma deliberada para neutralizar reglas historicas mas
+ * especificas que hicieron que el mismo nivel variara entre modulos.
+ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-weight-bold) !important;
+  line-height: var(--line-height-tight) !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Los textos introductorios que siguen a un titulo comparten tratamiento aun
+   cuando cada modulo conserve su nombre BEM historico. */
+[class$='__subtitle'],
+[class*='__subtitle '] {
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-subtitle) !important;
+  font-weight: var(--font-weight-regular) !important;
+  line-height: var(--line-height-body) !important;
 }
 
 p,
