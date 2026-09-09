@@ -12,15 +12,17 @@ import {
   type ProgramaAcademicoDto,
 } from '../../modules/reportes/api/programaAcademicoService'
 import {
-  generarInforme,
-  type TipoInforme,
-} from '../../modules/reportes/services/informesMockService'
-import {
   generarReporteAdmision,
   type ReporteAdmisionGenerado,
 } from '../../modules/reportes/services/reporteAdmisionService'
+import {
+  generarReportePeriodo,
+  type ReportePeriodoGenerado,
+} from '../../modules/reportes/services/reportePeriodoService'
 import { downloadBlobFile, openBlobInNewTab } from '../../shared/files/base64FileUtils'
 import './ReportesPage.css'
+
+type TipoInforme = 'ADMISION' | 'MATRICULA' | 'CREDITOS_CONDONABLES'
 
 const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string; description: string }> = [
   { id: 'ADMISION', label: 'Admisión', description: 'Informe de una convocatoria de admisión.' },
@@ -58,7 +60,7 @@ const ReportesPage = () => {
   const [generating, setGenerating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [generatedPdf, setGeneratedPdf] = useState<ReporteAdmisionGenerado | null>(null)
+  const [generatedPdf, setGeneratedPdf] = useState<ReporteAdmisionGenerado | ReportePeriodoGenerado | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -128,13 +130,17 @@ const ReportesPage = () => {
         return
       }
 
-      const response = await generarInforme({
-        tipoProceso: tipo,
+      const pdf = await generarReportePeriodo(tipo, {
         programaId: Number(programaId),
         actaId: Number(actaId),
         periodoId: Number(periodoId),
       })
-      setMessage(`${response.mensaje} Referencia: ${response.solicitudId}.`)
+      setGeneratedPdf(pdf)
+      setMessage(
+        tipo === 'MATRICULA'
+          ? 'El informe de matrícula fue generado correctamente.'
+          : 'El informe de créditos condonables fue generado correctamente.',
+      )
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'No fue posible generar el informe.')
     } finally {
