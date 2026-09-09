@@ -1,3 +1,18 @@
+# Update 2026-09-09 — Auditoría transversal de títulos y subtítulos
+
+## Estado actual y decisión
+- Se revisaron los encabezados semánticos y selectores de título/subtítulo de `src/pages`, `src/modules` y `src/components`. La fuente de verdad está en `src/styles/globals.css`: `h1` es título de página, `h2` título de sección, `h3` título de subsección y `h4`–`h6` título interno de componente.
+- Tamaño, peso, color, interlineado y espaciado de letras de los encabezados se fijan globalmente para neutralizar las antiguas diferencias de especificidad entre módulos. Las clases BEM terminadas en `__subtitle` comparten asimismo tamaño de cuerpo, peso regular, color secundario e interlineado de lectura. Los CSS locales todavía pueden controlar márgenes y layout.
+- No cambiaron componentes React, rutas, contratos HTTP, schemas, paquetes, variables, seeds ni datasets. Salida esperada: dos encabezados del mismo nivel semántico tienen idéntica tipografía en cualquier módulo, en tema claro u oscuro; el color se resuelve exclusivamente mediante `--text-primary`/`--text-secondary`.
+
+## Entorno, retos y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry ni otro árbol npm. El proyecto usa Node/npm y las versiones exactas permanecen en `package-lock.json` y `README.md`.
+- En cambios futuros, elegir el nivel HTML por jerarquía del contenido y no por el tamaño deseado. No agregar tamaños, pesos o colores locales a encabezados/subtítulos; añadir un rol tipográfico global solo si aparece una necesidad semántica nueva.
+- Verificaciones de esta actualización: `npm run build` pasó (253 módulos; `dist/assets/index-CXzH8O0r.css` y `index-CeQ5hOEa.js`) con el warning no bloqueante del chunk de 526.97 kB; `git diff --check` pasó. `npm run lint` conserva los 9 errores y 1 warning preexistentes en servicios API, admisiones, documentos y solicitudes; no señala ninguno de los archivos funcionales de esta actualización.
+- Pendiente únicamente la inspección visual con sesión institucional de todas las rutas protegidas; no se tomó captura porque el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`.
+
+---
+
 # Update 2026-09-09 — Filtro de estados disponible en Solicitudes
 
 ## Estado actual y decisión
