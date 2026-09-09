@@ -2873,3 +2873,29 @@ npm run lint
 - `git diff --check`: PASS. No se tomó captura porque el cambio no modifica la presentación del frontend; la validación completa del SLO requiere Gateway/IDP y sesión institucional.
 
 ---
+# Update 2026-09-09 — Notificación al completar la revisión documental de matrícula
+
+## Estado actual y decisión
+- En `MatriculaDetalleCoordinacionPage`, después de aprobar o rechazar un documento se recarga la lista desde el backend. La pantalla filtra los documentos obligatorios y comprueba que todos estén cargados y en estado terminal `APROBADO` o `RECHAZADO`.
+- Cuando la comprobación se cumple, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` sin body. Un `useRef` evita repetir la notificación para la misma matrícula durante el montaje actual; solo se marca como notificada después de una respuesta exitosa, de modo que un fallo no quede registrado falsamente.
+- La regla anterior que aprueba automáticamente la matrícula cuando todos los documentos obligatorios están aprobados permanece intacta. La nueva notificación también cubre el caso en que uno o más documentos hayan sido rechazados.
+
+## Paths, contrato y salida esperada
+- Orquestación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
+- Servicio HTTP: `src/modules/matricula/services/matriculaAcademicaService.ts`.
+- Contrato: `POST ${VITE_API_URL || '/api/sapp'}/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, sin body, autenticado, con respuesta esperada `ApiResponse<unknown>` (o HTTP 204 admitido por el transporte compartido).
+- No se agregaron dependencias, variables, seeds ni datasets. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm.
+
+## Retos y próximos pasos
+1. Validar con una sesión real de coordinación una matrícula con todos los documentos aprobados y otra con al menos un rechazo; Network debe mostrar el POST inmediatamente después de la última decisión.
+2. Confirmar que el endpoint del backend es idempotente entre recargas/sesiones, pues la protección del frontend evita duplicados durante un montaje, pero no sustituye la idempotencia del servidor.
+3. Si producto decide que documentos opcionales cargados también bloquean la finalización, ampliar el filtro `documentsToReview`; actualmente el avance de matrícula ya se basa en documentos obligatorios.
+
+## Entorno y resultados
+- Entorno único `/workspace/SAPP-frontend`: Node.js 24.15.0, npm 11.4.2 y las versiones exactas declaradas/instaladas que se resumen en `README.md`. No existe script `test` en `package.json`.
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts` (2026-09-09): PASS; npm mostró solo el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-09): PASS; 253 módulos transformados y artefactos `dist/assets/index-CV5t7kwZ.css` e `index-Dq8ZwHXv.js`; persiste el warning informativo por el chunk JavaScript mayor a 500 kB.
+- `git diff --check` (2026-09-09): PASS.
+- Validación funcional pendiente: el flujo requiere autenticación y datos del backend institucional. No hubo cambio visual, por lo que no aplica una captura de pantalla.
+
+---
