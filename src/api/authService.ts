@@ -1,4 +1,3 @@
-import { API_URL } from './config'
 import { httpGet } from '../shared/http/httpClient'
 import type { GatewayLoginResponseDto } from './authTypes'
 import type { ApiResponse } from './types'
@@ -17,17 +16,6 @@ export const loginFromGateway = async (): Promise<GatewayLoginResponseDto> => {
   return response.data
 }
 
-const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
-
-/** Asks the gateway to invalidate server-side/HttpOnly session state. */
-export const logoutFromGateway = async (): Promise<void> => {
-  const logoutUrl = import.meta.env.VITE_LOGOUT_URL ?? `${trimTrailingSlash(API_URL)}/logout`
-
-  await fetch(logoutUrl, {
-    method: 'POST',
-    credentials: 'include',
-    cache: 'no-store',
-    keepalive: true,
-    redirect: 'follow',
-  })
-}
+/** Resolves the front-channel logout/restart URL handled by the identity provider or gateway. */
+export const getLogoutRedirectUrl = (): string =>
+  import.meta.env.VITE_IDP_LOGOUT_URL ?? import.meta.env.VITE_LOGOUT_URL ?? '/'

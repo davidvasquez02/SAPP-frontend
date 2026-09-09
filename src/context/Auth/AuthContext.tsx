@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { loginFromGateway, logoutFromGateway } from '../../api/authService'
+import { getLogoutRedirectUrl, loginFromGateway } from '../../api/authService'
 import { mapGatewayLoginToUserSession } from '../../api/authMappers'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
 import { clearBrowserSession } from '../../modules/auth/session/clearBrowserSession'
@@ -55,10 +55,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSessionState(null)
 
     try {
-      await logoutFromGateway()
-    } finally {
       await clearBrowserSession()
-      window.location.replace('/')
+    } finally {
+      window.location.replace(getLogoutRedirectUrl())
     }
   }, [])
 
