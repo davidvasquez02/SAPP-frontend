@@ -482,19 +482,6 @@ const MatriculaPage = () => {
       await loadDocumentosMatricula(latestValidation);
 
       if (latestValidation.status === "CAN_CREATE") {
-        const missingRequiredDocument = documentos.some(
-          (documento) =>
-            documento.obligatorio &&
-            documento.uploadStatus !== "UPLOADED" &&
-            !documento.selectedFile,
-        );
-        if (missingRequiredDocument) {
-          setErrorForm(
-            "Debes adjuntar todos los documentos obligatorios antes de confirmar.",
-          );
-          return;
-        }
-
         await crearMatriculaAcademica({
           estudianteId,
           periodoId: latestValidation.periodoId,
@@ -931,7 +918,7 @@ const MatriculaPage = () => {
               {!loadingForm && !errorForm ? (
                 <DocumentosRequeridosTable
                   documentos={documentos}
-                  disabledActions={false}
+                  disabledActions={!hasExistingMatricula}
                   showActions
                   uploadDisabledOnly={isReadOnlyMatriculaFinalizada}
                   onAction={(docId, action) => {

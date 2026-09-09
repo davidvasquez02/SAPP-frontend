@@ -2899,3 +2899,28 @@ npm run lint
 - Validación funcional pendiente: el flujo requiere autenticación y datos del backend institucional. No hubo cambio visual, por lo que no aplica una captura de pantalla.
 
 ---
+
+# Update 2026-09-09 — Acciones documentales condicionadas al ID de matrícula
+
+## Estado actual y decisión
+- En la vista de matrícula del rol `ESTUDIANTE`, **Ver**, **Subir** y **Descargar** quedan deshabilitadas cuando la validación vigente todavía devuelve `CAN_CREATE`; solo se habilitan después de que la validación devuelva `EXISTS` y, por tanto, haya un `matricula.id` real.
+- La confirmación inicial ya no exige adjuntos antes de crear el trámite, porque esos controles están deliberadamente bloqueados hasta disponer del ID. Primero se ejecuta `crearMatriculaAcademica`, después se vuelve a consultar la matrícula vigente y finalmente se recarga el checklist asociado al nuevo ID.
+- Para una matrícula `FINALIZADA`, **Ver/Descargar** siguen disponibles porque existe el trámite, mientras **Subir** continúa bloqueado por la regla de solo lectura existente.
+
+## Paths, contrato y salida esperada
+- Orquestación y condición de permisos: `src/pages/Matricula/MatriculaPage.tsx`.
+- Tabla presentacional reutilizada sin cambios: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`; `disabledActions` bloquea las tres acciones y `uploadDisabledOnly` permite bloquear solamente la carga.
+- Contrato preservado: la creación usa el período retornado por la validación y las asignaturas elegidas; los documentos se cargan posteriormente con `tramiteId: matriculaValidation.matricula.id`. No se modificaron endpoints, schemas, dependencias, variables de entorno, seeds ni datasets.
+- Salida esperada: sin matrícula, la tabla puede informar el checklist requerido pero sus tres botones están inactivos; después de confirmar materias y obtener el ID, las acciones se habilitan según el estado del trámite y del documento.
+
+## Retos, próximos pasos y entorno
+1. Validar con backend y sesión `ESTUDIANTE` la transición `CAN_CREATE → EXISTS`: confirmar materias, comprobar que aparece el ID en la respuesta de validación y luego subir un documento.
+2. Confirmar con producto si conviene añadir una ayuda visible junto al checklist mientras no existe matrícula; este ajuste se limita a corregir la habilitación solicitada.
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El entorno observado permanece en Node.js 24.15.0 y npm 11.4.2; las versiones exactas están en `README.md` y `package-lock.json`.
+- No existe script automatizado `test` en `package.json`.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx` (2026-09-09): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-09): PASS; 253 módulos transformados y artefactos `dist/assets/index-CV5t7kwZ.css` e `index-CJ-CXGg0.js`. Persiste el warning informativo por el chunk JavaScript de 528.41 kB.
+- `git diff --check` (2026-09-09): PASS.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox y la vista requiere además sesión `ESTUDIANTE` y backend institucional.
+
+---
