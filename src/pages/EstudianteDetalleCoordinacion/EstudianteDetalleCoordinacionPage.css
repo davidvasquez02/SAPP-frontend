@@ -123,6 +123,49 @@
     margin-top: 1rem;
 }
 
+.estudiante-detalle__state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.estudiante-detalle__state-button {
+    min-height: 2.45rem;
+    border: 1px solid var(--primary);
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    background: var(--surface);
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.estudiante-detalle__state-button--primary {
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.estudiante-detalle__state-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary), transparent 58%);
+    outline-offset: 2px;
+}
+
+.estudiante-detalle__state-button:disabled {
+    cursor: wait;
+    opacity: 0.68;
+}
+
+.estudiante-detalle__state-feedback {
+    margin: 0.65rem 0 0;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.estudiante-detalle__state-feedback--error {
+    color: var(--error, var(--danger));
+}
+
 .estudiante-detalle__code-pill,
 .estudiante-detalle__program-pill,
 .estudiante-detalle__badge {
@@ -528,13 +571,17 @@
         grid-template-columns: 1fr;
     }
     .estudiante-detalle__tab-list,
-    .estudiante-detalle__document-actions {
+    .estudiante-detalle__document-actions,
+    .estudiante-detalle__state-actions {
         flex-direction: column;
         align-items: stretch;
     }
     .estudiante-detalle__tab-button,
     .estudiante-detalle__document-actions button,
     .estudiante-detalle__upload-button {
+        width: 100%;
+    }
+    .estudiante-detalle__state-button {
         width: 100%;
     }
     .estudiante-detalle__document-header {

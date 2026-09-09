@@ -1,3 +1,24 @@
+# Update 2026-09-09 — Cambio de estado en el detalle de estudiantes
+
+## Estado actual y decisión
+- El detalle `/coordinacion/estudiantes/:estudianteId` muestra acciones junto al estado académico. Para `ACTIVO` ofrece **Inactivar estudiante**; para `INACTIVO`, **Activar estudiante**; y en ambos casos ofrece **Marcar como egresado**. En `EGRESADO` no se muestran transiciones adicionales para evitar revertir un estado académico final sin una regla explícita.
+- Durante el `PUT` se bloquean las acciones y se muestra **Actualizando...**. Al confirmar el backend, React actualiza la insignia local, presenta un mensaje accesible y limpia el caché del listado. Un error conserva el estado anterior y se presenta con `role="alert"`.
+
+## Paths, contrato y salida esperada
+- Servicio y DTO de estado: `src/modules/estudiantes/services/estudiantesMockService.ts`.
+- Orquestación y presentación: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; estilos de botones pill, foco, estados y adaptación móvil en su CSS homónimo.
+- Contrato: `PUT /sapp/estudiantes/{estudianteId}/estado`, body JSON `{ "estado": "ACTIVO" | "INACTIVO" | "EGRESADO" }`. Con `VITE_API_URL=/api/sapp`, la normalización del cliente produce `/api/sapp/estudiantes/{id}/estado` sin duplicar el segmento `sapp`.
+- No se modificaron schemas, seeds, datasets, dependencias ni variables de entorno. La salida esperada es que la insignia cambie solo después de una respuesta HTTP exitosa y que el listado vuelva a solicitar datos al regresar.
+
+## Entorno, validación pendiente y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry ni otro árbol npm. El proyecto usa exclusivamente Node.js/npm y conserva sus versiones exactas en `package-lock.json` y `README.md`.
+- Validar con una sesión institucional de coordinación los tres payloads contra estudiantes reales, en particular el ID de referencia `15`, y confirmar si el backend asigna automáticamente `fechaEgreso` al marcar `EGRESADO`.
+- `npx eslint src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx src/modules/estudiantes/services/estudiantesMockService.ts`: PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-CV5t7kwZ.css` e `index-Bk_xb6z-.js`. Persiste el warning informativo por el chunk JavaScript de 528.04 kB. `git diff --check`: PASS.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida además requiere una sesión institucional y datos del backend.
+
+---
+
 # Update 2026-09-09 — Auditoría transversal de títulos y subtítulos
 
 ## Estado actual y decisión

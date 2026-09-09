@@ -1,9 +1,12 @@
 import type { ApiResponse } from '../../../api/types'
-import { httpGet } from '../../../shared/http/httpClient'
+import { httpGet, httpPut } from '../../../shared/http/httpClient'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
 
 const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
 const ESTUDIANTES_CONSULTA_ENDPOINT = '/sapp/estudiantes/consulta'
+const ESTUDIANTES_ENDPOINT = '/sapp/estudiantes'
+
+export type EstadoEstudiante = 'ACTIVO' | 'INACTIVO' | 'EGRESADO'
 
 const PROGRAMAS_COORDINACION: Record<
   string,
@@ -196,4 +199,14 @@ export const getEstudianteById = async (
 
   const estudiante = (response.data ?? []).find((item) => item.estudiante.id === estudianteId)
   return estudiante ? toEstudianteCoordinacion(estudiante) : null
+}
+
+export const updateEstadoEstudiante = async (
+  estudianteId: number,
+  estado: EstadoEstudiante,
+): Promise<void> => {
+  await httpPut<unknown>(
+    `${ESTUDIANTES_ENDPOINT}/${encodeURIComponent(estudianteId)}/estado`,
+    { estado },
+  )
 }

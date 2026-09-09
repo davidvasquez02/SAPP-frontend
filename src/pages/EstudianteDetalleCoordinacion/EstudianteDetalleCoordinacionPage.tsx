@@ -13,7 +13,11 @@ import {
   type DocumentoEstudianteMetadataDto,
   type DocumentosEstudianteGrupoDto,
 } from '../../modules/documentos/api/documentosService'
-import { getEstudianteById } from '../../modules/estudiantes/services/estudiantesMockService'
+import {
+  getEstudianteById,
+  updateEstadoEstudiante,
+  type EstadoEstudiante,
+} from '../../modules/estudiantes/services/estudiantesMockService'
 import { clearEstudiantesListCache } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
@@ -426,8 +430,28 @@ const DocumentGrid = ({ documentos, emptyMessage, activeAction, uploadingAction,
   )
 }
 
-const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinacion }) => {
+interface StudentProfileHeaderProps {
+  estudiante: EstudianteCoordinacion
+  isUpdatingEstado: boolean
+  estadoMessage: string | null
+  estadoError: string | null
+  onEstadoChange: (estado: EstadoEstudiante) => void
+}
+
+const StudentProfileHeader = ({
+  estudiante,
+  isUpdatingEstado,
+  estadoMessage,
+  estadoError,
+  onEstadoChange,
+}: StudentProfileHeaderProps) => {
   const fotoSrc = getFotoSrc(estudiante)
+  const estadoActual = estudiante.estadoAcademico.trim().toUpperCase()
+  const estadoAlterno = estadoActual === 'ACTIVO'
+    ? { estado: 'INACTIVO' as const, label: 'Inactivar estudiante' }
+    : estadoActual === 'INACTIVO'
+      ? { estado: 'ACTIVO' as const, label: 'Activar estudiante' }
+      : null
 
   return (
     <article className="estudiante-detalle__profile-card">
@@ -458,6 +482,30 @@ const StudentProfileHeader = ({ estudiante }: { estudiante: EstudianteCoordinaci
             {formatEstado(estudiante.estadoAcademico)}
           </span>
         </div>
+        <div className="estudiante-detalle__state-actions" aria-label="Acciones sobre el estado del estudiante">
+          {estadoAlterno ? (
+            <button
+              type="button"
+              className="estudiante-detalle__state-button estudiante-detalle__state-button--primary"
+              disabled={isUpdatingEstado}
+              onClick={() => onEstadoChange(estadoAlterno.estado)}
+            >
+              {isUpdatingEstado ? 'Actualizando...' : estadoAlterno.label}
+            </button>
+          ) : null}
+          {estadoActual !== 'EGRESADO' ? (
+            <button
+              type="button"
+              className="estudiante-detalle__state-button"
+              disabled={isUpdatingEstado}
+              onClick={() => onEstadoChange('EGRESADO')}
+            >
+              Marcar como egresado
+            </button>
+          ) : null}
+        </div>
+        {estadoMessage ? <p className="estudiante-detalle__state-feedback" role="status">{estadoMessage}</p> : null}
+        {estadoError ? <p className="estudiante-detalle__state-feedback estudiante-detalle__state-feedback--error" role="alert">{estadoError}</p> : null}
       </div>
 
       <dl className="estudiante-detalle__profile-meta">
@@ -548,6 +596,9 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [documentGroups, setDocumentGroups] = useState<DocumentosEstudianteGrupoDto[]>([])
   const [activeDocumentAction, setActiveDocumentAction] = useState<ActiveDocumentAction>(null)
   const [uploadingDocumentAction, setUploadingDocumentAction] = useState<UploadingDocumentAction>(null)
+  const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
+  const [estadoMessage, setEstadoMessage] = useState<string | null>(null)
+  const [estadoError, setEstadoError] = useState<string | null>(null)
   const loadedDocumentsCodeRef = useRef<string | null>(null)
 
   useEffect(() => () => {
@@ -744,6 +795,27 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
   }, [refreshDocumentGroups, usuarioCargaId])
 
+  const handleEstadoChange = useCallback(async (nuevoEstado: EstadoEstudiante) => {
+    if (!estudiante || isUpdatingEstado) {
+      return
+    }
+
+    setIsUpdatingEstado(true)
+    setEstadoMessage(null)
+    setEstadoError(null)
+
+    try {
+      await updateEstadoEstudiante(estudiante.id, nuevoEstado)
+      setEstudiante((current) => current ? { ...current, estadoAcademico: nuevoEstado } : current)
+      clearEstudiantesListCache()
+      setEstadoMessage(`El estudiante ahora está ${formatEstado(nuevoEstado).toLowerCase()}.`)
+    } catch (err) {
+      setEstadoError(err instanceof Error ? err.message : 'No fue posible actualizar el estado del estudiante.')
+    } finally {
+      setIsUpdatingEstado(false)
+    }
+  }, [estudiante, isUpdatingEstado])
+
   const contenidoTab = useMemo(() => {
     const withActionError = (content: ReactNode) => (
       <>
@@ -833,7 +905,13 @@ const EstudianteDetalleCoordinacionPage = () => {
 
         {estudiante ? (
           <div className="estudiante-detalle__dashboard">
-            <StudentProfileHeader estudiante={estudiante} />
+            <StudentProfileHeader
+              estudiante={estudiante}
+              isUpdatingEstado={isUpdatingEstado}
+              estadoMessage={estadoMessage}
+              estadoError={estadoError}
+              onEstadoChange={(estado) => void handleEstadoChange(estado)}
+            />
             <StudentAcademicStats estudiante={estudiante} />
             <StudentDetailTabs activeTab={tabActiva} onChange={setTabActiva}>
               {contenidoTab}
