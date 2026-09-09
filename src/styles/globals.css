@@ -22,11 +22,31 @@ body {
   --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
   --shadow-xs: 0 2px 8px rgba(32, 50, 35, 0.08);
   --radius-card: 2rem;
+  /* Escala tipográfica canónica. Los módulos solo deben apartarse de ella
+     cuando el contenido tenga una función visual específica. */
+  --font-family-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-caption: 0.75rem;
+  --font-size-small: 0.875rem;
+  --font-size-body: 1rem;
+  --font-size-heading-4: 1rem;
+  --font-size-heading-3: 1.25rem;
+  --font-size-heading-2: clamp(1.375rem, 1.2rem + 0.55vw, 1.75rem);
+  --font-size-heading-1: clamp(1.75rem, 1.45rem + 1vw, 2.375rem);
+  --line-height-tight: 1.2;
+  --line-height-body: 1.6;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
   margin: 0;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   background-color: var(--app-background);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: var(--line-height-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   transition:
     background-color 0.25s ease,
     color 0.25s ease,
@@ -73,6 +93,8 @@ input,
 select,
 textarea {
   font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
 }
 
 a {
@@ -116,12 +138,56 @@ a:focus-visible {
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
 }
 
-p {
-  line-height: 1.6;
+h1 {
+  font-size: var(--font-size-heading-1);
+}
+
+h2 {
+  font-size: var(--font-size-heading-2);
+}
+
+h3 {
+  font-size: var(--font-size-heading-3);
+}
+
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-heading-4);
+}
+
+p,
+li,
+dd {
+  line-height: var(--line-height-body);
+}
+
+small,
+caption {
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+label,
+legend,
+button,
+th {
+  font-weight: var(--font-weight-semibold);
+}
+
+::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 table {
@@ -145,8 +211,8 @@ table {
 .sapp-table thead th {
   background: var(--surface-container-low);
   color: var(--text-secondary);
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.02em;
 }
 
@@ -255,16 +321,4 @@ table {
 .home-page__session {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
   box-shadow: var(--shadow-xs);
-}
-
-@media (max-width: 1024px) {
-  body {
-    font-size: 15px;
-  }
-}
-
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
 }

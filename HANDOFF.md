@@ -2792,3 +2792,25 @@ npm run lint
 - `git diff --check`: PASS.
 
 ---
+# Update 2026-09-09 — Sistema tipográfico global
+
+## Estado actual y decisión
+- `src/styles/globals.css` es la fuente canónica de tipografía. Define tokens para familia sans, escala de títulos, cuerpo, texto pequeño, pesos e interlineados; los elementos HTML semánticos y los controles de formulario consumen esa base en todos los módulos.
+- Los títulos `h1` y `h2` usan tamaños fluidos con `clamp()`. El cuerpo mantiene `1rem` en todos los viewports: se retiró la reducción global a 15/14 px para evitar que el mismo texto cambiara de jerarquía entre escritorio y móvil.
+- Se conservaron las reglas locales de componentes cuando expresan una función particular (badges, métricas, códigos o titulares destacados). Los nuevos estilos deben reutilizar los tokens `--font-*` antes de introducir otro tamaño o peso.
+- El cambio es exclusivamente presentacional. No modifica componentes React, rutas, permisos, contratos HTTP ni datos.
+
+## Paths, contrato visual y salida esperada
+- Fuente canónica: `src/styles/globals.css`; carga global: `src/main.tsx`. No se añadieron fuentes remotas ni paquetes: la pila continúa usando Inter cuando esté disponible y las fuentes de sistema como respaldo.
+- La salida esperada es una jerarquía consistente para `h1`–`h6`, párrafos, listas, textos auxiliares, formularios y tablas en temas claro/oscuro. Los controles heredan familia, tamaño e interlineado; los placeholders usan `--text-secondary`.
+- No hay endpoints, schemas, variables de entorno, seeds o datasets nuevos. Los datos continúan viniendo del gateway/API institucional.
+
+## Retos, entorno y próximos pasos
+1. Validar las rutas protegidas en temas claro/oscuro y en escritorio/móvil con datos reales, prestando especial atención a títulos que mantienen variantes locales por diseño.
+2. Al intervenir un módulo, reemplazar gradualmente valores tipográficos duplicados por los tokens globales; no eliminar excepciones semánticas como códigos monoespaciados, badges o métricas sin revisión visual.
+3. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El entorno observado es Node.js 24.15.0 y npm 11.4.2; las versiones exactas de paquetes están en `package-lock.json` y resumidas en `README.md`.
+- `npm run build` (2026-09-09): PASS; transformó 253 módulos y generó `dist/assets/index-CNaywT30.css` e `index-BrrgKhWL.js`. Persiste el warning no bloqueante por el chunk JavaScript mayor a 500 kB.
+- `npm run lint` (2026-09-09): FAIL por 9 errores y 1 warning preexistentes en servicios, mocks, tipos y componentes no modificados por esta actualización. `git diff --check`: PASS.
+- No existe script de pruebas de componentes. Tampoco hay Chromium, Chrome o Firefox instalado, por lo que no fue posible tomar una captura; la revisión visual completa requiere una sesión institucional y su backend.
+
+---
