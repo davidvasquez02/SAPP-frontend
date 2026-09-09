@@ -21,7 +21,10 @@ import {
   getAsignaturasPorPrograma,
   getMatriculaVigenteValidationByEstudiante,
   getMatriculasAcademicas,
+  getPeriodoMatriculaVigente,
+  notificarAperturaMatricula,
 } from "../../modules/matricula/services/matriculaAcademicaService";
+import type { PeriodoAcademicoMatriculaVigenteDto } from "../../modules/matricula/services/matriculaAcademicaService";
 import { uploadDocument } from "../../api/documentUploadService";
 import { fileToBase64 } from "../../utils/fileToBase64";
 import { sha256Hex } from "../../utils/sha256";
@@ -201,6 +204,12 @@ const MatriculaPage = () => {
   const [estadoFilter, setEstadoFilter] = useState("TODOS");
   const [periodoFilter, setPeriodoFilter] = useState("TODOS");
   const [searchText, setSearchText] = useState("");
+  const [periodoMatriculaVigente, setPeriodoMatriculaVigente] =
+    useState<PeriodoAcademicoMatriculaVigenteDto | null>(null);
+  const [isLoadingPeriodoVigente, setIsLoadingPeriodoVigente] = useState(false);
+  const [isNotificandoApertura, setIsNotificandoApertura] = useState(false);
+  const [notificacionAperturaError, setNotificacionAperturaError] = useState<string | null>(null);
+  const [notificacionAperturaMessage, setNotificacionAperturaMessage] = useState<string | null>(null);
 
   const getMatriculaEstadoClassName = (estado: string) => {
     const normalizedEstado = estado.trim().toUpperCase();
@@ -439,6 +448,74 @@ const MatriculaPage = () => {
       cancelled = true;
     };
   }, [canManageMatriculas]);
+
+  useEffect(() => {
+    if (!canManageMatriculas) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadPeriodoMatriculaVigente = async () => {
+      setIsLoadingPeriodoVigente(true);
+      setNotificacionAperturaError(null);
+
+      try {
+        const periodoVigente = await getPeriodoMatriculaVigente();
+        if (!cancelled) {
+          setPeriodoMatriculaVigente(periodoVigente);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setNotificacionAperturaError(
+            error instanceof Error
+              ? error.message
+              : "No fue posible verificar si hay un periodo de matrícula abierto.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPeriodoVigente(false);
+        }
+      }
+    };
+
+    void loadPeriodoMatriculaVigente();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canManageMatriculas]);
+
+  const handleNotificarAperturaMatricula = async () => {
+    if (!periodoMatriculaVigente) {
+      return;
+    }
+
+    const periodoLabel = periodoMatriculaVigente.periodo.anioPeriodo;
+    if (!window.confirm(`¿Deseas enviar el correo de inicio de matrícula para el periodo ${periodoLabel}?`)) {
+      return;
+    }
+
+    setIsNotificandoApertura(true);
+    setNotificacionAperturaError(null);
+    setNotificacionAperturaMessage(null);
+
+    try {
+      const message = await notificarAperturaMatricula(
+        periodoMatriculaVigente.periodo.id,
+      );
+      setNotificacionAperturaMessage(message);
+    } catch (error) {
+      setNotificacionAperturaError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible enviar la notificación de apertura de matrícula.",
+      );
+    } finally {
+      setIsNotificandoApertura(false);
+    }
+  };
 
   const handleAddMateria = (materia: MateriaDto) => {
     setSelectedMaterias((current) => {
@@ -713,6 +790,48 @@ const MatriculaPage = () => {
             <h3>Listado de matrículas académicas</h3>
             <p>Consulta y filtra las matrículas registradas por programa.</p>
           </header>
+
+          <section className="matricula-page__card matricula-page__notification-card">
+            <div>
+              <h4>Notificación de inicio de matrícula</h4>
+              {isLoadingPeriodoVigente ? (
+                <p className="matricula-page__description" role="status">
+                  Verificando fechas de matrícula vigentes...
+                </p>
+              ) : periodoMatriculaVigente ? (
+                <p className="matricula-page__description">
+                  Periodo {periodoMatriculaVigente.periodo.anioPeriodo}, habilitado del{" "}
+                  {periodoMatriculaVigente.fechaInicio} al {periodoMatriculaVigente.fechaFin}.
+                </p>
+              ) : !notificacionAperturaError ? (
+                <p className="matricula-page__description">
+                  No hay un periodo de matrícula abierto para notificar.
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="matricula-page__notification-button"
+              disabled={
+                isLoadingPeriodoVigente ||
+                isNotificandoApertura ||
+                !periodoMatriculaVigente
+              }
+              onClick={() => void handleNotificarAperturaMatricula()}
+            >
+              {isNotificandoApertura ? "Enviando correo..." : "Enviar correo de inicio"}
+            </button>
+            {notificacionAperturaMessage ? (
+              <p className="matricula-page__success" role="status">
+                {notificacionAperturaMessage}
+              </p>
+            ) : null}
+            {notificacionAperturaError ? (
+              <p className="matricula-page__error" role="alert">
+                {notificacionAperturaError}
+              </p>
+            ) : null}
+          </section>
 
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
             <div className="matricula-page__filters-top-row">

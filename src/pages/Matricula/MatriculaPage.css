@@ -35,6 +35,46 @@
     color: var(--text-secondary);
 }
 
+.matricula-page__notification-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem 1.25rem;
+}
+
+.matricula-page__notification-button {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-weight: 700;
+    padding: 0.65rem 1.2rem;
+    cursor: pointer;
+}
+
+.matricula-page__notification-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--inverse-primary), transparent 35%);
+    outline-offset: 2px;
+}
+
+.matricula-page__notification-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.matricula-page__success {
+    grid-column: 1 / -1;
+    margin: 0;
+    border-radius: 12px;
+    padding: 0.7rem 0.85rem;
+    background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+    color: var(--primary);
+}
+
+.matricula-page__notification-card > .matricula-page__error {
+    grid-column: 1 / -1;
+}
+
 .matricula-page__status,
 .matricula-page__error,
 .matricula-page__placeholder {
@@ -190,6 +230,12 @@
 }
 
 @media (max-width: 768px) {
+    .matricula-page__notification-card {
+        grid-template-columns: 1fr;
+    }
+    .matricula-page__notification-button {
+        width: 100%;
+    }
     .matricula-page__actions {
         justify-content: stretch;
     }

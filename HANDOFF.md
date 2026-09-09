@@ -1,3 +1,31 @@
+# Update 2026-09-09 — Correo de apertura de matrícula
+
+## Estado actual y decisión
+- En la vista de matrícula de `COORDINACION` y `ADMIN` se agregó una tarjeta **Notificación de inicio de matrícula**. Al montar, consulta las fechas vigentes y solo habilita **Enviar correo de inicio** cuando encuentra un elemento de tipo `MATRICULA`.
+- La acción pide confirmación incluyendo `periodo.anioPeriodo`, se bloquea durante el envío y presenta mensajes de éxito o error accesibles. Si no existe fecha vigente, permanece deshabilitada y explica la causa.
+- Se usan tokens semánticos del tema y un layout adaptable; no se agregaron colores fijos, paquetes, variables de entorno, schemas, seeds ni datasets.
+
+## Paths, contratos y salida esperada
+- Servicio y DTO: `src/modules/matricula/services/matriculaAcademicaService.ts`; orquestación: `src/pages/Matricula/MatriculaPage.tsx`; presentación: `src/pages/Matricula/MatriculaPage.css`.
+- Verificación: `GET /sapp/periodoAcademicoFecha/vigente` -> `ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>`. El frontend selecciona el primer registro cuyo `tipoTramite.nombre`, normalizado, sea `MATRICULA`; el ejemplo vigente usa `periodo.id=2`, `anioPeriodo="2026 - 2"`, `fechaInicio="2026-07-18"` y `fechaFin="2026-12-18"`.
+- Envío: `POST /sapp/matriculaAcademica/notificarAperturaMatricula?periodoId={periodo.id}`, sin body. Acepta envelope `ApiResponse<unknown>` o HTTP 204; se muestra `message` cuando está disponible.
+- Con `VITE_API_URL=/api/sapp`, el cliente normaliza esas rutas a `/api/sapp/periodoAcademicoFecha/vigente` y `/api/sapp/matriculaAcademica/notificarAperturaMatricula?periodoId={id}`, sin duplicar `sapp`.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional de coordinación que el endpoint vigente retorna la fecha de matrícula y que `periodo.id` es el identificador esperado por la notificación.
+2. Confirmar con backend la audiencia del correo y su idempotencia ante un segundo envío; la interfaz evita dobles clics concurrentes, pero permite una nueva ejecución posterior.
+3. Revisar visualmente la tarjeta en escritorio/móvil y temas claro/oscuro con datos reales.
+
+## Entorno y verificaciones
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Versiones exactas y comandos de arranque permanecen documentados en `README.md`; no hay script `test` configurado.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts` (2026-09-09): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-09): PASS antes de actualizar esta bitácora.
+- `npm run build` (2026-09-09): PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-CCv-vI1Q.css` e `index-CatGG6Ho.js`. Persiste el warning no bloqueante por el chunk JavaScript de 530.68 kB.
+- `npm run lint` (2026-09-09): FAIL por los 9 errores y 1 warning preexistentes en servicios API, admisiones, documentos y solicitudes; el lint focalizado de los dos archivos TypeScript modificados sí pasa.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`; además, la ruta protegida y su estado vigente requieren sesión institucional y backend.
+
+---
+
 # Update 2026-09-09 — Cambio de estado en el detalle de estudiantes
 
 ## Estado actual y decisión
