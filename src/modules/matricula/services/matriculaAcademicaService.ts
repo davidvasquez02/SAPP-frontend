@@ -31,6 +31,27 @@ type MatriculaCreacionDisponibilidadDto = {
   puedeCrear: boolean
 }
 
+export type PeriodoAcademicoMatriculaVigenteDto = {
+  descripcion: string
+  fechaFin: string
+  fechaInicio: string
+  id: number
+  periodo: {
+    anio: number
+    anioPeriodo: string
+    descripcion: string
+    fechaFin: string
+    fechaInicio: string
+    id: number
+    periodo: number
+  }
+  tipoTramite: {
+    codigo: number
+    id: number
+    nombre: string
+  }
+}
+
 export const getAsignaturasPorPrograma = async (programaId: number): Promise<MateriaDto[]> => {
   const response = await httpGet<ApiResponse<AsignaturaApiDto[]>>(`/sapp/asignaturas?programaId=${programaId}`)
 
@@ -55,6 +76,32 @@ export const getMatriculasAcademicas = async (): Promise<MatriculaAcademicaLista
   }
 
   return response.data
+}
+
+export const getPeriodoMatriculaVigente = async (): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
+  const response = await httpGet<ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>>(
+    '/sapp/periodoAcademicoFecha/vigente',
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible verificar las fechas de matrícula vigentes.')
+  }
+
+  return response.data.find(
+    (fecha) => fecha.tipoTramite.nombre.trim().toUpperCase() === 'MATRICULA',
+  ) ?? null
+}
+
+export const notificarAperturaMatricula = async (periodoId: number): Promise<string> => {
+  const response = await httpPost<ApiResponse<unknown> | undefined>(
+    `/sapp/matriculaAcademica/notificarAperturaMatricula?periodoId=${encodeURIComponent(periodoId)}`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible enviar la notificación de apertura de matrícula.')
+  }
+
+  return response?.message || 'La notificación de apertura de matrícula fue enviada.'
 }
 
 export const crearMatriculaAcademica = async (payload: MatriculaAcademicaCreatePayload): Promise<void> => {
