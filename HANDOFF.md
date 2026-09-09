@@ -1,10 +1,32 @@
+# Update 2026-09-09 — PDF de matrícula y créditos condonables
+
+## Estado actual y decisiones
+- En `/coordinacion/reportes`, **Matrícula** ejecuta `POST /sapp/reportesMatricula/generar?actaId={number}&periodoId={number}&programaId={number}` y **Créditos condonables** ejecuta `POST /sapp/reportesCreditosCondonables/generar` con los mismos tres parámetros. No envían body.
+- Ambos procesos dejaron de usar `informesMockService`: interpretan la respuesta como PDF binario, guardan el `Blob` en memoria y muestran el mismo bloque **PDF generado** con acciones **Ver** y **Descargar** que admisión.
+- El servicio compartido está en `src/modules/reportes/services/reportePeriodoService.ts`; la orquestación está en `src/pages/Reportes/ReportesPage.tsx`. Se respeta el filename de `Content-Disposition`; sin ese header se construye un nombre con proceso, acta, período y programa. Un archivo vacío produce un error visible.
+
+## Contratos, salida esperada y próximos pasos
+- Entrada requerida: IDs numéricos de acta, período y programa seleccionados desde los catálogos existentes. Salida esperada de ambos endpoints: body PDF binario no vacío, `Content-Type: application/pdf` opcional y `Content-Disposition` opcional. Si el MIME no indica PDF, el frontend lo normaliza a `application/pdf` como ya hace admisión.
+- No se agregaron paquetes, variables, schemas, seeds ni datasets. Los catálogos y PDFs provienen del API institucional.
+- Pendiente: validar ambos endpoints con sesión institucional, incluyendo el ejemplo `actaId=2&periodoId=2&programaId=2`, la apertura en pestaña nueva, la descarga y los nombres suministrados por backend.
+
+## Entorno y verificación
+- Entorno único `/workspace/SAPP-frontend`: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm.
+- `npx eslint src/pages/Reportes/ReportesPage.tsx src/modules/reportes/services/reportePeriodoService.ts` (2026-09-09): PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-09): PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-D-63uBWd.css` e `index-nhiG4fGx.js`. Persiste el warning no bloqueante por el chunk JS de 525.21 kB.
+- `git diff --check` (2026-09-09): PASS. No existe script `test` ni Vitest/React Testing Library en `package.json`.
+- `npm run lint` (2026-09-09): FAIL por 9 errores y 1 warning preexistentes en archivos ajenos a esta actualización; el lint focalizado de los dos archivos TypeScript modificados sí pasa.
+- Captura pendiente por limitación del entorno: no hay Chromium, Chrome ni Firefox instalado y la salida completa requiere una sesión institucional y los endpoints reales del backend.
+
+---
+
 # Update 2026-09-08 - PDF binario en Informes a dependencias
 
 ## Estado actual y decision
 - En `/coordinacion/reportes`, el proceso **Admision** ahora genera el informe con `POST /sapp/reportesAdmision/generar?actaId={actaId}&convocatoriaId={convocatoriaId}` sin body y mapea la respuesta como archivo binario, no como `ApiResponse` JSON. El caso reportado por usuario fue `actaId=2` y `convocatoriaId=68`, cuyo body empieza con `%PDF-1.4`.
 - La pantalla guarda el resultado en memoria como `Blob` (`ReporteAdmisionGenerado`) y, debajo del boton **Generar informe**, muestra un bloque **PDF generado** con icono PDF, nombre de archivo, fecha en zona `America/Bogota` y botones estandarizados **Ver**/**Descargar** usando `.sapp-document-action`.
 - Si el backend envia `Content-Disposition`, se respeta su filename. Si no, el fallback es `informe-admision-acta-{actaId}-convocatoria-{convocatoriaId}.pdf`. Si `Content-Type` no contiene `pdf`, el frontend fuerza el MIME del `Blob` a `application/pdf` porque el contenido esperado es el PDF crudo.
-- Matricula y creditos condonables siguen temporalmente en `src/modules/reportes/services/informesMockService.ts`; no reutilizar el endpoint de admision para esos procesos.
+- Esta nota describe la primera integración de admisión. Desde 2026-09-09, matrícula y créditos condonables también usan sus endpoints binarios reales, documentados en la actualización superior.
 
 ## Paths, contratos y salida esperada
 - Transporte binario generico: `src/shared/http/httpClient.ts`, nuevos `httpFile` y `httpPostFile`. Conservan autenticacion, normalizacion de rutas `/sapp`/`/api/sapp`, manejo 401/403 y parsing de errores no exitosos.
