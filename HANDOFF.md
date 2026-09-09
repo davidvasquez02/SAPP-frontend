@@ -526,6 +526,8 @@
 
 # Update 2026-09-03 — Limpieza integral al cerrar sesión
 
+> **Histórico:** la estrategia de `POST` configurable descrita en esta sección fue reemplazada por la navegación fija `/api/auth/slo/logout` el 2026-09-09. Consultar la actualización más reciente al final del documento antes de modificar este flujo.
+
 ## Estado actual y decisión
 - `AuthContext.logout()` es asíncrono: elimina inmediatamente la sesión SAPP en memoria y luego intenta `POST` al endpoint de logout del Gateway con `credentials: 'include'`, `cache: 'no-store'` y `keepalive`.
 - El endpoint predeterminado es `${VITE_API_URL}/logout` (normalmente `/api/sapp/logout`) y se puede reemplazar con `VITE_LOGOUT_URL`. El Gateway debe invalidar allí la sesión servidor y cualquier cookie `HttpOnly`; JavaScript no puede borrar directamente una cookie `HttpOnly`.
@@ -2812,5 +2814,26 @@ npm run lint
 - `npm run build` (2026-09-09): PASS; transformó 253 módulos y generó `dist/assets/index-CNaywT30.css` e `index-BrrgKhWL.js`. Persiste el warning no bloqueante por el chunk JavaScript mayor a 500 kB.
 - `npm run lint` (2026-09-09): FAIL por 9 errores y 1 warning preexistentes en servicios, mocks, tipos y componentes no modificados por esta actualización. `git diff --check`: PASS.
 - No existe script de pruebas de componentes. Tampoco hay Chromium, Chrome o Firefox instalado, por lo que no fue posible tomar una captura; la revisión visual completa requiere una sesión institucional y su backend.
+
+---
+
+# Update 2026-09-09 — Front-channel logout institucional
+
+## Estado actual, contrato y salida esperada
+- El botón **Cerrar sesión** del sidebar continúa invocando `AuthContext.logout()`. La acción borra inmediatamente la sesión en memoria y el storage de sesión, espera la limpieza integral del origen mediante `clearBrowserSession()` y, incluso si esa limpieza falla, ejecuta `window.location.replace('/api/auth/slo/logout')` desde el bloque `finally`.
+- `/api/auth/slo/logout` es una navegación de documento (front-channel logout), no una solicitud `fetch` ni un endpoint bajo `VITE_API_URL`. El Gateway/IDP debe responder a esa ruta y completar el cierre de la sesión institucional.
+- La ruta es deliberadamente fija: `VITE_IDP_LOGOUT_URL` y `VITE_LOGOUT_URL` ya no intervienen. Se retiraron del ejemplo de entorno para evitar que un despliegue redirija al endpoint anterior o solamente a `/`.
+
+## Paths, retos y próximos pasos
+- Resolución de la ruta: `src/api/authService.ts`; orquestación: `src/context/Auth/AuthContext.tsx`; limpieza de navegador: `src/modules/auth/session/clearBrowserSession.ts`; disparador visual: `src/components/Sidebar/Sidebar.tsx`.
+- Configuración y documentación: `.env.example` y `README.md`. No cambiaron schemas, payloads JSON, dependencias, seeds ni datasets.
+- Validar en un despliegue integrado que el Gateway exponga `GET /api/auth/slo/logout`, invalide su cookie/sesión y lleve al usuario al destino post-logout esperado. La SPA no debe inicializar de nuevo `/inicio` antes de abandonar el documento.
+
+## Entorno y resultados
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Entorno observado: Node.js 24.15.0 y npm 11.4.2. Las versiones exactas del frontend permanecen en `package-lock.json` y en la tabla de `README.md`.
+- `npx eslint src/api/authService.ts src/context/Auth/AuthContext.tsx src/modules/auth/session/clearBrowserSession.ts src/components/Sidebar/Sidebar.tsx`: PASS; npm mostró únicamente el warning conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; TypeScript y Vite transformaron 253 módulos y generaron `dist/assets/index-CNaywT30.css` e `index-QBZ8MNTH.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 526.97 kB.
+- `git diff --check`: PASS. No se tomó captura porque el cambio no modifica la presentación del frontend; la validación completa del SLO requiere Gateway/IDP y sesión institucional.
 
 ---

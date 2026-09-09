@@ -17,5 +17,4 @@ export const loginFromGateway = async (): Promise<GatewayLoginResponseDto> => {
 }
 
 /** Resolves the front-channel logout/restart URL handled by the identity provider or gateway. */
-export const getLogoutRedirectUrl = (): string =>
-  import.meta.env.VITE_IDP_LOGOUT_URL ?? import.meta.env.VITE_LOGOUT_URL ?? '/'
+export const getLogoutRedirectUrl = (): string => '/api/auth/slo/logout'

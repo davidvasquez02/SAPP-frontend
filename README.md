@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-09:** **Cerrar sesión** elimina primero la sesión y el caché locales y después reemplaza la navegación por `/api/auth/slo/logout`. Esta ruta de front-channel logout queda fija para que el Gateway/IDP finalice también la sesión institucional; ya no depende de `VITE_IDP_LOGOUT_URL` ni `VITE_LOGOUT_URL`.
 - **2026-09-09:** se consolidó una escala tipográfica global para todos los módulos mediante tokens CSS de familia, tamaños, pesos e interlineados. Encabezados, texto de lectura, ayudas, etiquetas, controles y cabeceras de tabla comparten ahora una jerarquía base; las excepciones visuales específicas de cada módulo se conservan. El tamaño base ya no disminuye en tablet o móvil, mientras los títulos usan `clamp()` para adaptarse sin perjudicar la legibilidad.
 - **2026-09-09:** el filtro **Estado** del listado de solicitudes ahora se construye con los estados realmente presentes en los resultados visibles. Los estados sin solicitudes se omiten; al cambiar el tipo de solicitud, las opciones de estado se recalculan sobre ese subconjunto. En coordinación, el filtro de estado se aplica en cliente sobre la consulta por tipo para conservar todas las opciones disponibles sin mostrar estados vacíos.
 - **2026-09-09:** el detalle de una solicitud `HOMOLOG` presenta las parejas de materias recibidas en `solicitudHomologacionesAsignaturas`, con código y nombre de origen y destino. La sección **Motivos para la solicitud del crédito condonable**, incluida su edición, se muestra exclusivamente para los códigos `CRED_COND` y `RENOV_CRED_COND`; al cambiar durante la edición a otro tipo se limpian los motivos enviados.
@@ -48,7 +49,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 - **2026-09-03:** todos los listados del módulo Solicitudes ordenan por `fechaRegistro` descendente y, cuando dos registros comparten fecha, por `id` descendente. Una sesión cuyo único acceso operativo es el rol exacto `PROFESOR` ve exclusivamente **Solicitudes asignadas**; no se consulta ni se renderiza el listado general. `DOCENTE`, `DIRECTOR`, coordinación y administración conservan su comportamiento anterior, y los roles elevados prevalecen si una sesión también incluye `PROFESOR`.
 - **2026-09-03:** el payload de `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` usa `motivosCreditoCondonable` para los motivos de las solicitudes de crédito condonable; el frontend dejó de enviar la clave genérica `motivos`. La renovación (tipo 12) conserva su campo especifico `actividadesCreditoCondonable`.
 - **2026-09-03:** después de completar **Firmar todos los documentos** en el detalle de una solicitud, la SPA vuelve a consultar tanto `GET /sapp/solicitudesAcademicas/{solicitudId}` como `GET /sapp/document?tramiteId={solicitudId}&codigoTipoTramite={codigo}`. La solicitud, su selector de estado y los documentos adjuntos se actualizan en el estado React sin recargar la página completa; el mensaje final solo confirma actualización completa cuando ambas consultas terminan correctamente.
-- **2026-09-03:** el cierre de sesión ahora solicita primero `POST VITE_LOGOUT_URL` (o, por defecto, `POST ${VITE_API_URL}/logout`) con credenciales para que el Gateway invalide la sesión y las cookies `HttpOnly`. Incluso si esa solicitud falla, la SPA elimina sesión y caché en memoria, `localStorage`, `sessionStorage`, cookies visibles, Cache Storage, bases IndexedDB y registros de service workers antes de reemplazar la navegación por `/`. `VITE_LOGOUT_URL` permite adaptar el endpoint sin cambiar código.
+- **2026-09-03 (decisión histórica, reemplazada el 2026-09-09):** se introdujo la limpieza integral de sesión y cachés del navegador. La implementación vigente conserva esa limpieza, pero sustituyó el antiguo `POST` configurable y la navegación a `/` por el front-channel logout fijo `/api/auth/slo/logout` descrito arriba.
 - **2026-09-03:** los documentos generados por `POST /sapp/solicitudesAcademicas/pdf-previsualizacion` se convierten a PDF únicamente para su previsualización. Al registrar la solicitud se carga el HTML original, con MIME `text/html`, y las acciones posteriores **Ver/Descargar** lo convierten de nuevo a PDF en el navegador; así la base de datos conserva la fuente HTML sin exponerla como formato de descarga.
 - **2026-09-03:** el detalle de cualquier solicitud carga y presenta **Documentos adjuntos** para todos los roles autorizados, reutilizando el listado antes exclusivo de coordinación y omitiendo la columna técnica **Tipo**. Al entrar desde **Solicitudes asignadas**, un estado descriptivo que contiene `POR FIRMA` (incluido `POR FIRMA DIRECTOR DE TG`) habilita **Firmar todos los documentos**, aunque `estadoSigla` tenga un código como `PFIR_DIR_TG`; la acción ejecuta `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` y recarga el detalle tras el éxito.
 - **2026-09-03:** el perfil de un usuario con rol `ESTUDIANTE` solicita únicamente la imagen de firma y omite por completo `titulo` en el POST de creación. Los demás roles conservan el título obligatorio y el contrato `{ titulo, contenidoFirma }`.
@@ -139,9 +140,9 @@ Ejemplo `.env.local`:
 ```env
 VITE_API_URL=/api/sapp
 VITE_DEV_PROXY_TARGET=http://localhost:8080
-# Opcional; el valor predeterminado es /api/sapp/logout
-VITE_LOGOUT_URL=/api/sapp/logout
 ```
+
+El cierre de sesión no requiere variable de entorno: después de limpiar sesión y cachés, la SPA navega a la ruta institucional fija `/api/auth/slo/logout`.
 
 ## Cómo ejecutar
 
