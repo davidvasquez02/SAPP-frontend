@@ -11,6 +11,7 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
+  notificarDocumentosCompletosMatricula,
   validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type {
@@ -134,6 +135,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
+  const notifiedDocumentsMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
 
@@ -267,6 +269,36 @@ const MatriculaDetalleCoordinacionPage = () => {
     [getEstadoDocumento, requiredDocs],
   )
 
+  const notifyIfAllDocumentsReviewed = useCallback(
+    async (updatedDocuments: DocumentoTramiteItemDto[]) => {
+      if (notifiedDocumentsMatriculaIdRef.current === parsedMatriculaId) {
+        return
+      }
+
+      const documentsToReview = updatedDocuments.filter(
+        (documento) => documento.obligatorioTipoDocumentoTramite,
+      )
+      const allDocumentsReviewed =
+        documentsToReview.length > 0 &&
+        documentsToReview.every((documento) => {
+          if (!documento.documentoCargado || documento.documentoUploadedResponse == null) {
+            return false
+          }
+
+          const estado = getEstadoDocumento(documento)
+          return estado === 'APROBADO' || estado === 'RECHAZADO'
+        })
+
+      if (!allDocumentsReviewed) {
+        return
+      }
+
+      await notificarDocumentosCompletosMatricula(parsedMatriculaId)
+      notifiedDocumentsMatriculaIdRef.current = parsedMatriculaId
+    },
+    [getEstadoDocumento, parsedMatriculaId],
+  )
+
   const handleApproveDoc = async (id: number, disabled: boolean) => {
     if (disabled) {
       return
@@ -279,7 +311,8 @@ const MatriculaDetalleCoordinacionPage = () => {
         aprobado: true,
         observaciones: null,
       })
-      await loadDocumentos()
+      const updatedDocuments = await loadDocumentos()
+      await notifyIfAllDocumentsReviewed(updatedDocuments)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
@@ -325,7 +358,8 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
-      await loadDocumentos()
+      const updatedDocuments = await loadDocumentos()
+      await notifyIfAllDocumentsReviewed(updatedDocuments)
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {
