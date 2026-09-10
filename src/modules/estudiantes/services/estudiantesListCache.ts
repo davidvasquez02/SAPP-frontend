@@ -5,6 +5,8 @@ export interface EstudiantesListSnapshot {
   programas: ProgramaCoordinacion[]
   programTypeSeleccionado: ProgramType
   estudiantes: EstudianteCoordinacion[]
+  egresados?: EstudianteCoordinacion[]
+  mostrarEgresados?: boolean
 }
 
 let detailNavigationSnapshot: EstudiantesListSnapshot | null = null

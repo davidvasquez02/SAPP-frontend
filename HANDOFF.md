@@ -1,3 +1,27 @@
+# Update 2026-09-10 — Filtros de estudiantes y listado diferido de egresados
+
+## Estado actual y decisiones
+- En `/coordinacion/estudiantes`, el campo **Nombre o código** busca ambas propiedades con la misma entrada, ignorando mayúsculas y tildes. El tercer control dejó de ser otro buscador y ahora filtra **Activo**, **Inactivo** o ambos estados; el filtro de período se conserva.
+- `EstudianteCard` presenta explícitamente `INACTIVO` como **Inactivo** (y `EGRESADO` como **Egresado**) en vez de dejar esas etiquetas completamente en minúsculas.
+- La sección **Egresados** queda al final y cerrada inicialmente. La consulta y su carga de fotos solo comienzan al pulsar **Mostrar egresados**; ocultarla no borra los resultados ya obtenidos durante el montaje. Al cambiar de programa se limpian los egresados y la sección vuelve a cerrarse.
+- `StudentHorizontalBoard` acepta título y etiqueta accesible para reutilizar exactamente las mismas tarjetas y navegación sin IDs HTML duplicados. El snapshot efímero listado-detalle conserva opcionalmente egresados y el estado abierto de la sección.
+
+## Paths, contratos y salida esperada
+- Orquestación, filtros y carga diferida: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`; estilos responsive con tokens semánticos: CSS homónimo.
+- Tarjetas y carrusel reutilizable: `src/modules/estudiantes/components/{EstudianteCard,StudentHorizontalBoard}`. Contrato de caché: `src/modules/estudiantes/services/estudiantesListCache.ts`.
+- `getEstudiantesByPrograma(programaId, egresados = false)` está en `src/modules/estudiantes/services/estudiantesMockService.ts`. Listado principal: `GET /sapp/estudiantes/consulta?programaId={id}&egresados=false`; listado diferido: la misma ruta con `egresados=true`.
+- Las fotos de ambos listados conservan el flujo `idAspirante -> GET /sapp/inscripcionAdmision/aspirante/{idAspirante} -> GET` documental para trámite `1002`, documento `ANX-4` e `inscripcion.id`, con cuatro cadenas concurrentes. Un fallo individual conserva **Sin foto** y no invalida el listado.
+- No se agregaron dependencias, variables de entorno, schemas, seeds ni datasets. Salida esperada inicial: ninguna solicitud con `egresados=true`; después del clic, tarjetas de egresados con fotos progresivas y acceso al mismo detalle.
+
+## Entorno, retos y verificaciones
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto utiliza Node/npm y las versiones exactas están en `package-lock.json` y `README.md`.
+- Pendiente validar con sesión institucional que el backend interprete literalmente `egresados=true`, que los egresados conserven `idAspirante` para resolver sus fotos y que el endpoint no mezcle estudiantes activos. Revisar además escritorio/móvil y temas claro/oscuro.
+- `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx src/modules/estudiantes/services/estudiantesMockService.ts src/modules/estudiantes/services/estudiantesListCache.ts` (2026-09-10): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-mGbadlWH.css` e `index-B2aHv6xE.js`. Persiste el warning informativo por el chunk JavaScript de 532.87 kB. `git diff --check`: PASS.
+- No se pudo capturar la ruta protegida con datos: requiere sesión institucional y backend; validar visualmente en el entorno integrado.
+
+---
+
 # Update 2026-09-09 — Correo de apertura de matrícula
 
 ## Estado actual y decisión

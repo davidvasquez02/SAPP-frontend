@@ -6,11 +6,18 @@ import './StudentHorizontalBoard.css'
 interface StudentHorizontalBoardProps {
   estudiantes: EstudianteCoordinacion[]
   onStudentClick: (estudiante: EstudianteCoordinacion) => void
+  title?: string
+  ariaLabel?: string
 }
 
 const SCROLL_DISTANCE = 620
 
-const StudentHorizontalBoard = ({ estudiantes, onStudentClick }: StudentHorizontalBoardProps) => {
+const StudentHorizontalBoard = ({
+  estudiantes,
+  onStudentClick,
+  title = 'Estudiantes matriculados',
+  ariaLabel = 'Listado horizontal de estudiantes',
+}: StudentHorizontalBoardProps) => {
   const boardRef = useRef<HTMLDivElement | null>(null)
 
   const scrollBoard = (direction: 'left' | 'right') => {
@@ -21,13 +28,13 @@ const StudentHorizontalBoard = ({ estudiantes, onStudentClick }: StudentHorizont
   }
 
   return (
-    <section className="student-horizontal-board" aria-labelledby="student-horizontal-board-title">
+    <section className="student-horizontal-board" aria-label={title}>
       <div className="student-horizontal-board__header">
-        <h2 id="student-horizontal-board-title" className="student-horizontal-board__title">
+        <h2 className="student-horizontal-board__title">
           <span className="student-horizontal-board__title-icon" aria-hidden="true">
             👥
           </span>
-          Estudiantes matriculados
+          {title}
         </h2>
 
         <div className="student-horizontal-board__tools">
@@ -57,7 +64,7 @@ const StudentHorizontalBoard = ({ estudiantes, onStudentClick }: StudentHorizont
         ref={boardRef}
         className="student-horizontal-board__scroller"
         tabIndex={0}
-        aria-label="Listado horizontal de estudiantes"
+        aria-label={ariaLabel}
       >
         {estudiantes.map((estudiante) => (
           <EstudianteCard
