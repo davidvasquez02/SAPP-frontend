@@ -3079,3 +3079,27 @@ npm run lint
 - Verificaciones del 2026-09-10: `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` pasó (solo apareció el warning ambiental de npm `Unknown env config "http-proxy"`); `npm run build` pasó con 253 módulos y el warning no bloqueante del chunk mayor a 500 kB; `git diff --check` pasó. El repositorio no define un script `test`.
 
 ---
+# Update 2026-09-10 — Edición de entrevista limitada al evaluador en sesión
+
+## Estado actual y decisión
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas`, cada grupo continúa visible para permitir consultar las calificaciones, pero `EvaluacionEtapaSection` recibe `isReadOnly` para todos los grupos que no pertenecen al usuario autenticado. Una sesión de coordinación, por tanto, solo puede editar el grupo asignado a su propio nombre.
+- La pertenencia se determina comparando `EvaluacionAdmisionItem.evaluador` con el nombre completo de `session.user.persona` después de eliminar espacios extremos, compactar espacios internos y normalizar a mayúsculas. Se reutiliza la misma regla que ya restringía las entrevistas del perfil exclusivamente profesor.
+- Además del bloqueo de los controles, `handleChangeDraft` ignora cambios ajenos y el guardado masivo filtra las filas por el evaluador de la sesión. Esto es defensa de interfaz; el backend debe seguir autorizando que cada usuario actualice únicamente sus propias calificaciones.
+
+## Paths, contrato y salida esperada
+- Orquestación: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`; componente presentacional reutilizado: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`.
+- Entrada existente: `GET /sapp/evaluacionAdmision/info/{inscripcionId}?etapaEvaluacion=ENTREVISTA`; cada elemento requiere `id`, `evaluador`, `puntajeAspirante`, `puntajeMax`, `observaciones` y los demás campos de `EvaluacionAdmisionItem`.
+- Salida esperada: el evaluador de la sesión tiene habilitados nota y observaciones solo en su grupo; los grupos restantes muestran sus valores con controles deshabilitados. `ENTREV` continúa como resumen no editable. El `PUT` masivo existente recibe exclusivamente las filas modificadas que pertenecen al usuario actual.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesiones institucionales de coordinación y de profesor que el texto de `evaluador` retornado por el backend coincide con el nombre compuesto de `personas_idp`; si el backend dispone del `usuarios_sapp.id`/UUID del evaluador, se recomienda incorporarlo al DTO y reemplazar a futuro la comparación por nombre.
+2. Confirmar en backend la autorización por evaluador del endpoint de actualización; deshabilitar controles en React no reemplaza ese control de acceso.
+3. Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+
+## Verificaciones
+- `npx eslint src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` (2026-09-10): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y rolldown-vite transformaron 255 módulos y generaron `dist/assets/index-Cp9gSOCw.css` e `index-z4oLB2J3.js`. Persiste el warning informativo por el chunk JavaScript de 536.67 kB.
+- `npm run lint` (2026-09-10): FAIL por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; el lint focalizado del archivo funcional modificado sí pasa.
+- `git diff --check` (2026-09-10): PASS. No se tomó captura: no hay Chromium, Chrome ni Firefox instalado y la ruta requiere una sesión institucional con datos reales del backend.
+
+---
