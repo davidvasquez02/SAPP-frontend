@@ -2,7 +2,7 @@
 
 ## Estado funcional (2026-09-10)
 
-El módulo de estudiantes de coordinación presenta estudiantes activos/inactivos y, bajo demanda, egresados por programa. Ambos listados recuperan la fotografía documental `ANX-4` a partir de la inscripción de admisión, sin bloquear el resto de tarjetas cuando una foto individual falla. El formulario de solicitudes académicas también soporta la homologación de una o más parejas de materias.
+El módulo de estudiantes de coordinación presenta estudiantes activos/inactivos y, bajo demanda, egresados por programa. Ambos listados recuperan la fotografía documental `ANX-4` a partir de la inscripción de admisión, sin bloquear el resto de tarjetas cuando una foto individual falla. El formulario de solicitudes académicas también soporta la homologación de una o más parejas de materias. En el detalle de matrícula de coordinación, las acciones documentales están organizadas por propósito en columnas independientes de visualización y validación.
 
 ### Stack instalado y ejecución rápida
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-10:** el listado de documentos del detalle de matrícula para coordinación separa la antigua columna única **Acciones** en **Visualización** (`Ver`/`Descargar`) y **Validación** (`Aprobar`/`Rechazar`). La distribución responsive mantiene ambas agrupaciones identificadas mediante sus respectivas etiquetas, sin cambiar handlers, permisos ni contratos HTTP.
 - **2026-09-10:** el detalle de una convocatoria interpreta el `404 Not Found` de `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` como una colección vacía. El coordinador puede entrar a una convocatoria abierta sin aspirantes y usar **Crear aspirante**; los demás errores HTTP conservan su manejo normal. El cliente HTTP compartido expone ahora `HttpError.status` para tomar esta decisión por código de estado y no por el texto variable del backend.
 - **2026-09-10:** la carga diferida de egresados mantiene activa su solicitud después de guardar el listado inicial. El cambio evita que la actualización de `egresados.length` desmonte lógicamente el efecto y cancele la cola de fotografías antes de llamar al servicio documental; las fotos se resuelven ahora con el mismo flujo de inscripción y documento `ANX-4` usado por el listado normal.
 - **2026-09-10:** el listado de coordinación unifica la búsqueda por nombre y código UIS en un solo campo y dedica el tercer filtro al estado **Activo/Inactivo**. Las tarjetas presentan el estado `INACTIVO` como **Inactivo**. Al final se agregó una sección colapsable de egresados: no ejecuta ninguna consulta al cargar la página y, solo al pulsar **Mostrar egresados**, consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=true`, presenta las mismas tarjetas y carga sus fotografías con el flujo documental existente y un máximo de cuatro tareas concurrentes.

@@ -1,3 +1,22 @@
+# Update 2026-09-10 — Acciones documentales de matrícula en dos columnas
+
+## Estado actual y decisión
+- En `/matricula/:matriculaId`, para sesiones `COORDINACION` o `ADMIN`, la tabla de documentos ya no mezcla sus cuatro acciones en una sola columna. **Visualización** contiene `Ver` y `Descargar`; **Validación** contiene el componente existente con `Aprobar` y `Rechazar`.
+- El grid de escritorio pasó de cinco a seis columnas y mantiene los tokens semánticos existentes. En viewports de hasta 960 px, cada grupo conserva su etiqueta responsive mediante `data-label`, por lo que las acciones siguen siendo distinguibles cuando la cabecera se oculta.
+- Solo cambió la composición visual: handlers, estados de espera, confirmación del motivo de rechazo, roles, permisos, aprobación automática y contratos HTTP permanecen intactos.
+
+## Paths, contratos y salida esperada
+- Renderizado: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; grid y adaptación móvil: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.css`.
+- Los documentos continúan llegando de `GET /sapp/document?tramiteId={matriculaId}&codigoTipoTramite=MATRICULA_ACADEMICA`; aprobar/rechazar conserva el servicio de `src/modules/documentos/api/aprobacionDocumentosService.ts`. No se agregaron schemas, payloads, dependencias, variables, seeds ni datasets.
+- Salida esperada: seis encabezados (`Documento`, `Estado`, `Fecha de revisión`, `Observaciones`, `Visualización`, `Validación`), con dos botones documentales en cada una de las dos últimas columnas cuando el estado y permisos lo permiten.
+
+## Entorno, retos y próximos pasos
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js 24.15.0 y npm 11.4.2; las versiones instaladas exactas están documentadas en `README.md` y fijadas por `package-lock.json`.
+- Validar con una sesión institucional de coordinación una matrícula con documentos cargados, estados aprobados/rechazados y modo de captura de motivo. Revisar escritorio, ancho de 960 px o inferior, y temas claro/oscuro.
+- No hay script `test` configurado. `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`: PASS. `npm run build`: PASS (253 módulos; `dist/assets/index-BomhlJcI.css` e `index-CXu4yT4j.js`; solo persiste el warning informativo del chunk de 533.23 kB). `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; el archivo TypeScript intervenido pasa el lint focalizado. No se tomó captura porque el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta requiere sesión institucional y datos reales del backend.
+
+---
 # Update 2026-09-10 — Filtros de estudiantes y listado diferido de egresados
 
 ## Estado actual y decisiones

@@ -620,7 +620,8 @@ const MatriculaDetalleCoordinacionPage = () => {
                     <span>Estado</span>
                     <span>Fecha de revisión</span>
                     <span>Observaciones</span>
-                    <span>Acciones</span>
+                    <span>Visualización</span>
+                    <span>Validación</span>
                   </div>
                   {sortedDocumentos.map((documento) => {
                     const documentoId = documento.documentoUploadedResponse?.idDocumento
@@ -690,7 +691,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                           )}
                         </div>
 
-                        <div className="matricula-detalle__doc-actions" data-label="Acciones">
+                        <div className="matricula-detalle__doc-actions" data-label="Visualización">
                           <button
                             type="button"
                             className="sapp-document-action matricula-detalle__view-button"
@@ -713,6 +714,9 @@ const MatriculaDetalleCoordinacionPage = () => {
                           >
                             {actionState?.downloading ? 'Descargando...' : 'Descargar'}
                           </button>
+                        </div>
+
+                        <div className="matricula-detalle__doc-actions" data-label="Validación">
                           {!isFinalizada ? (
                             <ValidationButtons
                               estadoUi={validacionEstado}
