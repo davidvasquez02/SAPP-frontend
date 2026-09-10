@@ -19,6 +19,10 @@ import {
   generarReportePeriodo,
   type ReportePeriodoGenerado,
 } from '../../modules/reportes/services/reportePeriodoService'
+import {
+  getFaltantesReporte,
+  type FaltantesReporte,
+} from '../../modules/reportes/services/reporteError'
 import { downloadBlobFile, openBlobInNewTab } from '../../shared/files/base64FileUtils'
 import './ReportesPage.css'
 
@@ -60,6 +64,7 @@ const ReportesPage = () => {
   const [generating, setGenerating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [faltantes, setFaltantes] = useState<FaltantesReporte | null>(null)
   const [generatedPdf, setGeneratedPdf] = useState<ReporteAdmisionGenerado | ReportePeriodoGenerado | null>(null)
 
   useEffect(() => {
@@ -106,6 +111,7 @@ const ReportesPage = () => {
     setActaId('')
     setMessage(null)
     setError(null)
+    setFaltantes(null)
     setGeneratedPdf(null)
   }
 
@@ -113,6 +119,7 @@ const ReportesPage = () => {
     event.preventDefault()
     setMessage(null)
     setError(null)
+    setFaltantes(null)
     setGeneratedPdf(null)
     if (!programaId || !actaId || (tipo === 'ADMISION' ? !convocatoriaId : !periodoId)) {
       setError('Complete todos los parámetros requeridos para generar el informe.')
@@ -142,6 +149,7 @@ const ReportesPage = () => {
           : 'El informe de créditos condonables fue generado correctamente.',
       )
     } catch (submitError) {
+      setFaltantes(getFaltantesReporte(submitError))
       setError(submitError instanceof Error ? submitError.message : 'No fue posible generar el informe.')
     } finally {
       setGenerating(false)
@@ -200,6 +208,34 @@ const ReportesPage = () => {
             </div>
           ) : null}
           {error ? <p className="reports__feedback reports__feedback--error" role="alert">{error}</p> : null}
+          {faltantes ? (
+            <section className="reports__missing" aria-labelledby="reports-missing-title">
+              <div className="reports__missing-heading">
+                <div>
+                  <h3 id="reports-missing-title">Información pendiente para generar el informe</h3>
+                  <p>Complete los siguientes requisitos y vuelva a intentar.</p>
+                </div>
+                <span>{faltantes.aspirantesConDocumentosFaltantes.length} aspirante{faltantes.aspirantesConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
+              </div>
+              {faltantes.categoriasInstitucionalesFaltantes.length > 0 ? (
+                <div className="reports__missing-institutional">
+                  <strong>Documentos institucionales pendientes</strong>
+                  <ul>{faltantes.categoriasInstitucionalesFaltantes.map((categoria) => <li key={categoria}>{categoria}</li>)}</ul>
+                </div>
+              ) : null}
+              <div className="reports__missing-people">
+                {faltantes.aspirantesConDocumentosFaltantes.map((aspirante) => (
+                  <details key={aspirante.inscripcionId} className="reports__missing-person">
+                    <summary>
+                      <span><strong>{aspirante.nombreCompleto}</strong><small>Documento {aspirante.documento || 'no registrado'} · Inscripción {aspirante.inscripcionId}</small></span>
+                      <span className="reports__missing-count">{aspirante.documentosFaltantes.length} pendiente{aspirante.documentosFaltantes.length === 1 ? '' : 's'}</span>
+                    </summary>
+                    <ul>{aspirante.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {message ? <p className="reports__feedback reports__feedback--success" role="status">{message}</p> : null}
           <div className="reports__actions"><button type="submit" disabled={loading || generating}>{generating ? 'Generando...' : 'Generar informe'}</button></div>
         </form>

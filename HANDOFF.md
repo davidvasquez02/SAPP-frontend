@@ -17,6 +17,32 @@
 - `npm run lint`: FAIL por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; el archivo TypeScript intervenido pasa el lint focalizado. No se tomó captura porque el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta requiere sesión institucional y datos reales del backend.
 
 ---
+# Update 2026-09-10 — Detalle de documentos faltantes en informes
+
+## Estado actual y decisión
+- `/coordinacion/reportes` sigue mostrando el mensaje del backend cuando falla la generación. Además, si la respuesta contiene `data.faltantes`, presenta una tarjeta de requisitos pendientes aplicable a **Admisión**, **Matrícula** y **Créditos condonables**.
+- Las categorías institucionales aparecen en una lista propia. Cada aspirante aparece en un bloque desplegable con nombre, documento, ID de inscripción, contador y lista de documentos faltantes; la composición es responsive y consume tokens del tema claro/oscuro.
+- `HttpError` conserva ahora `data: unknown` tanto para solicitudes JSON como para archivos. El parser de reportes valida ese valor antes de exponerlo a la vista; una forma inesperada o vacía cae de manera segura al mensaje de error existente.
+
+## Paths, contrato y salida esperada
+- Transporte compartido: `src/shared/http/httpClient.ts`.
+- Parser y tipos: `src/modules/reportes/services/reporteError.ts`.
+- Orquestación/presentación: `src/pages/Reportes/ReportesPage.tsx` y `src/pages/Reportes/ReportesPage.css`.
+- Contrato reconocido: `{ ok: false, message: string, data: { faltantes: { categoriasInstitucionalesFaltantes: string[], aspirantesConDocumentosFaltantes: Array<{ inscripcionId: number, documento: string, nombreCompleto: string, documentosFaltantes: string[] }> } } }`. Se espera especialmente en HTTP 409, pero la extracción no depende del código de estado para poder reutilizar el manejo en todos los tipos de informe.
+- No cambiaron los endpoints ni los parámetros de generación y no se agregaron dependencias, variables, seeds o datasets.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesión real los tres endpoints de informes y confirmar si matrícula/créditos usan exactamente la misma forma de `data.faltantes`.
+2. Probar categorías institucionales no vacías, pues el ejemplo recibido únicamente incluye aspirantes.
+3. Raíz única `/workspace/SAPP-frontend`; usar Node.js 24.15.0, npm 11.4.2 y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Versiones exactas: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+
+## Verificación reciente
+- `npx eslint src/shared/http/httpClient.ts src/modules/reportes/services/reporteError.ts src/pages/Reportes/ReportesPage.tsx` (2026-09-10): PASS; únicamente apareció el warning ambiental conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y Vite transformaron 254 módulos y generaron `dist/assets/index-C-YVwHkl.css` e `index-CVFNWjzG.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 535.59 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-10): FAIL por los 9 errores y 1 warning preexistentes ya documentados (`no-explicit-any`, estado síncrono en efecto, variables sin uso, interfaces vacías y dependencia de hook). El lint dirigido de los tres archivos TypeScript modificados sí pasa. No existe script `test` en `package.json`.
+- La captura local queda limitada porque el contenedor no incluye Chromium, Chrome ni Firefox; además, el estado 409 real requiere backend y sesión institucional.
+
+---
 # Update 2026-09-10 — Filtros de estudiantes y listado diferido de egresados
 
 ## Estado actual y decisiones
