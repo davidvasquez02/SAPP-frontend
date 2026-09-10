@@ -1,0 +1,224 @@
+.estudiantes-coordinacion {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.estudiantes-coordinacion__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.35rem;
+}
+
+.estudiantes-coordinacion__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.estudiantes-coordinacion__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.estudiantes-coordinacion__status--error {
+  width: fit-content;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #b91c1c, transparent 65%);
+  background: color-mix(in srgb, #b91c1c, var(--surface) 90%);
+  color: #b91c1c;
+  padding: 0.85rem 1rem;
+}
+
+.estudiantes-coordinacion__filters {
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--outline), transparent 88%);
+}
+
+.estudiantes-coordinacion__filters-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.estudiantes-coordinacion__filters-heading h2,
+.estudiantes-coordinacion__filters-heading p {
+  margin: 0;
+}
+
+.estudiantes-coordinacion__filters-heading h2 {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.estudiantes-coordinacion__filters-heading p {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.estudiantes-coordinacion__filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.estudiantes-coordinacion__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.estudiantes-coordinacion__field input,
+.estudiantes-coordinacion__field select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 500;
+}
+
+.estudiantes-coordinacion__field input:focus-visible,
+.estudiantes-coordinacion__field select:focus-visible {
+  border-color: var(--primary);
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 75%);
+}
+
+.estudiantes-coordinacion__clear {
+  min-height: 2.5rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 45%);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.estudiantes-coordinacion__clear:hover {
+  background: color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.estudiantes-coordinacion__clear:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 65%);
+  outline-offset: 2px;
+}
+
+.estudiantes-coordinacion__graduates {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: clamp(1rem, 2vw, 1.5rem);
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 55%);
+}
+
+.estudiantes-coordinacion__graduates-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.estudiantes-coordinacion__graduates-heading h2,
+.estudiantes-coordinacion__graduates-heading p {
+  margin: 0;
+}
+
+.estudiantes-coordinacion__graduates-heading p {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+}
+
+.estudiantes-coordinacion__graduates-toggle {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.15rem;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.estudiantes-coordinacion__graduates-toggle:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary), var(--surface) 12%);
+}
+
+.estudiantes-coordinacion__graduates-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 65%);
+  outline-offset: 2px;
+}
+
+.estudiantes-coordinacion__graduates-toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.estudiantes-coordinacion__empty {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 18px;
+  border: 1px dashed color-mix(in srgb, var(--outline), transparent 25%);
+  background: color-mix(in srgb, var(--surface-container-low), var(--surface) 42%);
+  color: var(--text-secondary);
+  padding: 1.25rem;
+}
+
+.estudiantes-coordinacion__empty p {
+  margin: 0;
+  font-weight: 650;
+}
+
+.estudiantes-coordinacion__empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+}
+
+@media (max-width: 640px) {
+  .estudiantes-coordinacion {
+    gap: 1.25rem;
+  }
+
+  .estudiantes-coordinacion__header {
+    width: 100%;
+  }
+
+  .estudiantes-coordinacion__filters-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .estudiantes-coordinacion__graduates-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .estudiantes-coordinacion__filter-grid {
+    grid-template-columns: 1fr;
+  }
+}

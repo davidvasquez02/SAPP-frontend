@@ -1,0 +1,115 @@
+import type { ApiResponse } from '../../../api/types'
+
+export type { ApiResponse }
+
+export interface TipoSolicitudDto {
+  id: number
+  codigoNombre: string | null
+  tramiteId?: number | null
+  tipoTramiteId?: number | null
+  nombre?: string | null
+}
+
+
+export interface EstadoSolicitudDto {
+  id: number
+  nombre: string
+  sigla: string
+}
+
+export interface SolicitudAcademicaDto {
+  id: number
+  estudianteId: number
+  estudiante: string
+  codigoEstudianteUis: string
+  programaAcademico: string
+  tipoSolicitudId: number
+  tipoSolicitudCodigo: string
+  tipoSolicitud: string
+  tipoTramiteCodigo?: string | null
+  estadoId: number
+  estadoSigla: string
+  estado: string
+  fechaRegistro: string
+  fechaResolucion: string | null
+  observaciones: string | null
+  motivosCreditoCondonable?: string[] | null
+  solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaDetalleDto[] | null
+}
+
+export interface SolicitudHomologacionAsignaturaDetalleDto {
+  id: number
+  asignaturaOrigenId: number
+  asignaturaOrigenCodigo: string | null
+  asignaturaOrigenNombre: string
+  asignaturaDestinoId: number
+  asignaturaDestinoCodigo: string | null
+  asignaturaDestinoNombre: string
+}
+
+export interface CreateSolicitudRequestDto {
+  estudianteId: number
+  tipoSolicitudId: number
+  fechaResolucion: string | null
+  observaciones: string
+  modalidadId?: number
+  motivosCreditoCondonable?: string[]
+  solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
+}
+
+export interface CreateSolicitudResponseDto {
+  id: number
+  tipoTramiteCodigo?: string | null
+}
+
+export interface PreviewSolicitudCreditoRequestDto {
+  estudianteId: number
+  tipoSolicitudId: number
+  observaciones: string
+  modalidadId: number
+  motivosCreditoCondonable?: string[]
+  ciudadExpedicionDocumento: string
+  actividadesCreditoCondonable?: string[]
+  periodoAcademicoInicioCreditoCon?: string
+  direccionEstudiante?: string
+  telefonoEstudiante?: string
+  correoEstudiante?: string
+  intensidadHorariaSemanal?: number
+  horasSemestre?: number
+  solicitudHomologacionesAsignaturas: SolicitudHomologacionAsignaturaRequestDto[]
+}
+
+export interface PreviewSolicitudCreditoResponseDto {
+  tipoDocumentoId?: number
+  tipoDocumentoCodigo?: string
+  tipoDocumentoNombre?: string
+  plantillaSigla?: string
+  base64DocumentoContenido: string
+  mimeTypeDocumentoContenido: string
+}
+
+export type SolicitudHomologacionAsignaturaRequestDto =
+  | {
+      asignatura_origen_id: number
+      asignatura_destino_id: number
+    }
+  | {
+      nombreAsignaturaExterna: string
+      codigoAsignaturaExterna?: string
+      asignatura_destino_id: number
+    }
+
+export interface ModalidadContraprestacionDto {
+  id: number
+  nombre: string
+}
+
+export interface AsignaturaCatalogoDto {
+  id: number
+  codigo: string | null
+  nombre: string
+}
+
+export interface AsignaturaExternaDto extends AsignaturaCatalogoDto {
+  activo: boolean
+}

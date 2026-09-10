@@ -1,0 +1,72 @@
+.validation-buttons {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.validation-buttons__row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.validation-buttons__btn {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.32rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.validation-buttons__btn--approve.validation-buttons__btn--active {
+  background: color-mix(in srgb, #16a34a, transparent 16%);
+  border-color: color-mix(in srgb, #16a34a, transparent 20%);
+  color: #ffffff;
+}
+
+.validation-buttons__btn--reject.validation-buttons__btn--active {
+  background: color-mix(in srgb, #dc2626, transparent 12%);
+  border-color: color-mix(in srgb, #dc2626, transparent 20%);
+  color: #ffffff;
+}
+
+.validation-buttons__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--surface), var(--outline) 22%);
+  border-color: color-mix(in srgb, var(--outline), transparent 20%);
+  color: var(--text-secondary);
+}
+
+.validation-buttons__reject-mode {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.validation-buttons__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.validation-buttons__textarea {
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+.validation-buttons__error {
+  color: #b91c1c;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.validation-buttons__btn--neutral {
+  border-color: color-mix(in srgb, var(--outline), transparent 15%);
+}

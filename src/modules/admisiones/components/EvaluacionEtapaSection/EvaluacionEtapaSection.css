@@ -1,0 +1,163 @@
+.evaluacion-etapa-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.evaluacion-etapa-section__title {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__empty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.evaluacion-etapa-section__table-wrapper {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 16px;
+  background: var(--surface-container-low, var(--surface));
+}
+
+.evaluacion-etapa-section__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+
+.evaluacion-etapa-section__table th,
+.evaluacion-etapa-section__table td {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.95rem;
+}
+
+.evaluacion-etapa-section__row--modified td {
+  background: color-mix(in srgb, var(--primary), transparent 94%);
+}
+
+.evaluacion-etapa-section__table th {
+  background: color-mix(in srgb, var(--surface), var(--outline) 7%);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__th-max,
+.evaluacion-etapa-section__cell-max {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.evaluacion-etapa-section__th-nota,
+.evaluacion-etapa-section__cell-nota {
+  text-align: right;
+}
+
+.evaluacion-etapa-section__cell-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.evaluacion-etapa-section__consideraciones {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: color-mix(in srgb, var(--surface-container-low, var(--surface)), var(--primary) 4%);
+  white-space: pre-wrap;
+  line-height: 1.4;
+  max-height: 16rem;
+  overflow: auto;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__nota-field {
+  align-items: flex-end;
+}
+
+.evaluacion-etapa-section__nota-input {
+  min-width: 7.5rem;
+  text-align: right;
+  font-weight: 700;
+  padding: 0.5rem 0.6rem;
+}
+
+.evaluacion-etapa-section__nota-value {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__text-muted {
+  color: var(--text-secondary);
+}
+
+.evaluacion-etapa-section__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.evaluacion-etapa-section__input,
+.evaluacion-etapa-section__textarea {
+  width: 100%;
+  border: 1px solid var(--outline);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.evaluacion-etapa-section__textarea {
+  resize: vertical;
+}
+
+.evaluacion-etapa-section__error {
+  color: #dc2626;
+  font-size: 0.8rem;
+}
+
+.evaluacion-etapa-section__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.evaluacion-etapa-section__button {
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.evaluacion-etapa-section__button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.evaluacion-etapa-section__button--secondary {
+  background: color-mix(in srgb, var(--surface), var(--outline) 45%);
+  color: var(--text-primary);
+}
+
+.evaluacion-etapa-section__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .evaluacion-etapa-section__table {
+    min-width: 780px;
+  }
+}

@@ -1,0 +1,863 @@
+import { useEffect, useMemo, useState } from 'react'
+import { DocumentUploadCard } from '../../../../components'
+import { getDocumentosPorTipoTramite } from '../../../../api/tramiteDocumentService'
+import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
+import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
+import { getAsignaturasCatalogo, getAsignaturasExternasActivas } from '../../api/asignaturasService'
+import { getModalidadesContraprestacion } from '../../api/modalidadContraprestacionService'
+import type {
+  AsignaturaCatalogoDto,
+  AsignaturaExternaDto,
+  ModalidadContraprestacionDto,
+  PreviewSolicitudCreditoResponseDto,
+  SolicitudHomologacionAsignaturaRequestDto,
+} from '../../api/types'
+import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
+import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
+import { htmlToPdf } from '../../utils/htmlToPdf'
+import './SolicitudEstudianteForm.css'
+
+interface HomologacionAsignaturaFormItem {
+  id: string
+  origenModo: 'catalogo' | 'manual'
+  asignaturaOrigenId: number | null
+  nombreAsignaturaExterna: string
+  codigoAsignaturaExterna: string
+  asignaturaDestinoId: number | null
+}
+
+export interface SolicitudEstudiantePayload {
+  tipoSolicitudId: number
+  observaciones: string
+  modalidadId: number | null
+  motivosCreditoCondonable: string[]
+  solicitudHomologacionesAsignaturas: SolicitudHomologacionAsignaturaRequestDto[]
+  documentos: Array<{
+    id: number
+    nombre: string
+    obligatorio: boolean
+    file: File | null
+  }>
+}
+
+interface SolicitudEstudianteFormProps {
+  tipos: TipoSolicitudDto[]
+  estudianteId: number
+  telefonoEstudiante: string
+  correoEstudiante: string
+  onPreviewCreditoCondonable: (payload: {
+    estudianteId: number
+    tipoSolicitudId: number
+    observaciones: string
+    modalidadId: number
+    motivosCreditoCondonable?: string[]
+    ciudadExpedicionDocumento: string
+    actividadesCreditoCondonable?: string[]
+    periodoAcademicoInicioCreditoCon?: string
+    direccionEstudiante?: string
+    telefonoEstudiante?: string
+    correoEstudiante?: string
+    intensidadHorariaSemanal?: number
+    horasSemestre?: number
+  }) => Promise<PreviewSolicitudCreditoResponseDto[]>
+  onSubmit?: (payload: SolicitudEstudiantePayload) => Promise<void> | void
+}
+
+const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumentoDraft => ({
+  id: documento.id,
+  codigo: documento.codigo,
+  nombre: documento.nombre,
+  obligatorio: documento.obligatorio,
+  file: null,
+  error: null,
+})
+
+const mapDraftToCardItem = (documento: SolicitudDocumentoDraft): DocumentUploadItem => ({
+  id: documento.id,
+  codigo: documento.codigo,
+  nombre: documento.nombre,
+  obligatorio: documento.obligatorio,
+  status: documento.file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
+  selectedFile: documento.file,
+  errorMessage: documento.error ?? undefined,
+})
+
+const normalizeText = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+
+const isCreditoCondonableTipo = (tipo: TipoSolicitudDto | null): boolean => {
+  const descriptor = `${tipo?.codigoNombre ?? ''} ${tipo?.nombre ?? ''}`
+  return normalizeText(descriptor).includes('CREDITO')
+}
+
+const isHomologacionTipo = (tipo: TipoSolicitudDto | null): boolean => {
+  const descriptor = `${tipo?.codigoNombre ?? ''} ${tipo?.nombre ?? ''}`
+  return normalizeText(descriptor).includes('HOMOLOG')
+}
+
+interface PreviewDocumento extends PreviewSolicitudCreditoResponseDto {
+  pdfBlob: Blob
+  pdfUrl: string
+  sourceBlob: Blob
+}
+
+const getPreviewDocumentLabel = (documento: PreviewDocumento, index: number): string =>
+  documento.tipoDocumentoNombre?.trim() || documento.tipoDocumentoCodigo?.trim() || `Documento ${index + 1}`
+
+const getPreviewFileName = (documento: PreviewDocumento, index: number): string => {
+  const descriptor = documento.tipoDocumentoCodigo || documento.tipoDocumentoNombre || `documento-${index + 1}`
+  const normalized = descriptor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+  return `${normalized || `documento-${index + 1}`}.pdf`
+}
+
+const RENOVACION_CREDITO_CONDONABLE_ID = 12
+
+const SolicitudEstudianteForm = ({
+  tipos,
+  estudianteId,
+  telefonoEstudiante,
+  correoEstudiante,
+  onPreviewCreditoCondonable,
+  onSubmit,
+}: SolicitudEstudianteFormProps) => {
+  const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
+  const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
+  const [loadingDocumentos, setLoadingDocumentos] = useState(false)
+  const [documentosError, setDocumentosError] = useState<string | null>(null)
+  const [observaciones, setObservaciones] = useState('')
+  const [modalidades, setModalidades] = useState<ModalidadContraprestacionDto[]>([])
+  const [modalidadId, setModalidadId] = useState<number | null>(null)
+  const [loadingModalidades, setLoadingModalidades] = useState(false)
+  const [modalidadesError, setModalidadesError] = useState<string | null>(null)
+  const [asignaturasCatalogo, setAsignaturasCatalogo] = useState<AsignaturaCatalogoDto[]>([])
+  const [asignaturasExternas, setAsignaturasExternas] = useState<AsignaturaExternaDto[]>([])
+  const [loadingAsignaturas, setLoadingAsignaturas] = useState(false)
+  const [asignaturasError, setAsignaturasError] = useState<string | null>(null)
+  const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
+  const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
+  const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
+  const [direccionEstudiante, setDireccionEstudiante] = useState('')
+  const [periodoAcademicoInicioCreditoCon, setPeriodoAcademicoInicioCreditoCon] = useState('')
+  const [intensidadHorariaSemanal, setIntensidadHorariaSemanal] = useState<number | null>(null)
+  const [horasSemestre, setHorasSemestre] = useState<number | null>(null)
+  const [previewDocumentos, setPreviewDocumentos] = useState<PreviewDocumento[]>([])
+  const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(0)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [loadingSubmit, setLoadingSubmit] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const selectedTipo = useMemo(() => tipos.find((tipo) => tipo.id === tipoSolicitudId) ?? null, [tipoSolicitudId, tipos])
+  const selectedTipoLabel = useMemo(
+    () =>
+      formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.nombre?.trim() || selectedTipo?.codigoNombre || '',
+    [selectedTipo],
+  )
+  const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
+  const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
+  const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
+  const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
+  const periodoRenovacionValido = /^\d{4}-[12]$/.test(periodoAcademicoInicioCreditoCon.trim())
+  const camposRenovacionValidos =
+    direccionEstudiante.trim().length > 0 &&
+    telefonoEstudiante.trim().length > 0 &&
+    correoEstudiante.trim().length > 0 &&
+    periodoRenovacionValido &&
+    intensidadHorariaSemanal !== null &&
+    intensidadHorariaSemanal > 0 &&
+    horasSemestre !== null &&
+    horasSemestre > 0
+  const canPreviewCredito =
+    isCreditoCondonable &&
+    modalidadId !== null &&
+    motivosCreditoValidos.length > 0 &&
+    ciudadExpedicionDocumento.trim().length > 0 &&
+    (!isRenovacionCreditoCondonable || camposRenovacionValidos)
+
+  useEffect(() => () => previewDocumentos.forEach((documento) => URL.revokeObjectURL(documento.pdfUrl)), [previewDocumentos])
+
+  useEffect(() => {
+    if (selectedTipo == null) {
+      setDocumentosDraft([])
+      setDocumentosError(null)
+      setLoadingDocumentos(false)
+      return
+    }
+
+    const tipoTramiteId = selectedTipo.tipoTramiteId
+    if (tipoTramiteId == null || Number.isNaN(tipoTramiteId)) {
+      setDocumentosDraft([])
+      setDocumentosError('El tipo de solicitud seleccionado no tiene tipoTramiteId para consultar documentos.')
+      setLoadingDocumentos(false)
+      return
+    }
+
+    let mounted = true
+    setLoadingDocumentos(true)
+    setDocumentosError(null)
+
+    getDocumentosPorTipoTramite(tipoTramiteId)
+      .then((documentos) => {
+        if (!mounted) {
+          return
+        }
+        setDocumentosDraft(documentos.map(mapDocumentoToDraft))
+      })
+      .catch((documentsError) => {
+        if (!mounted) {
+          return
+        }
+        setDocumentosDraft([])
+        setDocumentosError(
+          documentsError instanceof Error
+            ? documentsError.message
+            : 'No fue posible cargar documentos del tipo de trámite seleccionado.',
+        )
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingDocumentos(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [selectedTipo])
+
+  useEffect(() => {
+    if (!isCreditoCondonable) {
+      setModalidadId(null)
+      setModalidades([])
+      setModalidadesError(null)
+      setLoadingModalidades(false)
+      return
+    }
+
+    let mounted = true
+    setLoadingModalidades(true)
+    setModalidadesError(null)
+
+    getModalidadesContraprestacion()
+      .then((data) => {
+        if (mounted) {
+          setModalidades(data)
+        }
+      })
+      .catch((fetchError) => {
+        if (!mounted) {
+          return
+        }
+        setModalidades([])
+        setModalidadesError(
+          fetchError instanceof Error ? fetchError.message : 'No fue posible cargar modalidades de contraprestación.',
+        )
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingModalidades(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isCreditoCondonable])
+
+  useEffect(() => {
+    if (!isHomologacion) {
+      setAsignaturasCatalogo([])
+      setAsignaturasExternas([])
+      setHomologaciones([])
+      setLoadingAsignaturas(false)
+      setAsignaturasError(null)
+      return
+    }
+
+    let mounted = true
+    setLoadingAsignaturas(true)
+    setAsignaturasError(null)
+
+    Promise.all([getAsignaturasCatalogo(), getAsignaturasExternasActivas()])
+      .then(([asignaturas, externas]) => {
+        if (mounted) {
+          setAsignaturasCatalogo(asignaturas)
+          setAsignaturasExternas(externas)
+          setHomologaciones((current) =>
+            current.length > 0
+              ? current
+              : [{ id: crypto.randomUUID(), origenModo: 'catalogo', asignaturaOrigenId: null, nombreAsignaturaExterna: '', codigoAsignaturaExterna: '', asignaturaDestinoId: null }],
+          )
+        }
+      })
+      .catch((fetchError) => {
+        if (!mounted) {
+          return
+        }
+        setAsignaturasCatalogo([])
+        setAsignaturasExternas([])
+        setAsignaturasError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar asignaturas.')
+      })
+      .finally(() => {
+        if (mounted) {
+          setLoadingAsignaturas(false)
+        }
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isHomologacion])
+
+  const handleFileChange = (documentoId: number, file: File | null) => {
+    setDocumentosDraft((current) =>
+      current.map((documento) =>
+        documento.id === documentoId
+          ? {
+              ...documento,
+              file,
+              error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
+            }
+          : documento,
+      ),
+    )
+  }
+
+  const validate = (): boolean => {
+    if (tipoSolicitudId === null) {
+      setErrorMsg('Debes seleccionar un tipo de trámite.')
+      return false
+    }
+    if (documentosError) {
+      setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
+      return false
+    }
+    if (isCreditoCondonable) {
+      if (modalidadesError) {
+        setErrorMsg('No es posible registrar la solicitud hasta cargar la modalidad de contraprestación.')
+        return false
+      }
+      if (modalidadId === null) {
+        setErrorMsg('Debes seleccionar la modalidad de contraprestación para solicitudes de crédito condonable.')
+        return false
+      }
+      const motivosValidos = motivosCredito.map((item) => item.trim()).filter(Boolean)
+      if (motivosValidos.length === 0) {
+        setErrorMsg(
+          isRenovacionCreditoCondonable
+            ? 'Debes agregar al menos una actividad del crédito condonable.'
+            : 'Debes agregar al menos un motivo para la solicitud de crédito condonable.',
+        )
+        return false
+      }
+    }
+    if (isHomologacion) {
+      if (asignaturasError) {
+        setErrorMsg('No es posible registrar la solicitud hasta cargar asignaturas de homologación.')
+        return false
+      }
+      if (homologaciones.length === 0) {
+        setErrorMsg('Agrega al menos un par de asignaturas para homologación.')
+        return false
+      }
+      const missingPair = homologaciones.some((item) =>
+        item.asignaturaDestinoId == null ||
+        (item.origenModo === 'catalogo' ? item.asignaturaOrigenId == null : item.nombreAsignaturaExterna.trim() === ''),
+      )
+      if (missingPair) {
+        setErrorMsg('Cada homologación debe tener una materia de origen válida y una materia de destino.')
+        return false
+      }
+    }
+    const missingRequired = documentosDraft.some((documento) => documento.obligatorio && !documento.file)
+    if (missingRequired) {
+      setDocumentosDraft((current) =>
+        current.map((documento) =>
+          documento.obligatorio && !documento.file
+            ? { ...documento, error: 'Este documento es obligatorio.' }
+            : documento,
+        ),
+      )
+      setErrorMsg('Adjunta todos los documentos obligatorios antes de registrar la solicitud.')
+      return false
+    }
+
+    setErrorMsg(null)
+    return true
+  }
+
+  const resetForm = () => {
+    setTipoSolicitudId(null)
+    setDocumentosDraft([])
+    setObservaciones('')
+    setModalidadId(null)
+    setHomologaciones([])
+    setMotivosCredito([''])
+    setCiudadExpedicionDocumento('')
+    setDireccionEstudiante('')
+    setPeriodoAcademicoInicioCreditoCon('')
+    setIntensidadHorariaSemanal(null)
+    setHorasSemestre(null)
+    setPreviewDocumentos([])
+    setSelectedPreviewIndex(0)
+  }
+
+  const handlePreviewCredito = async () => {
+    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null) {
+      return
+    }
+    setPreviewLoading(true)
+    try {
+      const response = await onPreviewCreditoCondonable({
+        estudianteId,
+        tipoSolicitudId,
+        observaciones: observaciones || 'Solicitud de crédito condonable',
+        modalidadId,
+        ...(isRenovacionCreditoCondonable
+          ? {
+              actividadesCreditoCondonable: motivosCreditoValidos,
+              periodoAcademicoInicioCreditoCon: periodoAcademicoInicioCreditoCon.trim(),
+              direccionEstudiante: direccionEstudiante.trim(),
+              telefonoEstudiante: telefonoEstudiante.trim(),
+              correoEstudiante: correoEstudiante.trim(),
+              intensidadHorariaSemanal: intensidadHorariaSemanal as number,
+              horasSemestre: horasSemestre as number,
+            }
+          : { motivosCreditoCondonable: motivosCreditoValidos }),
+        ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
+      })
+      const previews = await Promise.all(
+        response.map(async (documento) => {
+          const sourceBlob = await fetch(
+            `data:${documento.mimeTypeDocumentoContenido};base64,${documento.base64DocumentoContenido}`,
+          ).then((result) => result.blob())
+          const pdfBlob = documento.mimeTypeDocumentoContenido.toLowerCase().includes('html')
+            ? await htmlToPdf(await sourceBlob.text())
+            : sourceBlob
+          return { ...documento, sourceBlob, pdfBlob, pdfUrl: URL.createObjectURL(pdfBlob) }
+        }),
+      )
+      setPreviewDocumentos(previews)
+      setSelectedPreviewIndex(0)
+      setErrorMsg(null)
+    } catch (previewError) {
+      setPreviewDocumentos([])
+      setSelectedPreviewIndex(0)
+      setErrorMsg(previewError instanceof Error ? previewError.message : 'No fue posible generar la previsualización.')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleCargarDocumentoSolicitud = async () => {
+    if (previewDocumentos.length === 0) {
+      return
+    }
+    const matches = previewDocumentos.flatMap((documento, index) => {
+      const codigo = normalizeText(documento.tipoDocumentoCodigo ?? '')
+      const requirement = documentosDraft.find(
+        (item) => item.id === documento.tipoDocumentoId || (codigo !== '' && normalizeText(item.codigo) === codigo),
+      )
+      return requirement ? [{ documento, requirement, index }] : []
+    })
+    if (matches.length === 0) {
+      setErrorMsg('Ningún documento generado coincide por tipoDocumentoId o tipoDocumentoCodigo con el listado de documentos.')
+      return
+    }
+    setDocumentosDraft((current) =>
+      current.map((requirement) => {
+        const match = matches.find((item) => item.requirement.id === requirement.id)
+        return match
+          ? {
+              ...requirement,
+              file: new File(
+                [match.documento.sourceBlob],
+                match.documento.mimeTypeDocumentoContenido.toLowerCase().includes('html')
+                  ? getPreviewFileName(match.documento, match.index).replace(/\.pdf$/i, '.html')
+                  : getPreviewFileName(match.documento, match.index),
+                {
+                  type: match.documento.mimeTypeDocumentoContenido,
+                },
+              ),
+              error: null,
+            }
+          : requirement
+      }),
+    )
+    setErrorMsg(
+      matches.length < previewDocumentos.length
+        ? `Se cargaron ${matches.length} de ${previewDocumentos.length} documentos; algunos no coinciden con el listado.`
+        : null,
+    )
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSuccessMsg(null)
+
+    if (!validate() || tipoSolicitudId === null) {
+      return
+    }
+
+    const payload: SolicitudEstudiantePayload = {
+      tipoSolicitudId,
+      observaciones,
+      modalidadId,
+      motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
+      solicitudHomologacionesAsignaturas: homologaciones
+        .filter((item) => item.asignaturaDestinoId !== null)
+        .map((item) => item.origenModo === 'catalogo'
+          ? { asignatura_origen_id: item.asignaturaOrigenId as number, asignatura_destino_id: item.asignaturaDestinoId as number }
+          : {
+              nombreAsignaturaExterna: item.nombreAsignaturaExterna.trim(),
+              ...(item.codigoAsignaturaExterna.trim() ? { codigoAsignaturaExterna: item.codigoAsignaturaExterna.trim() } : {}),
+              asignatura_destino_id: item.asignaturaDestinoId as number,
+            }),
+      documentos: documentosDraft.map((documento) => ({
+        id: documento.id,
+        nombre: documento.nombre,
+        obligatorio: documento.obligatorio,
+        file: documento.file,
+      })),
+    }
+
+    try {
+      setLoadingSubmit(true)
+      if (onSubmit) {
+        await onSubmit(payload)
+      } else {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 200)
+        })
+      }
+
+      setErrorMsg(null)
+      setSuccessMsg('Solicitud registrada correctamente.')
+      resetForm()
+    } catch {
+      setSuccessMsg(null)
+      setErrorMsg('No fue posible registrar la solicitud. Intenta nuevamente.')
+    } finally {
+      setLoadingSubmit(false)
+    }
+  }
+
+  const addHomologacionRow = () => {
+    setHomologaciones((current) => [...current, { id: crypto.randomUUID(), origenModo: 'catalogo', asignaturaOrigenId: null, nombreAsignaturaExterna: '', codigoAsignaturaExterna: '', asignaturaDestinoId: null }])
+  }
+
+  const removeHomologacionRow = (rowId: string) => {
+    setHomologaciones((current) => current.filter((item) => item.id !== rowId))
+  }
+
+  const updateHomologacionRow = (
+    rowId: string,
+    changes: Partial<Omit<HomologacionAsignaturaFormItem, 'id'>>,
+  ) => {
+    setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, ...changes } : item)))
+  }
+
+
+  const updateMotivo = (index: number, value: string) => {
+    setMotivosCredito((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)))
+  }
+
+  const addMotivo = () => {
+    setMotivosCredito((current) => [...current, ''])
+  }
+
+  const removeMotivo = (index: number) => {
+    setMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
+  }
+
+  return (
+    <form className="solicitud-estudiante-form" onSubmit={handleSubmit}>
+      <h3 className="solicitud-estudiante-form__title">Registro de solicitud</h3>
+      <p className="solicitud-estudiante-form__subtitle">
+        Selecciona el tipo de trámite y adjunta los soportes requeridos. El estado inicial de la solicitud será
+        ENVIADA A COMITE ASESOR DE POSGRADOS.
+      </p>
+
+      {errorMsg && <p className="solicitud-estudiante-form__alert solicitud-estudiante-form__alert--error">{errorMsg}</p>}
+      {successMsg && (
+        <p className="solicitud-estudiante-form__alert solicitud-estudiante-form__alert--success">{successMsg}</p>
+      )}
+
+      <div className="solicitud-estudiante-form__section">
+        <label htmlFor="tipoSolicitud">Tipo de trámite *</label>
+        <select
+          id="tipoSolicitud"
+          value={tipoSolicitudId ?? ''}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setTipoSolicitudId(nextValue ? Number(nextValue) : null)
+            setErrorMsg(null)
+            setSuccessMsg(null)
+          }}
+          required
+        >
+          <option value="">Selecciona una opción</option>
+          {tipos.map((tipo) => (
+            <option key={tipo.id} value={tipo.id}>
+              {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.nombre || tipo.codigoNombre || `Tipo #${tipo.id}`}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {isCreditoCondonable && (
+        <div className="solicitud-estudiante-form__section">
+          <label htmlFor="modalidadContraprestacion">Modalidad de contraprestación *</label>
+          {loadingModalidades ? (
+            <p className="solicitud-estudiante-form__empty">Cargando modalidades...</p>
+          ) : modalidadesError ? (
+            <p className="solicitud-estudiante-form__doc-error">{modalidadesError}</p>
+          ) : (
+            <select
+              id="modalidadContraprestacion"
+              value={modalidadId ?? ''}
+              onChange={(event) => setModalidadId(event.target.value ? Number(event.target.value) : null)}
+              required
+            >
+              <option value="">Selecciona una modalidad</option>
+              {modalidades.map((modalidad) => (
+                <option key={modalidad.id} value={modalidad.id}>
+                  {modalidad.nombre}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <div className="solicitud-estudiante-form__motivos">
+            <label>
+              {isRenovacionCreditoCondonable
+                ? 'Actividades del crédito condonable *'
+                : 'Motivos para la solicitud del crédito condonable *'}
+            </label>
+            {motivosCredito.map((motivo, index) => (
+              <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
+                <input
+                  value={motivo}
+                  onChange={(event) => updateMotivo(index, event.target.value)}
+                  placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
+                />
+                <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
+                  −
+                </button>
+              </div>
+            ))}
+            <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
+              + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
+            </button>
+          </div>
+          <label htmlFor="ciudadExpedicionDocumento">Departamento/Ciudad de expedición del documento *</label>
+          <input
+            id="ciudadExpedicionDocumento"
+            value={ciudadExpedicionDocumento}
+            onChange={(event) => setCiudadExpedicionDocumento(event.target.value)}
+            placeholder="Ej: Bucaramanga"
+          />
+          {isRenovacionCreditoCondonable && (
+            <>
+              <label htmlFor="direccionEstudiante">Dirección de residencia *</label>
+              <input
+                id="direccionEstudiante"
+                value={direccionEstudiante}
+                onChange={(event) => setDireccionEstudiante(event.target.value)}
+                placeholder="Ej: Cra 32a #19-18, Barrio San Alonso"
+                required
+              />
+              <label htmlFor="periodoAcademicoInicioCreditoCon">Periodo de inicio del crédito condonable *</label>
+              <input
+                id="periodoAcademicoInicioCreditoCon"
+                value={periodoAcademicoInicioCreditoCon}
+                onChange={(event) => setPeriodoAcademicoInicioCreditoCon(event.target.value)}
+                placeholder="AAAA-P (ej: 2023-2)"
+                pattern="\d{4}-[12]"
+                title="Ingresa el periodo en formato año-periodo, por ejemplo 2023-2."
+                required
+              />
+              <div className="solicitud-estudiante-form__renewal-numbers">
+                <div>
+                  <label htmlFor="intensidadHorariaSemanal">Intensidad horaria semanal *</label>
+                  <input
+                    id="intensidadHorariaSemanal"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={intensidadHorariaSemanal ?? ''}
+                    onChange={(event) => setIntensidadHorariaSemanal(event.target.value ? Number(event.target.value) : null)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="horasSemestre">Horas del semestre *</label>
+                  <input
+                    id="horasSemestre"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={horasSemestre ?? ''}
+                    onChange={(event) => setHorasSemestre(event.target.value ? Number(event.target.value) : null)}
+                    required
+                  />
+                </div>
+              </div>
+              <p className="solicitud-estudiante-form__help">
+                El teléfono y el correo institucional se tomarán automáticamente de la sesión.
+              </p>
+              {(!telefonoEstudiante.trim() || !correoEstudiante.trim()) && (
+                <p className="solicitud-estudiante-form__doc-error">
+                  La sesión no contiene teléfono y correo suficientes para generar la previsualización.
+                </p>
+              )}
+            </>
+          )}
+          <button
+            type="button"
+            className="solicitud-estudiante-form__add-inline"
+            onClick={handlePreviewCredito}
+            disabled={!canPreviewCredito || previewLoading}
+          >
+            {previewLoading ? 'Generando previsualización...' : 'Previsualizar documento de solicitud'}
+          </button>
+          {previewDocumentos.length > 0 && (
+            <div className="solicitud-estudiante-form__preview">
+              {previewDocumentos.length > 1 && (
+                <div className="solicitud-estudiante-form__preview-selector" aria-label="Documentos generados">
+                  {previewDocumentos.map((documento, index) => (
+                    <button
+                      type="button"
+                      className={index === selectedPreviewIndex ? 'is-active' : undefined}
+                      onClick={() => setSelectedPreviewIndex(index)}
+                      key={`${documento.tipoDocumentoId ?? 'sin-id'}-${documento.tipoDocumentoCodigo ?? index}`}
+                    >
+                      {getPreviewDocumentLabel(documento, index)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <iframe
+                title={`Previsualización de ${getPreviewDocumentLabel(previewDocumentos[selectedPreviewIndex], selectedPreviewIndex)}`}
+                src={previewDocumentos[selectedPreviewIndex].pdfUrl}
+              />
+              <button type="button" className="solicitud-estudiante-form__add-inline" onClick={handleCargarDocumentoSolicitud}>
+                Cargar todos los documentos generados
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isHomologacion && (
+        <div className="solicitud-estudiante-form__section">
+          <h4>Asignaturas de homologación</h4>
+          <p className="solicitud-estudiante-form__help">
+            Indica la materia que ya cursaste y la materia de tu programa por la cual deseas homologarla.
+          </p>
+          {loadingAsignaturas ? (
+            <p className="solicitud-estudiante-form__empty">Cargando asignaturas...</p>
+          ) : asignaturasError ? (
+            <p className="solicitud-estudiante-form__doc-error">{asignaturasError}</p>
+          ) : homologaciones.length === 0 ? (
+            <button type="button" onClick={addHomologacionRow}>
+              Agregar par de homologación
+            </button>
+          ) : (
+            <div className="solicitud-estudiante-form__homologaciones">
+              {homologaciones.map((item, index) => (
+                <div key={item.id} className="solicitud-estudiante-form__homologacion-row">
+                  <div className="solicitud-estudiante-form__homologacion-heading">
+                    <strong>Homologación #{index + 1}</strong>
+                    <button type="button" onClick={() => removeHomologacionRow(item.id)}>
+                    Quitar
+                    </button>
+                  </div>
+                  <div className="solicitud-estudiante-form__homologacion-fields">
+                    <fieldset className="solicitud-estudiante-form__origen">
+                      <legend>Materia origen *</legend>
+                      <div className="solicitud-estudiante-form__source-toggle">
+                        <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Del listado</button>
+                        <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>No la encuentro</button>
+                      </div>
+                      {item.origenModo === 'catalogo' ? (
+                        <select aria-label={`Materia origen ${index + 1}`} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
+                          <option value="">Selecciona la materia cursada</option>
+                          {asignaturasExternas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
+                        </select>
+                      ) : (
+                        <div className="solicitud-estudiante-form__manual-origin">
+                          <input aria-label={`Código materia origen ${index + 1}`} value={item.codigoAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { codigoAsignaturaExterna: event.target.value })} placeholder="Código (opcional)" />
+                          <input aria-label={`Nombre materia origen ${index + 1}`} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
+                        </div>
+                      )}
+                    </fieldset>
+                    <label className="solicitud-estudiante-form__destino">
+                      <span>Materia destino del programa *</span>
+                      <select value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
+                        <option value="">Selecciona la materia a homologar</option>
+                        {asignaturasCatalogo.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addHomologacionRow}>
+                Agregar otro par
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="solicitud-estudiante-form__section">
+        <h4>Documentos</h4>
+        {selectedTipoLabel && <p className="solicitud-estudiante-form__help">Requisitos para: {selectedTipoLabel}</p>}
+
+        {loadingDocumentos ? (
+          <p className="solicitud-estudiante-form__empty">Cargando documentos requeridos...</p>
+        ) : documentosError ? (
+          <p className="solicitud-estudiante-form__doc-error">{documentosError}</p>
+        ) : documentosDraft.length === 0 ? (
+          <p className="solicitud-estudiante-form__empty">Selecciona un tipo de trámite para cargar documentos.</p>
+        ) : (
+          <div className="solicitud-estudiante-form__docs-list">
+            {documentosDraft.map((documento) => (
+              <DocumentUploadCard
+                key={documento.id}
+                item={mapDraftToCardItem(documento)}
+                onSelectFile={handleFileChange}
+                onRemoveFile={(documentoId) => handleFileChange(documentoId, null)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="solicitud-estudiante-form__section">
+        <label htmlFor="observaciones">Observaciones</label>
+        <textarea
+          id="observaciones"
+          rows={4}
+          value={observaciones}
+          onChange={(event) => setObservaciones(event.target.value)}
+          placeholder="Describe detalles relevantes para tu solicitud"
+        />
+      </div>
+
+      <button type="submit" className="solicitud-estudiante-form__submit" disabled={loadingSubmit}>
+        {loadingSubmit ? 'Registrando...' : 'Registrar solicitud'}
+      </button>
+    </form>
+  )
+}
+
+export default SolicitudEstudianteForm

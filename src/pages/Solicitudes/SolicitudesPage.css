@@ -1,0 +1,7 @@
+.solicitudes-page__status {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+}

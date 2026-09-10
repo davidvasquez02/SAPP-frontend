@@ -1,0 +1,61 @@
+.materias-selector {
+  position: relative;
+  width: min(100%, 32rem);
+}
+
+.materias-selector__input {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 12px;
+  min-height: 2.8rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.materias-selector__input:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary), transparent 40%);
+  border-color: color-mix(in srgb, var(--primary), transparent 30%);
+}
+
+.materias-selector__dropdown {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0.4rem;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  box-shadow: var(--shadow-soft);
+  max-height: 15rem;
+  overflow-y: auto;
+  position: absolute;
+  width: 100%;
+  z-index: 10;
+}
+
+.materias-selector__option {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+}
+
+.materias-selector__option small {
+  color: var(--text-secondary);
+}
+
+.materias-selector__option:hover {
+  background: color-mix(in srgb, var(--surface-container-low), transparent 30%);
+}
+
+.materias-selector__empty {
+  padding: 0.65rem;
+  color: var(--text-secondary);
+}

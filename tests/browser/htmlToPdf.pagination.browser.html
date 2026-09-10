@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prueba de paginación HTML a PDF</title>
+    <style>
+      body { box-sizing: border-box; width: 816px; margin: 0; font: 16px/24px Arial, sans-serif; }
+      #documento { width: 100%; }
+      #contenido-previo { height: 850px; }
+      #firmas { height: 144px; display: flex; gap: 48px; }
+      .firma { width: 260px; height: 120px; border-top: 1px solid #000; }
+      #result { position: fixed; inset: auto 0 0; padding: 8px; background: white; }
+    </style>
+  </head>
+  <body>
+    <main id="documento">
+      <div id="contenido-previo">Contenido único antes de las firmas.</div>
+      <section id="firmas" data-pdf-keep-together>
+        <div class="firma">Firma del estudiante</div>
+        <div class="firma">Firma de coordinación</div>
+      </section>
+      <p id="contenido-final">Contenido único después de las firmas.</p>
+    </main>
+    <output id="result">Ejecutando…</output>
+    <script type="module">
+      import { calculatePdfPageRanges } from '/src/modules/solicitudes/utils/htmlToPdf.ts'
+
+      const signatureBlock = document.querySelector('#firmas').getBoundingClientRect()
+      const finalText = document.querySelector('#contenido-final').firstChild
+      const finalRange = document.createRange()
+      finalRange.selectNodeContents(finalText)
+      const protectedRects = [signatureBlock, ...finalRange.getClientRects()].map(({ top, bottom }) => ({ top, bottom }))
+      const totalHeight = document.querySelector('#documento').getBoundingClientRect().bottom
+      const pages = calculatePdfPageRanges(totalHeight, protectedRects)
+      const signatures = [...document.querySelectorAll('.firma')].map((element) => element.getBoundingClientRect())
+      const secondPage = pages[1]
+
+      const assertions = [
+        ['se crearon al menos dos páginas', pages.length >= 2],
+        ['la primera página termina antes del bloque de firmas', pages[0].sourceY + pages[0].sourceHeight === signatureBlock.top],
+        ['ambas firmas pasan completas a la segunda página', signatures.every(({ top, bottom }) => top >= secondPage.sourceY && bottom <= secondPage.sourceY + secondPage.sourceHeight)],
+        ['los rangos no omiten ni duplican contenido', pages.every((page, index) => index === 0 || page.sourceY === pages[index - 1].sourceY + pages[index - 1].sourceHeight)],
+        ['los rangos cubren el documento completo', pages.at(-1).sourceY + pages.at(-1).sourceHeight === totalHeight],
+      ]
+      const failed = assertions.filter(([, passed]) => !passed)
+      const result = document.querySelector('#result')
+      result.value = failed.length === 0 ? `PASS (${assertions.length} assertions)` : `FAIL: ${failed.map(([name]) => name).join(', ')}`
+      result.dataset.status = failed.length === 0 ? 'pass' : 'fail'
+      document.title = result.value
+      if (failed.length > 0) throw new Error(result.value)
+    </script>
+  </body>
+</html>

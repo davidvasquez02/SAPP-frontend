@@ -1,0 +1,68 @@
+.inscripcion-accordion-window {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.inscripcion-accordion-window.is-disabled {
+  opacity: 0.5;
+}
+
+.inscripcion-accordion-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--surface), var(--outline) 10%);
+  cursor: pointer;
+}
+
+.inscripcion-accordion-window.is-disabled .inscripcion-accordion-window__header {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.inscripcion-accordion-window__header:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%);
+  outline-offset: -2px;
+}
+
+.inscripcion-accordion-window__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.inscripcion-accordion-window__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.inscripcion-accordion-window__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.inscripcion-accordion-window__chevron {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.inscripcion-accordion-window.is-open .inscripcion-accordion-window__chevron {
+  transform: rotate(180deg);
+}
+
+.inscripcion-accordion-window__body {
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  padding: 1.25rem;
+  background: var(--surface);
+  overflow-x: auto;
+}

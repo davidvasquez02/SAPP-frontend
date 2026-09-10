@@ -1,0 +1,212 @@
+.config-module {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.config-module__header,
+.config-module__card {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 18px;
+  background: var(--surface-container-low);
+  padding: 1.1rem;
+}
+
+.config-module__header h1,
+.config-module__card h2 {
+  margin: 0;
+}
+
+.config-module__header p,
+.config-module__card p {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+}
+
+.config-module__status {
+  margin: 0;
+  padding: 0.8rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-container-low), transparent 25%);
+}
+
+.config-module__status--error {
+  color: #b3261e;
+  background: color-mix(in srgb, #b3261e, transparent 93%);
+  border: 1px solid color-mix(in srgb, #b3261e, transparent 70%);
+}
+
+.config-module__feedback {
+  margin: 0;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--text-primary);
+}
+
+.config-module__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.config-module__card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.config-module__card-header button {
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.48rem 0.95rem;
+  cursor: pointer;
+}
+
+.config-module__table-wrap {
+  overflow-x: auto;
+}
+
+.config-module__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 860px;
+}
+
+.config-module__table .config-module__edit-button {
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary);
+  padding: 0.38rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.config-module__table .config-module__edit-button:hover,
+.config-module__table .config-module__edit-button:focus-visible {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.config-module__filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.config-module__program-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.config-module__program {
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+  padding-top: 1rem;
+}
+
+.config-module__program h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.config-module__table--convocatorias {
+  min-width: 1080px;
+}
+
+.config-module__badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.config-module__badge--vigente {
+  background: color-mix(in srgb, var(--primary), transparent 84%);
+  color: var(--primary);
+}
+
+.config-module__badge--cerrada {
+  background: color-mix(in srgb, var(--outline), transparent 75%);
+  color: var(--text-primary);
+}
+
+.config-module__observaciones {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-module__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.config-module__row-actions > button:not(.config-module__edit-button) {
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.38rem 0.8rem;
+  cursor: pointer;
+}
+
+.config-module__row-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.config-module__table th,
+.config-module__table td {
+  text-align: left;
+  padding: 0.7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+}
+
+.config-module__table tbody tr:hover {
+  background: color-mix(
+    in srgb,
+    var(--surface-container-low),
+    var(--primary) 8%
+  );
+}
+
+@media (max-width: 780px) {
+  .config-module__card-header {
+    flex-direction: column;
+  }
+
+  .config-module__filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.config-module__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.config-module__pagination button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--on-surface, inherit);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.config-module__pagination button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

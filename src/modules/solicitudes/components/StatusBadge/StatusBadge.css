@@ -1,0 +1,56 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.status-badge--sm {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.status-badge--md {
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.status-badge.status-badge--enviada {
+  background: color-mix(in srgb, var(--inverse-primary), transparent 86%);
+  border-color: color-mix(in srgb, var(--inverse-primary), transparent 55%);
+  color: var(--inverse-primary);
+}
+
+.status-badge.status-badge--en-revision,
+.status-badge.status-badge--en-firma {
+  background: color-mix(in srgb, #b06000, transparent 86%);
+  border-color: color-mix(in srgb, #b06000, transparent 58%);
+  color: #b06000;
+}
+
+.status-badge.status-badge--aprobada {
+  background: color-mix(in srgb, #1e8e3e, transparent 86%);
+  border-color: color-mix(in srgb, #1e8e3e, transparent 58%);
+  color: #1e8e3e;
+}
+
+.status-badge.status-badge--rechazada {
+  background: color-mix(in srgb, #b3261e, transparent 86%);
+  border-color: color-mix(in srgb, #b3261e, transparent 58%);
+  color: #b3261e;
+}
+
+.status-badge.status-badge--devuelta {
+  background: color-mix(in srgb, var(--outline), transparent 86%);
+  border-color: color-mix(in srgb, var(--outline), transparent 58%);
+  color: var(--text-secondary);
+}
+
+.status-badge.status-badge--unknown {
+  background: color-mix(in srgb, var(--outline), transparent 80%);
+  border-color: color-mix(in srgb, var(--outline), transparent 45%);
+  color: var(--text-secondary);
+}

@@ -1,0 +1,58 @@
+.admisiones-mis-entrevistas {
+  display: grid;
+  gap: 1rem;
+}
+
+.admisiones-mis-entrevistas__header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admisiones-mis-entrevistas__title {
+  margin: 0;
+}
+
+.admisiones-mis-entrevistas__subtitle,
+.admisiones-mis-entrevistas__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.admisiones-mis-entrevistas__table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.admisiones-mis-entrevistas__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.admisiones-mis-entrevistas__table th,
+.admisiones-mis-entrevistas__table td {
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--outline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admisiones-mis-entrevistas__table th {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.admisiones-mis-entrevistas__action {
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.admisiones-mis-entrevistas__action:hover {
+  filter: brightness(0.97);
+}

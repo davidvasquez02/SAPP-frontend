@@ -1,0 +1,60 @@
+.home-page__lead {
+  margin: 0 0 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.home-page__shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 240px));
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.home-page__shortcut-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 148px;
+  padding: 1.15rem;
+  border: 1px solid var(--outline);
+  border-radius: 20px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.home-page__shortcut-card:hover,
+.home-page__shortcut-card:focus-visible {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.14);
+  border-color: var(--primary);
+  outline: none;
+}
+
+.home-page__shortcut-icon {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+.home-page__shortcut-icon-svg {
+  width: 2rem;
+  height: 2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-page__shortcut-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+}

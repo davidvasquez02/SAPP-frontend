@@ -1,0 +1,361 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #cfd8cc;
+  --surface: #ffffff;
+  --surface-container-low: #f9fbf8;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --danger: #b42318;
+  --success: #067647;
+  --warning: #b54708;
+  --radius-sm: 0.8rem;
+  --radius-md: 1rem;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+  --shadow-xs: 0 2px 8px rgba(32, 50, 35, 0.08);
+  --radius-card: 2rem;
+  /* Escala tipográfica canónica. Los módulos solo deben apartarse de ella
+     cuando el contenido tenga una función visual específica. */
+  --font-family-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-caption: 0.75rem;
+  --font-size-small: 0.875rem;
+  --font-size-body: 1rem;
+  --font-size-heading-4: 1rem;
+  --font-size-heading-3: 1.25rem;
+  --font-size-heading-2: clamp(1.375rem, 1.2rem + 0.55vw, 1.75rem);
+  --font-size-heading-1: clamp(1.75rem, 1.45rem + 1vw, 2.375rem);
+  --line-height-tight: 1.2;
+  --line-height-body: 1.6;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  /* Roles tipograficos compartidos por todas las vistas. Estos alias son la
+     unica fuente de verdad para titulos y subtitulos de la aplicacion. */
+  --font-size-page-title: var(--font-size-heading-1);
+  --font-size-section-title: var(--font-size-heading-2);
+  --font-size-subsection-title: var(--font-size-heading-3);
+  --font-size-component-title: var(--font-size-heading-4);
+  --font-size-subtitle: var(--font-size-body);
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  background-color: var(--app-background);
+  color: var(--text-primary);
+  line-height: var(--line-height-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+body.light {
+  --primary: #438213;
+  --on-primary: #ffffff;
+  --outline: #cfd8cc;
+  --surface: #ffffff;
+  --surface-container-low: #f9fbf8;
+  --inverse-primary: #b6ceb4;
+  --app-background: #eef3ec;
+  --text-primary: #1f2a1c;
+  --text-secondary: #5a6757;
+  --shadow-soft: 0 20px 46px rgba(42, 57, 45, 0.12);
+}
+
+body.dark {
+  --primary: #499113;
+  --on-primary: #ffffff;
+  --outline: #3a4238;
+  --surface: #141316;
+  --surface-container-low: #1c1b1e;
+  --inverse-primary: #304d30;
+  --app-background: #0f130f;
+  --text-primary: #ecf3e8;
+  --text-secondary: #b6c3b2;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.light {
+  color-scheme: light;
+}
+
+body.dark {
+  color-scheme: dark;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  min-height: 2.65rem;
+  background: color-mix(in srgb, var(--surface), transparent 2%);
+  color: var(--text-primary);
+  padding: 0.65rem 0.8rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary), transparent 78%);
+}
+
+button {
+  color: inherit;
+  border-radius: 999px;
+  min-height: 2.65rem;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 74%);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--font-size-page-title) !important;
+}
+
+h2 {
+  font-size: var(--font-size-section-title) !important;
+}
+
+h3 {
+  font-size: var(--font-size-subsection-title) !important;
+}
+
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-component-title) !important;
+}
+
+/*
+ * Contrato visual de encabezados
+ * ------------------------------
+ * Las hojas de cada modulo pueden decidir margenes y distribucion, pero no
+ * deben cambiar tamano, peso, color ni ritmo de un encabezado semantico. Se
+ * usa !important de forma deliberada para neutralizar reglas historicas mas
+ * especificas que hicieron que el mismo nivel variara entre modulos.
+ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-weight-bold) !important;
+  line-height: var(--line-height-tight) !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Los textos introductorios que siguen a un titulo comparten tratamiento aun
+   cuando cada modulo conserve su nombre BEM historico. */
+[class$='__subtitle'],
+[class*='__subtitle '] {
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-subtitle) !important;
+  font-weight: var(--font-weight-regular) !important;
+  line-height: var(--line-height-body) !important;
+}
+
+p,
+li,
+dd {
+  line-height: var(--line-height-body);
+}
+
+small,
+caption {
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+label,
+legend,
+button,
+th {
+  font-weight: var(--font-weight-semibold);
+}
+
+::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+table {
+  width: 100%;
+}
+
+.sapp-table-shell {
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.sapp-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.sapp-table thead th {
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.sapp-table th,
+.sapp-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 38%);
+  vertical-align: top;
+}
+
+.sapp-table tbody tr:hover {
+  background: color-mix(in srgb, var(--primary), transparent 94%);
+}
+
+/* Acción secundaria estándar para abrir o descargar documentos. */
+.sapp-document-action {
+  border: 1px solid var(--primary) !important;
+  border-radius: 999px !important;
+  padding: 0.45rem 0.8rem !important;
+  background: transparent !important;
+  color: var(--primary) !important;
+  font: inherit !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.sapp-document-action:hover:not(:disabled),
+.sapp-document-action:focus-visible {
+  background: color-mix(in srgb, var(--primary), transparent 90%) !important;
+}
+
+.sapp-document-action:disabled {
+  opacity: 0.55 !important;
+  cursor: wait !important;
+}
+
+.sapp-filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.sapp-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sapp-filter-field > span {
+  color: var(--text-secondary);
+}
+
+.sapp-filter-field select,
+.sapp-filter-field input {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 15%);
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.sapp-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.sapp-filters-clear-button {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sapp-filters-clear-button:hover:enabled {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.sapp-filters-clear-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Shared component skin */
+.module-layout__content,
+.solicitud-detalle-page,
+.solicitudes-filters-bar,
+.solicitud-estudiante-form__section,
+.solicitudes-table__container,
+.home-page__session {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 18%);
+  box-shadow: var(--shadow-xs);
+}

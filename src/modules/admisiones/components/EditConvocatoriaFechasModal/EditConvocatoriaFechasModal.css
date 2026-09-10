@@ -1,0 +1,117 @@
+.edit-convocatoria-fechas-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--text-primary) 42%, transparent);
+}
+
+.edit-convocatoria-fechas-modal {
+  width: min(100%, 560px);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 24px;
+  padding: 1.5rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 20px 55px color-mix(in srgb, var(--text-primary) 20%, transparent);
+}
+
+.edit-convocatoria-fechas-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.edit-convocatoria-fechas-modal__header h2,
+.edit-convocatoria-fechas-modal__header p,
+.edit-convocatoria-fechas-modal__intro {
+  margin: 0;
+}
+
+.edit-convocatoria-fechas-modal__header p,
+.edit-convocatoria-fechas-modal__intro {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+}
+
+.edit-convocatoria-fechas-modal__header button {
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1.7rem;
+  cursor: pointer;
+}
+
+.edit-convocatoria-fechas-modal__intro {
+  margin-top: 1.25rem;
+}
+
+.edit-convocatoria-fechas-modal__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.edit-convocatoria-fechas-modal__fields label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.edit-convocatoria-fechas-modal__fields input {
+  width: 100%;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  padding: 0.72rem;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.edit-convocatoria-fechas-modal__fields input:focus {
+  outline: 2px solid var(--inverse-primary);
+  outline-offset: 2px;
+}
+
+.edit-convocatoria-fechas-modal__error {
+  margin: 1rem 0 0;
+  color: var(--error, #b3261e);
+}
+
+.edit-convocatoria-fechas-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+}
+
+.edit-convocatoria-fechas-modal__actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1.1rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-convocatoria-fechas-modal__actions .edit-convocatoria-fechas-modal__cancel {
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.edit-convocatoria-fechas-modal__actions button:disabled,
+.edit-convocatoria-fechas-modal__header button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .edit-convocatoria-fechas-modal__fields {
+    grid-template-columns: 1fr;
+  }
+}

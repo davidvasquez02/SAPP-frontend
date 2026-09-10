@@ -1,0 +1,116 @@
+.module-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: clamp(1rem, 2.2vw, 2rem);
+}
+
+.module-layout__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.module-layout__eyebrow {
+    margin: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.module-layout__title {
+    margin: 0.25rem 0 0;
+    font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+}
+
+.module-layout__user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: right;
+}
+
+.module-layout__avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid color-mix(in srgb, var(--outline), transparent 20%);
+    background: var(--surface-container-low);
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--outline), transparent 75%);
+}
+
+.module-layout__profile-link {
+    display: inline-flex;
+    border-radius: 999px;
+    outline: 3px solid transparent;
+    transition: transform 160ms ease, outline-color 160ms ease;
+}
+
+.module-layout__profile-link:hover {
+    transform: scale(1.04);
+}
+
+.module-layout__profile-link:focus-visible {
+    outline-color: var(--primary);
+}
+
+.module-layout__institutional-logos {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.65rem, 1.2vw, 1rem);
+    padding-left: 0.25rem;
+}
+
+.module-layout__institutional-logo {
+    display: block;
+    width: auto;
+    height: clamp(3.75rem, 5vw, 5.25rem);
+    object-fit: contain;
+}
+
+.module-layout__institutional-logo--eisi {
+    border-radius: 12%;
+}
+
+.module-layout__user-name {
+    margin: 0;
+    font-weight: 600;
+}
+
+.module-layout__user-role {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.module-layout__content {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    padding: clamp(1rem, 2.5vw, 2rem);
+    box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 768px) {
+    .module-layout {
+        gap: 1rem;
+    }
+    .module-layout__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .module-layout__user {
+        width: 100%;
+        justify-content: space-between;
+        text-align: left;
+        flex-wrap: wrap;
+    }
+    .module-layout__institutional-logos {
+        margin-left: auto;
+    }
+    .module-layout__institutional-logo {
+        height: clamp(3.25rem, 12vw, 4.5rem);
+    }
+}
