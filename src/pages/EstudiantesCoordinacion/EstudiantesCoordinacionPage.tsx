@@ -81,12 +81,16 @@ const EstudiantesCoordinacionPage = () => {
     initialSnapshot?.programTypeSeleccionado ?? 'doctorado',
   )
   const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>(initialSnapshot?.estudiantes ?? [])
+  const [egresados, setEgresados] = useState<EstudianteCoordinacion[]>(initialSnapshot?.egresados ?? [])
+  const [mostrarEgresados, setMostrarEgresados] = useState(initialSnapshot?.mostrarEgresados ?? false)
   const [isLoadingProgramas, setIsLoadingProgramas] = useState(!initialSnapshot)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
+  const [isLoadingEgresados, setIsLoadingEgresados] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorEgresados, setErrorEgresados] = useState<string | null>(null)
   const [periodoFiltro, setPeriodoFiltro] = useState('')
-  const [nombreFiltro, setNombreFiltro] = useState('')
-  const [codigoFiltro, setCodigoFiltro] = useState('')
+  const [busquedaFiltro, setBusquedaFiltro] = useState('')
+  const [estadoFiltro, setEstadoFiltro] = useState('')
 
   useEffect(() => {
     if (initialSnapshot) {
@@ -127,6 +131,8 @@ const EstudiantesCoordinacionPage = () => {
 
     if (!programaSeleccionado) {
       setEstudiantes([])
+      setEgresados([])
+      setMostrarEgresados(false)
       return () => {
         isCurrentRequest = false
       }
@@ -198,6 +204,63 @@ const EstudiantesCoordinacionPage = () => {
     }
   }, [programaSeleccionado])
 
+  useEffect(() => {
+    let isCurrentRequest = true
+
+    if (!mostrarEgresados || !programaSeleccionado || egresados.length > 0) {
+      return () => {
+        isCurrentRequest = false
+      }
+    }
+
+    const loadEgresados = async () => {
+      setIsLoadingEgresados(true)
+      setErrorEgresados(null)
+
+      try {
+        const data = ordenarEstudiantesPorSemestre(
+          await getEstudiantesByPrograma(programaSeleccionado.id, true),
+        )
+        if (!isCurrentRequest) return
+        setEgresados(data)
+
+        const egresadosConAspirante = data.filter(
+          (egresado): egresado is EstudianteCoordinacion & { idAspirante: number } =>
+            egresado.idAspirante !== null,
+        )
+
+        void loadWithConcurrencyLimit(egresadosConAspirante, async (egresado) => {
+          try {
+            const inscripcion = await getInscripcionByAspirante(egresado.idAspirante)
+            if (!inscripcion || !isCurrentRequest) return
+            const fotoUrl = await getFotoDocumentoByTramite({
+              codigoTipoTramite: 1002,
+              codigoTipoDocumentoTramite: 'ANX-4',
+              tramiteId: inscripcion.id,
+            })
+            if (!fotoUrl || !isCurrentRequest) return
+            setEgresados((current) => current.map((item) =>
+              item.id === egresado.id ? { ...item, fotoUrl } : item,
+            ))
+          } catch {
+            // Un fallo individual conserva el placeholder sin afectar el listado.
+          }
+        })
+      } catch (err) {
+        if (isCurrentRequest) {
+          setErrorEgresados(err instanceof Error ? err.message : 'No fue posible cargar los egresados.')
+        }
+      } finally {
+        if (isCurrentRequest) setIsLoadingEgresados(false)
+      }
+    }
+
+    void loadEgresados()
+    return () => {
+      isCurrentRequest = false
+    }
+  }, [egresados.length, mostrarEgresados, programaSeleccionado])
+
   const isEmptyStateVisible =
     !isLoadingProgramas && !isLoadingEstudiantes && !error && (!programaSeleccionado || estudiantes.length === 0)
 
@@ -207,26 +270,38 @@ const EstudiantesCoordinacionPage = () => {
   )
 
   const estudiantesVisibles = useMemo(() => {
-    const nombreNormalizado = normalizarTextoBusqueda(nombreFiltro)
-    const codigoNormalizado = normalizarTextoBusqueda(codigoFiltro)
+    const busquedaNormalizada = normalizarTextoBusqueda(busquedaFiltro)
+    const estadoNormalizado = normalizarTextoBusqueda(estadoFiltro)
 
     return estudiantes
       .filter((estudiante) => !periodoFiltro || estudiante.cohorte === periodoFiltro)
       .filter((estudiante) =>
-        !nombreNormalizado || normalizarTextoBusqueda(estudiante.nombreCompleto).includes(nombreNormalizado),
+        !busquedaNormalizada
+        || normalizarTextoBusqueda(estudiante.nombreCompleto).includes(busquedaNormalizada)
+        || normalizarTextoBusqueda(estudiante.codigo).includes(busquedaNormalizada),
       )
-      .filter((estudiante) =>
-        !codigoNormalizado || normalizarTextoBusqueda(estudiante.codigo).includes(codigoNormalizado),
-      )
+      .filter((estudiante) => !estadoNormalizado
+        || normalizarTextoBusqueda(estudiante.estadoAcademico) === estadoNormalizado)
       .sort(compararEstudiantesPorSemestre)
-  }, [codigoFiltro, estudiantes, nombreFiltro, periodoFiltro])
+  }, [busquedaFiltro, estadoFiltro, estudiantes, periodoFiltro])
 
-  const filtrosActivos = Boolean(periodoFiltro || nombreFiltro.trim() || codigoFiltro.trim())
+  const filtrosActivos = Boolean(periodoFiltro || busquedaFiltro.trim() || estadoFiltro)
 
   const limpiarFiltros = () => {
     setPeriodoFiltro('')
-    setNombreFiltro('')
-    setCodigoFiltro('')
+    setBusquedaFiltro('')
+    setEstadoFiltro('')
+  }
+
+  const openStudentDetail = (estudiante: EstudianteCoordinacion) => {
+    cacheEstudiantesListForDetail({
+      programas,
+      programTypeSeleccionado,
+      estudiantes,
+      egresados,
+      mostrarEgresados,
+    })
+    navigate(`/coordinacion/estudiantes/${estudiante.id}`, { state: { estudiante } })
   }
 
   return (
@@ -238,6 +313,9 @@ const EstudiantesCoordinacionPage = () => {
             value={programTypeSeleccionado}
             onChange={(programType) => {
               setProgramTypeSeleccionado(programType)
+              setEgresados([])
+              setMostrarEgresados(false)
+              setErrorEgresados(null)
               limpiarFiltros()
             }}
             disabled={isLoadingProgramas}
@@ -279,22 +357,21 @@ const EstudiantesCoordinacionPage = () => {
                 </select>
               </label>
               <label className="estudiantes-coordinacion__field">
-                <span>Nombre</span>
+                <span>Nombre o código</span>
                 <input
                   type="search"
-                  value={nombreFiltro}
-                  onChange={(event) => setNombreFiltro(event.target.value)}
-                  placeholder="Buscar por nombre"
+                  value={busquedaFiltro}
+                  onChange={(event) => setBusquedaFiltro(event.target.value)}
+                  placeholder="Buscar por nombre o código UIS"
                 />
               </label>
               <label className="estudiantes-coordinacion__field">
-                <span>Código</span>
-                <input
-                  type="search"
-                  value={codigoFiltro}
-                  onChange={(event) => setCodigoFiltro(event.target.value)}
-                  placeholder="Buscar por código UIS"
-                />
+                <span>Estado</span>
+                <select value={estadoFiltro} onChange={(event) => setEstadoFiltro(event.target.value)}>
+                  <option value="">Activos e inactivos</option>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
               </label>
             </div>
           </section>
@@ -317,18 +394,50 @@ const EstudiantesCoordinacionPage = () => {
         {!isLoadingEstudiantes && estudiantesVisibles.length > 0 ? (
           <StudentHorizontalBoard
             estudiantes={estudiantesVisibles}
-            onStudentClick={(estudiante) => {
-              cacheEstudiantesListForDetail({
-                programas,
-                programTypeSeleccionado,
-                estudiantes,
-              })
-              navigate(`/coordinacion/estudiantes/${estudiante.id}`, {
-                state: { estudiante },
-              })
-            }}
+            onStudentClick={openStudentDetail}
           />
         ) : null}
+
+        <section className="estudiantes-coordinacion__graduates" aria-labelledby="egresados-title">
+          <div className="estudiantes-coordinacion__graduates-heading">
+            <div>
+              <h2 id="egresados-title">Egresados</h2>
+              <p>Consulta los egresados del programa y sus perfiles.</p>
+            </div>
+            <button
+              type="button"
+              className="estudiantes-coordinacion__graduates-toggle"
+              aria-expanded={mostrarEgresados}
+              onClick={() => setMostrarEgresados((current) => !current)}
+              disabled={!programaSeleccionado}
+            >
+              {mostrarEgresados ? 'Ocultar egresados' : 'Mostrar egresados'}
+            </button>
+          </div>
+
+          {mostrarEgresados && isLoadingEgresados ? (
+            <p className="estudiantes-coordinacion__status">Cargando egresados...</p>
+          ) : null}
+          {mostrarEgresados && errorEgresados ? (
+            <p className="estudiantes-coordinacion__status estudiantes-coordinacion__status--error" role="alert">
+              {errorEgresados}
+            </p>
+          ) : null}
+          {mostrarEgresados && !isLoadingEgresados && !errorEgresados && egresados.length === 0 ? (
+            <div className="estudiantes-coordinacion__empty" role="status">
+              <span className="estudiantes-coordinacion__empty-icon" aria-hidden="true">🎓</span>
+              <p>No hay egresados registrados para este programa.</p>
+            </div>
+          ) : null}
+          {mostrarEgresados && !isLoadingEgresados && egresados.length > 0 ? (
+            <StudentHorizontalBoard
+              estudiantes={egresados}
+              onStudentClick={openStudentDetail}
+              title="Estudiantes egresados"
+              ariaLabel="Listado horizontal de estudiantes egresados"
+            />
+          ) : null}
+        </section>
       </section>
     </ModuleLayout>
   )

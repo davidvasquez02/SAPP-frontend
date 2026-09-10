@@ -122,6 +122,57 @@
   outline-offset: 2px;
 }
 
+.estudiantes-coordinacion__graduates {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: clamp(1rem, 2vw, 1.5rem);
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 55%);
+}
+
+.estudiantes-coordinacion__graduates-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.estudiantes-coordinacion__graduates-heading h2,
+.estudiantes-coordinacion__graduates-heading p {
+  margin: 0;
+}
+
+.estudiantes-coordinacion__graduates-heading p {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+}
+
+.estudiantes-coordinacion__graduates-toggle {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.15rem;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.estudiantes-coordinacion__graduates-toggle:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary), var(--surface) 12%);
+}
+
+.estudiantes-coordinacion__graduates-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 65%);
+  outline-offset: 2px;
+}
+
+.estudiantes-coordinacion__graduates-toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .estudiantes-coordinacion__empty {
   display: flex;
   align-items: center;
@@ -158,6 +209,11 @@
   }
 
   .estudiantes-coordinacion__filters-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .estudiantes-coordinacion__graduates-heading {
     align-items: flex-start;
     flex-direction: column;
   }

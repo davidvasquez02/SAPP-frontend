@@ -23,6 +23,14 @@ const getEstadoLabel = (estado: EstudianteCoordinacion['estadoAcademico']) => {
     return 'Activo'
   }
 
+  if (normalized === 'INACTIVO') {
+    return 'Inactivo'
+  }
+
+  if (normalized === 'EGRESADO') {
+    return 'Egresado'
+  }
+
   return estado.replaceAll('_', ' ').toLowerCase()
 }
 

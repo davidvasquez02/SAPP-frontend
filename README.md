@@ -1,6 +1,6 @@
 # Minerva Frontend — EISI UIS
 
-## Estado funcional (2026-09-09)
+## Estado funcional (2026-09-10)
 
 El formulario de solicitudes académicas soporta la homologación de una o más parejas de materias. La materia destino se elige del catálogo del programa; la materia origen se elige del catálogo externo activo o se registra en el formulario mediante nombre obligatorio y código opcional. El alta envía cada origen existente mediante `asignatura_origen_id`, o cada origen nuevo mediante `nombreAsignaturaExterna` y, cuando se diligencia, `codigoAsignaturaExterna`.
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-10:** el listado de coordinación unifica la búsqueda por nombre y código UIS en un solo campo y dedica el tercer filtro al estado **Activo/Inactivo**. Las tarjetas presentan el estado `INACTIVO` como **Inactivo**. Al final se agregó una sección colapsable de egresados: no ejecuta ninguna consulta al cargar la página y, solo al pulsar **Mostrar egresados**, consume `GET /sapp/estudiantes/consulta?programaId={id}&egresados=true`, presenta las mismas tarjetas y carga sus fotografías con el flujo documental existente y un máximo de cuatro tareas concurrentes.
 - **2026-09-09:** el módulo de matrícula para `COORDINACION`/`ADMIN` verifica primero `GET /sapp/periodoAcademicoFecha/vigente` y busca la fecha vigente cuyo tipo de trámite es `MATRICULA`. Solo cuando existe presenta habilitada la acción **Enviar correo de inicio**; tras confirmación, ejecuta `POST /sapp/matriculaAcademica/notificarAperturaMatricula?periodoId={id}` sin body, usando el identificador del periodo retornado por la verificación. La pantalla informa el periodo y rango de fechas, bloquea reenvíos mientras la solicitud está en curso y muestra el resultado del API.
 - **2026-09-09:** en la pantalla de matrícula del rol `ESTUDIANTE`, las acciones documentales **Ver**, **Subir** y **Descargar** permanecen deshabilitadas mientras todavía no exista un `id` de matrícula. La confirmación inicial crea primero la matrícula con las materias seleccionadas; después de recibir el registro vigente, la pantalla recarga el checklist y habilita las acciones asociadas a ese trámite. Una matrícula finalizada conserva **Ver/Descargar**, pero bloquea nuevas cargas.
 - **2026-09-09:** en el detalle de matrícula de coordinación, cada aprobación o rechazo vuelve a consultar los documentos obligatorios y verifica que todos estén cargados y tengan estado final `APROBADO` o `RECHAZADO`. Al completar la revisión se ejecuta una sola vez por matrícula y por montaje `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, sin body; los documentos opcionales no bloquean esta notificación.

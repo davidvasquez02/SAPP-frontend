@@ -171,10 +171,11 @@ export const getProgramasCoordinacion = async (): Promise<ProgramaCoordinacion[]
 }
 
 export const getEstudiantesByPrograma = async (
-  programaId: number
+  programaId: number,
+  egresados = false,
 ): Promise<EstudianteCoordinacion[]> => {
   const response = await httpGet<ApiResponse<EstudianteConsultaBackend[]>>(
-    `${ESTUDIANTES_CONSULTA_ENDPOINT}?programaId=${programaId}&egresados=false`
+    `${ESTUDIANTES_CONSULTA_ENDPOINT}?programaId=${programaId}&egresados=${egresados}`
   )
 
   if (!response.ok) {
