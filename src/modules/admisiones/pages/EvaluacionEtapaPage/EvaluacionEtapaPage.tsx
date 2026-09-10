@@ -77,7 +77,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const isProfesorOnly =
     isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
 
-  const nombreProfesor = useMemo(() => {
+  const nombreUsuarioSesion = useMemo(() => {
     if (session?.kind !== 'SAPP') {
       return ''
     }
@@ -89,14 +89,25 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       .replace(/\s+/g, ' ')
       .trim()
   }, [session])
+  const nombreUsuarioNormalizado = useMemo(
+    () => normalizeWhitespaceUpper(nombreUsuarioSesion),
+    [nombreUsuarioSesion],
+  )
+
+  const belongsToCurrentUser = useCallback(
+    (item: EvaluacionAdmisionItem) =>
+      nombreUsuarioNormalizado.length > 0 &&
+      normalizeWhitespaceUpper(item.evaluador) === nombreUsuarioNormalizado,
+    [nombreUsuarioNormalizado],
+  )
 
   const shouldIncludeByProfesor = useCallback((item: EvaluacionAdmisionItem) => {
     if (!isProfesorOnly || !isEntrevista) {
       return true
     }
 
-    return normalizeWhitespaceUpper(item.evaluador) === normalizeWhitespaceUpper(nombreProfesor)
-  }, [isEntrevista, isProfesorOnly, nombreProfesor])
+    return belongsToCurrentUser(item)
+  }, [belongsToCurrentUser, isEntrevista, isProfesorOnly])
 
   const loadEvaluacion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(inscripcionIdNumber)) {
@@ -234,7 +245,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
 
   const handleChangeDraft = (id: number, changes: EvaluacionDraft) => {
     const item = items.find((current) => current.id === id)
-    if (!item) return
+    if (!item || (isEntrevista && !belongsToCurrentUser(item))) return
 
     setDrafts((prev) => {
       const nextDraft = {
@@ -264,7 +275,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   }
 
   const handleSaveBulk = async () => {
-    const changedItems = items.filter((item) => modifiedByRow[item.id])
+    const changedItems = items.filter(
+      (item) => modifiedByRow[item.id] && (!isEntrevista || belongsToCurrentUser(item)),
+    )
     if (changedItems.length === 0) return
 
     const hasValidationErrors = changedItems.some((item) => Boolean(errorsByRow[item.id]))
@@ -467,6 +480,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 modifiedByRow={modifiedByRow}
                 isSavingBulk={savingBulk}
                 onChangeDraft={handleChangeDraft}
+                isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
               />
             </div>
           ))}
