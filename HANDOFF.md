@@ -21,6 +21,28 @@
 - No se pudo capturar la ruta protegida con datos: requiere sesión institucional y backend; validar visualmente en el entorno integrado.
 
 ---
+# Update 2026-09-10 — Convocatoria sin aspirantes permite nuevas inscripciones
+
+## Estado actual, causa y decisión
+- El backend productivo responde `404 Not Found` a `GET /sapp/inscripcionAdmision/convocatoria/{convocatoriaId}` cuando una convocatoria todavía no tiene inscripciones. El transporte convertía esa respuesta en un `Error` y el detalle quedaba en estado de fallo, impidiendo abrir **Crear aspirante** aunque la convocatoria estuviera vigente.
+- `src/shared/http/httpClient.ts` expone ahora `HttpError`, que conserva el `status` HTTP además del mensaje procesado. Tanto las respuestas JSON como las descargas mantienen su comportamiento previo, pero sus errores no exitosos son instancias de esta clase.
+- `getInscripcionesByConvocatoria` captura únicamente `HttpError` con estado `404` y retorna `[]`. No depende del texto del backend. Cualquier `401`, `403`, `500`, error de red o envelope no exitoso continúa propagándose.
+
+## Paths, contrato y salida esperada
+- Transporte: `src/shared/http/httpClient.ts`; adaptación del contrato vacío: `src/modules/admisiones/api/inscripcionAdmisionService.ts`; consumidor: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`.
+- Entrada relevante: `GET ${VITE_API_URL || '/api/sapp'}/inscripcionAdmision/convocatoria/{convocatoriaId}` autenticado. Respuesta normal: `{ ok, message, data: InscripcionAdmisionDto[] }`; respuesta vacía observada: HTTP 404; resultado normalizado en frontend: `[]`.
+- Salida esperada: una convocatoria abierta sin aspirantes muestra cero inscritos, no un error, y mantiene habilitada **Crear aspirante** para `COORDINACION`, `SECRETARIA` y `ADMIN`. La consulta independiente del catálogo de convocatorias sigue determinando vigencia y datos de la convocatoria.
+
+## Retos, próximos pasos y entorno
+1. Validar con una sesión real de coordinación la convocatoria `23`: Network conservará el 404 del servidor, pero la pantalla debe renderizar el estado vacío y permitir abrir/usar el modal de creación.
+2. Como mejora de contrato backend, considerar retornar HTTP 200 con `data: []`; el frontend debe conservar esta tolerancia mientras producción utilice 404 para la colección vacía.
+3. Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, variables de entorno, seeds o datasets.
+- `npx eslint src/shared/http/httpClient.ts src/modules/admisiones/api/inscripcionAdmisionService.ts` (2026-09-10): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-mGbadlWH.css` e `index-RwX5s21K.js`. Persiste el warning informativo por el chunk JavaScript de 533.08 kB.
+- `npm run lint` (2026-09-10): FAIL por 9 errores y 1 warning preexistentes en servicios, mocks, rutas, tipos y componentes no modificados por este ajuste; el lint dirigido de los archivos intervenidos sí pasa.
+- `git diff --check` (2026-09-10): PASS. No se tomó captura porque el ajuste no cambia la presentación; la validación funcional requiere sesión institucional y backend.
+
+---
 
 # Update 2026-09-09 — Correo de apertura de matrícula
 

@@ -1,12 +1,24 @@
-import { httpGet } from '../../../shared/http/httpClient'
+import { HttpError, httpGet } from '../../../shared/http/httpClient'
 import type { ApiResponse, InscripcionAdmisionDto } from './types'
 
 export const getInscripcionesByConvocatoria = async (
   convocatoriaId: number,
 ): Promise<InscripcionAdmisionDto[]> => {
-  const response = await httpGet<ApiResponse<InscripcionAdmisionDto[]>>(
-    `/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`,
-  )
+  let response: ApiResponse<InscripcionAdmisionDto[]>
+
+  try {
+    response = await httpGet<ApiResponse<InscripcionAdmisionDto[]>>(
+      `/sapp/inscripcionAdmision/convocatoria/${convocatoriaId}`,
+    )
+  } catch (error) {
+    // Este endpoint usa 404 para representar una colección todavía vacía.
+    // La convocatoria se valida por separado en la pantalla de detalle.
+    if (error instanceof HttpError && error.status === 404) {
+      return []
+    }
+
+    throw error
+  }
 
   if (!response.ok) {
     throw new Error(response.message || 'Error al obtener las inscripciones')

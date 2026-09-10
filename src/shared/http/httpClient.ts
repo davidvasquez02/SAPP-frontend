@@ -18,6 +18,16 @@ interface ApiErrorBody {
   errors?: unknown
 }
 
+export class HttpError extends Error {
+  readonly status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
 const stringifyValidationErrors = (errors: unknown): string | null => {
   if (Array.isArray(errors)) {
     const messages = errors
@@ -138,7 +148,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
       // Ignore parse errors and keep the default message.
     }
 
-    throw new Error(errorMessage)
+    throw new HttpError(response.status, errorMessage)
   }
 
   if (response.status === 204) {
@@ -188,7 +198,7 @@ export async function httpFile(path: string, options: HttpOptions = {}): Promise
       // Ignore parse errors and keep the default message.
     }
 
-    throw new Error(errorMessage)
+    throw new HttpError(response.status, errorMessage)
   }
 
   const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
