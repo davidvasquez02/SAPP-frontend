@@ -1,3 +1,22 @@
+# Update 2026-09-10 — Selector compacto de períodos en Admisiones
+
+## Estado actual y decisión
+- Los dos combos **Convocatorias anteriores** de `/admisiones` usan `CompactPeriodSelect` en lugar del `<select>` nativo. El cambio evita que una lista extensa de períodos cubra casi todo el viewport: el panel tiene `max-height: 12rem`, `overflow-y: auto` y se superpone a la tarjeta sin alterar su layout.
+- El disparador conserva el texto **Seleccione un período...** y las opciones se construyen con el ID y período de cada convocatoria anterior. Seleccionar mantiene exactamente el flujo existente de `handlePreviousChange`; el panel también se cierra con clic externo o `Escape` y devuelve el foco al disparador con este último.
+- Fondo, texto, borde, foco, hover, selección, sombra y scrollbar consumen tokens semánticos, por lo que el control funciona en temas claro y oscuro. No se cambiaron endpoints, contratos, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Componente: `src/pages/AdmisionesHome/CompactPeriodSelect.tsx`; integración: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`; presentación: `src/pages/AdmisionesHome/AdmisionesHomePage.css`.
+- Entrada local: `{ id, value, placeholder, options: Array<{ label, value }>, onChange }`. Los valores enviados por cada opción siguen siendo `String(convocatoria.id)` y su etiqueta sigue siendo `convocatoria.periodo`.
+- Salida esperada: al abrir cualquier combo se ven aproximadamente cinco períodos dentro de un panel compacto; si hay más, el usuario los recorre mediante scroll. Al elegir uno se navega a la convocatoria correspondiente igual que antes.
+
+## Entorno, retos y verificaciones
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2. No existe script `test`.
+- Pendiente validar visualmente ambos programas con una sesión institucional y suficientes convocatorias, incluyendo scroll por ratón/trackpad, teclado y temas claro/oscuro. No se pudo generar captura local porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida requiere sesión/backend.
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx src/pages/AdmisionesHome/CompactPeriodSelect.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 255 módulos transformados y artefactos `dist/assets/index-Cp9gSOCw.css` e `index-6ZqY9b-z.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 536.54 kB. `git diff --check`: PASS.
+
+---
 # Update 2026-09-10 — Acciones documentales de matrícula en dos columnas
 
 ## Estado actual y decisión
