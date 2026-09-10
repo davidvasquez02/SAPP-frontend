@@ -82,6 +82,8 @@ const EstudiantesCoordinacionPage = () => {
   )
   const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>(initialSnapshot?.estudiantes ?? [])
   const [egresados, setEgresados] = useState<EstudianteCoordinacion[]>(initialSnapshot?.egresados ?? [])
+  const egresadosRef = useRef(egresados)
+  egresadosRef.current = egresados
   const [mostrarEgresados, setMostrarEgresados] = useState(initialSnapshot?.mostrarEgresados ?? false)
   const [isLoadingProgramas, setIsLoadingProgramas] = useState(!initialSnapshot)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
@@ -207,7 +209,7 @@ const EstudiantesCoordinacionPage = () => {
   useEffect(() => {
     let isCurrentRequest = true
 
-    if (!mostrarEgresados || !programaSeleccionado || egresados.length > 0) {
+    if (!mostrarEgresados || !programaSeleccionado || egresadosRef.current.length > 0) {
       return () => {
         isCurrentRequest = false
       }
@@ -259,7 +261,7 @@ const EstudiantesCoordinacionPage = () => {
     return () => {
       isCurrentRequest = false
     }
-  }, [egresados.length, mostrarEgresados, programaSeleccionado])
+  }, [mostrarEgresados, programaSeleccionado])
 
   const isEmptyStateVisible =
     !isLoadingProgramas && !isLoadingEstudiantes && !error && (!programaSeleccionado || estudiantes.length === 0)

@@ -2976,3 +2976,20 @@ npm run lint
 - No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox y la vista requiere además sesión `ESTUDIANTE` y backend institucional.
 
 ---
+# Update 2026-09-10 — Fotografías del desplegable de egresados
+
+## Estado actual, causa y decisión
+- En `/coordinacion/estudiantes`, el bloque **Egresados** continúa siendo diferido: al abrirlo consulta `GET /sapp/estudiantes/consulta?programaId={id}&egresados=true` y luego resuelve las fotos de quienes tienen `idAspirante`.
+- La causa de las fotos ausentes era el arreglo de dependencias del efecto: después de `setEgresados(data)`, el cambio de `egresados.length` ejecutaba el cleanup, marcaba la solicitud como obsoleta y la cola abortaba antes de actualizar fotos. `egresados.length` ya no es dependencia; el efecto se gobierna por el despliegue y el programa, igual que el ciclo de vida del listado normal.
+- Por cada egresado se consulta primero la inscripción mediante `getInscripcionByAspirante(idAspirante)` y después el documento con `codigoTipoTramite: 1002`, `codigoTipoDocumentoTramite: 'ANX-4'` y `tramiteId: inscripcion.id`. La concurrencia máxima sigue siendo cuatro; un error individual conserva **Sin foto**.
+
+## Paths, contrato, salida esperada y próximos pasos
+- Orquestación: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`; consulta/mapeo de estudiantes: `src/modules/estudiantes/services/estudiantesMockService.ts`; servicio de foto: `src/modules/documentos/api/documentoFotoService.ts`; render: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx`.
+- Salida esperada: al pulsar **Mostrar egresados**, las tarjetas aparecen y cada egresado con foto `ANX-4` recibe una URI `data:{mime};base64,{contenido}`. Al ocultar durante la carga o cambiar de programa se invalidan actualizaciones tardías.
+- Pendiente: validar en navegador con sesión institucional y egresados reales que las llamadas de inscripción/documentos aparecen en Network y que las imágenes se renderizan. No hay seeds ni datasets locales; los datos provienen del API.
+
+## Entorno y verificación
+- Usar exclusivamente `/workspace/SAPP-frontend` con Node/npm y el `node_modules` existente; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`; no se agregaron paquetes ni variables de entorno.
+- Verificaciones del 2026-09-10: `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` pasó (solo apareció el warning ambiental de npm `Unknown env config "http-proxy"`); `npm run build` pasó con 253 módulos y el warning no bloqueante del chunk mayor a 500 kB; `git diff --check` pasó. El repositorio no define un script `test`.
+
+---
