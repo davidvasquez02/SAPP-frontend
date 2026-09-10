@@ -8,6 +8,7 @@ import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convo
 import { getProgramaNombreLargo } from "../../modules/admisiones/utils/programNames";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import { CompactPeriodSelect } from "./CompactPeriodSelect";
 import "./AdmisionesHomePage.css";
 
 const PROGRAM_META = new Map<
@@ -457,26 +458,23 @@ const AdmisionesHomePage = () => {
                         No hay convocatorias anteriores.
                       </p>
                     ) : (
-                      <select
+                      <CompactPeriodSelect
                         id={`prev-${programa.programaId}`}
-                        className="admisiones-previous-select__control"
                         value={selectedPrevious[programa.programaId] ?? ""}
-                        onChange={(event) =>
+                        placeholder="Seleccione un período..."
+                        options={anterioresOrdenadas.map((convocatoria) => ({
+                          label: convocatoria.periodo,
+                          value: String(convocatoria.id),
+                        }))}
+                        onChange={(value) =>
                           handlePreviousChange(
                             programa.programaId,
                             programaNombre,
                             anterioresOrdenadas,
-                            event.target.value,
+                            value,
                           )
                         }
-                      >
-                        <option value="">Seleccione un período...</option>
-                        {anterioresOrdenadas.map((convocatoria) => (
-                          <option key={convocatoria.id} value={convocatoria.id}>
-                            {convocatoria.periodo}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     )}
                   </div>
                 </article>
