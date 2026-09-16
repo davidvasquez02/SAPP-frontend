@@ -76,11 +76,6 @@ const DocumentosRequeridosTable = ({
                   {doc.selectedFile ? (
                     <small className="documentos-requeridos-table__file-name">{doc.selectedFile.name}</small>
                   ) : null}
-                  {doc.uploadStatus && doc.uploadStatus !== 'NOT_SELECTED' ? (
-                    <small className="documentos-requeridos-table__file-name">
-                      Estado de carga: {doc.uploadStatus}
-                    </small>
-                  ) : null}
                   {doc.errorMessage ? (
                     <small className="documentos-requeridos-table__file-name">{doc.errorMessage}</small>
                   ) : null}
