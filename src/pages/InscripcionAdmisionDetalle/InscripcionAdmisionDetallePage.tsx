@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { hasAnyRole, isEvaluadorAdmision } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
 import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
@@ -184,8 +184,8 @@ const InscripcionAdmisionDetallePage = () => {
   }, [activeKey])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
+  const isEvaluadorOnly =
+    isEvaluadorAdmision(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
   const canFinalizeInscripcion = hasAnyRole(roles, ['ADMIN', 'COORDINADOR'])
   const estadoNormalizado = normalizeEstado(inscripcionEstado)
   const isEstadoFinal = estadoNormalizado === 'ADMITIDO' || estadoNormalizado === 'RECHAZADO'
@@ -336,7 +336,7 @@ const InscripcionAdmisionDetallePage = () => {
   }, [loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, reloadInscripcionDetalle])
 
   useEffect(() => {
-    if (!isProfesorOnly || !basePath) {
+    if (!isEvaluadorOnly || !basePath) {
       return
     }
 
@@ -347,7 +347,7 @@ const InscripcionAdmisionDetallePage = () => {
     if (activeKey !== 'entrevistas') {
       navigate(`${basePath}/entrevistas`, { replace: true })
     }
-  }, [activeKey, basePath, evaluacionStatus, isProfesorOnly, navigate])
+  }, [activeKey, basePath, evaluacionStatus, isEvaluadorOnly, navigate])
 
   useEffect(() => {
     const previousActiveWindow = prevActiveRef.current
@@ -544,7 +544,7 @@ const InscripcionAdmisionDetallePage = () => {
       } satisfies InscripcionDetalleOutletContext}
     />
   )
-  const sectionsToRender = isProfesorOnly
+  const sectionsToRender = isEvaluadorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS
 

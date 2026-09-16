@@ -13,6 +13,7 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     ROLES.ADMIN,
     ROLES.PROFESOR,
     ROLES.DOCENTE,
+    ROLES.DIRECTOR,
   ])
   const canSeeGestionEstudiantes = hasAnyRole(roles, [
     ROLES.COORDINACION,

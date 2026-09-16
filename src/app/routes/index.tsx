@@ -21,7 +21,7 @@ import {
   InscripcionHojaVidaPage,
 } from "../../pages";
 import RequireRoles from "../../routes/RequireRoles/RequireRoles";
-import { hasAnyRole, isProfesor, ROLES } from "../../auth/roleGuards";
+import { hasAnyRole, isEvaluadorAdmision, ROLES } from "../../auth/roleGuards";
 import RequireEvaluacionEnabled from "../../modules/admisiones/routes/RequireEvaluacionEnabled";
 import { creditosRoutes } from "./creditosRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
@@ -31,7 +31,7 @@ import { solicitudesRoutes } from "./solicitudesRoutes";
 export const AppRoutes = () => {
   const { session } = useAuth();
   const sappRoles = session?.kind === "SAPP" ? session.user.roles : [];
-  const isProfesorOnly = isProfesor(sappRoles);
+  const isEvaluadorAdmisionOnly = isEvaluadorAdmision(sappRoles);
   const canManageAdmisiones =
     session?.kind === "SAPP" &&
     hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]);
@@ -52,9 +52,10 @@ export const AppRoutes = () => {
                   ROLES.SECRETARIA,
                   ROLES.PROFESOR,
                   ROLES.DOCENTE,
+                  ROLES.DIRECTOR,
                 ]}
               >
-                {isProfesorOnly && !canManageAdmisiones ? (
+                {isEvaluadorAdmisionOnly && !canManageAdmisiones ? (
                   <AdmisionesProfesorPage />
                 ) : (
                   <AdmisionesHomePage />
@@ -98,6 +99,7 @@ export const AppRoutes = () => {
                   ROLES.ADMIN,
                   ROLES.PROFESOR,
                   ROLES.DOCENTE,
+                  ROLES.DIRECTOR,
                 ]}
               >
                 <InscripcionAdmisionDetallePage />

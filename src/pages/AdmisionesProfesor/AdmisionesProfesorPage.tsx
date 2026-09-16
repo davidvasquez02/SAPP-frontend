@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
+import { hasAnyRole, isEvaluadorAdmision, ROLES } from '../../auth/roleGuards'
 import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import {
@@ -38,8 +38,9 @@ const AdmisionesProfesorPage = () => {
   const navigate = useNavigate()
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
+  const isEvaluadorOnly =
+    isEvaluadorAdmision(roles) &&
+    !hasAnyRole(roles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
 
   const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaApiDto[]>([])
   const [inscripcionesByConvocatoria, setInscripcionesByConvocatoria] = useState<
@@ -69,15 +70,15 @@ const AdmisionesProfesorPage = () => {
   }, [])
 
   useEffect(() => {
-    if (!isProfesorOnly) {
+    if (!isEvaluadorOnly) {
       return
     }
 
     loadConvocatorias()
-  }, [isProfesorOnly, loadConvocatorias])
+  }, [isEvaluadorOnly, loadConvocatorias])
 
   useEffect(() => {
-    if (!isProfesorOnly) {
+    if (!isEvaluadorOnly) {
       return
     }
 
@@ -133,7 +134,7 @@ const AdmisionesProfesorPage = () => {
     return () => {
       isMounted = false
     }
-  }, [activeConvocatorias, isProfesorOnly])
+  }, [activeConvocatorias, isEvaluadorOnly])
 
   const periodosLabel = useMemo(() => {
     const periodos = Array.from(new Set(activeConvocatorias.map((item) => item.periodo).filter(Boolean)))
@@ -266,7 +267,7 @@ const AdmisionesProfesorPage = () => {
     [goToEntrevistas, loadingInscripciones]
   )
 
-  if (!isProfesorOnly) {
+  if (!isEvaluadorOnly) {
     return null
   }
 

@@ -1,3 +1,28 @@
+# Update 2026-09-16 — DIRECTOR como evaluador de Admisiones
+
+## Estado actual y decisión
+- `DIRECTOR` comparte exclusivamente dentro de Admisiones los permisos operativos de `PROFESOR`/`DOCENTE`. El helper `isEvaluadorAdmision` centraliza los tres roles sin ampliar `isProfesor`, porque este último también condiciona módulos como Matrícula y Solicitudes.
+- Una sesión que solo tenga `DIRECTOR` ve **Admisiones** en el menú, accede a `/admisiones` mediante la vista **Mis entrevistas** y puede abrir `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas`.
+- El detalle restringe al director a la sección de entrevistas y la evaluación filtra los ítems por coincidencia normalizada entre `item.evaluador` y el nombre completo de la persona autenticada. Por ello solo puede modificar y enviar su nota/observaciones; los roles administrativos `ADMIN`, `COORDINADOR` o `SECRETARIA` siguen prevaleciendo cuando coexisten en la sesión.
+
+## Paths, contratos y salida esperada
+- Roles: `src/auth/roleGuards.ts`; navegación: `src/app/navigationItems.ts`; protección y selección de vista: `src/app/routes/index.tsx`.
+- Bandeja: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`; detalle: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`; propiedad y edición de notas: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`.
+- No cambiaron endpoints ni payloads. Se conservan las consultas de convocatorias/inscripciones y el guardado de evaluación existente; el backend debe entregar el rol literal `DIRECTOR` y asignar como `evaluador` el nombre completo que corresponde a la persona de la sesión.
+- Salida esperada: el director entra a **Admisiones — Mis entrevistas**, elige un aspirante y encuentra editables solo los componentes de entrevista asignados a su propio nombre. Si no existen componentes coincidentes, ve **No tienes aspectos asignados para esta entrevista**.
+
+## Entorno, retos y próximos pasos
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se añadieron paquetes, variables, schemas, seeds o datasets.
+- Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2. Las versiones exactas restantes están fijadas por `package-lock.json` y detalladas en `README.md`.
+- Pendiente validar en integración con una cuenta real que posea solo `DIRECTOR`: el backend también debe autorizar sus GET/PUT de evaluación y devolver asignaciones cuyo nombre de evaluador coincida con la persona autenticada. Esta modificación cubre la autorización y restricciones de UI, no la seguridad del backend.
+
+## Verificación reciente
+- `npx eslint src/auth/roleGuards.ts src/app/navigationItems.ts src/app/routes/index.tsx src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 255 módulos y generaron `dist/assets/index-Cp9gSOCw.css` e `index-srN2J68x.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 536.81 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes. Ningún hallazgo corresponde a los archivos modificados para habilitar `DIRECTOR`. No existe script `test` en `package.json`.
+- No se generó captura: el ajuste no altera el diseño visual y la ruta protegida requiere backend, sesión institucional y asignaciones reales.
+
+---
 # Update 2026-09-10 — Selector compacto de períodos en Admisiones
 
 ## Estado actual y decisión

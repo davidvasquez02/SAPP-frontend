@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../../../components'
-import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
+import { hasAnyRole, isEvaluadorAdmision } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
 import type { AuthUser } from '../../../../context/Auth/types'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
@@ -74,8 +74,8 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [inscripcionId],
   )
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
+  const isEvaluadorOnly =
+    isEvaluadorAdmision(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
 
   const nombreUsuarioSesion = useMemo(() => {
     if (session?.kind !== 'SAPP') {
@@ -102,12 +102,12 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   )
 
   const shouldIncludeByProfesor = useCallback((item: EvaluacionAdmisionItem) => {
-    if (!isProfesorOnly || !isEntrevista) {
+    if (!isEvaluadorOnly || !isEntrevista) {
       return true
     }
 
     return belongsToCurrentUser(item)
-  }, [belongsToCurrentUser, isEntrevista, isProfesorOnly])
+  }, [belongsToCurrentUser, isEntrevista, isEvaluadorOnly])
 
   const loadEvaluacion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(inscripcionIdNumber)) {
@@ -430,7 +430,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length === 0 && (
         <p className="evaluacion-etapa-page__status">
-          {isProfesorOnly
+          {isEvaluadorOnly
             ? 'No tienes aspectos asignados para esta entrevista.'
             : 'No hay evaluaciones de entrevista.'}
         </p>
