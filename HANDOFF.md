@@ -3254,3 +3254,27 @@ npm run lint
 - `git diff --check` (2026-09-16): PASS. No se pudo tomar captura local porque el contenedor no tiene Chromium, Chrome, Firefox, Playwright ni Puppeteer; además, la ruta requiere sesión institucional y backend.
 
 ---
+# Update 2026-09-16 — Legibilidad de estados documentales en matrícula estudiantil
+
+## Estado actual y decisión
+- En la tabla **Cargue de documentos** de `/matricula`, las insignias **Obligatorio** y **EN_REVISION** tienen ahora mayor contraste y jerarquía: peso `800` para obligatoriedad, relleno más amplio y combinaciones de fondo, texto y borde derivadas de `--primary`. El cambio sigue el patrón del módulo de documentos de admisión y funciona con los temas claro y oscuro.
+- Se retiró por completo la línea técnica `Estado de carga: {uploadStatus}` de cada fila porque duplicaba información interna sin aportar al estudiante. Se mantienen el nombre del archivo cargado o seleccionado, la columna **Estado**, las observaciones y cualquier mensaje de error.
+- No cambiaron lógica de carga, bloqueos, acciones, tipos, endpoints ni contratos HTTP.
+
+## Paths, contratos y salida esperada
+- Renderizado: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`.
+- Presentación: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.css`.
+- El componente sigue recibiendo `DocumentoRequerido[]`; `uploadStatus` continúa determinando si hay archivo y si **Cargar**, **Ver** o **Descargar** están disponibles, aunque ya no se imprime su valor literal.
+- Salida esperada: **Obligatorio** y **EN_REVISION** se distinguen claramente usando el color primario del tema, y debajo del archivo no aparece ningún texto `Estado de carga: UPLOADED` (ni otro estado técnico).
+
+## Entorno, retos y próximos pasos
+- Raíz única: `/workspace/SAPP-frontend`. Reutilizar su `node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. No se añadieron paquetes, variables, schemas, seeds o datasets.
+- Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. Las demás versiones exactas están fijadas en `package-lock.json`.
+- Pendiente validar la ruta protegida con una sesión real de estudiante y documentos en revisión, tanto en modo claro como oscuro. No se generó captura local porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer; la ruta requiere además sesión y datos del backend.
+
+## Verificación reciente
+- `npx eslint src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-77ECpyQ7.css` e `index-Pi6Gxfw2.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.35 kB.
+- No existe script `test` en `package.json`.
+
+---
