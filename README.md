@@ -2,6 +2,8 @@
 
 ## Estado funcional (2026-09-16)
 
+- El detalle de una inscripción de admisión muestra como **Código de inscripción** el campo `numeroInscripcion` entregado por el API; conserva el identificador `INS-{id}` únicamente como compatibilidad cuando el backend no envía el nuevo valor. Los datos de documento, correo y teléfono se presentan sin emojis.
+
 El acceso de coordinación incluye **Gestión profesores** al final del menú. El módulo consulta el contrato paginado vigente de Minerva, presenta nombre, correo institucional, programa y UUID, y permite administrar la pertenencia de docentes a grupos de investigación. El módulo de estudiantes de coordinación presenta estudiantes activos/inactivos y, bajo demanda, egresados por programa. Ambos listados recuperan la fotografía documental `ANX-4` a partir de la inscripción de admisión, sin bloquear el resto de tarjetas cuando una foto individual falla. Desde el detalle de un estudiante, coordinación también puede solicitar en una sola descarga ZIP toda su información documental; el botón permanece ocupado mientras el backend construye el archivo y la descarga comienza automáticamente al recibirlo. El formulario de solicitudes académicas también soporta la homologación de una o más parejas de materias. En el detalle de matrícula de coordinación, las acciones documentales están organizadas por propósito en columnas independientes de visualización y validación.
 
 ### Stack instalado y ejecución rápida
@@ -21,6 +23,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-16:** el detalle de inscripción de admisión usa `numeroInscripcion` del API como **Código de inscripción**, con `INS-{id}` como fallback compatible. Las etiquetas Documento, Correo y Teléfono se muestran sin emojis.
 - **2026-09-16:** el detalle de estudiantes de coordinación incorpora **Descargar información**. La acción consume `GET /sapp/estudiantes/{estudianteId}/documentos/zip` como respuesta binaria, muestra un indicador **Preparando descarga...** hasta completar la generación y dispara automáticamente el ZIP. Prioriza el nombre UTF-8 de `Content-Disposition` y usa `{codigoUIS}-documentos.zip` como respaldo; los errores se muestran en la misma cabecera sin navegar fuera del detalle.
 - **2026-09-16:** `/perfil` presenta la identidad una sola vez en una cabecera visual propia: el encabezado compartido conserva únicamente el título y las marcas institucionales en esta ruta. La fotografía del estudiante acepta tanto Base64 puro como un `data:image/...` completo, respeta el MIME entregado por `/inicio`, recorta con proporción circular y usa la inicial del nombre si no existe o no puede decodificarse; el resto de módulos conserva su resumen de usuario habitual.
 - **2026-09-16:** el perfil de coordinación deja de mostrar tipo/número de documento y el campo provisional de último ingreso. **Programa a cargo** ya no depende del valor de la sesión: presenta de forma fija la Maestría en Ingeniería de Sistemas e Informática y `347:DOCTORADO EN CIENCIAS DE LA COMPUTACION`; los perfiles sin rol de coordinación conservan sus datos documentales.
