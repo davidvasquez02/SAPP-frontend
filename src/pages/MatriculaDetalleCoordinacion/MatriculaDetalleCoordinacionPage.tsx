@@ -33,6 +33,30 @@ type AsignaturaDecisionState = {
   observaciones: string
 }
 
+type DocumentoDecision = 'APROBADO' | 'RECHAZADO'
+
+const applyDocumentoDecision = (
+  documentos: DocumentoTramiteItemDto[],
+  documentoId: number,
+  estadoDocumento: DocumentoDecision,
+  observacionesDocumento: string | null,
+) =>
+  documentos.map((documento) => {
+    const uploaded = documento.documentoUploadedResponse
+    if (uploaded?.idDocumento !== documentoId) {
+      return documento
+    }
+
+    return {
+      ...documento,
+      documentoUploadedResponse: {
+        ...uploaded,
+        estadoDocumento,
+        observacionesDocumento,
+      },
+    }
+  })
+
 const formatDateTime = (value: string | null) => {
   if (!value) {
     return '—'
@@ -299,6 +323,27 @@ const MatriculaDetalleCoordinacionPage = () => {
     [getEstadoDocumento, parsedMatriculaId],
   )
 
+  const refreshDocumentsAfterDecision = useCallback(
+    async (
+      documentoId: number,
+      estadoDocumento: DocumentoDecision,
+      observacionesDocumento: string | null,
+    ) => {
+      const reloadedDocuments = await loadDocumentos()
+      // The document decision request already succeeded. Apply it locally as well so an
+      // eventually-consistent checklist response cannot hide the last completed review.
+      const updatedDocuments = applyDocumentoDecision(
+        reloadedDocuments,
+        documentoId,
+        estadoDocumento,
+        observacionesDocumento,
+      )
+      setDocumentos(updatedDocuments)
+      await notifyIfAllDocumentsReviewed(updatedDocuments)
+    },
+    [loadDocumentos, notifyIfAllDocumentsReviewed],
+  )
+
   const handleApproveDoc = async (id: number, disabled: boolean) => {
     if (disabled) {
       return
@@ -311,8 +356,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         aprobado: true,
         observaciones: null,
       })
-      const updatedDocuments = await loadDocumentos()
-      await notifyIfAllDocumentsReviewed(updatedDocuments)
+      await refreshDocumentsAfterDecision(id, 'APROBADO', null)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
@@ -358,8 +402,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
-      const updatedDocuments = await loadDocumentos()
-      await notifyIfAllDocumentsReviewed(updatedDocuments)
+      await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {

@@ -3278,3 +3278,26 @@ npm run lint
 - No existe script `test` en `package.json`.
 
 ---
+
+# Update 2026-09-16 — Notificación fiable al terminar la revisión documental de matrícula
+
+## Estado actual y decisión
+- En el detalle de matrícula de coordinación, una aprobación o rechazo exitoso se incorpora al checklist recargado antes de evaluar si terminó la revisión. Esto evita que una lectura inmediatamente posterior, todavía desactualizada, impida reconocer la decisión sobre el último documento.
+- Cuando todos los documentos **obligatorios** cargados están en `APROBADO` o `RECHAZADO`, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` sin body. Los documentos opcionales se excluyen deliberadamente, incluso si están pendientes.
+- La protección `notifiedDocumentsMatriculaIdRef` conserva un solo envío exitoso por matrícula durante el montaje. El flujo independiente que avanza automáticamente la matrícula cuando todos los obligatorios están aprobados se mantiene.
+
+## Paths, contratos y salida esperada
+- Orquestación y reconciliación local: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` (`applyDocumentoDecision` y `refreshDocumentsAfterDecision`).
+- Transporte: `src/modules/matricula/services/matriculaAcademicaService.ts` (`notificarDocumentosCompletosMatricula`).
+- Entrada de decisión existente: `PUT /sapp/document` con `{ documentoId, aprobado, observaciones }`. Salida de finalización: `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, autenticado, sin body; admite envelope `ApiResponse<unknown>` o HTTP 204.
+- Resultado esperado: al confirmar el último obligatorio, aprobado o rechazado, Network muestra el POST de notificación aunque el GET de documentos inmediatamente posterior aún refleje el estado anterior. No hay cambios de schema, dependencias, variables, seeds ni datasets.
+
+## Entorno, retos y verificación
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Entorno observado: Node.js 24.15.0 y npm 11.4.2; versiones exactas del frontend en `README.md` y `package-lock.json`.
+- Pendiente validar con una sesión institucional una matrícula cuyo último obligatorio se apruebe y otra cuyo último obligatorio se rechace. Confirmar además la idempotencia del endpoint entre recargas/sesiones; la protección del frontend solo cubre el montaje actual.
+- El repositorio no define script `test`.
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-77ECpyQ7.css` e `index-CrnH0L8m.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.62 kB.
+- `git diff --check` (2026-09-16): PASS.
+
+---
