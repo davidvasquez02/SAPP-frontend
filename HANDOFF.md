@@ -1,3 +1,29 @@
+# Update 2026-09-16 — Orden y presentación de materias en matrícula estudiantil
+
+## Estado actual y decisión
+- En el selector de materias de `/matricula`, las asignaturas cuyo `nivel` es numérico aparecen antes que aquellas cuyo `nivel` es `null`. El orden relativo recibido del API se conserva dentro de ambos grupos mediante el ordenamiento estable de JavaScript.
+- Un nivel nulo se presenta como **Electiva**, nunca como `Nivel null`. La misma etiqueta se usa en la tabla después de seleccionar la materia.
+- Cada opción del desplegable dispone el nombre y la línea `código · nivel/Electiva` en vertical y alineados a la izquierda. Los estilos usan los tokens temáticos existentes y funcionan en modo claro/oscuro.
+
+## Paths, contrato y salida esperada
+- Selector y orden: `src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx`; presentación: `MateriasSelector.css`; tabla seleccionada: `src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx`.
+- Contrato tipado: `MateriaDto.nivel` y `AsignaturaApiDto.nivel` son `number | null` en `src/modules/matricula/types.ts` y `src/modules/matricula/services/matriculaAcademicaService.ts`.
+- Entrada conservada: `GET /sapp/asignaturas?programaId={programaId}`. No cambian endpoint, envelope, payload de creación, dependencias, variables de entorno, seeds ni datasets.
+- Salida esperada: materias con nivel primero; electivas después; cada opción totalmente alineada a la izquierda. La búsqueda y la exclusión de materias ya elegidas continúan aplicándose antes del ordenamiento.
+
+## Retos, próximos pasos y entorno
+1. Validar visualmente con una sesión real `ESTUDIANTE`, un catálogo mixto y ambos temas; la ruta protegida depende del backend institucional.
+2. Si producto requiere un orden secundario por número de nivel o nombre, acordarlo antes de modificarlo: actualmente se conserva deliberadamente el orden del API dentro de materias regulares y electivas.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación reciente
+- `npx eslint src/modules/matricula/types.ts src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-WwBwsYZB.css` e `index-BJQm_THy.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.47 kB.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el lint focalizado de todos los archivos TypeScript modificados sí pasa.
+- `git diff --check` (2026-09-16): PASS. No existe script `test` en `package.json`.
+- No se generó captura: no hay Chromium, Chrome ni Firefox disponible en el contenedor, y la ruta protegida requiere sesión y datos del backend institucional.
+
+---
 # Update 2026-09-16 — Una consulta de entrevista para evaluadores de Admisiones
 
 ## Estado actual y decisión

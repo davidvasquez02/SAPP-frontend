@@ -10,7 +10,7 @@ export type MateriaDto = {
   id: number
   nombre: string
   codigo: string | null
-  nivel: number
+  nivel: number | null
   programaId?: number
 }
 

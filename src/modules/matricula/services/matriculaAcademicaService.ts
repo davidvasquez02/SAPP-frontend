@@ -22,7 +22,7 @@ type AsignaturaApiDto = {
   nombre: string
   codigoUis: string | null
   codigoExterno: string | null
-  nivel: number
+  nivel: number | null
   programaId: number
 }
 

@@ -41,10 +41,17 @@
   padding: 0.55rem 0.65rem;
   cursor: pointer;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   color: var(--text-primary);
+  text-align: left;
+}
+
+.materias-selector__option > span,
+.materias-selector__option > small {
+  width: 100%;
+  text-align: left;
 }
 
 .materias-selector__option small {
