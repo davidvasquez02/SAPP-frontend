@@ -1,6 +1,6 @@
 # Minerva Frontend — EISI UIS
 
-## Estado funcional (2026-09-10)
+## Estado funcional (2026-09-16)
 
 El módulo de estudiantes de coordinación presenta estudiantes activos/inactivos y, bajo demanda, egresados por programa. Ambos listados recuperan la fotografía documental `ANX-4` a partir de la inscripción de admisión, sin bloquear el resto de tarjetas cuando una foto individual falla. El formulario de solicitudes académicas también soporta la homologación de una o más parejas de materias. En el detalle de matrícula de coordinación, las acciones documentales están organizadas por propósito en columnas independientes de visualización y validación.
 
@@ -21,6 +21,7 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 ### Decisiones recientes (changelog-lite)
 
+- **2026-09-16:** el rol `DIRECTOR` tiene en Admisiones el mismo acceso operativo que `PROFESOR` y `DOCENTE`: ve el acceso lateral, entra a **Mis entrevistas**, abre el detalle de cada aspirante y puede registrar únicamente las notas y observaciones del grupo evaluador asociado a su nombre de sesión. El permiso se encapsuló en `isEvaluadorAdmision` para no convertir al director en profesor en módulos ajenos a Admisiones; si además posee un rol administrativo de Admisiones, prevalece la vista administrativa.
 - **2026-09-10:** en el detalle de entrevistas de una inscripción se muestran las calificaciones agrupadas de todos los evaluadores, pero los campos de nota y observaciones solo se habilitan en el grupo cuyo nombre de evaluador coincide con el nombre completo de la sesión SAPP. Esto aplica también a coordinación: los grupos de otros usuarios permanecen visibles en modo consulta y el guardado descarta defensivamente cualquier fila que no pertenezca al usuario autenticado.
 - **2026-09-10:** los combos **Convocatorias anteriores** de `/admisiones` dejaron de depender del desplegable nativo, que podía ocupar casi toda la pantalla cuando había muchos períodos. Ahora usan un selector accesible y temático cuya lista flota sobre la tarjeta, tiene una altura máxima de `12rem` y activa desplazamiento vertical para el resto de períodos; se cierra al seleccionar, al hacer clic fuera o al presionar `Escape`, sin cambiar la navegación ni los datos de las convocatorias.
 - **2026-09-10:** **Informes a dependencias** conserva ahora el `data` estructurado de las respuestas HTTP fallidas. Cuando cualquiera de los informes responde con requisitos pendientes, la pantalla mantiene el mensaje del servidor y agrega un resumen desplegable por aspirante con documento, inscripción y lista de documentos faltantes; también presenta las categorías institucionales pendientes cuando existan. El parser valida defensivamente el contrato `{ data: { faltantes: { categoriasInstitucionalesFaltantes, aspirantesConDocumentosFaltantes } } }` y los errores sin ese detalle conservan el feedback simple anterior.
