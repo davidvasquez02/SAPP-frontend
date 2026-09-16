@@ -1,3 +1,28 @@
+# Update 2026-09-16 — Borrador de Gestión profesores
+
+## Estado actual y decisiones
+- Se incorporó **Gestión profesores** al menú y a la ruta protegida `/coordinacion/profesores`, disponible exclusivamente para `COORDINACION` y `ADMIN`.
+- La pestaña **Docentes en Minerva** consume el catálogo real, permite buscar por nombre y muestra `id`, `nombre` y `uuid`. **Inscribir docente** se presenta deshabilitado porque todavía no se suministró un endpoint ni payload de creación; no debe conectarse a una operación inventada.
+- La pestaña **Grupos de investigación** carga el catálogo de grupos y los docentes asociados al grupo seleccionado, permite asociar uno de los docentes mediante su UUID y retirarlo tras confirmación. El selector excluye docentes ya asignados cuando el contrato de integrantes informa `uuid` o `docenteUuid`.
+
+## Paths, contratos y salida esperada
+- Vista y estilos: `src/pages/GestionProfesores/GestionProfesoresPage.{tsx,css}`; barrel: `src/pages/GestionProfesores/index.ts` y `src/pages/index.ts`; ruta: `src/app/routes/index.tsx`; menú/icono: `src/app/navigationItems.ts` y `src/components/Sidebar/SidebarModuleIcon.tsx`.
+- Servicio: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`. Con `VITE_API_URL=/api/sapp`, la normalización convierte los paths `/sapp/...` en `/api/sapp/...` sin duplicar el segmento.
+- Contratos usados: `GET /sapp/docentes` → `ApiResponse<Array<{ id: number, nombre: string, uuid: string }>>`; `GET /sapp/gruposInvestigacion` → `ApiResponse<Array<{ id: number, codigoNombre: string }>>`; `GET /sapp/gruposInvestigacionDocentes?grupoId={id}` → integrantes; `POST /sapp/gruposInvestigacionDocentes` con `{ grupoId: number, docenteUuid: string }`; `DELETE /sapp/gruposInvestigacionDocentes?grupoId={id}&docenteId={id}`.
+- El borrador tolera en cada integrante `docenteId` o, como respaldo, `id` para el parámetro de borrado. Confirmar con backend si el `id` retornado representa al docente o a la asociación antes de validar producción.
+
+## Retos y próximos pasos
+1. Obtener el contrato de creación de docentes para habilitar **Inscribir docente** y definir validaciones del formulario.
+2. Confirmar ejemplos reales de respuesta de grupos e integrantes, en particular el nombre visible del grupo, el UUID del integrante y la semántica de `id`/`docenteId`.
+3. Validar alta y baja con sesión institucional, además de temas claro/oscuro y viewport móvil. La captura queda pendiente: la ruta protegida necesita backend/sesión y el contenedor no incluye navegador compatible.
+
+## Entorno y verificación reciente
+- Reutilizar únicamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se añadieron dependencias, variables, seeds o datasets. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/app/navigationItems.ts src/app/routes/index.tsx src/components/Sidebar/SidebarModuleIcon.tsx src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint`: PASS; no se reportaron errores ni advertencias de ESLint.
+- `npm run build`: PASS; 259 módulos transformados y artefactos `dist/assets/index-Bf5vqx-I.css` e `index-KKfbsN5N.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 544.55 kB. `git diff --check`: PASS. No existe script `test`.
+
+---
 # Update 2026-09-16 — DIRECTOR como evaluador de Admisiones
 
 ## Estado actual y decisión

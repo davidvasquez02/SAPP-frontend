@@ -1,0 +1,27 @@
+.gestion-profesores { display: flex; flex-direction: column; gap: 1.25rem; }
+.gestion-profesores__hero, .gestion-profesores__card { padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 20px; background: var(--surface-container-low); box-shadow: var(--shadow-xs); }
+.gestion-profesores__hero, .gestion-profesores__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.gestion-profesores h1, .gestion-profesores h2, .gestion-profesores p { margin: 0; }
+.gestion-profesores__hero p, .gestion-profesores__heading p { margin-top: .35rem; color: var(--text-secondary); }
+.gestion-profesores__hero button, .gestion-profesores__form button { border: 0; padding: .65rem 1.15rem; background: var(--primary); color: var(--on-primary); font-weight: 700; white-space: nowrap; cursor: pointer; }
+.gestion-profesores button:disabled { opacity: .55; cursor: not-allowed; }
+.gestion-profesores__tabs { display: flex; gap: .5rem; padding: .35rem; align-self: flex-start; border: 1px solid var(--outline); border-radius: 999px; background: var(--surface); }
+.gestion-profesores__tabs button { min-height: 2.25rem; padding: .35rem 1rem; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.gestion-profesores__tabs button[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.gestion-profesores__card { display: flex; flex-direction: column; gap: 1rem; }
+.gestion-profesores__heading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; }
+.gestion-profesores__search { display: flex; flex-direction: column; gap: .35rem; max-width: 26rem; color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto; align-items: end; gap: 1rem; }
+.gestion-profesores__form label { display: flex; flex-direction: column; gap: .35rem; color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__table-wrap { overflow-x: auto; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface); }
+.gestion-profesores table { width: 100%; border-collapse: collapse; }
+.gestion-profesores th, .gestion-profesores td { padding: .8rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%); text-align: left; }
+.gestion-profesores th { color: var(--text-secondary); font-size: var(--font-size-small); }
+.gestion-profesores tbody tr:last-child td { border-bottom: 0; }
+.gestion-profesores code { color: var(--text-secondary); font-size: .85rem; }
+.gestion-profesores__delete { border: 1px solid var(--danger); padding: .35rem .8rem; background: transparent; color: var(--danger); cursor: pointer; }
+.gestion-profesores__message, .gestion-profesores__empty { padding: .8rem 1rem; border-radius: 12px; }
+.gestion-profesores__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
+.gestion-profesores__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
+.gestion-profesores__empty { text-align: center; color: var(--text-secondary); }
+@media (max-width: 800px) { .gestion-profesores__hero, .gestion-profesores__heading { flex-direction: column; } .gestion-profesores__form { grid-template-columns: 1fr; } .gestion-profesores__tabs { width: 100%; overflow-x: auto; } }

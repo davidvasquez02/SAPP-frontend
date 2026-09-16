@@ -34,6 +34,12 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
       icon: '👥',
       visible: canSeeGestionEstudiantes,
     },
+    {
+      to: '/coordinacion/profesores',
+      label: 'Gestión profesores',
+      icon: '🧑‍🏫',
+      visible: canSeeGestionCoordinacion,
+    },
     { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
     {
       to: '/coordinacion/reportes',
