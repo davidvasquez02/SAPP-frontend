@@ -1,6 +1,21 @@
-import { httpGet } from '../shared/http/httpClient'
+import { httpDelete, httpGet, httpPost } from '../shared/http/httpClient'
 import type { ApiResponse } from './types'
-import type { GrupoInvestigacionDocenteDto, GrupoInvestigacionDto } from './gruposInvestigacionTypes'
+import type {
+  DocenteDto,
+  GrupoInvestigacionDocenteDto,
+  GrupoInvestigacionDto,
+  RegistrarDocenteGrupoRequest,
+} from './gruposInvestigacionTypes'
+
+export const getDocentes = async (): Promise<DocenteDto[]> => {
+  const response = await httpGet<ApiResponse<DocenteDto[]>>('/sapp/docentes')
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible consultar los docentes.')
+  }
+
+  return response.data ?? []
+}
 
 export const getGruposInvestigacion = async (): Promise<GrupoInvestigacionDto[]> => {
   const response = await httpGet<ApiResponse<GrupoInvestigacionDto[]>>('/sapp/gruposInvestigacion')
@@ -14,12 +29,8 @@ export const getGruposInvestigacion = async (): Promise<GrupoInvestigacionDto[]>
 
 export const getDocentesGrupoInvestigacion = async (
   grupoId: number,
-  query = '',
 ): Promise<GrupoInvestigacionDocenteDto[]> => {
-  const qs = new URLSearchParams({
-    grupoId: String(grupoId),
-    query,
-  })
+  const qs = new URLSearchParams({ grupoId: String(grupoId) })
   const response = await httpGet<ApiResponse<GrupoInvestigacionDocenteDto[]>>(
     `/sapp/gruposInvestigacionDocentes?${qs.toString()}`,
   )
@@ -29,4 +40,28 @@ export const getDocentesGrupoInvestigacion = async (
   }
 
   return response.data ?? []
+}
+
+export const registrarDocenteGrupoInvestigacion = async (
+  payload: RegistrarDocenteGrupoRequest,
+): Promise<void> => {
+  const response = await httpPost<ApiResponse<unknown>>('/sapp/gruposInvestigacionDocentes', payload)
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible registrar el docente en el grupo.')
+  }
+}
+
+export const eliminarDocenteGrupoInvestigacion = async (
+  grupoId: number,
+  docenteId: number,
+): Promise<void> => {
+  const qs = new URLSearchParams({ grupoId: String(grupoId), docenteId: String(docenteId) })
+  const response = await httpDelete<ApiResponse<unknown>>(
+    `/sapp/gruposInvestigacionDocentes?${qs.toString()}`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible retirar el docente del grupo.')
+  }
 }
