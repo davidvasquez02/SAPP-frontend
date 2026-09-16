@@ -1037,7 +1037,6 @@ const MatriculaPage = () => {
               {!loadingForm && !errorForm ? (
                 <DocumentosRequeridosTable
                   documentos={documentos}
-                  disabledActions={!hasExistingMatricula}
                   showActions
                   uploadDisabledOnly={isReadOnlyMatriculaFinalizada}
                   onAction={(docId, action) => {

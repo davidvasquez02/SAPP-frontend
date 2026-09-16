@@ -54,11 +54,13 @@ const DocumentosRequeridosTable = ({
         </thead>
         <tbody>
           {documentos.map((doc) => {
+            const hasUploadedFile = doc.uploadStatus === 'UPLOADED'
             const uploadBlocked =
               disabledActions ||
               uploadDisabledOnly ||
               doc.uploadStatus === 'UPLOADING' ||
-              doc.estado === 'APROBADO'
+              doc.estado === 'APROBADO' ||
+              (hasUploadedFile && doc.estado !== 'RECHAZADO')
 
             return (
             <tr key={doc.id}>
@@ -92,9 +94,6 @@ const DocumentosRequeridosTable = ({
               {showActions ? (
                 <td>
                   <div className="documentos-requeridos-table__actions">
-                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
-                      Ver
-                    </button>
                     <button
                       type="button"
                       disabled={uploadBlocked}
@@ -103,11 +102,18 @@ const DocumentosRequeridosTable = ({
                         fileInputRefs.current[doc.id]?.click()
                       }}
                     >
-                      Subir
+                      Cargar
                     </button>
-                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
-                      Descargar
-                    </button>
+                    {hasUploadedFile ? (
+                      <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
+                        Ver
+                      </button>
+                    ) : null}
+                    {hasUploadedFile ? (
+                      <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
+                        Descargar
+                      </button>
+                    ) : null}
                     <input
                       ref={(element) => {
                         fileInputRefs.current[doc.id] = element

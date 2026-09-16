@@ -3232,3 +3232,25 @@ npm run lint
 - `git diff --check` (2026-09-10): PASS. No se tomó captura: no hay Chromium, Chrome ni Firefox instalado y la ruta requiere una sesión institucional con datos reales del backend.
 
 ---
+
+# Update 2026-09-16 — Carga documental durante la creación de matrícula
+
+## Estado actual y decisiones
+- En `/matricula`, una sesión `ESTUDIANTE` puede seleccionar cada archivo desde el checklist aun cuando la validación responda `CAN_CREATE` y todavía no exista `matricula.id`. Al confirmar, el flujo existente crea la matrícula, vuelve a consultar el registro vigente y carga los archivos seleccionados usando el ID obtenido.
+- Las acciones por documento aparecen en el orden **Cargar**, **Ver**, **Descargar**. **Ver** y **Descargar** no se renderizan mientras `uploadStatus` sea distinto de `UPLOADED`, evitando acciones sin archivo.
+- En una matrícula existente, **Cargar** se habilita para documentos faltantes y para documentos `RECHAZADO` que requieren corrección. Se deshabilita para archivos ya cargados que están en revisión, documentos `APROBADO`, cargas en curso y cualquier matrícula `FINALIZADA`.
+
+## Paths, contratos y salida esperada
+- Tabla y reglas por documento: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`.
+- Integración del estado del trámite: `src/pages/Matricula/MatriculaPage.tsx`.
+- El contrato HTTP no cambió: `POST /sapp/matriculaAcademica` crea primero el trámite y la carga documental existente recibe después `tramiteId: matricula.id`. No hay schemas, dependencias, variables, seeds ni datasets nuevos.
+- Salida esperada en creación: **Cargar** activo y sin **Ver/Descargar** antes de seleccionar/cargar. Salida esperada después de cargar: las tres acciones visibles, pero **Cargar** bloqueado durante revisión o aprobación y nuevamente habilitado ante rechazo.
+
+## Entorno, retos y próximos pasos
+- Usar exclusivamente `/workspace/SAPP-frontend` y reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2; versiones exactas en `README.md` y `package-lock.json`.
+- Validar con backend y sesión institucional la secuencia `CAN_CREATE → EXISTS → upload`, un documento rechazado y uno aprobado. No existe script `test` en `package.json`.
+- `npx eslint src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/pages/Matricula/MatriculaPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-WwBwsYZB.css` e `index-BWVDWyce.js`. Persiste el warning informativo por el chunk JavaScript de 545.52 kB.
+- `git diff --check` (2026-09-16): PASS. No se pudo tomar captura local porque el contenedor no tiene Chromium, Chrome, Firefox, Playwright ni Puppeteer; además, la ruta requiere sesión institucional y backend.
+
+---
