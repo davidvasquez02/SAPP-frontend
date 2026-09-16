@@ -18,19 +18,21 @@ const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: Mater
 
   const filteredMaterias = useMemo(() => {
     const term = query.trim().toLowerCase()
-    return materias.filter((materia) => {
-      const alreadySelected = selectedIds.has(materia.id)
-      if (alreadySelected) {
-        return false
-      }
+    return materias
+      .filter((materia) => {
+        const alreadySelected = selectedIds.has(materia.id)
+        if (alreadySelected) {
+          return false
+        }
 
-      if (!term) {
-        return true
-      }
+        if (!term) {
+          return true
+        }
 
-      const codigo = materia.codigo?.toLowerCase() ?? ''
-      return materia.nombre.toLowerCase().includes(term) || codigo.includes(term)
-    })
+        const codigo = materia.codigo?.toLowerCase() ?? ''
+        return materia.nombre.toLowerCase().includes(term) || codigo.includes(term)
+      })
+      .sort((first, second) => Number(first.nivel == null) - Number(second.nivel == null))
   }, [materias, query, selectedIds])
 
   useEffect(() => {
@@ -76,7 +78,9 @@ const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: Mater
                   }}
                 >
                   <span>{materia.nombre}</span>
-                  <small>{`${materia.codigo ?? 'Sin código'} · Nivel ${materia.nivel}`}</small>
+                  <small>
+                    {materia.codigo ?? 'Sin código'} · {materia.nivel == null ? 'Electiva' : `Nivel ${materia.nivel}`}
+                  </small>
                 </button>
               </li>
             ))

@@ -36,7 +36,7 @@ const MateriasSelectedTable = ({
             <tr key={materia.id}>
               <td>{materia.nombre}</td>
               <td>{materia.codigo ?? 'Sin código'}</td>
-              <td>{materia.nivel}</td>
+              <td>{materia.nivel == null ? 'Electiva' : materia.nivel}</td>
               {!readOnlyView && !hideActionColumn ? (
                 <td>
                   <button type="button" className="materias-selected-table__remove" disabled={disabled} onClick={() => onRemove(materia.id)}>
