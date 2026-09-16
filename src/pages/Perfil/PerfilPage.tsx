@@ -13,7 +13,7 @@ import './PerfilPage.css'
 const MAX_SIGNATURE_SIZE = 2 * 1024 * 1024
 const COORDINATION_PROGRAMS = [
   'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
-  '347:DOCTORADO EN CIENCIAS DE LA COMPUTACION',
+  'DOCTORADO EN CIENCIAS DE LA COMPUTACION',
 ] as const
 
 const readFile = (file: File): Promise<FirmaPerfil> =>
