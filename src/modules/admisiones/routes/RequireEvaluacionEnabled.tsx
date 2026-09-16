@@ -14,7 +14,8 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
   const { convocatoriaId, inscripcionId } = useParams()
   const navigate = useNavigate()
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null)
-  const { evaluacionStatus } = useOutletContext<InscripcionDetalleOutletContext>()
+  const { evaluacionStatus, isEvaluadorOnly } =
+    useOutletContext<InscripcionDetalleOutletContext>()
 
   useEffect(() => {
     let isMounted = true
@@ -47,6 +48,15 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
       }
     }
 
+    // El detalle de DOCENTE/PROFESOR/DIRECTOR resuelve el acceso con la misma
+    // consulta de ENTREVISTA que llena la pantalla. Mientras esa única consulta
+    // termina, no se debe disparar adicionalmente el endpoint general.
+    if (isEvaluadorOnly) {
+      return () => {
+        isMounted = false
+      }
+    }
+
     getEvaluacionEstado(parsedInscripcionId)
       .then((estado) => {
         if (!isMounted) {
@@ -71,7 +81,7 @@ const RequireEvaluacionEnabled = ({ etapa, children }: RequireEvaluacionEnabledP
     return () => {
       isMounted = false
     }
-  }, [convocatoriaId, etapa, evaluacionStatus, inscripcionId, navigate])
+  }, [convocatoriaId, etapa, evaluacionStatus, inscripcionId, isEvaluadorOnly, navigate])
 
   if (isAllowed === null) {
     return <div>Cargando...</div>
