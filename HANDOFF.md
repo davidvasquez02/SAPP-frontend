@@ -23,6 +23,24 @@
 - No se generó captura: el contenedor no incluye Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida necesita backend, sesión institucional y un estudiante real para representar la generación del ZIP.
 
 ---
+# Update 2026-09-16 — Código real y datos de contacto en el detalle de inscripción
+
+## Estado actual y decisión
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId`, **Código de inscripción** prioriza `numeroInscripcion` de la respuesta del backend. El fallback `INS-{id}` se conserva para respuestas antiguas que no incluyan el nuevo campo.
+- Las filas Documento, Correo y Teléfono mantienen sus etiquetas y valores, pero ya no muestran emojis.
+
+## Paths, contrato y salida esperada
+- DTO: `src/modules/admisiones/api/types.ts`; render y fallback: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`.
+- Entrada: el elemento de `data` del detalle de inscripción puede incluir `numeroInscripcion: number | string | null`. Para `{ id: 83, numeroInscripcion: 1104843491 }`, la pantalla debe mostrar `1104843491`, no `INS-83`.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry ni otro árbol npm.
+
+## Pendiente
+- Validar la ruta protegida con una sesión institucional y una respuesta real del backend. El repositorio no dispone de datos locales para reproducir esa vista de forma autónoma.
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/api/types.ts` (2026-09-16): PASS; npm mostró solamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; se transformaron 259 módulos y se generaron `dist/assets/index-V1VYF5Kd.css` e `index-BEf7u2_z.js`. Persiste el warning informativo por el chunk JavaScript mayor a 500 kB. `git diff --check`: PASS.
+- No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH`, y la ruta requiere sesión institucional y datos del backend.
+
+---
 # Update 2026-09-16 — Identidad única y fotografía robusta en el perfil
 
 ## Estado actual y decisión

@@ -199,7 +199,13 @@ const InscripcionAdmisionDetallePage = () => {
   const documentoAspirante = inscripcionDetalle?.numeroDocumento ?? inscripcionDetalle?.cedula ?? '—'
   const correoAspirante = inscripcionDetalle?.emailPersonal ?? inscripcionDetalle?.correo ?? '—'
   const telefonoAspirante = inscripcionDetalle?.telefono ?? '—'
-  const codigoInscripcion = inscripcionDetalle?.id ? `INS-${inscripcionDetalle.id}` : inscripcionId ? `INS-${inscripcionId}` : '—'
+  const codigoInscripcion =
+    inscripcionDetalle?.numeroInscripcion ??
+    (inscripcionDetalle?.id
+      ? `INS-${inscripcionDetalle.id}`
+      : inscripcionId
+        ? `INS-${inscripcionId}`
+        : '—')
   const periodoAcademico = inscripcionDetalle?.periodoAcademico ?? '—'
   const fechaInscripcion = formatDisplayDate(inscripcionDetalle?.fechaInscripcion)
   const ultimaActualizacion = formatDisplayDate(inscripcionDetalle?.fechaResultado, {
@@ -621,9 +627,9 @@ const InscripcionAdmisionDetallePage = () => {
               ) : null}
             </div>
             <div className="inscripcion-detalle__contact-grid">
-              <span>🪪 Documento: <strong>{documentoAspirante}</strong></span>
-              <span>✉️ Correo: <strong>{correoAspirante}</strong></span>
-              <span>☎️ Teléfono: <strong>{telefonoAspirante}</strong></span>
+              <span>Documento: <strong>{documentoAspirante}</strong></span>
+              <span>Correo: <strong>{correoAspirante}</strong></span>
+              <span>Teléfono: <strong>{telefonoAspirante}</strong></span>
             </div>
           </div>
 
