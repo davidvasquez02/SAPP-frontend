@@ -1,3 +1,28 @@
+# Update 2026-09-16 — Descarga ZIP integral del estudiante
+
+## Estado actual y decisión
+- El detalle `/coordinacion/estudiantes/:estudianteId` muestra **Descargar información** junto a las acciones académicas. Al pulsarlo, el control queda deshabilitado, presenta un spinner y el texto **Preparando descarga...** durante toda la generación remota, y dispara la descarga automáticamente cuando llega el archivo.
+- La operación es independiente de la carga de los documentos por pestañas y de los cambios de estado. Un fallo restaura el botón y se informa como alerta en la cabecera; los clics repetidos quedan bloqueados mientras existe una solicitud activa.
+- El nombre se toma primero de `Content-Disposition` (incluido `filename*=UTF-8''...`) y cae a `{codigoUIS}-documentos.zip`. El `Blob` se descarga mediante una URL temporal que se revoca después del clic.
+
+## Paths, contrato y salida esperada
+- Servicio: `src/modules/estudiantes/services/estudiantesMockService.ts`; vista/orquestación: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; estilos temáticos y spinner: CSS homónimo. Se reutiliza el transporte binario `httpFile` de `src/shared/http/httpClient.ts`.
+- Contrato: `GET /sapp/estudiantes/{estudianteId}/documentos/zip` sin body → contenido binario `application/zip`; encabezado esperado `Content-Disposition: attachment; filename="...zip"; filename*=UTF-8''...zip`. No parsear como JSON ni como Base64.
+- Salida esperada: un único ZIP descargado automáticamente, con el nombre provisto por backend y la estructura documental interna que este genere. El frontend no inspecciona ni modifica sus carpetas o archivos.
+
+## Retos y próximos pasos
+1. Validar en integración con un estudiante que tenga un ZIP grande, el nombre con tildes/espacios y una sesión real de coordinación; confirmar además que CORS exponga `Content-Disposition` si frontend y API usan orígenes distintos.
+2. Validar respuesta 404/409/500 y expiración de sesión, además de los temas claro/oscuro y viewport móvil.
+3. La descarga espera el `Blob` completo porque Fetch no expone progreso portable de construcción del ZIP; el loader indica trabajo indeterminado, no porcentaje.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se agregaron paquetes, variables, seeds ni datasets.
+- `npx eslint src/modules/estudiantes/services/estudiantesMockService.ts src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-V1VYF5Kd.css` e `index-CwvfwWV8.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 547.43 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; los dos archivos TypeScript intervenidos pasan el lint focalizado. No existe script `test`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida necesita backend, sesión institucional y un estudiante real para representar la generación del ZIP.
+
+---
 # Update 2026-09-16 — Identidad única y fotografía robusta en el perfil
 
 ## Estado actual y decisión

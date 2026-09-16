@@ -1,5 +1,5 @@
 import type { ApiResponse } from '../../../api/types'
-import { httpGet, httpPut } from '../../../shared/http/httpClient'
+import { httpFile, httpGet, httpPut, type HttpFileResponse } from '../../../shared/http/httpClient'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
 
 const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
@@ -209,5 +209,14 @@ export const updateEstadoEstudiante = async (
   await httpPut<unknown>(
     `${ESTUDIANTES_ENDPOINT}/${encodeURIComponent(estudianteId)}/estado`,
     { estado },
+  )
+}
+
+export const downloadDocumentosEstudianteZip = async (
+  estudianteId: number,
+): Promise<HttpFileResponse> => {
+  return httpFile(
+    `${ESTUDIANTES_ENDPOINT}/${encodeURIComponent(estudianteId)}/documentos/zip`,
+    { method: 'GET' },
   )
 }

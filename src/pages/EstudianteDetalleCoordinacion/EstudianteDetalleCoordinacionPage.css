@@ -141,6 +141,52 @@
     font-weight: 800;
 }
 
+.estudiante-detalle__download-all-button {
+    display: inline-flex;
+    min-height: 2.45rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 1px solid var(--primary);
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.estudiante-detalle__download-all-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary), transparent 58%);
+    outline-offset: 2px;
+}
+
+.estudiante-detalle__download-all-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.estudiante-detalle__download-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid color-mix(in srgb, var(--on-primary), transparent 58%);
+    border-top-color: var(--on-primary);
+    border-radius: 50%;
+    animation: estudiante-detalle-spin 0.75s linear infinite;
+}
+
+@keyframes estudiante-detalle-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .estudiante-detalle__download-spinner {
+        animation-duration: 1.5s;
+    }
+}
+
 .estudiante-detalle__state-button--primary {
     background: var(--primary);
     color: var(--on-primary);
@@ -582,6 +628,9 @@
         width: 100%;
     }
     .estudiante-detalle__state-button {
+        width: 100%;
+    }
+    .estudiante-detalle__download-all-button {
         width: 100%;
     }
     .estudiante-detalle__document-header {
