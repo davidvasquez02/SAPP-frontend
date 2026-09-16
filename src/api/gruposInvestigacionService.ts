@@ -2,19 +2,26 @@ import { httpDelete, httpGet, httpPost } from '../shared/http/httpClient'
 import type { ApiResponse } from './types'
 import type {
   DocenteDto,
+  DocentesPageDto,
   GrupoInvestigacionDocenteDto,
   GrupoInvestigacionDto,
   RegistrarDocenteGrupoRequest,
 } from './gruposInvestigacionTypes'
 
 export const getDocentes = async (): Promise<DocenteDto[]> => {
-  const response = await httpGet<ApiResponse<DocenteDto[]>>('/sapp/docentes')
+  const response = await httpGet<ApiResponse<DocentesPageDto>>('/sapp/docentes')
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible consultar los docentes.')
   }
 
-  return response.data ?? []
+  const docentes = response.data?.data
+
+  if (!Array.isArray(docentes)) {
+    throw new Error('El servicio de docentes devolvió una respuesta con formato inválido.')
+  }
+
+  return docentes
 }
 
 export const getGruposInvestigacion = async (): Promise<GrupoInvestigacionDto[]> => {

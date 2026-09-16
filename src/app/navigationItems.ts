@@ -34,12 +34,6 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
       icon: '👥',
       visible: canSeeGestionEstudiantes,
     },
-    {
-      to: '/coordinacion/profesores',
-      label: 'Gestión profesores',
-      icon: '🧑‍🏫',
-      visible: canSeeGestionCoordinacion,
-    },
     { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
     {
       to: '/coordinacion/reportes',
@@ -49,6 +43,12 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     },
     { to: '/actas', label: 'Actas', icon: '📜', visible: canSeeGestionCoordinacion },
     { to: '/fechas', label: 'Fechas', icon: '🗓️', visible: canSeeGestionCoordinacion },
+    {
+      to: '/coordinacion/profesores',
+      label: 'Gestión profesores',
+      icon: '🧑‍🏫',
+      visible: canSeeGestionCoordinacion,
+    },
   ]
     .filter(({ visible }) => visible)
     .map(({ to, label, icon }) => ({ to, label, icon }))

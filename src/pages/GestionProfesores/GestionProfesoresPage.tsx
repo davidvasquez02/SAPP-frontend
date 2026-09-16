@@ -18,6 +18,14 @@ type Vista = 'docentes' | 'grupos'
 
 const normalize = (value: string) => value.trim().toLocaleLowerCase('es')
 
+const getDocenteName = (docente: DocenteDto) =>
+  docente.fullName.trim() ||
+  [docente.firstName, docente.lastName].filter(Boolean).join(' ').trim() ||
+  docente.username
+
+const getAcademicPrograms = (docente: DocenteDto) =>
+  docente.attributes.academicProgram?.join(', ') || 'No informado'
+
 const GestionProfesoresPage = () => {
   const [vista, setVista] = useState<Vista>('docentes')
   const [docentes, setDocentes] = useState<DocenteDto[]>([])
@@ -72,7 +80,10 @@ const GestionProfesoresPage = () => {
 
   const docentesFiltrados = useMemo(() => {
     const term = normalize(busqueda)
-    return docentes.filter((docente) => !term || normalize(docente.nombre).includes(term))
+    return docentes.filter((docente) => {
+      const searchable = [getDocenteName(docente), docente.email, docente.username].join(' ')
+      return !term || normalize(searchable).includes(term)
+    })
   }, [busqueda, docentes])
 
   const docentesDisponibles = useMemo(() => {
@@ -134,9 +145,9 @@ const GestionProfesoresPage = () => {
         {vista === 'docentes' ? (
           <section className="gestion-profesores__card" aria-labelledby="docentes-title">
             <div className="gestion-profesores__heading"><div><h2 id="docentes-title">Docentes registrados</h2><p>Información obtenida del catálogo institucional de docentes.</p></div><span>{docentesFiltrados.length} docentes</span></div>
-            <label className="gestion-profesores__search"><span>Buscar docente</span><input type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Nombre del docente" /></label>
+            <label className="gestion-profesores__search"><span>Buscar docente</span><input type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Nombre o correo institucional" /></label>
             {isLoading ? <p className="gestion-profesores__empty">Cargando docentes...</p> : (
-              <div className="gestion-profesores__table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>UUID</th></tr></thead><tbody>{docentesFiltrados.map((docente) => <tr key={docente.uuid || docente.id}><td>{docente.id}</td><td>{docente.nombre.trim()}</td><td><code>{docente.uuid || 'No informado'}</code></td></tr>)}</tbody></table>{docentesFiltrados.length === 0 ? <p className="gestion-profesores__empty">No se encontraron docentes.</p> : null}</div>
+              <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Nombre</th><th>Correo institucional</th><th>Programa académico</th><th>UUID</th></tr></thead><tbody>{docentesFiltrados.map((docente) => <tr key={docente.uuid}><td>{getDocenteName(docente)}</td><td>{docente.email || docente.username}</td><td>{getAcademicPrograms(docente)}</td><td><code>{docente.uuid}</code></td></tr>)}</tbody></table>{docentesFiltrados.length === 0 ? <p className="gestion-profesores__empty">No se encontraron docentes.</p> : null}</div>
             )}
           </section>
         ) : (
@@ -144,7 +155,7 @@ const GestionProfesoresPage = () => {
             <div className="gestion-profesores__heading"><div><h2 id="grupos-title">Docentes por grupo</h2><p>Seleccione un grupo y asigne un docente mediante su UUID institucional.</p></div></div>
             <form className="gestion-profesores__form" onSubmit={handleRegister}>
               <label><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => { setGrupoId(event.target.value); setDocenteUuid('') }} required><option value="">Seleccione un grupo</option>{grupos.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
-              <label><span>Docente</span><select value={docenteUuid} onChange={(event) => setDocenteUuid(event.target.value)} disabled={!grupoId} required><option value="">Seleccione un docente</option>{docentesDisponibles.map((docente) => <option key={docente.uuid || docente.id} value={docente.uuid}>{docente.nombre.trim()}</option>)}</select></label>
+              <label><span>Docente</span><select value={docenteUuid} onChange={(event) => setDocenteUuid(event.target.value)} disabled={!grupoId} required><option value="">Seleccione un docente</option>{docentesDisponibles.map((docente) => <option key={docente.uuid} value={docente.uuid}>{getDocenteName(docente)}</option>)}</select></label>
               <button type="submit" disabled={!grupoId || !docenteUuid || isSaving}>{isSaving ? 'Registrando...' : 'Registrar en el grupo'}</button>
             </form>
             {!grupoId ? <p className="gestion-profesores__empty">Seleccione un grupo para consultar sus docentes.</p> : isLoadingGroup ? <p className="gestion-profesores__empty">Cargando docentes del grupo...</p> : <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Docente</th><th>Identificador</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; return <tr key={id}><td>{docente.nombre.trim()}</td><td>{id}</td><td><button className="gestion-profesores__delete" type="button" disabled={deletingId === id} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene docentes registrados.</p> : null}</div>}
