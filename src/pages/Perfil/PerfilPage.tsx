@@ -11,6 +11,10 @@ import {
 import './PerfilPage.css'
 
 const MAX_SIGNATURE_SIZE = 2 * 1024 * 1024
+const COORDINATION_PROGRAMS = [
+  'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
+  'DOCTORADO EN CIENCIAS DE LA COMPUTACION',
+] as const
 
 const readFile = (file: File): Promise<FirmaPerfil> =>
   new Promise((resolve, reject) => {
@@ -163,8 +167,8 @@ const PerfilPage = () => {
         <section className="profile-page__card" aria-labelledby="personal-title">
           <div className="profile-page__heading"><div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div></div>
           <dl className="profile-page__data-grid">
-            <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>
-            <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>
+            {!isCoordination && <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>}
+            {!isCoordination && <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>}
             <div><dt>Correo institucional</dt><dd>{user.persona.emailInstitucional ?? user.email ?? 'No registrado'}</dd></div>
             {/* <div><dt>Usuario</dt><dd>{user.username}</dd></div> */}
             <div><dt>Correo personal</dt><dd>{personalEmail ?? 'No registrado'}</dd></div>
@@ -175,10 +179,16 @@ const PerfilPage = () => {
         {isCoordination && <section className="profile-page__card" aria-labelledby="coord-title">
           <div className="profile-page__heading"><div><h2 id="coord-title">Información de coordinación</h2><p>Contexto académico disponible para tu rol.</p></div></div>
           <dl className="profile-page__data-grid">
-            <div><dt>Programa a cargo</dt><dd>{user.programa ?? 'Posgrados EISI (dato provisional)'}</dd></div>
+            <div>
+              <dt>Programa a cargo</dt>
+              <dd>
+                <ul className="profile-page__program-list">
+                  {COORDINATION_PROGRAMS.map((program) => <li key={program}>{program}</li>)}
+                </ul>
+              </dd>
+            </div>
             <div><dt>Unidad académica</dt><dd>Escuela de Ingeniería de Sistemas e Informática</dd></div>
             <div><dt>Estado de la cuenta</dt><dd>{user.activo ? 'Activa' : 'Inactiva'}</dd></div>
-            <div><dt>Último ingreso</dt><dd>{user.lastLogin ?? 'Pendiente de integración'}</dd></div>
           </dl>
         </section>}
 

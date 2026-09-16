@@ -1,3 +1,25 @@
+# Update 2026-09-16 — Perfil de coordinación simplificado
+
+## Estado actual y decisión
+- En `/perfil`, las sesiones con rol `COORDINACION` o `ADMIN` ya no ven **Tipo de documento**, **Número de documento** ni **Último ingreso**. Los perfiles no administrativos conservan tipo y número de documento; no cambió el contrato de autenticación ni se eliminaron propiedades del modelo de sesión.
+- **Programa a cargo** ignora deliberadamente `user.programa` para coordinación y presenta dos valores fijos: **MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA** y **347:DOCTORADO EN CIENCIAS DE LA COMPUTACION**. Se usa una lista semántica compacta, compatible con los temas claro y oscuro.
+
+## Paths, contratos y salida esperada
+- Renderizado y valores fijos: `src/pages/Perfil/PerfilPage.tsx`; composición de la lista: `src/pages/Perfil/PerfilPage.css`.
+- Entrada conservada: `useAuth().user`, incluidos `roles`, `persona`, `activo` y los demás datos utilizados por perfiles de estudiante. No se agregaron endpoints, payloads, schemas, variables de entorno, dependencias, seeds ni datasets.
+- Salida esperada para coordinación: información personal sin identificadores documentales; tarjeta de coordinación con ambos programas, unidad académica y estado de cuenta, sin el placeholder **Pendiente de integración** de último ingreso.
+
+## Retos, próximos pasos y entorno
+1. Validar la ruta protegida con cuentas reales de coordinación y administración, en escritorio/móvil y temas claro/oscuro.
+2. Confirmar con producto si la maestría también debe mostrar un código numérico; no se inventó uno porque el requerimiento solo suministró explícitamente `347` para doctorado.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+
+## Verificación reciente
+- `npx eslint src/pages/Perfil/PerfilPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-CtvKtV-G.css` e `index-CfPO9zmy.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.65 kB.
+- `git diff --check` (2026-09-16): PASS. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere una sesión institucional.
+
+---
 # Update 2026-09-16 — Orden y presentación de materias en matrícula estudiantil
 
 ## Estado actual y decisión
