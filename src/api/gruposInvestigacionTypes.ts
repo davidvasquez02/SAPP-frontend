@@ -12,9 +12,22 @@ export interface GrupoInvestigacionDocenteDto {
 }
 
 export interface DocenteDto {
-  id: number
   uuid: string
-  nombre: string
+  firstName: string | null
+  lastName: string | null
+  username: string
+  fullName: string
+  email: string
+  attributes: Record<string, string[]>
+}
+
+export interface DocentesPageDto {
+  data: DocenteDto[]
+  meta: {
+    skip: number
+    limit: number
+    countInPage: number | null
+  }
 }
 
 export interface RegistrarDocenteGrupoRequest {

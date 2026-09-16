@@ -1,3 +1,30 @@
+# Update 2026-09-16 — Contrato real y ubicación de Gestión profesores
+
+## Estado actual y decisiones
+- **Gestión profesores** es el último acceso visible del sidebar para `COORDINACION` y `ADMIN`; la ruta protegida continúa siendo `/coordinacion/profesores`.
+- Se corrigió el fallo `n.filter is not a function`: `GET /sapp/docentes` no retorna un arreglo directamente en el primer `data`, sino una página en `response.data.data`. El servicio extrae y valida explícitamente esa colección antes de actualizar el estado React.
+- La tabla del catálogo usa los campos reales: nombre completo (con fallback a `firstName + lastName` y finalmente `username`), correo institucional, programas académicos y UUID. La búsqueda cubre nombre, correo y usuario. No se muestran atributos sensibles como teléfono, documento o correo personal.
+
+## Paths, contrato y salida esperada
+- Adaptación HTTP: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`; vista: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; orden del menú: `src/app/navigationItems.ts`.
+- Contrato confirmado: `GET /sapp/docentes` → `{ ok, message, data: { data: Array<{ uuid, firstName: string | null, lastName: string | null, username, fullName, email, attributes: Record<string, string[]> }>, meta: { skip, limit, countInPage: number | null } } }`. La salida interna de `getDocentes()` sigue siendo `Promise<DocenteDto[]>` para aislar a la vista del envelope.
+- Si `data.data` no es un arreglo, se lanza un error de contrato legible y la página muestra su alerta en vez de fallar durante `.filter`. Un registro sin nombre visible utiliza el usuario institucional.
+- No se modificaron endpoints de grupos: `GET/POST/DELETE /sapp/gruposInvestigacionDocentes` conservan los contratos documentados en la entrada anterior.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional la carga completa y confirmar si el backend pagina realmente el catálogo: el ejemplo reporta `limit: 20` y `countInPage: null`, pero contiene más de 20 registros. Si hay páginas posteriores, definir con backend los query params y el total.
+2. Confirmar ejemplos reales de grupos e integrantes y la semántica de `id`/`docenteId` antes de validar la baja en producción.
+3. Validar escritorio/móvil y temas claro/oscuro. La ruta protegida requiere sesión y backend para una captura representativa.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El proyecto usa Node.js/npm; no se agregaron paquetes, variables, schemas, seeds o datasets.
+- Versiones: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/app/navigationItems.ts src/pages/GestionProfesores/GestionProfesoresPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-Bf5vqx-I.css` e `index-B8zvzBAw.js`. Persiste el warning informativo por el chunk JavaScript de 544.94 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes fuera de los archivos de este ajuste; el lint focalizado sí pasa. No existe script `test`.
+- No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere sesión institucional y backend.
+
+---
 # Update 2026-09-16 — Borrador de Gestión profesores
 
 ## Estado actual y decisiones
