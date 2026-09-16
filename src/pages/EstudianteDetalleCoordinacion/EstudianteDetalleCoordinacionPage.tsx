@@ -6,7 +6,7 @@ import { uploadDocument } from '../../api/documentUploadService'
 import { useAuth } from '../../context/Auth'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
-import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
+import { downloadBase64File, downloadBlobFile, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
   getDocumentById,
   getDocumentsByEstudiante,
@@ -14,6 +14,7 @@ import {
   type DocumentosEstudianteGrupoDto,
 } from '../../modules/documentos/api/documentosService'
 import {
+  downloadDocumentosEstudianteZip,
   getEstudianteById,
   updateEstadoEstudiante,
   type EstadoEstudiante,
@@ -432,17 +433,23 @@ const DocumentGrid = ({ documentos, emptyMessage, activeAction, uploadingAction,
 
 interface StudentProfileHeaderProps {
   estudiante: EstudianteCoordinacion
+  isDownloadingZip: boolean
+  downloadZipError: string | null
   isUpdatingEstado: boolean
   estadoMessage: string | null
   estadoError: string | null
+  onDownloadZip: () => void
   onEstadoChange: (estado: EstadoEstudiante) => void
 }
 
 const StudentProfileHeader = ({
   estudiante,
+  isDownloadingZip,
+  downloadZipError,
   isUpdatingEstado,
   estadoMessage,
   estadoError,
+  onDownloadZip,
   onEstadoChange,
 }: StudentProfileHeaderProps) => {
   const fotoSrc = getFotoSrc(estudiante)
@@ -483,6 +490,20 @@ const StudentProfileHeader = ({
           </span>
         </div>
         <div className="estudiante-detalle__state-actions" aria-label="Acciones sobre el estado del estudiante">
+          <button
+            type="button"
+            className="estudiante-detalle__download-all-button"
+            disabled={isDownloadingZip}
+            aria-busy={isDownloadingZip}
+            onClick={onDownloadZip}
+          >
+            {isDownloadingZip ? (
+              <span className="estudiante-detalle__download-spinner" aria-hidden="true" />
+            ) : (
+              <span aria-hidden="true">↓</span>
+            )}
+            {isDownloadingZip ? 'Preparando descarga...' : 'Descargar información'}
+          </button>
           {estadoAlterno ? (
             <button
               type="button"
@@ -506,6 +527,7 @@ const StudentProfileHeader = ({
         </div>
         {estadoMessage ? <p className="estudiante-detalle__state-feedback" role="status">{estadoMessage}</p> : null}
         {estadoError ? <p className="estudiante-detalle__state-feedback estudiante-detalle__state-feedback--error" role="alert">{estadoError}</p> : null}
+        {downloadZipError ? <p className="estudiante-detalle__state-feedback estudiante-detalle__state-feedback--error" role="alert">{downloadZipError}</p> : null}
       </div>
 
       <dl className="estudiante-detalle__profile-meta">
@@ -599,6 +621,8 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [estadoMessage, setEstadoMessage] = useState<string | null>(null)
   const [estadoError, setEstadoError] = useState<string | null>(null)
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false)
+  const [downloadZipError, setDownloadZipError] = useState<string | null>(null)
   const loadedDocumentsCodeRef = useRef<string | null>(null)
 
   useEffect(() => () => {
@@ -816,6 +840,29 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
   }, [estudiante, isUpdatingEstado])
 
+  const handleDownloadZip = useCallback(async () => {
+    if (!estudiante || isDownloadingZip) {
+      return
+    }
+
+    setIsDownloadingZip(true)
+    setDownloadZipError(null)
+
+    try {
+      const file = await downloadDocumentosEstudianteZip(estudiante.id)
+      const fallbackFilename = `${getCodigoEstudianteUis(estudiante) || `estudiante-${estudiante.id}`}-documentos.zip`
+      downloadBlobFile(file.blob, file.filename || fallbackFilename)
+    } catch (err) {
+      setDownloadZipError(
+        err instanceof Error
+          ? err.message
+          : 'No fue posible descargar la información del estudiante.',
+      )
+    } finally {
+      setIsDownloadingZip(false)
+    }
+  }, [estudiante, isDownloadingZip])
+
   const contenidoTab = useMemo(() => {
     const withActionError = (content: ReactNode) => (
       <>
@@ -907,9 +954,12 @@ const EstudianteDetalleCoordinacionPage = () => {
           <div className="estudiante-detalle__dashboard">
             <StudentProfileHeader
               estudiante={estudiante}
+              isDownloadingZip={isDownloadingZip}
+              downloadZipError={downloadZipError}
               isUpdatingEstado={isUpdatingEstado}
               estadoMessage={estadoMessage}
               estadoError={estadoError}
+              onDownloadZip={() => void handleDownloadZip()}
               onEstadoChange={(estado) => void handleEstadoChange(estado)}
             />
             <StudentAcademicStats estudiante={estudiante} />
