@@ -3,6 +3,18 @@ const DATA_PREFIX_REGEX = /^data:.*;base64,/i
 export const normalizeBase64 = (input: string): string =>
   input.replace(DATA_PREFIX_REGEX, '').replace(/\s+/g, '').trim()
 
+export const imageDataUrl = (
+  content: string | null | undefined,
+  mimeType = 'image/jpeg',
+): string | null => {
+  const trimmedContent = content?.trim()
+
+  if (!trimmedContent) return null
+  if (/^data:image\//i.test(trimmedContent)) return trimmedContent.replace(/\s+/g, '')
+
+  return `data:${mimeType || 'image/jpeg'};base64,${normalizeBase64(trimmedContent)}`
+}
+
 export const base64ToBlob = (base64: string, mimeType: string): Blob => {
   const normalized = normalizeBase64(base64)
   const binary = atob(normalized)

@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
+import { imageDataUrl } from '../../shared/files/base64FileUtils'
 import {
   guardarFirmaUsuario,
   obtenerFirmaUsuario,
@@ -58,6 +59,7 @@ const PerfilPage = () => {
   const [isSavingSignature, setIsSavingSignature] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [photoFailed, setPhotoFailed] = useState(false)
   const roles = user?.roles ?? []
   const isCoordination = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
   const hasStudentRole = hasAnyRole(roles, [ROLES.ESTUDIANTE])
@@ -70,6 +72,10 @@ const PerfilPage = () => {
   const signatureSrc = signature
     ? `data:${signature.mimeType};base64,${signature.contenidoBase64}`
     : null
+  const profilePhotoSrc = imageDataUrl(
+    user?.estudiante?.foto?.contenidoBase64,
+    user?.estudiante?.foto?.mimeType,
+  )
 
   useEffect(() => {
     if (!user) return
@@ -157,11 +163,28 @@ const PerfilPage = () => {
   if (!user) return null
 
   return (
-    <ModuleLayout title="Mi perfil">
+    <ModuleLayout title="Mi perfil" showUserSummary={false}>
       <div className="profile-page">
-        <section className="profile-page__intro">
-          <span className="profile-page__icon" aria-hidden="true">{fullName.charAt(0).toUpperCase()}</span>
-          <div><h1>{fullName}</h1><p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario Minerva'}</p></div>
+        <section className="profile-page__hero" aria-label="Resumen del perfil">
+          <div className="profile-page__photo-shell">
+            {profilePhotoSrc && !photoFailed ? (
+              <img
+                className="profile-page__photo"
+                src={profilePhotoSrc}
+                alt={`Foto de perfil de ${fullName}`}
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <span className="profile-page__initials" aria-hidden="true">
+                {fullName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="profile-page__hero-copy">
+            <span className="profile-page__eyebrow">Cuenta institucional</span>
+            <h1>{fullName}</h1>
+            <p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario Minerva'}</p>
+          </div>
         </section>
 
         <section className="profile-page__card" aria-labelledby="personal-title">

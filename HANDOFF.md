@@ -1,3 +1,27 @@
+# Update 2026-09-16 — Identidad única y fotografía robusta en el perfil
+
+## Estado actual y decisión
+- `/perfil` ya no duplica el nombre, rol y fotografía entre el encabezado global y el contenido. En esta ruta, `ModuleLayout` oculta únicamente su resumen de usuario mediante la prop opcional `showUserSummary={false}` y conserva **Mi perfil** y ambos logos institucionales; las demás páginas mantienen el comportamiento predeterminado.
+- El perfil usa una cabecera amplia con una sola fotografía circular, nombre y roles. La imagen consume los tokens del tema y se adapta a móvil; si falta o falla, presenta la inicial del usuario sin mostrar una imagen rota.
+- La normalización compartida de fotografías admite Base64 puro o un data URI ya construido. Evita anteponer dos veces `data:...;base64,`, respeta el `mimeType` del contrato y elimina espacios de la carga Base64.
+
+## Paths, contratos y salida esperada
+- Cabecera y fallback visual: `src/pages/Perfil/PerfilPage.tsx` y `src/pages/Perfil/PerfilPage.css`; resumen opcional del layout: `src/components/ModuleLayout/ModuleLayout.tsx`; normalizador: `src/shared/files/base64FileUtils.ts`.
+- Entrada conservada: `useAuth().user.estudiante.foto = { documentoId, nombreArchivo, contenidoBase64, mimeType }`. No cambian `/inicio`, firma, payloads, schemas, variables, dependencias, seeds ni datasets.
+- Salida esperada: una única identidad visible en `/perfil`, imagen centrada con `object-fit: cover` y fallback inicial. Fuera de `/perfil`, nombre/rol/avatar continúan junto a las marcas UIS/EISI.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesiones reales cuya foto llegue en ambas variantes (Base64 y data URI), y comprobar escritorio/móvil y temas claro/oscuro.
+2. Confirmar que las fotos con orientación EXIF no requieren una transformación en backend; el frontend no rota ni recomprime el documento.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+
+## Verificación reciente
+- `npx eslint src/shared/files/base64FileUtils.ts src/components/ModuleLayout/ModuleLayout.tsx src/pages/Perfil/PerfilPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index--hq8ewXo.css` e `index-PMgQNOqJ.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 546.27 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; los tres archivos TypeScript intervenidos pasan el lint focalizado. No existe script `test`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome ni Firefox en `PATH`, y `/perfil` requiere una sesión institucional con fotografía para una validación representativa.
+
+---
 # Update 2026-09-16 — Perfil de coordinación simplificado
 
 ## Estado actual y decisión
