@@ -51,6 +51,7 @@ type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 export interface InscripcionDetalleOutletContext {
   isEstadoFinal: boolean
+  isEvaluadorOnly: boolean
   evaluacionStatus: 'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
   onEvaluacionStarted: () => Promise<void>
 }
@@ -150,6 +151,10 @@ const InscripcionAdmisionDetallePage = () => {
   const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
   const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
   const didCambioEstadoValRef = useRef<Record<number, boolean>>({})
+  const evaluadorEntrevistaRequestRef = useRef<{
+    inscripcionId: number
+    promise: Promise<void>
+  } | null>(null)
   const prevActiveRef = useRef<ActiveWindow>(null)
 
   const nombreAspirante = inscripcionDetalle?.nombreAspirante ?? routeState?.nombreAspirante ?? 'Aspirante'
@@ -314,6 +319,22 @@ const InscripcionAdmisionDetallePage = () => {
     setSectionErrors(errors)
   }, [parsedInscripcionId])
 
+  const loadEntrevistaForEvaluador = useCallback(async () => {
+    setEvaluacionStatus('LOADING')
+    setEvaluacionMsg(null)
+
+    try {
+      await prefetchEvaluacionEtapa(parsedInscripcionId, 'ENTREVISTA')
+      setSectionErrors({})
+      setEvaluacionStatus('STARTED')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setSectionErrors({ entrevistas: message })
+      setEvaluacionStatus('ERROR')
+      setEvaluacionMsg(message)
+    }
+  }, [parsedInscripcionId])
+
   const handleEvaluacionStarted = useCallback(async () => {
     setEvaluacionStatus('STARTED')
     setEvaluacionMsg(null)
@@ -329,11 +350,34 @@ const InscripcionAdmisionDetallePage = () => {
 
     void (async () => {
       setIsInitialLoading(true)
-      await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
-      await prefetchAllSections()
+      if (isEvaluadorOnly) {
+        // DOCENTE/PROFESOR/DIRECTOR solo necesitan la entrevista. Esta consulta
+        // también alimenta el caché que consume EvaluacionEtapaPage, evitando
+        // consultar las otras etapas y el endpoint general de evaluación.
+        if (evaluadorEntrevistaRequestRef.current?.inscripcionId !== parsedInscripcionId) {
+          evaluadorEntrevistaRequestRef.current = {
+            inscripcionId: parsedInscripcionId,
+            promise: Promise.all([
+              loadEntrevistaForEvaluador(),
+              reloadInscripcionDetalle(),
+            ]).then(() => undefined),
+          }
+        }
+        await evaluadorEntrevistaRequestRef.current.promise
+      } else {
+        await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
+        await prefetchAllSections()
+      }
       setIsInitialLoading(false)
     })()
-  }, [loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, reloadInscripcionDetalle])
+  }, [
+    isEvaluadorOnly,
+    loadEntrevistaForEvaluador,
+    loadEvaluacionEstado,
+    parsedInscripcionId,
+    prefetchAllSections,
+    reloadInscripcionDetalle,
+  ])
 
   useEffect(() => {
     if (!isEvaluadorOnly || !basePath) {
@@ -539,6 +583,7 @@ const InscripcionAdmisionDetallePage = () => {
     <Outlet
       context={{
         isEstadoFinal,
+        isEvaluadorOnly,
         evaluacionStatus,
         onEvaluacionStarted: handleEvaluacionStarted,
       } satisfies InscripcionDetalleOutletContext}

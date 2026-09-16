@@ -1,3 +1,29 @@
+# Update 2026-09-16 — Una consulta de entrevista para evaluadores de Admisiones
+
+## Estado actual y decisión
+- Al abrir el detalle de una admisión, una sesión que sea exclusivamente evaluadora (`PROFESOR`, `DOCENTE` o `DIRECTOR`, sin `ADMIN`, `COORDINADOR` ni `SECRETARIA`) hace una sola consulta de datos de evaluación, limitada a `ENTREVISTA`.
+- La promesa se conserva por `inscripcionId` durante el montaje para que la doble ejecución de efectos de React en desarrollo no duplique la solicitud. Su respuesta queda en `evaluacionCache`; por ello `EvaluacionEtapaPage` llena las notas desde caché sin otra llamada.
+- `RequireEvaluacionEnabled` espera el estado resuelto por el detalle para estos roles y no consulta el endpoint general mientras el padre está cargando. La rama administrativa no fue modificada: continúa consultando estado general y precargando documentos y las tres etapas.
+
+## Paths, contrato y salida esperada
+- Orquestación y caché: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `src/modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache.ts`.
+- Guardia anidada: `src/modules/admisiones/routes/RequireEvaluacionEnabled.tsx`; consumidor de notas: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`.
+- Único contrato de evaluación para evaluador: `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa=ENTREVISTA` → `ApiResponse<EvaluacionAdmisionItem[]>`. Salida esperada: solo los ítems cuyo evaluador coincide con la sesión aparecen editables; no deben aparecer solicitudes equivalentes para `HOJA_DE_VIDA`, `EXAMEN_DE_CONOCIMIENTOS` ni `/info?inscripcionId={id}` sin etapa.
+- La consulta separada del resumen de inscripción se conserva porque suministra identidad y metadatos del aspirante. No se agregaron dependencias, variables, schemas, seeds o datasets.
+
+## Retos y próximos pasos
+1. Validar la pestaña Network con cuentas reales exclusivas de `DOCENTE` y `DIRECTOR`, incluyendo React en modo desarrollo: debe existir exactamente un GET de evaluación con `etapa=ENTREVISTA` por inscripción.
+2. Confirmar con backend el mensaje/envelope que retorna el endpoint por etapa cuando una evaluación todavía no está iniciada; actualmente se presenta como error de carga, igual que cualquier respuesta no exitosa del servicio de etapa.
+3. No trasladar esta optimización a coordinación: su precarga de todas las secciones, validación y finalización dependen del flujo administrativo existente.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm run build` (2026-09-16): PASS; 259 módulos transformados y artefactos `dist/assets/index-Bf5vqx-I.css` e `index-BERUP9NS.js`. Persiste el warning informativo por el chunk JavaScript de 545.38 kB.
+- `git diff --check` (2026-09-16): PASS.
+- El lint focalizado conserva el error preexistente `react-hooks/set-state-in-effect` en `RequireEvaluacionEnabled.tsx:30`; no corresponde a la nueva rama y no se cambió para evitar alterar la lógica administrativa. No existe script `test`.
+- No se tomó captura: el cambio no modifica la presentación y la verificación de solicitudes requiere backend y sesión institucional.
+
+---
 # Update 2026-09-16 — Contrato real y ubicación de Gestión profesores
 
 ## Estado actual y decisiones
