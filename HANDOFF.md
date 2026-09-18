@@ -1,3 +1,28 @@
+# Update 2026-09-18 — Director de grupo de investigación
+
+## Estado actual y decisión
+- En `/coordinacion/profesores`, pestaña **Grupos de investigación**, el listado de integrantes consume el nuevo booleano `esDirector`. El único registro con valor `true` se distingue mediante la insignia **Director**; las demás filas se presentan como **Integrante** y habilitan **Hacer director**.
+- La designación solicita confirmación, bloquea simultáneamente altas, bajas y otras designaciones, ejecuta el nuevo PUT y vuelve a consultar los integrantes. La interfaz no modifica el arreglo local de forma optimista: muestra únicamente la condición de director confirmada por el GET posterior, sin recarga completa de la página.
+- Se conserva **Retirar** para todos los integrantes, incluido el director. Si la regla de negocio debe impedir retirar al director, el backend debe rechazarlo o producto debe definir la restricción antes de ocultar esa acción.
+
+## Paths, contratos y salida esperada
+- DTO: `src/api/gruposInvestigacionTypes.ts`; transporte: `src/api/gruposInvestigacionService.ts`; estado y orquestación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; insignia, botón y agrupación de acciones: `src/pages/GestionProfesores/GestionProfesoresPage.css`.
+- Consulta: `GET /sapp/gruposInvestigacionDocentes?grupoId={grupoId}` → `{ ok, message, data: Array<{ esDirector: boolean, existeEnSapp: boolean, id: number, nombre: string, uuid: string | null }> }`. Se espera un máximo de un elemento con `esDirector: true`.
+- Mutación: `PUT /sapp/gruposInvestigacionDocentes/director?grupoId={grupoId}&docenteId={docenteId}`, sin body. Se aceptan tanto un envelope exitoso como HTTP 204. Al completarse se repite el GET anterior; el nuevo director debe llegar con `esDirector: true` y el anterior con `false`.
+
+## Retos y próximos pasos
+1. Validar con el gateway real si el PUT responde con envelope o 204 y que el GET posterior actualice ambos indicadores de forma atómica.
+2. Confirmar la regla para retirar al director actual y el mensaje esperado si el grupo todavía no tiene reemplazo.
+3. Hacer una prueba visual autenticada en temas claro/oscuro y viewport móvil; este entorno no dispone de navegador ejecutable ni de una sesión institucional.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`; no se agregaron dependencias, seeds ni datasets.
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-CsH7l7Ht.css` e `index-COZE89ny.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 604.18 kB. `git diff --check`: PASS.
+- No existe script `test` en `package.json`. No se generó captura porque Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida necesita backend y sesión institucional para mostrar datos reales.
+
+---
+
 # Update 2026-09-18 — Firma desde el módulo de Créditos condonables
 
 ## Estado actual y decisión
