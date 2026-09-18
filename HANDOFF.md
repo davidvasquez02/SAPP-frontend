@@ -1,3 +1,29 @@
+# Update 2026-09-18 — Recordatorio global de firma pendiente
+
+## Estado actual y decisión
+- Después de inicializar una sesión válida, el layout protegido consulta una vez `GET /sapp/firmaUsuario/{usuarioId}` usando `user.id`, que corresponde al ID de `UsuarioSapp`; el `63` del requerimiento era un ejemplo y no quedó hardcodeado.
+- Si la respuesta no contiene firma, se muestra un toast global **Firma pendiente** con el enlace **Ingresa aquí para anexarla.** hacia `/perfil`. El aviso puede cerrarse y también se oculta al seguir el enlace. Si existe firma no se renderiza; si la consulta falla por red, contrato o autorización tampoco se presenta, para no afirmar incorrectamente que falta.
+- El formulario de perfil y su carga de PNG/JPG permanecen sin cambios. El toast usa tokens semánticos, foco visible, `role="status"` y adaptación móvil para temas claro/oscuro.
+
+## Paths, contrato y salida esperada
+- Orquestación: `src/components/SignatureReminder/SignatureReminder.tsx`; estilos: `src/components/SignatureReminder/SignatureReminder.css`; montaje global: `src/components/Layout/Layout.tsx`; servicio reutilizado: `src/modules/perfil/services/firmaPerfilService.ts`.
+- Entrada: `GET /sapp/firmaUsuario/{usuarioId}` autenticado. El servicio admite `ApiResponse<{ titulo, contenidoFirma } | null>` o el DTO directo. `contenidoFirma` no vacío significa que la firma existe; `data: null` o contenido vacío significa que debe mostrarse el recordatorio.
+- Salida esperada: una sola consulta por montaje/entrada autenticada y por usuario. El enlace navega a la ruta protegida existente `/perfil`, donde se guarda mediante `POST /sapp/firmaUsuario/{usuarioId}`. No se añadieron variables, paquetes, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con sesiones reales las respuestas de firma presente y ausente, especialmente el status/envelope exacto que entrega backend cuando todavía no existe registro.
+2. Confirmar en Network que el despliegue productivo realiza una consulta por entrada autenticada. El punto de entrada actual no usa `StrictMode`; si se habilita posteriormente, considerar un caché de promesa compartido para evitar la doble ejecución de efectos propia del modo de desarrollo.
+3. Probar visualmente escritorio/móvil y temas claro/oscuro con backend y sesión institucional. La captura local depende de poder completar el login del gateway.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npm run build` (2026-09-18): PASS; 267 módulos transformados, con `dist/assets/index-CzzkD3ef.css` e `index-DWDmkdnp.js`. Persiste el warning informativo por el chunk JavaScript de 553.77 kB.
+- `npx eslint src/components/SignatureReminder/SignatureReminder.tsx src/components/Layout/Layout.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; ningún hallazgo corresponde a los archivos de este ajuste. `git diff --check`: PASS. No existe script `test`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y el estado visible requiere una sesión institucional cuya respuesta de firma sea vacía.
+
+---
+
 # Update 2026-09-16 — Descarga ZIP integral del estudiante
 
 ## Estado actual y decisión

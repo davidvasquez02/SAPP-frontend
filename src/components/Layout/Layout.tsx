@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from '../Sidebar'
+import { SignatureReminder } from '../SignatureReminder'
 import './Layout.css'
 
 const Layout = () => {
@@ -9,6 +10,7 @@ const Layout = () => {
       <main className="app-shell__content">
         <Outlet />
       </main>
+      <SignatureReminder />
     </div>
   )
 }
