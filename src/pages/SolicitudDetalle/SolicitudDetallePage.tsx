@@ -73,8 +73,6 @@ const SolicitudDetallePage = () => {
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
 
-  const fromAssigned = Boolean((location.state as { fromAssigned?: boolean } | null)?.fromAssigned)
-
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
     if (Number.isNaN(parsedId)) {
@@ -257,8 +255,7 @@ const SolicitudDetallePage = () => {
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
   )
-  const canSignAllDocuments =
-    fromAssigned && estadoPermiteFirma
+  const canSignAllDocuments = isCoordinador && estadoPermiteFirma
 
   const handleFirmarDocumentos = async () => {
     if (!solicitud) {

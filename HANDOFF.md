@@ -1,3 +1,29 @@
+# Update 2026-09-18 — Firma desde el módulo de Créditos condonables
+
+## Estado actual y decisión
+- Corregido el detalle `/creditos-condonables/:solicitudId`: los perfiles habilitados por `canManagePosgrados` ven **Firmar todos los documentos** cuando `estado` o `estadoSigla`, normalizado a mayúsculas, contiene `POR FIRMA`.
+- La visibilidad ya no depende de `location.state.fromAssigned`. Ese estado transitorio solo se adjuntaba al navegar desde la tabla de solicitudes asignadas, por lo que faltaba al abrir un crédito desde el módulo dedicado o pegar su URL (caso reportado: solicitud 63, **POR FIRMA DIRECTOR DE TG**).
+- Se mantiene la protección por rol en la interfaz y en la ruta de Créditos condonables. No cambiaron el endpoint de firma, los contratos, estilos, paquetes, variables, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Lógica de visibilidad y operación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; guard compartido: `src/auth/roleGuards.ts`; ruta protegida: `src/app/routes/creditosCondonablesRoutes.tsx`.
+- Entrada: detalle de solicitud con `estado` o `estadoSigla` que incluya `POR FIRMA`, y sesión `ADMIN_POSGRADOS`, `SECRETARIA_POSGRADOS` o `COORDINADOR_POSGRADOS`.
+- Salida: se presenta **Firmar todos los documentos** independientemente de si se llegó desde `/solicitudes`, `/creditos-condonables` o mediante URL directa. Al activarlo se conserva `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` y luego se recargan detalle y adjuntos.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional la solicitud 63 y confirmar en Network que la firma responde correctamente y que el refresco entrega el estado siguiente esperado.
+2. Verificar con backend que los tres perfiles de gestión autorizados por el frontend tienen permiso equivalente sobre el endpoint; la autorización definitiva sigue siendo responsabilidad del servidor.
+3. Confirmar casos adicionales de estados de firma para director, coordinación u otros responsables. La detección conserva la regla previa basada en el texto `POR FIRMA`.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados, con `dist/assets/index-CNYnAK7V.css` e `index-Bj-sDITf.js`. Persiste el warning informativo por el chunk JavaScript de 603.01 kB.
+- `npm run lint` global (2026-09-18): FAIL por los 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el archivo funcional modificado pasa el lint focalizado. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere una sesión institucional con una solicitud en estado de firma.
+
+---
+
 # Update 2026-09-18 — Asignación de profesores a grupos de investigación
 
 ## Estado actual y decisiones
