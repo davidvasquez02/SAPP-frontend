@@ -3680,3 +3680,29 @@ npm run lint
 - `npm run build` (2026-09-18): PASS; 271 módulos transformados, artefactos `dist/assets/index-CNYnAK7V.css` e `index-BWeMOHZP.js`. Solo apareció el warning ambiental `Unknown env config "http-proxy"` y el aviso informativo por el chunk JS de 603.04 kB.
 
 ---
+
+---
+# Update 2026-09-18 — Actualización de archivos desde el detalle del estudiante
+
+## Estado actual y decisiones
+- Las tarjetas documentales de **Admisión** y **Matrículas** en `/coordinacion/estudiantes/:estudianteId` ahora muestran **Actualizar documento** junto a **Ver** y **Descargar** cuando ya existe un archivo.
+- Los requisitos pendientes conservan **Cargar documento**. Ambas acciones comparten selección de formatos, cálculo SHA-256, conversión Base64, estado de progreso por tarjeta y refresco posterior de la consulta agregada.
+- La actualización reutiliza el contrato vigente de carga; no se añadió un endpoint de reemplazo ni se envía el `documentoId`. El backend identifica el requisito por `tramiteId` + `tipoDocumentoTramiteId` y administra `version`, mientras que el frontend vuelve a consultar la metadata autoritativa.
+
+## Paths, contratos y salida esperada
+- Vista: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; estilos existentes: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`; transporte compartido: `src/api/documentUploadService.ts`.
+- Entrada de metadata: `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`. Cada documento actualizable necesita `tramiteId` en su grupo y `tipoDocumentoTramiteId` en su metadata.
+- Escritura: `POST /sapp/document` con `{ tipoDocumentoTramiteId, nombreArchivo, tramiteId, usuarioCargaId, aspiranteCargaId: null, contenidoBase64, mimeType, tamanoBytes, checksum }`.
+- Salida esperada: tras un POST exitoso se repite el GET agregado; la tarjeta conserva **Ver**, **Descargar** y **Actualizar documento**, y presenta nombre, fecha, tamaño, estado y versión retornados por el servidor. No cambiaron schemas, variables, dependencias, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con el backend institucional que un segundo `POST` para el mismo `tramiteId` + `tipoDocumentoTramiteId` genera/reemplaza la versión vigente y no produce un documento duplicado visible.
+2. Confirmar en Network que el refresco agregado devuelve el nuevo `id`, `nombreArchivo`, `fechaCarga` y `version` después de actualizar.
+3. Probar formatos PDF, DOC/DOCX, PNG y JPEG, además de temas claro/oscuro y responsive, con una sesión real de gestión.
+
+## Entorno y verificación
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2; las versiones exactas del lockfile están documentadas en `README.md`.
+- `npx eslint src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-alOfGVtp.js`. Persiste solo el aviso informativo por el chunk JavaScript de 603.07 kB.
+- `npm run lint` (2026-09-18): continúa fallando por 9 errores y 1 warning preexistentes en servicios API, guardas/mocks de admisiones y módulos de documentos/solicitudes; el archivo modificado pasa al validarlo de forma aislada.
+- `git diff --check` (2026-09-18): PASS. No hay script `test` en `package.json` ni navegador Chrome/Chromium/Firefox disponible para una captura autenticada.

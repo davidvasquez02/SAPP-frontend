@@ -304,7 +304,7 @@ const getUploadDocumentKey = (documento: Pick<DocumentCardDocument, 'tramiteId' 
 }
 
 const canUploadDocument = (documento: DocumentCardDocument) => {
-  return !documento.id && Boolean(documento.tipoDocumentoTramiteId && documento.tramiteId)
+  return Boolean(documento.tipoDocumentoTramiteId && documento.tramiteId)
 }
 
 const resolveDocumentoKey = (documento: DocumentCardDocument, index: number) => {
@@ -380,9 +380,14 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               {isDownloading ? 'Descargando...' : 'Descargar'}
             </button>
           </>
-        ) : uploadEnabled ? (
+        ) : null}
+        {uploadEnabled ? (
           <label className={`estudiante-detalle__upload-button ${isUploading ? 'is-disabled' : ''}`}>
-            {isUploading ? `Cargando ${uploadingAction?.filename ?? 'archivo'}...` : 'Cargar documento'}
+            {isUploading
+              ? `${hasFile ? 'Actualizando' : 'Cargando'} ${uploadingAction?.filename ?? 'archivo'}...`
+              : hasFile
+                ? 'Actualizar documento'
+                : 'Cargar documento'}
             <input
               type="file"
               className="estudiante-detalle__upload-input"
@@ -391,9 +396,9 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               onChange={handleFileChange}
             />
           </label>
-        ) : (
+        ) : !hasFile ? (
           <span className="estudiante-detalle__document-no-actions">No hay trámite disponible para cargar este archivo</span>
-        )}
+        ) : null}
       </footer>
     </article>
   )
