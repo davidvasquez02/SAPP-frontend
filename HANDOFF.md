@@ -1,3 +1,29 @@
+# Update 2026-09-18 — Asignación de profesores a grupos de investigación
+
+## Estado actual y decisiones
+- En `/coordinacion/profesores`, pestaña **Grupos de investigación**, el selector contiene únicamente el grupo. Después de seleccionarlo aparecen, en este orden, la tabla de profesores ya vinculados y una segunda tabla con profesores de posgrados disponibles para agregar.
+- La tabla disponible se deriva exclusivamente de `GET /sapp/docentes` con `tieneRolDocentePosgrados: true`, excluye los UUID ya asociados y, como compatibilidad con respuestas del grupo que no incluyan UUID, excluye también coincidencias de nombre normalizado. Incluye búsqueda por nombre, documento o correo y paginación local de 10 filas.
+- **Agregar al grupo** envía el UUID de la fila, bloquea temporalmente las demás mutaciones y vuelve a consultar los integrantes al finalizar. **Retirar** conserva el contrato y confirmación existentes. No se agregaron dependencias, variables, seeds ni datasets.
+
+## Paths, contratos y salida esperada
+- Vista/orquestación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; estilos temáticos: `src/pages/GestionProfesores/GestionProfesoresPage.css`; transporte existente: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`.
+- Catálogo elegible: `GET /sapp/docentes` → `data: Array<{ uuid, fullName, email, documentNumber, tieneRolDocentePosgrados }>`; solo son elegibles los elementos cuyo indicador sea `true`.
+- Alta: `POST /sapp/gruposInvestigacionDocentes` con `{ "grupoId": number, "docenteUuid": string }`. Baja: `DELETE /sapp/gruposInvestigacionDocentes?grupoId={grupoId}&docenteId={docenteId}`. Tras el alta se espera que `GET /sapp/gruposInvestigacionDocentes?grupoId={grupoId}` incluya al profesor y que este desaparezca de disponibles.
+
+## Retos, próximos pasos y entorno
+1. Validar con una sesión institucional y grupos reales que la respuesta de integrantes expone `docenteUuid`; la exclusión por nombre es solo una compatibilidad defensiva y no reemplaza un identificador estable.
+2. Confirmar respuestas de duplicado/conflicto y autorización del POST/DELETE con el gateway. El frontend muestra el mensaje del envelope cuando está disponible.
+3. Revisar ambos temas y viewport móvil con suficientes profesores para ejercitar búsqueda y paginación.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación reciente
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-rbGXm0ph.css` e `index-CEmt7pmW.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 601.60 kB.
+- `git diff --check` (2026-09-18): PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida requiere sesión/backend institucional para una representación útil.
+
+---
+
 # Update 2026-09-18 — Consejo Académico al aprobar solicitudes OTRA
 
 ## Estado actual y decisión
