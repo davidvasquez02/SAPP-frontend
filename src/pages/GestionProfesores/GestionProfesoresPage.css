@@ -3,7 +3,7 @@
 .gestion-profesores__hero, .gestion-profesores__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .gestion-profesores h1, .gestion-profesores h2, .gestion-profesores p { margin: 0; }
 .gestion-profesores__hero p, .gestion-profesores__heading p { margin-top: .35rem; color: var(--text-secondary); }
-.gestion-profesores__hero button, .gestion-profesores__form button { border: 0; padding: .65rem 1.15rem; background: var(--primary); color: var(--on-primary); font-weight: 700; white-space: nowrap; cursor: pointer; }
+.gestion-profesores__hero button, .gestion-profesores__form button, .gestion-profesores__assign { border: 0; border-radius: 999px; padding: .65rem 1.15rem; background: var(--primary); color: var(--on-primary); font-weight: 700; white-space: nowrap; cursor: pointer; }
 .gestion-profesores button:disabled { opacity: .55; cursor: not-allowed; }
 .gestion-profesores__tabs { display: flex; gap: .5rem; padding: .35rem; align-self: flex-start; border: 1px solid var(--outline); border-radius: 999px; background: var(--surface); }
 .gestion-profesores__tabs button { min-height: 2.25rem; padding: .35rem 1rem; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; }
@@ -19,7 +19,10 @@
 .gestion-profesores th { color: var(--text-secondary); font-size: var(--font-size-small); }
 .gestion-profesores tbody tr:last-child td { border-bottom: 0; }
 .gestion-profesores code { color: var(--text-secondary); font-size: .85rem; }
-.gestion-profesores__delete { border: 1px solid var(--danger); padding: .35rem .8rem; background: transparent; color: var(--danger); cursor: pointer; }
+.gestion-profesores__delete { border: 1px solid var(--danger); border-radius: 999px; padding: .35rem .8rem; background: transparent; color: var(--danger); cursor: pointer; white-space: nowrap; }
+.gestion-profesores__assign { padding: .4rem .85rem; }
+.gestion-profesores__pagination { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; color: var(--text-secondary); }
+.gestion-profesores__pagination button { border: 1px solid var(--outline); border-radius: 999px; padding: .4rem .8rem; background: var(--surface); color: var(--primary); cursor: pointer; }
 .gestion-profesores__message, .gestion-profesores__empty { padding: .8rem 1rem; border-radius: 12px; }
 .gestion-profesores__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
 .gestion-profesores__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
