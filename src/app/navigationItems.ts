@@ -1,4 +1,4 @@
-import { hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
 
 export interface PrimaryNavigationItem {
   to: string
@@ -15,15 +15,11 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     ROLES.DOCENTE,
     ROLES.DIRECTOR,
   ])
-  const canSeeGestionEstudiantes = hasAnyRole(roles, [
-    ROLES.COORDINACION,
-    ROLES.SECRETARIA,
-    ROLES.ADMIN,
-  ])
-  const canSeeGestionCoordinacion = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const canSeeGestionEstudiantes = canManagePosgrados(roles)
+  const canSeeGestionCoordinacion = canManagePosgrados(roles)
   const isProfesorOnly =
     isProfesor(roles) &&
-    !hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+    !canManagePosgrados(roles)
 
   return [
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
@@ -31,7 +27,7 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
       to: '/creditos-condonables',
       label: 'Créditos condonables',
       icon: '💳',
-      visible: hasAnyRole(roles, [ROLES.COORDINACION]),
+      visible: canManagePosgrados(roles),
     },
     { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     {

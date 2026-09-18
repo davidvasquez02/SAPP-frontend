@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
-import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
 import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
@@ -62,7 +62,7 @@ const PerfilPage = () => {
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
   const roles = user?.roles ?? []
-  const isCoordination = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const isCoordination = canManagePosgrados(roles)
   const hasStudentRole = hasAnyRole(roles, [ROLES.ESTUDIANTE])
   const isStudent = hasStudentRole || Boolean(user?.estudiante)
   const personalEmail = user?.persona.emailPersonal ?? firstAttribute(user?.attributes, 'personalEmail')

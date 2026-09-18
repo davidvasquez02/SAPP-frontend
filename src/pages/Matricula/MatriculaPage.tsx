@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import { Link } from "react-router-dom";
 import { ModuleLayout } from "../../components";
-import { ROLES, hasAnyRole } from "../../auth/roleGuards";
+import { canManagePosgrados, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import type { AuthUser } from "../../context/Auth/types";
 import DocumentosRequeridosTable from "../../modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable";
@@ -167,10 +167,7 @@ const MatriculaPage = () => {
     [session],
   );
   const isEstudiante = hasAnyRole(roles, ["ESTUDIANTE"]);
-  const canManageMatriculas = hasAnyRole(roles, [
-    ROLES.COORDINACION,
-    ROLES.ADMIN,
-  ]);
+  const canManageMatriculas = canManagePosgrados(roles);
 
   const [loadingConvocatoria, setLoadingConvocatoria] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);

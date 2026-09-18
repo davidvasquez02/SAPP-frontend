@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { hasAnyRole, isEvaluadorAdmision, ROLES } from '../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
 import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import {
@@ -38,9 +38,7 @@ const AdmisionesProfesorPage = () => {
   const navigate = useNavigate()
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const isEvaluadorOnly =
-    isEvaluadorAdmision(roles) &&
-    !hasAnyRole(roles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
 
   const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaApiDto[]>([])
   const [inscripcionesByConvocatoria, setInscripcionesByConvocatoria] = useState<

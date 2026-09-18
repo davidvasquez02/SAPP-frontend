@@ -22,7 +22,7 @@ import {
   InscripcionHojaVidaPage,
 } from "../../pages";
 import RequireRoles from "../../routes/RequireRoles/RequireRoles";
-import { hasAnyRole, isEvaluadorAdmision, ROLES } from "../../auth/roleGuards";
+import { canManagePosgrados, isEvaluadorAdmision, ROLES, ROLES_GESTION_POSGRADOS } from "../../auth/roleGuards";
 import RequireEvaluacionEnabled from "../../modules/admisiones/routes/RequireEvaluacionEnabled";
 import { creditosRoutes } from "./creditosRoutes";
 import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
@@ -36,7 +36,7 @@ export const AppRoutes = () => {
   const isEvaluadorAdmisionOnly = isEvaluadorAdmision(sappRoles);
   const canManageAdmisiones =
     session?.kind === "SAPP" &&
-    hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]);
+    canManagePosgrados(sappRoles);
 
   return (
     <Routes>
@@ -68,7 +68,7 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatorias"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConvocatoriasAdmisionConfigPage />
               </RequireRoles>
             }
@@ -76,7 +76,7 @@ export const AppRoutes = () => {
           <Route
             path="/fechas/periodos"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConfigFechasAdmisionesPage />
               </RequireRoles>
             }
@@ -84,9 +84,7 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatoria/:convocatoriaId"
             element={
-              <RequireRoles
-                allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]}
-              >
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConvocatoriaDetallePage />
               </RequireRoles>
             }
@@ -137,7 +135,7 @@ export const AppRoutes = () => {
           <Route
             path="/actas"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ActasPage />
               </RequireRoles>
             }
@@ -145,7 +143,7 @@ export const AppRoutes = () => {
           <Route
             path="/fechas"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <FechasModulePage />
               </RequireRoles>
             }
@@ -153,7 +151,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/reportes"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ReportesPage />
               </RequireRoles>
             }
@@ -161,7 +159,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/estudiantes"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <EstudiantesCoordinacionPage />
               </RequireRoles>
             }
@@ -169,7 +167,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/estudiantes/:estudianteId"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <EstudianteDetalleCoordinacionPage />
               </RequireRoles>
             }
@@ -177,7 +175,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/profesores"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <GestionProfesoresPage />
               </RequireRoles>
             }

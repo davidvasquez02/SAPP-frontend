@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import {
@@ -46,7 +46,7 @@ const SolicitudDetallePage = () => {
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isCoordinador = hasAnyRole(roles, ['COORDINADOR'])
+  const isCoordinador = canManagePosgrados(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)

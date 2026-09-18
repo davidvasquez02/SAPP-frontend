@@ -10,7 +10,21 @@ export const ROLES = {
   ESTUDIANTE: 'ESTUDIANTE_POSGRADOS',
 } as const
 
-export const isEvaluadorAdmision = (roles: string[]): boolean =>
+/**
+ * Perfiles administrativos que actualmente comparten toda la capacidad
+ * operativa de coordinación. Se mantiene cada rol explícito para poder
+ * separarlos cuando cambien las reglas de negocio.
+ */
+export const ROLES_GESTION_POSGRADOS = [
+  ROLES.COORDINACION,
+  ROLES.ADMIN,
+  ROLES.SECRETARIA,
+] as const
+
+export const canManagePosgrados = (roles: readonly string[]): boolean =>
+  hasAnyRole(roles, ROLES_GESTION_POSGRADOS)
+
+export const isEvaluadorAdmision = (roles: readonly string[]): boolean =>
   hasAnyRole(roles, [ROLES.PROFESOR, ROLES.DOCENTE, ROLES.DIRECTOR])
 
 export { hasAnyRole, isProfesor }

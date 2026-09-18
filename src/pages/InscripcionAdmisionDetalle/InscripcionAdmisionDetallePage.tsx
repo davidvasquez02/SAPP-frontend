@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { hasAnyRole, isEvaluadorAdmision } from '../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
 import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
@@ -189,9 +189,8 @@ const InscripcionAdmisionDetallePage = () => {
   }, [activeKey])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isEvaluadorOnly =
-    isEvaluadorAdmision(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
-  const canFinalizeInscripcion = hasAnyRole(roles, ['ADMIN', 'COORDINADOR'])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
+  const canFinalizeInscripcion = canManagePosgrados(roles)
   const estadoNormalizado = normalizeEstado(inscripcionEstado)
   const isEstadoFinal = estadoNormalizado === 'ADMITIDO' || estadoNormalizado === 'RECHAZADO'
   const canShowFinalizeSection = canFinalizeInscripcion && !isEstadoFinal
