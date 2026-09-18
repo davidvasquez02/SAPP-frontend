@@ -68,6 +68,7 @@ const SolicitudDetallePage = () => {
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
+  const [showConsejoConfirmation, setShowConsejoConfirmation] = useState(false)
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
@@ -305,7 +306,12 @@ const SolicitudDetallePage = () => {
     }
   }
 
-  const handleResolverSolicitud = async (target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>) => {
+  const isSolicitudOtra = solicitud?.tipoSolicitudId === 11
+
+  const handleResolverSolicitud = async (
+    target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>,
+    enviarConsejo?: boolean,
+  ) => {
     if (!solicitud || !canResolveSolicitud) {
       return
     }
@@ -315,7 +321,7 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, target)
+      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo })
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -329,6 +335,20 @@ const SolicitudDetallePage = () => {
     } finally {
       setIsUpdatingEstado(false)
     }
+  }
+
+  const handleApproveClick = () => {
+    if (isSolicitudOtra) {
+      setShowConsejoConfirmation(true)
+      return
+    }
+
+    void handleResolverSolicitud('APROBADA')
+  }
+
+  const handleConsejoDecision = (enviarConsejo: boolean) => {
+    setShowConsejoConfirmation(false)
+    void handleResolverSolicitud('APROBADA', enviarConsejo)
   }
 
   return (
@@ -560,7 +580,7 @@ const SolicitudDetallePage = () => {
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
                           type="button"
-                          onClick={() => void handleResolverSolicitud('APROBADA')}
+                          onClick={handleApproveClick}
                           disabled={isUpdatingEstado}
                         >
                           {isUpdatingEstado ? 'Procesando...' : 'Aprobar'}
@@ -596,6 +616,51 @@ const SolicitudDetallePage = () => {
                 }
               }}
             />
+
+            {showConsejoConfirmation && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="consejo-confirmation-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar aprobación"
+                  onClick={() => setShowConsejoConfirmation(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="consejo-confirmation-title">¿Requiere aprobación del Consejo Académico?</h3>
+                  <p>
+                    Indica si esta solicitud de tipo OTRA debe enviarse al Consejo Académico antes de continuar.
+                  </p>
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                      type="button"
+                      onClick={() => handleConsejoDecision(true)}
+                    >
+                      Sí, enviar al Consejo
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__save"
+                      type="button"
+                      onClick={() => handleConsejoDecision(false)}
+                    >
+                      No, aprobar directamente
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowConsejoConfirmation(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </section>
