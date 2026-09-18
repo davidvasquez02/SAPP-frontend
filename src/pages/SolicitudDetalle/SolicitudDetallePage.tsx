@@ -23,6 +23,7 @@ import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
+import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -36,11 +37,6 @@ const formatDate = (value: string | null) => {
   const [year, month, day] = value.split('-')
   return `${day}/${month}/${year}`
 }
-
-const CREDIT_TYPE_CODES = new Set(['CRED_COND', 'RENOV_CRED_COND'])
-
-const isCreditoCondonable = (codigo: string | null | undefined) =>
-  CREDIT_TYPE_CODES.has(codigo?.trim().toLocaleUpperCase() ?? '')
 
 const getTipoSolicitudCode = (tipo: TipoSolicitudDto | undefined) =>
   tipo?.codigoNombre?.split(' - ', 1)[0]?.trim().toLocaleUpperCase() ?? ''
@@ -251,10 +247,10 @@ const SolicitudDetallePage = () => {
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
-  const showMotivosCredito = isCreditoCondonable(solicitud?.tipoSolicitudCodigo)
+  const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
   const draftTipoSolicitud = tiposSolicitud.find((tipo) => tipo.id === draftTipoSolicitudId)
   const showDraftMotivosCredito = draftTipoSolicitud
-    ? isCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
+    ? isTipoCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
     : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
   const canResolveSolicitud = isCoordinador && currentEstado === 'ENVIADA'
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
@@ -338,7 +334,12 @@ const SolicitudDetallePage = () => {
   return (
     <ModuleLayout title="Detalle de solicitud">
       <section className="solicitud-detalle-page">
-        <BackButton to="/solicitudes" state={{ refreshAt: Date.now() }}>Volver a solicitudes</BackButton>
+        <BackButton
+          to={location.pathname.startsWith('/creditos-condonables') ? '/creditos-condonables' : '/solicitudes'}
+          state={{ refreshAt: Date.now() }}
+        >
+          Volver a {location.pathname.startsWith('/creditos-condonables') ? 'créditos condonables' : 'solicitudes'}
+        </BackButton>
 
         {loading ? (
           <p className="solicitud-detalle-page__status">Cargando solicitud...</p>

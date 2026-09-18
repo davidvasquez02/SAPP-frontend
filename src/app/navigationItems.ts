@@ -27,6 +27,12 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
 
   return [
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
+    {
+      to: '/creditos-condonables',
+      label: 'Créditos condonables',
+      icon: '💳',
+      visible: hasAnyRole(roles, [ROLES.COORDINACION]),
+    },
     { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     {
       to: '/coordinacion/estudiantes',

@@ -25,6 +25,7 @@ import RequireRoles from "../../routes/RequireRoles/RequireRoles";
 import { hasAnyRole, isEvaluadorAdmision, ROLES } from "../../auth/roleGuards";
 import RequireEvaluacionEnabled from "../../modules/admisiones/routes/RequireEvaluacionEnabled";
 import { creditosRoutes } from "./creditosRoutes";
+import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
 import { solicitudesRoutes } from "./solicitudesRoutes";
@@ -184,6 +185,7 @@ export const AppRoutes = () => {
           {solicitudesRoutes}
           {matriculaRoutes}
           {creditosRoutes}
+          {creditosCondonablesRoutes}
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
