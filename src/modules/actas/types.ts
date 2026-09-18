@@ -6,6 +6,7 @@ export interface ActaDto {
   codigo: string;
   fechaCreacion: string;
   observaciones: string | null;
+  tipoConsejo: boolean;
   documentoContenidoId: number;
   mimeType: string;
   tamanoBytes: number;
@@ -17,6 +18,7 @@ export interface CrearActaRequest {
   codigo: string;
   fechaCreacion: string;
   observaciones: string;
+  tipoConsejo: boolean;
   contenidoBase64: string;
   mimeType: string;
   tamanoBytes: number;
