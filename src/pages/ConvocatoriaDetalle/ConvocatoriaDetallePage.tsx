@@ -278,7 +278,6 @@ const ConvocatoriaDetallePage = () => {
 
         <header className="admission-detail-header convocatoria-detalle__header">
           <div className="admission-detail-header__content">
-            <p className="admission-detail-header__eyebrow">▧ Convocatoria</p>
             <h1 className="admission-detail-header__title convocatoria-detalle__title">
               Aspirantes inscritos
             </h1>
@@ -326,8 +325,8 @@ const ConvocatoriaDetallePage = () => {
                 <span aria-hidden="true">＋</span> Crear aspirante
               </button>
               {(!resolvedProgramaId || !parsedConvocatoriaId) &&
-              !isLoading &&
-              !error ? (
+                !isLoading &&
+                !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   No se pudo determinar el programa o el identificador de la
                   convocatoria.
