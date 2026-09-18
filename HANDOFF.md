@@ -3551,3 +3551,32 @@ npm run lint
 - Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node observado 24.15.0 y npm 11.4.2; versiones completas en `README.md`/`package-lock.json`.
 - `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx src/pages/Solicitudes/SolicitudesPage.tsx src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/utils/creditoCondonable.ts src/app/routes/creditosCondonablesRoutes.tsx src/app/navigationItems.ts` (2026-09-18): PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
 - `npm run build` (2026-09-18): PASS; 264 módulos, `dist/assets/index-h-NvBuld.css` e `index-BgNGRrEM.js`. Persiste únicamente el warning informativo del chunk de 552.72 kB. El repositorio no define script `test`.
+
+---
+# Update 2026-09-18 — Gestión del rol de profesores de posgrados
+
+## Estado actual y decisiones
+- El catálogo autoritativo es `GET /sapp/docentes`; se dejó de consumir `/docentes/estado?skip=0` y de interpretar la respuesta paginada anterior. Su `data` es un arreglo plano.
+- La creación de convocatorias solo ofrece elementos con `tieneRolDocentePosgrados: true`. La asignación de docentes a grupos aplica el mismo criterio.
+- `/gestion-profesores` presenta primero profesores de posgrados y luego profesores EISI disponibles. Ambos listados comparten filtro por nombre, documento o correo, tienen paginación local de 10 filas y se actualizan desde el servidor después de asignar o retirar el rol.
+- Las mutaciones solicitan confirmación, bloquean acciones concurrentes, muestran el resultado y ejecutan una nueva consulta completa; no se mueve un registro de forma optimista.
+
+## Paths, contratos y salida esperada
+- Transporte y DTO: `src/api/gruposInvestigacionService.ts` y `src/api/gruposInvestigacionTypes.ts`.
+- Adaptador de convocatoria: `src/modules/admisiones/services/profesoresMockService.ts` (el nombre es heredado; ya consume el API real).
+- Página y estilos: `src/pages/GestionProfesores/GestionProfesoresPage.tsx` y `.css`.
+- Respuesta esperada de `GET /sapp/docentes`: `{ ok, message, data: [{ documentNumber, email, fullName, tieneRolDocentePosgrados, uuid }] }`.
+- Asignar: `POST /sapp/docentes/{uuid}/asignarRolDocentePosgrados`, sin body. Retirar: `DELETE /sapp/docentes/{uuid}/rolDocentePosgrados`, sin body. Ambos admiten envelope normal o HTTP 204.
+- Resultado esperado: tras una asignación el profesor aparece en el listado superior y desaparece del inferior; al retirarlo ocurre lo contrario. Una convocatoria nunca ofrece un profesor cuyo indicador sea `false`.
+
+## Retos y próximos pasos
+1. Validar los tres endpoints con el gateway institucional y confirmar si las mutaciones responden envelope JSON o 204 (el cliente soporta ambos).
+2. Validar visualmente la ruta protegida en escritorio/móvil y temas claro/oscuro con suficientes registros para recorrer la paginación.
+3. Confirmar si retirar el rol debe impedirse cuando el profesor tiene evaluaciones o grupos activos; esa regla corresponde al backend y todavía no fue especificada.
+
+## Entorno y verificación
+- Reutilizar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, variables, schemas, seeds o datasets.
+- Entorno observado: Node.js 24.15.0 y npm 11.4.2. Lockfile: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/modules/admisiones/services/profesoresMockService.ts src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos y assets `index-gLMwS9CI.css`/`index-Dk9dYf_G.js`; permanece el warning informativo de chunk mayor de 500 kB.
+- No existe script `test`. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional.

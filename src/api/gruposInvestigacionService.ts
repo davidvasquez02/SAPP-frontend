@@ -2,26 +2,45 @@ import { httpDelete, httpGet, httpPost } from '../shared/http/httpClient'
 import type { ApiResponse } from './types'
 import type {
   DocenteDto,
-  DocentesPageDto,
   GrupoInvestigacionDocenteDto,
   GrupoInvestigacionDto,
   RegistrarDocenteGrupoRequest,
 } from './gruposInvestigacionTypes'
 
 export const getDocentes = async (): Promise<DocenteDto[]> => {
-  const response = await httpGet<ApiResponse<DocentesPageDto>>('/sapp/docentes')
+  const response = await httpGet<ApiResponse<DocenteDto[]>>('/sapp/docentes')
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible consultar los docentes.')
   }
 
-  const docentes = response.data?.data
+  const docentes = response.data
 
   if (!Array.isArray(docentes)) {
     throw new Error('El servicio de docentes devolvió una respuesta con formato inválido.')
   }
 
   return docentes
+}
+
+export const asignarRolDocentePosgrados = async (docenteUuid: string): Promise<void> => {
+  const response = await httpPost<ApiResponse<unknown> | undefined>(
+    `/sapp/docentes/${encodeURIComponent(docenteUuid)}/asignarRolDocentePosgrados`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible agregar el profesor a posgrados.')
+  }
+}
+
+export const eliminarRolDocentePosgrados = async (docenteUuid: string): Promise<void> => {
+  const response = await httpDelete<ApiResponse<unknown> | undefined>(
+    `/sapp/docentes/${encodeURIComponent(docenteUuid)}/rolDocentePosgrados`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible retirar el profesor de posgrados.')
+  }
 }
 
 export const getGruposInvestigacion = async (): Promise<GrupoInvestigacionDto[]> => {
