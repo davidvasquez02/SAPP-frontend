@@ -36,7 +36,11 @@ const SolicitudCard = ({ solicitud, onClick }: SolicitudCardProps) => {
         <h3 className="solicitud-card__title">
           {solicitud.tipoSolicitudCodigo} — {solicitud.tipoSolicitud}
         </h3>
-        <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} size="sm" />
+        <StatusBadge
+          estado={solicitud.estadoSigla || solicitud.estado}
+          programaAcademico={solicitud.programaAcademico}
+          size="sm"
+        />
       </header>
 
       <p className="solicitud-card__subtitle">

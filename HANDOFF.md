@@ -3630,3 +3630,27 @@ npm run lint
 - `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts`: PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
 - `npm run build`: PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-Cw0ZFhzY.js`. Persiste solo el warning informativo por el chunk JavaScript de 602.16 kB. No existe script `test`.
 - `git diff --check`: PASS.
+# Update 2026-09-18 — Estado de firma por programa y modalidad editorial
+
+## Estado actual y decisiones
+- El texto visible de `PFIR_DIR_TG` ahora depende de `programaAcademico`: los valores que contienen **MAESTRIA** o la sigla **MISI** muestran **POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION**; los que contienen **DOCTORADO** o **DCC** muestran **POR FIRMA DIRECTOR DE TESIS**. La comparación ignora tildes y mayúsculas. Un programa ausente/desconocido conserva **POR FIRMA DIRECTOR DE TG** para no inferir un nivel incorrecto.
+- `StatusBadge` recibe opcionalmente `programaAcademico`; tabla, tarjetas y detalle ya lo entregan. La sigla, los filtros y el estado recibido del backend no cambian: el ajuste es exclusivamente de presentación.
+- En solicitudes `CRED_COND` y `RENOV_CRED_COND`, seleccionar la modalidad del catálogo con `id: 2` (**EDICIÓN DE REVISTAS CIENTIFICAS**) oculta motivos/actividades, ubicación, campos adicionales de renovación y toda previsualización. El estudiante pasa directamente a Documentos; el selector del sistema operativo acepta PDF y una validación defensiva rechaza otro formato.
+- El submit sigue creando la solicitud con `modalidadId: 2`. Como no se capturan motivos, `SolicitudesEstudianteView` omite `motivosCreditoCondonable` del request. Los documentos se cargan después con el flujo existente. No se añadieron dependencias, variables, seeds, datasets ni cambios de backend.
+
+## Paths y contratos
+- Etiqueta por programa: `src/modules/solicitudes/utils/estadoSolicitud.ts`; consumo visual: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx`, `SolicitudesTable/SolicitudesTable.tsx`, `SolicitudCard/SolicitudCard.tsx` y `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- Flujo especial: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Discriminante deliberado: `modalidadId === 2`, proveniente de `GET /sapp/modalidadContraprestacion`; no depender del texto susceptible a tildes o cambios editoriales.
+- Salida esperada para modalidad 2: creación mediante el contrato existente con `estudianteId`, `tipoSolicitudId`, `fechaResolucion`, `observaciones` y `modalidadId: 2`; sin llamada a previsualización y sin datos de prediligenciamiento. Luego cada PDF seleccionado usa el endpoint documental existente. Los documentos obligatorios continúan validándose.
+
+## Retos y próximos pasos
+1. Validar con respuestas reales los valores exactos de `programaAcademico` para maestría y doctorado, tanto en listado como detalle.
+2. Confirmar con backend/producto que modalidad 2 nunca necesita `motivosCreditoCondonable`, incluso para renovación, y que sus requisitos documentales retornados por tipo de trámite son los PDF correctos.
+3. Realizar prueba E2E autenticada de ambos tipos de crédito: modalidad 2 no debe llamar al endpoint de previsualización, debe rechazar un archivo no PDF y debe registrar/cargar los PDF seleccionados.
+4. Captura visual pendiente: el contenedor no cuenta con Chromium/Chrome/Firefox y la pantalla protegida necesita sesión y catálogos institucionales.
+
+## Entorno y verificación
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. `npm ci` reproduce `package-lock.json`; no hay seeds ni script `test`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados, artefactos `dist/assets/index-CNYnAK7V.css` e `index-BWeMOHZP.js`. Solo apareció el warning ambiental `Unknown env config "http-proxy"` y el aviso informativo por el chunk JS de 603.04 kB.
+
+---

@@ -125,6 +125,7 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
 }
 
 const RENOVACION_CREDITO_CONDONABLE_ID = 12
+const EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID = 2
 
 const SolicitudEstudianteForm = ({
   tipos,
@@ -170,6 +171,7 @@ const SolicitudEstudianteForm = ({
   )
   const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
+  const isEdicionRevistasCientificas = modalidadId === EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
   const municipioExpedicionSeleccionado = useMemo(
@@ -188,6 +190,7 @@ const SolicitudEstudianteForm = ({
     horasSemestre > 0
   const canPreviewCredito =
     isCreditoCondonable &&
+    !isEdicionRevistasCientificas &&
     modalidadId !== null &&
     motivosCreditoValidos.length > 0 &&
     municipioExpedicionSeleccionado !== undefined &&
@@ -329,13 +332,19 @@ const SolicitudEstudianteForm = ({
   }, [isHomologacion])
 
   const handleFileChange = (documentoId: number, file: File | null) => {
+    const isPdf = file === null || file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
     setDocumentosDraft((current) =>
       current.map((documento) =>
         documento.id === documentoId
           ? {
               ...documento,
-              file,
-              error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
+              file: isEdicionRevistasCientificas && !isPdf ? null : file,
+              error:
+                isEdicionRevistasCientificas && !isPdf
+                  ? 'Para esta modalidad solo se permiten archivos PDF.'
+                  : documento.obligatorio && file === null
+                    ? 'Este documento es obligatorio.'
+                    : null,
             }
           : documento,
       ),
@@ -361,7 +370,7 @@ const SolicitudEstudianteForm = ({
         return false
       }
       const motivosValidos = motivosCredito.map((item) => item.trim()).filter(Boolean)
-      if (motivosValidos.length === 0) {
+      if (!isEdicionRevistasCientificas && motivosValidos.length === 0) {
         setErrorMsg(
           isRenovacionCreditoCondonable
             ? 'Debes agregar al menos una actividad del crédito condonable.'
@@ -369,7 +378,7 @@ const SolicitudEstudianteForm = ({
         )
         return false
       }
-      if (!municipioExpedicionSeleccionado) {
+      if (!isEdicionRevistasCientificas && !municipioExpedicionSeleccionado) {
         setErrorMsg('Selecciona un municipio válido del departamento de expedición.')
         return false
       }
@@ -640,7 +649,11 @@ const SolicitudEstudianteForm = ({
             <select
               id="modalidadContraprestacion"
               value={modalidadId ?? ''}
-              onChange={(event) => setModalidadId(event.target.value ? Number(event.target.value) : null)}
+              onChange={(event) => {
+                setModalidadId(event.target.value ? Number(event.target.value) : null)
+                setPreviewDocumentos([])
+                setSelectedPreviewIndex(0)
+              }}
               required
             >
               <option value="">Selecciona una modalidad</option>
@@ -652,37 +665,43 @@ const SolicitudEstudianteForm = ({
             </select>
           )}
 
-          <div className="solicitud-estudiante-form__motivos">
-            <label>
-              {isRenovacionCreditoCondonable
-                ? 'Actividades del crédito condonable *'
-                : 'Motivos para la solicitud del crédito condonable *'}
-            </label>
-            {motivosCredito.map((motivo, index) => (
-              <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
-                <input
-                  value={motivo}
-                  onChange={(event) => updateMotivo(index, event.target.value)}
-                  placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
-                />
-                <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
-                  −
+          {isEdicionRevistasCientificas ? (
+            <p className="solicitud-estudiante-form__help">
+              Para esta modalidad adjunta directamente los archivos PDF requeridos en la sección Documentos.
+            </p>
+          ) : (
+            <>
+              <div className="solicitud-estudiante-form__motivos">
+                <label>
+                  {isRenovacionCreditoCondonable
+                    ? 'Actividades del crédito condonable *'
+                    : 'Motivos para la solicitud del crédito condonable *'}
+                </label>
+                {motivosCredito.map((motivo, index) => (
+                  <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
+                    <input
+                      value={motivo}
+                      onChange={(event) => updateMotivo(index, event.target.value)}
+                      placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
+                    />
+                    <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
+                      −
+                    </button>
+                  </div>
+                ))}
+                <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
+                  + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
                 </button>
               </div>
-            ))}
-            <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
-              + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
-            </button>
-          </div>
-          <DaneLocationSelector
-            departmentCode={departamentoExpedicionCodigo}
-            municipality={ciudadExpedicionDocumento}
-            onDepartmentChange={(departmentCode) => {
-              setDepartamentoExpedicionCodigo(departmentCode)
-              setCiudadExpedicionDocumento('')
-            }}
-            onMunicipalityChange={setCiudadExpedicionDocumento}
-          />
+              <DaneLocationSelector
+                departmentCode={departamentoExpedicionCodigo}
+                municipality={ciudadExpedicionDocumento}
+                onDepartmentChange={(departmentCode) => {
+                  setDepartamentoExpedicionCodigo(departmentCode)
+                  setCiudadExpedicionDocumento('')
+                }}
+                onMunicipalityChange={setCiudadExpedicionDocumento}
+              />
           {isRenovacionCreditoCondonable && (
             <>
               <label htmlFor="direccionEstudiante">Dirección de residencia *</label>
@@ -772,6 +791,8 @@ const SolicitudEstudianteForm = ({
               </button>
             </div>
           )}
+            </>
+          )}
         </div>
       )}
 
@@ -854,6 +875,7 @@ const SolicitudEstudianteForm = ({
                 item={mapDraftToCardItem(documento)}
                 onSelectFile={handleFileChange}
                 onRemoveFile={(documentoId) => handleFileChange(documentoId, null)}
+                fileAccept={isEdicionRevistasCientificas ? 'application/pdf,.pdf' : undefined}
               />
             ))}
           </div>

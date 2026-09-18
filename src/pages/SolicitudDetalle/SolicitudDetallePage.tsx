@@ -389,7 +389,10 @@ const SolicitudDetallePage = () => {
               <div className="solicitud-detalle-page__item">
                 <dt>Estado</dt>
                 <dd>
-                  <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} />
+                  <StatusBadge
+                    estado={solicitud.estadoSigla || solicitud.estado}
+                    programaAcademico={solicitud.programaAcademico}
+                  />
                 </dd>
               </div>
               <div className="solicitud-detalle-page__item">
