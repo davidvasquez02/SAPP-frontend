@@ -11,8 +11,12 @@
 .gestion-profesores__card { display: flex; flex-direction: column; gap: 1rem; }
 .gestion-profesores__heading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; }
 .gestion-profesores__search { display: flex; flex-direction: column; gap: .35rem; max-width: 26rem; color: var(--text-secondary); font-weight: 600; }
-.gestion-profesores__form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto; align-items: end; gap: 1rem; }
-.gestion-profesores__form label { display: flex; flex-direction: column; gap: .35rem; color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__group-select { display: flex; flex-direction: column; gap: .35rem; width: min(100%, 34rem); color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__group-section { display: flex; flex-direction: column; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%); }
+.gestion-profesores__subheading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.gestion-profesores__subheading h3, .gestion-profesores__subheading p { margin: 0; }
+.gestion-profesores__subheading p { margin-top: .25rem; color: var(--text-secondary); }
+.gestion-profesores__subheading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; white-space: nowrap; }
 .gestion-profesores__table-wrap { overflow-x: auto; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface); }
 .gestion-profesores table { width: 100%; border-collapse: collapse; }
 .gestion-profesores th, .gestion-profesores td { padding: .8rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%); text-align: left; }
@@ -27,4 +31,4 @@
 .gestion-profesores__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
 .gestion-profesores__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
 .gestion-profesores__empty { text-align: center; color: var(--text-secondary); }
-@media (max-width: 800px) { .gestion-profesores__hero, .gestion-profesores__heading { flex-direction: column; } .gestion-profesores__form { grid-template-columns: 1fr; } .gestion-profesores__tabs { width: 100%; overflow-x: auto; } }
+@media (max-width: 800px) { .gestion-profesores__hero, .gestion-profesores__heading, .gestion-profesores__subheading { flex-direction: column; } .gestion-profesores__tabs { width: 100%; overflow-x: auto; } }

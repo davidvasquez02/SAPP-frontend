@@ -2,6 +2,7 @@
 
 ## Estado funcional (2026-09-18)
 
+- En **Gestión profesores → Grupos de investigación**, al seleccionar un grupo se muestran primero sus integrantes y, debajo, una tabla paginada y filtrable con los profesores de posgrados todavía disponibles. Cada fila permite agregar mediante `POST /sapp/gruposInvestigacionDocentes`; la acción existente para retirar mediante `DELETE` se conserva.
 - La creación de convocatorias obtiene los evaluadores desde `GET /sapp/docentes` y solo ofrece profesores con `tieneRolDocentePosgrados: true`. Gestión de profesores separa los usuarios de posgrados de los demás profesores EISI y permite asignar o retirar ese rol; después de cada operación vuelve a consultar el catálogo para actualizar ambos listados.
 - Al aprobar una solicitud de tipo **OTRA** (`tipoSolicitudId: 11`), cualquier rol de gestión autorizado debe indicar en un diálogo si requiere aprobación del Consejo Académico. La opción afirmativa añade `enviarConsejo=true` al cambio de estado; la negativa conserva el contrato anterior sin ese parámetro.
 - En las solicitudes de crédito condonable y renovación, el lugar de expedición se selecciona con el catálogo DANE suministrado: Santander aparece por defecto, el municipio usa un desplegable filtrable con la misma identidad visual del selector de departamento y el contrato HTTP conserva únicamente el nombre del municipio seleccionado.

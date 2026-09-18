@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import {
   asignarRolDocentePosgrados,
@@ -27,13 +27,14 @@ const GestionProfesoresPage = () => {
   const [grupos, setGrupos] = useState<GrupoInvestigacionDto[]>([])
   const [docentesGrupo, setDocentesGrupo] = useState<GrupoInvestigacionDocenteDto[]>([])
   const [grupoId, setGrupoId] = useState('')
-  const [docenteUuid, setDocenteUuid] = useState('')
   const [busqueda, setBusqueda] = useState('')
+  const [busquedaGrupo, setBusquedaGrupo] = useState('')
   const [paginaPosgrados, setPaginaPosgrados] = useState(1)
   const [paginaEscuela, setPaginaEscuela] = useState(1)
+  const [paginaDisponibles, setPaginaDisponibles] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingGroup, setIsLoadingGroup] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [savingUuid, setSavingUuid] = useState<string | null>(null)
   const [changingRoleUuid, setChangingRoleUuid] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -104,10 +105,28 @@ const GestionProfesoresPage = () => {
 
   const docentesDisponibles = useMemo(() => {
     const assignedUuids = new Set(docentesGrupo.map((item) => item.docenteUuid ?? item.uuid).filter(Boolean))
+    const assignedNames = new Set(docentesGrupo.map((item) => normalize(item.nombre)))
+    const term = normalize(busquedaGrupo)
+
     return docentes.filter(
-      (docente) => docente.tieneRolDocentePosgrados && docente.uuid && !assignedUuids.has(docente.uuid),
+      (docente) =>
+        docente.tieneRolDocentePosgrados &&
+        docente.uuid &&
+        !assignedUuids.has(docente.uuid) &&
+        !assignedNames.has(normalize(docente.fullName)) &&
+        (!term || normalize([docente.fullName, docente.email, docente.documentNumber].join(' ')).includes(term)),
     )
-  }, [docentes, docentesGrupo])
+  }, [busquedaGrupo, docentes, docentesGrupo])
+
+  const paginasDisponibles = Math.max(1, Math.ceil(docentesDisponibles.length / PAGE_SIZE))
+
+  useEffect(() => {
+    setPaginaDisponibles(1)
+  }, [busquedaGrupo, grupoId])
+
+  useEffect(() => {
+    setPaginaDisponibles((page) => Math.min(page, paginasDisponibles))
+  }, [paginasDisponibles])
 
   const changeRole = async (docente: DocenteDto, assign: boolean) => {
     const verb = assign ? 'agregar a' : 'retirar de'
@@ -127,21 +146,19 @@ const GestionProfesoresPage = () => {
     }
   }
 
-  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!grupoId || !docenteUuid) return
-    setIsSaving(true)
+  const handleRegister = async (docente: DocenteDto) => {
+    if (!grupoId) return
+    setSavingUuid(docente.uuid)
     setError(null)
     setSuccess(null)
     try {
-      await registrarDocenteGrupoInvestigacion({ grupoId: Number(grupoId), docenteUuid })
-      setDocenteUuid('')
+      await registrarDocenteGrupoInvestigacion({ grupoId: Number(grupoId), docenteUuid: docente.uuid })
       setDocentesGrupo(await getDocentesGrupoInvestigacion(Number(grupoId)))
-      setSuccess('El docente fue registrado en el grupo de investigación.')
+      setSuccess(`${docente.fullName.trim()} fue agregado al grupo de investigación.`)
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No fue posible registrar el docente.')
     } finally {
-      setIsSaving(false)
+      setSavingUuid(null)
     }
   }
 
@@ -211,13 +228,22 @@ const GestionProfesoresPage = () => {
           </>
         ) : (
           <section className="gestion-profesores__card" aria-labelledby="grupos-title">
-            <div className="gestion-profesores__heading"><div><h2 id="grupos-title">Docentes por grupo</h2><p>Seleccione un grupo y asigne un profesor de posgrados mediante su UUID institucional.</p></div></div>
-            <form className="gestion-profesores__form" onSubmit={handleRegister}>
-              <label><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => { setGrupoId(event.target.value); setDocenteUuid('') }} required><option value="">Seleccione un grupo</option>{grupos.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
-              <label><span>Docente</span><select value={docenteUuid} onChange={(event) => setDocenteUuid(event.target.value)} disabled={!grupoId} required><option value="">Seleccione un docente</option>{docentesDisponibles.map((docente) => <option key={docente.uuid} value={docente.uuid}>{docente.fullName}</option>)}</select></label>
-              <button type="submit" disabled={!grupoId || !docenteUuid || isSaving}>{isSaving ? 'Registrando...' : 'Registrar en el grupo'}</button>
-            </form>
-            {!grupoId ? <p className="gestion-profesores__empty">Seleccione un grupo para consultar sus docentes.</p> : isLoadingGroup ? <p className="gestion-profesores__empty">Cargando docentes del grupo...</p> : <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Docente</th><th>Identificador</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; return <tr key={id}><td>{docente.nombre.trim()}</td><td>{id}</td><td><button className="gestion-profesores__delete" type="button" disabled={deletingId === id} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene docentes registrados.</p> : null}</div>}
+            <div className="gestion-profesores__heading"><div><h2 id="grupos-title">Docentes por grupo</h2><p>Seleccione un grupo para consultar sus integrantes y agregar profesores del listado de posgrados.</p></div></div>
+            <label className="gestion-profesores__group-select"><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => setGrupoId(event.target.value)}><option value="">Seleccione un grupo</option>{grupos.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
+            {!grupoId ? <p className="gestion-profesores__empty">Seleccione un grupo para consultar sus docentes.</p> : isLoadingGroup ? <p className="gestion-profesores__empty">Cargando docentes del grupo...</p> : (
+              <>
+                <section className="gestion-profesores__group-section" aria-labelledby="integrantes-title">
+                  <div className="gestion-profesores__subheading"><div><h3 id="integrantes-title">Profesores del grupo</h3><p>Integrantes registrados actualmente en el grupo de investigación.</p></div><span>{docentesGrupo.length} profesores</span></div>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Identificador</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; return <tr key={id}><td>{docente.nombre.trim()}</td><td>{id}</td><td><button className="gestion-profesores__delete" type="button" disabled={deletingId === id || savingUuid !== null} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
+                </section>
+                <section className="gestion-profesores__group-section" aria-labelledby="disponibles-title">
+                  <div className="gestion-profesores__subheading"><div><h3 id="disponibles-title">Profesores de posgrados disponibles</h3><p>Agregue al grupo únicamente profesores que tienen activo el rol de posgrados.</p></div><span>{docentesDisponibles.length} profesores</span></div>
+                  <label className="gestion-profesores__search"><span>Buscar profesor disponible</span><input type="search" value={busquedaGrupo} onChange={(event) => setBusquedaGrupo(event.target.value)} placeholder="Nombre, documento o correo institucional" /></label>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Nombre</th><th>Documento</th><th>Correo institucional</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesDisponibles.slice((paginaDisponibles - 1) * PAGE_SIZE, paginaDisponibles * PAGE_SIZE).map((docente) => <tr key={docente.uuid}><td>{docente.fullName.trim()}</td><td>{docente.documentNumber || '—'}</td><td>{docente.email || '—'}</td><td><button className="gestion-profesores__assign" type="button" disabled={savingUuid !== null || deletingId !== null} onClick={() => void handleRegister(docente)}>{savingUuid === docente.uuid ? 'Agregando...' : 'Agregar al grupo'}</button></td></tr>)}</tbody></table>{docentesDisponibles.length === 0 ? <p className="gestion-profesores__empty">No hay profesores de posgrados disponibles para agregar.</p> : null}</div>
+                  {docentesDisponibles.length > PAGE_SIZE ? <nav className="gestion-profesores__pagination" aria-label="Paginación de profesores disponibles"><button type="button" disabled={paginaDisponibles === 1} onClick={() => setPaginaDisponibles(paginaDisponibles - 1)}>Anterior</button><span>Página {paginaDisponibles} de {paginasDisponibles}</span><button type="button" disabled={paginaDisponibles === paginasDisponibles} onClick={() => setPaginaDisponibles(paginaDisponibles + 1)}>Siguiente</button></nav> : null}
+                </section>
+              </>
+            )}
           </section>
         )}
       </main>
