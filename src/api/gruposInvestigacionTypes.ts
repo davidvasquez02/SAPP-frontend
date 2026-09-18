@@ -4,9 +4,11 @@ export interface GrupoInvestigacionDto {
 }
 
 export interface GrupoInvestigacionDocenteDto {
+  esDirector: boolean
+  existeEnSapp: boolean
   id: number
   nombre: string
-  uuid?: string
+  uuid: string | null
   docenteId?: number
   docenteUuid?: string
 }

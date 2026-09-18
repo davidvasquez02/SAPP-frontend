@@ -1,4 +1,4 @@
-import { httpDelete, httpGet, httpPost } from '../shared/http/httpClient'
+import { httpDelete, httpGet, httpPost, httpPut } from '../shared/http/httpClient'
 import type { ApiResponse } from './types'
 import type {
   DocenteDto,
@@ -75,6 +75,20 @@ export const registrarDocenteGrupoInvestigacion = async (
 
   if (response && !response.ok) {
     throw new Error(response.message || 'No fue posible registrar el docente en el grupo.')
+  }
+}
+
+export const asignarDirectorGrupoInvestigacion = async (
+  grupoId: number,
+  docenteId: number,
+): Promise<void> => {
+  const qs = new URLSearchParams({ grupoId: String(grupoId), docenteId: String(docenteId) })
+  const response = await httpPut<ApiResponse<unknown> | undefined>(
+    `/sapp/gruposInvestigacionDocentes/director?${qs.toString()}`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible asignar el director del grupo.')
   }
 }
 

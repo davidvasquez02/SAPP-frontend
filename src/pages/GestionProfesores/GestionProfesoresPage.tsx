@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import {
+  asignarDirectorGrupoInvestigacion,
   asignarRolDocentePosgrados,
   eliminarDocenteGrupoInvestigacion,
   eliminarRolDocentePosgrados,
@@ -37,6 +38,7 @@ const GestionProfesoresPage = () => {
   const [savingUuid, setSavingUuid] = useState<string | null>(null)
   const [changingRoleUuid, setChangingRoleUuid] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [changingDirectorId, setChangingDirectorId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -179,6 +181,23 @@ const GestionProfesoresPage = () => {
     }
   }
 
+  const handleAssignDirector = async (docente: GrupoInvestigacionDocenteDto) => {
+    if (!grupoId || !window.confirm(`¿Designar a ${docente.nombre.trim()} como director del grupo?`)) return
+    const docenteId = docente.docenteId ?? docente.id
+    setChangingDirectorId(docenteId)
+    setError(null)
+    setSuccess(null)
+    try {
+      await asignarDirectorGrupoInvestigacion(Number(grupoId), docenteId)
+      setDocentesGrupo(await getDocentesGrupoInvestigacion(Number(grupoId)))
+      setSuccess(`${docente.nombre.trim()} es ahora el director del grupo de investigación.`)
+    } catch (directorError) {
+      setError(directorError instanceof Error ? directorError.message : 'No fue posible asignar el director del grupo.')
+    } finally {
+      setChangingDirectorId(null)
+    }
+  }
+
   const renderDocentesTable = (
     items: DocenteDto[],
     assign: boolean,
@@ -234,12 +253,12 @@ const GestionProfesoresPage = () => {
               <>
                 <section className="gestion-profesores__group-section" aria-labelledby="integrantes-title">
                   <div className="gestion-profesores__subheading"><div><h3 id="integrantes-title">Profesores del grupo</h3><p>Integrantes registrados actualmente en el grupo de investigación.</p></div><span>{docentesGrupo.length} profesores</span></div>
-                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Identificador</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; return <tr key={id}><td>{docente.nombre.trim()}</td><td>{id}</td><td><button className="gestion-profesores__delete" type="button" disabled={deletingId === id || savingUuid !== null} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Identificador</th><th>Rol en el grupo</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; const isMutating = deletingId !== null || savingUuid !== null || changingDirectorId !== null; return <tr key={id}><td>{docente.nombre.trim()}</td><td>{id}</td><td>{docente.esDirector ? <span className="gestion-profesores__director-badge">Director</span> : 'Integrante'}</td><td><div className="gestion-profesores__row-actions">{!docente.esDirector ? <button className="gestion-profesores__director" type="button" disabled={isMutating} onClick={() => void handleAssignDirector(docente)}>{changingDirectorId === id ? 'Asignando...' : 'Hacer director'}</button> : null}<button className="gestion-profesores__delete" type="button" disabled={isMutating} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></div></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
                 </section>
                 <section className="gestion-profesores__group-section" aria-labelledby="disponibles-title">
                   <div className="gestion-profesores__subheading"><div><h3 id="disponibles-title">Profesores de posgrados disponibles</h3><p>Agregue al grupo únicamente profesores que tienen activo el rol de posgrados.</p></div><span>{docentesDisponibles.length} profesores</span></div>
                   <label className="gestion-profesores__search"><span>Buscar profesor disponible</span><input type="search" value={busquedaGrupo} onChange={(event) => setBusquedaGrupo(event.target.value)} placeholder="Nombre, documento o correo institucional" /></label>
-                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Nombre</th><th>Documento</th><th>Correo institucional</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesDisponibles.slice((paginaDisponibles - 1) * PAGE_SIZE, paginaDisponibles * PAGE_SIZE).map((docente) => <tr key={docente.uuid}><td>{docente.fullName.trim()}</td><td>{docente.documentNumber || '—'}</td><td>{docente.email || '—'}</td><td><button className="gestion-profesores__assign" type="button" disabled={savingUuid !== null || deletingId !== null} onClick={() => void handleRegister(docente)}>{savingUuid === docente.uuid ? 'Agregando...' : 'Agregar al grupo'}</button></td></tr>)}</tbody></table>{docentesDisponibles.length === 0 ? <p className="gestion-profesores__empty">No hay profesores de posgrados disponibles para agregar.</p> : null}</div>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Nombre</th><th>Documento</th><th>Correo institucional</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesDisponibles.slice((paginaDisponibles - 1) * PAGE_SIZE, paginaDisponibles * PAGE_SIZE).map((docente) => <tr key={docente.uuid}><td>{docente.fullName.trim()}</td><td>{docente.documentNumber || '—'}</td><td>{docente.email || '—'}</td><td><button className="gestion-profesores__assign" type="button" disabled={savingUuid !== null || deletingId !== null || changingDirectorId !== null} onClick={() => void handleRegister(docente)}>{savingUuid === docente.uuid ? 'Agregando...' : 'Agregar al grupo'}</button></td></tr>)}</tbody></table>{docentesDisponibles.length === 0 ? <p className="gestion-profesores__empty">No hay profesores de posgrados disponibles para agregar.</p> : null}</div>
                   {docentesDisponibles.length > PAGE_SIZE ? <nav className="gestion-profesores__pagination" aria-label="Paginación de profesores disponibles"><button type="button" disabled={paginaDisponibles === 1} onClick={() => setPaginaDisponibles(paginaDisponibles - 1)}>Anterior</button><span>Página {paginaDisponibles} de {paginasDisponibles}</span><button type="button" disabled={paginaDisponibles === paginasDisponibles} onClick={() => setPaginaDisponibles(paginaDisponibles + 1)}>Siguiente</button></nav> : null}
                 </section>
               </>
