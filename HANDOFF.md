@@ -3606,3 +3606,27 @@ npm run lint
 - `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/modules/admisiones/services/profesoresMockService.ts src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
 - `npm run build`: PASS; 271 módulos y assets `index-gLMwS9CI.css`/`index-Dk9dYf_G.js`; permanece el warning informativo de chunk mayor de 500 kB.
 - No existe script `test`. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional.
+
+---
+# Update 2026-09-18 — Actas de comité y de consejo
+
+## Estado actual y decisiones
+- El formulario de `/actas` ahora exige seleccionar **Comité Asesor de Posgrados** o **Consejo Académico**. Comité es el valor inicial para conservar el comportamiento anterior.
+- La creación incluye el nuevo booleano `tipoConsejo`: `false` representa comité y `true` representa consejo. El listado también expone esa clasificación con su nombre institucional.
+- La nomenclatura generada conserva el consecutivo y año del flujo existente, pero incorpora el tipo: `ACTA_COMITE_XXX-AAAA` o `ACTA_CONSEJO_XXX-AAAA`. Al cambiar el selector, la vista previa del código se actualiza antes de enviar.
+
+## Paths, contratos y salida esperada
+- Formulario, payload, nomenclatura y tabla: `src/pages/Actas/ActasPage.tsx`; ajuste responsive del prefijo: `src/pages/Actas/ActasPage.css`; DTOs: `src/modules/actas/types.ts`.
+- `POST /sapp/actas` conserva `nombre`, `codigo`, `fechaCreacion`, `observaciones`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum`, y añade obligatoriamente `tipoConsejo: boolean`. Ejemplo de comité: `{ "codigo": "ACTA_COMITE_001-2026", "tipoConsejo": false, ... }`; para consejo: `{ "codigo": "ACTA_CONSEJO_001-2026", "tipoConsejo": true, ... }`.
+- `GET /sapp/actas` debe devolver `tipoConsejo` en cada `ActaDto`; la UI interpreta `true` como **Consejo Académico** y `false` como **Comité Asesor de Posgrados**. No cambiaron endpoints, variables, dependencias, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar ambas creaciones contra el backend institucional y confirmar que persiste/devuelve el booleano.
+2. Confirmar con producto si el año debe continuar después de `XXX`; se mantuvo porque el pedido indicó conservar el funcionamiento actual y solo agregar `COMITE` o `CONSEJO`.
+3. Revisar visualmente escritorio/móvil y modos claro/oscuro con sesión real. No se tomó captura: el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer, y la ruta protegida requiere backend/sesión.
+
+## Entorno y verificación
+- Usar exclusivamente `/workspace/SAPP-frontend` y reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts`: PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-Cw0ZFhzY.js`. Persiste solo el warning informativo por el chunk JavaScript de 602.16 kB. No existe script `test`.
+- `git diff --check`: PASS.

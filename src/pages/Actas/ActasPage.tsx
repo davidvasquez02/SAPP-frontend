@@ -10,6 +10,7 @@ const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const SUCCESS_MESSAGE_DURATION_MS = 5_000;
 
 type FileAction = "view" | "download";
+type TipoActa = "COMITE" | "CONSEJO";
 
 const getColombiaToday = () => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -76,6 +77,7 @@ const ActasPage = () => {
   const [yearFilter, setYearFilter] = useState("");
   const [page, setPage] = useState(1);
   const [nombre, setNombre] = useState("");
+  const [tipoActa, setTipoActa] = useState<TipoActa>("COMITE");
   const [codigoActa, setCodigoActa] = useState("");
   const [anio, setAnio] = useState(currentYear);
   const [observaciones, setObservaciones] = useState("");
@@ -107,7 +109,7 @@ const ActasPage = () => {
     return () => window.clearTimeout(timeoutId);
   }, [success]);
 
-  const codigo = `ACT-${codigoActa.trim().toUpperCase()}-${anio}`;
+  const codigo = `ACTA_${tipoActa}_${codigoActa.trim().toUpperCase()}-${anio}`;
   const years = useMemo(
     () => Array.from(new Set(actas.map(getActaYear).filter(Boolean))).sort().reverse(),
     [actas],
@@ -209,6 +211,7 @@ const ActasPage = () => {
         codigo,
         fechaCreacion: getColombiaToday(),
         observaciones: observaciones.trim(),
+        tipoConsejo: tipoActa === "CONSEJO",
         contenidoBase64: await fileToBase64(file),
         mimeType: file.type || "application/pdf",
         tamanoBytes: file.size,
@@ -217,6 +220,7 @@ const ActasPage = () => {
       await crearActa(payload);
       setSuccess(`El acta ${codigo} fue creada correctamente.`);
       setNombre("");
+      setTipoActa("COMITE");
       setCodigoActa("");
       setAnio(currentYear);
       setObservaciones("");
@@ -246,8 +250,9 @@ const ActasPage = () => {
         {showForm ? (
           <form className="actas-form" onSubmit={handleSubmit}>
             <div className="actas-form__heading"><h2>Nueva acta</h2><p>La fecha de creación se asignará automáticamente: {formatDate(getColombiaToday())}.</p></div>
-            <label><span>Nombre del acta *</span><input value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder="Ej. Consejo de Escuela" required /></label>
-            <label><span>Código del acta *</span><div className="actas-form__code"><span>ACT-</span><input value={codigoActa} onChange={(event) => setCodigoActa(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))} placeholder="001" required /><span>-</span><input aria-label="Año del acta" inputMode="numeric" maxLength={4} value={anio} onChange={(event) => setAnio(event.target.value.replace(/\D/g, ""))} required /></div><small>Código generado: {codigo}</small></label>
+            <label><span>Tipo de acta *</span><select value={tipoActa} onChange={(event) => setTipoActa(event.target.value as TipoActa)} required><option value="COMITE">Comité Asesor de Posgrados</option><option value="CONSEJO">Consejo Académico</option></select></label>
+            <label><span>Nombre del acta *</span><input value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder={tipoActa === "CONSEJO" ? "Ej. Consejo Académico" : "Ej. Comité Asesor de Posgrados"} required /></label>
+            <label><span>Código del acta *</span><div className="actas-form__code"><span>ACTA_{tipoActa}_</span><input value={codigoActa} onChange={(event) => setCodigoActa(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))} placeholder="001" required /><span>-</span><input aria-label="Año del acta" inputMode="numeric" maxLength={4} value={anio} onChange={(event) => setAnio(event.target.value.replace(/\D/g, ""))} required /></div><small>Código generado: {codigo}</small></label>
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
             <label className="actas-form__wide actas-form__file"><span>Archivo del acta (PDF, máximo 15 MB) *</span><input type="file" accept="application/pdf,.pdf" onChange={handleFile} required={!file} />{file ? <small>{file.name} · {formatSize(file.size)}</small> : null}</label>
             <div className="actas-form__actions"><button className="actas-page__primary" type="submit" disabled={isSaving}>{isSaving ? "Procesando archivo..." : "Crear acta"}</button></div>
@@ -262,12 +267,12 @@ const ActasPage = () => {
           </div>
           {isLoading ? <p className="actas-page__empty">Cargando actas...</p> : null}
           {!isLoading && visibleActas.length === 0 ? <p className="actas-page__empty">No hay actas que coincidan con los filtros.</p> : null}
-          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
+          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Tipo</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
             const isViewing = fileAction?.actaId === acta.id && fileAction.action === "view";
             const isDownloading = fileAction?.actaId === acta.id && fileAction.action === "download";
             const isDeleting = deletingActaId === acta.id;
             const actionsDisabled = fileAction !== null || deletingActaId !== null;
-            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td></tr>;
+            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.tipoConsejo ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td></tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>
