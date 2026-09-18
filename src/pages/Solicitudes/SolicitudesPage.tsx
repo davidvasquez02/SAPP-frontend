@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { ModuleLayout } from '../../components'
-import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import SolicitudesCoordinadorView from '../../modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView'
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
@@ -11,6 +11,7 @@ const SolicitudesPage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoord = hasAnyRole(roles, ['COORDINADOR', 'ADMIN'])
+  const isCoordinadorCreditos = hasAnyRole(roles, [ROLES.COORDINACION])
   const isProfesorRole = isProfesor(roles)
   const isDirector = hasAnyRole(roles, ['DIRECTOR'])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
@@ -37,6 +38,7 @@ const SolicitudesPage = () => {
             usuarioSappId={usuarioSappId}
             readOnly={!isCoord}
             assignedOnly={isProfesorOnly}
+            excludeCreditosCondonables={isCoordinadorCreditos}
           />
         )
       ) : (

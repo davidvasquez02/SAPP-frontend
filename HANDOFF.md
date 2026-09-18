@@ -3420,3 +3420,26 @@ npm run lint
 - `git diff --check` (2026-09-18): PASS. `npm run lint` global sigue fallando por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; ninguno está en los archivos de esta migración. No existe script `test` en `package.json`.
 - No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox, y las superficies de rol requieren además una sesión institucional.
 - Corrección 2026-09-18: el alias heredado de administración se rectificó de `ADMIN-SAPP` a `ADMIN_SAPP`. `npx eslint src/modules/auth/roles/roleUtils.ts`, `npm run build`, `git diff --check` y la comprobación de ausencia global de `ADMIN-SAPP` pasaron; el build generó `dist/assets/index-BOMLGh01.js` y mantuvo únicamente el warning informativo de tamaño de chunk.
+
+---
+# Update 2026-09-18 — Módulo de coordinación para créditos condonables
+
+## Estado actual y decisiones
+- Se agregó `/creditos-condonables`, visible y accesible exclusivamente para `COORDINADOR_POSGRADOS`. La parte superior lista trámites pendientes y filtra por estado; la inferior contiene solo `APROBADA`/`RECHAZADA` y filtra por estado y por nombre/código UIS del estudiante. Ambos listados tienen paginación de 10 filas.
+- Los códigos funcionales son `CRED_COND` y `RENOV_CRED_COND`. La detección quedó centralizada y esos registros, incluidos los asignados, se ocultan de `/solicitudes` solo para coordinación. Estudiante, docente, director y administración conservan el comportamiento previo.
+- El detalle se reutiliza en `/creditos-condonables/:solicitudId`, incluidas carga documental y aprobación/rechazo; el botón de regreso reconoce el módulo de origen. Las dos rutas están protegidas por `RequireRoles` y no se añadieron permisos al resto de perfiles.
+
+## Paths, contratos y salida esperada
+- Página/estilos: `src/pages/CreditosCondonablesCoordinacion/`; rutas: `src/app/routes/creditosCondonablesRoutes.tsx`; navegación: `src/app/navigationItems.ts`.
+- Clasificación compartida: `src/modules/solicitudes/utils/creditoCondonable.ts`; exclusión del listado general: `SolicitudesCoordinadorView.tsx`; detalle reutilizado: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- Contratos sin cambios: `GET /sapp/solicitudesAcademicas`, `GET /sapp/estadosSolicitud` y `GET /sapp/solicitudesAcademicas/{id}`. Se espera el DTO `SolicitudAcademicaDto`, en especial `tipoSolicitudCodigo`, `estadoId`/`estadoSigla`, `estudiante` y `codigoEstudianteUis`. No hay schemas, datasets, seeds, variables ni paquetes nuevos.
+
+## Retos y próximos pasos
+1. Validar con una sesión institucional de coordinación que ambos códigos reales llegan exactamente como `CRED_COND`/`RENOV_CRED_COND` y que no aparecen en el módulo general.
+2. Confirmar con producto si `DEVUELTA` debe seguir en pendientes (decisión actual: todo estado distinto de `APROBADA`/`RECHAZADA` es pendiente).
+3. Verificar visualmente temas claro/oscuro y responsive con datos reales. No hubo captura local: el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere sesión/backend.
+
+## Entorno y verificación
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node observado 24.15.0 y npm 11.4.2; versiones completas en `README.md`/`package-lock.json`.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx src/pages/Solicitudes/SolicitudesPage.tsx src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/utils/creditoCondonable.ts src/app/routes/creditosCondonablesRoutes.tsx src/app/navigationItems.ts` (2026-09-18): PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 264 módulos, `dist/assets/index-h-NvBuld.css` e `index-BgNGRrEM.js`. Persiste únicamente el warning informativo del chunk de 552.72 kB. El repositorio no define script `test`.

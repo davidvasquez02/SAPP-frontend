@@ -6,6 +6,13 @@ interface SidebarModuleIconProps {
 }
 
 const iconPaths: Record<string, React.ReactNode> = {
+  '/creditos-condonables': (
+    <>
+      <rect width="20" height="14" x="2" y="5" rx="2" />
+      <path d="M2 10h20M6 15h2" />
+      <path d="M17 2v3M14.5 3.5h5" />
+    </>
+  ),
   '/solicitudes': (
     <>
       <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />

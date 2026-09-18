@@ -1,0 +1,14 @@
+.creditos-condonables { display: grid; gap: 1.25rem; margin: 0.25rem 0 0.5rem; }
+.creditos-condonables__section { display: grid; gap: 1rem; border-radius: 1.25rem; padding: 1.25rem; background: var(--surface); box-shadow: 0 0.2rem 0.75rem color-mix(in srgb, var(--outline), transparent 82%); }
+.creditos-condonables__section header h2, .creditos-condonables__section header p { margin: 0; }
+.creditos-condonables__section header p { margin-top: 0.25rem; color: var(--text-secondary); }
+.creditos-condonables__filters { display: flex; align-items: end; flex-wrap: wrap; gap: 0.85rem; padding: 1rem; border-radius: 1rem; background: var(--surface-container-low); }
+.creditos-condonables__field { flex: 1 1 15rem; }
+.creditos-condonables__field input, .creditos-condonables__field select { width: 100%; color: var(--text-primary); background: var(--surface); border-color: var(--outline); }
+.creditos-condonables__status { margin: 0; border-radius: 0.75rem; padding: 0.85rem 1rem; color: var(--text-secondary); background: var(--surface-container-low); }
+.creditos-condonables__status--error { color: var(--error, #b3261e); background: color-mix(in srgb, var(--error, #b3261e), transparent 90%); }
+.creditos-condonables__pagination { display: flex; justify-content: flex-end; align-items: center; gap: 0.65rem; }
+.creditos-condonables__pagination span { color: var(--text-secondary); font-size: 0.9rem; }
+.creditos-condonables__pagination button { border: 1px solid var(--outline); border-radius: 999px; padding: 0.4rem 0.9rem; color: var(--text-primary); background: var(--surface); font-weight: 600; cursor: pointer; }
+.creditos-condonables__pagination button:disabled { opacity: 0.6; cursor: not-allowed; }
+@media (max-width: 640px) { .creditos-condonables__section { padding: 1rem; } .creditos-condonables__filters { align-items: stretch; } .creditos-condonables__pagination { justify-content: space-between; } }

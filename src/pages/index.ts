@@ -5,6 +5,7 @@ export { AdmisionesPage } from "./AdmisionesPage";
 export { ConvocatoriaDetallePage } from "./ConvocatoriaDetalle";
 export { ConvocatoriasAdmisionConfigPage } from "./ConvocatoriasAdmisionConfig";
 export { CreditosPage } from "./Creditos";
+export { CreditosCondonablesCoordinacionPage } from "./CreditosCondonablesCoordinacion";
 export { EstudianteDetalleCoordinacionPage } from "./EstudianteDetalleCoordinacion";
 export { EstudiantesCoordinacionPage } from "./EstudiantesCoordinacion";
 export { GestionProfesoresPage } from "./GestionProfesores";

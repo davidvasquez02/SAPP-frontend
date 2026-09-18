@@ -16,6 +16,10 @@ import {
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
 import { sortSolicitudesDesc } from '../../utils/ordenSolicitudes'
+import {
+  isSolicitudCreditoCondonable,
+  isTipoSolicitudCreditoCondonable,
+} from '../../utils/creditoCondonable'
 import './SolicitudesCoordinadorView.css'
 
 const PAGE_SIZE = 10
@@ -24,12 +28,14 @@ interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
   readOnly?: boolean
   assignedOnly?: boolean
+  excludeCreditosCondonables?: boolean
 }
 
 const SolicitudesCoordinadorView = ({
   usuarioSappId,
   readOnly = false,
   assignedOnly = false,
+  excludeCreditosCondonables = false,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -55,7 +61,7 @@ const SolicitudesCoordinadorView = ({
           return
         }
 
-        setTiposSolicitud(tipos)
+        setTiposSolicitud(excludeCreditosCondonables ? tipos.filter((tipo) => !isTipoSolicitudCreditoCondonable(tipo)) : tipos)
         if (estados.length > 0) {
           setEstadosCatalog(estados)
         }
@@ -71,7 +77,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [])
+  }, [excludeCreditosCondonables])
 
   useEffect(() => {
     let mounted = true
@@ -80,7 +86,10 @@ const SolicitudesCoordinadorView = ({
       .then((solicitudes) => {
         if (mounted) {
           setAssignedError(null)
-          setAssignedRows(sortSolicitudesDesc(solicitudes))
+          const visibleSolicitudes = excludeCreditosCondonables
+            ? solicitudes.filter((solicitud) => !isSolicitudCreditoCondonable(solicitud))
+            : solicitudes
+          setAssignedRows(sortSolicitudesDesc(visibleSolicitudes))
         }
       })
       .catch((fetchError) => {
@@ -99,7 +108,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [usuarioSappId, location.key, location.state])
+  }, [excludeCreditosCondonables, usuarioSappId, location.key, location.state])
 
   useEffect(() => {
     if (assignedOnly) {
@@ -115,7 +124,10 @@ const SolicitudesCoordinadorView = ({
         if (!mounted) {
           return
         }
-        setRows(sortSolicitudesDesc(solicitudes))
+        const visibleSolicitudes = excludeCreditosCondonables
+          ? solicitudes.filter((solicitud) => !isSolicitudCreditoCondonable(solicitud))
+          : solicitudes
+        setRows(sortSolicitudesDesc(visibleSolicitudes))
         setCurrentPage(1)
       })
       .catch((fetchError) => {
@@ -133,7 +145,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [assignedOnly, tipoSolicitudId, location.key, location.state])
+  }, [assignedOnly, excludeCreditosCondonables, tipoSolicitudId, location.key, location.state])
 
   const availableRows = useMemo(() => {
     const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
