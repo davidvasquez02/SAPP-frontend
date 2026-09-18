@@ -82,6 +82,32 @@ export function getEstadoSolicitudLabel(value: string | null | undefined): strin
   return estadoBySigla.get(sigla)?.label ?? sigla
 }
 
+const normalizeProgramaAcademico = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+
+/** Ajusta el nombre visible del estado de firma al nivel del programa del estudiante. */
+export function getEstadoSolicitudLabelPorPrograma(
+  value: string | null | undefined,
+  programaAcademico?: string | null,
+): string {
+  if (normalizeEstadoSolicitud(value) !== 'PFIR_DIR_TG' || !programaAcademico) {
+    return getEstadoSolicitudLabel(value)
+  }
+
+  const programa = normalizeProgramaAcademico(programaAcademico)
+  if (programa.includes('DOCTORADO') || /\bDCC\b/.test(programa)) {
+    return 'POR FIRMA DIRECTOR DE TESIS'
+  }
+  if (programa.includes('MAESTRIA') || /\bMISI\b/.test(programa)) {
+    return 'POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION'
+  }
+
+  return getEstadoSolicitudLabel(value)
+}
+
 type SolicitudConEstado = {
   estadoId?: number | null
   estadoSigla?: string | null
