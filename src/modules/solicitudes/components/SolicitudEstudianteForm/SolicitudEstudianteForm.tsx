@@ -15,6 +15,12 @@ import type {
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
+import { DaneLocationSelector } from '../DaneLocationSelector/DaneLocationSelector'
+import {
+  DEFAULT_DEPARTMENT_CODE,
+  findMunicipality,
+  formatLocationName,
+} from '../DaneLocationSelector/daneLocations'
 import './SolicitudEstudianteForm.css'
 
 interface HomologacionAsignaturaFormItem {
@@ -143,6 +149,7 @@ const SolicitudEstudianteForm = ({
   const [asignaturasError, setAsignaturasError] = useState<string | null>(null)
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
+  const [departamentoExpedicionCodigo, setDepartamentoExpedicionCodigo] = useState(DEFAULT_DEPARTMENT_CODE)
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
   const [direccionEstudiante, setDireccionEstudiante] = useState('')
   const [periodoAcademicoInicioCreditoCon, setPeriodoAcademicoInicioCreditoCon] = useState('')
@@ -165,6 +172,10 @@ const SolicitudEstudianteForm = ({
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
+  const municipioExpedicionSeleccionado = useMemo(
+    () => findMunicipality(departamentoExpedicionCodigo, ciudadExpedicionDocumento),
+    [departamentoExpedicionCodigo, ciudadExpedicionDocumento],
+  )
   const periodoRenovacionValido = /^\d{4}-[12]$/.test(periodoAcademicoInicioCreditoCon.trim())
   const camposRenovacionValidos =
     direccionEstudiante.trim().length > 0 &&
@@ -179,7 +190,7 @@ const SolicitudEstudianteForm = ({
     isCreditoCondonable &&
     modalidadId !== null &&
     motivosCreditoValidos.length > 0 &&
-    ciudadExpedicionDocumento.trim().length > 0 &&
+    municipioExpedicionSeleccionado !== undefined &&
     (!isRenovacionCreditoCondonable || camposRenovacionValidos)
 
   useEffect(() => () => previewDocumentos.forEach((documento) => URL.revokeObjectURL(documento.pdfUrl)), [previewDocumentos])
@@ -358,6 +369,10 @@ const SolicitudEstudianteForm = ({
         )
         return false
       }
+      if (!municipioExpedicionSeleccionado) {
+        setErrorMsg('Selecciona un municipio válido del departamento de expedición.')
+        return false
+      }
     }
     if (isHomologacion) {
       if (asignaturasError) {
@@ -401,6 +416,7 @@ const SolicitudEstudianteForm = ({
     setModalidadId(null)
     setHomologaciones([])
     setMotivosCredito([''])
+    setDepartamentoExpedicionCodigo(DEFAULT_DEPARTMENT_CODE)
     setCiudadExpedicionDocumento('')
     setDireccionEstudiante('')
     setPeriodoAcademicoInicioCreditoCon('')
@@ -411,7 +427,7 @@ const SolicitudEstudianteForm = ({
   }
 
   const handlePreviewCredito = async () => {
-    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null) {
+    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null || !municipioExpedicionSeleccionado) {
       return
     }
     setPreviewLoading(true)
@@ -432,7 +448,7 @@ const SolicitudEstudianteForm = ({
               horasSemestre: horasSemestre as number,
             }
           : { motivosCreditoCondonable: motivosCreditoValidos }),
-        ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
+        ciudadExpedicionDocumento: formatLocationName(municipioExpedicionSeleccionado.name),
       })
       const previews = await Promise.all(
         response.map(async (documento) => {
@@ -658,12 +674,14 @@ const SolicitudEstudianteForm = ({
               + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
             </button>
           </div>
-          <label htmlFor="ciudadExpedicionDocumento">Departamento/Ciudad de expedición del documento *</label>
-          <input
-            id="ciudadExpedicionDocumento"
-            value={ciudadExpedicionDocumento}
-            onChange={(event) => setCiudadExpedicionDocumento(event.target.value)}
-            placeholder="Ej: Bucaramanga"
+          <DaneLocationSelector
+            departmentCode={departamentoExpedicionCodigo}
+            municipality={ciudadExpedicionDocumento}
+            onDepartmentChange={(departmentCode) => {
+              setDepartamentoExpedicionCodigo(departmentCode)
+              setCiudadExpedicionDocumento('')
+            }}
+            onMunicipalityChange={setCiudadExpedicionDocumento}
           />
           {isRenovacionCreditoCondonable && (
             <>

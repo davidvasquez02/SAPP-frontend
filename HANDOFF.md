@@ -1,3 +1,29 @@
+# Update 2026-09-18 — Selector DANE para lugar de expedición en créditos condonables
+
+## Estado actual y decisiones
+- Los formularios de **Solicitud crédito condonable** y **Renovación crédito condonable** ya no aceptan libremente `Departamento/Ciudad`. Presentan un selector de departamento y un campo de municipio con sugerencias filtrables del departamento activo.
+- Santander (código DANE `68`) queda seleccionado por defecto. Cambiar el departamento borra el municipio para impedir combinaciones inconsistentes; restablecer el formulario vuelve a Santander.
+- La previsualización solo se habilita cuando el texto coincide, ignorando mayúsculas y tildes, con un municipio del departamento. Al perder foco se restaura su presentación Camel Case. El payload conserva únicamente `ciudadExpedicionDocumento: string` con el nombre visible del municipio; no se envían departamento ni códigos DANE.
+
+## Paths, artefactos y contrato esperado
+- Componente accesible y responsive: `src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx` y `.css`; búsqueda, normalización y valor por defecto: `daneLocations.ts`.
+- Integración y payload: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Fuente entregada: `public/resources/Tabla-Códigos-Dane.pdf`. Dataset derivado localmente: `src/modules/solicitudes/data/daneLocations.json`, con 33 departamentos y 1.119 municipios/registros, sin dependencia o consulta de red.
+- Contrato sin cambios: la previsualización de crédito recibe `ciudadExpedicionDocumento`, por ejemplo `"Bucaramanga"`; nunca `"Santander/Bucaramanga"`, el código `001` ni un objeto. Aplica a ambos tipos de crédito detectados por el formulario.
+
+## Retos y próximos pasos
+1. Validar con sesión real ambos tipos de solicitud, el cambio de Santander a otro departamento y el payload en Network. La ruta protegida y los catálogos remotos de tipos/modalidades impiden una validación visual local representativa.
+2. Confirmar con producto si se desea una fuente DANE más reciente; esta implementación reproduce deliberadamente el PDF suministrado y no mezcla datos externos.
+3. Si el backend pasa a requerir código DANE, versionar explícitamente el contrato; no enviar códigos sin coordinación porque hoy espera solo el nombre del municipio.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes ni variables de entorno.
+- `npx eslint src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx src/modules/solicitudes/components/DaneLocationSelector/daneLocations.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados y artefactos `dist/assets/index-CeQuaapS.css` e `index-CgJEZsgg.js`. Persiste el warning informativo por el chunk JavaScript de 594.19 kB. No existe script `test`.
+- Captura pendiente por limitación ambiental: no hay Chromium, Chrome ni Firefox en `PATH`, y la pantalla necesita sesión institucional y respuestas del backend.
+
+---
+
 # Update 2026-09-18 — Paridad de gestión ADMIN/SECRETARIA/COORDINADOR
 
 ## Estado actual y decisión
