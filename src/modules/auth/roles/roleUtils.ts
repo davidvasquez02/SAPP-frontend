@@ -13,16 +13,16 @@ export const normalizeRole = (role: string): string => {
   return LEGACY_ROLE_ALIASES[normalizedRole] ?? normalizedRole
 }
 
-export const normalizeRoles = (roles: string[]): string[] =>
+export const normalizeRoles = (roles: readonly string[]): string[] =>
   [...new Set(roles.map(normalizeRole).filter(Boolean))]
 
 export const formatRoleLabel = (role: string): string =>
   normalizeRole(role).replace(/_POSGRADOS$/, '').replaceAll('_', ' ')
 
-export const hasAnyRole = (userRoles: string[], requiredRoles: string[]): boolean => {
+export const hasAnyRole = (userRoles: readonly string[], requiredRoles: readonly string[]): boolean => {
   const normalizedUserRoles = new Set(normalizeRoles(userRoles))
   return normalizeRoles(requiredRoles).some((role) => normalizedUserRoles.has(role))
 }
 
-export const isProfesor = (roles: string[]): boolean =>
+export const isProfesor = (roles: readonly string[]): boolean =>
   hasAnyRole(roles, ['DOCENTE_POSGRADOS'])

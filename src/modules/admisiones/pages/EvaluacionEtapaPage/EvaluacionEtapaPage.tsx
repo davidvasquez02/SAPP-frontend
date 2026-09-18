@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../../../components'
-import { hasAnyRole, isEvaluadorAdmision } from '../../../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
 import type { AuthUser } from '../../../../context/Auth/types'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
@@ -74,8 +74,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [inscripcionId],
   )
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isEvaluadorOnly =
-    isEvaluadorAdmision(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
 
   const nombreUsuarioSesion = useMemo(() => {
     if (session?.kind !== 'SAPP') {

@@ -1,3 +1,31 @@
+# Update 2026-09-18 — Paridad de gestión ADMIN/SECRETARIA/COORDINADOR
+
+## Estado actual y decisión
+- Los roles canónicos `ADMIN_POSGRADOS`, `SECRETARIA_POSGRADOS` y `COORDINADOR_POSGRADOS` siguen siendo valores distintos, pero por decisión funcional tienen ahora exactamente la misma capacidad operativa en el frontend.
+- `src/auth/roleGuards.ts` es la fuente única de esta política: `ROLES_GESTION_POSGRADOS` enumera los tres perfiles y `canManagePosgrados(roles)` resuelve la pertenencia mediante la normalización existente. No convertir un rol en otro ni modificar `normalizeRole`: la separación debe preservarse para cambios futuros.
+- La revisión cubrió menú, guardas de rutas y autorizaciones internas. Los tres perfiles pueden usar Créditos condonables, Informes a dependencias, Actas, Fechas, Gestión profesores y estudiantes; además comparten creación/configuración/finalización de Admisiones, validación documental, gestión de Matrícula, resolución de Solicitudes y la variante administrativa de Perfil.
+
+## Paths, contratos y salida esperada
+- Política: `src/auth/roleGuards.ts`; compatibilidad readonly: `src/modules/auth/roles/roleUtils.ts` y `src/routes/RequireRoles/RequireRoles.tsx`.
+- Navegación/rutas: `src/app/navigationItems.ts`, `src/app/routes/index.tsx` y `src/app/routes/creditosCondonablesRoutes.tsx`.
+- Acciones de página auditadas: `src/pages/{AdmisionesHome,InscripcionAdmisionDetalle,InscripcionDocumentos,Matricula,MatriculaDetalleCoordinacion,Perfil,Solicitudes,SolicitudDetalle}`.
+- Contrato de entrada sin cambios: `GET /api/sapp/inicio` entrega los roles funcionales en `clientRoles`; los nombres legacy todavía se normalizan. Salida esperada: al iniciar por separado con cualquiera de los tres roles, aparecen los mismos accesos y las mismas acciones administrativas, aunque el encabezado sigue mostrando la identidad real (`ADMIN`, `SECRETARIA` o `COORDINADOR`).
+- No se agregaron ni cambiaron endpoints, payloads, variables, dependencias, schemas, seeds o datasets.
+
+## Retos y próximos pasos
+1. Ejecutar una matriz E2E con tres cuentas institucionales, una por rol, y comparar rutas visibles, accesos directos por URL y botones de acción; la seguridad definitiva debe estar alineada también en el backend.
+2. Si producto diferencia permisos en el futuro, editar primero `ROLES_GESTION_POSGRADOS` o crear una política con nombre funcional más específico; no dispersar nuevamente arreglos de roles por las páginas.
+3. Validar especialmente respuestas 403 del backend en Créditos condonables, cierre de Admisiones, validación documental y cambios de estado de Solicitudes/Matrícula, porque este repositorio solo controla autorización de interfaz.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0 y npm 11.4.2.
+- Paquetes instalados: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide React 0.468.0-local, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; `package-lock.json` fija el árbol exacto.
+- `npm run build` (2026-09-18): PASS; 267 módulos transformados, artefactos `dist/assets/index-BKgrn9UU.css` e `index-BCj8u8EB.js`; solo persiste el warning informativo del chunk JS de 553.12 kB.
+- ESLint focalizado sobre los 16 archivos TypeScript/TSX intervenidos (2026-09-18): PASS; npm solo mostró el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores y 1 warning preexistentes en tres servicios API, el guard de evaluación, mocks/fachadas de documentos y tipos/componentes de Solicitudes; ningún hallazgo pertenece a las líneas cambiadas para esta política.
+- `git diff --check` (2026-09-18): PASS. No existe script `test` en `package.json`. No se requiere captura porque no hubo cambio visual: se habilitaron superficies existentes según rol y su representación depende de sesiones reales del gateway.
+
+---
 # Update 2026-09-18 — Recordatorio global de firma pendiente
 
 ## Estado actual y decisión

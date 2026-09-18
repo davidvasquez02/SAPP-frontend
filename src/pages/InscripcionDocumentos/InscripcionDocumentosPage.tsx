@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
@@ -64,7 +64,7 @@ const InscripcionDocumentosPage = () => {
       return false
     }
 
-    return hasAnyRole(user.roles, [ROLES.COORDINACION, ROLES.SECRETARIA])
+    return canManagePosgrados(user.roles)
   }, [session, user])
 
   const getActionState = useCallback(

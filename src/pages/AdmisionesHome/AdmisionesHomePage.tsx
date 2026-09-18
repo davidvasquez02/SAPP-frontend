@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { hasAnyRole, ROLES } from "../../auth/roleGuards";
+import { canManagePosgrados } from "../../auth/roleGuards";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { useAuth } from "../../context/Auth";
@@ -120,7 +120,7 @@ const AdmisionesHomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const canManageConvocatorias =
     session?.kind === "SAPP" &&
-    hasAnyRole(session.user.roles, [ROLES.ADMIN, ROLES.COORDINACION]);
+    canManagePosgrados(session.user.roles);
 
   const loadConvocatorias = useCallback(async () => {
     setIsLoading(true);

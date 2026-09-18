@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
@@ -146,7 +146,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const parsedMatriculaId = useMemo(() => Number(matriculaId), [matriculaId])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const canManageMatriculas = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const canManageMatriculas = canManagePosgrados(roles)
 
   const [matricula, setMatricula] = useState<MatriculaAcademicaListadoDto | null>(null)
   const [documentos, setDocumentos] = useState<DocumentoTramiteItemDto[]>([])
