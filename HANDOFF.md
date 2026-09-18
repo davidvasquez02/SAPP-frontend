@@ -3390,3 +3390,33 @@ npm run lint
 - `git diff --check` (2026-09-16): PASS.
 
 ---
+# Update 2026-09-18 — Migración de roles de posgrados desde `clientRoles`
+
+## Estado actual y decisiones
+- `GET /api/sapp/inicio` entrega el rol funcional en `data.clientRoles`. El mapper normaliza ese arreglo (mayúsculas/espacios, aliases y duplicados) y lo usa de forma autoritativa. Solo cuando llega vacío usa el `roles` heredado como compatibilidad temporal; no mezcla ambos arreglos para evitar que un claim obsoleto amplíe permisos. Los nombres canónicos quedan en `session.user.roles` y los claims específicos normalizados en `session.user.clientRoles`.
+- Los nombres canónicos son `ADMIN_POSGRADOS`, `COORDINADOR_POSGRADOS`, `SECRETARIA_POSGRADOS`, `ESTUDIANTE_POSGRADOS` y `DOCENTE_POSGRADOS`. La capa central de roles traduce además `ADMIN_SAPP`/`ADMIN`, `COORDINADOR`, `SECRETARIA`, `ESTUDIANTE`, `PROFESOR` y `DOCENTE`; esto mantiene operativas las comparaciones antiguas que todavía existen en páginas y evita una migración fragmentada. El identificador heredado correcto usa guion bajo (`ADMIN_SAPP`), no guion medio.
+- `ROLES` ya expone los valores nuevos. `PROFESOR` y `DOCENTE` son alias semánticos de `DOCENTE_POSGRADOS`, mientras `DIRECTOR` permanece sin cambio porque no fue incluido en la migración solicitada.
+- La presentación está desacoplada de autorización: la cabecera compartida y `/perfil` usan `formatRoleLabel`, que elimina `_POSGRADOS` y convierte guiones bajos restantes en espacios. El rol genérico `DEFAULT-ROLES-EISI` sigue oculto. El usuario ve, por ejemplo, `COORDINADOR`, no `COORDINADOR_POSGRADOS`.
+
+## Paths, contrato y salida esperada
+- Normalización, aliases, comparación y etiqueta: `src/modules/auth/roles/roleUtils.ts`.
+- Constantes funcionales: `src/auth/roleGuards.ts`.
+- Contrato y mapper de inicio: `src/api/authTypes.ts` y `src/api/authMappers.ts`.
+- Superficies visibles: `src/components/ModuleLayout/ModuleLayout.tsx` y `src/pages/Perfil/PerfilPage.tsx`.
+- Entrada principal esperada: `{ "ok": true, "data": { ..., "clientRoles": ["COORDINADOR_POSGRADOS"] } }`. Dentro del mapper se recibe el objeto `data`; `roles` puede no existir. Resultado esperado: `session.user.roles` contiene `COORDINADOR_POSGRADOS`, las guardas de coordinación autorizan las mismas rutas/acciones de antes y la UI imprime `COORDINADOR`.
+- No cambiaron endpoints, navegación, schemas de base de datos, dependencias, variables de entorno, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar contra el gateway institucional una sesión por cada uno de los cinco roles nuevos y confirmar sidebar, rutas protegidas y acciones de cada módulo.
+2. Confirmar si `DIRECTOR` y roles genéricos tendrán una nomenclatura nueva. Hasta recibir ese contrato se conservan literalmente y no se les concede acceso adicional.
+3. Cuando todos los ambientes de gateway hayan retirado `roles`, se puede eliminar su fallback del mapper y los aliases heredados; hacerlo antes rompería ambientes en transición.
+4. El repositorio no cuenta con Vitest. Conviene añadir pruebas unitarias para normalización, equivalencia heredada, deduplicación y etiquetas cuando se incorpore un runner.
+
+## Entorno y verificaciones
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Entorno observado: Node.js 24.15.0 y npm 11.4.2. Lockfile: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/modules/auth/roles/roleUtils.ts src/auth/roleGuards.ts src/api/authMappers.ts src/api/authTypes.ts src/components/ModuleLayout/ModuleLayout.tsx src/pages/Perfil/PerfilPage.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-V1VYF5Kd.css` e `index-CZ50IDvu.js`. Persiste el warning informativo por el chunk JavaScript de 547.66 kB.
+- `git diff --check` (2026-09-18): PASS. `npm run lint` global sigue fallando por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; ninguno está en los archivos de esta migración. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox, y las superficies de rol requieren además una sesión institucional.
+- Corrección 2026-09-18: el alias heredado de administración se rectificó de `ADMIN-SAPP` a `ADMIN_SAPP`. `npx eslint src/modules/auth/roles/roleUtils.ts`, `npm run build`, `git diff --check` y la comprobación de ausencia global de `ADMIN-SAPP` pasaron; el build generó `dist/assets/index-BOMLGh01.js` y mantuvo únicamente el warning informativo de tamaño de chunk.

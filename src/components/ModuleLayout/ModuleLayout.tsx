@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
+import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
@@ -19,9 +20,8 @@ type ModuleLayoutProps = {
 const ModuleLayout = ({ title, children, showUserSummary = true }: ModuleLayoutProps) => {
   const { user } = useAuth()
   const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
-  const roleLabel =
-    user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE) ??
-    'SIN ROL ASIGNADO'
+  const functionalRole = user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE)
+  const roleLabel = functionalRole ? formatRoleLabel(functionalRole) : 'SIN ROL ASIGNADO'
   const estudianteFoto =
     user?.estudiante?.foto ?? null
   const avatarSrc = imageDataUrl(estudianteFoto?.contenidoBase64, estudianteFoto?.mimeType) ?? FALLBACK_AVATAR

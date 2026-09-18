@@ -4,6 +4,7 @@ import { ModuleLayout } from '../../components'
 import { ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
+import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
 import {
   guardarFirmaUsuario,
   obtenerFirmaUsuario,
@@ -183,7 +184,12 @@ const PerfilPage = () => {
           <div className="profile-page__hero-copy">
             <span className="profile-page__eyebrow">Cuenta institucional</span>
             <h1>{fullName}</h1>
-            <p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario Minerva'}</p>
+            <p>
+              {roles
+                .filter((role) => role.toUpperCase() !== 'DEFAULT-ROLES-EISI')
+                .map(formatRoleLabel)
+                .join(' · ') || 'Usuario Minerva'}
+            </p>
           </div>
         </section>
 

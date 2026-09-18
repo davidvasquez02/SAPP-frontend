@@ -74,7 +74,7 @@ export interface GatewayLoginResponseDto {
   fullName: string
   email: string
   attributes: Record<string, string[]>
-  roles: string[]
+  roles?: string[]
   clientRoles: string[]
   detalle: LoginDetalleDto
 }
