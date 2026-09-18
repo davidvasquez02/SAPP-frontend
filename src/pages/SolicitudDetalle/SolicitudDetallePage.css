@@ -265,3 +265,55 @@
   padding: 0.55rem 0.7rem;
   font: inherit;
 }
+
+.solicitud-detalle-page__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.solicitud-detalle-page__modal-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 55%);
+  cursor: default;
+}
+
+.solicitud-detalle-page__modal-dialog {
+  position: relative;
+  width: min(100%, 32rem);
+  padding: 1.5rem;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 1.25rem 3rem color-mix(in srgb, var(--outline), transparent 45%);
+}
+
+.solicitud-detalle-page__modal-dialog h3,
+.solicitud-detalle-page__modal-dialog p {
+  margin-top: 0;
+}
+
+.solicitud-detalle-page__modal-dialog p {
+  color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 540px) {
+  .solicitud-detalle-page__modal-actions > * {
+    width: 100%;
+  }
+}

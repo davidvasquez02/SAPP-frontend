@@ -1,3 +1,29 @@
+# Update 2026-09-18 — Consejo Académico al aprobar solicitudes OTRA
+
+## Estado actual y decisión
+- En el detalle de solicitudes, los roles habilitados por `canManagePosgrados` siguen compartiendo la acción **Aprobar**. Cuando la solicitud tiene `tipoSolicitudId === 11` (**OTRA**, asociada al trámite 15), esa acción abre un diálogo obligatorio antes de llamar al backend.
+- **Sí, enviar al Consejo** aprueba con `enviarConsejo=true`; **No, aprobar directamente** conserva literalmente el comportamiento anterior y omite el query param. **Cancelar** y el backdrop cierran el diálogo sin cambiar el estado. Rechazar y aprobar tipos distintos de OTRA no abren el diálogo.
+- El cliente acepta una opción `enviarConsejo?: boolean`, pero serializa el parámetro únicamente cuando es `true`. Esto evita enviar `false` a backends que esperan el contrato histórico cuando no se requiere Consejo.
+
+## Paths, contrato y salida esperada
+- Orquestación/diálogo: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; apariencia temática y responsive: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; URL HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`.
+- Entrada discriminante: `SolicitudAcademicaDto.tipoSolicitudId === 11`. No depender del texto visible para evitar diferencias entre **OTRA**/**OTRO** o cambios de capitalización.
+- Contrato afirmativo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true`, sin body. Contrato negativo y resto de tipos: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA`, sin body.
+- El `actaId=2` incluido en el ejemplo del requerimiento no se añadió: este flujo no dispone de selección de acta y el contrato anterior del frontend tampoco enviaba `actaId`. Confirmar con backend/producto si debe existir una fuente real y dinámica para ese valor; no hardcodear `2` sin esa definición.
+
+## Retos y próximos pasos
+1. Validar con sesiones reales de ADMIN, SECRETARIA y COORDINADOR que los tres perfiles ven el diálogo y que Network omite/incluye el parámetro según la decisión.
+2. Confirmar con backend si remitir al Consejo mantiene inmediatamente el estado `APROBADA` y cuál es la respuesta/estado posterior esperado.
+3. Validar visualmente el diálogo en temas claro/oscuro y viewport móvil. La ruta está protegida y necesita una solicitud OTRA real en estado `ENVIADA`.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se agregaron paquetes, variables, seeds ni datasets.
+- `npx eslint src/modules/solicitudes/api/solicitudCambioEstadoService.ts src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-BpcPKGuv.css` e `index-BX3WKUBT.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 597.06 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome, Firefox ni una herramienta de navegador, y la ruta protegida requiere sesión institucional y una solicitud OTRA real en estado `ENVIADA`.
+
+---
+
 # Update 2026-09-18 — Selector DANE para lugar de expedición en créditos condonables
 
 ## Estado actual y decisiones
