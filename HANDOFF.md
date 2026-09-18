@@ -1,9 +1,10 @@
 # Update 2026-09-18 — Selector DANE para lugar de expedición en créditos condonables
 
 ## Estado actual y decisiones
-- Los formularios de **Solicitud crédito condonable** y **Renovación crédito condonable** ya no aceptan libremente `Departamento/Ciudad`. Presentan un selector de departamento y un campo de municipio con sugerencias filtrables del departamento activo.
+- Los formularios de **Solicitud crédito condonable** y **Renovación crédito condonable** ya no aceptan libremente `Departamento/Ciudad`. Presentan un selector de departamento compacto y un combobox de municipio con desplegable propio, filtrable y consistente con el estilo visual del departamento.
 - Santander (código DANE `68`) queda seleccionado por defecto. Cambiar el departamento borra el municipio para impedir combinaciones inconsistentes; restablecer el formulario vuelve a Santander.
 - La previsualización solo se habilita cuando el texto coincide, ignorando mayúsculas y tildes, con un municipio del departamento. Al perder foco se restaura su presentación Camel Case. El payload conserva únicamente `ciudadExpedicionDocumento: string` con el nombre visible del municipio; no se envían departamento ni códigos DANE.
+- El combobox de municipio abre al recibir foco, filtra mientras se escribe, admite flechas, `Enter` y `Escape`, y se cierra al hacer clic fuera. El cambio es exclusivamente visual y de interacción; no agrega paquetes ni altera contratos.
 
 ## Paths, artefactos y contrato esperado
 - Componente accesible y responsive: `src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx` y `.css`; búsqueda, normalización y valor por defecto: `daneLocations.ts`.
@@ -18,8 +19,9 @@
 
 ## Entorno y verificación reciente
 - Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes ni variables de entorno.
-- `npx eslint src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx src/modules/solicitudes/components/DaneLocationSelector/daneLocations.ts src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
-- `npm run build` (2026-09-18): PASS; 271 módulos transformados y artefactos `dist/assets/index-CeQuaapS.css` e `index-CgJEZsgg.js`. Persiste el warning informativo por el chunk JavaScript de 594.19 kB. No existe script `test`.
+- `npx eslint src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados y artefactos `dist/assets/index-C5_8d92w.css` e `index-DtocM0qY.js`. Persiste el warning informativo por el chunk JavaScript de 595.74 kB. No existe script `test`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores preexistentes fuera del selector (tipos `any`, variables no usadas, interfaces vacías y un `setState` en efecto) y 1 warning de dependencia de hook; el lint focalizado del archivo modificado sí pasa.
 - Captura pendiente por limitación ambiental: no hay Chromium, Chrome ni Firefox en `PATH`, y la pantalla necesita sesión institucional y respuestas del backend.
 
 ---
