@@ -305,6 +305,29 @@
   color: var(--text-secondary);
 }
 
+.solicitud-detalle-page__modal-dialog .solicitud-detalle-page__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.solicitud-detalle-page__modal-dialog .solicitud-detalle-page__field span {
+  font-weight: 700;
+}
+
+.solicitud-detalle-page__modal-dialog select {
+  width: 100%;
+  border: 1px solid var(--outline);
+  border-radius: 0.75rem;
+  background: var(--surface-container-low, var(--surface));
+  color: var(--text-primary);
+  padding: 0.7rem 0.8rem;
+}
+
+.solicitud-detalle-page__modal-dialog select:focus-visible {
+  outline: 2px solid var(--inverse-primary, var(--primary));
+  outline-offset: 2px;
+}
+
 .solicitud-detalle-page__modal-actions {
   display: flex;
   flex-wrap: wrap;

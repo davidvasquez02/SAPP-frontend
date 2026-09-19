@@ -14,6 +14,8 @@ import {
 } from '../../modules/solicitudes/api/solicitudCambioEstadoService'
 import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { getSolicitudDocumentosAdjuntos } from '../../modules/solicitudes/api/solicitudDocumentosService'
+import { getActas } from '../../modules/actas/api'
+import type { ActaDto } from '../../modules/actas/types'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
 import SolicitudDocumentosEditor, {
@@ -69,6 +71,12 @@ const SolicitudDetallePage = () => {
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
   const [showConsejoConfirmation, setShowConsejoConfirmation] = useState(false)
+  const [showActaSelection, setShowActaSelection] = useState(false)
+  const [actas, setActas] = useState<ActaDto[]>([])
+  const [selectedActaId, setSelectedActaId] = useState('')
+  const [actasLoading, setActasLoading] = useState(false)
+  const [actasError, setActasError] = useState<string | null>(null)
+  const [pendingEnviarConsejo, setPendingEnviarConsejo] = useState<boolean | undefined>()
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
@@ -246,12 +254,19 @@ const SolicitudDetallePage = () => {
   }
 
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
+  const estadoAntesDeResolver = `${solicitud?.estadoSigla ?? ''} ${solicitud?.estado ?? ''}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+  const estabaEnConsejo = estadoAntesDeResolver.includes('CONSEJO')
+  const estabaEnInstanciaResolutiva =
+    currentEstado === 'ENVIADA' || estadoAntesDeResolver.includes('COMITE') || estabaEnConsejo
   const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
   const draftTipoSolicitud = tiposSolicitud.find((tipo) => tipo.id === draftTipoSolicitudId)
   const showDraftMotivosCredito = draftTipoSolicitud
     ? isTipoCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
     : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
-  const canResolveSolicitud = isCoordinador && currentEstado === 'ENVIADA'
+  const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
   )
@@ -308,6 +323,7 @@ const SolicitudDetallePage = () => {
   const handleResolverSolicitud = async (
     target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>,
     enviarConsejo?: boolean,
+    actaId?: number,
   ) => {
     if (!solicitud || !canResolveSolicitud) {
       return
@@ -318,7 +334,7 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo })
+      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo, actaId })
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -334,18 +350,47 @@ const SolicitudDetallePage = () => {
     }
   }
 
+  const openActaSelection = async (enviarConsejo?: boolean) => {
+    setPendingEnviarConsejo(enviarConsejo)
+    setSelectedActaId('')
+    setActas([])
+    setActasError(null)
+    setShowActaSelection(true)
+    setActasLoading(true)
+
+    try {
+      const response = await getActas()
+      setActas(response.filter((acta) => acta.tipoConsejo === estabaEnConsejo))
+    } catch (actasFetchError) {
+      setActasError(getErrorMessage(actasFetchError, 'No fue posible consultar las actas disponibles.'))
+    } finally {
+      setActasLoading(false)
+    }
+  }
+
   const handleApproveClick = () => {
     if (isSolicitudOtra) {
       setShowConsejoConfirmation(true)
       return
     }
 
-    void handleResolverSolicitud('APROBADA')
+    void openActaSelection()
   }
 
   const handleConsejoDecision = (enviarConsejo: boolean) => {
     setShowConsejoConfirmation(false)
-    void handleResolverSolicitud('APROBADA', enviarConsejo)
+    void openActaSelection(enviarConsejo)
+  }
+
+  const handleConfirmApproval = () => {
+    const actaId = Number(selectedActaId)
+    if (!Number.isInteger(actaId) || actaId <= 0) {
+      setActasError('Debes seleccionar el acta asociada a la aprobación.')
+      return
+    }
+
+    setShowActaSelection(false)
+    void handleResolverSolicitud('APROBADA', pendingEnviarConsejo, actaId)
   }
 
   return (
@@ -654,6 +699,81 @@ const SolicitudDetallePage = () => {
                       className="solicitud-detalle-page__back"
                       type="button"
                       onClick={() => setShowConsejoConfirmation(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showActaSelection && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="acta-selection-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar aprobación"
+                  onClick={() => setShowActaSelection(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="acta-selection-title">Seleccionar acta asociada</h3>
+                  <p>
+                    La solicitud estaba en {estabaEnConsejo ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}.
+                    Selecciona un acta de esa instancia para registrar la aprobación.
+                  </p>
+
+                  {actasLoading ? (
+                    <p role="status">Consultando actas...</p>
+                  ) : (
+                    <label className="solicitud-detalle-page__field">
+                      <span>Acta *</span>
+                      <select
+                        value={selectedActaId}
+                        onChange={(event) => {
+                          setSelectedActaId(event.target.value)
+                          setActasError(null)
+                        }}
+                        disabled={actas.length === 0}
+                      >
+                        <option value="">Selecciona un acta</option>
+                        {actas.map((acta) => (
+                          <option key={acta.id} value={acta.id}>
+                            {acta.codigo} — {acta.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
+                  {!actasLoading && actas.length === 0 && !actasError && (
+                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                      No hay actas disponibles para esta instancia.
+                    </p>
+                  )}
+                  {actasError && (
+                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                      {actasError}
+                    </p>
+                  )}
+
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                      type="button"
+                      onClick={handleConfirmApproval}
+                      disabled={actasLoading || !selectedActaId}
+                    >
+                      Aprobar con acta
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowActaSelection(false)}
                     >
                       Cancelar
                     </button>
