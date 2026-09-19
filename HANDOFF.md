@@ -3758,3 +3758,26 @@ npm run lint
 - `npm run build` (2026-09-18): PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-alOfGVtp.js`. Persiste solo el aviso informativo por el chunk JavaScript de 603.07 kB.
 - `npm run lint` (2026-09-18): continúa fallando por 9 errores y 1 warning preexistentes en servicios API, guardas/mocks de admisiones y módulos de documentos/solicitudes; el archivo modificado pasa al validarlo de forma aislada.
 - `git diff --check` (2026-09-18): PASS. No hay script `test` en `package.json` ni navegador Chrome/Chromium/Firefox disponible para una captura autenticada.
+# Update 2026-09-19 — Filtro por tipo en Gestión de actas
+
+## Estado actual y decisión
+- El listado de `/actas` incorpora el filtro **Tipo de acta** con tres opciones: **Todos**, **Comité Asesor de Posgrados** y **Consejo Académico**.
+- El filtrado ocurre en cliente sobre el catálogo ya cargado, se combina con búsqueda por nombre/código y año, y reinicia la paginación en la página 1 al cambiar. No se agregó una consulta HTTP ni se alteraron contratos.
+
+## Paths, contrato y salida esperada
+- Vista y lógica: `src/pages/Actas/ActasPage.tsx`. Los estilos existentes de `sapp-filters-panel` y `sapp-filter-field` se reutilizan sin una hoja nueva.
+- Entrada: `GET /sapp/actas`, donde cada `ActaDto` expone `tipoConsejo: boolean`; `true` corresponde a Consejo Académico y `false` a Comité Asesor de Posgrados.
+- Salida: **Todos** no restringe el catálogo; **Consejo Académico** conserva registros con `tipoConsejo === true`; **Comité Asesor de Posgrados** conserva registros con `tipoConsejo === false`. Los estados vacío, carga y paginación operan sobre el resultado combinado.
+- No se agregaron paquetes, variables, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar visualmente con una sesión institucional y datos de ambos tipos que las combinaciones tipo+año+texto producen los resultados esperados.
+2. Si el catálogo crece y el backend pagina `GET /sapp/actas`, trasladar los filtros al contrato HTTP antes de asumir que el cliente tiene el conjunto completo.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm; las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/Actas/ActasPage.tsx` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-Chy-FRr7.css` e `index-CwxD0sSI.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 607.10 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida requiere backend y sesión institucional para mostrar actas reales.
+
+---

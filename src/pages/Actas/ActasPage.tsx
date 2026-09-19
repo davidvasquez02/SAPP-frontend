@@ -11,6 +11,7 @@ const SUCCESS_MESSAGE_DURATION_MS = 5_000;
 
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
+type TipoActaFilter = "" | TipoActa;
 
 const getColombiaToday = () => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -75,6 +76,7 @@ const ActasPage = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [tipoFilter, setTipoFilter] = useState<TipoActaFilter>("");
   const [page, setPage] = useState(1);
   const [nombre, setNombre] = useState("");
   const [tipoActa, setTipoActa] = useState<TipoActa>("COMITE");
@@ -119,15 +121,16 @@ const ActasPage = () => {
     return actas.filter(
       (acta) =>
         (!yearFilter || getActaYear(acta) === yearFilter) &&
+        (!tipoFilter || acta.tipoConsejo === (tipoFilter === "CONSEJO")) &&
         (!term ||
           acta.nombre.toLocaleLowerCase("es").includes(term) ||
           acta.codigo.toLocaleLowerCase("es").includes(term)),
     );
-  }, [actas, search, yearFilter]);
+  }, [actas, search, tipoFilter, yearFilter]);
   const totalPages = Math.max(1, Math.ceil(filteredActas.length / PAGE_SIZE));
   const visibleActas = filteredActas.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  useEffect(() => setPage(1), [search, yearFilter]);
+  useEffect(() => setPage(1), [search, tipoFilter, yearFilter]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -264,6 +267,7 @@ const ActasPage = () => {
           <div className="sapp-filters-panel">
             <label className="sapp-filter-field"><span>Buscar por nombre o código</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ej. ACT-001" /></label>
             <label className="sapp-filter-field"><span>Año</span><select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}><option value="">Todos</option>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>
+            <label className="sapp-filter-field"><span>Tipo de acta</span><select value={tipoFilter} onChange={(event) => setTipoFilter(event.target.value as TipoActaFilter)}><option value="">Todos</option><option value="COMITE">Comité Asesor de Posgrados</option><option value="CONSEJO">Consejo Académico</option></select></label>
           </div>
           {isLoading ? <p className="actas-page__empty">Cargando actas...</p> : null}
           {!isLoading && visibleActas.length === 0 ? <p className="actas-page__empty">No hay actas que coincidan con los filtros.</p> : null}
