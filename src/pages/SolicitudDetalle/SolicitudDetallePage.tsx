@@ -307,9 +307,9 @@ const SolicitudDetallePage = () => {
       setSignError(
         firmaCompletada
           ? getErrorMessage(
-              signingError,
-              'Los documentos fueron firmados, pero no fue posible actualizar la información en pantalla.',
-            )
+            signingError,
+            'Los documentos fueron firmados, pero no fue posible actualizar la información en pantalla.',
+          )
           : getErrorMessage(signingError, 'No fue posible firmar los documentos de la solicitud.'),
       )
     } finally {
@@ -362,7 +362,7 @@ const SolicitudDetallePage = () => {
       const response = await getActas()
       setActas(
         response.filter((acta) =>
-          estabaEnConsejo ? acta.tipoConsejo === true : acta.tipoConsejo === null,
+          estabaEnConsejo ? acta.tipoConsejo === true : (acta.tipoConsejo === null || acta.tipoConsejo === false),
         ),
       )
     } catch (actasFetchError) {
