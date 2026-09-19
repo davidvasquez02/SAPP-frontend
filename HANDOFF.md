@@ -2,13 +2,13 @@
 
 ## Estado actual y decisiones
 - En `/solicitudes/:solicitudId` y el detalle compartido de créditos, **Aprobar** ya no llama inmediatamente al cambio de estado: abre un diálogo, consulta `GET /sapp/actas` mediante el servicio existente y exige escoger un acta.
-- El listado se filtra por la instancia del estado previo. Si `estado` o `estadoSigla` contiene **CONSEJO**, se ofrecen únicamente actas con `tipoConsejo: true`; en otro estado resolutivo de Comité se muestran las de `tipoConsejo: false`. Esto evita asociar un acta de una instancia diferente.
+- El listado se filtra por la instancia del estado previo. Si `estado` o `estadoSigla` contiene **CONSEJO**, se ofrecen únicamente actas con `tipoConsejo: true`; en el estado **ENVIADA A COMITE ASESOR DE POSGRADOS** se muestran exclusivamente las de `tipoConsejo: null`. El mismo detalle y asociación se reutiliza desde los listados de solicitudes generales y créditos condonables, evitando asociar un acta de una instancia diferente.
 - Los estados descriptivos que contienen **COMITE** o **CONSEJO** habilitan la resolución para los roles reconocidos por `canManagePosgrados`, además de la sigla histórica `ENVIADA`. **Rechazar** conserva el flujo sin acta.
 - El diálogo previo de solicitudes OTRA se conserva. Tras elegir si se remite al Consejo, se solicita el acta y el PUT incluye tanto el `actaId` seleccionado como `enviarConsejo=true` cuando se escogió esa alternativa. No hay IDs hardcodeados.
 
 ## Paths, contratos y salida esperada
 - Vista/orquestación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; estilos temáticos: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; serialización: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`; catálogo reutilizado: `src/modules/actas/api.ts` y `src/modules/actas/types.ts`.
-- Catálogo: `GET /sapp/actas` → `{ ok, message, data: ActaDto[] }`, donde cada elemento incluye al menos `{ id, codigo, nombre, tipoConsejo }`.
+- Catálogo: `GET /sapp/actas` → `{ ok, message, data: ActaDto[] }`, donde cada elemento incluye al menos `{ id, codigo, nombre, tipoConsejo }`; para este flujo se espera `tipoConsejo: true | null` (Consejo | Comité).
 - Aprobación: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&actaId={id}`, sin body. Para OTRA remitida al Consejo, también incluye `enviarConsejo=true`. Salida esperada: solo se ejecuta al elegir un acta válida y después se refresca el detalle con el GET existente.
 - No se añadieron paquetes, variables, seeds, datasets ni schemas. Se reutiliza el árbol npm actual.
 
@@ -19,8 +19,9 @@
 
 ## Entorno y verificación reciente
 - Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
-- `npx eslint src/modules/solicitudes/api/solicitudCambioEstadoService.ts src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
-- `npm run build` (2026-09-19): PASS; 271 módulos transformados y artefactos `dist/assets/index-Chy-FRr7.css` e `index-BP5xY9I4.js`. Persiste el warning informativo no bloqueante por el chunk JS de 606.65 kB. `git diff --check`: PASS. No existe script `test`.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/actas/types.ts` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; 271 módulos transformados y artefactos `dist/assets/index-Chy-FRr7.css` e `index-rdW-fojp.js`. Persiste el warning informativo no bloqueante por el chunk JS de 607.12 kB. `git diff --check`: PASS. No existe script `test`.
+- `npm run lint` (2026-09-19): FAIL por 9 errores preexistentes fuera de los archivos modificados (`no-explicit-any`, `set-state-in-effect`, variables sin uso e interfaces vacías) y un warning de dependencia de hook; el lint focalizado anterior confirma que este cambio no agrega hallazgos.
 - No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la pantalla protegida necesita una sesión institucional, una solicitud resolutiva y actas reales para representar el nuevo diálogo.
 
 ---
