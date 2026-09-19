@@ -6,7 +6,7 @@ export interface ActaDto {
   codigo: string;
   fechaCreacion: string;
   observaciones: string | null;
-  tipoConsejo: boolean;
+  tipoConsejo: boolean | null;
   documentoContenidoId: number;
   mimeType: string;
   tamanoBytes: number;

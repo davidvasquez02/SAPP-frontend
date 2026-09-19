@@ -360,7 +360,11 @@ const SolicitudDetallePage = () => {
 
     try {
       const response = await getActas()
-      setActas(response.filter((acta) => acta.tipoConsejo === estabaEnConsejo))
+      setActas(
+        response.filter((acta) =>
+          estabaEnConsejo ? acta.tipoConsejo === true : acta.tipoConsejo === null,
+        ),
+      )
     } catch (actasFetchError) {
       setActasError(getErrorMessage(actasFetchError, 'No fue posible consultar las actas disponibles.'))
     } finally {
