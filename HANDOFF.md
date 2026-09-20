@@ -1,3 +1,29 @@
+# Update 2026-09-20 — Estudiantes responsive y filtro activo predeterminado
+
+## Estado actual y decisiones
+- `/coordinacion/estudiantes` inicia `estadoFiltro` en `ACTIVO`. Cambiar entre Maestría/Doctorado o limpiar devuelve ese valor predeterminado. El buscador y el contador de resultados quedan siempre visibles; en móvil período y estado empiezan contraídos, conservan sus valores al cerrar/redimensionar y se controlan con **Filtros**, `aria-expanded`, `aria-controls` y una insignia con el número de filtros adicionales aplicados. En escritorio ambos selects permanecen expandidos.
+- La variante `compactOnMobile` de `ModuleLayout` se activa únicamente en esta página: mantiene título, usuario, avatar y ambas marcas, pero reduce padding y reúne identidad/marcas en una fila cuando hay espacio. Otras pantallas no adoptan la variante.
+- El tablero conserva Pointer Events solo para mouse, umbral de 6 px, cancelación ante gesto vertical y supresión del clic posterior a drag. En móvil las tarjetas usan `calc(100% - 40px)` y gap de 12 px para anticipar 20–32 px de la siguiente según el ancho útil; el scroll táctil sigue nativo y el snap es suave. La ayuda táctil dice **Desliza para ver más**.
+- Las portadas siguen grandes: alto fluido `clamp(13.75rem, 56vw, 15rem)` (220–240 px), `object-fit: contain`, fondo semántico y fallback con iniciales. Se eliminó el `min-height` vacío del encabezado, los nombres ya no se truncan a dos líneas y la fila duplicada de estado se oculta solo en móvil; la insignia conserva Activo/Inactivo. **Ver perfil** mide al menos 44 px.
+- Egresados sigue cargándose bajo demanda. Los fallos muestran **No pudimos cargar los egresados.** y **Reintentar**; el error impide renderizar datos como si fueran un éxito o un vacío. El reintento repite la consulta existente sin cambiar el endpoint.
+
+## Paths, contratos y salida esperada
+- Vista/filtros/reintento: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` y `.css`; tablero: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.css`; tarjeta: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css`; variante de layout: `src/components/ModuleLayout/ModuleLayout.tsx` y `.css`.
+- Se conservan `getProgramasCoordinacion()`, `getEstudiantesByPrograma(programaId, egresados?)`, carga documental `ANX-4`, `EstudianteCoordinacion` y navegación `/coordinacion/estudiantes/{id}`. No cambiaron API, DTO, permisos, reglas, paquetes, variables, schemas, seeds o datasets.
+- Estados esperados: carga independiente; error distinto de vacío; lista sin coincidencias distinta de programa sin estudiantes; fotos individuales pueden fallar y dejan iniciales sin bloquear el tablero.
+
+## Retos y próximos pasos
+1. Hacer validación autenticada real en 440 × 956, 390 × 844, 320 px, landscape y escritorio; comprobar claro/oscuro, nombres largos, con/sin foto, filtros, vacío y error/reintento.
+2. Probar en dispositivo táctil scroll vertical iniciado sobre la foto, swipe horizontal y zoom; con mouse verificar clic normal frente a drag >6 px y flechas en ambos extremos.
+3. Confirmar con datos backend si algún registro activo usa el valor legado `1`; el filtro actual conserva el contrato visible `ACTIVO` usado por el selector.
+
+## Entorno y verificación reciente
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test` ni seeds.
+- `npm run build` PASS: 271 módulos; `dist/assets/index-Ctxt-4n7.css` (182.56 kB) e `index-Bb609q7R.js` (612.22 kB). Persiste el warning informativo del chunk mayor a 500 kB.
+- `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de estos archivos (`any`, estado en efecto, parámetros sin uso, interfaces vacías y dependencia de hook); el cambio no añade hallazgos.
+- No hubo captura ni prueba E2E: no hay Chromium/Chrome, Playwright ni Puppeteer instalados y la ruta protegida requiere backend/sesión institucional. No agregar dependencias solo para la captura.
+
+---
 # Ajuste visual — Portadas grandes de estudiantes (2026-09-19)
 
 - La solicitud posterior del usuario reemplaza la decisión anterior de avatares de 64 px: ahora las fotos ocupan una portada de ancho completo y 15rem (240 px con fuente base de 16 px) de alto, como tarjetas con imagen de Trello.

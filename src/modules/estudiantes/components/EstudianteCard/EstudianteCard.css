@@ -8,11 +8,11 @@
 .estudiante-card__photo-placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: var(--primary); font-size: 3.5rem; font-weight: 800; letter-spacing: .05em; background: color-mix(in srgb, var(--inverse-primary), var(--surface) 55%); }
 .estudiante-card__badge { max-width: calc(100% - 2.3rem); margin-inline: 1.15rem; display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .3rem .6rem; color: var(--primary); background: color-mix(in srgb, var(--primary), var(--surface) 90%); border: 1px solid color-mix(in srgb, var(--primary), transparent 68%); font-size: .72rem; font-weight: 750; line-height: 1.25; }
 .estudiante-card__badge--inactive { color: var(--text-secondary); background: color-mix(in srgb, var(--outline), var(--surface) 82%); border-style: dashed; border-color: var(--outline); }
-.estudiante-card__content { padding: 1rem 1rem .9rem 1.15rem; }
-.estudiante-card__header { min-height: 4.6rem; }
-.estudiante-card__title { margin: 0; font-size: 1.05rem !important; line-height: 1.28 !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.estudiante-card__content { padding: .85rem 1rem .8rem 1.15rem; }
+.estudiante-card__header { min-height: 0; }
+.estudiante-card__title { margin: 0; font-size: 1.05rem !important; line-height: 1.28 !important; overflow-wrap: anywhere; }
 .estudiante-card__code { margin: .35rem 0 0; color: var(--text-secondary); font-size: .82rem; font-weight: 650; letter-spacing: .01em; }
-.estudiante-card__details { margin: .95rem 0 0; display: grid; gap: .7rem; }
+.estudiante-card__details { margin: .7rem 0 0; display: grid; gap: .55rem; }
 .estudiante-card__details > div { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
 .estudiante-card__details dt { display: flex; align-items: center; gap: .4rem; color: var(--text-secondary); font-size: .77rem; }
 .estudiante-card__details dt svg { color: var(--primary); }
@@ -21,5 +21,5 @@
 .estudiante-card__action { margin-top: auto; width: 100%; min-height: 3.25rem; padding: .8rem 1rem .8rem 1.15rem; border: 0; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 38%); border-radius: 0; background: color-mix(in srgb, var(--surface), var(--surface-container-low) 52%); color: var(--primary); display: flex; align-items: center; justify-content: space-between; font-weight: 800; cursor: pointer; }
 .estudiante-card__action:hover { background: color-mix(in srgb, var(--primary), var(--surface) 92%); }
 .estudiante-card__action:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%); outline-offset: -4px; }
-@media (max-width: 640px) { .estudiante-card { flex-basis: min(84vw, 19rem); } }
+@media (max-width: 640px) { .estudiante-card { flex-basis: calc(100% - 40px); min-width: 0; min-height: 0; } .estudiante-card__media { height: clamp(13.75rem, 56vw, 15rem); } .estudiante-card__identity { gap: .65rem; padding-bottom: .65rem; } .estudiante-card__content { padding-block: .75rem .7rem; } .estudiante-card__details > div:last-child { display: none; } .estudiante-card__action { min-height: 2.75rem; } }
 @media (prefers-reduced-motion: reduce) { .estudiante-card { transition: none; } }

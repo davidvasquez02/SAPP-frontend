@@ -15,9 +15,10 @@ type ModuleLayoutProps = {
   title: string
   children: React.ReactNode
   showUserSummary?: boolean
+  compactOnMobile?: boolean
 }
 
-const ModuleLayout = ({ title, children, showUserSummary = true }: ModuleLayoutProps) => {
+const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile = false }: ModuleLayoutProps) => {
   const { user } = useAuth()
   const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
   const functionalRole = user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE)
@@ -27,7 +28,7 @@ const ModuleLayout = ({ title, children, showUserSummary = true }: ModuleLayoutP
   const avatarSrc = imageDataUrl(estudianteFoto?.contenidoBase64, estudianteFoto?.mimeType) ?? FALLBACK_AVATAR
 
   return (
-    <div className="module-layout">
+    <div className={`module-layout${compactOnMobile ? ' module-layout--compact-mobile' : ''}`}>
       <header className="module-layout__header">
         <div>
           <h2 className="module-layout__title">{title}</h2>
