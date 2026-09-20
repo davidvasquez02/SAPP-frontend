@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — Gestión de profesores responsive (2026-09-20)
+
+- `/coordinacion/profesores` conserva en escritorio las pestañas, tablas, columnas, filtros, paginación y operaciones existentes. Hasta 800 CSS px, los cuatro listados se adaptan a tarjetas verticales: profesores de posgrados, profesores EISI disponibles, integrantes del grupo y profesores de posgrados disponibles para el grupo.
+- El recorte móvil provenía de tablas intrínsecamente más anchas que el viewport dentro de una cadena flex sin `min-width: 0`, celdas/acciones sin ajuste y pestañas desplazables. La solución es local al módulo: permite contracción de contenedores, transforma semánticamente las filas solo en el breakpoint, ajusta texto largo y distribuye botones/paginación sin ocultar overflow en `body` ni eliminar información.
+- Las pestañas implementan `tablist`/`tab`/`tabpanel`, foco roving y flechas/Home/End. El selector ocupa todo el ancho móvil y repite debajo el nombre completo seleccionado; una protección descarta respuestas tardías al cambiar de grupo. Las mutaciones y consultas, confirmaciones, identificadores, elegibilidad, regla de director único, estados de envío y contratos HTTP no cambiaron.
+- No se añadieron dependencias, variables, schemas, seeds ni datasets. Se reutiliza el único `node_modules` del repositorio. ESLint focalizado, build y `git diff --check` pasan; el build produjo `dist/assets/index-DUxhBT2n.css` e `index-eaq7Vr05.js`, con el aviso informativo conocido por tamaño del chunk. La comprobación visual autenticada, capturas y operaciones con mocks quedan pendientes porque el contenedor no tiene navegador ni entorno backend/sesión de pruebas.
+
 ## Corrección reciente — detalles de convocatoria e inscripción en móvil (2026-09-20)
 
 - Se corrigió el espacio vertical excesivo que aparecía en el detalle móvil de una convocatoria: la columna de acciones heredaba un `flex-basis: 25rem` pensado para el eje horizontal de escritorio. Hasta 760 px ahora usa base automática, por lo que **Crear aspirante**, los indicadores y el listado quedan consecutivos sin una zona vacía artificial.

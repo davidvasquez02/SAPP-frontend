@@ -1,3 +1,27 @@
+## Update 2026-09-20 — `/coordinacion/profesores` responsive
+
+### Estado, causa y decisiones
+- Las dos pestañas existentes siguen usando un solo estado React y conservan búsquedas, selección y páginas al alternar. Ahora tienen semántica `tablist`/`tab`/`tabpanel`, selección visible, foco roving y navegación con flechas, Home y End.
+- El recorte móvil era la combinación de ancho intrínseco de las tablas, celdas y acciones sin ajuste, contenedores flex sin `min-width: 0` y tabs con overflow. Hasta 800 CSS px las mismas filas se presentan como tarjetas CSS (sin montar una segunda lista ni duplicar solicitudes); a partir de 801 px la tabla y su distribución anterior permanecen intactas.
+- Los cuatro listados están cubiertos: rol de posgrados, EISI disponible, integrantes de grupo y posgrados disponibles para agregar. Las tarjetas preservan nombre, documento/correo o identificador/rol según corresponda y botones completos de 44 px. Correos/nombres usan wrap; paginación se reorganiza sin perder el total filtrado.
+- El selector de grupo es fluido y muestra el nombre completo seleccionado bajo el control en móvil. El efecto de integrantes invalida respuestas tardías cuando cambia `grupoId`, evitando pintar el grupo anterior. Se distingue explícitamente selección pendiente de grupo seleccionado sin integrantes.
+- No cambiaron endpoints, DTO, permisos, elegibilidad, confirmaciones, regla de director único, alcance de retirar, estados de mutación, paginación, ni las operaciones **Agregar/Retirar de posgrados**, **Agregar al grupo**, **Hacer director** y **Retirar**.
+
+### Paths, contratos y salida esperada
+- Implementación y estado: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`. Estilos aislados y breakpoint: `src/pages/GestionProfesores/GestionProfesoresPage.css` (800 CSS px; compactación adicional a 360 px).
+- Contratos sin cambios: `GET /sapp/docentes`, endpoints de rol bajo `/sapp/docentes/{uuid}`, `GET /sapp/gruposInvestigacion`, y GET/POST/PUT/DELETE de `/sapp/gruposInvestigacionDocentes`. Los detalles están en `src/api/gruposInvestigacionService.ts` y `src/api/gruposInvestigacionTypes.ts`.
+- Salida esperada: escritorio con tablas y todas sus columnas originales; móvil 320–440 px sin scroll horizontal, con una tarjeta por fila, texto completo y acciones a ancho disponible. El identificador de integrante continúa siendo `docenteId ?? id`, no documento ni código UIS.
+- No existen seeds/datasets ni fixtures nuevos. No crear venv, Conda o Poetry: es un frontend Node y debe reutilizar `/workspace/SAPP-frontend/node_modules`.
+
+### Verificación y próximos pasos
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS (solo warning ambiental de npm por `http-proxy`).
+- `npm run build`: PASS, 272 módulos; `dist/assets/index-DUxhBT2n.css` (202.04 kB) e `index-eaq7Vr05.js` (629.79 kB). Persiste el warning informativo del chunk mayor de 500 kB. `git diff --check`: PASS. No existe script `test`.
+- Pendiente: validar con navegador y sesión de pruebas a 320/375/402/440 px, tablet, horizontal y escritorio, `body.light`/`body.dark`; comprobar teclado, zoom, nombres/correos/grupos largos, vacíos/error, búsquedas, páginas y móvil → escritorio → móvil. No hay Chromium/Chrome/Firefox en el contenedor, por lo que no hubo captura.
+- Pendiente con mocks o ambiente no productivo: ejecutar asignación/retiro del rol, alta/baja del grupo y cambio de director, verificando refresh/contadores y fallos. No se modificaron usuarios reales.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; versiones reproducibles en `package-lock.json`.
+
+---
+
 ## Update 2026-09-20 — corrección de detalles de convocatoria e inscripción
 
 ### Estado actual y causa

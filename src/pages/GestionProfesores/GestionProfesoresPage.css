@@ -1,4 +1,5 @@
-.gestion-profesores { display: flex; flex-direction: column; gap: 1.25rem; }
+.gestion-profesores { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.gestion-profesores__panel { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 .gestion-profesores__hero, .gestion-profesores__card { padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 20px; background: var(--surface-container-low); box-shadow: var(--shadow-xs); }
 .gestion-profesores__hero, .gestion-profesores__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .gestion-profesores h1, .gestion-profesores h2, .gestion-profesores p { margin: 0; }
@@ -7,11 +8,13 @@
 .gestion-profesores button:disabled { opacity: .55; cursor: not-allowed; }
 .gestion-profesores__tabs { display: flex; gap: .5rem; padding: .35rem; align-self: flex-start; border: 1px solid var(--outline); border-radius: 999px; background: var(--surface); }
 .gestion-profesores__tabs button { min-height: 2.25rem; padding: .35rem 1rem; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; }
-.gestion-profesores__tabs button[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); font-weight: 700; }
-.gestion-profesores__card { display: flex; flex-direction: column; gap: 1rem; }
+.gestion-profesores__tabs button[aria-selected='true'] { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.gestion-profesores__tabs button:focus-visible, .gestion-profesores button:focus-visible, .gestion-profesores input:focus-visible, .gestion-profesores select:focus-visible { outline: 3px solid var(--inverse-primary); outline-offset: 2px; }
+.gestion-profesores__card { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
 .gestion-profesores__heading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; }
 .gestion-profesores__search { display: flex; flex-direction: column; gap: .35rem; max-width: 26rem; color: var(--text-secondary); font-weight: 600; }
 .gestion-profesores__group-select { display: flex; flex-direction: column; gap: .35rem; width: min(100%, 34rem); color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__selected-group { display: none; color: var(--text-secondary); overflow-wrap: anywhere; }
 .gestion-profesores__group-section { display: flex; flex-direction: column; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%); }
 .gestion-profesores__subheading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .gestion-profesores__subheading h3, .gestion-profesores__subheading p { margin: 0; }
@@ -34,4 +37,34 @@
 .gestion-profesores__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
 .gestion-profesores__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
 .gestion-profesores__empty { text-align: center; color: var(--text-secondary); }
-@media (max-width: 800px) { .gestion-profesores__hero, .gestion-profesores__heading, .gestion-profesores__subheading { flex-direction: column; } .gestion-profesores__tabs { width: 100%; overflow-x: auto; } }
+@media (max-width: 800px) {
+  .gestion-profesores { gap: 1rem; width: 100%; }
+  .gestion-profesores__hero, .gestion-profesores__heading, .gestion-profesores__subheading { flex-direction: column; }
+  .gestion-profesores__hero, .gestion-profesores__card { padding: 1rem; border-radius: 16px; }
+  .gestion-profesores__tabs { box-sizing: border-box; width: 100%; align-self: stretch; border-radius: 16px; }
+  .gestion-profesores__tabs button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: .5rem; line-height: 1.25; white-space: normal; }
+  .gestion-profesores__search, .gestion-profesores__group-select { width: 100%; max-width: none; min-width: 0; }
+  .gestion-profesores__search input, .gestion-profesores__group-select select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; font-size: 16px; }
+  .gestion-profesores__selected-group { display: block; margin: -.25rem 0 .25rem; }
+  .gestion-profesores__heading > span, .gestion-profesores__subheading > span { white-space: normal; }
+  .gestion-profesores__table-wrap { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .gestion-profesores table, .gestion-profesores tbody { display: block; width: 100%; }
+  .gestion-profesores thead { display: none; }
+  .gestion-profesores tr { display: flex; flex-direction: column; gap: .75rem; box-sizing: border-box; width: 100%; margin-bottom: .75rem; padding: 1rem; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface); }
+  .gestion-profesores tbody tr:last-child { margin-bottom: 0; }
+  .gestion-profesores td { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .gestion-profesores td[data-label]::before { display: block; margin-bottom: .2rem; color: var(--text-secondary); content: attr(data-label); font-size: var(--font-size-small); font-weight: 700; }
+  .gestion-profesores td:first-child { font-weight: 700; }
+  .gestion-profesores td:first-child::before { font-weight: 600; }
+  .gestion-profesores__action-cell { padding-top: .25rem !important; }
+  .gestion-profesores__action-cell > button, .gestion-profesores__row-actions button { box-sizing: border-box; width: 100%; min-height: 44px; white-space: normal; }
+  .gestion-profesores__row-actions { flex-direction: column; align-items: stretch; width: 100%; }
+  .gestion-profesores__pagination { flex-wrap: wrap; justify-content: center; text-align: center; }
+  .gestion-profesores__pagination button { min-height: 44px; }
+  .gestion-profesores__pagination span { flex: 1 0 100%; order: -1; }
+}
+
+@media (max-width: 360px) {
+  .gestion-profesores__hero, .gestion-profesores__card { padding: .75rem; }
+  .gestion-profesores tr { padding: .875rem; }
+}
