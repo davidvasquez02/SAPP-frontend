@@ -19,6 +19,11 @@ export interface EstadoSolicitudDto {
 
 export interface SolicitudAcademicaDto {
   id: number
+  actaId?: number | null
+  actaCodigo?: string | null
+  actaNombre?: string | null
+  actaFechaCreacion?: string | null
+  actaTipoConsejo?: boolean | null
   estudianteId: number
   estudiante: string
   codigoEstudianteUis: string

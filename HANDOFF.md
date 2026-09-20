@@ -1,3 +1,27 @@
+# Update 2026-09-20 — Acta asociada en detalles de solicitudes
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` es la vista compartida por solicitudes académicas normales y créditos condonables. Su DTO ahora declara `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` como campos opcionales/anulables del `GET` de detalle.
+- Solo cuando el estado normalizado es `APROBADA` y existe `actaId`, se renderiza una única tarjeta **Acta asociada** después del resumen general. Contiene código, fecha `DD/MM/YYYY`, nombre e instancia; no se dispersaron los campos entre las tarjetas generales.
+- `actaTipoConsejo: true` significa **Consejo Académico**. Tanto `false` como `null` se muestran como **Comité Asesor de Posgrados**, consistente con el contrato ya usado al filtrar las actas disponibles durante la aprobación.
+- La tarjeta usa Lucide ya instalado y tokens `--primary`, `--on-primary`, `--outline`, `--surface-container-low` y texto semántico. Tiene dos columnas en escritorio y una en móvil, compatible con temas claro/oscuro. No cambió el flujo previo de selección de acta al aprobar.
+
+## Paths, contrato y salida esperada
+- DTO: `src/modules/solicitudes/api/types.ts`. Render: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Estilos: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`.
+- Consulta existente: `GET /sapp/solicitudesAcademicas/{solicitudId}` → `{ ok, message, data }`. En `data`, los campos nuevos son `{ actaId: number | null, actaCodigo: string | null, actaNombre: string | null, actaFechaCreacion: "YYYY-MM-DD" | null, actaTipoConsejo: boolean | null }`.
+- Salida esperada: `APROBADA` + `actaId` dibuja exactamente un bloque del acta en ambas familias de solicitudes; cualquier otro estado, o una aprobada sin asociación, no lo dibuja. Valores ausentes de código/nombre usan texto de respaldo y una fecha ausente usa `—`.
+- No se añadieron endpoints, paquetes, variables, schemas, seeds ni datasets. La respuesta de ejemplo usada para implementar tenía `id: 65`, `estadoSigla: "APROBADA"`, `actaId: 5`, `actaCodigo: "ACT-001-2026"`, `actaNombre: "ACTA DE PRUEBA DE DAVID"`, `actaFechaCreacion: "2026-08-28"` y `actaTipoConsejo: null`.
+
+## Retos y próximos pasos
+1. Validar con el gateway una solicitud normal aprobada y un crédito condonable aprobado, además de casos no aprobados y una respuesta aprobada sin acta.
+2. Confirmar con backend que `actaTipoConsejo: null` seguirá representando Comité. Si `null` pasa a significar “sin clasificar”, ajustar la etiqueta o presentar un fallback neutral.
+3. Revisar visualmente la tarjeta con nombres/códigos largos a 320–440 px y escritorio en `body.light`/`body.dark`. El contenedor no contiene Chromium, Chrome ni Firefox y la ruta requiere autenticación, por lo que no se generó captura.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2. Instalado: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test` ni seeds.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/types.ts`: PASS. `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-DNu7XGnK.css` (199.46 kB) e `index-B-Qm0z6W.js` (628.67 kB), con el aviso informativo conocido por tamaño del chunk. `git diff --check`: PASS.
+
+---
 # Update 2026-09-20 — Listado inicial de matrículas responsive
 
 ## Estado actual y decisiones

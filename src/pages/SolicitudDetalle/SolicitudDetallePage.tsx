@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
+import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
 import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
@@ -271,6 +272,7 @@ const SolicitudDetallePage = () => {
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
   )
   const canSignAllDocuments = isCoordinador && estadoPermiteFirma
+  const showActaAsociada = currentEstado === 'APROBADA' && solicitud?.actaId != null
 
   const handleFirmarDocumentos = async () => {
     if (!solicitud) {
@@ -470,6 +472,38 @@ const SolicitudDetallePage = () => {
                 </div>
               )}
             </dl>
+
+            {showActaAsociada && (
+              <section className="solicitud-detalle-page__acta" aria-labelledby="acta-asociada-title">
+                <div className="solicitud-detalle-page__acta-heading">
+                  <span className="solicitud-detalle-page__acta-icon" aria-hidden="true">
+                    <ScrollText size={22} strokeWidth={1.8} />
+                  </span>
+                  <div>
+                    <h3 id="acta-asociada-title">Acta asociada</h3>
+                    <p>Documento en el que quedó registrada la aprobación de esta solicitud.</p>
+                  </div>
+                </div>
+                <dl className="solicitud-detalle-page__acta-details">
+                  <div>
+                    <dt>Código</dt>
+                    <dd>{solicitud.actaCodigo || 'Sin código'}</dd>
+                  </div>
+                  <div>
+                    <dt>Fecha del acta</dt>
+                    <dd>{formatDate(solicitud.actaFechaCreacion ?? null)}</dd>
+                  </div>
+                  <div>
+                    <dt>Nombre</dt>
+                    <dd>{solicitud.actaNombre || 'Sin nombre'}</dd>
+                  </div>
+                  <div>
+                    <dt>Instancia</dt>
+                    <dd>{solicitud.actaTipoConsejo === true ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}</dd>
+                  </div>
+                </dl>
+              </section>
+            )}
 
             {solicitud.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG' && (
               <section className="solicitud-detalle-page__homologaciones" aria-labelledby="homologaciones-title">
