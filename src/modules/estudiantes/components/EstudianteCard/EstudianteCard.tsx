@@ -1,6 +1,5 @@
-import type { KeyboardEvent } from 'react'
+import { CalendarDays } from 'lucide-react'
 import type { EstudianteCoordinacion } from '../../types'
-import { formatDocumentoIdentidad } from '../../utils/formatDocumentoIdentidad'
 import './EstudianteCard.css'
 
 interface EstudianteCardProps {
@@ -10,97 +9,63 @@ interface EstudianteCardProps {
 
 const getEstadoLabel = (estado: EstudianteCoordinacion['estadoAcademico']) => {
   const normalized = estado?.trim().toUpperCase()
-
-  if (normalized === 'EN_TRABAJO_DE_GRADO') {
-    return 'En trabajo de grado'
-  }
-
-  if (normalized === 'EN_ESPERA_CANDIDATURA') {
-    return 'En espera candidatura'
-  }
-
-  if (normalized === 'ACTIVO' || normalized === '1') {
-    return 'Activo'
-  }
-
-  if (normalized === 'INACTIVO') {
-    return 'Inactivo'
-  }
-
-  if (normalized === 'EGRESADO') {
-    return 'Egresado'
-  }
-
+  if (normalized === 'EN_TRABAJO_DE_GRADO') return 'En trabajo de grado'
+  if (normalized === 'EN_ESPERA_CANDIDATURA') return 'En espera candidatura'
+  if (normalized === 'ACTIVO' || normalized === '1') return 'Activo'
+  if (normalized === 'INACTIVO') return 'Inactivo'
+  if (normalized === 'EGRESADO') return 'Egresado'
   return estado.replaceAll('_', ' ').toLowerCase()
 }
 
+const getInitials = (name: string) => name
+  .trim()
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part[0]?.toLocaleUpperCase('es-CO'))
+  .join('') || 'ES'
+
 const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onClick()
-    }
-  }
+  const normalizedStatus = estudiante.estadoAcademico?.trim().toUpperCase()
+  const isInactive = normalizedStatus === 'INACTIVO'
 
   return (
-    <article
-      className="estudiante-card"
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-    >
-      <div className="estudiante-card__media">
-        {estudiante.fotoUrl ? (
-          <img
-            className="estudiante-card__photo"
-            src={estudiante.fotoUrl}
-            alt={`Foto de ${estudiante.nombreCompleto}`}
-            loading="lazy"
-          />
-        ) : (
-          <div className="estudiante-card__photo-placeholder" aria-hidden="true">
-            <span className="estudiante-card__placeholder-icon">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Zm0 2c-3.31 0-6 2.02-6 4.5V20h12v-1.5c0-2.48-2.69-4.5-6-4.5Z" />
-              </svg>
-            </span>
-            <span>Sin foto</span>
+    <article className={`estudiante-card${isInactive ? ' estudiante-card--inactive' : ''}`}>
+      <div className="estudiante-card__identity">
+        <div className="estudiante-card__media">
+          {estudiante.fotoUrl ? (
+            <img className="estudiante-card__photo" src={estudiante.fotoUrl} alt="" loading="lazy" draggable={false} />
+          ) : (
+            <div className="estudiante-card__photo-placeholder" aria-hidden="true">{getInitials(estudiante.nombreCompleto)}</div>
+          )}
+        </div>
+        <span className={`estudiante-card__badge${isInactive ? ' estudiante-card__badge--inactive' : ''}`}>
+          <span aria-hidden="true">{isInactive ? '○' : '✓'}</span>
+          {getEstadoLabel(estudiante.estadoAcademico)}
+        </span>
+      </div>
+
+      <div className="estudiante-card__content">
+        <header className="estudiante-card__header">
+          <h3 className="estudiante-card__title">{estudiante.nombreCompleto}</h3>
+          <p className="estudiante-card__code">Código UIS {estudiante.codigo}</p>
+        </header>
+
+        <dl className="estudiante-card__details">
+          <div>
+            <dt><CalendarDays aria-hidden="true" size={16} /> Cohorte</dt>
+            <dd>{estudiante.cohorte}</dd>
           </div>
-        )}
+          <div>
+            <dt><span aria-hidden="true">▣</span> Estado académico</dt>
+            <dd>{getEstadoLabel(estudiante.estadoAcademico)}</dd>
+          </div>
+        </dl>
       </div>
 
-      <header className="estudiante-card__header">
-        <h2 className="estudiante-card__title">{estudiante.nombreCompleto}</h2>
-        <span className="estudiante-card__badge">{getEstadoLabel(estudiante.estadoAcademico)}</span>
-      </header>
-
-      <div className="estudiante-card__body">
-        <p className="estudiante-card__meta">
-          <span className="estudiante-card__meta-icon" aria-hidden="true">▣</span>
-          <span><strong>Código:</strong> {estudiante.codigo}</span>
-        </p>
-        <p className="estudiante-card__meta">
-          <span className="estudiante-card__meta-icon" aria-hidden="true">▤</span>
-          <span>
-            <strong>Documento:</strong>{' '}
-            {formatDocumentoIdentidad(estudiante.tipoDocumento, estudiante.numeroDocumento)}
-          </span>
-        </p>
-        <p className="estudiante-card__meta estudiante-card__meta--break">
-          <span className="estudiante-card__meta-icon" aria-hidden="true">✉</span>
-          <span><strong>Correo:</strong> {estudiante.correoInstitucional}</span>
-        </p>
-        <p className="estudiante-card__meta">
-          <span className="estudiante-card__meta-icon" aria-hidden="true">♙</span>
-          <span><strong>Cohorte:</strong> {estudiante.cohorte}</span>
-        </p>
-      </div>
-
-      <footer className="estudiante-card__footer">
+      <button type="button" className="estudiante-card__action" onClick={onClick} aria-label={`Ver perfil de ${estudiante.nombreCompleto}`}>
         <span>Ver perfil</span>
-        <span className="estudiante-card__footer-arrow" aria-hidden="true">→</span>
-      </footer>
+        <span aria-hidden="true">→</span>
+      </button>
     </article>
   )
 }

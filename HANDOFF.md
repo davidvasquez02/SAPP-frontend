@@ -22,6 +22,35 @@
 - No existe script `test`. No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH` y la aplicación fuerza inicialización contra el gateway institucional; no falsificar una sesión ni disparar logout durante la validación.
 
 ---
+# Update 2026-09-20 — Tablero compacto de estudiantes de coordinación
+
+## Estado actual y decisiones
+- `/coordinacion/estudiantes` conserva los dos tipos de programa, filtros por período/nombre o código/estado, contador, orden por cohorte, carga progresiva de fotografías, bloque diferido de egresados y navegación con snapshot. No se cambió ninguna consulta ni DTO.
+- `StudentHorizontalBoard` ahora permite arrastrar horizontalmente con el botón izquierdo. Solo inicia para mouse primario y fuera de controles interactivos; captura el puntero, exige 6 px, abandona el gesto cuando predomina el movimiento vertical y suprime en captura el clic generado tras un arrastre. `pointerup`, `pointercancel` y `lostpointercapture` limpian el estado. El scroll táctil, trackpad, rueda/barra y vertical permanecen nativos.
+- Las flechas se deshabilitan de acuerdo con la posición real y se recalculan en scroll/resize. El tablero enfocado admite `ArrowLeft` y `ArrowRight`, muestra foco y usa cursores `grab`/`grabbing`.
+- `EstudianteCard` reduce el retrato a 64 px, usa iniciales como fallback y prioriza nombre, código UIS, cohorte y estado. El estado se repite textual e icónicamente, y la tarjeta inactiva usa además borde lateral neutro e insignia discontinua. Se retiraron documento y correo del resumen para reducir ruido y exposición; siguen disponibles en el perfil. El botón **Ver perfil** mantiene el callback existente.
+- Los estilos usan exclusivamente tokens semánticos existentes y `color-mix`, con anchos fluidos para escritorio/tablet/móvil y soporte inherente para `body.light`/`body.dark`. No hay dependencias nuevas.
+
+## Paths, contratos y salida esperada
+- Tablero/interacción: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx` y `.css`.
+- Tarjeta: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` y `.css`.
+- Ajuste responsive de filtros: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.css`.
+- Entrada sin cambios: `EstudianteCoordinacion` y los servicios existentes de `src/modules/estudiantes`; la salida esperada sigue navegando a `/coordinacion/estudiantes/{estudiante.id}` con `{ estudiante }` en `location.state`.
+- No cambiaron endpoints, schemas, roles, variables de entorno, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Ejecutar una prueba E2E autenticada: clic normal en **Ver perfil** navega una sola vez; arrastrar desde el cuerpo de una tarjeta más de 6 px desplaza y no navega; iniciar sobre el botón conserva el comportamiento del control.
+2. Revisar visualmente datos reales en tema claro/oscuro a 1440, 768 y 390 px, especialmente nombres/estados largos y fotos de encuadre heterogéneo.
+3. Confirmar en Safari que Pointer Events, `color-mix` y `ResizeObserver` satisfacen la matriz institucional; agregar fallback solo si esa matriz incluye navegadores antiguos.
+
+## Entorno y verificaciones recientes
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. `npm ci` reproduce el lockfile; no hay seeds ni script `test`.
+- `npx eslint src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` (2026-09-20): PASS.
+- `npm run build` (2026-09-20): PASS; 271 módulos, `dist/assets/index-Bd4ooJs_.css` y `dist/assets/index-Clw57B_Z.js`. Solo persiste el aviso informativo por el chunk JS de 611.43 kB.
+- `npm run lint` (2026-09-20): FAIL por 9 errores y 1 warning preexistentes fuera de esta pantalla (servicios API con `any`, guard/mocks de admisiones, validación documental y tipos/efecto de Solicitudes). Los tres archivos TypeScript del cambio pasan aislados.
+- `git diff --check` (2026-09-20): PASS. No se generó captura ni prueba E2E: Chromium, Chrome y Firefox no están disponibles en el contenedor, y la ruta protegida requiere backend/sesión institucional.
+
+---
 
 # Update 2026-09-19 — Acta obligatoria al aprobar solicitudes
 

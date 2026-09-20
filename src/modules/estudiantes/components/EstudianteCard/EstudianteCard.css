@@ -1,156 +1,25 @@
-.estudiante-card {
-    flex: 0 0 290px;
-    min-height: 470px;
-    border-radius: 18px;
-    border: 1px solid color-mix(in srgb, var(--outline), transparent 28%);
-    background: var(--surface);
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
-    overflow: hidden;
-    scroll-snap-align: start;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.estudiante-card:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--primary), var(--outline) 58%);
-    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
-}
-
-.estudiante-card:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--primary), transparent 45%);
-    outline-offset: 2px;
-}
-
-.estudiante-card__media {
-    width: 100%;
-    height: 300px;
-    background: color-mix(in srgb, var(--surface-container-low), var(--outline) 12%);
-    border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 32%);
-}
-
-.estudiante-card__photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.estudiante-card__photo-placeholder {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-    align-content: center;
-    gap: 0.7rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 0.9rem;
-    background: radial-gradient(circle at center, color-mix(in srgb, var(--primary), transparent 88%) 0 34%, transparent 35%), color-mix(in srgb, var(--surface-container-low), var(--surface) 30%);
-}
-
-.estudiante-card__placeholder-icon {
-    width: 3.35rem;
-    height: 3.35rem;
-    border-radius: 999px;
-    display: grid;
-    place-items: center;
-    color: var(--primary);
-    background: color-mix(in srgb, var(--surface), var(--outline) 8%);
-    border: 1px solid color-mix(in srgb, var(--outline), transparent 42%);
-}
-
-.estudiante-card__placeholder-icon svg {
-    width: 1.75rem;
-    height: 1.75rem;
-    fill: currentColor;
-}
-
-.estudiante-card__header {
-    padding: 1rem 1.1rem 0.65rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.7rem;
-}
-
-.estudiante-card__title {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 1rem;
-    line-height: 1.35;
-    font-weight: 800;
-}
-
-.estudiante-card__badge {
-    border-radius: 999px;
-    padding: 0.25rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary), var(--surface) 86%);
-    border: 1px solid color-mix(in srgb, var(--primary), transparent 65%);
-    white-space: nowrap;
-}
-
-.estudiante-card__body {
-    padding: 0 1.1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
-.estudiante-card__meta {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.82rem;
-    line-height: 1.4;
-    display: grid;
-    grid-template-columns: 1.1rem minmax(0, 1fr);
-    gap: 0.45rem;
-    align-items: start;
-}
-
-.estudiante-card__meta strong {
-    color: var(--text-primary);
-}
-
-.estudiante-card__meta-icon {
-    color: color-mix(in srgb, var(--text-secondary), var(--primary) 18%);
-    font-size: 0.85rem;
-    line-height: 1.25rem;
-    text-align: center;
-}
-
-.estudiante-card__meta--break {
-    overflow-wrap: anywhere;
-}
-
-.estudiante-card__footer {
-    margin-top: auto;
-    padding: 0.95rem 1.1rem;
-    border-top: 1px solid color-mix(in srgb, var(--outline), transparent 32%);
-    background: color-mix(in srgb, var(--surface), var(--surface-container-low) 58%);
-    color: var(--primary);
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.estudiante-card__footer-arrow {
-    font-size: 1.35rem;
-    line-height: 1;
-}
-
-@media (max-width: 640px) {
-    .estudiante-card {
-        flex-basis: 84vw;
-        min-height: 455px;
-    }
-    .estudiante-card__media {
-        height: 220px;
-    }
-}
+.estudiante-card { position: relative; flex: 0 0 clamp(15rem, 22vw, 17rem); min-height: 20rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 24%); border-radius: 1.25rem; background: var(--surface); box-shadow: 0 7px 20px color-mix(in srgb, var(--outline), transparent 82%); display: flex; flex-direction: column; overflow: hidden; scroll-snap-align: start; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.estudiante-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--primary); }
+.estudiante-card--inactive::before { background: var(--text-secondary); }
+.estudiante-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--primary), var(--outline) 60%); box-shadow: 0 12px 26px color-mix(in srgb, var(--outline), transparent 72%); }
+.estudiante-card__identity { padding: 1rem 1rem .8rem 1.15rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; background: color-mix(in srgb, var(--surface-container-low), var(--surface) 35%); border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 45%); }
+.estudiante-card__media { flex: 0 0 4rem; width: 4rem; height: 4rem; border-radius: 1rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--outline), transparent 25%); background: var(--surface); }
+.estudiante-card__photo { width: 100%; height: 100%; display: block; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.estudiante-card__photo-placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: var(--primary); font-size: 1rem; font-weight: 800; letter-spacing: .05em; background: color-mix(in srgb, var(--inverse-primary), var(--surface) 55%); }
+.estudiante-card__badge { max-width: 9rem; display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .3rem .6rem; color: var(--primary); background: color-mix(in srgb, var(--primary), var(--surface) 90%); border: 1px solid color-mix(in srgb, var(--primary), transparent 68%); font-size: .72rem; font-weight: 750; line-height: 1.25; }
+.estudiante-card__badge--inactive { color: var(--text-secondary); background: color-mix(in srgb, var(--outline), var(--surface) 82%); border-style: dashed; border-color: var(--outline); }
+.estudiante-card__content { padding: 1rem 1rem .9rem 1.15rem; }
+.estudiante-card__header { min-height: 4.6rem; }
+.estudiante-card__title { margin: 0; font-size: 1.05rem !important; line-height: 1.28 !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.estudiante-card__code { margin: .35rem 0 0; color: var(--text-secondary); font-size: .82rem; font-weight: 650; letter-spacing: .01em; }
+.estudiante-card__details { margin: .95rem 0 0; display: grid; gap: .7rem; }
+.estudiante-card__details > div { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
+.estudiante-card__details dt { display: flex; align-items: center; gap: .4rem; color: var(--text-secondary); font-size: .77rem; }
+.estudiante-card__details dt svg { color: var(--primary); }
+.estudiante-card--inactive .estudiante-card__details dt svg { color: var(--text-secondary); }
+.estudiante-card__details dd { margin: 0; color: var(--text-primary); font-size: .78rem; font-weight: 700; text-align: right; }
+.estudiante-card__action { margin-top: auto; width: 100%; min-height: 3.25rem; padding: .8rem 1rem .8rem 1.15rem; border: 0; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 38%); border-radius: 0; background: color-mix(in srgb, var(--surface), var(--surface-container-low) 52%); color: var(--primary); display: flex; align-items: center; justify-content: space-between; font-weight: 800; cursor: pointer; }
+.estudiante-card__action:hover { background: color-mix(in srgb, var(--primary), var(--surface) 92%); }
+.estudiante-card__action:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%); outline-offset: -4px; }
+@media (max-width: 640px) { .estudiante-card { flex-basis: min(82vw, 16rem); } }
+@media (prefers-reduced-motion: reduce) { .estudiante-card { transition: none; } }
