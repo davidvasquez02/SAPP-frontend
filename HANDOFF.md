@@ -3920,3 +3920,26 @@ npm run lint
 - `npm run build` (2026-09-19): PASS; 271 módulos transformados, con artefactos `dist/assets/index-C4041SpY.css` y `dist/assets/index-CaQSr3LZ.js`. Vite mostró el warning no bloqueante conocido por el chunk JS mayor a 500 kB.
 - `git diff --check` (2026-09-19): PASS.
 - No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida necesita backend y sesión institucional para mostrar las solicitudes reales.
+
+# Update 2026-09-20 — Corrección de pestañas móviles en Créditos condonables
+
+## Estado actual y causa confirmada
+- En `/creditos-condonables`, **Pendientes** continúa siendo la pestaña móvil inicial. Clic, toque o navegación de teclado actualizan el único estado `activeListing`, que ahora controla efectivamente cuál `tabpanel` queda visible.
+- La causa no estaba en los eventos ni en el estado React: el atributo `hidden` cambiaba correctamente, pero `.creditos-condonables__section { display: grid; }` era una regla CSS de autor y prevalecía sobre el estilo de agente de usuario `[hidden] { display: none; }`. Por eso cambiaba el color del tab mientras ambos paneles seguían visibles.
+- Se añadió `.creditos-condonables__section[hidden] { display: none; }`. El panel inactivo queda oculto y fuera de navegación/lectores de pantalla; no se desmonta, así que conserva filtro y página. En escritorio `isMobile` hace que ninguno tenga `hidden`, por lo cual se muestran ambos como antes.
+- Ambos tabs declaran `type="button"`; conservan `tablist`, `tab`, `tabpanel`, `aria-selected`, `aria-controls`, `aria-labelledby`, roving `tabIndex`, flechas, `Home` y `End`, y ahora tienen foco visible explícito. El cambio funciona independientemente de que los resultados estén cargando, vacíos o en error porque la selección envuelve el panel completo.
+
+## Paths, contratos y salida esperada
+- Lógica/estado/semántica: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`. Visibilidad y foco: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`.
+- Contrato HTTP sin cambios: una carga compartida de solicitudes y estados; alternar pestañas o breakpoints no ejecuta otra consulta. Tampoco cambian permisos, clasificación, contadores ni la ruta `Ver solicitud`.
+- Salida móvil esperada: Pendientes → Histórico → Pendientes muestra exactamente un panel, preservando por separado `estadoPendienteId`/`pendingPage` y `estadoHistoricoId`/`estudianteId`/`historyPage`. Salida de escritorio esperada: ambos paneles visibles. Al regresar a móvil se respeta la última pestaña activa.
+
+## Entorno, verificaciones y pendientes
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js/npm y todas las versiones de paquetes siguen siendo las documentadas en `README.md`; no se agregaron dependencias, variables, seeds ni datasets.
+- El proyecto no tiene script ni infraestructura de pruebas de componentes (`package.json` solo expone dev/build/lint/preview), por lo que no se agregó una prueba automatizada artificial.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx` (2026-09-20): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-20): PASS; 271 módulos transformados y artefactos `dist/assets/index-BitnsXae.css` e `index-DZRe2v1A.js`. Persiste el warning informativo no bloqueante por el chunk JS de 616.30 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-20): FAIL por los mismos 9 errores y 1 warning preexistentes fuera de los archivos funcionales modificados (`no-explicit-any`, `set-state-in-effect`, variables sin uso, interfaces vacías y una dependencia de hook). El lint focalizado anterior confirma que la corrección no agrega hallazgos.
+- Pendiente: prueba manual autenticada en navegador real con datos suficientes para paginar y filtrar ambos listados, cubriendo vacío/carga/error y el cambio móvil → escritorio → móvil. El contenedor no incluye Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional; no afirmar que esa interacción se ejecutó aquí.
+
+---
