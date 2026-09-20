@@ -57,4 +57,56 @@
   font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .home-page__lead {
+    margin-bottom: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .home-page__shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .home-page__shortcut-card {
+    width: 100%;
+    min-width: 0;
+    min-height: 120px;
+    padding: 0.8rem 0.55rem;
+    border-radius: 16px;
+    box-shadow: 0 5px 14px rgba(32, 50, 35, 0.09);
+  }
+
+  .home-page__shortcut-icon-svg {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+
+  .home-page__shortcut-label {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .home-page__shortcuts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1500px) {
+  .home-page__shortcuts {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page__shortcut-card {
+    transition: none;
+  }
 }
