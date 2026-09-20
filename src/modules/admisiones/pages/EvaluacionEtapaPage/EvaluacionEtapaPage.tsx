@@ -17,6 +17,7 @@ import { evaluacionCache, hojaVidaDocCache } from './evaluacionPrefetchCache'
 import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
 import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
 import { CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION } from '../../../documentos/constants'
+import { clearEvaluationDrafts, getEvaluationDrafts, setEvaluationDrafts } from '../../utils/evaluacionDraftStore'
 
 interface EvaluacionEtapaPageProps {
   title: string
@@ -63,6 +64,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [modifiedByRow, setModifiedByRow] = useState<Record<number, boolean>>({})
   const [errorsByRow, setErrorsByRow] = useState<Record<number, string | null>>({})
   const [savingBulk, setSavingBulk] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
   const [hojaVidaPreviewDoc, setHojaVidaPreviewDoc] = useState<HojaVidaPreviewDocument | null>(null)
   const [hojaVidaDocStatus, setHojaVidaDocStatus] = useState<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
@@ -116,12 +118,22 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     }
 
     const cacheKey = `${inscripcionIdNumber}-${etapa}`
+    const restoreDrafts = (loadedItems: EvaluacionAdmisionItem[]) => {
+      const savedDrafts = getEvaluationDrafts(inscripcionIdNumber, etapa)
+      setDrafts(savedDrafts)
+      setModifiedByRow(Object.fromEntries(loadedItems.map((item) => [item.id, Boolean(savedDrafts[item.id])])))
+      setErrorsByRow(Object.fromEntries(loadedItems.map((item) => {
+        const saved = savedDrafts[item.id]
+        return [item.id, saved && Object.prototype.hasOwnProperty.call(saved, 'puntajeAspirante')
+          ? buildValidationMessage(saved.puntajeAspirante, item.puntajeMax)
+          : null]
+      })))
+    }
     const cachedItems = evaluacionCache.get(cacheKey)
     if (cachedItems) {
-      setItems(cachedItems.filter(shouldIncludeByProfesor))
-      setDrafts({})
-      setModifiedByRow({})
-      setErrorsByRow({})
+      const visibleItems = cachedItems.filter(shouldIncludeByProfesor)
+      setItems(visibleItems)
+      restoreDrafts(visibleItems)
       setLoading(false)
       return
     }
@@ -132,10 +144,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     try {
       const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
       evaluacionCache.set(cacheKey, data)
-      setItems(data.filter(shouldIncludeByProfesor))
-      setDrafts({})
-      setModifiedByRow({})
-      setErrorsByRow({})
+      const visibleItems = data.filter(shouldIncludeByProfesor)
+      setItems(visibleItems)
+      restoreDrafts(visibleItems)
     } catch (errorResponse) {
       const message =
         errorResponse instanceof Error
@@ -227,6 +238,18 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     return () => URL.revokeObjectURL(url)
   }, [hojaVidaPreviewDoc])
 
+  const hasUnsavedChanges = useMemo(
+    () => Object.values(modifiedByRow).some(Boolean),
+    [modifiedByRow],
+  )
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasUnsavedChanges])
+
   const normalizeObservaciones = (value: string | null | undefined): string | null => {
     if (!value) return null
     const trimmed = value.trim()
@@ -234,7 +257,8 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   }
 
   const isDraftModified = (item: EvaluacionAdmisionItem, draft: EvaluacionDraft): boolean => {
-    const puntajeFromDraft = draft.puntajeAspirante ?? item.puntajeAspirante
+    const hasDraftScore = Object.prototype.hasOwnProperty.call(draft, 'puntajeAspirante')
+    const puntajeFromDraft = hasDraftScore ? draft.puntajeAspirante : item.puntajeAspirante
     const observacionesFromDraft = draft.observaciones ?? item.observaciones ?? ''
     return (
       puntajeFromDraft !== item.puntajeAspirante ||
@@ -251,20 +275,24 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
         ...prev[id],
         ...changes,
       }
+      const modified = isDraftModified(item, nextDraft)
 
       setModifiedByRow((prevModified) => ({
         ...prevModified,
-        [id]: isDraftModified(item, nextDraft),
+        [id]: modified,
       }))
 
-      return {
+      const nextDrafts = {
         ...prev,
         [id]: nextDraft,
       }
+      if (!modified) delete nextDrafts[id]
+      setEvaluationDrafts(inscripcionIdNumber, etapa, nextDrafts)
+      return nextDrafts
     })
 
     if (Object.prototype.hasOwnProperty.call(changes, 'puntajeAspirante')) {
-      const puntajeForValidation = changes.puntajeAspirante ?? drafts[id]?.puntajeAspirante
+      const puntajeForValidation = changes.puntajeAspirante
       const validation = buildValidationMessage(puntajeForValidation, item.puntajeMax)
       setErrorsByRow((prev) => ({
         ...prev,
@@ -295,15 +323,17 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     })
 
     setSavingBulk(true)
+    setSaveMessage(null)
     try {
       await updateEvaluacionRegistroPuntaje(payload)
+      clearEvaluationDrafts(inscripcionIdNumber, etapa)
       evaluacionCache.delete(`${inscripcionIdNumber}-${etapa}`)
-      window.alert('Calificación guardada')
       await loadEvaluacion()
+      setSaveMessage({ kind: 'success', text: 'Calificación guardada correctamente.' })
     } catch (errorResponse) {
       const message =
         errorResponse instanceof Error ? errorResponse.message : 'No fue posible actualizar.'
-      window.alert(message)
+      setSaveMessage({ kind: 'error', text: message })
     } finally {
       setSavingBulk(false)
     }
@@ -355,6 +385,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           }`}
         >
           <div className="evaluacion-etapa-page__main-panel">
+            {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
             <EvaluacionEtapaSection
               title={`Componentes de ${title.toLowerCase()}`}
               etapa={etapa}
@@ -376,7 +407,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                   <button
                     type="button"
                     className="sapp-document-action evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
+                    disabled={!hojaVidaPreviewDoc}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       openBase64InNewTab(
@@ -386,12 +417,12 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                       )
                     }}
                   >
-                    Abrir
+                    Abrir PDF
                   </button>
                   <button
                     type="button"
                     className="sapp-document-action evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
+                    disabled={!hojaVidaPreviewDoc}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       downloadBase64File(
@@ -417,11 +448,10 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 </p>
               )}
               {hojaVidaDocStatus === 'ready' && pdfViewerUrl && (
-                <iframe
-                  src={pdfViewerUrl}
-                  title="Hoja de vida"
-                  className="evaluacion-etapa-page__pdf-viewer"
-                />
+                <details className="evaluacion-etapa-page__pdf-preview">
+                  <summary>Mostrar previsualización</summary>
+                  <iframe src={pdfViewerUrl} title="Previsualización de hoja de vida" className="evaluacion-etapa-page__pdf-viewer" />
+                </details>
               )}
             </aside>
           )}
@@ -467,9 +497,10 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               </div>
             </section>
           )}
+          {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
           {gruposEntrevista.map((grupo) => (
-            <div key={grupo.evaluadorKey} className="evaluacion-etapa-page__group">
-              <h2 className="evaluacion-etapa-page__group-title">{grupo.evaluadorLabel}</h2>
+            <details key={grupo.evaluadorKey} className="evaluacion-etapa-page__group" open>
+              <summary className="evaluacion-etapa-page__group-title">{grupo.evaluadorLabel}</summary>
               <EvaluacionEtapaSection
                 title="Componentes evaluados"
                 etapa={etapa}
@@ -481,7 +512,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 onChangeDraft={handleChangeDraft}
                 isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
               />
-            </div>
+            </details>
           ))}
           <div className="evaluacion-etapa-page__interview-footer">
             <button

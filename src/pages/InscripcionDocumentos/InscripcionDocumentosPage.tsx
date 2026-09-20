@@ -54,6 +54,7 @@ const InscripcionDocumentosPage = () => {
   const [busyDocumentoId, setBusyDocumentoId] = useState<number | null>(null)
   const [isStartingEvaluacion, setIsStartingEvaluacion] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [operationMessage, setOperationMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [rejectingDocId, setRejectingDocId] = useState<number | null>(null)
   const [rejectNotes, setRejectNotes] = useState<Record<number, string>>({})
   const [rejectErrors, setRejectErrors] = useState<Record<number, string | null>>({})
@@ -147,6 +148,7 @@ const InscripcionDocumentosPage = () => {
     }
 
     setBusyDocumentoId(id)
+    setOperationMessage(null)
     try {
       await aprobarRechazarDocumento({
         documentoId: id,
@@ -157,9 +159,10 @@ const InscripcionDocumentosPage = () => {
       await loadDocumentos()
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
+      setOperationMessage({ kind: 'success', text: 'Documento aprobado correctamente.' })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      window.alert(message)
+      setOperationMessage({ kind: 'error', text: message })
     } finally {
       setBusyDocumentoId(null)
     }
@@ -192,6 +195,7 @@ const InscripcionDocumentosPage = () => {
     }
 
     setBusyDocumentoId(id)
+    setOperationMessage(null)
     try {
       await aprobarRechazarDocumento({
         documentoId: id,
@@ -203,9 +207,10 @@ const InscripcionDocumentosPage = () => {
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
       await loadDocumentos()
+      setOperationMessage({ kind: 'success', text: 'Documento rechazado correctamente.' })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      window.alert(message)
+      setOperationMessage({ kind: 'error', text: message })
     } finally {
       setBusyDocumentoId(null)
     }
@@ -337,6 +342,11 @@ const InscripcionDocumentosPage = () => {
           </p>
         </div>
       </div>
+      {operationMessage ? (
+        <p role="status" className={`inscripcion-documentos__operation-message inscripcion-documentos__operation-message--${operationMessage.kind}`}>
+          {operationMessage.text}
+        </p>
+      ) : null}
 
       {isLoading ? (
         <p className="inscripcion-documentos__status">Cargando documentos...</p>

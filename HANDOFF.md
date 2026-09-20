@@ -3991,3 +3991,28 @@ npm run lint
 - Pendiente: prueba manual autenticada en navegador real con datos suficientes para paginar y filtrar ambos listados, cubriendo vacío/carga/error y el cambio móvil → escritorio → móvil. El contenedor no incluye Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional; no afirmar que esa interacción se ejecutó aquí.
 
 ---
+# Update 2026-09-20 — Detalle responsive de inscripción de admisión
+
+## Estado actual y decisiones
+- La ruta protegida `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId` y sus hijas `documentos`, `hoja-vida`, `examen` y `entrevistas` ya tienen representación móvil real (tarjetas/bloques), no scroll horizontal como sustituto. El resumen no repite programa ni estado de inscripción; distingue explícitamente el estado de evaluación y muestra `numeroInscripcion` con el fallback histórico existente.
+- Los acordeones son controles `<button>` asociados a regiones por `aria-controls`/`aria-labelledby`. La URL continúa determinando la sección abierta, por lo que enlaces directos, recarga y historial conservan el contrato de rutas. Los borradores de nota/observación se guardan en memoria por inscripción y etapa en `evaluacionDraftStore.ts`, sobreviven al desmontaje causado por el cambio de ruta/acordeón y se eliminan después de un PUT exitoso. Cambiar de sección pide confirmación únicamente si hay borradores; cerrar/recargar usa `beforeunload`.
+- `EvaluacionEtapaSection` mantiene un único formulario/estado y cambia solo mediante CSS de tabla en escritorio a bloques en móvil. Distingue vacío de cero, no corrige valores silenciosamente y conserva máximo/decimales/validaciones/payload. JSON válido se presenta como lista o pares clave/valor conservando orden y contenido; texto o estructuras anidadas desconocidas no se interpretan y se serializan.
+- Hoja de vida sigue obteniendo base64 por el servicio autenticado y crea una URL `blob:` local; no expone token ni URL pública. Abrir y descargar están antes de criterios en móvil, incluso en estado final (son consulta, no edición), y el iframe es opcional. Entrevistas conserva el resumen y el cálculo backend, permisos por evaluador y operación conjunta; los grupos `<details>` no desmontan campos al contraerse. Documentos conserva permisos, condición de continuación y operaciones por documento; muestra resultados inline y previene doble envío con el bloqueo existente.
+
+## Paths, contratos y salida esperada
+- Shell/resumen/rutas: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`; acordeón: `src/modules/admisiones/components/InscripcionAccordionWindow/`.
+- Documentos: `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx` y `.css`; validación compartida: `src/modules/documentos/components/ValidationButtons/`. No cambió `aprobarRechazarDocumento` ni la evaluación de obligatorios.
+- Evaluaciones/PDF/entrevistas: `src/modules/admisiones/pages/EvaluacionEtapaPage/`; formulario responsive: `src/modules/admisiones/components/EvaluacionEtapaSection/`; borradores transitorios: `src/modules/admisiones/utils/evaluacionDraftStore.ts`.
+- Contratos intactos: `GET` de evaluación/documentos, PUT conjunto de `{ id, puntajeAspirante, observaciones }`, inicio/finalización y aprobación/rechazo documental. No cambiaron roles, fórmulas, ponderaciones, rutas, schemas, variables, paquetes, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Probar con sesión institucional en 320, 375, 402 y 440 CSS px, landscape, tablet y escritorio, temas claro/oscuro y zoom de texto. Incluir nombres/correos/archivos largos, JSON extenso/anidado, varios evaluadores, cero, vacío, decimales y rechazo del servidor.
+2. Validar Atrás/Adelante, apertura/retorno de PDF y teclado virtual en dispositivo real. Los borradores se conservan en memoria durante navegación SPA, no tras una recarga aceptada expresamente por el usuario.
+3. Confirmar con lector de pantalla el anuncio de regiones, errores y mensajes de estado. No fue posible capturar ni inspeccionar visualmente: no hay Chromium/Chrome/Firefox en `PATH`, y no se falsificó sesión ni se alteraron evaluaciones reales.
+
+## Entorno y verificación reciente
+- Usar solo `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+- `npx eslint` focalizado sobre los cinco TSX funcionales y el store: PASS. `npm run build`: PASS, 272 módulos, `dist/assets/index-CV-fTsMB.css` e `index-Dlh1BoHO.js`; solo aparece el warning informativo de chunk JS de 623.85 kB.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de los archivos modificados (tres servicios con `any`, guard de evaluación, mocks, validación documental y tipos/efecto de Solicitudes). El lint focalizado confirma que este cambio no añade hallazgos.
+
+---
