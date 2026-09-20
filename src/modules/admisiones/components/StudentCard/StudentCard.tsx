@@ -76,6 +76,7 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
             src={photoUrl}
             alt={`Foto de ${inscripcion.nombreAspirante}`}
             loading="lazy"
+            draggable={false}
             onError={() => setFailedPhotoUrl(photoUrl)}
           />
         )}
@@ -123,11 +124,14 @@ const StudentCard = ({ inscripcion, photoUrl, onClick }: StudentCardProps) => {
           </div>
         </div>
 
-        <div className="applicant-card__meta">
+        <div className="applicant-card__meta applicant-card__meta--contact">
           <div>
             <span className="applicant-card__label">Correo</span>
             <span className="applicant-card__value">{correo || "—"}</span>
           </div>
+        </div>
+
+        <div className="applicant-card__meta">
           <div>
             <span className="applicant-card__label">Teléfono</span>
             <span className="applicant-card__value">{telefono || "—"}</span>

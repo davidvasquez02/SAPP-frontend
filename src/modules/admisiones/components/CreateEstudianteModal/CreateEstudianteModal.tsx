@@ -33,6 +33,15 @@ export const CreateEstudianteModal = ({
     window.setTimeout(() => codigoInputRef.current?.focus(), 0);
   }, [aspirante]);
 
+  useEffect(() => {
+    if (!aspirante) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSubmitting) onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [aspirante, isSubmitting, onClose]);
+
   if (!aspirante) return null;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -77,6 +86,7 @@ export const CreateEstudianteModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-student-title"
+        aria-describedby="create-student-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="create-student-modal__header">
@@ -87,7 +97,7 @@ export const CreateEstudianteModal = ({
           <button type="button" onClick={onClose} aria-label="Cerrar" disabled={isSubmitting}>×</button>
         </header>
 
-        <p className="create-student-modal__description">
+        <p id="create-student-description" className="create-student-modal__description">
           Completa los datos institucionales. El correo personal se obtiene del registro del aspirante.
         </p>
 

@@ -1,3 +1,29 @@
+# Update 2026-09-20 — Detalle responsive de convocatoria de admisiones
+
+## Estado actual y decisiones
+- Se completó el responsive de `/admisiones/convocatoria/:convocatoriaId` para convocatorias abiertas y cerradas. La cabecera usa contexto textual compacto y multilínea; si está cerrada presenta una sola nota semántica **Inscripciones cerradas** y no dibuja **Crear aspirante**, aunque el manejador y la prop `open` del modal conservan la protección contra apertura. El botón abierto conserva exactamente roles de gestión, resolución de programa/convocatoria, carga y cupos.
+- La sección **Crear estudiantes admitidos** mantiene su condición existente: convocatoria cerrada + rol autorizado, y elegibilidad `estado === ADMITIDO`. `idPersona` o el ID confirmado en la sesión muestran **Estudiante creado** como estado; los pendientes mantienen el mismo servicio, payload y bloqueo `isSubmitting`. Hay tabla en escritorio y tarjetas no enfocables duplicadas visualmente en móvil mediante `display: none`, sin IDs repetidos.
+- El tablero conserva fotografías grandes y navegación de cada tarjeta. `ResizeObserver` y el evento `scroll` recalculan overflow/extremos por datos y tamaño; sin overflow no hay flechas ni instrucción. En móvil, varias tarjetas usan ancho dependiente del viewport y una única tarjeta ocupa el contenedor. El scroll táctil sigue nativo; el arrastre de mouse conserva umbral de 8 px y cancela el clic posterior solo si hubo desplazamiento.
+- Las tarjetas conservan todos los campos y el significado de ausentes (`?? "—"` para puntaje/posición), pasan correo a fila completa, permiten ajuste de cadenas y usan `object-fit: contain`/posición superior para no recortar rostros.
+
+## Paths, contratos y salida esperada
+- Página, condiciones, overflow y variantes tabla/tarjeta: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`. Tarjeta: `src/modules/admisiones/components/StudentCard/StudentCard.tsx` y `.css`. Modal de estudiante: `src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx` y `.css`.
+- Lecturas sin cambios: `GET /sapp/inscripcionesAdmision/convocatoria/{id}` (servicio vigente) y catálogo de convocatorias. Creación de estudiante sin cambios mediante `admitirAspiranteComoEstudiante({ idAspirante, codigoUIS, emailInstitucional })`; creación de aspirante y carga documental tampoco cambiaron.
+- Salida esperada: 2 indicadores por fila hasta 1100 px y 4 en escritorio; lista apilada de admitidos hasta 760 px; tablero adaptable hasta 320 px sin overflow de página; solo el tablero desplaza horizontalmente cuando sus hijos exceden el contenedor. Ambos temas consumen exclusivamente tokens semánticos/`color-mix`.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional convocatorias abierta/cerrada y cero/uno/varios aspirantes, fotos fallidas, textos largos y estados admitidos con/sin `idPersona`; inspeccionar Network sin crear registros reales.
+2. Revisar manualmente 320, 375, 402, 440 CSS px, tablet, escritorio y horizontal en `body.light`/`body.dark`; comprobar zoom, teclado virtual, scroll interno del modal, foco, flechas y toque/arrastre.
+3. Tomar capturas cuando exista navegador. Este contenedor no ofrece Chromium, Chrome ni Firefox y la ruta necesita backend/autenticación, por lo que no hubo revisión visual real ni captura.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes, variables, seeds, datasets ni schemas.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx`: PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos, `dist/assets/index-B1gestz2.css` e `index-BhpzgPd9.js`; warning no bloqueante por chunk JS de 621.22 kB. `git diff --check`: PASS. No existe script `test`.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes documentados en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el lint focalizado confirma que los archivos de este cambio no añaden hallazgos.
+
+---
+
 # Update 2026-09-20 — inicio responsive de Admisiones
 
 ## Estado actual y decisiones

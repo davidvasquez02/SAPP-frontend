@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — detalle responsive de convocatoria de admisiones (2026-09-20)
+
+- `/admisiones/convocatoria/:convocatoriaId` reorganiza cabecera, contexto e indicadores con prioridad móvil: el período y los nombres extensos de programa ajustan línea, **Crear aspirante** conserva permisos/validaciones y ocupa el ancho disponible, y una convocatoria cerrada muestra un único bloque informativo **Inscripciones cerradas** en vez de un botón inactivo. El cierre sigue habilitando, bajo las condiciones previas, la creación de estudiantes admitidos.
+- Los cuatro indicadores mantienen sus cálculos y usan dos columnas en móvil/cuatro cuando hay espacio. La creación de estudiantes conserva la tabla en escritorio y usa tarjetas sin scroll horizontal en móvil; **Estudiante creado** es ahora un estado no interactivo. El modal conserva payload/validaciones y añade scroll interno, campos de 16 px, controles táctiles y acciones visibles en alturas reducidas.
+- El tablero recalcula desbordamiento mediante `ResizeObserver`: oculta instrucciones/flechas sin overflow, limita flechas en extremos, soporta flechas del teclado y conserva scroll táctil. El arrastre con mouse usa un umbral de 8 px y suprime el clic posterior para no abrir inscripciones accidentalmente. Las tarjetas móviles anticipan la siguiente solo cuando existe, muestran la foto completa con `object-fit: contain`, impiden arrastre de imágenes, dan el correo a todo el ancho y conservan `—` para puntaje/posición ausentes.
+- Verificación: lint focalizado, compilación y `git diff --check` pasan. El build produjo `dist/assets/index-B1gestz2.css` e `index-BhpzgPd9.js`, con el aviso informativo conocido por el chunk JS de 621.22 kB. No se ejecutó revisión visual real ni captura: el contenedor no tiene Chromium/Chrome/Firefox y la ruta protegida requiere backend y sesión institucional; quedan pendientes las matrices manuales de datos, viewport y tema. No cambiaron API, rutas, permisos, reglas, dependencias, seeds ni datasets.
+
 ## Decisión reciente — inicio responsive de Admisiones (2026-09-20)
 
 - `/admisiones` conserva las dos tarjetas de programa en escritorio y, hasta 900 CSS px, presenta un selector accesible de ancho igual para los programas reales devueltos por `GET /sapp/convocatoriaAdmision`. Solo el panel seleccionado permanece visible y accesible en móvil; la selección se conserva al cambiar de breakpoint y los estados de convocatorias anteriores siguen separados por `programaId`, sin nuevas consultas.
