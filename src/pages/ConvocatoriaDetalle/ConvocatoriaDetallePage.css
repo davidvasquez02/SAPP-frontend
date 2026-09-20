@@ -69,7 +69,7 @@
 @media (max-width: 760px) {
   .admission-detail-page, .convocatoria-detalle { gap: 1rem; }
   .admission-detail-header, .convocatoria-detalle__header { flex-direction: column; gap: .85rem; }
-  .convocatoria-detalle__actions { width: 100%; min-width: 0; }
+  .convocatoria-detalle__actions { flex-basis: auto; width: 100%; min-width: 0; }
   .convocatoria-detalle__create-button { width: 100%; }
   .convocatoria-detalle__table-wrap { display: none; }
   .convocatoria-detalle__admitted-cards { display: grid; gap: .7rem; }

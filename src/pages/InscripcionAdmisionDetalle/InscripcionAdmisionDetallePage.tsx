@@ -688,13 +688,6 @@ const InscripcionAdmisionDetallePage = () => {
             </div>
           </div>
           <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">🎓</span>
-            <div>
-              <span>Programa</span>
-              <strong>{programaAcademico ?? '—'}</strong>
-            </div>
-          </div>
-          <div className="inscripcion-detalle__summary-item">
             <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
             <div>
               <span>Estado de evaluación</span>
