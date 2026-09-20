@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — responsive de créditos condonables (2026-09-20)
+
+- `/creditos-condonables` conserva las dos tablas en escritorio y presenta en viewports de hasta 768 CSS px pestañas accesibles de igual ancho para **Pendientes** e **Histórico**. Cada listado conserva de forma independiente sus filtros y página; los contadores corresponden al total real de cada clasificación, no al tamaño de la página.
+- En móvil, las solicitudes usan tarjetas propias del módulo con estudiante, código UIS, tipo, estado multilínea, programa, fechas, observaciones expandibles y un enlace explícito al detalle existente. A 350 CSS px o menos, los datos breves pasan de dos columnas a una; los controles mantienen al menos 44 CSS px y los `select` usan 16 px.
+- Los filtros siguen usando los datos de `GET /sapp/solicitudesAcademicas`: pendiente filtra por estado; histórico por estado y `estudianteId` exacto. El cambio de pestaña o breakpoint no limpia estado ni dispara una consulta. Se añadieron mensajes diferenciados para colección vacía/sin coincidencias y reintento ante error, sin modificar API, orden o reglas de clasificación.
+- Verificación: `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`, `npm run build` y `git diff --check` pasan. El build generó `dist/assets/index-BKTs4nd7.css` y `index-DpUG42po.js`; persiste el aviso informativo del chunk de 616.27 kB. No fue posible tomar captura ni hacer inspección visual real porque no hay Chromium, Chrome ni Firefox en el contenedor y la ruta protegida depende de sesión/backend institucional.
+
 ## Estado funcional (2026-09-20)
 
 - **El tablero de estudiantes de coordinación es responsive y navegable:** `/coordinacion/estudiantes` inicia con el estado **Activo**, mantiene buscador y contador siempre visibles y contrae período/estado detrás de **Filtros** solo en móvil, sin perder valores. Las tarjetas conservan portadas grandes de 220–240 px, fotografía completa o iniciales, ancho calculado desde el tablero para anticipar la siguiente tarjeta y datos compactos sin duplicar el estado en móvil. El tablero mantiene scroll táctil/vertical nativo, snap suave, flechas con límites, teclado y arrastre de mouse protegido contra clics accidentales. Egresados continúa bajo demanda y ofrece un error contextual en español con reintento.
