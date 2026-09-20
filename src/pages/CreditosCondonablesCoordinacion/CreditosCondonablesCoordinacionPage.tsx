@@ -60,7 +60,7 @@ const CreditosCondonablesCoordinacionPage = () => {
   const [estados, setEstados] = useState<EstadoSolicitudCatalogItem[]>(DEFAULT_ESTADOS_SOLICITUD_CATALOG)
   const [estadoPendienteId, setEstadoPendienteId] = useState<number | null>(null)
   const [estadoHistoricoId, setEstadoHistoricoId] = useState<number | null>(null)
-  const [estudiante, setEstudiante] = useState('')
+  const [estudianteId, setEstudianteId] = useState('')
   const [pendingPage, setPendingPage] = useState(1)
   const [historyPage, setHistoryPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -98,6 +98,23 @@ const CreditosCondonablesCoordinacionPage = () => {
   )
   const estadosPendientes = useMemo(() => getEstadosPresentesEnSolicitudes(estados, pendientes), [estados, pendientes])
   const estadosHistoricos = useMemo(() => getEstadosPresentesEnSolicitudes(estados, historico), [estados, historico])
+  const estudiantesHistoricos = useMemo(() => {
+    const estudiantesUnicos = new Map<number, { id: number; nombre: string; codigo: string }>()
+
+    historico.forEach((solicitud) => {
+      if (!estudiantesUnicos.has(solicitud.estudianteId)) {
+        estudiantesUnicos.set(solicitud.estudianteId, {
+          id: solicitud.estudianteId,
+          nombre: solicitud.estudiante,
+          codigo: solicitud.codigoEstudianteUis,
+        })
+      }
+    })
+
+    return [...estudiantesUnicos.values()].sort((left, right) =>
+      left.nombre.localeCompare(right.nombre, 'es', { sensitivity: 'base' }),
+    )
+  }, [historico])
 
   const filterByEstado = (rows: SolicitudAcademicaDto[], estadoId: number | null) => {
     if (estadoId === null) return rows
@@ -108,12 +125,9 @@ const CreditosCondonablesCoordinacionPage = () => {
   }
 
   const pendientesFiltradas = filterByEstado(pendientes, estadoPendienteId)
-  const normalizedStudent = estudiante.trim().toLocaleLowerCase()
-  const historicoFiltrado = filterByEstado(historico, estadoHistoricoId).filter((solicitud) => {
-    if (!normalizedStudent) return true
-    return [solicitud.estudiante, solicitud.codigoEstudianteUis]
-      .some((value) => value?.toLocaleLowerCase().includes(normalizedStudent))
-  })
+  const historicoFiltrado = filterByEstado(historico, estadoHistoricoId).filter((solicitud) =>
+    !estudianteId || String(solicitud.estudianteId) === estudianteId,
+  )
   const pendingPagination = paginate(pendientesFiltradas, pendingPage)
   const historyPagination = paginate(historicoFiltrado, historyPage)
 
@@ -150,9 +164,21 @@ const CreditosCondonablesCoordinacionPage = () => {
             <EstadoFilter id="estado-credito-historico" value={estadoHistoricoId} estados={estadosHistoricos} disabled={loading} onChange={(value) => { setEstadoHistoricoId(value); setHistoryPage(1) }} />
             <label className="creditos-condonables__field sapp-filter-field" htmlFor="estudiante-credito-historico">
               <span>Estudiante</span>
-              <input id="estudiante-credito-historico" type="search" value={estudiante} disabled={loading} placeholder="Nombre o código UIS" onChange={(event) => { setEstudiante(event.target.value); setHistoryPage(1) }} />
+              <select
+                id="estudiante-credito-historico"
+                value={estudianteId}
+                disabled={loading || estudiantesHistoricos.length === 0}
+                onChange={(event) => { setEstudianteId(event.target.value); setHistoryPage(1) }}
+              >
+                <option value="">Todos</option>
+                {estudiantesHistoricos.map((estudiante) => (
+                  <option key={estudiante.id} value={estudiante.id}>
+                    {estudiante.nombre}{estudiante.codigo ? ` — ${estudiante.codigo}` : ''}
+                  </option>
+                ))}
+              </select>
             </label>
-            <button className="sapp-filters-clear-button" type="button" disabled={loading || (estadoHistoricoId === null && !estudiante)} onClick={() => { setEstadoHistoricoId(null); setEstudiante(''); setHistoryPage(1) }}>Limpiar filtros</button>
+            <button className="sapp-filters-clear-button" type="button" disabled={loading || (estadoHistoricoId === null && !estudianteId)} onClick={() => { setEstadoHistoricoId(null); setEstudianteId(''); setHistoryPage(1) }}>Limpiar filtros</button>
           </div>
           {renderTable(historyPagination.rows, 'No hay solicitudes históricas con los filtros seleccionados.')}
           {!loading && !error && historicoFiltrado.length > 0 && renderPagination(historyPagination.page, historyPagination.totalPages, setHistoryPage, 'histórico de solicitudes')}

@@ -2,6 +2,7 @@
 
 ## Estado funcional (2026-09-19)
 
+- En **Créditos condonables → Histórico de solicitudes**, el filtro de estudiante es un combo desplegable construido con los estudiantes únicos presentes en el resultado histórico de la consulta. Cada opción muestra nombre y código UIS, y selecciona por el identificador del estudiante para evitar coincidencias parciales ambiguas.
 - El listado de **Gestión de actas** se puede filtrar por instancia: todas, Comité Asesor de Posgrados o Consejo Académico. El filtro se combina con la búsqueda y el año, y vuelve a la primera página cuando cambia.
 - Al aprobar una solicitud desde Comité o Consejo, el detalle consulta `GET /sapp/actas`, muestra únicamente las actas de la instancia anterior y exige seleccionar una antes de confirmar. El cambio de estado incorpora el `actaId` elegido; no se usan identificadores hardcodeados.
 - En **Gestión profesores → Grupos de investigación**, la lista de integrantes identifica al único director con una insignia institucional. Los demás integrantes ofrecen **Hacer director**, que ejecuta `PUT /sapp/gruposInvestigacionDocentes/director` y vuelve a consultar el grupo para reflejar el nuevo director sin recargar la página.

@@ -3782,3 +3782,24 @@ npm run lint
 - No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida requiere backend y sesión institucional para mostrar actas reales.
 
 ---
+# Update 2026-09-19 (Créditos condonables: combo de estudiante en histórico)
+
+## Estado actual
+
+- El filtro **Estudiante** de `/creditos-condonables`, dentro de **Histórico de solicitudes**, dejó de ser una búsqueda de texto y ahora es un `<select>`.
+- Las opciones se deduplican por `estudianteId` a partir de las solicitudes históricas (`APROBADA`/`RECHAZADA`) recibidas en la consulta vigente, se ordenan por nombre en español y muestran `nombre — código UIS` cuando existe código.
+- La opción **Todos** conserva el histórico completo. La selección filtra por igualdad exacta de `estudianteId` y reinicia la paginación; **Limpiar filtros** restablece tanto estado como estudiante.
+
+## Contrato y archivos
+
+- Implementación: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`.
+- Fuente: `GET /sapp/solicitudesAcademicas`; se reutilizan `SolicitudAcademicaDto.estudianteId`, `estudiante` y `codigoEstudianteUis`. No hay endpoints, schemas, seeds, datasets, variables de entorno ni dependencias nuevas.
+- Entorno existente: Node/npm con las versiones fijadas en `package.json`/`package-lock.json`; usar el `node_modules` actual y no crear venv, conda, Poetry ni una segunda instalación de dependencias.
+
+## Próximos pasos y validación
+
+- Validar con el backend autenticado que dos solicitudes históricas del mismo estudiante produzcan una sola opción y que estudiantes con nombres iguales se distingan por código UIS.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; 271 módulos transformados, con artefactos `dist/assets/index-C4041SpY.css` y `dist/assets/index-CaQSr3LZ.js`. Vite mostró el warning no bloqueante conocido por el chunk JS mayor a 500 kB.
+- `git diff --check` (2026-09-19): PASS.
+- No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida necesita backend y sesión institucional para mostrar las solicitudes reales.
