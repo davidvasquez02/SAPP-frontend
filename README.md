@@ -1,5 +1,14 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — escritorio del detalle de inscripción (2026-09-20)
+
+- El detalle `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId` vuelve a tomar como contrato visual la versión de escritorio anterior al responsive: cabecera con fotografía, nombre, estado, documento, correo, teléfono, programa, código de inscripción, período y fechas, más los tres indicadores originales (inscripción, programa y evaluación). En móvil se mantiene la presentación compacta, sin eliminar información.
+- Las consideraciones de Hoja de vida, Examen y Entrevistas permanecen siempre renderizadas y visibles en escritorio. Sus controles de expansión solo afectan viewports de hasta 768 px; estructuras JSON conocidas conservan orden y contenido, y los valores no reconocidos usan una representación textual segura en vez de desaparecer.
+- Hoja de vida vuelve a mostrar automáticamente el PDF autenticado junto a la tabla en escritorio. El botón de previsualización es exclusivamente móvil: cerrarlo y ampliar el viewport no oculta el visor. Abrir/descargar, carga simultánea, errores y borradores de notas/observaciones conservan los contratos existentes.
+- En las tablas de escritorio, **Nota**, **Observaciones**, **Puntaje máximo** y los demás nombres se presentan en el encabezado una sola vez. La etiqueta asociada al input de nota sigue disponible para tecnologías de asistencia y solo se hace visible en la transformación móvil a formulario.
+- **Regla para cambios futuros:** una adaptación responsive debe preservar la visual, los campos y la interacción de escritorio salvo petición explícita. Los cambios móviles deben quedar dentro de sus breakpoints y nunca depender del tamaño inicial del dispositivo; al redimensionar, escritorio debe recuperar toda su información aunque un panel se hubiera cerrado en móvil.
+- No cambiaron API, permisos, cálculos, guardado, dependencias, variables, schemas, seeds ni datasets. El entorno continúa siendo el `node_modules` de este repositorio (Node.js 24.15.0, npm 11.4.2; versiones completas fijadas por `package-lock.json`); no se usa venv, Conda ni Poetry.
+
 ## Decisión reciente — detalle responsive de inscripción de admisión (2026-09-20)
 
 - `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/{documentos,hoja-vida,examen,entrevistas}` conserva rutas, permisos, contratos y cálculos, pero reorganiza el resumen y las cuatro etapas para móvil sin tablas horizontales. El encabezado mantiene foto, nombre, estado de inscripción, programa y `numeroInscripcion`; los datos secundarios quedan en **Datos de la inscripción**, desplegable en móvil. El estado de evaluación permanece en un bloque independiente.

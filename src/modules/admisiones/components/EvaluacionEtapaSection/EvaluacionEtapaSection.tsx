@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evaluacionAdmisionTypes'
 import './EvaluacionEtapaSection.css'
 
@@ -33,38 +34,62 @@ const parseConsideraciones = (value: string): unknown => {
   }
 }
 
-const Consideraciones = ({ value }: { value: string }) => {
+const Consideraciones = ({ value, contentId }: { value: string; contentId: string }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
   const parsed = parseConsideraciones(value)
 
-  if (typeof parsed === 'string') {
-    return <p className="evaluacion-etapa-section__consideraciones">{parsed}</p>
-  }
+  const content = (() => {
+    if (typeof parsed === 'string') {
+      return <p className="evaluacion-etapa-section__consideraciones">{parsed}</p>
+    }
 
-  const renderValue = (entry: unknown): string => {
-    if (entry === null) return 'null'
-    if (typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean') return String(entry)
-    return JSON.stringify(entry)
-  }
+    const renderValue = (entry: unknown): string => {
+      if (entry === null) return 'null'
+      if (typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean') return String(entry)
+      try {
+        return JSON.stringify(entry) ?? String(entry)
+      } catch {
+        return String(entry)
+      }
+    }
 
-  if (Array.isArray(parsed)) {
-    return (
-      <ol className="evaluacion-etapa-section__criteria-list">
-        {parsed.map((entry, index) => <li key={index}>{renderValue(entry)}</li>)}
-      </ol>
-    )
-  }
+    if (Array.isArray(parsed)) {
+      return (
+        <ol className="evaluacion-etapa-section__criteria-list">
+          {parsed.map((entry, index) => <li key={index}>{renderValue(entry)}</li>)}
+        </ol>
+      )
+    }
 
-  if (parsed && typeof parsed === 'object') {
-    return (
-      <dl className="evaluacion-etapa-section__criteria-list">
-        {Object.entries(parsed).map(([key, entry]) => (
-          <div key={key}><dt>{key}</dt><dd>{renderValue(entry)}</dd></div>
-        ))}
-      </dl>
-    )
-  }
+    if (parsed && typeof parsed === 'object') {
+      return (
+        <dl className="evaluacion-etapa-section__criteria-list">
+          {Object.entries(parsed).map(([key, entry]) => (
+            <div key={key}><dt>{key}</dt><dd>{renderValue(entry)}</dd></div>
+          ))}
+        </dl>
+      )
+    }
 
-  return <p className="evaluacion-etapa-section__consideraciones">{value}</p>
+    return <p className="evaluacion-etapa-section__consideraciones">{value}</p>
+  })()
+
+  return (
+    <div className={`evaluacion-etapa-section__criteria${isExpanded ? ' evaluacion-etapa-section__criteria--expanded' : ''}`}>
+      <button
+        type="button"
+        className="evaluacion-etapa-section__criteria-toggle"
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
+        onClick={() => setIsExpanded((current) => !current)}
+      >
+        {isExpanded ? 'Ocultar criterios' : 'Ver criterios'}
+      </button>
+      <div id={contentId} className="evaluacion-etapa-section__criteria-content">
+        {content}
+      </div>
+    </div>
+  )
 }
 
 const EvaluacionEtapaSection = ({
@@ -116,16 +141,14 @@ const EvaluacionEtapaSection = ({
                 const noteId = `${etapa}-${item.id}-nota`
                 const observationsId = `${etapa}-${item.id}-observaciones`
                 const errorId = `${noteId}-error`
+                const considerationsId = `${etapa}-${item.id}-consideraciones`
 
                 return (
                   <tr key={item.id} className={isModified ? 'evaluacion-etapa-section__row--modified' : ''}>
                     <td data-label="Aspecto" className="evaluacion-etapa-section__aspecto">{item.aspecto}</td>
                     <td data-label="Consideraciones">
                       {item.consideraciones ? (
-                        <details className="evaluacion-etapa-section__criteria">
-                          <summary>Ver criterios</summary>
-                          <Consideraciones value={item.consideraciones} />
-                        </details>
+                        <Consideraciones value={item.consideraciones} contentId={considerationsId} />
                       ) : (
                         <span className="evaluacion-etapa-section__text-muted">-</span>
                       )}
