@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-width: 0;
 }
 
 .matricula-page__header h3 {
@@ -23,6 +24,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+    min-width: 0;
 }
 
 .matricula-page__card h4 {
@@ -122,7 +124,7 @@
 
 @media (min-width: 900px) {
     .matricula-page__filters-top-row {
-        grid-template-columns: repeat(3, 33%);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         justify-content: end;
     }
     .matricula-page__search-filter {
@@ -132,6 +134,7 @@
 
 .matricula-page__table-wrapper {
     overflow-x: auto;
+    max-width: 100%;
 }
 
 .matricula-page__table {
@@ -199,6 +202,10 @@
     display: inline-block;
 }
 
+.matricula-page__mobile-list {
+    display: none;
+}
+
 .matricula-page__detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -230,16 +237,143 @@
 }
 
 @media (max-width: 768px) {
+    .matricula-page,
+    .matricula-page__header,
+    .matricula-page__notification-card > div,
+    .matricula-page__filters,
+    .matricula-page__filters-top-row,
+    .matricula-page__filter-field,
+    .matricula-page__search-filter {
+        min-width: 0;
+        max-width: 100%;
+    }
+
     .matricula-page__notification-card {
         grid-template-columns: 1fr;
     }
     .matricula-page__notification-button {
         width: 100%;
+        min-height: 44px;
     }
+
+    .matricula-page__filters-top-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .matricula-page__filter-field select,
+    .matricula-page__filter-field input,
+    .matricula-page__search-filter input {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        font-size: 1rem;
+    }
+
+    .matricula-page__table-wrapper {
+        display: none;
+    }
+
+    .matricula-page__mobile-list {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .matricula-page__mobile-card {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 0.9rem;
+        padding: 1rem;
+        border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+        border-radius: 16px;
+        background: var(--surface-container-low);
+        box-shadow: var(--shadow-xs);
+    }
+
+    .matricula-page__mobile-card-header {
+        display: flex;
+        min-width: 0;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .matricula-page__mobile-card-header > div {
+        min-width: 0;
+    }
+
+    .matricula-page__mobile-card h4,
+    .matricula-page__mobile-card p {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .matricula-page__mobile-card-header p {
+        margin-top: 0.25rem;
+        color: var(--text-secondary);
+    }
+
+    .matricula-page__mobile-card .matricula-page__estado-badge {
+        min-width: 0;
+        max-width: 48%;
+        flex: none;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+    }
+
+    .matricula-page__mobile-card-academic {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .matricula-page__mobile-card-academic > div,
+    .matricula-page__mobile-date {
+        min-width: 0;
+    }
+
+    .matricula-page__mobile-label {
+        display: block;
+        margin-bottom: 0.2rem;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .matricula-page__mobile-detail-button {
+        display: inline-flex;
+        width: 100%;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
     .matricula-page__actions {
         justify-content: stretch;
     }
     .matricula-page__confirm {
         width: 100%;
+    }
+}
+
+@media (max-width: 359px) {
+    .matricula-page__card {
+        padding-inline: 0.85rem;
+    }
+
+    .matricula-page__mobile-card-header {
+        flex-direction: column;
+    }
+
+    .matricula-page__mobile-card .matricula-page__estado-badge {
+        max-width: 100%;
+    }
+
+    .matricula-page__mobile-card-academic {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

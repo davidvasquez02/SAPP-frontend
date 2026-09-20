@@ -939,6 +939,51 @@ const MatriculaPage = () => {
                     </tbody>
                   </table>
                 </div>
+                <div
+                  className="matricula-page__mobile-list"
+                  aria-label="Matrículas académicas"
+                >
+                  {filteredMatriculas.length === 0 ? (
+                    <p className="matricula-page__placeholder">
+                      No hay matrículas que coincidan con los filtros seleccionados.
+                    </p>
+                  ) : null}
+                  {filteredMatriculas.map((item) => (
+                    <article className="matricula-page__mobile-card" key={item.id}>
+                      <header className="matricula-page__mobile-card-header">
+                        <div>
+                          <h4>{item.estudianteNombreCompleto}</h4>
+                          <p>Código UIS: {item.codigoEstudianteUis ?? "—"}</p>
+                        </div>
+                        <span className={getMatriculaEstadoClassName(item.estado)}>
+                          {item.estado}
+                        </span>
+                      </header>
+                      <div className="matricula-page__mobile-card-academic">
+                        <div>
+                          <span className="matricula-page__mobile-label">Programa</span>
+                          <p>{item.programaAcademico}</p>
+                        </div>
+                        <div>
+                          <span className="matricula-page__mobile-label">Periodo</span>
+                          <p>{item.periodoAcademico}</p>
+                        </div>
+                      </div>
+                      <div className="matricula-page__mobile-date">
+                        <span className="matricula-page__mobile-label">
+                          Fecha y hora de solicitud
+                        </span>
+                        <p>{formatDateTime(item.fechaSolicitud)}</p>
+                      </div>
+                      <Link
+                        to={`/matricula/${item.id}`}
+                        className="matricula-page__detail-button matricula-page__mobile-detail-button"
+                      >
+                        Ver detalle
+                      </Link>
+                    </article>
+                  ))}
+                </div>
               </>
             ) : null}
           </section>
