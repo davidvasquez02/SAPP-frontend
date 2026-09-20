@@ -1,3 +1,28 @@
+# Update 2026-09-20 — Inicio responsive y navegación móvil accesible
+
+## Estado actual y decisiones
+- La pantalla protegida de Inicio conserva los elementos devueltos por `getPrimaryNavigationItems(roles)`, por lo que las nueve opciones administrativas, su orden, sus rutas y la visibilidad por rol no cambiaron.
+- En viewports de hasta 900 CSS px, el sidebar permanente se reemplaza visualmente por una barra superior compacta. El drawer empieza cerrado, se abre desde un botón con `aria-expanded`/`aria-controls`, se cierra con su botón, backdrop o `Escape`, contiene el foco y lo devuelve al disparador. Mientras está cerrado, sus enlaces y logout tienen `tabIndex=-1`; mientras abre, bloquea solo el scroll del `body` y mantiene scroll interno.
+- El sidebar de escritorio sigue siendo deliberadamente un overlay temporal: ocupa 84 px contraído y se amplía a 260 px con hover/foco. El contenido reserva los 84 px persistentes; no se añadió un desplazamiento de layout al expandir para evitar saltos visuales.
+- Inicio muestra dos columnas iguales entre 341 y 900 px, incluida la referencia de iPhone 16 Pro Max (viewport CSS solicitado: 440 × 956 en orientación vertical). A 340 px o menos cae a una columna. Las tarjetas son fluidas, de mínimo 120 px, y admiten etiquetas multilínea. El encabezado, avatar y logos usan Grid/Flex sin posicionamiento absoluto.
+
+## Paths, contratos y salida esperada
+- Navegación/interacción: `src/components/Sidebar/Sidebar.tsx`; drawer/barra/sidebar: `src/components/Sidebar/Sidebar.css`; reserva y márgenes de shell: `src/components/Layout/Layout.css`.
+- Encabezado compartido responsive: `src/components/ModuleLayout/ModuleLayout.css`; cuadrícula exclusiva de Inicio: `src/pages/Home/HomePage.css`. La fuente de rutas y permisos permanece en `src/app/navigationItems.ts`.
+- `index.html` ya contiene `<meta name="viewport" content="width=device-width, initial-scale=1.0" />`; no se modificó. No hubo cambios de endpoints, payloads, datos, paquetes, seeds o schemas.
+
+## Retos y próximos pasos
+1. Ejecutar una revisión con sesión institucional real en 320, 375, 390, 430 y 440 CSS px, iPhone 16 Pro Max 440 × 956, landscape, tablet y escritorio. Confirmar visualmente nombres largos, zoom de texto y temas claro/oscuro.
+2. Validar el ciclo completo de foco y scroll con VoiceOver/TalkBack en un dispositivo real. La implementación cubre teclado/DOM, pero el contenedor no ofrece navegador ni emulador para una prueba asistiva o capturas.
+3. Revisar páginas internas en móvil porque `ModuleLayout` es compartido. Los cambios se limitaron a reorganizar su cabecera y padding bajo 768 px; no se tocaron contenidos ni lógica de módulos.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2. Instalado: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/components/Layout/Layout.tsx src/components/ModuleLayout/ModuleLayout.tsx src/pages/Home/HomePage.tsx` (2026-09-20): PASS. `git diff --check`: PASS. `npm run build`: PASS; 271 módulos transformados, artefactos `dist/assets/index-DRTAu577.css` e `index-DL4_coBh.js`; persiste solo el warning informativo por el chunk JS de 610.11 kB.
+- No existe script `test`. No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH` y la aplicación fuerza inicialización contra el gateway institucional; no falsificar una sesión ni disparar logout durante la validación.
+
+---
+
 # Update 2026-09-19 — Acta obligatoria al aprobar solicitudes
 
 ## Estado actual y decisiones
