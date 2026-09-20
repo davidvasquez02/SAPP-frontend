@@ -1,3 +1,28 @@
+# Update 2026-09-20 — Listado inicial de matrículas responsive
+
+## Estado actual y decisiones
+- La ruta protegida `/matricula` mantiene sin cambios visuales deliberados su presentación de escritorio: notificación, cuatro filtros, contador y tabla de seis columnas. El único ajuste de escritorio es técnico: el grid de filtros cambió `repeat(3, 33%)` por `repeat(3, minmax(0, 1fr))`, porque los tres porcentajes más los dos `gap` excedían el contenedor.
+- Hasta 768 CSS px, la tabla de `min-width: 760px` deja de participar en el layout y `filteredMatriculas` se representa también como una lista vertical de tarjetas. Cada tarjeta conserva nombre, código UIS (o el `—` existente), estado textual, programa, período, fecha/hora mediante `formatDateTime` y `/matricula/{id}`. La tabla y sus enlaces usan `display: none` en ese breakpoint, por lo que no quedan controles ocultos enfocables.
+- La cadena local de contenedores ahora puede contraerse con `min-width: 0`; no se aplicó `overflow-x: hidden` a `body`. Los textos usan wrap, el estado no depende solo del color y programa/período pasan de dos columnas a una bajo 360 px. Notificación y filtros se apilan, y botones/controles tienen al menos 44 px; inputs/selects usan 16 px para evitar zoom involuntario.
+- No cambiaron hooks, consultas, carga/error, opciones o valores de filtros, orden por fecha, contador, roles, confirmación ni protección de doble envío del correo. No se toca el detalle de matrícula. No hay paginación implementada actualmente.
+
+## Paths, contratos y salida esperada
+- Render y fuente compartida de datos: `src/pages/Matricula/MatriculaPage.tsx`; estilos exclusivamente del módulo: `src/pages/Matricula/MatriculaPage.css`.
+- Entrada del listado: `MatriculaAcademicaListadoDto[]` obtenido por el servicio existente. No cambió el DTO: `{ id, estudianteNombreCompleto, codigoEstudianteUis, programaAcademico, periodoAcademico, estado, fechaSolicitud, ... }`.
+- Resultado esperado: a 769 px o más se ve la tabla anterior; a 768 px o menos solo las tarjetas. Carga y error son excluyentes del listado; con cero coincidencias se conserva `Registros encontrados: 0` y en móvil aparece el mensaje explícito de ausencia. Redimensionar no modifica estado React ni filtros y no causa nuevas consultas ni correos.
+
+## Retos y próximos pasos
+1. Ejecutar una prueba autenticada con datos reales a 320, 375, 402 y 440 CSS px, tablet, landscape y el viewport de escritorio de referencia; confirmar `scrollWidth <= clientWidth`, temas claro/oscuro, foco y zoom.
+2. Probar nombres/programas/estados largos, múltiples filas, respuesta vacía y error del listado; recorrer los cuatro filtros y cada enlace **Ver detalle**, y redimensionar móvil → escritorio → móvil verificando que los filtros persisten.
+3. Verificar el botón de notificación con mocks o un entorno de pruebas. No enviar correos reales. Confirmar estados disabled/loading y pulsaciones repetidas; esta revisión no cambió el handler.
+
+## Entorno y verificación reciente
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds ni script `test`.
+- `npm run build` PASS: 272 módulos; `dist/assets/index-BqffXqoX.css` (198.34 kB) e `index-BhTGTJV5.js` (627.47 kB). Persiste el warning informativo del chunk mayor a 500 kB. `npx eslint src/pages/Matricula/MatriculaPage.tsx` PASS. `git diff --check` PASS.
+- No se obtuvo captura ni se ejecutó E2E: Chromium, Chrome y Firefox no están instalados, y la ruta exige backend/sesión institucional. La validación responsive enumerada arriba permanece pendiente; no agregar una dependencia solo para capturarla.
+
+---
+
 # Update 2026-09-20 — Restauración del escritorio en detalle de inscripción
 
 ## Estado actual, causa y decisión
@@ -4038,5 +4063,3 @@ npm run lint
 - Usar solo `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
 - `npx eslint` focalizado sobre los cinco TSX funcionales y el store: PASS. `npm run build`: PASS, 272 módulos, `dist/assets/index-CV-fTsMB.css` e `index-Dlh1BoHO.js`; solo aparece el warning informativo de chunk JS de 623.85 kB.
 - `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de los archivos modificados (tres servicios con `any`, guard de evaluación, mocks, validación documental y tipos/efecto de Solicitudes). El lint focalizado confirma que este cambio no añade hallazgos.
-
----

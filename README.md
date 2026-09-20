@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — listado responsive de matrículas (2026-09-20)
+
+- `/matricula`, para perfiles de gestión, conserva en escritorio la tabla, sus seis columnas, filtros, contador, orden, rutas y notificación de apertura. En viewports de hasta 768 CSS px el mismo arreglo ya filtrado se presenta como tarjetas con estudiante, código UIS, estado textual, programa, período, fecha/hora y el enlace original **Ver detalle**.
+- La causa del desbordamiento era la tabla con `min-width: 760px` dentro de ancestros flexibles sin una cadena completa de `min-width: 0`; además, las tres columnas de filtros de `33%` sumaban sus `gap` al ancho disponible. La tabla sigue intacta en escritorio y queda fuera del layout móvil, no escondida mediante `overflow-x` global; el grid usa columnas contraíbles y las tarjetas admiten texto largo.
+- En móvil, la notificación permite texto multilínea y coloca el botón a ancho completo; los cuatro filtros forman una columna con controles de 16 px y altura mínima de 44 px. No cambiaron consultas, permisos, estado de envío, confirmación, filtros ni contratos API, y ambas presentaciones consumen `filteredMatriculas` sin solicitudes duplicadas.
+- Verificación de esta revisión: `npm run build`, ESLint focalizado y `git diff --check` pasan. El build transformó 272 módulos y produjo `index-BqffXqoX.css`/`index-BhTGTJV5.js`; persiste solo el aviso informativo del chunk superior a 500 kB. No existe script de pruebas ni navegador instalado, por lo que queda pendiente la comprobación visual autenticada a 320, 375, 402, 440 px, tablet, horizontal y escritorio, en claro/oscuro, sin enviar correos reales.
+
 ## Corrección reciente — escritorio del detalle de inscripción (2026-09-20)
 
 - El detalle `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId` vuelve a tomar como contrato visual la versión de escritorio anterior al responsive: cabecera con fotografía, nombre, estado, documento, correo, teléfono, programa, código de inscripción, período y fechas, más los tres indicadores originales (inscripción, programa y evaluación). En móvil se mantiene la presentación compacta, sin eliminar información.
