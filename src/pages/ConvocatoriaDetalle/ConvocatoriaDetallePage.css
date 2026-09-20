@@ -1,486 +1,101 @@
 .admission-detail-page,
-.convocatoria-detalle {
-  display: flex;
-  flex-direction: column;
-  gap: 1.45rem;
-  min-width: 0;
-}
-
-.admission-detail-page__back,
-.convocatoria-detalle__back {
-  width: fit-content;
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 800;
-  font-size: 0.92rem;
-}
-
-.admission-detail-page__back:hover,
-.convocatoria-detalle__back:hover {
-  text-decoration: underline;
-}
-
+.convocatoria-detalle { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
 .admission-detail-header,
-.convocatoria-detalle__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.admission-detail-header__content {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.admission-detail-header__eyebrow {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--primary);
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
+.convocatoria-detalle__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+.admission-detail-header__content { min-width: 0; display: flex; flex: 1 1 auto; flex-direction: column; gap: .7rem; }
+.admission-detail-header__eyebrow { margin: 0; display: inline-flex; align-items: center; gap: .4rem; color: var(--primary); font-size: .88rem; font-weight: 800; }
 .admission-detail-header__title,
-.convocatoria-detalle__title {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.05;
-  letter-spacing: -0.045em;
-  width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.admission-context-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.admission-context-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  max-width: 100%;
-  padding: 0.52rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
-  background: color-mix(
-    in srgb,
-    var(--surface-container-low),
-    var(--surface) 52%
-  );
-  color: var(--text-primary);
-  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.04);
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.admission-context-chip span[aria-hidden="true"] {
-  color: var(--primary);
-}
-
-.convocatoria-detalle__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  align-items: flex-end;
-  max-width: min(24rem, 100%);
-}
-
-.convocatoria-detalle__create-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.78rem 1.55rem;
-  border-radius: 999px;
-  border: none;
-  background: var(--primary);
-  color: var(--on-primary);
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 12px 22px color-mix(in srgb, var(--primary), transparent 76%);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
-  white-space: nowrap;
-}
-
-.convocatoria-detalle__create-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px color-mix(in srgb, var(--primary), transparent 68%);
-}
-
-.convocatoria-detalle__create-button:disabled {
-  opacity: 0.58;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.convocatoria-detalle__status {
-  margin: 0;
-  color: var(--text-secondary);
-}
-
-.convocatoria-detalle__status--success {
-  color: #047857;
-  font-weight: 700;
-}
-
-.convocatoria-detalle__status--error {
-  color: #b91c1c;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.admission-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.admission-stat-card {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.95rem;
-  padding: 1rem;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 36%);
-  background: var(--surface);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.055);
-}
-
-.admission-stat-card__icon {
-  flex: 0 0 2.65rem;
-  width: 2.65rem;
-  height: 2.65rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary), var(--surface) 86%);
-  font-size: 1.15rem;
-  font-weight: 900;
-}
-
-.admission-stat-card--success .admission-stat-card__icon {
-  color: #166534;
-  background: #dcfce7;
-}
-
-.admission-stat-card--info .admission-stat-card__icon {
-  color: #075985;
-  background: #e0f2fe;
-}
-
-.admission-stat-card--danger .admission-stat-card__icon {
-  color: #991b1b;
-  background: #fee2e2;
-}
-
+.convocatoria-detalle__title { width: 100%; margin: 0; color: var(--text-primary); font-size: clamp(1.8rem, 4vw, 2.75rem); line-height: 1.08; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.admission-context-chips { display: flex; flex-wrap: wrap; gap: .45rem 1rem; }
+.admission-context-chip { display: inline-flex; align-items: flex-start; gap: .4rem; min-width: 0; max-width: 100%; color: var(--text-secondary); font-size: .92rem; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+.admission-context-chip span[aria-hidden="true"] { flex: 0 0 auto; color: var(--primary); }
+.convocatoria-detalle__actions { display: flex; flex: 0 1 25rem; flex-direction: column; align-items: stretch; gap: .6rem; min-width: min(20rem, 100%); }
+.convocatoria-detalle__create-button,
+.convocatoria-detalle__student-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .7rem 1.3rem; border: 0; border-radius: 999px; background: var(--primary); color: var(--on-primary); font: inherit; font-weight: 800; cursor: pointer; box-shadow: 0 9px 20px color-mix(in srgb, var(--primary), transparent 78%); }
+.convocatoria-detalle__create-button:disabled { opacity: .58; cursor: not-allowed; box-shadow: none; }
+.convocatoria-detalle__create-button:focus-visible,
+.convocatoria-detalle__student-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%); outline-offset: 2px; }
+.convocatoria-detalle__closed-notice { display: flex; align-items: flex-start; gap: .7rem; padding: .8rem .9rem; border: 1px solid color-mix(in srgb, var(--inverse-primary), var(--outline) 55%); border-radius: 14px; background: color-mix(in srgb, var(--inverse-primary), var(--surface) 90%); color: var(--text-primary); }
+.convocatoria-detalle__closed-notice > svg { flex: 0 0 auto; width: 1.25rem; margin-top: .08rem; color: var(--inverse-primary); }
+.convocatoria-detalle__closed-notice strong { display: block; line-height: 1.3; }
+.convocatoria-detalle__closed-notice p { margin: .2rem 0 0; color: var(--text-secondary); font-size: .88rem; line-height: 1.4; }
+.convocatoria-detalle__status { margin: 0; color: var(--text-secondary); }
+.convocatoria-detalle__status--success { color: color-mix(in srgb, var(--primary), #047857 60%); font-weight: 700; }
+.convocatoria-detalle__status--error { display: flex; flex-direction: column; gap: .7rem; color: var(--error, #b91c1c); font-size: .9rem; }
+.admission-stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.admission-stat-card { display: flex; align-items: center; gap: .75rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 38%); border-radius: 15px; background: var(--surface); box-shadow: 0 6px 18px color-mix(in srgb, var(--outline), transparent 87%); }
+.admission-stat-card__icon { display: grid; flex: 0 0 2.4rem; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: 999px; background: color-mix(in srgb, var(--primary), var(--surface) 86%); color: var(--primary); }
+.admission-stat-card--success .admission-stat-card__icon { color: #16804b; background: color-mix(in srgb, #16a34a, var(--surface) 86%); }
+.admission-stat-card--info .admission-stat-card__icon { color: #0878a4; background: color-mix(in srgb, #0ea5e9, var(--surface) 86%); }
+.admission-stat-card--danger .admission-stat-card__icon { color: #b43333; background: color-mix(in srgb, #dc2626, var(--surface) 88%); }
+.admission-stat-card > div { min-width: 0; }
 .admission-stat-card strong,
-.admission-stat-card span:not(.admission-stat-card__icon) {
-  display: block;
-}
-
-.admission-stat-card strong {
-  color: var(--text-primary);
-  font-size: 1.32rem;
-  line-height: 1.1;
-  font-weight: 900;
-}
-
-.admission-stat-card span:not(.admission-stat-card__icon) {
-  margin-top: 0.18rem;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.applicants-board {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  min-width: 0;
-}
-
-.applicants-board-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.applicants-board-header h2 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 1.02rem;
-  font-weight: 900;
-}
-
-.applicants-board-header p {
-  margin: 0.28rem 0 0;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
-.applicants-board-header__controls {
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-.applicants-board-header__controls button {
-  width: 2.35rem;
-  height: 2.35rem;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
-  background: var(--surface);
-  color: var(--primary);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
-  font: inherit;
-  font-size: 1.1rem;
-  font-weight: 900;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.applicants-board-header__controls button:hover {
-  transform: translateY(-1px);
-  background: color-mix(in srgb, var(--primary), var(--surface) 90%);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
-}
-
+.admission-stat-card span:not(.admission-stat-card__icon) { display: block; }
+.admission-stat-card strong { color: var(--text-primary); font-size: 1.25rem; line-height: 1.1; font-weight: 900; }
+.admission-stat-card span:not(.admission-stat-card__icon) { margin-top: .12rem; color: var(--text-secondary); font-size: .86rem; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
+.applicants-board { display: flex; flex-direction: column; gap: .7rem; min-width: 0; }
+.applicants-board-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.applicants-board-header h2 { margin: 0; color: var(--text-primary); font-size: 1.02rem; font-weight: 900; }
+.applicants-board-header p { margin: .2rem 0 0; color: var(--text-secondary); font-size: .86rem; }
+.applicants-board-header__controls { display: inline-flex; flex: 0 0 auto; gap: .4rem; }
+.applicants-board-header__controls button { display: inline-grid; width: 44px; height: 44px; place-items: center; border: 1px solid color-mix(in srgb, var(--outline), transparent 30%); border-radius: 999px; background: var(--surface); color: var(--primary); cursor: pointer; }
+.applicants-board-header__controls button:disabled { opacity: .38; cursor: default; }
 .applicants-board-header__controls button:focus-visible,
-.applicants-horizontal-board:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--primary), transparent 58%);
-  outline-offset: 3px;
-}
-
+.applicants-horizontal-board:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 58%); outline-offset: 2px; }
 .applicants-horizontal-board,
-.convocatoria-detalle__grid {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  min-width: 0;
-  padding: 0.15rem 0.15rem 1.35rem;
-  scroll-snap-type: x proximity;
-  scroll-behavior: smooth;
-  scroll-padding-inline: 0.15rem;
-  scrollbar-color: var(--primary)
-    color-mix(in srgb, var(--outline), transparent 74%);
-  scrollbar-width: thin;
-}
-
-.applicants-horizontal-board::-webkit-scrollbar,
-.convocatoria-detalle__grid::-webkit-scrollbar {
-  height: 0.7rem;
-}
-
-.applicants-horizontal-board::-webkit-scrollbar-track,
-.convocatoria-detalle__grid::-webkit-scrollbar-track {
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--outline), transparent 78%);
-}
-
-.applicants-horizontal-board::-webkit-scrollbar-thumb,
-.convocatoria-detalle__grid::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: var(--primary);
-}
-
-.convocatoria-detalle__empty {
-  display: grid;
-  place-items: center;
-  gap: 0.75rem;
-  min-height: 13rem;
-  border-radius: 20px;
-  border: 1px dashed color-mix(in srgb, var(--outline), transparent 20%);
-  background: color-mix(
-    in srgb,
-    var(--surface-container-low),
-    var(--surface) 45%
-  );
-  color: var(--text-secondary);
-  text-align: center;
-  font-weight: 700;
-}
-
-.convocatoria-detalle__empty span {
-  width: 3.5rem;
-  height: 3.5rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--primary), var(--surface) 87%);
-  color: var(--primary);
-  font-size: 1.7rem;
-}
-
-.convocatoria-detalle__retry {
-  width: fit-content;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  border: 1px solid #fecaca;
-  background: #fee2e2;
-  color: #991b1b;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.convocatoria-detalle__retry:hover {
-  background: #fecaca;
-}
-
-.convocatoria-detalle__skeletons {
-  display: flex;
-  gap: 20px;
-  overflow-x: hidden;
-}
-
-.convocatoria-detalle__skeleton {
-  flex: 0 0 300px;
-  height: 520px;
-  border-radius: 18px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--surface), var(--outline) 14%) 0%,
-    color-mix(in srgb, var(--surface), var(--outline) 26%) 50%,
-    color-mix(in srgb, var(--surface), var(--outline) 14%) 100%
-  );
-  background-size: 200% 100%;
-  animation: convocatoria-detalle-skeleton 1.5s ease-in-out infinite;
-}
-
-@keyframes convocatoria-detalle-skeleton {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: -200% 0%;
-  }
-}
-
-.convocatoria-detalle__admitir-panel {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  border: 1px solid var(--outline);
-  border-radius: 16px;
-  background: var(--surface-container-low);
-}
-
-.convocatoria-detalle__admitir-panel h2 { margin: 0.35rem 0; color: var(--text-primary); }
-.convocatoria-detalle__admitir-panel p { color: var(--text-secondary); }
-
-.convocatoria-detalle__table-wrap {
-  overflow-x: auto;
-}
-
-.convocatoria-detalle__table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
+.convocatoria-detalle__grid { display: flex; gap: 20px; min-width: 0; padding: .15rem .1rem 1rem; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; scroll-padding-inline: .1rem; scroll-snap-type: x proximity; scrollbar-color: var(--primary) color-mix(in srgb, var(--outline), transparent 74%); scrollbar-width: thin; touch-action: pan-x pan-y; }
+.applicants-horizontal-board.is-dragging { cursor: grabbing; scroll-behavior: auto; scroll-snap-type: none; user-select: none; }
+.applicants-horizontal-board::-webkit-scrollbar { height: .65rem; }
+.applicants-horizontal-board::-webkit-scrollbar-track { border-radius: 999px; background: color-mix(in srgb, var(--outline), transparent 78%); }
+.applicants-horizontal-board::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--primary); }
+.convocatoria-detalle__empty { display: grid; min-height: 11rem; place-items: center; gap: .6rem; border: 1px dashed color-mix(in srgb, var(--outline), transparent 20%); border-radius: 18px; background: color-mix(in srgb, var(--surface-container-low), var(--surface) 45%); color: var(--text-secondary); text-align: center; font-weight: 700; }
+.convocatoria-detalle__empty p { margin: 0; }
+.convocatoria-detalle__empty span { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: 999px; background: color-mix(in srgb, var(--primary), var(--surface) 87%); color: var(--primary); font-size: 1.5rem; }
+.convocatoria-detalle__retry { width: fit-content; min-height: 44px; padding: .5rem 1rem; border: 1px solid color-mix(in srgb, var(--error, #b91c1c), var(--outline) 55%); border-radius: 999px; background: var(--surface); color: var(--error, #b91c1c); font-weight: 700; cursor: pointer; }
+.convocatoria-detalle__skeletons { display: flex; gap: 20px; overflow: hidden; }
+.convocatoria-detalle__skeleton { flex: 0 0 300px; height: 520px; border-radius: 18px; background: linear-gradient(90deg, color-mix(in srgb, var(--surface), var(--outline) 14%), color-mix(in srgb, var(--surface), var(--outline) 26%), color-mix(in srgb, var(--surface), var(--outline) 14%)); background-size: 200% 100%; animation: convocatoria-detalle-skeleton 1.5s ease-in-out infinite; }
+@keyframes convocatoria-detalle-skeleton { to { background-position: -200% 0; } }
+.convocatoria-detalle__admitir-panel { padding: 1rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 18px; background: var(--surface-container-low); }
+.convocatoria-detalle__admitir-panel h2 { margin: .25rem 0; color: var(--text-primary); }
+.convocatoria-detalle__admitir-panel p { margin: .25rem 0 1rem; color: var(--text-secondary); }
+.convocatoria-detalle__table-wrap { overflow-x: auto; }
+.convocatoria-detalle__table { width: 100%; border-collapse: collapse; }
 .convocatoria-detalle__table th,
-.convocatoria-detalle__table td {
-  padding: 0.6rem;
-  border-bottom: 1px solid var(--outline);
-  text-align: left;
-}
-
-.convocatoria-detalle__student-button {
-  padding: 0.6rem 1rem;
-  border: 0;
-  border-radius: 999px;
-  background: var(--primary);
-  color: var(--on-primary);
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.convocatoria-detalle__student-button:disabled { opacity: 0.6; cursor: default; }
-
-.convocatoria-detalle__admitir-form {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.convocatoria-detalle__admitir-form label {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.convocatoria-detalle__admitir-form input {
-  padding: 0.55rem 0.7rem;
-  border-radius: 10px;
-  border: 1px solid var(--outline);
-  background: var(--surface);
-}
-
-.convocatoria-detalle__admitir-actions {
-  display: flex;
-  gap: 0.6rem;
-}
-
-@media (max-width: 1100px) {
-  .admission-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
+.convocatoria-detalle__table td { padding: .7rem; border-bottom: 1px solid var(--outline); color: var(--text-primary); text-align: left; }
+.convocatoria-detalle__student-created { display: inline-flex; align-items: center; gap: .4rem; color: color-mix(in srgb, var(--primary), #16804b 55%); font-weight: 800; }
+.convocatoria-detalle__student-created > span { display: inline-grid; flex: 0 0 1.15rem; width: 1.15rem; height: 1.15rem; place-items: center; border: 1px solid currentColor; border-radius: 999px; font-size: .72rem; }
+.convocatoria-detalle__admitted-cards { display: none; }
+@media (max-width: 1100px) { .admission-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
-  .admission-detail-header,
-  .convocatoria-detalle__header,
-  .applicants-board-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .convocatoria-detalle__actions {
-    width: 100%;
-    align-items: stretch;
-  }
-
-  .convocatoria-detalle__create-button {
-    width: 100%;
-  }
-
-  .applicants-board-header__controls {
-    align-self: flex-end;
-  }
+  .admission-detail-page, .convocatoria-detalle { gap: 1rem; }
+  .admission-detail-header, .convocatoria-detalle__header { flex-direction: column; gap: .85rem; }
+  .convocatoria-detalle__actions { width: 100%; min-width: 0; }
+  .convocatoria-detalle__create-button { width: 100%; }
+  .convocatoria-detalle__table-wrap { display: none; }
+  .convocatoria-detalle__admitted-cards { display: grid; gap: .7rem; }
+  .convocatoria-detalle__admitted-card { display: grid; gap: .75rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 30%); border-radius: 14px; background: var(--surface); }
+  .convocatoria-detalle__admitted-card > strong { color: var(--text-primary); font-size: 1rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .convocatoria-detalle__admitted-card > div { display: grid; gap: .15rem; min-width: 0; }
+  .convocatoria-detalle__admitted-card > div span { color: var(--text-secondary); font-size: .78rem; }
+  .convocatoria-detalle__admitted-card > div b { color: var(--text-primary); overflow-wrap: anywhere; }
+  .convocatoria-detalle__student-button { width: 100%; }
 }
-
 @media (max-width: 560px) {
-  .admission-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .admission-stat-card {
-    padding: 0.85rem;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.7rem;
-  }
-
-  .admission-context-chip {
-    width: 100%;
-  }
+  .convocatoria-detalle { --applicant-card-width: calc(100vw - 4.75rem); }
+  .admission-detail-header__title, .convocatoria-detalle__title { font-size: clamp(1.65rem, 8vw, 2.1rem); }
+  .admission-context-chips { flex-direction: column; gap: .35rem; }
+  .admission-context-chip { width: 100%; }
+  .admission-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .admission-stat-card { align-items: flex-start; gap: .55rem; padding: .7rem; }
+  .admission-stat-card__icon { flex-basis: 2rem; width: 2rem; height: 2rem; }
+  .admission-stat-card strong { font-size: 1.15rem; }
+  .admission-stat-card span:not(.admission-stat-card__icon) { font-size: .8rem; }
+  .convocatoria-detalle__admitir-panel { padding: .85rem; }
+  .applicants-board-header { align-items: center; }
+  .applicants-board-header p { max-width: 16rem; }
+  .applicants-horizontal-board { gap: 12px; }
+}
+@media (max-width: 350px) {
+  .convocatoria-detalle { --applicant-card-width: calc(100vw - 3.75rem); }
+  .admission-stat-card { flex-direction: column; }
 }
