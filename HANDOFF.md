@@ -1,3 +1,21 @@
+## Update 2026-09-20 — corrección de detalles de convocatoria e inscripción
+
+### Estado actual y causa
+- En `/admisiones/convocatoria/:convocatoriaId`, el hueco móvil no provenía de datos ni del tablero: al pasar el encabezado a columna, `.convocatoria-detalle__actions` conservaba `flex: 0 1 25rem`, de modo que esos 25 rem se aplicaban al eje vertical. El breakpoint de 760 px fija `flex-basis: auto` y conserva el ancho completo de la acción.
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId`, **Programa** permanece dentro de **Datos de la inscripción** y se retiró de la barra inferior duplicada. La barra ahora distribuye sus dos estados en dos columnas de escritorio y una en móvil.
+- No se modificaron contratos, consultas, estado React, rutas, permisos ni reglas académicas. No hay paquetes, variables, schemas, seeds o datasets nuevos.
+
+### Paths, salida esperada y próximos pasos
+- Responsive de convocatoria: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.css`. Resumen de inscripción: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`.
+- A 760 CSS px o menos, cabecera, botón/aviso, indicadores y tablero deben fluir sin un hueco de 400 px. En inscripción debe aparecer el programa una sola vez, dentro del panel de metadatos; la barra conserva estado de inscripción y evaluación.
+- Pendiente: comprobación autenticada en 320/375/402/440 px y escritorio, temas claro/oscuro y convocatoria abierta/cerrada. El contenedor no dispone de Chromium, Chrome ni Firefox y estas rutas requieren backend/sesión institucional.
+
+### Entorno
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. No existe script `test`.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`. `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-Df4G69RN.css` e `index-xtNZzMOk.js`; persiste el aviso informativo por el chunk JS mayor de 500 kB. `git diff --check`: PASS.
+
+---
+
 # Update 2026-09-20 — Acta asociada en detalles de solicitudes
 
 ## Estado actual y decisiones

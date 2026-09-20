@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — detalles de convocatoria e inscripción en móvil (2026-09-20)
+
+- Se corrigió el espacio vertical excesivo que aparecía en el detalle móvil de una convocatoria: la columna de acciones heredaba un `flex-basis: 25rem` pensado para el eje horizontal de escritorio. Hasta 760 px ahora usa base automática, por lo que **Crear aspirante**, los indicadores y el listado quedan consecutivos sin una zona vacía artificial.
+- En el detalle de inscripción se eliminó la segunda aparición de **Programa** en la barra de resumen. El dato se conserva en **Datos de la inscripción** y la barra queda en dos columnas con estado de inscripción y estado de evaluación.
+- No cambiaron endpoints, DTO, permisos, reglas de admisión, paquetes, variables, seeds ni datasets. Los estilos continúan usando tokens semánticos y funcionan en los temas claro y oscuro.
+
 ## Decisión reciente — acta asociada en el detalle de solicitudes (2026-09-20)
 
 - El detalle compartido por `/solicitudes/:solicitudId` y `/creditos-condonables/:solicitudId` consume los nuevos campos `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` del contrato de consulta. Cuando la solicitud está en estado `APROBADA` y tiene un `actaId`, presenta toda la información en una única tarjeta institucional **Acta asociada**; para los demás estados no muestra el bloque.
