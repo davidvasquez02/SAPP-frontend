@@ -1,3 +1,30 @@
+# Update 2026-09-20 — Responsive de `/creditos-condonables`
+
+## Estado actual y decisiones
+- La pantalla de coordinación mantiene ambas secciones/tablas simultáneas en escritorio. Hasta 768 CSS px muestra una sola sección mediante pestañas accesibles Pendientes/Histórico; inicia en Pendientes y conserva pestaña activa, filtros y paginación independiente durante cambios de pestaña y ancho.
+- Los paneles móviles reutilizan las colecciones ya consultadas: no hay fetch asociado al breakpoint. Las pestañas admiten flechas izquierda/derecha, Home y End, tienen `tablist`/`tab`/`tabpanel`, foco roving y contadores con el total real de cada lista.
+- Las tarjetas móviles son locales al módulo para no alterar la transformación global de `SolicitudesTable`. Incluyen enlace explícito al mismo detalle `/creditos-condonables/:solicitudId`, observaciones expandibles sin interacción anidada, estado multilínea y layout de metadatos que pasa a una columna a 350 CSS px.
+- Se conservaron clasificación (`APROBADA`/`RECHAZADA` son histórico), orden, selección exacta por `estudianteId`, valores ausentes y contratos. Los estados vacío y sin coincidencias tienen textos distintos; un error no se representa como lista vacía y ofrece Reintentar.
+
+## Paths, contratos y salida esperada
+- Vista/lógica: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`.
+- Estilos aislados: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`; breakpoint principal 768 CSS px, referencia 402 × 874 CSS px y colapso adicional a una columna en 350 CSS px.
+- Entrada sin cambios: `GET /sapp/solicitudesAcademicas` y catálogo de estados existente. Salida esperada: escritorio con pendientes e histórico visibles; móvil con una pestaña visible, tarjetas de ancho completo, filtros/paginación propios y navegación al detalle sin acciones de aprobación/rechazo.
+- No se agregaron paquetes, endpoints, variables, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Ejecutar revisión autenticada con backend real en 320, 375, 402, 440 CSS px, tablet, horizontal y escritorio, tanto `body.light` como `body.dark`; cubrir nombres/estados/observaciones largos, fechas ausentes, vacíos y varias páginas.
+2. Confirmar mediante lector de pantalla y teclado real la locución de contadores y pestañas, y validar contraste con la paleta institucional desplegada.
+3. Tomar capturas a 402 × 874 cuando exista un navegador y sesión. El contenedor actual no incluye Chromium, Chrome ni Firefox, por lo cual la inspección visual y captura siguen pendientes.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`: PASS; solo warning ambiental `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos, `dist/assets/index-BKTs4nd7.css` e `index-DpUG42po.js`. Warning informativo no bloqueante por chunk JS de 616.27 kB.
+- `git diff --check`: PASS. No existe script `test` en `package.json`.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (servicios API con `any`, guarda/mock de admisiones, validación documental y tipos/editor de solicitudes); el archivo modificado pasa ESLint aislado.
+
+---
 # Update 2026-09-20 — Estudiantes responsive y filtro activo predeterminado
 
 ## Estado actual y decisiones
