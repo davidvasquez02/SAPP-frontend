@@ -22,6 +22,7 @@ import {
 } from '../../modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache'
 import { validateEvaluacionCompleta } from '../../modules/admisiones/utils/validateEvaluacionCompleta'
 import { prefetchInscripcionDocumentos } from '../InscripcionDocumentos/documentosPrefetchCache'
+import { hasEvaluationDrafts } from '../../modules/admisiones/utils/evaluacionDraftStore'
 import './InscripcionAdmisionDetallePage.css'
 
 const INSCRIPCION_SECTIONS = [
@@ -569,6 +570,14 @@ const InscripcionAdmisionDetallePage = () => {
         return
       }
 
+      if (
+        !Number.isNaN(parsedInscripcionId) &&
+        hasEvaluationDrafts(parsedInscripcionId) &&
+        !window.confirm('Hay calificaciones sin guardar. Puedes cambiar de sección sin perderlas. ¿Deseas continuar?')
+      ) {
+        return
+      }
+
       if (activeKey === sectionKey) {
         navigate(basePath)
         return
@@ -581,7 +590,7 @@ const InscripcionAdmisionDetallePage = () => {
 
       navigate(`${basePath}/${section.pathSuffix}`)
     },
-    [activeKey, basePath, navigate, sectionAvailability],
+    [activeKey, basePath, navigate, parsedInscripcionId, sectionAvailability],
   )
 
   const outlet = (
@@ -625,23 +634,16 @@ const InscripcionAdmisionDetallePage = () => {
                 </span>
               ) : null}
             </div>
-            <div className="inscripcion-detalle__contact-grid">
-              <span>Documento: <strong>{documentoAspirante}</strong></span>
-              <span>Correo: <strong>{correoAspirante}</strong></span>
-              <span>Teléfono: <strong>{telefonoAspirante}</strong></span>
-            </div>
+            <p className="inscripcion-detalle__programa">{programaAcademico ?? '—'}</p>
+            <p className="inscripcion-detalle__codigo">Código de inscripción: <strong>{codigoInscripcion}</strong></p>
           </div>
 
-          <div className="inscripcion-detalle__profile-meta">
-            <div className="inscripcion-detalle__meta-item">
-              <span>Programa</span>
-              <strong>{programaAcademico ?? '—'}</strong>
-            </div>
-            <div className="inscripcion-detalle__meta-item">
-              <span>Código de inscripción</span>
-              <strong>{codigoInscripcion}</strong>
-            </div>
-            <div className="inscripcion-detalle__meta-row">
+          <details className="inscripcion-detalle__profile-meta">
+            <summary>Datos de la inscripción</summary>
+            <div className="inscripcion-detalle__meta-row inscripcion-detalle__meta-row--contact">
+              <div className="inscripcion-detalle__meta-item"><span>Documento</span><strong>{documentoAspirante}</strong></div>
+              <div className="inscripcion-detalle__meta-item"><span>Correo</span><strong>{correoAspirante}</strong></div>
+              <div className="inscripcion-detalle__meta-item"><span>Teléfono</span><strong>{telefonoAspirante}</strong></div>
               <div className="inscripcion-detalle__meta-item">
                 <span>Período</span>
                 <strong>{periodoAcademico}</strong>
@@ -655,24 +657,10 @@ const InscripcionAdmisionDetallePage = () => {
                 <strong>{ultimaActualizacion}</strong>
               </div>
             </div>
-          </div>
+          </details>
         </section>
 
         <section className="inscripcion-detalle__summary-bar" aria-label="Resumen de inscripción">
-          <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">✓</span>
-            <div>
-              <span>Estado de inscripción</span>
-              <strong>{inscripcionEstado ? inscripcionEstado.replaceAll('_', ' ') : '—'}</strong>
-            </div>
-          </div>
-          <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">🎓</span>
-            <div>
-              <span>Programa</span>
-              <strong>{programaAcademico ?? '—'}</strong>
-            </div>
-          </div>
           <div className="inscripcion-detalle__summary-item">
             <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
             <div>

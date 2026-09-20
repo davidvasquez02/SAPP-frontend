@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import './InscripcionAccordionWindow.css'
 
 interface InscripcionAccordionWindowProps {
@@ -18,24 +18,9 @@ const InscripcionAccordionWindow = ({
   onToggle,
   children,
 }: InscripcionAccordionWindowProps) => {
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (isDisabled) {
-      return
-    }
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onToggle()
-    }
-  }
-
-  const handleClick = () => {
-    if (isDisabled) {
-      return
-    }
-
-    onToggle()
-  }
+  const generatedId = useId()
+  const triggerId = `inscripcion-accordion-trigger-${generatedId}`
+  const panelId = `inscripcion-accordion-panel-${generatedId}`
 
   return (
     <div
@@ -43,14 +28,14 @@ const InscripcionAccordionWindow = ({
         isDisabled ? 'is-disabled' : ''
       }`}
     >
-      <div
+      <button
+        type="button"
+        id={triggerId}
         className="inscripcion-accordion-window__header"
-        role="button"
-        tabIndex={isDisabled ? -1 : 0}
         aria-expanded={isOpen}
-        aria-disabled={isDisabled}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
+        aria-controls={panelId}
+        disabled={isDisabled}
+        onClick={onToggle}
       >
         <div className="inscripcion-accordion-window__header-text">
           <span className="inscripcion-accordion-window__title">{title}</span>
@@ -64,9 +49,16 @@ const InscripcionAccordionWindow = ({
         >
           ▾
         </span>
-      </div>
+      </button>
       {isOpen ? (
-        <div className="inscripcion-accordion-window__body">{children}</div>
+        <div
+          id={panelId}
+          className="inscripcion-accordion-window__body"
+          role="region"
+          aria-labelledby={triggerId}
+        >
+          {children}
+        </div>
       ) : null}
     </div>
   )

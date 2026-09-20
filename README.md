@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — detalle responsive de inscripción de admisión (2026-09-20)
+
+- `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/{documentos,hoja-vida,examen,entrevistas}` conserva rutas, permisos, contratos y cálculos, pero reorganiza el resumen y las cuatro etapas para móvil sin tablas horizontales. El encabezado mantiene foto, nombre, estado de inscripción, programa y `numeroInscripcion`; los datos secundarios quedan en **Datos de la inscripción**, desplegable en móvil. El estado de evaluación permanece en un bloque independiente.
+- Los acordeones usan botones nativos con `aria-expanded`, `aria-controls` y paneles etiquetados. Los formularios se convierten en tarjetas a 768 px, con etiquetas visibles, entradas de 16 px, blancos táctiles de 44 px, criterios JSON representados como listas descriptivas sin reinterpretar valores y observaciones de ancho completo. Los borradores se conservan por inscripción/etapa al contraer o navegar y solo se confirma una navegación entre secciones cuando existen cambios pendientes; recargar/cerrar conserva el aviso nativo del navegador.
+- Documentos mantiene la tabla de escritorio y usa tarjetas en móvil con requisito, estado, archivo/versión, observaciones, apertura/descarga y validación. Conserva la condición vigente de documentos obligatorios aprobados, rechazo con motivo, permisos y bloqueo por operación. Hoja de vida prioriza **Abrir PDF**/**Descargar** en móvil y deja el visor `blob:` autenticado como previsualización opcional. Entrevistas conserva el resumen y el envío conjunto, agrupando criterios en desplegables por evaluador sin desmontarlos.
+- No se añadieron dependencias, endpoints, seeds ni datasets. El lint focalizado y el build de producción pasan; queda pendiente la prueba visual autenticada porque el contenedor no incluye navegador y la pantalla depende del gateway/sesión institucional.
+
 ## Decisión reciente — detalle responsive de convocatoria de admisiones (2026-09-20)
 
 - `/admisiones/convocatoria/:convocatoriaId` reorganiza cabecera, contexto e indicadores con prioridad móvil: el período y los nombres extensos de programa ajustan línea, **Crear aspirante** conserva permisos/validaciones y ocupa el ancho disponible, y una convocatoria cerrada muestra un único bloque informativo **Inscripciones cerradas** en vez de un botón inactivo. El cierre sigue habilitando, bajo las condiciones previas, la creación de estudiantes admitidos.

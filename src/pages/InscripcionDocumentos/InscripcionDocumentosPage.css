@@ -45,6 +45,9 @@
   color: #991b1b;
   font-weight: 600;
 }
+.inscripcion-documentos__operation-message { margin: 0; padding: .7rem .85rem; border-radius: 12px; background: var(--surface-container-low); color: var(--text-primary); }
+.inscripcion-documentos__operation-message--success { color: #166534; }
+.inscripcion-documentos__operation-message--error { color: #991b1b; }
 
 .inscripcion-documentos__table {
   display: grid;
@@ -342,6 +345,9 @@
 }
 
 @media (max-width: 640px) {
+  .inscripcion-documentos { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .inscripcion-documentos__heading { display: none; }
+  .inscripcion-documentos__subtitle { margin: 0; font-size: .9rem; }
   .inscripcion-documentos__table-header {
     display: none;
   }
@@ -349,6 +355,9 @@
   .inscripcion-documentos__table,
   .inscripcion-documentos__table:not(:has(.inscripcion-documentos__docActions)) {
     overflow-x: visible;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   .inscripcion-documentos__table-row,
@@ -356,7 +365,30 @@
     grid-template-columns: 1fr;
     min-width: 0;
     gap: 0.65rem;
+    padding: .8rem;
+    border-radius: 14px;
   }
+
+  .inscripcion-documentos__table-row > div:not(.inscripcion-documentos__doc-cell)::before {
+    display: block;
+    margin-bottom: .25rem;
+    color: var(--text-secondary);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  .inscripcion-documentos__table-row > div:nth-child(2)::before { content: "Requisito"; }
+  .inscripcion-documentos__table-row > div:nth-child(3)::before { content: "Estado"; }
+  .inscripcion-documentos__table-row > div:nth-child(4)::before { content: "Archivo cargado"; }
+  .inscripcion-documentos__table-row > div:nth-child(5)::before { content: "Validación"; }
+  .inscripcion-documentos__table-row > div:nth-child(6)::before { content: "Observaciones"; }
+  .inscripcion-documentos__table-row > div:nth-child(7)::before { content: "Abrir archivo"; }
+  .inscripcion-documentos__doc-icon { display: none; }
+  .inscripcion-documentos__docActions { padding-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 50%); }
+  .inscripcion-documentos__view-button,
+  .inscripcion-documentos__download-button { min-height: 44px; flex: 1; font-size: .9rem; }
+  .inscripcion-documentos__validation-actions .validation-buttons__btn { min-height: 44px; flex: 1; }
+  .inscripcion-documentos__footer { padding-inline: 0; }
+  .inscripcion-documentos__continue-button { min-height: 44px; font-size: .95rem; }
 
   .inscripcion-documentos__file-name {
     max-width: 100%;

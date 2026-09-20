@@ -78,6 +78,17 @@
   font-family: inherit;
   color: var(--text-primary);
 }
+.evaluacion-etapa-section__criteria > summary { display: none; cursor: pointer; color: var(--primary); font-weight: 700; min-height: 44px; align-items: center; }
+.evaluacion-etapa-section__criteria-list { margin: 0; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 25%); border-radius: 10px; overflow-wrap: anywhere; }
+.evaluacion-etapa-section__criteria-list div { display: grid; grid-template-columns: minmax(6rem, auto) 1fr; gap: .5rem; }
+.evaluacion-etapa-section__criteria-list dt { font-weight: 700; }
+.evaluacion-etapa-section__criteria-list dd { margin: 0; }
+.evaluacion-etapa-section__mobile-label,
+.evaluacion-etapa-section__nota-field label { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
+.evaluacion-etapa-section__mobile-label { display: none; }
+@media (min-width: 769px) {
+  .evaluacion-etapa-section__criteria:not([open]) > :not(summary) { display: block; }
+}
 
 .evaluacion-etapa-section__nota-field {
   align-items: flex-end;
@@ -157,7 +168,26 @@
 }
 
 @media (max-width: 768px) {
-  .evaluacion-etapa-section__table {
-    min-width: 780px;
-  }
+  .evaluacion-etapa-section__title { display: none; }
+  .evaluacion-etapa-section__table-wrapper { overflow: visible; border: 0; background: transparent; }
+  .evaluacion-etapa-section__table,
+  .evaluacion-etapa-section__table tbody { display: grid; min-width: 0; gap: .75rem; }
+  .evaluacion-etapa-section__table thead { display: none; }
+  .evaluacion-etapa-section__table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, .45fr); gap: .65rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 35%); border-radius: 14px; background: var(--surface); }
+  .evaluacion-etapa-section__table td { display: block; padding: 0; border: 0; min-width: 0; text-align: left; }
+  .evaluacion-etapa-section__table td::before { content: attr(data-label); display: block; margin-bottom: .2rem; color: var(--text-secondary); font-size: .8rem; font-weight: 700; }
+  .evaluacion-etapa-section__table .evaluacion-etapa-section__aspecto,
+  .evaluacion-etapa-section__table td[data-label="Consideraciones"],
+  .evaluacion-etapa-section__table td[data-label="Observaciones"] { grid-column: 1 / -1; }
+  .evaluacion-etapa-section__aspecto { font-size: 1.05rem !important; font-weight: 750; }
+  .evaluacion-etapa-section__criteria > summary { display: flex; }
+  .evaluacion-etapa-section__criteria:not([open]) > :not(summary) { display: none; }
+  .evaluacion-etapa-section__consideraciones { max-height: none; overflow: visible; }
+  .evaluacion-etapa-section__criteria-list div { grid-template-columns: 1fr; gap: .1rem; margin-bottom: .45rem; }
+  .evaluacion-etapa-section__nota-input { min-width: 0; text-align: left; }
+  .evaluacion-etapa-section__input,
+  .evaluacion-etapa-section__textarea { font-size: 16px; min-height: 44px; }
+  .evaluacion-etapa-section__mobile-label { display: block; margin-bottom: .35rem; }
+  .evaluacion-etapa-section__footer,
+  .evaluacion-etapa-section__button { width: 100%; min-height: 44px; }
 }
