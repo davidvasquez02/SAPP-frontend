@@ -1,3 +1,13 @@
+# Ajuste visual — Portadas grandes de estudiantes (2026-09-19)
+
+- La solicitud posterior del usuario reemplaza la decisión anterior de avatares de 64 px: ahora las fotos ocupan una portada de ancho completo y 15rem (240 px con fuente base de 16 px) de alto, como tarjetas con imagen de Trello.
+- Archivo de implementación: src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css. Tarjetas de 17–19rem en escritorio y min(84vw, 19rem) en móvil. object-fit: contain muestra la fotografía completa sin deformación ni recorte; iniciales de 3.5rem cuando no existe foto. Estado debajo de la portada.
+- Se mantienen los tokens semánticos de tema. No se modificaron componentes React, contratos, filtros, permisos ni manejadores de clic/arrastre.
+- Validación: npm run build PASS (269 módulos); persiste advertencia de chunk JS superior a 500 kB. git diff --check PASS.
+- Pendiente: revisión visual autenticada en claro/oscuro, escritorio/móvil y comprobación manual de clic frente a arrastre. No se ejecutó navegador en esta revisión.
+- Entorno utilizado: proyecto local en Windows, Node 24.11.0, npm 11.6.1; node_modules existente, sin nuevas dependencias.
+
+---
 # Update 2026-09-20 — Inicio responsive y navegación móvil accesible
 
 ## Estado actual y decisiones
