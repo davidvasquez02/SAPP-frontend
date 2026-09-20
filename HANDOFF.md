@@ -1,3 +1,25 @@
+# Update 2026-09-20 — inicio responsive de Admisiones
+
+## Estado actual y decisiones
+- La ruta protegida `/admisiones` carga una sola vez `GET /sapp/convocatoriaAdmision`, agrupa exclusivamente por el `programaId` real y conserva ambos programas en columnas de escritorio. En viewports de hasta 900 CSS px aparece un `tablist`; solo el `tabpanel` seleccionado queda renderizado para tecnologías de asistencia y navegación por teclado, pero los paneles permanecen montados conceptualmente mediante el mismo estado de datos y cambiar el breakpoint no consulta de nuevo.
+- La selección móvil inicial sigue el orden vigente de programas y una selección del usuario se conserva al alternar Maestría → Doctorado → Maestría o cambiar de viewport. No se relacionan convocatorias por posición del array. Las flechas, `Home` y `End` cambian selección y foco; toque/clic cambian el contenido real.
+- La tarjeta móvil se aplanó para evitar bordes/padding anidados. Nombre completo y código permanecen visibles; el encabezado usa **Convocatoria actual**, **vigente** o **más reciente** y la insignia textual ABIERTA/CERRADA. La determinación continúa usando `getConvocatoriaDestacada` e `isConvocatoriaVigente`; no se introdujo lógica académica nueva. Las fechas usan el formateo existente y una cuadrícula autoajustable.
+- **Configurar fechas académicas** conserva el guard `canManagePosgrados` y navega directamente a `/fechas`. Convocatoria destacada y períodos anteriores navegan a `/admisiones/convocatoria/{id}` con el estado previo. La selección de anteriores continúa aislada por `programaId`; si no hay destacada, todas las convocatorias del programa quedan disponibles como anteriores.
+
+## Paths, contratos y salida esperada
+- Orquestación/estado/semántica: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`; estilos responsive temáticos: `src/pages/AdmisionesHome/AdmisionesHomePage.css`; selector existente: `src/pages/AdmisionesHome/CompactPeriodSelect.tsx`.
+- Datos: `GET /sapp/convocatoriaAdmision` → envelope con `data: Array<{ id, programaId, programa, periodoId, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }>`; no cambió el contrato. Los metadatos institucionales conocidos continúan asociados por ID (`1` MISI, `2` DCC), con fallback al nombre del API.
+- Salida móvil esperada en 320, 375, 402 y 440 CSS px: selector de programas en una fila, un solo programa visible, sin scroll horizontal, acción principal y selector a ancho completo, controles de al menos 44 px. Escritorio: ambos programas visibles en dos columnas y sin pestañas visibles. Los temas claro/oscuro consumen tokens semánticos existentes.
+
+## Verificación reciente, retos y próximos pasos
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx src/pages/AdmisionesHome/CompactPeriodSelect.tsx` (2026-09-20): PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-20): PASS; 271 módulos transformados, `dist/assets/index-Y5pbd70m.css` e `index-DnddbAO9.js`. Warning no bloqueante: chunk JS de 617.99 kB supera 500 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- `npm run lint` global (2026-09-20): FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (`no-explicit-any`, estado síncrono en un efecto, parámetros sin usar, tipos vacíos y una dependencia de hook). El lint focalizado de Admisiones sí pasa.
+- Pendiente con navegador/sesión institucional: validar visualmente 320/375/402/440, tablet, landscape, escritorio, ambos temas y texto ampliado; recorrer convocatorias abiertas/cerradas/anteriores de ambos programas y permisos de `/fechas`. No hubo captura porque el contenedor no dispone de Chromium, Chrome ni Firefox.
+- Entorno único: `/workspace/SAPP-frontend`, Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No hay seeds ni datasets nuevos.
+
+---
+
 # Update 2026-09-20 — Responsive de `/creditos-condonables`
 
 ## Estado actual y decisiones

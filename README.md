@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — inicio responsive de Admisiones (2026-09-20)
+
+- `/admisiones` conserva las dos tarjetas de programa en escritorio y, hasta 900 CSS px, presenta un selector accesible de ancho igual para los programas reales devueltos por `GET /sapp/convocatoriaAdmision`. Solo el panel seleccionado permanece visible y accesible en móvil; la selección se conserva al cambiar de breakpoint y los estados de convocatorias anteriores siguen separados por `programaId`, sin nuevas consultas.
+- La pantalla elimina tarjetas anidadas en móvil, reduce espacios, conserva la identidad institucional y la acción autorizada **Configurar fechas académicas** hacia `/fechas`. La convocatoria distingue por texto e insignia si está abierta/cerrada, mantiene la lógica vigente de período/fechas y permite consultar anteriores incluso cuando no existe convocatoria actual.
+- Las pestañas admiten toque, clic, flechas, `Home` y `End`; paneles y foco usan `tablist`/`tab`/`tabpanel`. Acciones, selector de período y opciones tienen al menos 44 CSS px, texto multilínea y foco visible; las fechas ocupan dos columnas mientras caben y colapsan automáticamente en anchos estrechos. No cambiaron rutas, permisos, API, dependencias, seeds ni datasets.
+- Verificación: lint focalizado, compilación y `git diff --check` pasan. El build generó `dist/assets/index-Y5pbd70m.css` e `index-DnddbAO9.js`, con el aviso informativo conocido por el chunk JS de 617.99 kB. No se realizó captura ni interacción con sesión real porque el contenedor no incluye navegador y la ruta está protegida.
+
 ## Decisión reciente — responsive de créditos condonables (2026-09-20)
 
 - Se corrigió la conmutación real de las pestañas móviles **Pendientes** e **Histórico**. La causa era la regla de autor `.creditos-condonables__section { display: grid; }`, que prevalecía sobre el estilo `display: none` del atributo HTML `hidden`: React sí actualizaba la selección y el atributo, pero ambos paneles continuaban dibujándose. La regla explícita `.creditos-condonables__section[hidden] { display: none; }` vuelve a vincular el estado único `activeListing` con el contenido visible y retira el panel inactivo del árbol de accesibilidad, sin desmontarlo ni perder filtros/página.
