@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — acta asociada en el detalle de solicitudes (2026-09-20)
+
+- El detalle compartido por `/solicitudes/:solicitudId` y `/creditos-condonables/:solicitudId` consume los nuevos campos `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` del contrato de consulta. Cuando la solicitud está en estado `APROBADA` y tiene un `actaId`, presenta toda la información en una única tarjeta institucional **Acta asociada**; para los demás estados no muestra el bloque.
+- La tarjeta informa código, nombre, fecha en formato `DD/MM/YYYY` e instancia. `actaTipoConsejo: true` se presenta como **Consejo Académico** y `false` o `null`, conforme al contrato vigente, como **Comité Asesor de Posgrados**. La misma implementación cubre solicitudes académicas ordinarias y créditos condonables porque ambas rutas reutilizan `SolicitudDetallePage`.
+- Los estilos usan tokens semánticos, admiten temas claro/oscuro y pasan de dos columnas a una en móvil. No cambiaron endpoints, navegación, permisos, mutaciones, paquetes, variables, seeds ni datasets.
+- Verificación: ESLint focalizado, build de producción y `git diff --check` pasan. El build produjo `dist/assets/index-DNu7XGnK.css` e `index-B-Qm0z6W.js`; persiste únicamente el aviso informativo por el chunk JS mayor de 500 kB. La revisión visual autenticada queda pendiente porque no hay navegador ejecutable ni sesión/backend institucional en el contenedor.
+
 ## Corrección reciente — listado responsive de matrículas (2026-09-20)
 
 - `/matricula`, para perfiles de gestión, conserva en escritorio la tabla, sus seis columnas, filtros, contador, orden, rutas y notificación de apertura. En viewports de hasta 768 CSS px el mismo arreglo ya filtrado se presenta como tarjetas con estudiante, código UIS, estado textual, programa, período, fecha/hora y el enlace original **Ver detalle**.

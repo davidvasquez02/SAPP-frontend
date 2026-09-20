@@ -76,6 +76,65 @@
     grid-column: 1 / -1;
 }
 
+.solicitud-detalle-page__acta {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 65%);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--primary) 5%, var(--surface-container-low));
+}
+
+.solicitud-detalle-page__acta-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.solicitud-detalle-page__acta-icon {
+    display: grid;
+    flex: 0 0 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.solicitud-detalle-page__acta h3,
+.solicitud-detalle-page__acta p,
+.solicitud-detalle-page__acta dl {
+    margin: 0;
+}
+
+.solicitud-detalle-page__acta p {
+    margin-top: 0.2rem;
+    color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__acta-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1.25rem;
+}
+
+.solicitud-detalle-page__acta-details div {
+    min-width: 0;
+}
+
+.solicitud-detalle-page__acta-details dt {
+    margin-bottom: 0.2rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.solicitud-detalle-page__acta-details dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
 .solicitud-detalle-page__estado-editor {
     border-top: 1px solid var(--outline);
     padding-top: 1rem;
@@ -189,6 +248,9 @@
     .solicitud-detalle-page__back,
     .solicitud-detalle-page__save {
         width: 100%;
+    }
+    .solicitud-detalle-page__acta-details {
+        grid-template-columns: 1fr;
     }
 }
 
