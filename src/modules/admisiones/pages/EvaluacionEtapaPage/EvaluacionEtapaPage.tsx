@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../../../components'
 import { canManagePosgrados, isEvaluadorAdmision } from '../../../../auth/roleGuards'
@@ -29,6 +29,30 @@ interface HojaVidaPreviewDocument {
   base64: string
   mimeType: string
   filename: string
+}
+
+const ResponsiveInterviewGroup = ({ label, children }: { label: string; children: ReactNode }) => {
+  const [isExpanded, setIsExpanded] = useState(true)
+  const contentId = `entrevista-grupo-${useId()}`
+
+  return (
+    <section className={`evaluacion-etapa-page__group${isExpanded ? ' evaluacion-etapa-page__group--expanded' : ''}`}>
+      <h2 className="evaluacion-etapa-page__group-title">{label}</h2>
+      <button
+        type="button"
+        className="evaluacion-etapa-page__group-toggle"
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
+        onClick={() => setIsExpanded((current) => !current)}
+      >
+        <span>{label}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      <div id={contentId} className="evaluacion-etapa-page__group-content">
+        {children}
+      </div>
+    </section>
+  )
 }
 
 const buildValidationMessage = (
@@ -66,6 +90,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [savingBulk, setSavingBulk] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [isPdfPreviewExpanded, setIsPdfPreviewExpanded] = useState(false)
   const [hojaVidaPreviewDoc, setHojaVidaPreviewDoc] = useState<HojaVidaPreviewDocument | null>(null)
   const [hojaVidaDocStatus, setHojaVidaDocStatus] = useState<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
   const [hojaVidaDocMessage, setHojaVidaDocMessage] = useState<string | null>(null)
@@ -448,10 +473,20 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 </p>
               )}
               {hojaVidaDocStatus === 'ready' && pdfViewerUrl && (
-                <details className="evaluacion-etapa-page__pdf-preview">
-                  <summary>Mostrar previsualización</summary>
+                <div className={`evaluacion-etapa-page__pdf-preview${isPdfPreviewExpanded ? ' evaluacion-etapa-page__pdf-preview--expanded' : ''}`}>
+                  <button
+                    type="button"
+                    className="evaluacion-etapa-page__pdf-preview-toggle"
+                    aria-expanded={isPdfPreviewExpanded}
+                    aria-controls="hoja-vida-pdf-preview"
+                    onClick={() => setIsPdfPreviewExpanded((current) => !current)}
+                  >
+                    {isPdfPreviewExpanded ? 'Ocultar previsualización' : 'Mostrar previsualización'}
+                  </button>
+                  <div id="hoja-vida-pdf-preview" className="evaluacion-etapa-page__pdf-preview-content">
                   <iframe src={pdfViewerUrl} title="Previsualización de hoja de vida" className="evaluacion-etapa-page__pdf-viewer" />
-                </details>
+                  </div>
+                </div>
               )}
             </aside>
           )}
@@ -499,8 +534,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           )}
           {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
           {gruposEntrevista.map((grupo) => (
-            <details key={grupo.evaluadorKey} className="evaluacion-etapa-page__group" open>
-              <summary className="evaluacion-etapa-page__group-title">{grupo.evaluadorLabel}</summary>
+            <ResponsiveInterviewGroup key={grupo.evaluadorKey} label={grupo.evaluadorLabel}>
               <EvaluacionEtapaSection
                 title="Componentes evaluados"
                 etapa={etapa}
@@ -512,7 +546,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 onChangeDraft={handleChangeDraft}
                 isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
               />
-            </details>
+            </ResponsiveInterviewGroup>
           ))}
           <div className="evaluacion-etapa-page__interview-footer">
             <button

@@ -78,7 +78,7 @@
   font-family: inherit;
   color: var(--text-primary);
 }
-.evaluacion-etapa-section__criteria > summary { display: none; cursor: pointer; color: var(--primary); font-weight: 700; min-height: 44px; align-items: center; }
+.evaluacion-etapa-section__criteria-toggle { display: none; border: 0; padding: 0; background: transparent; color: var(--primary); font: inherit; font-weight: 700; cursor: pointer; }
 .evaluacion-etapa-section__criteria-list { margin: 0; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 25%); border-radius: 10px; overflow-wrap: anywhere; }
 .evaluacion-etapa-section__criteria-list div { display: grid; grid-template-columns: minmax(6rem, auto) 1fr; gap: .5rem; }
 .evaluacion-etapa-section__criteria-list dt { font-weight: 700; }
@@ -86,9 +86,7 @@
 .evaluacion-etapa-section__mobile-label,
 .evaluacion-etapa-section__nota-field label { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
 .evaluacion-etapa-section__mobile-label { display: none; }
-@media (min-width: 769px) {
-  .evaluacion-etapa-section__criteria:not([open]) > :not(summary) { display: block; }
-}
+.evaluacion-etapa-section__nota-field label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .evaluacion-etapa-section__nota-field {
   align-items: flex-end;
@@ -180,11 +178,12 @@
   .evaluacion-etapa-section__table td[data-label="Consideraciones"],
   .evaluacion-etapa-section__table td[data-label="Observaciones"] { grid-column: 1 / -1; }
   .evaluacion-etapa-section__aspecto { font-size: 1.05rem !important; font-weight: 750; }
-  .evaluacion-etapa-section__criteria > summary { display: flex; }
-  .evaluacion-etapa-section__criteria:not([open]) > :not(summary) { display: none; }
+  .evaluacion-etapa-section__criteria-toggle { display: flex; min-height: 44px; align-items: center; }
+  .evaluacion-etapa-section__criteria:not(.evaluacion-etapa-section__criteria--expanded) .evaluacion-etapa-section__criteria-content { display: none; }
   .evaluacion-etapa-section__consideraciones { max-height: none; overflow: visible; }
   .evaluacion-etapa-section__criteria-list div { grid-template-columns: 1fr; gap: .1rem; margin-bottom: .45rem; }
   .evaluacion-etapa-section__nota-input { min-width: 0; text-align: left; }
+  .evaluacion-etapa-section__nota-field label { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; }
   .evaluacion-etapa-section__input,
   .evaluacion-etapa-section__textarea { font-size: 16px; min-height: 44px; }
   .evaluacion-etapa-section__mobile-label { display: block; margin-bottom: .35rem; }

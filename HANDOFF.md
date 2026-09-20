@@ -1,3 +1,27 @@
+# Update 2026-09-20 — Restauración del escritorio en detalle de inscripción
+
+## Estado actual, causa y decisión
+- Se comparó `a7f2dfd` con su padre (implementación previa al responsive). La regresión principal fue introducir elementos nativos `<details>` cerrados para cabecera, consideraciones y PDF: las reglas CSS de escritorio intentaban mostrar sus hijos, pero el estado cerrado del elemento seguía suprimiendo el contenido. Además se eliminaron del JSX los indicadores repetidos de estado/programa y se hizo visible la etiqueta **Nota** en cada fila de escritorio.
+- La cabecera recuperó exactamente las fuentes y formatos previos: fotografía, nombre, estado de inscripción, documento, correo, teléfono, programa, `numeroInscripcion` con su fallback histórico, período, fecha de inscripción y última actualización. También regresaron los indicadores de estado de inscripción, programa y estado de evaluación. El panel compacto móvil usa estado React, pero CSS fuerza todo el contenido en escritorio, incluso si se cerró antes en móvil.
+- Hoja de vida, Examen y Entrevistas reutilizan un único formulario y los mismos DTO/payloads. Las consideraciones siempre existen en el DOM y son visibles en escritorio; solo el breakpoint móvil puede ocultarlas. El formateador conserva texto y valores JSON, incluyendo fallback seguro para estructuras no serializables. Los grupos de entrevista siguen el mismo patrón para no convertir un control móvil en interacción de escritorio.
+- El visor autenticado de Hoja de vida se carga junto con los criterios y queda visible automáticamente en escritorio. Su expansión opcional solo se aplica hasta 768 px; cambiar móvil → escritorio no depende de un listener ni del tamaño inicial y no remonta formulario, iframe o datos.
+- **Regla permanente:** toda adaptación responsive debe preservar visual, campos e interacción de escritorio salvo solicitud explícita. Encapsular transformaciones dentro del breakpoint y comprobar escritorio → móvil → escritorio; nunca esconder contenido de escritorio mediante el estado persistente de un control móvil.
+
+## Paths, contratos y salida esperada
+- Cabecera e indicadores: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`. Acordeón y overflow de escritorio: `src/modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow.css`.
+- Criterios, etiquetas y formulario único: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx` y `.css`. PDF y grupos de entrevista: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` y `.css`.
+- Sin cambios contractuales: continúan los GET simultáneos de evaluación/documento, URL `blob:` local desde Base64 autenticado, PUT conjunto `{ id, puntajeAspirante, observaciones }`, permisos, cálculos, estados y rutas hijas. Documentos cargados conserva campos, versiones, acciones y reglas existentes.
+- Salida esperada en escritorio: resumen completo directo; tres indicadores; consideraciones completas; PDF inmediato junto a Hoja de vida; una sola etiqueta visual **Nota** por columna y nombre accesible por input. En 402/440 CSS px: controles compactos y expandibles con todos los campos. Los borradores viven en `evaluacionDraftStore.ts` y no se pierden al contraer, navegar o redimensionar.
+
+## Verificación, limitaciones y próximos pasos
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`: PASS (solo warning ambiental conocido de npm por `http-proxy`).
+- `npm run build`: PASS; 272 módulos, `dist/assets/index-Di7oIX-v.css` e `index-DRKnmGPY.js`; solo warning informativo del chunk JS de 626.08 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de esta superficie (servicios API con `any`, guard de evaluación, mocks, validación documental y solicitudes); el lint focalizado confirma que esta corrección no añade hallazgos.
+- Validación visual y captura pendientes: no existe Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere backend, sesión y datos institucionales. Cuando estén disponibles, comparar contra el padre de `a7f2dfd` con idénticos datos/viewport; cubrir escritorio y 402/440 px, temas claro/oscuro, cerrar paneles en móvil y volver a escritorio, además de notas/observaciones sin guardar.
+- Entorno único: `/workspace/SAPP-frontend` con su `node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay script `test`, seeds ni datasets nuevos.
+
+---
+
 # Update 2026-09-20 — Detalle responsive de convocatoria de admisiones
 
 ## Estado actual y decisiones

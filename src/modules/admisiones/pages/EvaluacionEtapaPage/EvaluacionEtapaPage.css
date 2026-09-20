@@ -111,7 +111,7 @@
   border-radius: 12px;
   background: var(--surface);
 }
-.evaluacion-etapa-page__pdf-preview > summary { min-height: 44px; display: flex; align-items: center; color: var(--primary); font-weight: 700; cursor: pointer; }
+.evaluacion-etapa-page__pdf-preview-toggle { display: none; border: 0; padding: 0; background: transparent; color: var(--primary); font: inherit; font-weight: 700; cursor: pointer; }
 .evaluacion-etapa-page__save-message { margin: 0 0 .75rem; padding: .7rem .8rem; border-radius: 10px; background: var(--surface-container-low); color: var(--text-primary); }
 .evaluacion-etapa-page__save-message--success { color: color-mix(in srgb, #166534, var(--text-primary) 15%); }
 .evaluacion-etapa-page__save-message--error { color: #b42318; }
@@ -177,7 +177,7 @@
   font-size: 1.2rem;
   color: var(--text-primary);
 }
-.evaluacion-etapa-page__group > summary { cursor: pointer; min-height: 44px; align-items: center; }
+.evaluacion-etapa-page__group-toggle { display: none; }
 
 .evaluacion-etapa-page__interview-footer {
   display: flex;
@@ -202,13 +202,17 @@
   .evaluacion-etapa-page__pdf-actions { width: 100%; }
   .evaluacion-etapa-page__pdf-action { min-height: 44px; flex: 1; font-size: .9rem; }
   .evaluacion-etapa-page__pdf-viewer { height: min(65dvh, 620px); min-height: 360px; }
+  .evaluacion-etapa-page__pdf-preview-toggle { display: flex; min-height: 44px; align-items: center; }
+  .evaluacion-etapa-page__pdf-preview:not(.evaluacion-etapa-page__pdf-preview--expanded) .evaluacion-etapa-page__pdf-preview-content { display: none; }
   .evaluacion-etapa-page__summary { padding: .8rem; }
   .evaluacion-etapa-page__summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
   .evaluacion-etapa-page__summary-grid > div:nth-child(n+3) { grid-column: 1 / -1; }
   .evaluacion-etapa-page__summary-value { overflow-wrap: anywhere; }
   .evaluacion-etapa-page__group { padding: .75rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 30%); border-radius: 14px; }
-  .evaluacion-etapa-page__group-title { display: flex; margin: 0; font-size: 1.05rem; }
-  .evaluacion-etapa-page__group[open] .evaluacion-etapa-page__group-title { margin-bottom: .75rem; }
+  .evaluacion-etapa-page__group-title { display: none; }
+  .evaluacion-etapa-page__group-toggle { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; border: 0; padding: 0; background: transparent; color: var(--text-primary); font: inherit; font-size: 1.05rem; font-weight: 700; text-align: left; cursor: pointer; }
+  .evaluacion-etapa-page__group--expanded .evaluacion-etapa-page__group-toggle { margin-bottom: .75rem; }
+  .evaluacion-etapa-page__group:not(.evaluacion-etapa-page__group--expanded) .evaluacion-etapa-page__group-content { display: none; }
   .evaluacion-etapa-page__interview-footer,
   .evaluacion-etapa-page__interview-footer .evaluacion-etapa-section__button { width: 100%; }
 }

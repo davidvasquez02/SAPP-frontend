@@ -606,6 +606,7 @@ const InscripcionAdmisionDetallePage = () => {
   const sectionsToRender = isEvaluadorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS
+  const [isProfileMetaExpanded, setIsProfileMetaExpanded] = useState(false)
 
   return (
     <ModuleLayout title="Admisiones">
@@ -634,16 +635,33 @@ const InscripcionAdmisionDetallePage = () => {
                 </span>
               ) : null}
             </div>
-            <p className="inscripcion-detalle__programa">{programaAcademico ?? '—'}</p>
-            <p className="inscripcion-detalle__codigo">Código de inscripción: <strong>{codigoInscripcion}</strong></p>
+            <div className="inscripcion-detalle__contact-grid">
+              <span>Documento: <strong>{documentoAspirante}</strong></span>
+              <span>Correo: <strong>{correoAspirante}</strong></span>
+              <span>Teléfono: <strong>{telefonoAspirante}</strong></span>
+            </div>
           </div>
 
-          <details className="inscripcion-detalle__profile-meta">
-            <summary>Datos de la inscripción</summary>
-            <div className="inscripcion-detalle__meta-row inscripcion-detalle__meta-row--contact">
-              <div className="inscripcion-detalle__meta-item"><span>Documento</span><strong>{documentoAspirante}</strong></div>
-              <div className="inscripcion-detalle__meta-item"><span>Correo</span><strong>{correoAspirante}</strong></div>
-              <div className="inscripcion-detalle__meta-item"><span>Teléfono</span><strong>{telefonoAspirante}</strong></div>
+          <div className={`inscripcion-detalle__profile-meta${isProfileMetaExpanded ? ' inscripcion-detalle__profile-meta--expanded' : ''}`}>
+            <button
+              type="button"
+              className="inscripcion-detalle__profile-meta-toggle"
+              aria-expanded={isProfileMetaExpanded}
+              aria-controls="inscripcion-profile-meta-content"
+              onClick={() => setIsProfileMetaExpanded((current) => !current)}
+            >
+              Datos de la inscripción
+            </button>
+            <div id="inscripcion-profile-meta-content" className="inscripcion-detalle__profile-meta-content">
+              <div className="inscripcion-detalle__meta-item">
+                <span>Programa</span>
+                <strong>{programaAcademico ?? '—'}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-item">
+                <span>Código de inscripción</span>
+                <strong>{codigoInscripcion}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-row">
               <div className="inscripcion-detalle__meta-item">
                 <span>Período</span>
                 <strong>{periodoAcademico}</strong>
@@ -656,11 +674,26 @@ const InscripcionAdmisionDetallePage = () => {
                 <span>Última actualización</span>
                 <strong>{ultimaActualizacion}</strong>
               </div>
+              </div>
             </div>
-          </details>
+          </div>
         </section>
 
         <section className="inscripcion-detalle__summary-bar" aria-label="Resumen de inscripción">
+          <div className="inscripcion-detalle__summary-item">
+            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">✓</span>
+            <div>
+              <span>Estado de inscripción</span>
+              <strong>{inscripcionEstado ? inscripcionEstado.replaceAll('_', ' ') : '—'}</strong>
+            </div>
+          </div>
+          <div className="inscripcion-detalle__summary-item">
+            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">🎓</span>
+            <div>
+              <span>Programa</span>
+              <strong>{programaAcademico ?? '—'}</strong>
+            </div>
+          </div>
           <div className="inscripcion-detalle__summary-item">
             <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
             <div>
