@@ -1,3 +1,24 @@
+# Update 2026-09-21 — consistencia de colores de estados en responsive
+
+## Estado actual y decisión
+
+- Se corrigió la diferencia mostrada en `/creditos-condonables`: la regla móvil de `CreditosCondonablesCoordinacionPage.css` sobrescribía `color`, `background` y `border-color` de cualquier `StatusBadge` con un único estilo verde. La regla responsive conserva ahora únicamente layout y tipografía, de modo que no compite con los modificadores semánticos compartidos.
+- `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` normaliza los ocho estados del contrato. `StatusBadge.css` sigue siendo la única fuente cromática: `ENVIADA` usa el tono institucional; `EN_REVISION`, `PFIR_DIR_TG`, `PFIR_COOR_POS` y `PFIR_CAR_CONT` usan ámbar; `APROBADA`, verde; `RECHAZADA`, rojo; `DEVUELTA` y `UNKNOWN`, neutral. Esto cubre solicitudes ordinarias y créditos condonables, tabla, tarjetas y detalle, sin cambiar labels ni datos.
+- Salida esperada: a más de 768 CSS px se conserva la tabla de escritorio; a 768 px o menos las tarjetas permiten badges multilínea, pero cada estado mantiene el mismo texto, fondo y borde que en escritorio. Debe funcionar en `body.light` y `body.dark` y el significado nunca depende solo del color porque la etiqueta completa permanece visible.
+
+## Paths, contratos y trabajo pendiente
+
+- Componente y paleta: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `.css`. Corrección responsive: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`. La vista consume `SolicitudAcademicaDto.estadoSigla || estado`; el catálogo y aliases viven en `src/modules/solicitudes/utils/estadoSolicitud.ts`.
+- No cambiaron `GET /sapp/solicitudesAcademicas`, DTO, filtros, normalización, estados de dominio, endpoints, permisos, navegación, paquetes, variables, schemas, seeds ni datasets.
+- Pendiente con navegador/backend/sesión institucional: capturar y comparar los ocho estados a 320/375/402/440 px y escritorio en ambos temas, revisar contraste y textos largos. El contenedor no dispone de Chromium, Chrome ni Firefox, por lo que no fue posible producir la captura solicitada localmente.
+
+## Entorno y verificación
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0 y npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+- `npm run build`: PASS; 272 módulos, `index-CtLOhbNR.css` (222.36 kB) e `index-C7FRZ1pi.js` (635.45 kB), con el warning informativo conocido del chunk mayor de 500 kB. `git diff --check`: PASS. La comprobación Node del selector móvil: PASS; confirma que no declara `color`, `background` ni `border-color`.
+
+---
+
 # Update 2026-09-21 — creación y detalle responsive de homologaciones
 
 ## Estado actual y decisiones
