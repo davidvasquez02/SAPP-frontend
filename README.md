@@ -1,5 +1,13 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — selector móvil de programa en `/fechas` (2026-09-21)
+
+- En **Convocatorias de admisión**, el breakpoint existente de 780 CSS px presenta un selector accesible de ancho completo para **Maestría** y **Doctorado**, ubicado entre la cabecera/acción de creación y los filtros compartidos. Las opciones se relacionan con los `programaId` recibidos en las convocatorias, no con posiciones ni identificadores codificados.
+- La primera visita móvil prioriza Maestría cuando está disponible. La selección persiste al alternar, al cambiar filtros y durante móvil → escritorio → móvil; el escritorio no muestra el selector y mantiene ambos programas. Los paneles usan `tablist`, `tab`, `tabpanel`, `aria-selected`, `aria-controls`, foco roving y flechas/Home/End.
+- Período y Vigente siguen siendo filtros compartidos y conservan su reinicio de paginación. Cada programa conserva su página propia al cambiar de pestaña; una combinación sin resultados muestra el vacío del programa seleccionado sin saltar al otro. El nombre institucional completo permanece sobre cada listado.
+- No se modificaron **Períodos académicos**, consultas, formularios, permisos, acciones, endpoints, DTO, dependencias, variables, schemas, seeds ni datasets. El cambio reutiliza la consulta existente y el breakpoint no dispara cargas ni remonta formularios.
+- Verificación local: ESLint focalizado, build y `git diff --check` pasan. El build generó `dist/assets/index-D56WF_LI.css` e `index-BTuBYlEL.js`; persiste el aviso informativo del chunk JS de 633.33 kB. El lint global conserva 9 errores y 1 warning preexistentes fuera del módulo (servicios API, guard/mock de admisiones, validación documental y solicitudes). La prueba visual/autenticada y la captura quedan pendientes porque el contenedor no incluye navegador ni backend/sesión institucional.
+
 ## Corrección reciente — filtro de actas de Comité Asesor (2026-09-21)
 
 - Se corrigió la discrepancia entre la columna **Tipo** y el filtro **Tipo de acta** de `/actas`. El contrato histórico admite `tipoConsejo: null` para Comité Asesor: la tabla ya lo mostraba como **Comité Asesor de Posgrados**, pero el filtro solo aceptaba el booleano `false` y por eso ocultaba esas filas.
