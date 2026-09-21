@@ -20,7 +20,12 @@ import './GestionProfesoresPage.css'
 type Vista = 'docentes' | 'grupos'
 const PAGE_SIZE = 10
 
-const normalize = (value: string) => value.trim().toLocaleLowerCase('es')
+const normalize = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim()
+    .toLocaleLowerCase('es')
 
 const GestionProfesoresPage = () => {
   const [vista, setVista] = useState<Vista>('docentes')
