@@ -6,6 +6,7 @@ import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
+import { getDocumentById } from '../../modules/documentos/api/documentosService'
 import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
 import type { DocumentoTramiteUiItem } from '../../modules/documentos/types/ui'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
@@ -222,16 +223,29 @@ const InscripcionDocumentosPage = () => {
     mimeType?: string,
     filename?: string,
   ) => {
-    if (!base64) {
-      window.alert('No hay contenido para visualizar.')
-      return
+    const previewWindow = window.open('', '_blank')
+
+    if (previewWindow) {
+      previewWindow.opener = null
     }
 
     updateActionState(documentoId, { viewing: true })
     try {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-      openBase64InNewTab(base64, mimeType ?? 'application/pdf', filename)
+      const documentoCompleto = base64 ? null : await getDocumentById(documentoId)
+      const contenido = base64 ?? documentoCompleto?.contenidoBase64
+
+      if (!contenido) {
+        throw new Error('No hay contenido para visualizar.')
+      }
+
+      openBase64InNewTab(
+        contenido,
+        documentoCompleto?.mimeType ?? mimeType ?? 'application/pdf',
+        documentoCompleto?.nombreArchivo ?? filename,
+        previewWindow,
+      )
     } catch (error) {
+      previewWindow?.close()
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)
     } finally {
@@ -245,15 +259,20 @@ const InscripcionDocumentosPage = () => {
     mimeType?: string,
     filename?: string,
   ) => {
-    if (!base64) {
-      window.alert('No hay contenido para descargar.')
-      return
-    }
-
     updateActionState(documentoId, { downloading: true })
     try {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-      downloadBase64File(base64, mimeType ?? 'application/pdf', filename ?? 'documento.pdf')
+      const documentoCompleto = base64 ? null : await getDocumentById(documentoId)
+      const contenido = base64 ?? documentoCompleto?.contenidoBase64
+
+      if (!contenido) {
+        throw new Error('No hay contenido para descargar.')
+      }
+
+      downloadBase64File(
+        contenido,
+        documentoCompleto?.mimeType ?? mimeType ?? 'application/pdf',
+        documentoCompleto?.nombreArchivo ?? filename ?? 'documento.pdf',
+      )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       window.alert(message)
@@ -363,7 +382,7 @@ const InscripcionDocumentosPage = () => {
             <span>Archivo cargado</span>
             <span>Validación</span>
             <span>Observaciones</span>
-            {canManageDocuments && !isEstadoFinal ? <span>Acciones</span> : null}
+            {canManageDocuments ? <span>Acciones</span> : null}
           </div>
           {sortedDocumentos.map((documento) => {
             const documentoId = documento.documentoUploadedResponse?.idDocumento
@@ -389,7 +408,7 @@ const InscripcionDocumentosPage = () => {
                 ? rejectNotes[documentoId] ?? documento.validacionObservaciones ?? ''
                 : ''
             const currentRejectError = documentoId != null ? rejectErrors[documentoId] : null
-            const canOpenActions = uploaded && Boolean(base64) && Boolean(mimeType)
+            const canOpenActions = uploaded && documentoId != null
             const estadoDocumento = uploaded ? getEstadoDocumento(documento) ?? 'CARGADO' : 'PENDIENTE'
             const estadoBadgeKey = normalizeBadgeKey(estadoDocumento)
             const documentIcon = getDocumentIcon(documento.nombreTipoDocumentoTramite, mimeType)
@@ -427,19 +446,14 @@ const InscripcionDocumentosPage = () => {
                 </div>
                 <div className="inscripcion-documentos__file-cell document-file-cell">
                   {uploaded ? (
-                    <>
-                      <span className="inscripcion-documentos__file-icon" aria-hidden="true">
-                        {documentIcon}
-                      </span>
-                      <div>
-                        <p className="inscripcion-documentos__file-name">
-                          {documento.documentoUploadedResponse?.nombreArchivoDocumento}
-                        </p>
-                        <p className="inscripcion-documentos__file">
-                          Versión {documento.documentoUploadedResponse?.versionDocumento}
-                        </p>
-                      </div>
-                    </>
+                    <div>
+                      <p className="inscripcion-documentos__file-name">
+                        {documento.documentoUploadedResponse?.nombreArchivoDocumento}
+                      </p>
+                      <p className="inscripcion-documentos__file">
+                        Versión {documento.documentoUploadedResponse?.versionDocumento}
+                      </p>
+                    </div>
                   ) : (
                     <span className="inscripcion-documentos__observaciones-placeholder">No cargado</span>
                   )}
@@ -475,7 +489,7 @@ const InscripcionDocumentosPage = () => {
                     <span className="inscripcion-documentos__observaciones-placeholder">—</span>
                   )}
                 </div>
-                {canManageDocuments && !isEstadoFinal ? (
+                {canManageDocuments ? (
                   <div className="inscripcion-documentos__docActions">
                     <button
                       type="button"
@@ -483,8 +497,8 @@ const InscripcionDocumentosPage = () => {
                       onClick={() =>
                         documentoId && handleViewDocumento(documentoId, base64, mimeType, filename)
                       }
-                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
-                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
                     >
                       {actionState?.viewing ? 'Abriendo...' : 'Ver'}
                     </button>
@@ -494,8 +508,8 @@ const InscripcionDocumentosPage = () => {
                       onClick={() =>
                         documentoId && handleDownloadDocumento(documentoId, base64, mimeType, filename)
                       }
-                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
-                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading || isEstadoFinal}
+                      disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
+                      aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
                     >
                       {actionState?.downloading ? 'Descargando...' : 'Descargar'}
                     </button>

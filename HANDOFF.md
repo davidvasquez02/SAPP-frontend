@@ -4363,3 +4363,28 @@ npm run lint
   solicitudes). El proyecto no define script `test`.
 
 ---
+## Actualización 2026-09-21 — consulta de archivos en detalle de inscripción
+
+### Estado actual
+
+- En `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`, las acciones **Ver** y **Descargar** se muestran para usuarios gestores aun si la inscripción alcanzó un estado final.
+- El listado `GET /sapp/document?codigoTipoTramite=...&tramiteId=...` puede entregar únicamente metadatos. Si no incluye Base64, cada acción obtiene el archivo con `getDocumentById(documentoId)`, que consume `GET /sapp/document/{documentoId}`; conserva compatibilidad con respuestas del listado que sí incluyan contenido.
+- **Ver** reserva la pestaña en el mismo gesto del clic antes de esperar la consulta autenticada, evitando que el bloqueador de ventanas emergentes descarte la previsualización asíncrona; la utilidad compartida acepta esa ventana como destino.
+- La celda **Archivo cargado** ya no muestra el icono decorativo; conserva nombre y versión.
+
+### Contrato y salida esperada
+
+- `GET /sapp/document/{documentoId}` debe responder `ApiResponse<DocumentoCompletoDto>` con `data.contenidoBase64`; `mimeType` y `nombreArchivo` pueden ser nulos y el frontend usa los metadatos/fallback PDF.
+- Un documento marcado como cargado y con `idDocumento` habilita ambas acciones. Mientras se consulta o procesa, ambos botones quedan deshabilitados y muestran el estado de progreso correspondiente.
+- Las acciones de aprobación/rechazo y **Continuar evaluación** permanecen bloqueadas en estados finales; solo la lectura/descarga continúa disponible.
+
+### Próximos pasos / retos abiertos
+
+1. Verificar contra backend real un documento cuyo endpoint de listado omita el Base64 y confirmar permisos del endpoint individual para los roles de posgrados.
+2. Agregar una prueba de componente cuando exista infraestructura de tests, cubriendo el fallback al endpoint individual y una inscripción finalizada.
+
+### Entorno y pruebas
+
+- Reutilizar la instalación npm del repositorio (`node_modules`); no crear entornos venv/conda/poetry para este frontend.
+- Versiones exactas y comandos continúan documentados en `package.json`/`package-lock.json` y README.
+- `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx src/shared/files/base64FileUtils.ts`: PASS. `npm run build`: PASS (273 módulos; warning informativo conocido por chunk principal mayor de 500 kB). `git diff --check`: PASS. El lint global continúa fallando por 9 errores y 1 warning preexistentes en archivos no relacionados (`creditosService`, `matriculaService`, `solicitudesService`, `RequireEvaluacionEnabled`, mocks/validación y tipos/componentes de solicitudes).

@@ -27,9 +27,14 @@ export const base64ToBlob = (base64: string, mimeType: string): Blob => {
   return new Blob([bytes], { type: mimeType })
 }
 
-export const openBase64InNewTab = (base64: string, mimeType: string, filename?: string): void => {
+export const openBase64InNewTab = (
+  base64: string,
+  mimeType: string,
+  filename?: string,
+  targetWindow?: Window | null,
+): void => {
   const blob = base64ToBlob(base64, mimeType)
-  openBlobInNewTab(blob, filename)
+  openBlobInNewTab(blob, filename, targetWindow)
 }
 
 export const downloadBase64File = (base64: string, mimeType: string, filename: string): void => {
@@ -37,11 +42,19 @@ export const downloadBase64File = (base64: string, mimeType: string, filename: s
   downloadBlobFile(blob, filename)
 }
 
-export const openBlobInNewTab = (blob: Blob, filename?: string): void => {
+export const openBlobInNewTab = (
+  blob: Blob,
+  filename?: string,
+  targetWindow?: Window | null,
+): void => {
   const url = URL.createObjectURL(blob)
 
   void filename
-  window.open(url, '_blank', 'noopener,noreferrer')
+  if (targetWindow && !targetWindow.closed) {
+    targetWindow.location.href = url
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
