@@ -670,6 +670,11 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-21:** se definió un orden único de módulos para la navegación
+  principal y los accesos de Inicio: Admisiones, Matrícula, Solicitudes,
+  Créditos condonables, Estudiantes, Informes a dependencias, Actas, Fechas y
+  Gestión profesores. Los permisos continúan ocultando los módulos que no
+  correspondan a cada rol, sin alterar el orden relativo de los visibles.
 - **2026-09-21:** la búsqueda en Gestión de profesores pasó a ignorar tildes y
   otros signos diacríticos. Consultas como `andres leo` encuentran nombres como
   `ANDRÉS LEONARDO`, sin alterar los DTO ni los endpoints existentes.
