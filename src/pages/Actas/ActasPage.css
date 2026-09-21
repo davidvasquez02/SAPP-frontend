@@ -1,29 +1,421 @@
-.actas-page { display: flex; flex-direction: column; gap: 1.25rem; }
-.actas-page__hero, .actas-list, .actas-form { border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 20px; background: var(--surface-container-low); padding: clamp(1rem, 2vw, 1.5rem); box-shadow: var(--shadow-xs); }
-.actas-page__hero, .actas-list__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.actas-page h1, .actas-page h2, .actas-page p { margin: 0; }
-.actas-page__hero p, .actas-list__heading p, .actas-form__heading p { margin-top: .35rem; color: var(--text-secondary); }
-.actas-page__primary { border: 0; padding: .65rem 1.15rem; background: var(--primary); color: var(--on-primary); font-weight: 700; cursor: pointer; white-space: nowrap; }
-.actas-page__primary:disabled { opacity: .6; cursor: wait; }
-.actas-page__message, .actas-page__empty { padding: .8rem 1rem; border-radius: 12px; }
-.actas-page__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
-.actas-page__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
-.actas-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.actas-form__heading, .actas-form__wide, .actas-form__actions { grid-column: 1 / -1; }
-.actas-form label { display: flex; flex-direction: column; gap: .4rem; color: var(--text-secondary); font-weight: 600; }
-.actas-form small { color: var(--text-secondary); font-weight: 400; }
-.actas-form__code { display: grid; grid-template-columns: auto minmax(80px, 1fr) auto 100px; align-items: center; gap: .4rem; color: var(--text-primary); }
-.actas-form__code > span:first-child { font-size: .88rem; font-weight: 700; white-space: nowrap; }
-.actas-form__file { border: 1px dashed var(--outline); border-radius: 14px; padding: 1rem; }
-.actas-form__actions { display: flex; justify-content: flex-end; }
-.actas-list { display: flex; flex-direction: column; gap: 1rem; }
-.actas-table { min-width: 1040px; }
-.actas-table__file { display: inline-flex; padding: .25rem .55rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; white-space: nowrap; }
-.actas-table__actions { display: flex; align-items: center; gap: .5rem; }
-.actas-table__actions .actas-table__delete { border-color: var(--danger); color: var(--danger); }
-.actas-table__actions .actas-table__delete:hover:not(:disabled), .actas-table__actions .actas-table__delete:focus-visible { background: color-mix(in srgb, var(--danger), transparent 90%); }
-.actas-pagination { display: flex; justify-content: flex-end; align-items: center; gap: .7rem; }
-.actas-pagination button { border: 1px solid var(--outline); background: var(--surface); padding: .45rem .85rem; cursor: pointer; }
-.actas-pagination button:disabled { opacity: .5; cursor: not-allowed; }
-.actas-page__empty { text-align: center; color: var(--text-secondary); background: var(--surface); }
-@media (max-width: 720px) { .actas-page__hero { flex-direction: column; } .actas-form { grid-template-columns: 1fr; } .actas-form__code { grid-template-columns: 1fr auto 80px; } .actas-form__code > span:first-child { grid-column: 1 / -1; } }
+.actas-page {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.actas-page__hero,
+.actas-list,
+.actas-form {
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 20px;
+  background: var(--surface-container-low);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  box-shadow: var(--shadow-xs);
+}
+
+.actas-page__hero,
+.actas-list__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.actas-page h1,
+.actas-page h2,
+.actas-page p {
+  margin: 0;
+}
+
+.actas-page__hero p,
+.actas-list__heading p,
+.actas-form__heading p {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+}
+
+.actas-page__primary {
+  min-height: 44px;
+  border: 0;
+  padding: 0.65rem 1.15rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.actas-page__primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.actas-page__message,
+.actas-page__empty {
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.actas-page__message--error {
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 65%);
+  background: color-mix(in srgb, var(--danger), transparent 94%);
+}
+
+.actas-page__message--success {
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success), transparent 65%);
+  background: color-mix(in srgb, var(--success), transparent 94%);
+}
+
+.actas-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.actas-form__heading,
+.actas-form__wide,
+.actas-form__actions {
+  grid-column: 1 / -1;
+}
+
+.actas-form label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.actas-form small {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.actas-form__code {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(80px, 1fr) auto 100px;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-primary);
+}
+
+.actas-form__code > span:first-child {
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.actas-form__file {
+  border: 1px dashed var(--outline);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.actas-form__file input[type="file"] {
+  max-width: 100%;
+}
+
+.actas-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actas-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.actas-table {
+  min-width: 1040px;
+}
+
+.actas-table__file {
+  display: inline-flex;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary), transparent 88%);
+  color: var(--primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.actas-table__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actas-table__actions .actas-table__delete {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.actas-table__actions .actas-table__delete:hover:not(:disabled),
+.actas-table__actions .actas-table__delete:focus-visible {
+  background: color-mix(in srgb, var(--danger), transparent 90%);
+}
+
+.actas-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.actas-pagination button {
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+}
+
+.actas-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actas-page__empty {
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+@media (max-width: 720px) {
+  .actas-page {
+    gap: 0.9rem;
+  }
+
+  .actas-page__hero,
+  .actas-list,
+  .actas-form {
+    width: 100%;
+    min-width: 0;
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .actas-page__hero {
+    flex-direction: column;
+  }
+
+  .actas-page__hero > div,
+  .actas-page__primary,
+  .actas-form__actions,
+  .actas-form__actions .actas-page__primary {
+    width: 100%;
+  }
+
+  .actas-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actas-form input,
+  .actas-form select,
+  .actas-form textarea,
+  .actas-list .sapp-filter-field input,
+  .actas-list .sapp-filter-field select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .actas-form input,
+  .actas-form select,
+  .actas-list .sapp-filter-field input,
+  .actas-list .sapp-filter-field select {
+    min-height: 44px;
+  }
+
+  .actas-form__code {
+    grid-template-columns: minmax(0, 1fr) auto minmax(72px, 0.45fr);
+  }
+
+  .actas-form__code > span:first-child {
+    grid-column: 1 / -1;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .actas-form__file {
+    padding: 0.8rem;
+  }
+
+  .actas-form__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    padding-top: 0.35rem;
+    background: var(--surface-container-low);
+  }
+
+  .actas-list .sapp-filters-panel {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.8rem;
+  }
+
+  .actas-table-shell {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .actas-table,
+  .actas-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    background: transparent;
+  }
+
+  .actas-table thead {
+    display: none;
+  }
+
+  .actas-table tbody {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .actas-table tbody tr {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "name name"
+      "code code"
+      "type type"
+      "year date"
+      "observations observations"
+      "document document"
+      "actions actions";
+    gap: 0.85rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+    border-radius: 16px;
+    padding: 1rem;
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .actas-table tbody tr:hover {
+    background: var(--surface);
+  }
+
+  .actas-table td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .actas-table td::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .actas-table__name {
+    grid-area: name;
+    color: var(--text-primary);
+    font-size: 1.08rem;
+    font-weight: 700;
+  }
+
+  .actas-table__code { grid-area: code; }
+  .actas-table__type { grid-area: type; }
+  .actas-table__year { grid-area: year; }
+  .actas-table__date { grid-area: date; }
+  .actas-table__observations { grid-area: observations; }
+  .actas-table__document { grid-area: document; }
+  .actas-table__action-cell { grid-area: actions; }
+
+  .actas-table__code strong {
+    color: var(--primary);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .actas-table__observations {
+    padding-block: 0.75rem !important;
+    border-block: 1px solid color-mix(in srgb, var(--outline), transparent 50%) !important;
+    white-space: pre-wrap;
+  }
+
+  .actas-table__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .actas-table__actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .actas-table__actions .actas-table__delete {
+    grid-column: 1 / -1;
+  }
+
+  .actas-pagination {
+    justify-content: space-between;
+    gap: 0.45rem;
+    text-align: center;
+  }
+
+  .actas-pagination button {
+    min-height: 44px;
+    padding-inline: 0.65rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .actas-table tbody tr {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "name"
+      "code"
+      "type"
+      "year"
+      "date"
+      "observations"
+      "document"
+      "actions";
+    padding: 0.85rem;
+  }
+
+  .actas-table__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actas-table__actions .actas-table__delete {
+    grid-column: auto;
+  }
+
+  .actas-pagination {
+    flex-wrap: wrap;
+  }
+
+  .actas-pagination span {
+    order: -1;
+    width: 100%;
+  }
+}

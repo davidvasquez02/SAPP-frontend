@@ -269,14 +269,23 @@ const ActasPage = () => {
             <label className="sapp-filter-field"><span>Año</span><select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}><option value="">Todos</option>{years.map((year) => <option key={year} value={year}>{year}</option>)}</select></label>
             <label className="sapp-filter-field"><span>Tipo de acta</span><select value={tipoFilter} onChange={(event) => setTipoFilter(event.target.value as TipoActaFilter)}><option value="">Todos</option><option value="COMITE">Comité Asesor de Posgrados</option><option value="CONSEJO">Consejo Académico</option></select></label>
           </div>
-          {isLoading ? <p className="actas-page__empty">Cargando actas...</p> : null}
-          {!isLoading && visibleActas.length === 0 ? <p className="actas-page__empty">No hay actas que coincidan con los filtros.</p> : null}
-          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Tipo</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
+          {isLoading ? <p className="actas-page__empty" role="status">Cargando actas...</p> : null}
+          {!isLoading && !error && visibleActas.length === 0 ? <p className="actas-page__empty">No hay actas que coincidan con los filtros.</p> : null}
+          {!isLoading && visibleActas.length > 0 ? <div className="sapp-table-shell actas-table-shell"><table className="sapp-table actas-table"><thead><tr><th>Código</th><th>Tipo</th><th>Nombre</th><th>Año</th><th>Fecha de creación</th><th>Observaciones</th><th>Archivo</th><th>Acciones</th></tr></thead><tbody>{visibleActas.map((acta) => {
             const isViewing = fileAction?.actaId === acta.id && fileAction.action === "view";
             const isDownloading = fileAction?.actaId === acta.id && fileAction.action === "download";
             const isDeleting = deletingActaId === acta.id;
             const actionsDisabled = fileAction !== null || deletingActaId !== null;
-            return <tr key={acta.id}><td><strong>{acta.codigo}</strong></td><td>{acta.tipoConsejo ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td><td>{acta.nombre}</td><td>{getActaYear(acta) || "—"}</td><td>{formatDate(acta.fechaCreacion)}</td><td>{acta.observaciones || "—"}</td><td><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td><td><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td></tr>;
+            return <tr key={acta.id}>
+              <td className="actas-table__code" data-label="Código"><strong>{acta.codigo}</strong></td>
+              <td className="actas-table__type" data-label="Tipo de acta">{acta.tipoConsejo ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td>
+              <td className="actas-table__name" data-label="Nombre del acta">{acta.nombre}</td>
+              <td className="actas-table__year" data-label="Año">{getActaYear(acta) || "—"}</td>
+              <td className="actas-table__date" data-label="Fecha de creación">{formatDate(acta.fechaCreacion)}</td>
+              <td className="actas-table__observations" data-label="Observaciones">{acta.observaciones || "—"}</td>
+              <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td>
+              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
+            </tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>

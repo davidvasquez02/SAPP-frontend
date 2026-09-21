@@ -1,3 +1,24 @@
+## Update 2026-09-20 — adaptación responsive completa de `/actas`
+
+### Estado actual y decisiones
+- `src/pages/Actas/ActasPage.tsx` mantiene una sola consulta, colección, orden, filtros, paginación y conjunto de filas. Escritorio conserva la tabla original. En `max-width: 720px`, CSS transforma esas mismas filas en tarjetas, sin duplicar consultas, IDs ni controles; nombre/código se priorizan y año/fecha forman dos columnas hasta 350 px.
+- La causa del desbordamiento era `.actas-table { min-width: 1040px; }`, amplificada por padding/bordes y elementos grid/flex sin contracción explícita. `src/pages/Actas/ActasPage.css` limita la corrección al módulo: usa `min-width: 0`, elimina el ancho mínimo solo en móvil y permite wrap, sin ocultar overflow en `body`.
+- Encabezado, filtros y formulario se apilan en móvil. Los controles miden al menos 44 px y usan 16 px; el nombre seleccionado y código generado ajustan líneas. Se conservan valores al redimensionar y ante errores, validación PDF/15 MB, SHA-256, clasificación COMITE/CONSEJO, fecha Colombia, payload y bloqueo `isSaving`.
+- Ver/Descargar comparten fila cuando caben; Eliminar ocupa otra y conserva estilo destructivo. Se mantienen `getDocumentoActa(acta.id)`, Blob URL autenticado/temporal, confirmación con nombre/código, bloqueo de operaciones y eliminación local solo tras éxito. Un fallo de consulta ya no se confunde con cero resultados.
+
+### Contratos, paths y salida esperada
+- Vista/lógica: `src/pages/Actas/ActasPage.tsx`; estilos: `src/pages/Actas/ActasPage.css`; API: `src/modules/actas/api.ts`; DTO/payload: `src/modules/actas/types.ts`; Blob/base64: `src/shared/files/base64FileUtils.ts`.
+- Sin cambios: `GET /sapp/actas`, `POST /sapp/actas`, `DELETE /sapp/actas/{id}` y `GET /sapp/actas/{id}`. `CrearActaRequest` conserva `nombre`, `codigo`, `fechaCreacion`, `observaciones`, `tipoConsejo`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum`.
+- Salida móvil esperada a 320/375/402/440 CSS px: márgenes de shell de 12–16 px, sin scroll horizontal del listado, filtros/tarjetas/formulario a una columna y todos los valores/acciones accesibles. Escritorio conserva tabla, filtros de tres columnas y formulario de dos columnas.
+
+### Entorno, resultados y trabajo pendiente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, Poetry, entorno Python ni segundo árbol npm. Node 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds/datasets nuevos ni script `test`.
+- `npx eslint src/pages/Actas/ActasPage.tsx`: PASS (solo warning ambiental `Unknown env config "http-proxy"`). `npm run build`: PASS, 272 módulos, `index-Cc_JZsaX.css` e `index-DU-XEZcO.js`; warning no bloqueante por chunk de 630.31 kB. `git diff --check`: PASS.
+- Pendiente con navegador, backend y sesión/mocks: comparar escritorio antes/después y recorrer 320/375/402/440, tablet, landscape, ambos temas y zoom; cubrir textos largos, filtros, vacío/error, paginación, PDF ausente/error/apertura/descarga, carga y eliminación sin tocar actas reales.
+- No hubo captura: Chromium, Chrome y Firefox no están en `PATH`; la ruta requiere autenticación/backend. No instalar dependencias solo para falsificar esta validación.
+
+---
+
 ## Update 2026-09-20 — `/coordinacion/profesores` responsive
 
 ### Estado, causa y decisiones
