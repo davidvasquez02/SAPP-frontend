@@ -66,3 +66,20 @@
   padding: 0.65rem;
   color: var(--text-secondary);
 }
+
+@media (max-width: 768px) {
+  .materias-selector {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .materias-selector__input {
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .materias-selector__option {
+    min-height: 44px;
+  }
+}

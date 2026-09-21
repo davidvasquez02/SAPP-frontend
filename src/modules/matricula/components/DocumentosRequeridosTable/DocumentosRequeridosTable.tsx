@@ -64,7 +64,7 @@ const DocumentosRequeridosTable = ({
 
             return (
             <tr key={doc.id}>
-              <td>
+              <td data-label="Documento">
                 <div className="documentos-requeridos-table__doc-cell">
                   <strong>{doc.nombre}</strong>
                   <span className={`documentos-requeridos-table__badge ${doc.obligatorio ? 'required' : 'optional'}`}>
@@ -81,13 +81,13 @@ const DocumentosRequeridosTable = ({
                   ) : null}
                 </div>
               </td>
-              <td>
+              <td data-label="Estado">
                 <span className={`documentos-requeridos-table__status ${statusClassByEstado[doc.estado]}`}>{doc.estado}</span>
               </td>
-              <td>{formatDateOnly(doc.fechaRevision)}</td>
-              <td>{doc.observaciones ?? '-'}</td>
+              <td data-label="Fecha de revisión">{formatDateOnly(doc.fechaRevision)}</td>
+              <td data-label="Observaciones">{doc.observaciones ?? '-'}</td>
               {showActions ? (
-                <td>
+                <td data-label="Acciones">
                   <div className="documentos-requeridos-table__actions">
                     <button
                       type="button"

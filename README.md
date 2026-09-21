@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — detalle de matrícula responsive por rol (2026-09-21)
+
+- La ruta de gestión `/matricula/:matriculaId` conserva en escritorio el resumen, la grilla documental de seis columnas y la tabla de asignaturas. Hasta 768 CSS px, las asignaturas se presentan como tarjetas y, hasta 960 px, los documentos usan tarjetas con requisito, estado, archivo completo, fecha, observaciones y filas separadas de visualización y validación. Aprobar/Rechazar documentos continúa siendo inmediato; las decisiones y comentarios de asignaturas mantienen el envío conjunto **Guardar validación de asignaturas**.
+- La experiencia real del estudiante continúa en `/matricula`, no en una ruta de detalle independiente. Sus tablas de documentos y materias se transforman en tarjetas solo hasta 768 CSS px, usando el mismo estado React, inputs de archivo y manejadores existentes. Conserva carga/reemplazo permitido por estado, Ver/Descargar autenticados, selección y eliminación de materias y el envío vigente; nunca recibe controles de coordinación.
+- Los cambios eliminan el desplazamiento horizontal móvil causado por `min-width` de las tablas sin ocultar overflow en `body`. Cadenas largas ajustan línea, controles táctiles alcanzan 44 px e inputs/textareas usan 16 px. No se duplican presentaciones ni peticiones: el mismo DOM, datos y borradores se redistribuyen mediante breakpoints, por lo que redimensionar no pierde selecciones, archivos, comentarios o decisiones.
+- No cambiaron rutas, endpoints, DTO, permisos, estados, requisitos de finalización, tipos/tamaños de archivo, dependencias, variables, schemas, seeds ni datasets. ESLint focalizado, build y `git diff --check` pasan. El build produjo `dist/assets/index-KHN1TpiC.css` e `index-CTXBbwem.js`; queda pendiente la prueba visual autenticada y captura porque el contenedor no dispone de navegador ni backend/sesión institucional.
+
 ## Decisión reciente — selector móvil de programa en `/fechas` (2026-09-21)
 
 - En **Convocatorias de admisión**, el breakpoint existente de 780 CSS px presenta un selector accesible de ancho completo para **Maestría** y **Doctorado**, ubicado entre la cabecera/acción de creación y los filtros compartidos. Las opciones se relacionan con los `programaId` recibidos en las convocatorias, no con posiciones ni identificadores codificados.

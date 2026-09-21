@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-width: 0;
 }
 
 .matricula-detalle__back {
@@ -19,6 +20,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  min-width: 0;
 }
 
 .matricula-detalle__header h2,
@@ -275,6 +277,15 @@
 }
 
 @media (max-width: 960px) {
+  .matricula-detalle__documents {
+    overflow-x: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 0.85rem;
+  }
+
   .matricula-detalle__documents-header {
     display: none;
   }
@@ -283,6 +294,20 @@
     grid-template-columns: 1fr;
     padding: 1rem;
     gap: 0.8rem;
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+    border-radius: 14px;
+    background: var(--surface-container-low);
+  }
+
+  .matricula-detalle__documents-row > div,
+  .matricula-detalle__doc-name,
+  .matricula-detalle__doc-description,
+  .matricula-detalle__doc-meta,
+  .matricula-detalle__validation-note {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .matricula-detalle__documents-row > [data-label]::before {
@@ -297,6 +322,144 @@
   .matricula-detalle__footer {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .matricula-detalle {
+    gap: 0.8rem;
+  }
+
+  .matricula-detalle__card {
+    padding: 0.9rem;
+  }
+
+  .matricula-detalle__header h2,
+  .matricula-detalle__header h3,
+  .matricula-detalle__header p,
+  .matricula-detalle__grid p {
+    overflow-wrap: anywhere;
+  }
+
+  .matricula-detalle__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .matricula-detalle__grid p:nth-child(2),
+  .matricula-detalle__grid p:nth-child(5),
+  .matricula-detalle__grid p:nth-child(6),
+  .matricula-detalle__grid p:nth-child(7) {
+    grid-column: 1 / -1;
+  }
+
+  .matricula-detalle__doc-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .matricula-detalle__doc-actions > button,
+  .matricula-detalle__doc-actions .validation-buttons,
+  .matricula-detalle__doc-actions .validation-buttons__reject-mode,
+  .matricula-detalle__doc-actions .validation-buttons__textarea {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .matricula-detalle__doc-actions .validation-buttons {
+    grid-column: 1 / -1;
+  }
+
+  .matricula-detalle__doc-actions .validation-buttons__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .matricula-detalle__view-button,
+  .matricula-detalle__download-button,
+  .matricula-detalle__decision-button,
+  .matricula-detalle__approve-button,
+  .matricula-detalle__doc-actions .validation-buttons__btn {
+    min-height: 44px;
+  }
+
+  .matricula-detalle__table-wrapper {
+    overflow-x: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .matricula-detalle__table,
+  .matricula-detalle__table tbody,
+  .matricula-detalle__table tr,
+  .matricula-detalle__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .matricula-detalle__table {
+    min-width: 0;
+  }
+
+  .matricula-detalle__table thead {
+    display: none;
+  }
+
+  .matricula-detalle__table tbody {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .matricula-detalle__table tr {
+    padding: 0.95rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+    border-radius: 14px;
+    background: var(--surface-container-low);
+  }
+
+  .matricula-detalle__table td {
+    min-width: 0;
+    padding: 0.45rem 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .matricula-detalle__table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.28rem;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .matricula-detalle__decision-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .matricula-detalle__asignatura-comments {
+    min-width: 0;
+    min-height: 88px;
+    font-size: 16px;
+  }
+
+  .matricula-detalle__asignatura-actions,
+  .matricula-detalle__approve-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 359px) {
+  .matricula-detalle__grid,
+  .matricula-detalle__doc-actions,
+  .matricula-detalle__doc-actions .validation-buttons__row,
+  .matricula-detalle__decision-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .matricula-detalle__grid p {
+    grid-column: 1 / -1;
   }
 }
 

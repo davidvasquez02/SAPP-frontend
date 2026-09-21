@@ -53,3 +53,58 @@
   border-color: #b3261e;
   background: color-mix(in srgb, #b3261e, var(--surface) 92%);
 }
+
+@media (max-width: 768px) {
+  .materias-selected-table__wrapper {
+    overflow-x: visible;
+  }
+
+  .materias-selected-table,
+  .materias-selected-table tbody,
+  .materias-selected-table tr,
+  .materias-selected-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .materias-selected-table {
+    min-width: 0;
+  }
+
+  .materias-selected-table thead {
+    display: none;
+  }
+
+  .materias-selected-table tbody {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .materias-selected-table tr {
+    padding: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+    border-radius: 14px;
+    background: var(--surface-container-low);
+  }
+
+  .materias-selected-table td {
+    min-width: 0;
+    padding: 0.38rem 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .materias-selected-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .materias-selected-table__remove {
+    width: 100%;
+    min-height: 44px;
+  }
+}
