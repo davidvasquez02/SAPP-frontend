@@ -1,3 +1,25 @@
+## Update 2026-09-21 — corrección del filtro de Comité Asesor en `/actas`
+
+### Estado actual y causa confirmada
+- El filtro **Tipo de acta → Comité Asesor de Posgrados** ahora incluye registros cuyo `tipoConsejo` sea `false` **o** `null`.
+- La causa era una inconsistencia local: la tabla usaba la condición truthy y mostraba `null` como Comité, mientras el predicado del filtro exigía estrictamente `tipoConsejo === false`. Los registros históricos con `null` se veían en **Todos**, pero desaparecían al seleccionar Comité.
+- `isActaConsejo` centraliza la interpretación. Solo `true` es Consejo Académico; cualquier valor admitido restante (`false | null`) es Comité Asesor. La tabla y el filtro consumen la misma función para evitar otra divergencia.
+
+### Paths, contrato y salida esperada
+- Lógica y presentación: `src/pages/Actas/ActasPage.tsx`; contrato sin cambios: `src/modules/actas/types.ts`.
+- Entrada: `GET /sapp/actas`, con `ActaDto.tipoConsejo: boolean | null`. Salida esperada: **Consejo Académico** selecciona únicamente `true`; **Comité Asesor de Posgrados** selecciona `false` y `null`; **Todos** no restringe el tipo.
+- No cambiaron endpoints, payloads, permisos, estilos, dependencias, variables, schemas, seeds ni datasets.
+
+### Retos, próximos pasos y entorno
+1. Validar con sesión/backend institucional un catálogo que combine `true`, `false` y `null`, además de combinaciones con año, texto y paginación.
+2. Si el backend migra los datos históricos, mantener esta normalización mientras el DTO continúe admitiendo `null`, o coordinar primero un cambio explícito del contrato.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y no tiene script `test`; las versiones exactas están fijadas en `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts` (2026-09-21): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-21): PASS; transformó 272 módulos y generó `dist/assets/index-Cc_JZsaX.css` e `index-Do082L2s.js`. Persiste solo el aviso informativo no bloqueante por el chunk JavaScript de 630.32 kB. `git diff --check`: PASS.
+- No se generó captura: la corrección no altera la presentación y la ruta protegida requiere backend, sesión institucional y registros con los tres valores del contrato para verificar el comportamiento real.
+
+---
+
 ## Update 2026-09-20 — adaptación responsive completa de `/actas`
 
 ### Estado actual y decisiones
