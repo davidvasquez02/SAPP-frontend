@@ -53,6 +53,7 @@ const FechasModulePage = () => {
   const [vigenteFilter, setVigenteFilter] = useState<VigenteFilter>("TODOS");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingConvocatoria, setEditingConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null);
+  const [closingConvocatoriaId, setClosingConvocatoriaId] = useState<number | null>(null);
 
   const loadData = useCallback(async (silent = false): Promise<ConvocatoriaAdmisionDto[]> => {
     if (silent) {
@@ -89,6 +90,10 @@ const FechasModulePage = () => {
 
   useEffect(() => { setProgramPages({}); }, [periodoFilter, vigenteFilter]);
 
+  useEffect(() => {
+    setPeriodosPage((page) => Math.min(page, Math.max(1, Math.ceil(periodos.length / PERIODOS_PER_PAGE))));
+  }, [periodos.length]);
+
   const totalPagesPeriodos = Math.max(1, Math.ceil(periodos.length / PERIODOS_PER_PAGE));
   const periodosPreview = useMemo(() => {
     const start = (periodosPage - 1) * PERIODOS_PER_PAGE;
@@ -117,16 +122,40 @@ const FechasModulePage = () => {
     })).sort((a, b) => a.programaLabel.localeCompare(b.programaLabel, "es"));
   }, [convocatorias, periodoFilter, vigenteFilter]);
 
+  useEffect(() => {
+    setProgramPages((current) => {
+      let changed = false;
+      const next: Record<number, number> = {};
+
+      sections.forEach((section) => {
+        const totalPages = Math.max(1, Math.ceil(section.items.length / CONVOCATORIAS_PER_PAGE));
+        const currentPage = current[section.programaId] ?? 1;
+        const validPage = Math.min(currentPage, totalPages);
+        next[section.programaId] = validPage;
+        if (validPage !== currentPage) changed = true;
+      });
+
+      if (Object.keys(current).length !== Object.keys(next).length) changed = true;
+      return changed ? next : current;
+    });
+  }, [sections]);
+
   const handleCloseConvocatoria = useCallback(async (convocatoria: ConvocatoriaAdmisionDto) => {
+    if (closingConvocatoriaId !== null) return;
     if (!window.confirm(`¿Cerrar convocatoria ${convocatoria.periodo} - ${convocatoria.programa}?`)) return;
+    setClosingConvocatoriaId(convocatoria.id);
+    setError(null);
+    setFeedback(null);
     try {
       await cerrarConvocatoriaAdmision(convocatoria.id);
       await loadData(true);
       setFeedback("Convocatoria cerrada correctamente.");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No fue posible cerrar la convocatoria.");
+    } finally {
+      setClosingConvocatoriaId(null);
     }
-  }, [loadData]);
+  }, [closingConvocatoriaId, loadData]);
 
   return (
     <ModuleLayout title="Fechas">
@@ -146,14 +175,22 @@ const FechasModulePage = () => {
               <div><h2>Períodos académicos</h2><p>Base para definir rangos de fechas y habilitar procesos por semestre.</p></div>
               <button type="button" onClick={() => navigate("/fechas/periodos")}>Crear período académico</button>
             </div>
-            <div className="config-module__table-wrap sapp-table-shell">
+            {periodos.length === 0 ? <p className="config-module__status">No hay períodos académicos registrados.</p> : null}
+            {periodos.length > 0 ? <div className="config-module__table-wrap sapp-table-shell">
               <table className="config-module__table sapp-table"><thead><tr><th>Período</th><th>Fecha inicio</th><th>Fecha fin</th><th>Inicio matrículas</th><th>Fin matrículas</th><th>Acciones</th></tr></thead>
                 <tbody>{periodosPreview.map((item) => {
                   const fechaMatricula = item.fechas.find((fecha) => fecha.tipoTramite.id === TIPO_TRAMITE_ADMISIONES);
-                  return <tr key={item.periodo.id}><td>{item.periodo.anioPeriodo}</td><td>{formatFecha(item.periodo.fechaInicio)}</td><td>{formatFecha(item.periodo.fechaFin)}</td><td>{formatFecha(fechaMatricula?.fechaInicio ?? null)}</td><td>{formatFecha(fechaMatricula?.fechaFin ?? null)}</td><td><button type="button" className="config-module__edit-button" onClick={() => navigate(`/fechas/periodos?periodoId=${item.periodo.id}`)}>Editar</button></td></tr>;
+                  return <tr key={item.periodo.id}>
+                    <td data-label="Período" className="config-module__period-title">{item.periodo.anioPeriodo}</td>
+                    <td data-label="Inicio" data-date-group="Período académico">{formatFecha(item.periodo.fechaInicio)}</td>
+                    <td data-label="Fin" data-date-group="Período académico">{formatFecha(item.periodo.fechaFin)}</td>
+                    <td data-label="Inicio" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaInicio ?? null)}</td>
+                    <td data-label="Fin" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaFin ?? null)}</td>
+                    <td data-label="Acciones" className="config-module__actions-cell"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/fechas/periodos?periodoId=${item.periodo.id}`)}>Editar</button></td>
+                  </tr>;
                 })}</tbody></table>
-            </div>
-            <div className="config-module__pagination"><button type="button" onClick={() => setPeriodosPage((page) => Math.max(1, page - 1))} disabled={periodosPage === 1}>Anterior</button><span>Página {periodosPage} de {totalPagesPeriodos}</span><button type="button" onClick={() => setPeriodosPage((page) => Math.min(totalPagesPeriodos, page + 1))} disabled={periodosPage === totalPagesPeriodos}>Siguiente</button></div>
+            </div> : null}
+            {periodos.length > 0 ? <div className="config-module__pagination"><button type="button" onClick={() => setPeriodosPage((page) => Math.max(1, page - 1))} disabled={periodosPage === 1}>Anterior</button><span>Página {periodosPage} de {totalPagesPeriodos}</span><button type="button" onClick={() => setPeriodosPage((page) => Math.min(totalPagesPeriodos, page + 1))} disabled={periodosPage === totalPagesPeriodos}>Siguiente</button></div> : null}
           </article>
 
           <article className="config-module__card">
@@ -173,7 +210,15 @@ const FechasModulePage = () => {
               return <section key={section.programaId} className="config-module__program" aria-labelledby={`programa-${section.programaId}`}>
                 <h3 id={`programa-${section.programaId}`}>{section.programaLabel}</h3>
                 <div className="config-module__table-wrap sapp-table-shell"><table className="config-module__table config-module__table--convocatorias sapp-table"><thead><tr><th>Período</th><th>Cupos</th><th>Fecha inicio</th><th>Fecha fin</th><th>Vigente</th><th>Observaciones</th><th>Acciones</th></tr></thead>
-                  <tbody>{pageItems.map((item) => { const vigente = isConvocatoriaVigente(item); return <tr key={item.id}><td>{item.periodo}</td><td>{item.cupos}</td><td>{formatFecha(item.fechaInicio)}</td><td>{formatFecha(item.fechaFin)}</td><td><span className={`config-module__badge config-module__badge--${vigente ? "vigente" : "cerrada"}`}>{vigente ? "VIGENTE" : "CERRADA"}</span></td><td><span className="config-module__observaciones">{item.observaciones?.trim() || "—"}</span></td><td><div className="config-module__row-actions"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/admisiones/convocatoria/${item.id}`, { state: { programaId: item.programaId, programaNombre: section.programaLabel, periodoLabel: item.periodo, periodoAcademico: item.periodo, cupos: item.cupos } })}>Ver inscripciones</button><button type="button" className="config-module__edit-button" onClick={() => setEditingConvocatoria(item)} disabled={isRefreshing}>Editar</button>{vigente ? <button type="button" onClick={() => void handleCloseConvocatoria(item)} disabled={isRefreshing}>Cerrar</button> : null}</div></td></tr>; })}</tbody></table></div>
+                  <tbody>{pageItems.map((item) => { const vigente = isConvocatoriaVigente(item); const actionsDisabled = isRefreshing || closingConvocatoriaId !== null; return <tr key={item.id}>
+                    <td data-label="Período" className="config-module__convocatoria-period">{item.periodo}</td>
+                    <td data-label="Cupos" className="config-module__convocatoria-cupos">{item.cupos}</td>
+                    <td data-label="Fecha de inicio" className="config-module__convocatoria-start">{formatFecha(item.fechaInicio)}</td>
+                    <td data-label="Fecha de fin" className="config-module__convocatoria-end">{formatFecha(item.fechaFin)}</td>
+                    <td data-label="Estado" className="config-module__convocatoria-status"><span className={`config-module__badge config-module__badge--${vigente ? "vigente" : "cerrada"}`}>{vigente ? "VIGENTE" : "CERRADA"}</span></td>
+                    <td data-label="Observaciones" className="config-module__convocatoria-notes"><span className="config-module__observaciones">{item.observaciones?.trim() || "—"}</span></td>
+                    <td data-label="Acciones" className="config-module__convocatoria-actions"><div className="config-module__row-actions"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/admisiones/convocatoria/${item.id}`, { state: { programaId: item.programaId, programaNombre: section.programaLabel, periodoLabel: item.periodo, periodoAcademico: item.periodo, cupos: item.cupos } })}>Ver inscripciones</button><button type="button" className="config-module__edit-button" onClick={() => setEditingConvocatoria(item)} disabled={actionsDisabled}>Editar</button>{vigente ? <button type="button" onClick={() => void handleCloseConvocatoria(item)} disabled={actionsDisabled}>{closingConvocatoriaId === item.id ? "Cerrando..." : "Cerrar"}</button> : null}</div></td>
+                  </tr>; })}</tbody></table></div>
                 <div className="config-module__pagination"><button type="button" disabled={page === 1} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page - 1 }))}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page + 1 }))}>Siguiente</button></div>
               </section>;
             })}</div>
