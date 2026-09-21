@@ -520,11 +520,11 @@ const SolicitudDetallePage = () => {
                       <tbody>
                         {solicitud.solicitudHomologacionesAsignaturas.map((homologacion) => (
                           <tr key={homologacion.id}>
-                            <td>
+                            <td data-label="Materia de origen">
                               <strong>{homologacion.asignaturaOrigenNombre}</strong>
                               <span>{homologacion.asignaturaOrigenCodigo || 'Sin código'}</span>
                             </td>
-                            <td>
+                            <td data-label="Materia de destino">
                               <strong>{homologacion.asignaturaDestinoNombre}</strong>
                               <span>{homologacion.asignaturaDestinoCodigo || 'Sin código'}</span>
                             </td>

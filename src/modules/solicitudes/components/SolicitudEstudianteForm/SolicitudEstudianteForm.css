@@ -166,9 +166,25 @@
 }
 
 .solicitud-estudiante-form__origen legend,
-.solicitud-estudiante-form__destino span {
+.solicitud-estudiante-form__destino label {
   margin-bottom: 0.55rem;
   font-weight: 600;
+}
+
+.solicitud-estudiante-form__selected-subject,
+.solicitud-estudiante-form__field-error {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+.solicitud-estudiante-form__selected-subject {
+  display: none;
+  color: var(--text-secondary);
+}
+
+.solicitud-estudiante-form__field-error {
+  color: var(--danger, #b3261e);
 }
 .solicitud-estudiante-form__motivos {
   display: flex;
@@ -196,9 +212,70 @@
 }
 
 @media (max-width: 640px) {
+  .solicitud-estudiante-form {
+    gap: 1rem;
+  }
+
+  .solicitud-estudiante-form__section {
+    min-width: 0;
+    padding: 0.8rem;
+  }
+
+  .solicitud-estudiante-form__homologaciones {
+    gap: 0.85rem;
+  }
+
+  .solicitud-estudiante-form__homologacion-row {
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
   .solicitud-estudiante-form__renewal-numbers,
   .solicitud-estudiante-form__homologacion-fields {
     grid-template-columns: 1fr;
+  }
+
+  .solicitud-estudiante-form__homologacion-fields {
+    gap: 1.1rem;
+  }
+
+  .solicitud-estudiante-form__homologacion-heading {
+    align-items: flex-start;
+  }
+
+  .solicitud-estudiante-form__homologacion-heading button,
+  .solicitud-estudiante-form__source-toggle button,
+  .solicitud-estudiante-form__homologaciones > button,
+  .solicitud-estudiante-form__section > button,
+  .solicitud-estudiante-form__submit {
+    min-height: 44px;
+  }
+
+  .solicitud-estudiante-form__source-toggle {
+    align-items: stretch;
+  }
+
+  .solicitud-estudiante-form__source-toggle button {
+    flex: 1 1 0;
+  }
+
+  .solicitud-estudiante-form select,
+  .solicitud-estudiante-form textarea,
+  .solicitud-estudiante-form input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+  }
+
+  .solicitud-estudiante-form__selected-subject {
+    display: block;
+  }
+
+  .solicitud-estudiante-form__submit {
+    width: 100%;
+    margin-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 }
 

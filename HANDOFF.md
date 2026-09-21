@@ -1,3 +1,35 @@
+# Update 2026-09-21 — creación y detalle responsive de homologaciones
+
+## Estado actual y decisiones
+
+- Se completó la adaptación móvil del tipo `HOMOLOG` tanto en `SolicitudEstudianteForm` como en `SolicitudDetallePage`, sin cambiar su presentación de escritorio. El formulario apila origen/destino hasta 640 CSS px y el detalle convierte cada fila en una tarjeta hasta 768 CSS px. Cada tarjeta conserva inequívocamente una pareja, el orden recibido y textos completos con ajuste de línea.
+- La creación ya tenía IDs `crypto.randomUUID()` por pareja y las mutaciones por `rowId`; se preservó este modelo. Eliminar la pareja intermedia filtra solo ese UUID y React no reutiliza estado posicional. Los controles recibieron IDs derivados del UUID, errores accesibles por pareja y un resumen móvil del nombre/código seleccionado. El estado React y los inputs de archivo son los mismos a cualquier ancho, por lo que no se desmontan al alternar móvil/escritorio.
+- No cambió la serialización: catálogo externo → `{ asignatura_origen_id, asignatura_destino_id }`; alta manual → `{ nombreAsignaturaExterna, codigoAsignaturaExterna? , asignatura_destino_id }`. Tampoco cambiaron validaciones de completitud/cantidad, endpoints, DTO, adjuntos, permisos o flujo de acta/aprobación. El estudiante continúa sin controles de aprobación; la guarda existente de rol/estado en el detalle permanece intacta.
+- `DocumentosAdjuntos` conserva su tabla en escritorio y usa tarjetas móviles con nombre/descripcion completos y botones Ver/Descargar de al menos 44 px. Todos los estilos nuevos consumen tokens semánticos (`--surface`, `--surface-container-low`, `--outline`, `--primary`, `--on-primary`, `--text-*`) y no bloquean overflow horizontal en `body`.
+
+## Paths, contratos y salida esperada
+
+- Creación y estado/payload: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`; responsive: su `.css` adyacente.
+- Detalle `HOMOLOG`: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`. Adjuntos compartidos: `src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx` y `.css`.
+- Catálogos sin cambios: `GET /sapp/homologaciones/asignaturas-externas/activas` para origen y `GET /sapp/asignaturas?programaId=1` para destino. Envío sin cambios a `POST /sapp/solicitudesAcademicas` dentro de `solicitudHomologacionesAsignaturas`.
+- Detalle esperado: `solicitudHomologacionesAsignaturas: [{ id, asignaturaOrigenNombre, asignaturaOrigenCodigo, asignaturaDestinoNombre, asignaturaDestinoCodigo }]`. El bloque de acta sigue usando `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` cuando aplican.
+- Salida móvil esperada a 320/375/402/440 CSS px: margen/padding interior reducido, ninguna tabla de homologaciones/documentos provoca scroll horizontal, cada pareja se conserva unida, controles táctiles de 44 px y controles de texto a 16 px. A más de los breakpoints se conserva la tabla y grilla anteriores.
+
+## Verificación reciente, límites y próximos pasos
+
+- `npx eslint src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx`: PASS; solo warning ambiental de npm por `http-proxy`.
+- `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-r9VGzlr2.css` (222.51 kB) e `index-DHsrY2pe.js` (635.45 kB). Persiste el warning informativo de chunk mayor a 500 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de esta superficie (tres servicios API con `any`, guard y mock de admisiones, validación documental, editor y tipos de solicitudes); el lint focalizado anterior confirma que este cambio no añade hallazgos.
+- No existe script `test`. La estabilidad de UUID, el filtrado por ID y el mapeo del payload fueron revisados estáticamente; no se envió una solicitud real.
+- Pendiente validación manual autenticada con mocks/backend de pruebas: 1 y 3 parejas; borrar la intermedia; nombres/códigos largos; errores; móvil → escritorio → móvil; adjuntos; con/sin acta; roles estudiante/coordinación; estados editables/no editables; temas claro/oscuro y anchos 320/375/402/440. También comparar escritorio con el padre del commit de este cambio.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y las rutas protegidas necesitan backend, sesión y datos institucionales. No agregar dependencias únicamente para capturas.
+
+## Entorno exacto
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0 y Lucide 0.468.0-local. Sin paquetes, variables, schemas, seeds o datasets nuevos.
+
+---
+
 # Update 2026-09-21 — detalle de matrícula responsive (coordinación y estudiante)
 
 ## Estado actual y decisiones por rol

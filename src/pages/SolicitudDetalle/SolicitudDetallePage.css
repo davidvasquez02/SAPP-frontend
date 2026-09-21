@@ -237,23 +237,6 @@
     margin: 0.75rem 0 0;
 }
 
-@media (max-width: 768px) {
-    .solicitud-detalle-page {
-        padding: 1rem;
-    }
-    .solicitud-detalle-page__estado-controls>* {
-        width: 100%;
-    }
-    .solicitud-detalle-page__estado-controls select,
-    .solicitud-detalle-page__back,
-    .solicitud-detalle-page__save {
-        width: 100%;
-    }
-    .solicitud-detalle-page__acta-details {
-        grid-template-columns: 1fr;
-    }
-}
-
 .solicitud-detalle-page__motivos-list {
     margin: 0;
     padding-left: 1rem;
@@ -398,5 +381,115 @@
 @media (max-width: 540px) {
     .solicitud-detalle-page__modal-actions>* {
         width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .solicitud-detalle-page {
+        padding: 1rem;
+    }
+    .solicitud-detalle-page__estado-controls>* {
+        width: 100%;
+    }
+    .solicitud-detalle-page__estado-controls select,
+    .solicitud-detalle-page__back,
+    .solicitud-detalle-page__save {
+        width: 100%;
+    }
+    .solicitud-detalle-page__acta-details {
+        grid-template-columns: 1fr;
+    }
+
+    .solicitud-detalle-page__homologaciones .solicitud-detalle-page__table-wrapper {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .solicitud-detalle-page__homologaciones table,
+    .solicitud-detalle-page__homologaciones tbody,
+    .solicitud-detalle-page__homologaciones tr,
+    .solicitud-detalle-page__homologaciones td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .solicitud-detalle-page__homologaciones table {
+        background: transparent;
+    }
+
+    .solicitud-detalle-page__homologaciones thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .solicitud-detalle-page__homologaciones tbody {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .solicitud-detalle-page__homologaciones tr {
+        padding: 0.8rem;
+        border: 1px solid var(--outline);
+        border-radius: 0.9rem;
+        background: var(--surface-container-low);
+    }
+
+    .solicitud-detalle-page__homologaciones td {
+        padding: 0;
+        border: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .solicitud-detalle-page__homologaciones td + td {
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid var(--outline);
+    }
+
+    .solicitud-detalle-page__homologaciones td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+}
+
+@media (max-width: 440px) {
+    .solicitud-detalle-page {
+        padding: 0.8rem;
+    }
+
+    .solicitud-detalle-page__item,
+    .solicitud-detalle-page__acta,
+    .solicitud-detalle-page__homologaciones tr {
+        padding: 0.75rem;
+    }
+
+    .solicitud-detalle-page__field select,
+    .solicitud-detalle-page__field textarea,
+    .solicitud-detalle-page__field input,
+    .solicitud-detalle-page__estado-controls select,
+    .solicitud-detalle-page__modal-dialog select {
+        font-size: 1rem;
+    }
+
+    .solicitud-detalle-page__back,
+    .solicitud-detalle-page__save,
+    .solicitud-detalle-page__decision,
+    .solicitud-detalle-page__estado-controls select {
+        min-height: 44px;
     }
 }
