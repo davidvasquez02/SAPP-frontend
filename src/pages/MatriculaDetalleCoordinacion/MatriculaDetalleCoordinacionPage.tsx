@@ -20,6 +20,12 @@ import type {
   MatriculaAsignaturaValidacionPayload,
   MatriculaValidacionAsignaturasRequest,
 } from '../../modules/matricula/types'
+import {
+  formatBackendDateTime,
+  getAsignaturaEstadoLabel,
+  getMatriculaEstadoLabel,
+  getMatriculaEstadoModifier,
+} from '../../modules/matricula/utils/matriculaPresentation'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './MatriculaDetalleCoordinacionPage.css'
 
@@ -56,26 +62,6 @@ const applyDocumentoDecision = (
       },
     }
   })
-
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return '—'
-  }
-
-  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
-  const date = new Date(normalized)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleString('es-CO', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEstado => {
   if (!documento.documentoCargado) {
@@ -123,21 +109,7 @@ const getEstadoDocumentoClassName = (documento: DocumentoTramiteItemDto) => {
 
 
 const getEstadoBadgeClassName = (estado: string) => {
-  const normalizedEstado = estado.toUpperCase()
-
-  if (normalizedEstado === 'PENDIENTE_DOCUMENTOS') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--pendiente-documentos'
-  }
-
-  if (normalizedEstado === 'RADICADA') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--radicada'
-  }
-
-  if (normalizedEstado === 'FINALIZADA') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--finalizada'
-  }
-
-  return 'matricula-page__estado-badge matricula-page__estado-badge--default'
+  return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado)}`
 }
 
 const MatriculaDetalleCoordinacionPage = () => {
@@ -630,14 +602,18 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <strong>Periodo:</strong> {matricula.periodoAcademico}
                 </p>
                 <p>
-                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{matricula.estado}</span>
+                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{getMatriculaEstadoLabel(matricula.estado)}</span>
                 </p>
                 <p>
-                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
+                  <strong>Fecha solicitud:</strong> {formatBackendDateTime(matricula.fechaSolicitud)}
                 </p>
                 <p>
-                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
+                  <strong>Fecha revisión:</strong> {formatBackendDateTime(matricula.fechaRevision)}
                 </p>
+              </div>
+              <div className="matricula-detalle__general-observations">
+                <strong>Observaciones de la matrícula</strong>
+                <p>{matricula.observaciones?.trim() || 'Sin observaciones registradas.'}</p>
               </div>
             </article>
 
@@ -723,7 +699,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                         </div>
 
                         <div className="matricula-detalle__review-date" data-label="Fecha de revisión">
-                          {formatDateTime(documentoResponse?.fechaRevisionDocumento ?? null)}
+                          {formatBackendDateTime(documentoResponse?.fechaRevisionDocumento ?? null)}
                         </div>
 
                         <div data-label="Observaciones">
@@ -840,7 +816,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                       <tr key={asignatura.id}>
                         <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
                         <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
-                        <td data-label="Estado">{asignatura.estado}</td>
+                        <td data-label="Estado">{getAsignaturaEstadoLabel(asignatura.estado)}</td>
                         <td data-label="Validación coordinación">
                           {isFinalizada ? (
                             <span className="matricula-detalle__obs-empty">—</span>

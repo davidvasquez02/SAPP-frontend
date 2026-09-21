@@ -10,6 +10,7 @@ import type {
   MatriculaValidacionAsignaturasRequest,
   MatriculaVigenteValidationResult,
 } from '../types'
+import { selectStudentMatricula } from '../utils/matriculaPresentation'
 
 type ApiResponse<T> = {
   ok: boolean
@@ -121,7 +122,7 @@ export const getMatriculaVigenteByEstudiante = async (estudianteId: number): Pro
     throw new Error(response.message || 'No fue posible consultar la matrícula vigente.')
   }
 
-  return response.data[0] ?? null
+  return selectStudentMatricula(response.data)
 }
 
 export const getMatriculaVigenteValidationByEstudiante = async (
@@ -142,7 +143,7 @@ export const getMatriculaVigenteValidationByEstudiante = async (
   }
 
   if (Array.isArray(response.data)) {
-    const matricula = response.data[0]
+    const matricula = selectStudentMatricula(response.data)
     if (!matricula) {
       throw new Error('La respuesta de matrícula vigente no contiene datos válidos.')
     }

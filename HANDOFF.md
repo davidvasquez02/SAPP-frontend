@@ -1,3 +1,25 @@
+# Update 2026-09-21 — seguimiento de matrícula del estudiante
+
+## Estado actual y decisiones
+- Rutas confirmadas en `src/app/routes/matriculaRoutes.tsx`: `/matricula` → `MatriculaPage` (estudiante o listado según rol), `/matricula/:matriculaId` → `MatriculaDetalleCoordinacionPage` (gestión). No se creó una ruta estudiantil nueva ni se reutilizó el endpoint autorizado a coordinación.
+- El estudiante consume `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` y los documentos mediante `getDocumentosMatriculaAcademica(matricula.id)`. Estado general, fecha/observación general y asignaturas proceden del primer contrato; documento, obligatoriedad, revisión/observación y contenido proceden del segundo. Errores documentales se muestran aparte y no producen un contador `0/0`.
+- `selectStudentMatricula` evita `data[0]`: admite `periodoId` y, al no recibirlo, escoge de forma estable la fecha de solicitud más reciente y luego el mayor ID. Limitación pendiente: la pantalla hoy no recibe un período/ID desde URL; el endpoint denominado `vigente` es el único contexto estudiantil disponible. Confirmar con backend si puede devolver más de una vigente y si debe exponer explícitamente el período objetivo.
+- El resumen muestra etiqueta del estado del backend, número, programa si está en el DTO, período, solicitud, revisión neutral (`—`) y observación general. No muestra usuario revisor. Materias se relacionan por `asignaturaId` con catálogo y conservan aparte `matriculaAsignaturaId`; si el catálogo no contiene una materia, ya no se elimina: usa nombre/código del contrato y nivel neutral.
+- `FINALIZADA`, `RADICADA` y `PENDIENTE_DOCUMENTOS` son los únicos estados generales confirmados en el código. Las demás etiquetas son neutrales. Estados de materias confirmados: `MATRICULADA`, `APROBADA`, `NO_MATRICULADA`, `RECHAZADA`, `PENDIENTE`. La carga estudiantil solo permanece disponible en `PENDIENTE_DOCUMENTOS`; estados desconocidos se bloquean de forma conservadora. Coordinación mantiene aprobación/rechazo y guardado existentes, pero ahora comparte etiquetas y muestra **Observaciones de la matrícula**.
+
+## Paths, fixture, contrato y salida esperada
+- Render/estilos estudiante: `src/pages/Matricula/MatriculaPage.tsx` y `.css`; tabla responsive de materias: `src/modules/matricula/components/MateriasSelectedTable/`; documentos: `src/modules/matricula/components/DocumentosRequeridosTable/`. Coordinación: `src/pages/MatriculaDetalleCoordinacion/`.
+- Tipos/consulta: `src/modules/matricula/types.ts` y `services/matriculaAcademicaService.ts`. Presentación, fecha sin conversión de zona y selección: `src/modules/matricula/utils/matriculaPresentation.ts`.
+- Fixture y prueba: `tests/fixtures/matricula/student-matriculas.json`, `tests/matriculaPresentation.test.ts`. Es dato sintético no usado por producción y cubre dos matrículas, dos estados de materia, grupo nulo, observaciones, fecha ausente y estado desconocido. No hay seeds ni datasets adicionales.
+- Respuesta esperada: `data: MatriculaAcademicaVigenteDto[]`; cada registro conserva `id`, estudiante/programa/período, `estado`, `fechaSolicitud`, `fechaRevision`, `observaciones` y `asignaturas[{ id, matriculaId, asignaturaId, asignaturaCodigo, asignaturaNombre, estado, grupo, observaciones }]`. `id` de la fila y `asignaturaId` no se intercambian. Los documentos no forman parte de este JSON.
+
+## Verificación, retos y siguientes pasos
+- `node --experimental-strip-types --test tests/matriculaPresentation.test.ts`: PASS, 4/4. `npx eslint ...`: PASS (solo warning ambiental npm `Unknown env config "http-proxy"`). `npm run build`: PASS, 273 módulos; `index-DhFeTLOW.css` 224.43 kB e `index-DQeieq-z.js` 638.82 kB; warning no bloqueante por chunk >500 kB. `git diff --check`: PASS.
+- Pendiente en entorno no productivo: verificar respuestas vacías y múltiples del endpoint real, fallos independientes de ambas consultas, catálogo documental completo y asociación por matrícula; recorrer Cargar/Ver/Descargar y todas las restricciones sin subir archivos reales.
+- Pendiente visual: escritorio y 320/375/402/440 CSS px, ambos temas, textos largos, foco/teclado y `scrollWidth <= clientWidth`. No hay Chromium/Chrome/Firefox, backend ni sesión institucional en el contenedor, por lo que no hubo captura.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No crear venv, Conda, Poetry, entorno Python ni otro árbol npm.
+
+---
 # Update 2026-09-21 — consistencia de colores de estados en responsive
 
 ## Estado actual y decisión

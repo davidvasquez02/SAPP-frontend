@@ -121,6 +121,12 @@
   font-size: 0.82rem;
 }
 
+.documentos-requeridos-table__blocked-reason {
+  flex-basis: 100%;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
 @media (max-width: 768px) {
   .documentos-requeridos-table__wrapper {
     overflow-x: visible;
