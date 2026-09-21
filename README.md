@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — colores de estados en solicitudes responsive (2026-09-21)
+
+- Los listados de solicitudes académicas y créditos condonables comparten `StatusBadge` como fuente única para la normalización, etiqueta y color de sus ocho estados. La convención vigente es: enviada con el tono institucional, revisión y los tres pasos de firma en ámbar, aprobada en verde, rechazada en rojo, y devuelta/desconocida en tonos neutrales.
+- Se eliminó la sobrescritura móvil de color, fondo y borde que aplicaba el mismo verde a todos los estados de las tarjetas de créditos condonables. El breakpoint de 768 CSS px ahora solo adapta tamaño, ajuste de línea y alineación; por tanto, una misma solicitud conserva exactamente su semántica cromática entre la tabla de escritorio, las tarjetas responsive y el detalle compartido, tanto en `body.light` como en `body.dark`.
+- No cambiaron estados, etiquetas, filtros, orden, endpoints, DTO, navegación, permisos, dependencias, variables de entorno, seeds ni datasets. La aplicación continúa siendo un frontend React que consume los contratos REST de Spring Boot mediante los servicios del módulo; no existe script automatizado `test`.
+- Verificación local: el build de producción transformó 272 módulos y generó `dist/assets/index-CtLOhbNR.css` e `index-C7FRZ1pi.js`; `git diff --check` y la comprobación estática de que el selector móvil no redefine colores pasan. Persiste únicamente el aviso informativo conocido por el chunk JavaScript de 635.45 kB.
+
 ## Decisión reciente — homologación de asignaturas responsive (2026-09-21)
 
 - El alcance sigue siendo el frontend institucional para trámites de posgrado. La arquitectura no cambia: React renderiza las rutas protegidas, los componentes del módulo `solicitudes` encapsulan formulario/documentos y los servicios HTTP conservan los contratos de Spring Boot. Este ajuste se limita a la creación estudiantil y al detalle compartido `/solicitudes/:solicitudId` cuando el tipo es `HOMOLOG`.
