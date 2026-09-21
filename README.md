@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — filtro de actas de Comité Asesor (2026-09-21)
+
+- Se corrigió la discrepancia entre la columna **Tipo** y el filtro **Tipo de acta** de `/actas`. El contrato histórico admite `tipoConsejo: null` para Comité Asesor: la tabla ya lo mostraba como **Comité Asesor de Posgrados**, pero el filtro solo aceptaba el booleano `false` y por eso ocultaba esas filas.
+- La clasificación quedó centralizada: únicamente `tipoConsejo === true` representa **Consejo Académico**; tanto `false` como `null` representan **Comité Asesor de Posgrados**. La misma regla alimenta ahora la etiqueta y el filtro, sin cambios de endpoint, DTO, dependencias, variables, schemas, seeds ni datasets.
+- El catálogo continúa obteniéndose mediante `GET /sapp/actas` y se filtra en cliente junto con año y búsqueda. La paginación sigue operando sobre el resultado combinado y vuelve a la primera página al cambiar un filtro.
+
 ## Decisión reciente — `/actas` responsive (2026-09-20)
 
 - El módulo protegido conserva sin cambios su tabla de ocho columnas, filtros en tres columnas, formulario en dos columnas, paginación, clasificación, contratos y acciones en escritorio. Hasta 720 CSS px, las mismas filas se presentan como tarjetas verticales con nombre y código completos, tipo real, año, fecha, observaciones, tipo/tamaño y acciones explícitas.

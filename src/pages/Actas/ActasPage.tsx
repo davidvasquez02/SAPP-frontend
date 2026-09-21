@@ -39,6 +39,10 @@ const getActaYear = (acta: ActaDto) => acta.codigo.match(/-(\d{4})$/)?.[1] ?? ""
 
 const getActaCode = (acta: ActaDto) => acta.codigo.replace(/-\d{4}$/, "");
 
+// El contrato histórico usa null para las actas de Comité Asesor. Normalizarlo
+// aquí evita que la etiqueta de la tabla y el filtro interpreten tipos distintos.
+const isActaConsejo = (acta: ActaDto) => acta.tipoConsejo === true;
+
 const compareActas = (a: ActaDto, b: ActaDto) => {
   const byCode = getActaCode(b).localeCompare(getActaCode(a), "es", {
     numeric: true,
@@ -121,7 +125,7 @@ const ActasPage = () => {
     return actas.filter(
       (acta) =>
         (!yearFilter || getActaYear(acta) === yearFilter) &&
-        (!tipoFilter || acta.tipoConsejo === (tipoFilter === "CONSEJO")) &&
+        (!tipoFilter || isActaConsejo(acta) === (tipoFilter === "CONSEJO")) &&
         (!term ||
           acta.nombre.toLocaleLowerCase("es").includes(term) ||
           acta.codigo.toLocaleLowerCase("es").includes(term)),
@@ -278,7 +282,7 @@ const ActasPage = () => {
             const actionsDisabled = fileAction !== null || deletingActaId !== null;
             return <tr key={acta.id}>
               <td className="actas-table__code" data-label="Código"><strong>{acta.codigo}</strong></td>
-              <td className="actas-table__type" data-label="Tipo de acta">{acta.tipoConsejo ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td>
+              <td className="actas-table__type" data-label="Tipo de acta">{isActaConsejo(acta) ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td>
               <td className="actas-table__name" data-label="Nombre del acta">{acta.nombre}</td>
               <td className="actas-table__year" data-label="Año">{getActaYear(acta) || "—"}</td>
               <td className="actas-table__date" data-label="Fecha de creación">{formatDate(acta.fechaCreacion)}</td>
