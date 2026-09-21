@@ -162,6 +162,7 @@ const SolicitudEstudianteForm = ({
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [homologacionesValidationAttempted, setHomologacionesValidationAttempted] = useState(false)
 
   const selectedTipo = useMemo(() => tipos.find((tipo) => tipo.id === tipoSolicitudId) ?? null, [tipoSolicitudId, tipos])
   const selectedTipoLabel = useMemo(
@@ -291,6 +292,7 @@ const SolicitudEstudianteForm = ({
       setAsignaturasCatalogo([])
       setAsignaturasExternas([])
       setHomologaciones([])
+      setHomologacionesValidationAttempted(false)
       setLoadingAsignaturas(false)
       setAsignaturasError(null)
       return
@@ -384,6 +386,7 @@ const SolicitudEstudianteForm = ({
       }
     }
     if (isHomologacion) {
+      setHomologacionesValidationAttempted(true)
       if (asignaturasError) {
         setErrorMsg('No es posible registrar la solicitud hasta cargar asignaturas de homologación.')
         return false
@@ -424,6 +427,7 @@ const SolicitudEstudianteForm = ({
     setObservaciones('')
     setModalidadId(null)
     setHomologaciones([])
+    setHomologacionesValidationAttempted(false)
     setMotivosCredito([''])
     setDepartamentoExpedicionCodigo(DEFAULT_DEPARTMENT_CODE)
     setCiudadExpedicionDocumento('')
@@ -588,6 +592,20 @@ const SolicitudEstudianteForm = ({
     changes: Partial<Omit<HomologacionAsignaturaFormItem, 'id'>>,
   ) => {
     setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, ...changes } : item)))
+  }
+
+  const getAsignaturaOrigenLabel = (item: HomologacionAsignaturaFormItem): string => {
+    if (item.origenModo === 'manual') {
+      return [item.codigoAsignaturaExterna.trim(), item.nombreAsignaturaExterna.trim()].filter(Boolean).join(' — ')
+    }
+
+    const asignatura = asignaturasExternas.find((candidate) => candidate.id === item.asignaturaOrigenId)
+    return asignatura ? [asignatura.codigo, asignatura.nombre].filter(Boolean).join(' — ') : ''
+  }
+
+  const getAsignaturaDestinoLabel = (item: HomologacionAsignaturaFormItem): string => {
+    const asignatura = asignaturasCatalogo.find((candidate) => candidate.id === item.asignaturaDestinoId)
+    return asignatura ? [asignatura.codigo, asignatura.nombre].filter(Boolean).join(' — ') : ''
   }
 
 
@@ -828,24 +846,32 @@ const SolicitudEstudianteForm = ({
                         <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>No la encuentro</button>
                       </div>
                       {item.origenModo === 'catalogo' ? (
-                        <select aria-label={`Materia origen ${index + 1}`} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
+                        <select id={`homologacion-${item.id}-origen`} aria-label={`Materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.asignaturaOrigenId == null ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.asignaturaOrigenId == null} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
                           <option value="">Selecciona la materia cursada</option>
                           {asignaturasExternas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
                         </select>
                       ) : (
                         <div className="solicitud-estudiante-form__manual-origin">
                           <input aria-label={`Código materia origen ${index + 1}`} value={item.codigoAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { codigoAsignaturaExterna: event.target.value })} placeholder="Código (opcional)" />
-                          <input aria-label={`Nombre materia origen ${index + 1}`} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
+                          <input id={`homologacion-${item.id}-origen`} aria-label={`Nombre materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.nombreAsignaturaExterna.trim() === '' ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.nombreAsignaturaExterna.trim() === ''} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
                         </div>
                       )}
+                      {getAsignaturaOrigenLabel(item) && <p className="solicitud-estudiante-form__selected-subject">{getAsignaturaOrigenLabel(item)}</p>}
+                      {homologacionesValidationAttempted && (item.origenModo === 'catalogo' ? item.asignaturaOrigenId == null : item.nombreAsignaturaExterna.trim() === '') && (
+                        <p id={`homologacion-${item.id}-origen-error`} className="solicitud-estudiante-form__field-error">Selecciona o escribe una materia de origen válida.</p>
+                      )}
                     </fieldset>
-                    <label className="solicitud-estudiante-form__destino">
-                      <span>Materia destino del programa *</span>
-                      <select value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
+                    <div className="solicitud-estudiante-form__destino">
+                      <label htmlFor={`homologacion-${item.id}-destino`}>Materia destino del programa *</label>
+                      <select id={`homologacion-${item.id}-destino`} aria-describedby={homologacionesValidationAttempted && item.asignaturaDestinoId == null ? `homologacion-${item.id}-destino-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.asignaturaDestinoId == null} value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
                         <option value="">Selecciona la materia a homologar</option>
                         {asignaturasCatalogo.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
                       </select>
-                    </label>
+                      {getAsignaturaDestinoLabel(item) && <p className="solicitud-estudiante-form__selected-subject">{getAsignaturaDestinoLabel(item)}</p>}
+                      {homologacionesValidationAttempted && item.asignaturaDestinoId == null && (
+                        <p id={`homologacion-${item.id}-destino-error`} className="solicitud-estudiante-form__field-error">Selecciona una materia de destino.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

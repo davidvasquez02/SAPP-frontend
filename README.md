@@ -1,5 +1,26 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — homologación de asignaturas responsive (2026-09-21)
+
+- El alcance sigue siendo el frontend institucional para trámites de posgrado. La arquitectura no cambia: React renderiza las rutas protegidas, los componentes del módulo `solicitudes` encapsulan formulario/documentos y los servicios HTTP conservan los contratos de Spring Boot. Este ajuste se limita a la creación estudiantil y al detalle compartido `/solicitudes/:solicitudId` cuando el tipo es `HOMOLOG`.
+- En escritorio se conservan las dos columnas del formulario y la tabla origen/destino del detalle. Hasta 640 CSS px, cada pareja de creación pasa a una columna; hasta 768 CSS px, cada fila del detalle pasa a una tarjeta que mantiene origen y destino juntos, verticales y en el orden del API. Los nombres/códigos largos ajustan línea y no se añadió `overflow-x: hidden`.
+- Cada bloque del formulario conserva el UUID generado al crearse como `key` e identificador de controles. Agregar y quitar continúa actualizando por ese UUID, por lo que eliminar la pareja intermedia no reasigna las demás. El payload no cambió: origen registrado usa `asignatura_origen_id` + `asignatura_destino_id`; origen manual usa `nombreAsignaturaExterna`, el opcional `codigoAsignaturaExterna` y `asignatura_destino_id`.
+- La validación vigente sigue exigiendo una pareja completa y al menos una pareja, sin restricciones nuevas. Tras intentar enviar, los errores también quedan asociados mediante `aria-invalid`/`aria-describedby` al origen o destino de su pareja. En móvil se muestra bajo cada selector el código y nombre completos de la selección, sin duplicar etiquetas visibles en escritorio.
+- Los documentos adjuntos conservan nombre, descripción, Ver y Descargar. Su tabla se mantiene en escritorio y pasa a tarjetas hasta 768 CSS px, con nombre completo y acciones táctiles. No cambiaron roles, estados editables, aprobación exclusiva de coordinación, actas, endpoints, DTO, reglas, dependencias, seeds ni datasets.
+
+### Ejecución y entorno exacto
+
+```bash
+npm install        # solo si node_modules no existe; reutilizar el árbol actual
+npm run dev
+npm run build
+npm run lint
+```
+
+- Entorno único: `/workspace/SAPP-frontend` y su `node_modules`; no usa venv, Conda ni Poetry y no debe crearse un segundo entorno. Node.js 24.15.0 y npm 11.4.2.
+- Versiones instaladas principales: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0 y Lucide 0.468.0-local.
+- No existe script automatizado `test`, seed ni dataset local. La aplicación requiere el backend, autenticación y datos institucionales para recorrer las rutas protegidas.
+
 ## Decisión reciente — detalle de matrícula responsive por rol (2026-09-21)
 
 - La ruta de gestión `/matricula/:matriculaId` conserva en escritorio el resumen, la grilla documental de seis columnas y la tabla de asignaturas. Hasta 768 CSS px, las asignaturas se presentan como tarjetas y, hasta 960 px, los documentos usan tarjetas con requisito, estado, archivo completo, fecha, observaciones y filas separadas de visualización y validación. Aprobar/Rechazar documentos continúa siendo inmediato; las decisiones y comentarios de asignaturas mantienen el envío conjunto **Guardar validación de asignaturas**.
