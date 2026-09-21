@@ -1,3 +1,28 @@
+# Update 2026-09-21 — selector móvil de programa en `/fechas`
+
+## Estado actual y decisiones
+- La tarjeta **Convocatorias de admisión** de `src/pages/FechasModule/FechasModulePage.tsx` muestra, exclusivamente hasta 780 CSS px, dos pestañas de igual ancho para **Maestría** y **Doctorado**. El selector está después del título y **Crear convocatoria**, antes de Período/Vigente. Se reutilizó el patrón accesible de Créditos condonables.
+- Las pestañas se derivan de los nombres/códigos institucionales y conservan el `programaId` real recibido por `GET /sapp/convocatoriaAdmision`; no dependen del orden del arreglo ni de IDs fijos. Maestría es la selección inicial si está disponible. La selección vive fuera del estado de viewport, por lo que se recupera tras móvil → escritorio → móvil.
+- Solo el panel móvil seleccionado participa en accesibilidad y foco (`hidden`, `tabpanel`, `aria-labelledby`). En escritorio no se renderiza el `tablist`, se retiran los roles condicionales y ambos paneles quedan visibles y accesibles. Cada panel conserva el nombre completo del programa.
+- Período y Vigente continúan compartidos y reinician las páginas como antes; `programPages` conserva una página por `programaId` al alternar. Los programas se catalogan antes de filtrar, así un programa con cero coincidencias conserva su panel y estado vacío sin seleccionar automáticamente el otro. No se añadieron fetches, efectos de carga ni desmontajes de modales por alternar/redimensionar.
+- La sección **Períodos académicos**, la acción/modal **Crear convocatoria**, edición, cierre, navegación a inscripciones y todos los contratos/permisos quedaron intactos.
+
+## Paths, contrato y salida esperada
+- Lógica, estado, semántica y paneles: `src/pages/FechasModule/FechasModulePage.tsx`. Estilos temáticos y breakpoint: `src/pages/FechasModule/FechasModulePage.css`.
+- Entrada sin cambios: `GET /sapp/convocatoriaAdmision` entrega convocatorias con al menos `{ id, programaId, programa, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }`. Los grupos y páginas se indexan por `programaId` real.
+- Móvil esperado: selector de 44 px mínimo, Maestría → Doctorado → Maestría por toque/clic y flechas/Home/End, una lista visible, filtros persistentes, vacío local y acciones correspondientes al programa. Escritorio esperado: selector ausente y ambos programas con la distribución vertical previa.
+- No hay paquetes, endpoints, variables, schemas, seeds o datasets nuevos. El entorno único es `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm.
+
+## Verificación, retos y próximos pasos
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx`: PASS; solo warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-D56WF_LI.css` (212.97 kB) e `index-BTuBYlEL.js` (633.33 kB). Persiste el warning informativo del chunk superior a 500 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (`any` en servicios API, estado síncrono en el efecto del guard de evaluación, parámetros sin usar, tipos vacíos y una dependencia de hook). El ESLint focalizado del módulo sí pasa.
+- No existe script `test`. Queda pendiente probar con navegador, backend y sesión institucional: toque/clic/teclado, acciones de ambas listas, filtros, páginas independientes, programa sin coincidencias, móvil → escritorio → móvil y temas `body.light`/`body.dark`.
+- No se obtuvo captura: Chromium, Chrome y Firefox no están en `PATH`, y `/fechas` requiere datos/autenticación. No instalar dependencias ni crear mocks permanentes solo para esta revisión.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; reproducible por `package-lock.json`.
+
+---
+
 ## Update 2026-09-21 — corrección del filtro de Comité Asesor en `/actas`
 
 ### Estado actual y causa confirmada

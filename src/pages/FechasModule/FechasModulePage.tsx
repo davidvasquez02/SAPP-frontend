@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import {
@@ -24,6 +24,7 @@ type ProgramaSection = {
 
 const PERIODOS_PER_PAGE = 4;
 const CONVOCATORIAS_PER_PAGE = 4;
+const MOBILE_QUERY = "(max-width: 780px)";
 
 const formatFecha = (value: string | null) => {
   if (!value) return "—";
@@ -39,8 +40,29 @@ const resolveProgramaLabel = (programa: string) => {
   return programa;
 };
 
+const resolveProgramaTabLabel = (programa: string) => {
+  const upper = programa.toUpperCase();
+  if (upper.includes("MISI") || upper.includes("MAESTR")) return "Maestría";
+  if (upper.includes("DCC") || upper.includes("DOCTOR")) return "Doctorado";
+  return null;
+};
+
+const useMobileViewport = () => {
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_QUERY);
+    const update = () => setIsMobile(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return isMobile;
+};
+
 const FechasModulePage = () => {
   const navigate = useNavigate();
+  const isMobile = useMobileViewport();
   const [periodos, setPeriodos] = useState<PeriodoAcademicoWithFechasDto[]>([]);
   const [convocatorias, setConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +76,8 @@ const FechasModulePage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingConvocatoria, setEditingConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null);
   const [closingConvocatoriaId, setClosingConvocatoriaId] = useState<number | null>(null);
+  const [selectedProgramaId, setSelectedProgramaId] = useState<number | null>(null);
+  const programaTabRefs = useRef(new Map<number, HTMLButtonElement>());
 
   const loadData = useCallback(async (silent = false): Promise<ConvocatoriaAdmisionDto[]> => {
     if (silent) {
@@ -107,8 +131,8 @@ const FechasModulePage = () => {
 
   const sections = useMemo<ProgramaSection[]>(() => {
     const grouped = new Map<number, ConvocatoriaAdmisionDto[]>();
-    convocatorias
-      .filter((item) => {
+    convocatorias.forEach((item) => grouped.set(item.programaId, []));
+    convocatorias.filter((item) => {
         const vigente = isConvocatoriaVigente(item);
         return (periodoFilter === "TODOS" || item.periodo === periodoFilter)
           && (vigenteFilter === "TODOS" || (vigenteFilter === "VIGENTE" ? vigente : !vigente));
@@ -117,10 +141,27 @@ const FechasModulePage = () => {
 
     return Array.from(grouped.entries()).map(([programaId, items]) => ({
       programaId,
-      programaLabel: resolveProgramaLabel(items[0]?.programa ?? `Programa ${programaId}`),
+      programaLabel: resolveProgramaLabel(
+        convocatorias.find((item) => item.programaId === programaId)?.programa ?? `Programa ${programaId}`,
+      ),
       items: items.sort((a, b) => b.periodo.localeCompare(a.periodo, "es")),
     })).sort((a, b) => a.programaLabel.localeCompare(b.programaLabel, "es"));
   }, [convocatorias, periodoFilter, vigenteFilter]);
+
+  const programaTabs = useMemo(() => sections
+    .map((section) => ({
+      programaId: section.programaId,
+      label: resolveProgramaTabLabel(section.programaLabel),
+    }))
+    .filter((option): option is { programaId: number; label: string } => option.label !== null)
+    .sort((a, b) => (a.label === "Maestría" ? -1 : b.label === "Maestría" ? 1 : 0)), [sections]);
+
+  useEffect(() => {
+    if (selectedProgramaId !== null || programaTabs.length === 0) return;
+    setSelectedProgramaId(
+      programaTabs.find((option) => option.label === "Maestría")?.programaId ?? programaTabs[0].programaId,
+    );
+  }, [programaTabs, selectedProgramaId]);
 
   useEffect(() => {
     setProgramPages((current) => {
@@ -156,6 +197,26 @@ const FechasModulePage = () => {
       setClosingConvocatoriaId(null);
     }
   }, [closingConvocatoriaId, loadData]);
+
+  const selectPrograma = (programaId: number, focus = false) => {
+    setSelectedProgramaId(programaId);
+    if (focus) requestAnimationFrame(() => programaTabRefs.current.get(programaId)?.focus());
+  };
+
+  const handleProgramaTabKeyDown = (event: React.KeyboardEvent, programaId: number) => {
+    const currentIndex = programaTabs.findIndex((option) => option.programaId === programaId);
+    if (currentIndex < 0) return;
+
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % programaTabs.length;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + programaTabs.length) % programaTabs.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = programaTabs.length - 1;
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    selectPrograma(programaTabs[nextIndex].programaId, true);
+  };
 
   return (
     <ModuleLayout title="Fechas">
@@ -198,18 +259,33 @@ const FechasModulePage = () => {
               <div><h2>Convocatorias de admisión</h2><p>Gestione convocatorias por programa, período y estado de vigencia.</p></div>
               <button type="button" onClick={() => setIsCreateModalOpen(true)}>Crear convocatoria</button>
             </div>
+            {isMobile && programaTabs.length > 0 ? <div className="config-module__program-tabs" role="tablist" aria-label="Programas de convocatorias de admisión">
+              {programaTabs.map((option) => <button
+                key={option.programaId}
+                ref={(node) => { if (node) programaTabRefs.current.set(option.programaId, node); else programaTabRefs.current.delete(option.programaId); }}
+                id={`programa-tab-${option.programaId}`}
+                type="button"
+                role="tab"
+                aria-selected={selectedProgramaId === option.programaId}
+                aria-controls={`programa-panel-${option.programaId}`}
+                tabIndex={selectedProgramaId === option.programaId ? 0 : -1}
+                onClick={() => selectPrograma(option.programaId)}
+                onKeyDown={(event) => handleProgramaTabKeyDown(event, option.programaId)}
+              >{option.label}</button>)}
+            </div> : null}
             <div className="config-module__filters sapp-filters-panel">
               <label className="sapp-filter-field"><span>Período</span><select value={periodoFilter} onChange={(event) => setPeriodoFilter(event.target.value)}>{periodosConvocatoria.map((periodo) => <option key={periodo} value={periodo}>{periodo === "TODOS" ? "Todos" : periodo}</option>)}</select></label>
               <label className="sapp-filter-field"><span>Vigente</span><select value={vigenteFilter} onChange={(event) => setVigenteFilter(event.target.value as VigenteFilter)}><option value="TODOS">Todos</option><option value="VIGENTE">Vigentes</option><option value="CERRADA">Cerradas</option></select></label>
             </div>
-            {sections.length === 0 ? <p className="config-module__status">No hay convocatorias para los filtros seleccionados.</p> : null}
             <div className="config-module__program-sections">{sections.map((section) => {
               const page = programPages[section.programaId] ?? 1;
               const totalPages = Math.max(1, Math.ceil(section.items.length / CONVOCATORIAS_PER_PAGE));
               const pageItems = section.items.slice((page - 1) * CONVOCATORIAS_PER_PAGE, page * CONVOCATORIAS_PER_PAGE);
-              return <section key={section.programaId} className="config-module__program" aria-labelledby={`programa-${section.programaId}`}>
+              const isSelected = selectedProgramaId === section.programaId;
+              return <section key={section.programaId} id={`programa-panel-${section.programaId}`} className="config-module__program" aria-labelledby={isMobile ? `programa-tab-${section.programaId}` : `programa-${section.programaId}`} role={isMobile ? "tabpanel" : undefined} hidden={isMobile && !isSelected}>
                 <h3 id={`programa-${section.programaId}`}>{section.programaLabel}</h3>
-                <div className="config-module__table-wrap sapp-table-shell"><table className="config-module__table config-module__table--convocatorias sapp-table"><thead><tr><th>Período</th><th>Cupos</th><th>Fecha inicio</th><th>Fecha fin</th><th>Vigente</th><th>Observaciones</th><th>Acciones</th></tr></thead>
+                {section.items.length === 0 ? <p className="config-module__status">No hay convocatorias para los filtros seleccionados.</p> : null}
+                {section.items.length > 0 ? <div className="config-module__table-wrap sapp-table-shell"><table className="config-module__table config-module__table--convocatorias sapp-table"><thead><tr><th>Período</th><th>Cupos</th><th>Fecha inicio</th><th>Fecha fin</th><th>Vigente</th><th>Observaciones</th><th>Acciones</th></tr></thead>
                   <tbody>{pageItems.map((item) => { const vigente = isConvocatoriaVigente(item); const actionsDisabled = isRefreshing || closingConvocatoriaId !== null; return <tr key={item.id}>
                     <td data-label="Período" className="config-module__convocatoria-period">{item.periodo}</td>
                     <td data-label="Cupos" className="config-module__convocatoria-cupos">{item.cupos}</td>
@@ -218,8 +294,8 @@ const FechasModulePage = () => {
                     <td data-label="Estado" className="config-module__convocatoria-status"><span className={`config-module__badge config-module__badge--${vigente ? "vigente" : "cerrada"}`}>{vigente ? "VIGENTE" : "CERRADA"}</span></td>
                     <td data-label="Observaciones" className="config-module__convocatoria-notes"><span className="config-module__observaciones">{item.observaciones?.trim() || "—"}</span></td>
                     <td data-label="Acciones" className="config-module__convocatoria-actions"><div className="config-module__row-actions"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/admisiones/convocatoria/${item.id}`, { state: { programaId: item.programaId, programaNombre: section.programaLabel, periodoLabel: item.periodo, periodoAcademico: item.periodo, cupos: item.cupos } })}>Ver inscripciones</button><button type="button" className="config-module__edit-button" onClick={() => setEditingConvocatoria(item)} disabled={actionsDisabled}>Editar</button>{vigente ? <button type="button" onClick={() => void handleCloseConvocatoria(item)} disabled={actionsDisabled}>{closingConvocatoriaId === item.id ? "Cerrando..." : "Cerrar"}</button> : null}</div></td>
-                  </tr>; })}</tbody></table></div>
-                <div className="config-module__pagination"><button type="button" disabled={page === 1} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page - 1 }))}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page + 1 }))}>Siguiente</button></div>
+                  </tr>; })}</tbody></table></div> : null}
+                {section.items.length > 0 ? <div className="config-module__pagination"><button type="button" disabled={page === 1} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page - 1 }))}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page + 1 }))}>Siguiente</button></div> : null}
               </section>;
             })}</div>
           </article>
