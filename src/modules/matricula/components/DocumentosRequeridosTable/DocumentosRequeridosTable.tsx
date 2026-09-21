@@ -11,6 +11,7 @@ type DocumentosRequeridosTableProps = {
   disabledActions?: boolean
   showActions?: boolean
   uploadDisabledOnly?: boolean
+  uploadBlockedReason?: string | null
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -37,6 +38,7 @@ const DocumentosRequeridosTable = ({
   disabledActions = false,
   showActions = true,
   uploadDisabledOnly = false,
+  uploadBlockedReason = null,
 }: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
@@ -120,6 +122,11 @@ const DocumentosRequeridosTable = ({
                         onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                       }}
                     />
+                    {uploadBlocked && uploadBlockedReason ? (
+                      <small className="documentos-requeridos-table__blocked-reason">
+                        {uploadBlockedReason}
+                      </small>
+                    ) : null}
                   </div>
                 </td>
               ) : null}

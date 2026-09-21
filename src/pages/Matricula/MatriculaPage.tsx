@@ -33,8 +33,14 @@ import type {
   MateriaDto,
   MateriaSeleccionada,
   MatriculaAcademicaListadoDto,
+  MatriculaAcademicaVigenteDto,
   MatriculaConvocatoria,
 } from "../../modules/matricula/types";
+import {
+  formatBackendDateTime,
+  getMatriculaEstadoLabel,
+  getMatriculaEstadoModifier,
+} from "../../modules/matricula/utils/matriculaPresentation";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import "./MatriculaPage.css";
 
@@ -82,26 +88,6 @@ const resolveProgramaLabel = (programa: string): string => {
   }
 
   return `${codigo} · ${PROGRAMAS_COORDINACION_LABELS[codigo]}`;
-};
-
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return "—";
-  }
-
-  const normalized = value.includes("T") ? value : value.replace(" ", "T");
-  const date = new Date(normalized);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleString("es-CO", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 const mapDocumentoTramiteToRequerido = (
@@ -175,6 +161,9 @@ const MatriculaPage = () => {
     useState<MatriculaConvocatoria | null>(null);
   const [materiasCatalogo, setMateriasCatalogo] = useState<MateriaDto[]>([]);
   const [documentos, setDocumentos] = useState<DocumentoRequerido[]>([]);
+  const [activeMatricula, setActiveMatricula] =
+    useState<MatriculaAcademicaVigenteDto | null>(null);
+  const [errorDocumentos, setErrorDocumentos] = useState<string | null>(null);
   const [selectedMaterias, setSelectedMaterias] = useState<
     MateriaSeleccionada[]
   >([]);
@@ -209,21 +198,7 @@ const MatriculaPage = () => {
   const [notificacionAperturaMessage, setNotificacionAperturaMessage] = useState<string | null>(null);
 
   const getMatriculaEstadoClassName = (estado: string) => {
-    const normalizedEstado = estado.trim().toUpperCase();
-
-    if (normalizedEstado === "PENDIENTE_DOCUMENTOS") {
-      return "matricula-page__estado-badge matricula-page__estado-badge--pendiente-documentos";
-    }
-
-    if (normalizedEstado === "RADICADA") {
-      return "matricula-page__estado-badge matricula-page__estado-badge--radicada";
-    }
-
-    if (normalizedEstado === "FINALIZADA") {
-      return "matricula-page__estado-badge matricula-page__estado-badge--finalizada";
-    }
-
-    return "matricula-page__estado-badge matricula-page__estado-badge--default";
+    return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado)}`;
   };
 
   const applyMatriculaValidation = (
@@ -233,6 +208,7 @@ const MatriculaPage = () => {
     materias: MateriaDto[],
   ) => {
     if (validation.status === "EXISTS") {
+      setActiveMatricula(validation.matricula);
       setHasActiveMatriculaDates(true);
       setCanCreateMatricula(false);
       setHasExistingMatricula(true);
@@ -258,23 +234,27 @@ const MatriculaPage = () => {
           const materiaCatalogo = materias.find(
             (item) => item.id === asignatura.asignaturaId,
           );
-          if (!materiaCatalogo) {
-            return null;
-          }
 
           return {
-            ...materiaCatalogo,
-            codigo: materiaCatalogo.codigo ?? asignatura.asignaturaCodigo,
+            id: asignatura.asignaturaId,
+            nombre: materiaCatalogo?.nombre ?? asignatura.asignaturaNombre,
+            codigo: materiaCatalogo?.codigo ?? asignatura.asignaturaCodigo,
+            nivel: materiaCatalogo?.nivel ?? null,
+            programaId: materiaCatalogo?.programaId,
             addedAt: new Date().toISOString(),
+            matriculaAsignaturaId: asignatura.id,
+            estado: asignatura.estado,
+            grupo: asignatura.grupo,
+            observaciones: asignatura.observaciones,
           } satisfies MateriaSeleccionada;
         })
-        .filter((item): item is MateriaSeleccionada => item !== null);
 
       setSelectedMaterias(selectedFromMatricula);
       return;
     }
 
     if (validation.status === "NO_ACTIVE_PERIOD") {
+      setActiveMatricula(null);
       setHasActiveMatriculaDates(false);
       setCanCreateMatricula(false);
       setHasExistingMatricula(false);
@@ -284,6 +264,7 @@ const MatriculaPage = () => {
     }
 
     setHasActiveMatriculaDates(true);
+    setActiveMatricula(null);
     setCanCreateMatricula(true);
     setHasExistingMatricula(false);
     setIsReadOnlyMatriculaFinalizada(false);
@@ -295,18 +276,28 @@ const MatriculaPage = () => {
       ReturnType<typeof getMatriculaVigenteValidationByEstudiante>
     >,
   ) => {
-    if (validation.status === "EXISTS") {
-      const documentosCargados = await getDocumentosMatriculaAcademica(
-        validation.matricula.id,
-      );
-      setDocumentos(documentosCargados.map(mapDocumentoCargadoToRequerido));
-      return;
-    }
+    setErrorDocumentos(null);
+    try {
+      if (validation.status === "EXISTS") {
+        const documentosCargados = await getDocumentosMatriculaAcademica(
+          validation.matricula.id,
+        );
+        setDocumentos(documentosCargados.map(mapDocumentoCargadoToRequerido));
+        return;
+      }
 
-    const documentosRequeridos = await getDocumentosPorTipoTramite(
-      TIPO_TRAMITE_ID_MATRICULA,
-    );
-    setDocumentos(documentosRequeridos.map(mapDocumentoTramiteToRequerido));
+      const documentosRequeridos = await getDocumentosPorTipoTramite(
+        TIPO_TRAMITE_ID_MATRICULA,
+      );
+      setDocumentos(documentosRequeridos.map(mapDocumentoTramiteToRequerido));
+    } catch (error) {
+      setDocumentos([]);
+      setErrorDocumentos(
+        error instanceof Error
+          ? error.message
+          : "No fue posible consultar los documentos de la matrícula.",
+      );
+    }
   }, []);
 
   const estudianteId = useMemo(() => {
@@ -365,8 +356,10 @@ const MatriculaPage = () => {
         setLoadingForm(true);
         setErrorForm(null);
 
-        const materiasResult = await getAsignaturasPorPrograma(1);
-        await loadDocumentosMatricula(matriculaValidation);
+        const [materiasResult] = await Promise.all([
+          getAsignaturasPorPrograma(1),
+          loadDocumentosMatricula(matriculaValidation),
+        ]);
 
         if (cancelled) {
           return;
@@ -744,8 +737,24 @@ const MatriculaPage = () => {
     return documentos.every((item) => item.uploadStatus === "UPLOADED");
   }, [documentos, hasExistingMatricula]);
 
+  const requiredDocumentsSummary = useMemo(() => {
+    if (errorDocumentos || documentos.length === 0) return null;
+    const required = documentos.filter((documento) => documento.obligatorio);
+    return {
+      approved: required.filter((documento) => documento.estado === "APROBADO").length,
+      total: required.length,
+    };
+  }, [documentos, errorDocumentos]);
+
+  const isExistingMatriculaBlocked = Boolean(
+    activeMatricula && activeMatricula.estado.trim().toUpperCase() !== "PENDIENTE_DOCUMENTOS",
+  );
+  const uploadBlockedReason = isExistingMatriculaBlocked
+    ? `La carga no está disponible mientras la matrícula se encuentre en estado ${getMatriculaEstadoLabel(activeMatricula?.estado ?? "")}.`
+    : null;
+
   const canConfirmMatricula = useMemo(() => {
-    if (isSubmitting || isReadOnlyMatriculaFinalizada) {
+    if (isSubmitting || isReadOnlyMatriculaFinalizada || isExistingMatriculaBlocked) {
       return false;
     }
 
@@ -763,6 +772,7 @@ const MatriculaPage = () => {
     hasAllDocumentsUploadedAndNoRejected,
     hasExistingMatricula,
     isReadOnlyMatriculaFinalizada,
+    isExistingMatriculaBlocked,
     isSubmitting,
     selectedMaterias.length,
   ]);
@@ -922,10 +932,10 @@ const MatriculaPage = () => {
                           <td>{item.periodoAcademico}</td>
                           <td>
                             <span className={getMatriculaEstadoClassName(item.estado)}>
-                              {item.estado}
+                              {getMatriculaEstadoLabel(item.estado)}
                             </span>
                           </td>
-                          <td>{formatDateTime(item.fechaSolicitud)}</td>
+                          <td>{formatBackendDateTime(item.fechaSolicitud)}</td>
                           <td>
                             <Link
                               to={`/matricula/${item.id}`}
@@ -956,7 +966,7 @@ const MatriculaPage = () => {
                           <p>Código UIS: {item.codigoEstudianteUis ?? "—"}</p>
                         </div>
                         <span className={getMatriculaEstadoClassName(item.estado)}>
-                          {item.estado}
+                          {getMatriculaEstadoLabel(item.estado)}
                         </span>
                       </header>
                       <div className="matricula-page__mobile-card-academic">
@@ -973,7 +983,7 @@ const MatriculaPage = () => {
                         <span className="matricula-page__mobile-label">
                           Fecha y hora de solicitud
                         </span>
-                        <p>{formatDateTime(item.fechaSolicitud)}</p>
+                        <p>{formatBackendDateTime(item.fechaSolicitud)}</p>
                       </div>
                       <Link
                         to={`/matricula/${item.id}`}
@@ -1021,6 +1031,32 @@ const MatriculaPage = () => {
 
         {!loadingConvocatoria && convocatoria?.isOpen && hasActiveMatriculaDates ? (
           <>
+            {activeMatricula ? (
+              <section className="matricula-page__card matricula-page__tracking" aria-labelledby="matricula-tracking-title">
+                <header className="matricula-page__tracking-header">
+                  <div>
+                    <h4 id="matricula-tracking-title">Resumen de la matrícula</h4>
+                    <p className="matricula-page__description">Consulta el estado informado para este periodo.</p>
+                  </div>
+                  <span className={getMatriculaEstadoClassName(activeMatricula.estado)}>
+                    {getMatriculaEstadoLabel(activeMatricula.estado)}
+                  </span>
+                </header>
+                <div className="matricula-page__tracking-grid">
+                  <p><strong>Número de matrícula</strong><span>#{activeMatricula.id}</span></p>
+                  {activeMatricula.programaAcademico ? (
+                    <p><strong>Programa</strong><span>{activeMatricula.programaAcademico}</span></p>
+                  ) : null}
+                  <p><strong>Periodo</strong><span>{activeMatricula.periodoAcademico || "—"}</span></p>
+                  <p><strong>Fecha de solicitud</strong><span>{formatBackendDateTime(activeMatricula.fechaSolicitud)}</span></p>
+                  <p><strong>Fecha de revisión</strong><span>{formatBackendDateTime(activeMatricula.fechaRevision ?? null)}</span></p>
+                </div>
+                <div className="matricula-page__tracking-observations">
+                  <strong>Observaciones de la matrícula</strong>
+                  <p>{activeMatricula.observaciones?.trim() || "Sin observaciones registradas."}</p>
+                </div>
+              </section>
+            ) : null}
             <section className="matricula-page__card">
               {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                 <>
@@ -1076,11 +1112,20 @@ const MatriculaPage = () => {
               {loadingForm ? (
                 <p className="matricula-page__status">Cargando documentos...</p>
               ) : null}
-              {!loadingForm && !errorForm ? (
+              {errorDocumentos ? (
+                <p className="matricula-page__error" role="alert">{errorDocumentos}</p>
+              ) : null}
+              {!loadingForm && !errorDocumentos && requiredDocumentsSummary ? (
+                <p className="matricula-page__documents-summary">
+                  Documentos obligatorios aprobados: <strong>{requiredDocumentsSummary.approved}/{requiredDocumentsSummary.total}</strong>
+                </p>
+              ) : null}
+              {!loadingForm && !errorDocumentos ? (
                 <DocumentosRequeridosTable
                   documentos={documentos}
                   showActions
-                  uploadDisabledOnly={isReadOnlyMatriculaFinalizada}
+                  uploadDisabledOnly={isReadOnlyMatriculaFinalizada || isExistingMatriculaBlocked}
+                  uploadBlockedReason={uploadBlockedReason}
                   onAction={(docId, action) => {
                     const documento = documentos.find((item) => item.id === docId);
                     if (!documento) {

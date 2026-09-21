@@ -38,6 +38,23 @@
   color: var(--text-secondary);
 }
 
+.materias-selected-table__status {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
+  border-radius: 999px;
+  background: var(--surface-container-low);
+  padding: 0.24rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.materias-selected-table__observation {
+  display: block;
+  border-left: 3px solid var(--primary);
+  padding-left: 0.55rem;
+  overflow-wrap: anywhere;
+}
+
 .materias-selected-table__grupo-input {
   width: 4.5rem;
   border: 1px solid var(--outline);

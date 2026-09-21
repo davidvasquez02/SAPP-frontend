@@ -57,6 +57,24 @@
   margin: 0;
 }
 
+.matricula-detalle__general-observations {
+  margin-top: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  background: var(--surface-container-low);
+}
+
+.matricula-detalle__general-observations strong {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.matricula-detalle__general-observations p {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+
 .matricula-detalle__table-wrapper {
   overflow-x: auto;
 }

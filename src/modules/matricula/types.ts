@@ -16,6 +16,10 @@ export type MateriaDto = {
 
 export type MateriaSeleccionada = MateriaDto & {
   addedAt: string
+  matriculaAsignaturaId?: number
+  estado?: string
+  grupo?: string | null
+  observaciones?: string | null
 }
 
 export type DocumentoRequerido = {
@@ -49,7 +53,7 @@ export type MatriculaAsignaturaVigenteDto = {
   asignaturaId: number
   asignaturaCodigo: string | null
   asignaturaNombre: string
-  grupo: string
+  grupo: string | null
   estado: string
   observaciones: string | null
 }
@@ -73,9 +77,15 @@ export type MatriculaAcademicaVigenteDto = {
   estudianteId: number
   periodoId: number
   periodoAcademico: string
+  estudianteNombreCompleto?: string
+  codigoEstudianteUis?: string | null
+  programaAcademico?: string
   estado: string
   fechaSolicitud: string
+  fechaRevision?: string | null
   observaciones: string | null
+  usuarioRevisionId?: number | null
+  usuarioRevisionUsername?: string | null
   asignaturas: MatriculaAsignaturaVigenteDto[]
 }
 
