@@ -34,11 +34,11 @@ const MateriasSelectedTable = ({
         <tbody>
           {selected.map((materia) => (
             <tr key={materia.id}>
-              <td>{materia.nombre}</td>
-              <td>{materia.codigo ?? 'Sin código'}</td>
-              <td>{materia.nivel == null ? 'Electiva' : materia.nivel}</td>
+              <td data-label="Materia">{materia.nombre}</td>
+              <td data-label="Código">{materia.codigo ?? 'Sin código'}</td>
+              <td data-label="Nivel">{materia.nivel == null ? 'Electiva' : materia.nivel}</td>
               {!readOnlyView && !hideActionColumn ? (
-                <td>
+                <td data-label="Acción">
                   <button type="button" className="materias-selected-table__remove" disabled={disabled} onClick={() => onRemove(materia.id)}>
                     Eliminar
                   </button>

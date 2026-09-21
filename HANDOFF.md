@@ -1,3 +1,24 @@
+# Update 2026-09-21 — detalle de matrícula responsive (coordinación y estudiante)
+
+## Estado actual y decisiones por rol
+- **Coordinación:** `/matricula/:matriculaId` usa `MatriculaDetalleCoordinacionPage`. Escritorio permanece igual. En móvil, el resumen conserva matrícula, estudiante, código UIS, período, estado y ambas fechas; los documentos pasan de la grilla de seis columnas a tarjetas hasta 960 px y las asignaturas pasan de tabla a tarjetas hasta 768 px. Ver/Descargar y Aprobar/Rechazar quedan en grupos etiquetados distintos. El rechazo conserva motivo obligatorio y el estado local ante fallo; la validación documental sigue siendo inmediata y la de asignaturas sigue siendo conjunta.
+- **Estudiante:** su implementación real es la rama de rol de `MatriculaPage` en `/matricula`; no existe `/matricula/:id` estudiantil. Hasta 768 px, `DocumentosRequeridosTable` y `MateriasSelectedTable` convierten sus propias filas en tarjetas sin duplicar DOM/estado. Mantiene exactamente Cargar, Ver, Descargar, selección/eliminación de materias y Confirmar según `EXISTS`, `CAN_CREATE`, `NO_ACTIVE_PERIOD`, documento y `FINALIZADA`; no se añadieron controles de gestión.
+- Se conservaron IDs estables (`documento.id`/tipo e `asignatura.id`), estado de archivos seleccionados, decisiones y observaciones durante resize. Se quitaron los `min-width` efectivos solo dentro de breakpoints y se permitió ajuste de nombres/observaciones; no se aplicó `overflow-x: hidden` global.
+
+## Paths, contratos y salida esperada
+- Coordinación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `.css`. Servicios sin cambios: listado/detalle documental, aprobación o rechazo inmediato de documento, notificación al completar obligatorios, validación conjunta de asignaturas y aprobación automática vigente.
+- Estudiante: `src/pages/Matricula/MatriculaPage.tsx`; componentes responsive `src/modules/matricula/components/DocumentosRequeridosTable`, `MateriasSelectedTable` y `MateriasSelector`. El archivo se conserva en `DocumentoRequerido.selectedFile`; la carga sigue usando Base64 + checksum y el visor/descarga usan el contenido autenticado ya recuperado, sin token en URL.
+- Salida esperada: escritorio conserva columnas y acciones anteriores. En 320/375/402/440 px no debe existir overflow de página; etiquetas solo aparecen en tarjetas, textos largos ajustan línea, acciones tienen 44 px y las observaciones ocupan todo el ancho. Móvil → escritorio → móvil no remonta componentes ni borra borradores.
+
+## Verificación reciente, limitaciones y próximos pasos
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx`: PASS (solo warning ambiental de npm por `http-proxy`).
+- `npm run lint`: PASS para el repositorio completo (solo el mismo warning ambiental de npm).
+- `npm run build`: PASS; 272 módulos, `dist/assets/index-KHN1TpiC.css` (218.26 kB) e `index-CTXBbwem.js` (633.70 kB); warning informativo por chunk superior a 500 kB. `git diff --check`: PASS. No hay script `test`.
+- Pendiente: inspección autenticada en 320/375/402/440 px, tablet, landscape y escritorio, claro/oscuro; cubrir documentos ausentes/pendientes/aprobados/rechazados, nombres y observaciones extensos, varias asignaturas y resize con borradores. No ejecutar mutaciones sobre matrículas reales. No se obtuvo captura: el contenedor no incluye Chromium/Chrome/Firefox y no hay backend/sesión institucional.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds ni datasets nuevos.
+
+---
+
 # Update 2026-09-21 — selector móvil de programa en `/fechas`
 
 ## Estado actual y decisiones

@@ -838,10 +838,10 @@ const MatriculaDetalleCoordinacionPage = () => {
 
                       return (
                       <tr key={asignatura.id}>
-                        <td>{asignatura.asignaturaCodigo ?? '—'}</td>
-                        <td>{asignatura.asignaturaNombre}</td>
-                        <td>{asignatura.estado}</td>
-                        <td>
+                        <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
+                        <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
+                        <td data-label="Estado">{asignatura.estado}</td>
+                        <td data-label="Validación coordinación">
                           {isFinalizada ? (
                             <span className="matricula-detalle__obs-empty">—</span>
                           ) : (
@@ -879,7 +879,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                             </div>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Comentarios">
                           <textarea
                             className="matricula-detalle__asignatura-comments"
                             value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
