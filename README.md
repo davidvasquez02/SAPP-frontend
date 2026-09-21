@@ -1,5 +1,13 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — `/actas` responsive (2026-09-20)
+
+- El módulo protegido conserva sin cambios su tabla de ocho columnas, filtros en tres columnas, formulario en dos columnas, paginación, clasificación, contratos y acciones en escritorio. Hasta 720 CSS px, las mismas filas se presentan como tarjetas verticales con nombre y código completos, tipo real, año, fecha, observaciones, tipo/tamaño y acciones explícitas.
+- El recorte horizontal provenía del `min-width: 1040px` de la tabla dentro de una cadena de tarjetas/contenedores que no declaraba toda la contracción. La solución es local a `ActasPage`: mantiene tabla y DOM únicos, convierte las filas a Grid solo en móvil y ajusta texto largo, sin aplicar `overflow-x: hidden` al documento.
+- Encabezado, filtros y carga pasan a una columna móvil con controles de 44 px y fuente de 16 px. El PDF conserva input táctil nativo, validaciones PDF/15 MB, nombre visible, valores ante error, checksum, código y payload. El envío permanece bloqueado durante la operación.
+- Ver/Descargar mantienen recuperación autenticada por ID y Blob URL temporal sin token; Eliminar mantiene confirmación con nombre/código, bloqueo de operaciones simultáneas y actualización solo tras éxito. Un error de consulta ya no se muestra también como lista vacía.
+- No se añadieron dependencias, endpoints, variables, seeds, datasets o schemas. ESLint focalizado, build y `git diff --check` pasan; el build produjo `dist/assets/index-Cc_JZsaX.css` e `index-DU-XEZcO.js`, con el aviso informativo conocido por chunk de 630.31 kB. La captura y pruebas autenticadas/mocks quedan pendientes porque no hay navegador ni backend/sesión institucional.
+
 ## Decisión reciente — Gestión de profesores responsive (2026-09-20)
 
 - `/coordinacion/profesores` conserva en escritorio las pestañas, tablas, columnas, filtros, paginación y operaciones existentes. Hasta 800 CSS px, los cuatro listados se adaptan a tarjetas verticales: profesores de posgrados, profesores EISI disponibles, integrantes del grupo y profesores de posgrados disponibles para el grupo.
