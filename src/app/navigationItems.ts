@@ -22,6 +22,8 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     !canManagePosgrados(roles)
 
   return [
+    { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
+    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
     {
       to: '/creditos-condonables',
@@ -29,14 +31,12 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
       icon: '💳',
       visible: canManagePosgrados(roles),
     },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     {
       to: '/coordinacion/estudiantes',
       label: 'Estudiantes',
       icon: '👥',
       visible: canSeeGestionEstudiantes,
     },
-    { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
     {
       to: '/coordinacion/reportes',
       label: 'Informes a dependencias',

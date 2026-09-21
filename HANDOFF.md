@@ -1,3 +1,35 @@
+# Update 2026-09-21 — orden unificado de los módulos principales
+
+## Estado actual y decisión
+- `src/app/navigationItems.ts` es la fuente compartida por el sidebar y las
+  tarjetas de la pantalla de Inicio. Su orden es ahora: **Admisiones, Matrícula,
+  Solicitudes, Créditos condonables, Estudiantes, Informes a dependencias,
+  Actas, Fechas y Gestión profesores**.
+- El filtrado existente por roles se conserva. Si un usuario no puede ver un
+  módulo, este se omite y los restantes mantienen el orden relativo definido;
+  no se duplicó la configuración en `Sidebar.tsx` ni en `HomePage.tsx`.
+- No cambiaron rutas, iconos, etiquetas, permisos, contratos HTTP, estilos,
+  dependencias, variables de entorno, schemas, seeds ni datasets.
+
+## Salida esperada, entorno y siguientes pasos
+- Coordinación debe ver los nueve accesos en el orden indicado tanto en el menú
+  lateral como en Inicio. Otros roles deben ver solamente su subconjunto
+  autorizado, en ese mismo orden relativo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry, entornos Python ni otro árbol npm. Este proyecto usa Node.js/npm y no
+  tiene script `test`. Las versiones exactas están en `package-lock.json` y
+  resumidas en `README.md`.
+- Pendiente: comprobación visual autenticada con los distintos roles en
+  escritorio y móvil. El contenedor no dispone de Chromium, Chrome ni Firefox y
+  las rutas requieren una sesión institucional, por lo que no se generó captura.
+- `npx eslint src/app/navigationItems.ts`: PASS (solo el warning ambiental de
+  npm por `http-proxy`). `npm run build`: PASS, 273 módulos y artefactos
+  `dist/assets/index-BAnVHByW.css` (224.30 kB) e `index-DaC1sGKb.js`
+  (638.83 kB); persiste el aviso informativo por el chunk superior a 500 kB.
+  `git diff --check`: PASS. `npm run lint`: FAIL por 9 errores y 1 warning
+  preexistentes fuera de `navigationItems.ts`.
+
+---
 # Update 2026-09-21 — seguimiento de matrícula del estudiante
 
 ## Estado actual y decisiones
