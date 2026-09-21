@@ -574,3 +574,54 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Lectura: `GET /sapp/periodoAcademico/withFechas` y `GET /sapp/convocatoriaAdmision`. Escritura: creación/actualización de período mediante los servicios existentes; `POST /sapp/convocatoriaAdmision`; `PUT /sapp/convocatoriaAdmision/fechas/{id}`; cierre confirmado mediante `PUT /sapp/convocatoriaAdmision/cerrar/{id}`.
 - Desarrollo: reutilice `node_modules` y ejecute `npm run dev`; producción: `npm run build`; no existe script `test`. No se requieren seeds para frontend y los catálogos/datos provienen del backend configurado por el cliente HTTP existente.
 - Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No crear venv, conda, Poetry ni otro árbol npm.
+# SAPP Frontend
+
+Interfaz web del Sistema de Apoyo para la gestión de trámites de Posgrados de la
+EISI–UIS. Centraliza las experiencias de admisiones, estudiantes, matrícula,
+créditos condonables, solicitudes, comités, trabajos de grado, profesores,
+notificaciones y configuración académica. Consume los contratos REST del backend
+SAPP; no accede directamente a PostgreSQL.
+
+## Arquitectura y stack
+
+- SPA modular construida con componentes funcionales y hooks de React.
+- Rutas públicas y protegidas centralizadas en `src/app/routes`; páginas en
+  `src/pages`, componentes compartidos en `src/components` y acceso HTTP en
+  `src/api`.
+- React/React DOM 19.2.3, React Router DOM 7.11.0 y Lucide React 0.468.0-local.
+- TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y
+  typescript-eslint 8.51.0 (versiones resueltas por `package-lock.json`).
+- Temas claro/oscuro basados en los tokens semánticos UIS/Beer.css.
+
+## Ejecución local
+
+Requisitos comprobados: Node.js 24.15.0 y npm 11.4.2. Reutilice el único árbol
+`node_modules` del repositorio; este frontend no usa venv, Conda ni Poetry.
+
+```bash
+npm ci
+cp .env.example .env.local # ajuste únicamente los valores de su entorno
+npm run dev
+```
+
+Validaciones y compilación de producción:
+
+```bash
+npm run lint
+npm run build
+npm run preview
+```
+
+No existe un script de seeds ni datasets locales: los catálogos y registros se
+obtienen del backend configurado mediante las variables Vite documentadas en
+`.env.example`. Tampoco hay actualmente un script automatizado `test`.
+
+## Decisiones recientes (changelog ligero)
+
+- **2026-09-21:** la búsqueda en Gestión de profesores pasó a ignorar tildes y
+  otros signos diacríticos. Consultas como `andres leo` encuentran nombres como
+  `ANDRÉS LEONARDO`, sin alterar los DTO ni los endpoints existentes.
+- **2026-09-20:** se completaron adaptaciones responsive en Fechas, Admisiones,
+  Créditos condonables y Estudiantes, preservando permisos y contratos.
+
+---

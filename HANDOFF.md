@@ -4202,3 +4202,43 @@ npm run lint
 ## Entorno
 - Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otra instalación npm. No hay seeds ni script `test`.
 - Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+# Update 2026-09-21 — búsqueda de profesores sin diacríticos
+
+## Estado actual y decisión
+- Se corrigió el filtro local de `/coordinacion/profesores`: antes solo convertía
+  a minúsculas, por lo que `andres leo` no era substring de `ANDRÉS LEONARDO`.
+  `normalize` ahora aplica normalización Unicode NFD y elimina marcas diacríticas
+  antes de comparar nombre, documento y correo.
+- La misma función ya alimentaba el buscador general, el buscador de profesores
+  disponibles y las comparaciones para excluir integrantes de un grupo; por eso
+  todos esos puntos quedan consistentes. No cambiaron UI, API, permisos ni DTO.
+
+## Paths, contratos y salida esperada
+- Implementación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`.
+- Entrada vigente: `getDocentes()` entrega `DocenteDto` y se buscan localmente
+  `fullName`, `email` y `documentNumber`. No se añadieron endpoints, schemas,
+  variables, seeds, datasets ni dependencias.
+- Resultado esperado: `andres leo`, `ANDRÉS LEO` y otras variantes de mayúsculas
+  o tildes encuentran `ANDRÉS LEONARDO GONZÁLEZ GÓMEZ`; documento y correo siguen
+  siendo buscables como antes.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional búsquedas con y sin tildes en las pestañas
+   **Profesores** y **Grupos de investigación**, incluidos vacíos y paginación.
+2. Si se incorpora una suite, extraer la normalización a una utilidad y cubrir
+   tildes, espacios y caracteres Unicode con pruebas unitarias.
+3. No duplicar ambientes: reutilizar `/workspace/SAPP-frontend/node_modules`.
+   No crear venv, Conda, Poetry, entornos Python ni otro árbol npm.
+
+## Entorno y verificación
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router
+  DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2,
+  ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS.
+- `npm run build`: PASS (272 módulos; persiste únicamente el warning informativo
+  del chunk JS mayor a 500 kB). `git diff --check`: PASS.
+- `npm run lint`: conserva 9 errores y 1 warning preexistentes fuera del archivo
+  modificado (servicios con `any`, guard de evaluación, mocks, documentos y
+  solicitudes). El proyecto no define script `test`.
+
+---
