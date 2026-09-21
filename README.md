@@ -560,3 +560,17 @@ No hay seeds de base de datos ni usuarios quemados en este repositorio. La sesi�
 - Las tarjetas de acceso rápido de **Inicio** usan ahora exactamente los iconos definitivos del sidebar para Solicitudes, Matrícula, Estudiantes, Admisiones, Informes a dependencias, Actas y Fechas.
 - `SidebarModuleIcon` centraliza tanto los trazos propios como los iconos Lucide de los módulos; sidebar e inicio consumen esa única fuente para evitar que vuelvan a divergir.
 - Los iconos del inicio heredan `--primary` y conservan trazos vectoriales nítidos en modo claro y oscuro. No se modificaron rutas, permisos, contratos HTTP, dependencias, seeds ni datasets.
+
+## Decisión reciente — `/fechas` responsive (2026-09-21)
+
+- El módulo protegido mantiene en escritorio sus tablas, columnas, filtros, agrupación por programa, formularios y acciones. Hasta 780 CSS px, las mismas filas y manejadores se presentan como tarjetas: los períodos separan las fechas del período académico de las fechas de matrículas y las convocatorias muestran período, estado, cupos, fechas, observaciones completas y acciones explícitas.
+- El desbordamiento móvil provenía de los anchos mínimos locales de 860 px y 1080 px de las tablas, sumados al padding de tarjetas anidadas. La corrección está encapsulada en `FechasModulePage.css`: elimina esos mínimos únicamente en móvil, convierte el DOM de tabla existente a Grid y mantiene el encabezado de tabla disponible para tecnologías de asistencia; no oculta overflow en `body` ni modifica tablas de otros módulos.
+- Los filtros, la página de períodos y la página independiente de cada programa siguen siendo estados React únicos y no dependen del breakpoint. Después de una recarga de datos se ajustan páginas que hayan quedado fuera del rango. El cierre conserva confirmación y endpoint, ahora bloquea reenvíos mientras está en curso y solo informa éxito después de la respuesta y el refresco.
+- `vigente` retornado por el backend es la fuente autoritativa de **VIGENTE/CERRADA**; el cliente ya no reclasifica una convocatoria con el reloj local. No cambiaron endpoints, DTO, serialización de fechas, roles, rutas, dependencias, variables, schemas, seeds ni datasets.
+- Los formularios de período, creación de convocatoria y edición de fechas conservan campos y validaciones. En móvil pasan a una columna, usan controles de al menos 44 px y fuente de 16 px, y los modales limitan su alto con scroll interno mediante `100dvh` sin desmontar ni duplicar el formulario.
+
+### Contratos y ejecución de `/fechas`
+
+- Lectura: `GET /sapp/periodoAcademico/withFechas` y `GET /sapp/convocatoriaAdmision`. Escritura: creación/actualización de período mediante los servicios existentes; `POST /sapp/convocatoriaAdmision`; `PUT /sapp/convocatoriaAdmision/fechas/{id}`; cierre confirmado mediante `PUT /sapp/convocatoriaAdmision/cerrar/{id}`.
+- Desarrollo: reutilice `node_modules` y ejecute `npm run dev`; producción: `npm run build`; no existe script `test`. No se requieren seeds para frontend y los catálogos/datos provienen del backend configurado por el cliente HTTP existente.
+- Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No crear venv, conda, Poetry ni otro árbol npm.

@@ -181,12 +181,245 @@
 }
 
 @media (max-width: 780px) {
+  .config-module {
+    min-width: 0;
+  }
+
+  .config-module__header,
+  .config-module__card {
+    min-width: 0;
+    padding: 0.875rem;
+    border-radius: 16px;
+  }
+
   .config-module__card-header {
     flex-direction: column;
   }
 
+  .config-module__card-header > div,
+  .config-module__card-header h2,
+  .config-module__program h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .config-module__card-header > button {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+  }
+
   .config-module__filters {
     grid-template-columns: 1fr;
+  }
+
+  .config-module__filters select {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .config-module__table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .config-module__table,
+  .config-module__table thead,
+  .config-module__table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .config-module__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .config-module__table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .config-module__table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    padding: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+
+  .config-module__table td {
+    display: flex;
+    min-width: 0;
+    padding: 0.55rem 0;
+    border: 0;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow-wrap: anywhere;
+  }
+
+  .config-module__table td::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .config-module__table td[data-date-group]::before {
+    content: attr(data-date-group) " · " attr(data-label);
+  }
+
+  .config-module__table td:nth-child(even):not(.config-module__actions-cell) {
+    padding-right: 0.5rem;
+  }
+
+  .config-module__table td:nth-child(odd):not(.config-module__period-title) {
+    padding-left: 0.5rem;
+  }
+
+  .config-module__period-title {
+    grid-column: 1 / -1;
+    padding-top: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .config-module__actions-cell {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+
+  .config-module__actions-cell .config-module__edit-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .config-module__table--convocatorias tr {
+    grid-template-areas:
+      "period status"
+      "capacity capacity"
+      "start end"
+      "notes notes"
+      "actions actions";
+    column-gap: 0.75rem;
+  }
+
+  .config-module__convocatoria-period { grid-area: period; }
+  .config-module__convocatoria-status { grid-area: status; align-items: flex-end; text-align: right; }
+  .config-module__convocatoria-cupos { grid-area: capacity; }
+  .config-module__convocatoria-start { grid-area: start; }
+  .config-module__convocatoria-end { grid-area: end; }
+  .config-module__convocatoria-notes { grid-area: notes; }
+  .config-module__convocatoria-actions { grid-area: actions; padding-bottom: 0; }
+
+  .config-module__convocatoria-period,
+  .config-module__convocatoria-status {
+    padding-top: 0;
+  }
+
+  .config-module__observaciones {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: pre-wrap;
+  }
+
+  .config-module__row-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .config-module__row-actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0.55rem 0.7rem;
+    white-space: normal;
+  }
+
+  .config-module__row-actions > button:not(.config-module__edit-button) {
+    grid-column: 1 / -1;
+  }
+
+  .config-module__pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: 100%;
+    gap: 0.45rem;
+  }
+
+  .config-module__pagination button {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  .config-module__pagination span {
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 359px) {
+  .config-module__table tr,
+  .config-module__table--convocatorias tr {
+    grid-template-columns: 1fr;
+  }
+
+  .config-module__table td:nth-child(n) {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .config-module__table--convocatorias tr {
+    grid-template-areas:
+      "period"
+      "status"
+      "capacity"
+      "start"
+      "end"
+      "notes"
+      "actions";
+  }
+
+  .config-module__convocatoria-status {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .config-module__row-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .config-module__row-actions > button:not(.config-module__edit-button) {
+    grid-column: auto;
+  }
+
+  .config-module__pagination {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .config-module__pagination span {
+    grid-column: 1 / -1;
+    grid-row: 1;
   }
 }
 
@@ -209,4 +442,36 @@
 .config-module__pagination button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+@media (max-width: 780px) {
+  .config-module__pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: 100%;
+    gap: 0.45rem;
+  }
+
+  .config-module__pagination button {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  .config-module__pagination span {
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 359px) {
+  .config-module__pagination {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .config-module__pagination span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
 }

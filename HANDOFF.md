@@ -4172,3 +4172,33 @@ npm run lint
 - Usar solo `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
 - `npx eslint` focalizado sobre los cinco TSX funcionales y el store: PASS. `npm run build`: PASS, 272 módulos, `dist/assets/index-CV-fTsMB.css` e `index-Dlh1BoHO.js`; solo aparece el warning informativo de chunk JS de 623.85 kB.
 - `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de los archivos modificados (tres servicios con `any`, guard de evaluación, mocks, validación documental y tipos/efecto de Solicitudes). El lint focalizado confirma que este cambio no añade hallazgos.
+
+---
+# Update 2026-09-21 — Adaptación responsive integral de `/fechas`
+
+## Estado actual y decisiones
+- `/fechas` conserva su representación de escritorio. En `max-width: 780px`, períodos y convocatorias reutilizan el mismo `<table>` y las mismas filas/datos, pero CSS los presenta como tarjetas sin ancho mínimo ni scroll horizontal. A 359 px o menos las parejas de fechas pasan a una columna; entre 360 y 780 px usan dos columnas.
+- Períodos distingue **Período académico · Inicio/Fin** de **Matrículas · Inicio/Fin**, conserva `—`, orden, cuatro registros por página y edición. Convocatorias conserva filtros, nombres completos de programa, cuatro registros por página para cada programa, observaciones sin elipsis y todas las acciones. Cerrar queda separado visualmente, mantiene `window.confirm`, bloquea solicitudes duplicadas y espera servidor/refresco antes del éxito.
+- La fuente de verdad de estado es `ConvocatoriaAdmisionDto.vigente`. `isConvocatoriaVigente` ya no compara fechas con el reloj del navegador; sus consumidores existentes reciben la misma decisión autoritativa del backend.
+- Los formularios asociados mantienen contratos, campos y validaciones. Sus cambios son CSS móvil: una columna, `min-width: 0`, inputs/selects de 16 px y controles de 44 px; ambos modales caben en `100dvh` y tienen scroll interno. No se añadieron dependencias ni se cambiaron rutas, permisos, payloads o fechas sin hora.
+
+## Paths, contratos y salida esperada
+- Listado/estado/paginación: `src/pages/FechasModule/FechasModulePage.tsx`; presentación: `src/pages/FechasModule/FechasModulePage.css`; estado backend: `src/modules/admisiones/utils/convocatoriaEstado.ts`.
+- Formulario de período: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx` y `.css`. Creación: `src/modules/admisiones/components/CreateConvocatoriaModal/`. Edición: `src/modules/admisiones/components/EditConvocatoriaFechasModal/`.
+- Entradas: `GET /sapp/periodoAcademico/withFechas`, `GET /sapp/convocatoriaAdmision` y catálogos existentes. Escrituras sin cambios: servicios de período, `POST /sapp/convocatoriaAdmision`, `PUT /sapp/convocatoriaAdmision/fechas/{id}` y `PUT /sapp/convocatoriaAdmision/cerrar/{id}`.
+- Salida esperada: escritorio idéntico; móvil sin scroll horizontal local, con tarjetas completas, filtros a ancho completo y paginadores independientes. Cambiar viewport no desmonta listados, filtros ni formularios.
+
+## Verificación reciente y limitaciones
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx src/modules/admisiones/components/EditConvocatoriaFechasModal/EditConvocatoriaFechasModal.tsx src/modules/admisiones/utils/convocatoriaEstado.ts` (2026-09-21): PASS; solo warning ambiental conocido de npm por `http-proxy`.
+- `npm run build` (2026-09-21): PASS; 272 módulos, `dist/assets/index-Bu7Uk1uf.css` y `dist/assets/index-D6zrhrGt.js`; aviso informativo por chunk JS de 631.44 kB.
+- `git diff --check` (2026-09-21): PASS antes de actualizar documentación.
+- No hay Chromium, Chrome ni Firefox en `PATH`; por ello no se pudo tomar captura, medir en navegador 320/375/402/440 px, probar Safari/iOS real, teclado virtual, temas con renderizado, transición móvil→escritorio→móvil ni flujos autenticados contra backend. Estas validaciones manuales siguen pendientes y no deben presentarse como ejecutadas.
+
+## Retos y próximos pasos
+1. Con sesión institucional y mocks/backend de pruebas, validar 320, 375, 402 y 440 CSS px, landscape, tablet y escritorio; cubrir temas claro/oscuro, zoom, nombres y observaciones extensos, ausentes, carga, error y listas vacías.
+2. Probar creación/edición/cierre sin alterar calendarios reales: rechazo del servidor debe conservar valores; abrir y guardar una fecha sin cambios no debe desplazar el día; doble toque en Cerrar debe producir una sola solicitud.
+3. Comparar captura de escritorio antes/después con los mismos datos y verificar foco/restauración de foco de modales y controles con lector de pantalla en un navegador real.
+
+## Entorno
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otra instalación npm. No hay seeds ni script `test`.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
