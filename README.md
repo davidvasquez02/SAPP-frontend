@@ -1,5 +1,13 @@
 # Minerva Frontend — EISI UIS
 
+## Funcionalidad reciente — proceso privado de evaluación de trabajos de grado (2026-09-22)
+
+- El detalle autenticado de los cinco trámites con jurados (`DEF_TESIS_DCC`, `DEF_TI_MISI`, `CAND_DOCTORAL`, `PROP_TESIS_DCC` y `PROP_TI_MISI`) incorpora la sección de coordinación **Proceso de evaluación**. `TEMA_T` permanece expresamente fuera del proceso.
+- La sección consume `/sapp/procesoEvaluacionTg`: consulta el proceso y catálogos, designa jurados con autocompletado del banco, conserva el historial de jurados inactivos, reenvía invitaciones, reemplaza o retira jurados, envía recordatorios, cambia el documento evaluado, envía a ajustes, programa la sustentación y registra el resultado.
+- Los catálogos de estados, modalidades y resultados proceden del backend. Los formularios validan los requisitos inmediatos de modalidad; las transiciones y reglas académicas siguen siendo responsabilidad del backend y sus mensajes 400 se muestran al usuario.
+- La evaluación se integra únicamente en el portal privado y solo para perfiles de gestión. No se añadió la ruta pública del evaluador ni una segunda API. El cliente compartido existente aporta el JWT Bearer y conserva la envoltura `{ ok, message, data }`.
+- La vista usa los tokens globales, funciona en modo claro/oscuro y adapta tabla, formularios y acciones a móvil. No se agregaron paquetes, variables de entorno, seeds ni datasets. Desarrollo: `npm run dev`; validación: `npm run build` y `npm run lint`.
+
 ## Corrección reciente — clasificación de temas por programa (2026-09-22)
 
 - Las solicitudes compartidas de tipo 13 (`TEMA_T`, **ENVÍO DE TEMA DE TRABAJO DE INVESTIGACIÓN/TESIS**) ya no se repiten en los dos apartados de Proyectos de grado: si `programaAcademico` contiene `DCC` se muestran únicamente en **Tesis doctoral**; cualquier otro programa se muestra únicamente en **Trabajo de investigación de maestría**.

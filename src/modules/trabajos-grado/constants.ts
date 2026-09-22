@@ -2,6 +2,17 @@ import type { SolicitudTableRow, TipoSolicitudDto } from '../solicitudes/types'
 
 export type NivelTrabajoGrado = 'maestria' | 'doctorado'
 
+export const CODIGOS_PROCESO_EVALUACION_TG = new Set([
+  'DEF_TESIS_DCC',
+  'DEF_TI_MISI',
+  'CAND_DOCTORAL',
+  'PROP_TESIS_DCC',
+  'PROP_TI_MISI',
+])
+
+export const tieneProcesoEvaluacionTg = (codigo: string | null | undefined): boolean =>
+  CODIGOS_PROCESO_EVALUACION_TG.has(codigo?.trim().toLocaleUpperCase('es-CO') ?? '')
+
 export const TIPO_TEMA_TRABAJO_GRADO_ID = 13
 
 export const TIPOS_TRABAJO_GRADO_POR_NIVEL: Record<NivelTrabajoGrado, readonly number[]> = {

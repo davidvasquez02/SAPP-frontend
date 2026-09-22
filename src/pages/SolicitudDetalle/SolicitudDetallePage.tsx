@@ -27,6 +27,8 @@ import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
+import { tieneProcesoEvaluacionTg } from '../../modules/trabajos-grado/constants'
+import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -53,6 +55,7 @@ const SolicitudDetallePage = () => {
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
+  const processActasRequestedRef = useRef(false)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
@@ -273,6 +276,22 @@ const SolicitudDetallePage = () => {
   )
   const canSignAllDocuments = isCoordinador && estadoPermiteFirma
   const showActaAsociada = currentEstado === 'APROBADA' && solicitud?.actaId != null
+  const showProcesoEvaluacion =
+    isCoordinador &&
+    tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo) &&
+    !['ENVIADA', 'EN_REVISION', 'ENVIADA_COMITE', 'ENVIADA_CONSEJO', 'RECHAZADA'].includes(
+      solicitud?.estadoSigla?.trim().toLocaleUpperCase() ?? '',
+    )
+
+  useEffect(() => {
+    if (!showProcesoEvaluacion || actas.length > 0 || actasLoading || processActasRequestedRef.current) return
+    processActasRequestedRef.current = true
+    setActasLoading(true)
+    getActas()
+      .then(setActas)
+      .catch(() => setActas([]))
+      .finally(() => setActasLoading(false))
+  }, [actas.length, actasLoading, showProcesoEvaluacion])
 
   const handleFirmarDocumentos = async () => {
     if (!solicitud) {
@@ -403,10 +422,18 @@ const SolicitudDetallePage = () => {
     <ModuleLayout title="Detalle de solicitud">
       <section className="solicitud-detalle-page">
         <BackButton
-          to={location.pathname.startsWith('/creditos-condonables') ? '/creditos-condonables' : '/solicitudes'}
+          to={location.pathname.startsWith('/creditos-condonables')
+            ? '/creditos-condonables'
+            : location.pathname.startsWith('/trabajos-grado')
+              ? location.pathname.split('/solicitudes/')[0]
+              : '/solicitudes'}
           state={{ refreshAt: Date.now() }}
         >
-          Volver a {location.pathname.startsWith('/creditos-condonables') ? 'créditos condonables' : 'solicitudes'}
+          Volver a {location.pathname.startsWith('/creditos-condonables')
+            ? 'créditos condonables'
+            : location.pathname.startsWith('/trabajos-grado')
+              ? 'proyectos de grado'
+              : 'solicitudes'}
         </BackButton>
 
         {loading ? (
@@ -699,6 +726,10 @@ const SolicitudDetallePage = () => {
                 }
               }}
             />
+
+            {showProcesoEvaluacion && (
+              <ProcesoEvaluacionPanel solicitudId={solicitud.id} documentos={documentos} actas={actas} />
+            )}
 
             {showConsejoConfirmation && (
               <div
