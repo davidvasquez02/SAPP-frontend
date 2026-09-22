@@ -1,3 +1,29 @@
+# Update 2026-09-22 — proceso privado de evaluación de trabajos de grado
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` monta `ProcesoEvaluacionPanel` únicamente para coordinación, cuando el código es uno de los cinco trámites evaluables y la solicitud ya dejó Comité/Consejo. `TEMA_T` nunca monta el proceso. El botón Volver conserva ahora el nivel de `/trabajos-grado/:nivel`.
+- `src/modules/trabajos-grado/evaluacion/api.ts` contiene los 12 contratos privados bajo `/sapp/procesoEvaluacionTg`; `types.ts` declara proceso, jurados, evaluaciones, catálogos y payloads. Se usa el cliente compartido, que ya adjunta JWT Bearer y extrae `message` de errores JSON.
+- El panel implementa resumen, barra contextual, designación de un jurado por llamada (el endpoint permite sumar jurados), banco con debounce, historial activo/inactivo, reenvío/reemplazo/retiro, recordatorios, documento, ajustes, sustentación, resultado y línea de tiempo. Catálogos no están hardcodeados; `ES`/`EN` sí son el contrato de idioma.
+- `SolicitudAcademicaDto` y `CreateSolicitudRequestDto` admiten `tituloTrabajo` y `resumenTrabajo`. La elegibilidad por código está centralizada en `src/modules/trabajos-grado/constants.ts`; los IDs históricos siguen temporalmente para filtrar los listados existentes hasta que esos componentes migren por completo al código.
+
+## Contratos y salida esperada
+- Respuesta común: `{ ok: boolean, message: string, data: T }`. Mutaciones de jurados, documento, ajustes, sustentación y resultado deben devolver el proceso completo actualizado; el panel repinta directamente con `data`.
+- Se asumieron los nombres de campos documentados en el brief: `estadoInvitacion`, `evaluaciones`, `documentos`, `historial`, `sustentacion`, `resultadoCodigo` y `notaFinal`. Antes de integración real, contrastar `types.ts` con los ejemplos completos de Bruno y ajustar nombres/nulabilidad si el DTO backend difiere.
+- `VITE_API_URL=/api/sapp`; Vite dirige esa ruta a `VITE_DEV_PROXY_TARGET=http://localhost:8080`. No agregar `/sapp_public` a este repositorio. No hay cambios de schema, migraciones, seeds o datasets.
+
+## Retos y siguientes pasos
+1. Validar contra Bruno el GET del proceso en todos los estados y confirmar que el backend devuelve `documentos` e `historial`; el panel tiene fallback de línea de tiempo al estado actual.
+2. Confirmar con backend el cálculo oficial de plazos hábiles. Los defaults actuales son sugerencias de calendario (21/28/60 días), editables; no modelan festivos colombianos.
+3. Probar los 400 y todas las mutaciones en un ambiente no productivo, especialmente acta inexistente, correo duplicado, modalidad incompleta y restricciones desde `SUST_PROGRAMADA`.
+4. Hacer revisión visual autenticada a 320/375/402/440 px y escritorio, claro/oscuro. La modificación es perceptible, pero el contenedor no dispone de navegador ni backend/sesión, por lo que no hay captura.
+
+## Entorno y verificación
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- `npm run build`: PASS; 281 módulos, `index-DhxWK-Ve.css` (230.07 kB) e `index-DULI6bCU.js` (660.33 kB). Persiste el warning informativo por chunk mayor de 500 kB.
+- `npx eslint src/modules/trabajos-grado/evaluacion src/modules/trabajos-grado/constants.ts src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/types.ts`: PASS; solo warning ambiental conocido de npm por `http-proxy`.
+
+---
+
 # Update 2026-09-22 — módulo inicial de Proyectos de grado
 
 ## Estado actual y alcance

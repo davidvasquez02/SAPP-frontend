@@ -40,6 +40,8 @@ export interface SolicitudAcademicaDto {
   observaciones: string | null
   motivosCreditoCondonable?: string[] | null
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaDetalleDto[] | null
+  tituloTrabajo?: string | null
+  resumenTrabajo?: string | null
 }
 
 export interface SolicitudHomologacionAsignaturaDetalleDto {
@@ -60,6 +62,8 @@ export interface CreateSolicitudRequestDto {
   modalidadId?: number
   motivosCreditoCondonable?: string[]
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
+  tituloTrabajo?: string
+  resumenTrabajo?: string
 }
 
 export interface CreateSolicitudResponseDto {
