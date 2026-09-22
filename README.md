@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Decisión reciente — módulo inicial de Proyectos de grado (2026-09-22)
+
+- Se creó el módulo protegido `/trabajos-grado`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
+- Los tipos de solicitud 13, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y recibe una etiqueta contextual según el nivel.
+- Esos seis tipos ya no se muestran ni se ofrecen para crear desde el módulo general de Solicitudes. No se cambiaron endpoints ni DTO: el nuevo módulo reutiliza por ahora los servicios, formularios, filtros, tablas y detalle existentes.
+- El estudiante es dirigido al nivel inferido de su programa y no puede navegar al otro; coordinación dispone de ambos niveles. Las funcionalidades de expediente, avances, evaluadores, defensa y calificación se implementarán posteriormente.
+
 ## Decisión reciente — seguimiento de matrícula estudiantil y coherencia con coordinación (2026-09-21)
 
 - Se confirmó el enrutamiento real: `/matricula` renderiza `MatriculaPage` y decide por rol entre la experiencia del estudiante y el listado de gestión; `/matricula/:matriculaId` renderiza `MatriculaDetalleCoordinacionPage` y conserva exclusivamente los controles de coordinación.

@@ -1,3 +1,19 @@
+# Update 2026-09-22 — módulo inicial de Proyectos de grado
+
+## Estado actual y alcance
+- Existe un nuevo acceso **Proyectos de grado** y las rutas `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`. Estudiantes ven solo el nivel inferido de `programaCodigoNombre`; coordinación puede alternar ambos.
+- La clasificación está centralizada en `src/modules/trabajos-grado/constants.ts`: maestría usa tipos 13, 6 y 7; doctorado usa 13, 8, 4 y 5. El tipo 13 conserva su ID, pero se etiqueta según el nivel.
+- Las vistas reutilizables de solicitudes aceptan inclusión/exclusión de tipos, transformación de etiquetas y una ruta de detalle configurable. El módulo general excluye los seis tipos trasladados; no hubo cambios de API, payload, schema, seeds ni datasets.
+- El detalle sigue usando `SolicitudDetallePage` y los endpoints `/sapp/solicitudesAcademicas`. Las futuras funciones de expediente, informes, evaluadores, calificación y defensa no forman parte de este incremento.
+
+## Validación y siguientes pasos
+- `npm run build`: PASS; 278 módulos, con el aviso informativo habitual por el chunk mayor de 500 kB.
+- `npm run lint`: conserva errores preexistentes fuera del cambio. El lint focalizado de los archivos modificados pasa después de estabilizar la carga estudiantil con `useCallback`.
+- Pendiente validar con sesión real ambos roles, los seis tipos y programas cuyo nombre institucional identifique maestría o doctorado. Si el backend expone el nivel explícitamente, reemplazar la inferencia textual por ese campo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. El proyecto conserva las versiones documentadas en este archivo y `package-lock.json`.
+
+---
+
 # Update 2026-09-21 — orden unificado de los módulos principales
 
 ## Estado actual y decisión

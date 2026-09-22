@@ -25,6 +25,7 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
     { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
+    { to: '/trabajos-grado', label: 'Proyectos de grado', icon: '📘', visible: !isProfesorOnly },
     {
       to: '/creditos-condonables',
       label: 'Créditos condonables',

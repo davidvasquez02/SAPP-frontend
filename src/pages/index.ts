@@ -21,6 +21,7 @@ export { MatriculaPage } from "./Matricula";
 export { MatriculaDetalleCoordinacionPage } from "./MatriculaDetalleCoordinacion";
 export { SolicitudesPage } from "./Solicitudes";
 export { SolicitudDetallePage } from "./SolicitudDetalle";
+export { TrabajosGradoPage } from "./TrabajosGrado";
 
 export { ConfigFechasAdmisionesPage } from "./ConfigFechasAdmisiones";
 
