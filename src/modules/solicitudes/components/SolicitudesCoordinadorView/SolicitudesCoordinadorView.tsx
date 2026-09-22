@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
-import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../../types'
+import type { SolicitudCoordinadorDto, SolicitudTableRow, TipoSolicitudDto } from '../../types'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
@@ -34,6 +34,7 @@ interface SolicitudesCoordinadorViewProps {
   excludeTipoSolicitudIds?: ReadonlySet<number>
   detailPath?: (solicitudId: number) => string
   transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
+  filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
 }
 
 const SolicitudesCoordinadorView = ({
@@ -45,6 +46,7 @@ const SolicitudesCoordinadorView = ({
   excludeTipoSolicitudIds,
   detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
   transformTipoSolicitud = identityTipoSolicitud,
+  filterSolicitud,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -104,6 +106,7 @@ const SolicitudesCoordinadorView = ({
             : solicitudes
           if (includeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => includeTipoSolicitudIds.includes(item.tipoSolicitudId))
           if (excludeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => !excludeTipoSolicitudIds.has(item.tipoSolicitudId))
+          if (filterSolicitud) visibleSolicitudes = visibleSolicitudes.filter(filterSolicitud)
           setAssignedRows(sortSolicitudesDesc(visibleSolicitudes))
         }
       })
@@ -123,7 +126,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [excludeCreditosCondonables, excludeTipoSolicitudIds, includeTipoSolicitudIds, usuarioSappId, location.key, location.state])
+  }, [excludeCreditosCondonables, excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds, usuarioSappId, location.key, location.state])
 
   useEffect(() => {
     if (assignedOnly) {
@@ -144,6 +147,7 @@ const SolicitudesCoordinadorView = ({
           : solicitudes
         if (includeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => includeTipoSolicitudIds.includes(item.tipoSolicitudId))
         if (excludeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => !excludeTipoSolicitudIds.has(item.tipoSolicitudId))
+        if (filterSolicitud) visibleSolicitudes = visibleSolicitudes.filter(filterSolicitud)
         setRows(sortSolicitudesDesc(visibleSolicitudes))
         setCurrentPage(1)
       })
@@ -162,7 +166,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [assignedOnly, excludeCreditosCondonables, excludeTipoSolicitudIds, includeTipoSolicitudIds, tipoSolicitudId, location.key, location.state])
+  }, [assignedOnly, excludeCreditosCondonables, excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds, tipoSolicitudId, location.key, location.state])
 
   const availableRows = useMemo(() => {
     const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))

@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — clasificación de temas por programa (2026-09-22)
+
+- Las solicitudes compartidas de tipo 13 (`TEMA_T`, **ENVÍO DE TEMA DE TRABAJO DE INVESTIGACIÓN/TESIS**) ya no se repiten en los dos apartados de Proyectos de grado: si `programaAcademico` contiene `DCC` se muestran únicamente en **Tesis doctoral**; cualquier otro programa se muestra únicamente en **Trabajo de investigación de maestría**.
+- La misma clasificación se aplica a solicitudes asignadas, al listado general de coordinación y al listado/refresco del estudiante. `DCC` también determina la ruta permitida para un estudiante; cualquier otro valor se trata como maestría conforme a la regla acordada.
+- Los demás tipos exclusivos de cada nivel conservan su distribución. No cambiaron endpoints, DTO, payloads, rutas, permisos, dependencias, variables de entorno, schemas, seeds ni datasets; el filtro usa el campo `programaAcademico` que ya entrega el listado de solicitudes.
+
 ## Decisión reciente — módulo inicial de Proyectos de grado (2026-09-22)
 
 - Se creó el módulo protegido `/trabajos-grado`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
