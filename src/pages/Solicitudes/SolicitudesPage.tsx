@@ -6,6 +6,7 @@ import SolicitudesCoordinadorView from '../../modules/solicitudes/components/Sol
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
 import { getEstadosSolicitudCatalog } from '../../modules/solicitudes/api/estadoSolicitudService'
 import './SolicitudesPage.css'
+import { TIPOS_TRABAJO_GRADO_IDS } from '../../modules/trabajos-grado/constants'
 
 const SolicitudesPage = () => {
   const { session } = useAuth()
@@ -29,7 +30,7 @@ const SolicitudesPage = () => {
   return (
     <ModuleLayout title="Solicitudes">
       {isEstudiante ? (
-        <SolicitudesEstudianteView />
+        <SolicitudesEstudianteView excludeTipoSolicitudIds={TIPOS_TRABAJO_GRADO_IDS} />
       ) : canUseCoordinadorList ? (
         usuarioSappId === null ? (
           <p className="solicitudes-page__status">No fue posible identificar el usuario.</p>
@@ -39,6 +40,7 @@ const SolicitudesPage = () => {
             readOnly={!isCoord}
             assignedOnly={isProfesorOnly}
             excludeCreditosCondonables={isCoordinadorCreditos}
+            excludeTipoSolicitudIds={TIPOS_TRABAJO_GRADO_IDS}
           />
         )
       ) : (

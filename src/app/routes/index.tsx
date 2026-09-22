@@ -29,6 +29,7 @@ import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
 import { solicitudesRoutes } from "./solicitudesRoutes";
+import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
 export const AppRoutes = () => {
   const { session } = useAuth();
@@ -181,6 +182,7 @@ export const AppRoutes = () => {
             }
           />
           {solicitudesRoutes}
+          {trabajosGradoRoutes}
           {matriculaRoutes}
           {creditosRoutes}
           {creditosCondonablesRoutes}
