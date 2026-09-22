@@ -1,4 +1,4 @@
-import type { TipoSolicitudDto } from '../solicitudes/types'
+import type { SolicitudTableRow, TipoSolicitudDto } from '../solicitudes/types'
 
 export type NivelTrabajoGrado = 'maestria' | 'doctorado'
 
@@ -17,7 +17,14 @@ export const isTipoTrabajoGrado = (tipoSolicitudId: number | undefined): boolean
   tipoSolicitudId !== undefined && TIPOS_TRABAJO_GRADO_IDS.has(tipoSolicitudId)
 
 export const getNivelTrabajoGrado = (programa: string | null | undefined): NivelTrabajoGrado =>
-  programa?.toLocaleLowerCase('es-CO').includes('doctor') ? 'doctorado' : 'maestria'
+  programa?.toLocaleUpperCase('es-CO').includes('DCC') ? 'doctorado' : 'maestria'
+
+export const correspondeSolicitudANivel = (
+  solicitud: Pick<SolicitudTableRow, 'tipoSolicitudId' | 'programaAcademico'>,
+  nivel: NivelTrabajoGrado,
+): boolean =>
+  solicitud.tipoSolicitudId !== TIPO_TEMA_TRABAJO_GRADO_ID ||
+  getNivelTrabajoGrado(solicitud.programaAcademico) === nivel
 
 export const contextualizarTipoTrabajoGrado = (
   tipo: TipoSolicitudDto,

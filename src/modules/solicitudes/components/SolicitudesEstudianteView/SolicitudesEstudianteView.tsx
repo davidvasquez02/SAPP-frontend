@@ -16,7 +16,7 @@ import {
 } from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
-import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
+import type { SolicitudEstudianteRowDto, SolicitudTableRow, TipoSolicitudDto } from '../../types'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
   getEstadosPresentesEnSolicitudes,
@@ -35,6 +35,7 @@ interface SolicitudesEstudianteViewProps {
   excludeTipoSolicitudIds?: ReadonlySet<number>
   detailPath?: (solicitudId: number) => string
   transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
+  filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
 }
 
 const SolicitudesEstudianteView = ({
@@ -42,6 +43,7 @@ const SolicitudesEstudianteView = ({
   excludeTipoSolicitudIds,
   detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
   transformTipoSolicitud = identityTipoSolicitud,
+  filterSolicitud,
 }: SolicitudesEstudianteViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -77,10 +79,11 @@ const SolicitudesEstudianteView = ({
         if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(solicitud.tipoSolicitudId)) {
           return false
         }
+        if (filterSolicitud && !filterSolicitud(solicitud)) return false
         return !excludeTipoSolicitudIds?.has(solicitud.tipoSolicitudId)
       }),
     )
-  }, [excludeTipoSolicitudIds, includeTipoSolicitudIds])
+  }, [excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds])
 
   useEffect(() => {
     let mounted = true
@@ -214,6 +217,7 @@ const SolicitudesEstudianteView = ({
       setRows(
         refreshedSolicitudes.filter((solicitud) => {
           if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(solicitud.tipoSolicitudId)) return false
+          if (filterSolicitud && !filterSolicitud(solicitud)) return false
           return !excludeTipoSolicitudIds?.has(solicitud.tipoSolicitudId)
         }),
       )

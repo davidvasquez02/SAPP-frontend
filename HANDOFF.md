@@ -4436,3 +4436,32 @@ npm run lint
 - Reutilizar la instalación npm del repositorio (`node_modules`); no crear entornos venv/conda/poetry para este frontend.
 - Versiones exactas y comandos continúan documentados en `package.json`/`package-lock.json` y README.
 - `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx src/shared/files/base64FileUtils.ts`: PASS. `npm run build`: PASS (273 módulos; warning informativo conocido por chunk principal mayor de 500 kB). `git diff --check`: PASS. El lint global continúa fallando por 9 errores y 1 warning preexistentes en archivos no relacionados (`creditosService`, `matriculaService`, `solicitudesService`, `RequireEvaluacionEnabled`, mocks/validación y tipos/componentes de solicitudes).
+
+---
+# Update 2026-09-22 — clasificación de solicitudes de tema por programa
+
+## Estado actual y decisión
+- El tipo compartido `tipoSolicitudId: 13` / `tipoSolicitudCodigo: TEMA_T` ya no aparece simultáneamente en maestría y doctorado. `correspondeSolicitudANivel` lo clasifica por el valor ya disponible en `programaAcademico`: si contiene `DCC`, corresponde solo a **Tesis doctoral**; en caso contrario corresponde solo a **Trabajo de investigación de maestría**.
+- El filtro se aplica a los resultados asignados y generales de coordinación y al listado/refresco posterior a creación del estudiante. Los tipos no compartidos siguen determinados por `TIPOS_TRABAJO_GRADO_POR_NIVEL`.
+- `getNivelTrabajoGrado` reconoce la sigla `DCC`; esto evita redirigir a un estudiante de `61204 - DCC` al apartado de maestría. Todo valor que no contenga esa sigla se clasifica como maestría conforme a la regla acordada.
+
+## Paths, contrato y salida esperada
+- Regla de dominio de presentación: `src/modules/trabajos-grado/constants.ts`.
+- Integración del módulo: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`.
+- Punto extensible de filtrado de filas: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+- El contrato REST no cambia. El listado debe seguir entregando `tipoSolicitudId`, `tipoSolicitudCodigo` y `programaAcademico`; ejemplo relevante: `{ "tipoSolicitudId": 13, "tipoSolicitudCodigo": "TEMA_T", "programaAcademico": "61204 - DCC" }` se ve solo en `/trabajos-grado/doctorado`. El mismo tipo con un programa que no contiene `DCC` se ve solo en `/trabajos-grado/maestria`.
+- No se agregaron endpoints, schemas, paquetes, variables, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con backend y sesión institucional los listados **Solicitudes asignadas** y **Solicitudes** en ambas pestañas, incluida la solicitud 51 del ejemplo, y confirmar que cada ID aparece exactamente una vez.
+2. Confirmar los valores reales de `programaAcademico`; la regla solicitada trata un valor ausente o sin `DCC` como maestría. Si backend incorpora otra sigla doctoral, acordar primero el contrato antes de ampliar la inferencia.
+3. Cuando exista infraestructura de pruebas, cubrir la clasificación `DCC`/no `DCC` y los tres flujos de filtrado. No hay script `test` actualmente.
+
+## Entorno
+- Reutilizar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, Conda, Poetry, entornos Python ni otra instalación npm. No hay seeds para este flujo.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación de esta corrección
+- `npx eslint src/modules/trabajos-grado/constants.ts src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx src/pages/TrabajosGrado/TrabajosGradoPage.tsx`: PASS.
+- `npm run build`: PASS; 278 módulos, `dist/assets/index-BBLqYFql.css` e `index-CwDe3c1W.js`; persiste solo el aviso informativo conocido por el chunk JS de 642.58 kB.
+- La comprobación visual autenticada queda pendiente: el contenedor no ofrece navegador ni backend/sesión institucional. El cambio no añade estilos ni elementos visuales; modifica qué filas existentes recibe cada apartado.

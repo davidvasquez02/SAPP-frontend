@@ -7,6 +7,7 @@ import SolicitudesCoordinadorView from '../../modules/solicitudes/components/Sol
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
 import {
   getNivelTrabajoGrado,
+  correspondeSolicitudANivel,
   contextualizarTipoTrabajoGrado,
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
   type NivelTrabajoGrado,
@@ -27,6 +28,11 @@ const TrabajosGradoPage = () => {
   const nivelSeleccionado = isNivel(nivel) ? nivel : nivelEstudiante
   const transformTipoSolicitud = useMemo(
     () => (tipo: Parameters<typeof contextualizarTipoTrabajoGrado>[0]) => contextualizarTipoTrabajoGrado(tipo, nivelSeleccionado),
+    [nivelSeleccionado],
+  )
+  const filterSolicitud = useMemo(
+    () => (solicitud: Parameters<typeof correspondeSolicitudANivel>[0]) =>
+      correspondeSolicitudANivel(solicitud, nivelSeleccionado),
     [nivelSeleccionado],
   )
 
@@ -63,6 +69,7 @@ const TrabajosGradoPage = () => {
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
             transformTipoSolicitud={transformTipoSolicitud}
+            filterSolicitud={filterSolicitud}
           />
         ) : isCoordinacion && usuarioSappId !== null ? (
           <SolicitudesCoordinadorView
@@ -70,6 +77,7 @@ const TrabajosGradoPage = () => {
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
             transformTipoSolicitud={transformTipoSolicitud}
+            filterSolicitud={filterSolicitud}
           />
         ) : (
           <p className="trabajos-grado-page__status">No tienes permisos para consultar este módulo.</p>
