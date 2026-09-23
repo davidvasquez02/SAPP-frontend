@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — agendamiento tras recibir ajustes (2026-09-23)
+
+- El detalle de coordinación de trabajos de grado muestra **Programar sustentación** tanto en `CONCEPTOS_REC` como en `AJUSTES_RECIB`; también tolera los nombres descriptivos **CONCEPTOS RECIBIDOS** y **AJUSTES RECIBIDOS** entregados por el backend.
+- La regla se centralizó y conserva el comportamiento previo para `EN_AJUSTES`. No cambiaron el formulario, el endpoint `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion`, su payload, los permisos ni las validaciones del backend.
+- No se agregaron dependencias, variables de entorno, seeds o datasets. La regresión se cubre con una prueba Node específica de los estados habilitados y bloqueados.
+
 ## Corrección reciente — estado de ajustes recibidos en proyectos de grado (2026-09-23)
 
 - El estado de evaluación `AJUSTES_RECIB`, entregado por el backend con el nombre **AJUSTES RECIBIDOS**, se reconoce ahora en las solicitudes de proyectos de grado y deja de mostrarse como **DESCONOCIDO**.
