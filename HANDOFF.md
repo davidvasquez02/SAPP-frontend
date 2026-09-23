@@ -1,3 +1,40 @@
+# Update 2026-09-23 — título y resumen visibles en el detalle de trabajo de grado
+
+## Estado actual y contrato
+- `SolicitudDetallePage` presenta **Título** y **Resumen** inmediatamente antes de
+  **Observaciones** para estudiantes y coordinación cuando alguno de esos datos
+  está disponible. Primero usa `SolicitudAcademicaDto.tituloTrabajo` y
+  `resumenTrabajo`; para los códigos con proceso de evaluación usa como respaldo
+  `ProcesoEvaluacionTg.titulo` y `resumen`.
+- El respaldo consume el endpoint autenticado existente `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`, cuya envoltura esperada es
+  `{ "ok": true, "message": string, "data": { "titulo": string,
+  "resumen": string | null, ... } }`. Un 404 previo a la creación del proceso
+  se ignora de forma deliberada y no reemplaza ni bloquea el detalle académico.
+- No cambiaron la creación (`tituloTrabajo`/`resumenTrabajo`), las transiciones,
+  los permisos, los endpoints, el schema, las dependencias, variables, seeds o
+  datasets. Queda pendiente validar con sesiones institucionales de ambos roles
+  un trámite que solo exponga esos valores mediante el DTO del proceso.
+
+## Paths, entorno y resultados
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+  Contratos reutilizados: `src/modules/solicitudes/api/types.ts` y
+  `src/modules/trabajos-grado/evaluacion/{api,types}.ts`.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (283 módulos, `index-Ch9v6k1n.css` 231.65 kB e `index-Bj4f55CP.js` 667.87
+  kB); `git diff --check` PASS. Persisten solo el warning ambiental npm
+  `Unknown env config "http-proxy"` y el aviso informativo del chunk mayor de
+  500 kB. Las pruebas Node dirigidas pasan (6/6). `npm run lint` conserva 9
+  errores y 1 warning preexistentes en servicios placeholder, admisiones,
+  validación documental y tipos/editor de solicitudes; el archivo modificado
+  pasa ESLint de forma aislada.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2. No existe seed para este flujo.
+
+---
+
 # Update 2026-09-23 — estados de proyectos de grado en solicitudes
 
 ## Estado actual y decisiones

@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — título y resumen en el detalle de trabajo de grado (2026-09-23)
+
+- El detalle compartido de la solicitud muestra ahora **Título** y **Resumen**, en ese orden y justo antes de **Observaciones**, tanto para coordinación como para estudiantes cuando esos datos fueron solicitados al crear el trámite.
+- La vista prioriza `tituloTrabajo` y `resumenTrabajo` de `GET /sapp/solicitudesAcademicas/{id}`. Para los trámites con proceso de evaluación también consulta `GET /sapp/procesoEvaluacionTg/solicitud/{id}` y usa sus campos `titulo` y `resumen` como respaldo; así cubre el contrato real del proceso sin cambiar el payload de creación.
+- Si el proceso aún no existe (por ejemplo, antes de aprobar la solicitud), la consulta opcional no bloquea el resto del detalle. No se agregaron endpoints, dependencias, variables de entorno, seeds, datasets ni cambios de esquema.
+- Verificación local: ESLint focalizado, build de producción y `git diff --check` pasan. El build transformó 283 módulos y produjo `index-Ch9v6k1n.css` e `index-Bj4f55CP.js`; permanece el aviso informativo conocido por el chunk JavaScript mayor de 500 kB.
+
 ## Corrección reciente — aprobación contextual de proyectos de grado (2026-09-23)
 
 - En el detalle de una solicitud de proyecto de grado enviada al Comité Asesor de Posgrados, la acción principal se presenta como **Aprobar y enviar a consejo académico**.
