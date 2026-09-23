@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — estado de ajustes recibidos en proyectos de grado (2026-09-23)
+
+- El estado de evaluación `AJUSTES_RECIB`, entregado por el backend con el nombre **AJUSTES RECIBIDOS**, se reconoce ahora en las solicitudes de proyectos de grado y deja de mostrarse como **DESCONOCIDO**.
+- El mapeo compartido se aplica tanto al listado como al detalle individual para estudiantes y coordinación. La insignia reutiliza la variante visual de revisión y mantiene la compatibilidad con los temas claro y oscuro.
+- No cambiaron endpoints, DTO, transiciones, dependencias, variables de entorno, seeds ni datasets; el backend continúa siendo la autoridad del flujo académico.
+
 ## Mejora reciente — acciones de evaluación de proyectos de grado (2026-09-23)
 
 - En el detalle de coordinación, **Agregar evaluador** está ahora integrado en la cabecera de la tabla de jurados y abre el mismo formulario que selecciona el documento a evaluar. Se retiró la acción independiente **Definir documento** para evitar que el flujo ofreciera dos lugares distintos para escogerlo.

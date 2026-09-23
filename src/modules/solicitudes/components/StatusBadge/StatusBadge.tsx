@@ -26,6 +26,7 @@ const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, strin
   SUSTENTADA: 'aprobada',
   APLAZADA: 'devuelta',
   NO_APROBADA: 'rechazada',
+  AJUSTES_RECIB: 'en-revision',
   UNKNOWN: 'unknown',
 }
 
