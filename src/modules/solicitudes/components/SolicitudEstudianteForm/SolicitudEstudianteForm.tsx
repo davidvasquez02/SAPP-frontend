@@ -34,6 +34,8 @@ interface HomologacionAsignaturaFormItem {
 
 export interface SolicitudEstudiantePayload {
   tipoSolicitudId: number
+  tituloTrabajo?: string
+  resumenTrabajo?: string
   observaciones: string
   modalidadId: number | null
   motivosCreditoCondonable: string[]
@@ -126,6 +128,7 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
 
 const RENOVACION_CREDITO_CONDONABLE_ID = 12
 const EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID = 2
+const TIPOS_CON_DATOS_TRABAJO = new Set([4, 5, 6, 7])
 
 const SolicitudEstudianteForm = ({
   tipos,
@@ -140,6 +143,8 @@ const SolicitudEstudianteForm = ({
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
   const [documentosError, setDocumentosError] = useState<string | null>(null)
   const [observaciones, setObservaciones] = useState('')
+  const [tituloTrabajo, setTituloTrabajo] = useState('')
+  const [resumenTrabajo, setResumenTrabajo] = useState('')
   const [modalidades, setModalidades] = useState<ModalidadContraprestacionDto[]>([])
   const [modalidadId, setModalidadId] = useState<number | null>(null)
   const [loadingModalidades, setLoadingModalidades] = useState(false)
@@ -167,13 +172,14 @@ const SolicitudEstudianteForm = ({
   const selectedTipo = useMemo(() => tipos.find((tipo) => tipo.id === tipoSolicitudId) ?? null, [tipoSolicitudId, tipos])
   const selectedTipoLabel = useMemo(
     () =>
-      formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.nombre?.trim() || selectedTipo?.codigoNombre || '',
+      selectedTipo?.nombre?.trim() || formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.codigoNombre || '',
     [selectedTipo],
   )
   const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
   const isEdicionRevistasCientificas = modalidadId === EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
+  const requiereDatosTrabajo = tipoSolicitudId !== null && TIPOS_CON_DATOS_TRABAJO.has(tipoSolicitudId)
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
   const municipioExpedicionSeleccionado = useMemo(
     () => findMunicipality(departamentoExpedicionCodigo, ciudadExpedicionDocumento),
@@ -362,6 +368,10 @@ const SolicitudEstudianteForm = ({
       setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
       return false
     }
+    if (requiereDatosTrabajo && (!tituloTrabajo.trim() || !resumenTrabajo.trim())) {
+      setErrorMsg('Debes ingresar el título y el resumen del trabajo de grado.')
+      return false
+    }
     if (isCreditoCondonable) {
       if (modalidadesError) {
         setErrorMsg('No es posible registrar la solicitud hasta cargar la modalidad de contraprestación.')
@@ -425,6 +435,8 @@ const SolicitudEstudianteForm = ({
     setTipoSolicitudId(null)
     setDocumentosDraft([])
     setObservaciones('')
+    setTituloTrabajo('')
+    setResumenTrabajo('')
     setModalidadId(null)
     setHomologaciones([])
     setHomologacionesValidationAttempted(false)
@@ -538,6 +550,9 @@ const SolicitudEstudianteForm = ({
 
     const payload: SolicitudEstudiantePayload = {
       tipoSolicitudId,
+      ...(requiereDatosTrabajo
+        ? { tituloTrabajo: tituloTrabajo.trim(), resumenTrabajo: resumenTrabajo.trim() }
+        : {}),
       observaciones,
       modalidadId,
       motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
@@ -650,11 +665,34 @@ const SolicitudEstudianteForm = ({
           <option value="">Selecciona una opción</option>
           {tipos.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>
-              {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.nombre || tipo.codigoNombre || `Tipo #${tipo.id}`}
+              {tipo.nombre?.trim() || formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.codigoNombre || `Tipo #${tipo.id}`}
             </option>
           ))}
         </select>
       </div>
+
+      {requiereDatosTrabajo && (
+        <div className="solicitud-estudiante-form__section">
+          <h4>Información del trabajo de grado</h4>
+          <label htmlFor="tituloTrabajo">Título del trabajo *</label>
+          <input
+            id="tituloTrabajo"
+            value={tituloTrabajo}
+            onChange={(event) => setTituloTrabajo(event.target.value)}
+            placeholder="Ingresa el título completo del trabajo"
+            required
+          />
+          <label htmlFor="resumenTrabajo">Resumen del trabajo *</label>
+          <textarea
+            id="resumenTrabajo"
+            rows={6}
+            value={resumenTrabajo}
+            onChange={(event) => setResumenTrabajo(event.target.value)}
+            placeholder="Describe brevemente el propósito, alcance y metodología del trabajo"
+            required
+          />
+        </div>
+      )}
 
       {isCreditoCondonable && (
         <div className="solicitud-estudiante-form__section">

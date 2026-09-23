@@ -202,6 +202,8 @@ const SolicitudesEstudianteView = ({
       const createdSolicitud = await createSolicitudAcademica({
         estudianteId,
         tipoSolicitudId: payload.tipoSolicitudId,
+        tituloTrabajo: payload.tituloTrabajo,
+        resumenTrabajo: payload.resumenTrabajo,
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
         modalidadId: payload.modalidadId ?? undefined,
