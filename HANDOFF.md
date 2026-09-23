@@ -4999,3 +4999,40 @@ npm run lint
   Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM
   19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y
   ESLint 9.39.2; el proyecto no usa seeds.
+
+---
+
+# Update 2026-09-23 — rueda y tarjeta interactiva en estudiantes
+
+## Estado actual y salida esperada
+- `StudentHorizontalBoard` convierte el movimiento dominante de la rueda
+  (`deltaY` o `deltaX`) en desplazamiento horizontal y contempla los tres
+  `deltaMode`. Solo cancela el scroll de la página cuando el tablero realmente
+  puede avanzar en la dirección solicitada; los extremos liberan la rueda.
+- `EstudianteCard` funciona completa como acceso al perfil mediante clic,
+  `Enter` o espacio, con foco visible y semántica de enlace. La acción visual
+  **Ver perfil** permanece integrada en la tarjeta sin crear controles
+  interactivos anidados. La supresión de clic posterior a un arrastre permanece en el
+  contenedor, por lo que arrastrar una tarjeta no abre el detalle.
+- Salida esperada: rueda sobre cualquier tablero con desbordamiento mueve sus
+  tarjetas; clic en foto, estado, nombre o datos abre exactamente el mismo
+  detalle que el botón. No hay cambios de API, schema, DTO ni permisos.
+
+## Paths, entorno, validación y continuidad
+- Implementación: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx`
+  y `src/modules/estudiantes/components/EstudianteCard/{EstudianteCard.tsx,EstudianteCard.css}`.
+  Consumidor: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (286 módulos; CSS 232.73 kB y JS 669.38 kB); `git diff --check` PASS. El build
+  conserva el aviso informativo por el chunk JS mayor de 500 kB y npm el warning
+  ambiental `Unknown env config "http-proxy"`.
+- Pendiente: comprobar con backend y sesión institucional la rueda en ratón
+  físico, clic/teclado y temas claro/oscuro. No se pudo capturar la ruta
+  protegida porque el contenedor no incluye Chromium, Chrome ni Firefox y no
+  dispone de una sesión institucional reproducible.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. No hay seeds ni datasets. Entorno: Node.js 24.15.0,
+  npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+
+---

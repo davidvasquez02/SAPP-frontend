@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
+  type WheelEvent,
 } from 'react'
 import { UsersRound } from 'lucide-react'
 import type { EstudianteCoordinacion } from '../../types'
@@ -135,6 +136,21 @@ const StudentHorizontalBoard = ({
     scrollBoard(event.key === 'ArrowLeft' ? 'left' : 'right')
   }
 
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const board = event.currentTarget
+    const wheelDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+    if (wheelDelta === 0) return
+
+    const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? board.clientWidth : 1
+    const scrollDelta = wheelDelta * deltaMultiplier
+    const maxScrollLeft = board.scrollWidth - board.clientWidth
+    const canMoveInDirection = scrollDelta < 0 ? board.scrollLeft > 0 : board.scrollLeft < maxScrollLeft
+
+    if (!canMoveInDirection) return
+    event.preventDefault()
+    board.scrollLeft = Math.max(0, Math.min(maxScrollLeft, board.scrollLeft + scrollDelta))
+  }
+
   return (
     <section className="student-horizontal-board" aria-labelledby={titleId}>
       <div className="student-horizontal-board__header">
@@ -147,7 +163,7 @@ const StudentHorizontalBoard = ({
         </div>
 
         <div className="student-horizontal-board__tools">
-          <p className="student-horizontal-board__hint">Arrastra o usa las flechas para recorrer</p>
+          <p className="student-horizontal-board__hint">Usa la rueda, arrastra o pulsa las flechas</p>
           <div className="student-horizontal-board__controls" aria-label="Controles de desplazamiento horizontal">
             <button type="button" className="student-horizontal-board__control" aria-label="Desplazar estudiantes hacia la izquierda" onClick={() => scrollBoard('left')} disabled={!canScrollLeft}>
               <span aria-hidden="true">←</span>
@@ -171,6 +187,7 @@ const StudentHorizontalBoard = ({
         onLostPointerCapture={finishPointerGesture}
         onClickCapture={handleClickCapture}
         onKeyDown={handleKeyDown}
+        onWheel={handleWheel}
         onScroll={updateScrollControls}
       >
         {estudiantes.map((estudiante) => (
