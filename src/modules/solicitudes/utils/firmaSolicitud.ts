@@ -1,5 +1,20 @@
 const ESTADOS_FIRMA = new Set(['PFIR_DIR_TG', 'PFIR_COOR_POS', 'PFIR_CAR_CONT'])
 
+interface AsignacionSolicitudAccess {
+  personaAsignadaId?: number | null
+  personaSesionId?: number | null
+  incluidaEnSolicitudesAsignadas: boolean
+}
+
+export const estaAsignadaSolicitudAlUsuario = ({
+  personaAsignadaId,
+  personaSesionId,
+  incluidaEnSolicitudesAsignadas,
+}: AsignacionSolicitudAccess): boolean =>
+  personaAsignadaId != null
+    ? personaSesionId != null && personaAsignadaId === personaSesionId
+    : incluidaEnSolicitudesAsignadas
+
 export const estadoPermiteFirmaSolicitud = (...estados: Array<string | null | undefined>): boolean =>
   estados.some((estado) => {
     const normalized = estado?.trim().toLocaleUpperCase() ?? ''
@@ -7,19 +22,15 @@ export const estadoPermiteFirmaSolicitud = (...estados: Array<string | null | un
   })
 
 interface FirmaSolicitudAccess {
-  esGestionPosgrados: boolean
-  esDocente: boolean
   estaAsignadaAlUsuario: boolean
   estado?: string | null
   estadoSigla?: string | null
 }
 
 export const puedeFirmarDocumentosSolicitud = ({
-  esGestionPosgrados,
-  esDocente,
   estaAsignadaAlUsuario,
   estado,
   estadoSigla,
 }: FirmaSolicitudAccess): boolean =>
   estadoPermiteFirmaSolicitud(estado, estadoSigla)
-  && (esGestionPosgrados || (esDocente && estaAsignadaAlUsuario))
+  && estaAsignadaAlUsuario

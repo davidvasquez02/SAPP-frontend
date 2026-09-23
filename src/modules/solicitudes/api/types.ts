@@ -42,6 +42,16 @@ export interface SolicitudAcademicaDto {
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaDetalleDto[] | null
   tituloTrabajo?: string | null
   resumenTrabajo?: string | null
+  solicitudCreditoCondonable?: SolicitudCreditoCondonableDetalleDto | null
+}
+
+export interface SolicitudCreditoCondonableDetalleDto {
+  id: number
+  modalidadId: number
+  modalidadNombre: string
+  personaAsignadaId: number | null
+  personaAsignadaNombre: string | null
+  solicitudAcademicaId: number
 }
 
 export interface SolicitudHomologacionAsignaturaDetalleDto {

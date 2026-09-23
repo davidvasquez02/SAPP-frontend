@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
-import { canManagePosgrados, hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import {
@@ -28,7 +28,10 @@ import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
-import { puedeFirmarDocumentosSolicitud } from '../../modules/solicitudes/utils/firmaSolicitud'
+import {
+  estaAsignadaSolicitudAlUsuario,
+  puedeFirmarDocumentosSolicitud,
+} from '../../modules/solicitudes/utils/firmaSolicitud'
 import {
   getAprobacionTrabajoGradoLabel,
   tieneProcesoEvaluacionTg,
@@ -60,7 +63,6 @@ const SolicitudDetallePage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = canManagePosgrados(roles)
-  const isDocente = isProfesor(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
@@ -94,6 +96,7 @@ const SolicitudDetallePage = () => {
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
   const [isAssignedToCurrentUser, setIsAssignedToCurrentUser] = useState(false)
+  const [isSignedAssignmentConsumed, setIsSignedAssignmentConsumed] = useState(false)
   const [procesoEvaluacion, setProcesoEvaluacion] = useState<ProcesoEvaluacionTg | null>(null)
 
   useEffect(() => {
@@ -114,6 +117,7 @@ const SolicitudDetallePage = () => {
           return
         }
         setSolicitud(response)
+        setIsSignedAssignmentConsumed(false)
         setDraftTipoSolicitudId(response.tipoSolicitudId)
         setDraftObservaciones(response.observaciones ?? '')
         setDraftMotivosCredito(response.motivosCreditoCondonable?.length ? response.motivosCreditoCondonable : [''])
@@ -138,7 +142,7 @@ const SolicitudDetallePage = () => {
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
-    if (!isDocente || usuarioSappId == null || !Number.isInteger(parsedId)) {
+    if (usuarioSappId == null || !Number.isInteger(parsedId)) {
       setIsAssignedToCurrentUser(false)
       return
     }
@@ -155,7 +159,7 @@ const SolicitudDetallePage = () => {
     return () => {
       mounted = false
     }
-  }, [isDocente, solicitudId, usuarioSappId])
+  }, [solicitudId, usuarioSappId])
 
   useEffect(() => {
     if (
@@ -334,10 +338,14 @@ const SolicitudDetallePage = () => {
     solicitud?.estadoSigla,
     solicitud?.estado,
   )
+  const personaAsignadaId = solicitud?.solicitudCreditoCondonable?.personaAsignadaId
+  const estaAsignadaAlUsuario = estaAsignadaSolicitudAlUsuario({
+    personaAsignadaId,
+    personaSesionId: session?.user.persona.id,
+    incluidaEnSolicitudesAsignadas: isAssignedToCurrentUser,
+  })
   const canSignAllDocuments = puedeFirmarDocumentosSolicitud({
-    esGestionPosgrados: isCoordinador,
-    esDocente: isDocente,
-    estaAsignadaAlUsuario: isAssignedToCurrentUser,
+    estaAsignadaAlUsuario: !isSignedAssignmentConsumed && estaAsignadaAlUsuario,
     estado: solicitud?.estado,
     estadoSigla: solicitud?.estadoSigla,
   })
@@ -389,9 +397,10 @@ const SolicitudDetallePage = () => {
     try {
       await firmarDocumentosSolicitudAcademica(solicitud.id)
       firmaCompletada = true
-      // Una firma exitosa consume la asignacion actual. El siguiente estado puede
-      // seguir siendo de firma, pero ya corresponde al siguiente responsable.
-      if (isDocente) setIsAssignedToCurrentUser(false)
+      // Una firma exitosa consume la asignación actual. El detalle actualizado
+      // confirmará después quién es el siguiente responsable del trámite.
+      setIsAssignedToCurrentUser(false)
+      setIsSignedAssignmentConsumed(true)
       setDocsLoading(true)
       setDocsError(null)
 
@@ -408,6 +417,7 @@ const SolicitudDetallePage = () => {
       })
 
       setSolicitud(solicitudActualizada)
+      setIsSignedAssignmentConsumed(false)
       setDocumentos(documentosActualizados)
       setSignSuccess('Todos los documentos fueron firmados y la información fue actualizada correctamente.')
     } catch (signingError) {

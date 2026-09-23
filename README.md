@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — firma por responsable actualmente asignado (2026-09-23)
+
+- **Firmar todos los documentos** depende ahora de la asignación vigente de la persona autenticada, sin restringirse a un rol concreto. En créditos condonables se compara `solicitudCreditoCondonable.personaAsignadaId` con `session.user.persona.id`; por ejemplo, los IDs `65` del director y de la asignación habilitan la acción en `PFIR_CAR_CONT`.
+- Si el detalle identifica expresamente a otra persona, esa información prevalece y el botón se oculta aunque el trámite hubiera aparecido antes en el listado de asignadas. Para otros tipos de solicitud que aún no exponen el responsable en su detalle, se conserva como respaldo `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarioSappId}`.
+- Después de firmar se invalidan la asignación local y se recargan el detalle y los documentos. El botón solo vuelve a mostrarse si la respuesta actualizada confirma que la misma persona continúa asignada y el estado sigue siendo firmable. El backend continúa siendo la autoridad final del `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}`.
+- No se agregaron dependencias, variables de entorno, seeds, datasets ni cambios de esquema. Se reutiliza `node_modules`; desarrollo con `npm run dev` y build con `npm run build`. Stack instalado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
 ## Corrección reciente — agendamiento tras recibir ajustes (2026-09-23)
 
 - El detalle de coordinación de trabajos de grado muestra **Programar sustentación** tanto en `CONCEPTOS_REC` como en `AJUSTES_RECIB`; también tolera los nombres descriptivos **CONCEPTOS RECIBIDOS** y **AJUSTES RECIBIDOS** entregados por el backend.
