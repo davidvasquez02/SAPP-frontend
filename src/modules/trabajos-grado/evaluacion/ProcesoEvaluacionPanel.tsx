@@ -22,6 +22,7 @@ import type {
   JuradoInput,
   ProcesoEvaluacionTg,
 } from './types'
+import { puedeAgendarSustentacion } from './estadoProcesoEvaluacion'
 import './ProcesoEvaluacionPanel.css'
 
 interface ProcesoEvaluacionPanelProps {
@@ -35,7 +36,6 @@ type FormularioActivo = 'designar' | 'sustentacion' | 'resultado' | null
 
 const EMPTY_JURADO: JuradoInput = { nombre: '', correo: '', institucion: '', externo: true, idioma: 'ES' }
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
-const ESTADOS_CON_SUSTENTACION = new Set(['CONCEPTOS_REC', 'EN_AJUSTES'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
 const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION'])
 
@@ -249,7 +249,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
 
   const canSendReminders = ['EN_EVALUACION', 'JUR_INVITADO'].includes(estado)
   const canSendToAdjustments = ESTADOS_CON_AJUSTES.has(estado)
-  const canScheduleDefense = ESTADOS_CON_SUSTENTACION.has(estado)
+  const canScheduleDefense = puedeAgendarSustentacion(estado)
   const canRegisterResult = ESTADOS_CON_RESULTADO.has(estado)
   const hasProcessActions = canSendReminders || canSendToAdjustments || canRegisterResult
   const hasJurorActions = canManageJurors && activeJurors.some((item) => item.activo)

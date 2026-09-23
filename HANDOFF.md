@@ -1,3 +1,18 @@
+# Update 2026-09-23 — agendamiento con conceptos o ajustes recibidos
+
+## Estado actual y contrato
+- El panel de coordinación habilita la tarjeta y el botón **Programar sustentación** cuando `estadoSolicitud` es `CONCEPTOS_REC` o `AJUSTES_RECIB`. La regla tolera además las formas descriptivas con espacios y conserva `EN_AJUSTES` por compatibilidad con el flujo anterior.
+- La regla está aislada en `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts` y la consume `ProcesoEvaluacionPanel.tsx`. Al abrir el formulario, la mutación continúa usando `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion` con `fechaSustentacion`, `modalidadCodigo`, `lugar`, `enlace` y `notificarJurados`.
+- No cambiaron DTO, endpoint, permisos, esquema, dependencias, variables, seeds ni datasets. El backend continúa validando la transición académica.
+
+## Pruebas, entorno y continuidad
+- La regresión `tests/estadoProcesoEvaluacion.test.ts` verifica las siglas y nombres descriptivos de conceptos/ajustes recibidos, la compatibilidad con `EN_AJUSTES` y el bloqueo de estados no agendables.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Las versiones exactas permanecen registradas en `package-lock.json` y la aplicación se ejecuta con `npm run dev` sin seeds.
+- Verificación local 2026-09-23: prueba dirigida PASS (2/2), ESLint focalizado PASS, build PASS (285 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-D8oZUkhF.js` 668.32 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB. No se generó captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta protegida requiere una sesión institucional.
+- Pendiente: validar en una sesión real de coordinación una solicitud doctoral en `AJUSTES_RECIB` y otra en `CONCEPTOS_REC`, incluido el envío del formulario. La ruta es protegida y requiere backend y autenticación institucional.
+
+---
+
 # Update 2026-09-23 — cierre de la firma docente después de reasignar
 
 ## Estado actual, causa y decisión
