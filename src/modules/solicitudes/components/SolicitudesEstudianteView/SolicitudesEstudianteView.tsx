@@ -36,6 +36,7 @@ interface SolicitudesEstudianteViewProps {
   detailPath?: (solicitudId: number) => string
   transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
   filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
+  showAllEstadoOptions?: boolean
 }
 
 const SolicitudesEstudianteView = ({
@@ -44,6 +45,7 @@ const SolicitudesEstudianteView = ({
   detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
   transformTipoSolicitud = identityTipoSolicitud,
   filterSolicitud,
+  showAllEstadoOptions = false,
 }: SolicitudesEstudianteViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -284,11 +286,13 @@ const SolicitudesEstudianteView = ({
     () => rows.filter((row) => (tipoSolicitudId === null ? true : row.tipoSolicitudId === tipoSolicitudId)),
     [rows, tipoSolicitudId],
   )
-  const estadosPresentes = useMemo(
-    () => getEstadosPresentesEnSolicitudes(estadosCatalog, rowsDelTipoSeleccionado),
-    [estadosCatalog, rowsDelTipoSeleccionado],
+  const estadosDisponibles = useMemo(
+    () => showAllEstadoOptions
+      ? estadosCatalog
+      : getEstadosPresentesEnSolicitudes(estadosCatalog, rowsDelTipoSeleccionado),
+    [estadosCatalog, rowsDelTipoSeleccionado, showAllEstadoOptions],
   )
-  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
+  const estadoIdActivo = estadosDisponibles.some((estado) => estado.id === estadoId) ? estadoId : null
 
   const filteredRows = rows
     .filter((row) => {
@@ -342,7 +346,7 @@ const SolicitudesEstudianteView = ({
           <SolicitudesFiltersBar
             estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosPresentes}
+            estadosCatalog={estadosDisponibles}
             tiposSolicitud={tiposSolicitud}
             disabled={loading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {

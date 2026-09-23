@@ -35,6 +35,7 @@ interface SolicitudesCoordinadorViewProps {
   detailPath?: (solicitudId: number) => string
   transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
   filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
+  showAllEstadoOptions?: boolean
 }
 
 const SolicitudesCoordinadorView = ({
@@ -47,6 +48,7 @@ const SolicitudesCoordinadorView = ({
   detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
   transformTipoSolicitud = identityTipoSolicitud,
   filterSolicitud,
+  showAllEstadoOptions = false,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -172,12 +174,14 @@ const SolicitudesCoordinadorView = ({
     const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
     return rows.filter((solicitud) => !assignedIds.has(solicitud.id))
   }, [assignedRows, rows])
-  const estadosPresentes = useMemo(
-    () => getEstadosPresentesEnSolicitudes(estadosCatalog, availableRows),
-    [availableRows, estadosCatalog],
+  const estadosDisponibles = useMemo(
+    () => showAllEstadoOptions
+      ? estadosCatalog
+      : getEstadosPresentesEnSolicitudes(estadosCatalog, availableRows),
+    [availableRows, estadosCatalog, showAllEstadoOptions],
   )
-  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
-  const estadoSiglaActiva = estadosPresentes.find((estado) => estado.id === estadoIdActivo)?.sigla
+  const estadoIdActivo = estadosDisponibles.some((estado) => estado.id === estadoId) ? estadoId : null
+  const estadoSiglaActiva = estadosDisponibles.find((estado) => estado.id === estadoIdActivo)?.sigla
   const filteredRows = availableRows.filter((solicitud) => {
     if (!estadoSiglaActiva) {
       return true
@@ -222,7 +226,7 @@ const SolicitudesCoordinadorView = ({
           <SolicitudesFiltersBar
             estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosPresentes}
+            estadosCatalog={estadosDisponibles}
             tiposSolicitud={tiposSolicitud}
             disabled={loading || assignedLoading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
