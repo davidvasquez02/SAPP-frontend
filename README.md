@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — reasignación del documento ajustado (2026-09-23)
+
+- Cuando un estudiante carga la nueva versión solicitada para un trabajo de grado en estado `EN_AJUSTES`, el frontend conserva primero el documento mediante `POST /sapp/document` y utiliza el `id` real de esa respuesta como `documentoId` para llamar inmediatamente a `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}`.
+- Esta reasignación es exclusiva del formulario estudiantil que aparece cuando los evaluadores devolvieron el trabajo con observaciones (`EN_AJUSTES`, estado 16). El manejador comprueba nuevamente ese estado antes de cargar y asignar; no se ejecuta al adjuntar documentos inicialmente ni desde otros estados o acciones de coordinación.
+- El refresco del proceso, la solicitud, el checklist y los adjuntos ocurre únicamente después de completar ambas operaciones. El mensaje de éxito confirma que la versión recién creada quedó asignada como el documento que deben evaluar los jurados; un error de asignación no se presenta como éxito completo.
+- No cambiaron el payload documental, los roles, los estados, las rutas de interfaz, las dependencias, las variables de entorno, los seeds ni los datasets. El flujo reutiliza `definirDocumentoEvaluar` y el cliente HTTP autenticado existentes.
+
 ## Corrección reciente — datos del trabajo al crear solicitudes (2026-09-23)
 
 - En **Proyectos de grado**, el formulario estudiantil solicita ahora `tituloTrabajo` y `resumenTrabajo` para los tipos 4, 5, 6 y 7 (propuestas y defensas de doctorado/maestría). Ambos campos son obligatorios, se limpian antes del envío y se incluyen en `POST /sapp/solicitudesAcademicas` con `estudianteId` y `tipoSolicitudId`.
@@ -709,8 +716,10 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`. Cuando la solicitud está en
   `EN_AJUSTES` (estado 16), muestra las observaciones de los evaluadores y
   permite volver a cargar exactamente el documento señalado por
-  `documentoEvaluarId`; al finalizar refresca el proceso, la solicitud y sus
-  adjuntos.
+  `documentoEvaluarId`. Después de crear la nueva versión con `POST
+  /sapp/document`, asigna el `id` retornado mediante `PUT
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}`
+  y solo entonces refresca el proceso, la solicitud y sus adjuntos.
 - **2026-09-21:** se definió un orden único de módulos para la navegación
   principal y los accesos de Inicio: Admisiones, Matrícula, Solicitudes,
   Créditos condonables, Estudiantes, Informes a dependencias, Actas, Fechas y

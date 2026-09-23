@@ -4,7 +4,7 @@ import type { DocumentChecklistItemDto } from '../../../api/documentChecklistTyp
 import { uploadDocument } from '../../../api/documentUploadService'
 import { fileToBase64 } from '../../../utils/fileToBase64'
 import { sha256Hex } from '../../../utils/sha256'
-import { getProcesoEvaluacion } from './api'
+import { definirDocumentoEvaluar, getProcesoEvaluacion } from './api'
 import type { ProcesoEvaluacionTg } from './types'
 import './AjustesEstudiantePanel.css'
 
@@ -69,13 +69,15 @@ const AjustesEstudiantePanel = ({
   )
 
   const handleUpload = async () => {
-    if (!file || !requirement) return
+    // Este reemplazo pertenece exclusivamente a los ajustes solicitados por los
+    // evaluadores. Nunca reasignar el documento evaluado desde otro estado.
+    if (!enAjustes || !file || !requirement) return
     setUploading(true)
     setError(null)
     setMessage(null)
     try {
       const buffer = await file.arrayBuffer()
-      await uploadDocument({
+      const uploadedDocument = await uploadDocument({
         tipoDocumentoTramiteId: requirement.idTipoDocumentoTramite,
         nombreArchivo: file.name,
         tramiteId: solicitudId,
@@ -86,11 +88,16 @@ const AjustesEstudiantePanel = ({
         tamanoBytes: file.size,
         checksum: await sha256Hex(buffer),
       })
+      await definirDocumentoEvaluar(solicitudId, uploadedDocument.id)
       setFile(null)
-      setMessage('El archivo se cargó correctamente. La información de la solicitud fue actualizada.')
+      setMessage('El archivo se cargó correctamente y quedó asignado como el nuevo documento a evaluar.')
       await Promise.all([load(), onUploaded()])
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : 'No fue posible cargar nuevamente el archivo.')
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : 'No fue posible cargar y asignar el nuevo documento para evaluación.',
+      )
     } finally {
       setUploading(false)
     }
