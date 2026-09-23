@@ -1,3 +1,18 @@
+# Update 2026-09-23 — firma docente de créditos condonables asignados
+
+## Estado actual y causa corregida
+- La causa estaba en `SolicitudDetallePage`: `canSignAllDocuments` exigía `canManagePosgrados`, aunque `SolicitudesPage` sí permite que `DOCENTE_POSGRADOS` consulte sus trámites mediante el listado **Solicitudes asignadas**. Por ello el backend entregaba la asignación, pero la interfaz ocultaba el botón.
+- El detalle consulta ahora `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarioSappId}` para docentes y habilita **Firmar todos los documentos** solo si el ID abierto está incluido y el estado admite firma. `firmaSolicitud.ts` centraliza esta regla y reconoce `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT` y nombres que contienen `POR FIRMA`. Gestión de posgrados conserva el acceso previo.
+- La mutación no cambió: `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}`, respuesta esperada `{ ok, message, data? }`. Tras el éxito se vuelven a consultar el detalle y los adjuntos. El backend debe seguir comprobando autorización y asignación.
+
+## Paths, validación y próximos pasos
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `src/modules/solicitudes/utils/firmaSolicitud.ts`. Cobertura: `tests/firmaSolicitud.test.ts` (docente asignado, solicitud ajena, estado no firmable, sigla y gestión).
+- Validación local 2026-09-23: test dirigido PASS (4/4), ESLint focalizado PASS, build PASS (284 módulos; `index-Ch9v6k1n.css` 231.65 kB e `index-NzlJh6WO.js` 668.39 kB) y `git diff --check` PASS. Persiste el warning informativo del chunk mayor de 500 kB y el warning ambiental npm `Unknown env config "http-proxy"`.
+- Pendiente: validar con una sesión institucional `DOCENTE_POSGRADOS` un crédito asignado en `PFIR_CAR_CONT`, ejecutar la firma y confirmar el nuevo estado/documentos. No hubo captura: la corrección no puede representarse sin backend, datos y sesión institucional disponibles.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No existen seeds ni datasets para este flujo.
+
+---
+
 # Update 2026-09-23 — título y resumen visibles en el detalle de trabajo de grado
 
 ## Estado actual y contrato
