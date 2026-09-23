@@ -29,6 +29,11 @@
 .evaluacion-tg__table-shell { overflow-x: auto; }
 .evaluacion-tg table { width: 100%; border-collapse: collapse; }
 .evaluacion-tg th, .evaluacion-tg td { padding: .75rem; border-bottom: 1px solid var(--outline); text-align: left; vertical-align: top; }
+.evaluacion-tg__evaluations { display: grid; gap: .55rem; min-width: 13rem; }
+.evaluacion-tg__evaluation { display: grid; gap: .2rem; padding: .65rem; border: 1px solid var(--outline); border-radius: var(--radius-sm); background: var(--surface); }
+.evaluacion-tg__evaluation > strong { color: var(--text-primary); font-size: var(--font-size-small); }
+.evaluacion-tg__evaluation span { color: var(--text-secondary); font-size: var(--font-size-caption); overflow-wrap: anywhere; }
+.evaluacion-tg__evaluation span b { color: var(--text-primary); }
 .evaluacion-tg__inactive { opacity: .58; }
 .evaluacion-tg__chip--aceptada { border-color: var(--success); color: var(--success); }
 .evaluacion-tg__chip--declinada, .evaluacion-tg__chip--reemplazado { border-color: var(--danger); color: var(--danger); }
