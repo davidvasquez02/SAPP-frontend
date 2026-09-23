@@ -17,6 +17,7 @@ export type EstadoSolicitudSigla =
   | 'SUSTENTADA'
   | 'APLAZADA'
   | 'NO_APROBADA'
+  | 'AJUSTES_RECIB'
 
 export interface EstadoSolicitudCatalogItem {
   id: number
@@ -43,6 +44,7 @@ export const DEFAULT_ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
   { id: 18, sigla: 'SUSTENTADA', label: 'SUSTENTADA' },
   { id: 19, sigla: 'APLAZADA', label: 'APLAZADA' },
   { id: 20, sigla: 'NO_APROBADA', label: 'NO APROBADA' },
+  { id: 21, sigla: 'AJUSTES_RECIB', label: 'AJUSTES RECIBIDOS' },
 ]
 
 let estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
@@ -77,6 +79,8 @@ const ESTADO_SIGLA_MAP: Record<string, EstadoSolicitudSigla> = {
   SUSTENTADA: 'SUSTENTADA',
   APLAZADA: 'APLAZADA',
   NO_APROBADA: 'NO_APROBADA',
+  AJUSTES_RECIB: 'AJUSTES_RECIB',
+  'AJUSTES RECIBIDOS': 'AJUSTES_RECIB',
 }
 
 export const ESTADOS_SOLICITUD_SIGLAS = Object.freeze(

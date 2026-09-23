@@ -18,6 +18,7 @@ const estadosTrabajoGrado = [
   [18, 'SUSTENTADA', 'SUSTENTADA'],
   [19, 'APLAZADA', 'APLAZADA'],
   [20, 'NO_APROBADA', 'NO APROBADA'],
+  [21, 'AJUSTES_RECIB', 'AJUSTES RECIBIDOS'],
 ] as const
 
 test('reconoce y presenta en mayúsculas los estados de proyectos de grado', () => {
@@ -54,4 +55,10 @@ test('reconoce el estado enviado a consejo por sigla y por nombre descriptivo', 
     DEFAULT_ESTADOS_SOLICITUD_CATALOG.find((estado) => estado.id === 10),
     { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO ACADEMICO' },
   )
+})
+
+test('reconoce los ajustes recibidos por sigla y por nombre descriptivo', () => {
+  assert.equal(normalizeEstadoSolicitud('AJUSTES_RECIB'), 'AJUSTES_RECIB')
+  assert.equal(normalizeEstadoSolicitud('AJUSTES RECIBIDOS'), 'AJUSTES_RECIB')
+  assert.equal(getEstadoSolicitudLabel('AJUSTES_RECIB'), 'AJUSTES RECIBIDOS')
 })

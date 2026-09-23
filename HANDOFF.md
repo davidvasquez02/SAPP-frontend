@@ -4903,3 +4903,16 @@ npm run lint
   Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 
 ---
+# Update 2026-09-23 — estado AJUSTES_RECIB en proyectos de grado
+
+## Estado actual y contrato
+
+- El catálogo compartido de solicitudes reconoce ahora `estadoSolicitud: "AJUSTES_RECIB"` y el nombre descriptivo `"AJUSTES RECIBIDOS"`; ambos se normalizan a la misma sigla y se presentan como **AJUSTES RECIBIDOS**, no como **DESCONOCIDO**.
+- La corrección vive en `src/modules/solicitudes/utils/estadoSolicitud.ts` y `StatusBadge.tsx`, por lo que cubre las tablas/tarjetas y el detalle individual compartidos por estudiante y coordinación. El estado usa la variante visual `en-revision`.
+- El catálogo local registra el estado con id 21. No cambian endpoints, payloads, DTO, transiciones, permisos, schemas, variables, seeds ni datasets. Entrada relevante del proceso: `{ "estadoSolicitud": "AJUSTES_RECIB", "estadoSolicitudNombre": "AJUSTES RECIBIDOS" }`; salida visual esperada: **AJUSTES RECIBIDOS**.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otra instalación npm. Las versiones exactas están en `package-lock.json`; el proyecto se ejecuta con `npm run dev` y no requiere seeds.
+- La regresión dirigida está en `tests/estadoSolicitud.test.ts` y cubre la sigla, el nombre descriptivo, la etiqueta y el registro de catálogo. Pendiente únicamente la comprobación autenticada contra backend real para ambos roles; el contenedor no dispone de esa sesión institucional.
+- Verificación local del 2026-09-23: `node --test tests/estadoSolicitud.test.ts` PASS (4/4), ESLint focalizado PASS, `npm run build` PASS (284 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-_pxWkai9.js` 668.17 kB) y `git diff --check` PASS. El build conserva el aviso informativo conocido por el chunk JavaScript mayor de 500 kB; npm conserva el warning ambiental conocido por `http-proxy`.
