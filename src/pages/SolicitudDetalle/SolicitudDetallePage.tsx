@@ -389,6 +389,9 @@ const SolicitudDetallePage = () => {
     try {
       await firmarDocumentosSolicitudAcademica(solicitud.id)
       firmaCompletada = true
+      // Una firma exitosa consume la asignacion actual. El siguiente estado puede
+      // seguir siendo de firma, pero ya corresponde al siguiente responsable.
+      if (isDocente) setIsAssignedToCurrentUser(false)
       setDocsLoading(true)
       setDocsError(null)
 
