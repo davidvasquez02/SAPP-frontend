@@ -43,3 +43,13 @@ test('conserva la firma de gestión de posgrados en estados habilitados', () => 
     estadoSigla: 'PFIR_COOR_POS',
   }), true)
 })
+
+test('oculta la firma al docente cuando el trámite pasa a otro responsable', () => {
+  assert.equal(puedeFirmarDocumentosSolicitud({
+    esGestionPosgrados: false,
+    esDocente: true,
+    estaAsignadaAlUsuario: false,
+    estado: 'POR FIRMA COORDINACION DE POSGRADOS',
+    estadoSigla: 'PFIR_COOR_POS',
+  }), false)
+})

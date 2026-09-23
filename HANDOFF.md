@@ -1,3 +1,18 @@
+# Update 2026-09-23 — cierre de la firma docente después de reasignar
+
+## Estado actual, causa y decisión
+- Se corrigió la regresión posterior a la habilitación de firma para `DOCENTE_POSGRADOS`: después de un `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` exitoso, el detalle recargaba el nuevo estado pero conservaba en memoria `isAssignedToCurrentUser=true`. Como el siguiente estado podía ser también firmable (por ejemplo, `PFIR_COOR_POS`), el botón seguía visible aunque el backend ya hubiera asignado el trámite a otra persona.
+- Una firma exitosa consume ahora inmediatamente la asignación local del docente antes de recargar el detalle y los adjuntos. Por tanto, aunque el siguiente estado admita firma para otro rol, `puedeFirmarDocumentosSolicitud` recibe `estaAsignadaAlUsuario=false` y oculta la acción. Gestión de posgrados conserva su regla previa.
+- No cambiaron endpoints ni DTO: firma mediante `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` sin body; detalle mediante `GET /sapp/solicitudesAcademicas/{id}`; documentos mediante la consulta existente por trámite. El backend sigue obligado a validar autorización/asignación.
+
+## Paths, pruebas y continuación
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regla y regresión: `src/modules/solicitudes/utils/firmaSolicitud.ts` y `tests/firmaSolicitud.test.ts`.
+- Validación local 2026-09-23: prueba dirigida PASS (5/5), ESLint focalizado PASS, build PASS (284 módulos; `index-Ch9v6k1n.css` 231.65 kB e `index-Cl4WuzZh.js` 668.40 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con una sesión institucional `DOCENTE_POSGRADOS` que, tras firmar un crédito en `PFIR_CAR_CONT`, el backend lo mueve al responsable siguiente y el botón desaparece sin recargar manualmente la página.
+- No existen seeds o datasets para este flujo. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. El entorno permanece en Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
 # Update 2026-09-23 — firma docente de créditos condonables asignados
 
 ## Estado actual y causa corregida

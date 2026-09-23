@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — cierre de la firma docente al reasignar (2026-09-23)
+
+- Después de que un docente firma correctamente los documentos de un crédito condonable asignado, la interfaz consume de inmediato su asignación local y oculta **Firmar todos los documentos**. Esto evita que el botón permanezca disponible cuando el nuevo estado también es de firma, pero el trámite ya corresponde a otra persona.
+- La regla sigue exigiendo simultáneamente un estado firmable y una asignación vigente al docente. El detalle y los documentos se recargan como antes; el backend continúa siendo la autoridad de autorización y transición.
+- No se agregaron contratos, dependencias, variables de entorno, seeds, datasets ni cambios de esquema. La regresión está cubierta en `tests/firmaSolicitud.test.ts`.
+
 ## Corrección reciente — firma docente de créditos condonables asignados (2026-09-23)
 
 - Se corrigió el motivo por el que un docente veía un crédito condonable en **Solicitudes asignadas**, pero no encontraba la acción de firma: el detalle restringía `Firmar todos los documentos` exclusivamente a los roles de gestión de posgrados.
