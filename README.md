@@ -831,6 +831,13 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-23:** la línea de tiempo del detalle de evaluación de trabajos de
+  grado dejó de depender del historial incluido en el DTO general y consulta
+  `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`. Cada cambio
+  presenta el nuevo estado, fecha en horario de Colombia, origen, responsable,
+  detalle y minutos transcurridos en el estado anterior cuando esos valores
+  existen. El historial se refresca también después de las mutaciones del
+  proceso.
 - **2026-09-23:** el catálogo y la presentación de solicitudes reconocen los
   estados de proyectos de grado 12–20 (`JUR_POR_DESIG`, `JUR_INVITADO`,
   `EN_EVALUACION`, `CONCEPTOS_REC`, `EN_AJUSTES`, `SUST_PROGRAMADA`,
