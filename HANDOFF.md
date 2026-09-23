@@ -4719,3 +4719,40 @@ npm run lint
   `command -v chromium || command -v chromium-browser || command -v
   google-chrome || command -v firefox` no encontró navegador y el flujo requiere
   sesión/backend institucionales.
+
+---
+
+# Update 2026-09-23 — depuración visual de acciones del proceso de evaluación
+
+## Estado actual y decisiones
+- `ProcesoEvaluacionPanel` eliminó las cuatro tarjetas redundantes de estudiante,
+  programa, fecha límite y documento. El encabezado del proceso, mensajes,
+  formularios, jurados, sustentación y línea de tiempo se conservan.
+- Las seis acciones superiores se renderizan solo cuando su regla de negocio las
+  habilita para el estado actual. `busy` no retira controles durante una petición:
+  deshabilita temporalmente las acciones previamente disponibles para impedir
+  duplicados y evitar saltos de layout.
+- La columna **Acciones** de jurados existe solo si `canManageJurors` es verdadero
+  y hay al menos un jurado activo. Una fila inactiva no presenta botones; si no
+  existe ninguna operación posible, tampoco se renderiza el `th` de la columna.
+- No se modificaron contratos HTTP, DTO, estados, permisos, estilos, schemas,
+  dependencias, variables, seeds ni datasets.
+
+## Paths, verificación y siguientes pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`.
+  Salida esperada para un proceso cerrado como `SUSTENTADA`: sin tarjetas de
+  resumen, sin barra vacía de acciones y sin columna de acciones de jurados.
+- `npx eslint src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`:
+  PASS; solo aparece el warning ambiental conocido de npm por `http-proxy`.
+- `npm run build`: PASS; 283 módulos, `index-Ch9v6k1n.css` (231.65 kB) e
+  `index-6ruUdfsX.js` (666.44 kB). Persiste el aviso informativo por el chunk JS
+  mayor de 500 kB. `git diff --check`: PASS.
+- Pendiente: comprobación autenticada de cada estado y captura en claro/oscuro.
+  El contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida
+  requiere backend y sesión institucional, por lo que no se generó captura.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---

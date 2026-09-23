@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — acciones disponibles en la evaluación (2026-09-23)
+
+- El panel de coordinación del proceso de evaluación ya no repite el resumen de estudiante, programa, fecha límite y documento, pues esos datos ya están disponibles en el detalle de la solicitud.
+- La barra muestra exclusivamente las acciones permitidas por el estado actual. Durante una mutación, las acciones que ya eran válidas permanecen visibles y se bloquean temporalmente para evitar envíos duplicados.
+- La tabla de jurados presenta **Acciones** solo cuando al menos un jurado activo puede gestionarse. Las filas inactivas no muestran controles y, cuando ninguna fila admite operaciones, se omite también el encabezado completo de la columna.
+- No cambiaron estados, permisos, endpoints, DTO, dependencias, variables de entorno, seeds ni datasets; el backend continúa siendo la autoridad sobre las transiciones del proceso.
+
 ## Corrección reciente — catálogo completo de estados en proyectos de grado (2026-09-23)
 
 - Los filtros de **Proyectos de grado** muestran ahora el catálogo completo retornado por `GET /sapp/estadosSolicitud`, tanto para estudiantes como para coordinación. Esto incluye los estados generales del trámite (envío, revisión, aprobación, rechazo, devolución y firmas) y los estados propios de evaluación, ajustes y sustentación.
