@@ -753,7 +753,12 @@ const SolicitudDetallePage = () => {
             )}
 
             {showProcesoEvaluacion && (
-              <ProcesoEvaluacionPanel solicitudId={solicitud.id} documentos={documentos} actas={actas} />
+              <ProcesoEvaluacionPanel
+                solicitudId={solicitud.id}
+                documentos={documentos}
+                actas={actas}
+                onUpdated={refreshSolicitud}
+              />
             )}
 
             {showConsejoConfirmation && (

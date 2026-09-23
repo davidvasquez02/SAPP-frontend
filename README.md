@@ -744,3 +744,9 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   Créditos condonables y Estudiantes, preservando permisos y contratos.
 
 ---
+- **2026-09-23:** todas las mutaciones del proceso de evaluación de trabajos de
+  grado (jurados, documento, ajustes, sustentación, resultado y recordatorios)
+  vuelven a consultar tanto el proceso como la solicitud y sus adjuntos. La tabla
+  de jurados presenta cada evaluación por separado: momento y concepto para
+  `CONCEPTO_DOCUMENTO`, o momento y resultado para `SUSTENTACION`, incluyendo
+  observaciones únicamente cuando existen.

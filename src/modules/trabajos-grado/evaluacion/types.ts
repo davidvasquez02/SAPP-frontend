@@ -21,11 +21,13 @@ export interface CatalogosEvaluacion {
 export interface EvaluacionJurado {
   id: number
   momentoCodigo: string
+  momento?: string | null
   momentoNombre?: string | null
   conceptoCodigo?: string | null
   conceptoNombre?: string | null
   concepto?: string | null
   resultadoCodigo?: string | null
+  resultado?: string | null
   resultadoNombre?: string | null
   nota?: number | null
   observaciones?: string | null

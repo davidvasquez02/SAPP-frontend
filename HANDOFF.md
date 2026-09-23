@@ -4671,3 +4671,51 @@ npm run lint
 - Verificación local del 2026-09-23: prueba Node dirigida PASS (2/2), ESLint focalizado PASS, build PASS (283 módulos; `index-CagCtW9j.css` 231.16 kB e `index-DhEovsif.js` 666.35 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental de npm por `http-proxy` y el aviso informativo del chunk JavaScript mayor de 500 kB.
 
 ---
+
+---
+
+# Update 2026-09-23 — sincronización y detalle de evaluaciones de jurados
+
+## Estado actual y decisiones
+- `ProcesoEvaluacionPanel` recibe `onUpdated` desde `SolicitudDetallePage`. Después
+  de cualquier mutación exitosa (designar, reemplazar, retirar o reinvitar un
+  jurado; definir documento; enviar a ajustes; programar sustentación; registrar
+  resultado) espera en paralelo el GET canónico del proceso y la recarga de la
+  solicitud/adjuntos. Los recordatorios aplican la misma recarga. La UI ya no
+  depende del DTO devuelto por la mutación para quedar sincronizada.
+- La columna Evaluaciones dejó de concatenar códigos. Cada registro muestra su
+  momento y, según `momentoCodigo`, el concepto de `CONCEPTO_DOCUMENTO` o el
+  resultado de `SUSTENTACION`; las observaciones se muestran solo si contienen
+  texto. El contrato admite los aliases reales `momento`, `concepto` y
+  `resultado`, además de `*Nombre` y `*Codigo`.
+
+## Paths, contrato y salida esperada
+- Coordinación visual/recarga: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`
+  y `.css`; callback padre en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`;
+  aliases DTO en `src/modules/trabajos-grado/evaluacion/types.ts`.
+- Después de una acción exitosa se esperan `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`, `GET` de la solicitud y la
+  consulta de adjuntos del trámite. Si una recarga falla, la acción no se anuncia
+  como sincronizada y se muestra el error; el usuario puede reintentar.
+- Ejemplo de presentación: `CONCEPTO_DOCUMENTO` → «Concepto del documento»,
+  «Concepto: Favorable» y observaciones opcionales; `SUSTENTACION` →
+  «Sustentación», «Resultado: Aprobado» y observaciones opcionales.
+
+## Entorno y próximos pasos
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y
+  typescript-eslint 8.51.0. No hay seeds ni datasets para este flujo.
+- Pendiente validar con backend y sesión de coordinación las recargas después de
+  cada estado y la presentación con observaciones extensas. El contenedor no
+  dispone de navegador instalado; documentar cualquier captura realizada desde
+  un entorno autenticado externo.
+- Verificación 2026-09-23: ESLint focalizado de los tres archivos TS/TSX
+  modificados PASS; `npm run build` PASS (283 módulos, CSS 231.65 kB y JS
+  667.25 kB), con el aviso informativo conocido por chunk >500 kB;
+  `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning
+  preexistentes fuera de este cambio. No se tomó captura porque
+  `command -v chromium || command -v chromium-browser || command -v
+  google-chrome || command -v firefox` no encontró navegador y el flujo requiere
+  sesión/backend institucionales.
