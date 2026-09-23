@@ -108,6 +108,49 @@
 
 ---
 
+# Update 2026-09-23 — asignación de la nueva versión del documento en evaluación
+
+## Estado actual y contrato
+- `AjustesEstudiantePanel` ya no se limita a cargar una nueva versión. Tras el
+  éxito de `POST /sapp/document`, toma exclusivamente
+  `DocumentUploadResponseDto.id` y ejecuta `PUT
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{id}`
+  mediante el servicio existente `definirDocumentoEvaluar`.
+- La llamada de asignación es exclusiva de la corrección estudiantil solicitada
+  por observaciones: la UI de carga solo se muestra con `enAjustes === true` y
+  `handleUpload` vuelve a exigir esa condición antes de iniciar las dos
+  mutaciones. No afecta la carga inicial, otros estados ni las acciones de
+  coordinación.
+- Las operaciones son secuenciales: solo después de cargar y asignar se limpia
+  el archivo, se informa éxito y se refrescan en paralelo el proceso, la
+  solicitud, el checklist y los adjuntos. Si falla la segunda llamada, se
+  conserva el archivo seleccionado y se muestra el mensaje del backend; no se
+  afirma que el cambio quedó completo.
+- El ID no se infiere del checklist ni del proceso anterior. Debe ser el ID de
+  la respuesta de carga, pues representa el nuevo registro/versionado que los
+  jurados evaluarán. La respuesta esperada de la asignación mantiene
+  `{ ok: boolean, message: string, data: ProcesoEvaluacionTg }`.
+
+## Paths, retos y próximos pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`.
+  Servicios reutilizados: `src/api/documentUploadService.ts` y
+  `src/modules/trabajos-grado/evaluacion/api.ts`.
+- Probar con backend autenticado que una carga nueva retorna un `id`
+  distinto y que el `GET` posterior expone ese mismo valor en
+  `documentoEvaluarId`. También verificar el comportamiento si el documento se
+  guarda pero la asignación falla: hoy el usuario puede reintentar y generar
+  otra versión porque el backend no ofrece una transacción conjunta.
+- No se agregaron dependencias, variables, seeds ni datasets. Reutilizar
+  `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni un
+  segundo árbol npm. Las versiones exactas y comandos están en `README.md` y
+  `package-lock.json`.
+- Verificación 2026-09-23: `npx eslint
+  src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx` PASS;
+  `npm run build` PASS (283 módulos, `index-CagCtW9j.css` 231.16 kB e
+  `index-BSplSaVc.js` 665.92 kB), con el aviso informativo conocido por el chunk
+  JavaScript mayor de 500 kB; `git diff --check` PASS. La secuencia HTTP real
+  queda pendiente de sesión y backend institucionales.
+
 # Update 2026-09-23 — recarga estudiantil del documento en evaluación
 
 ## Estado, contrato y decisiones
