@@ -27,6 +27,35 @@ export const TIPOS_TRABAJO_GRADO_IDS = new Set(
 export const isTipoTrabajoGrado = (tipoSolicitudId: number | undefined): boolean =>
   tipoSolicitudId !== undefined && TIPOS_TRABAJO_GRADO_IDS.has(tipoSolicitudId)
 
+const normalizeEstadoResolucion = (value: string | null | undefined): string =>
+  value
+    ?.trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleUpperCase('es-CO') ?? ''
+
+export const getAprobacionTrabajoGradoLabel = (
+  tipoSolicitudId: number | undefined,
+  estadoSigla: string | null | undefined,
+  estadoNombre: string | null | undefined,
+): string => {
+  if (!isTipoTrabajoGrado(tipoSolicitudId)) {
+    return 'Aprobar'
+  }
+
+  const estado = `${normalizeEstadoResolucion(estadoSigla)} ${normalizeEstadoResolucion(estadoNombre)}`
+
+  if (estado.includes('CONSEJO')) {
+    return 'Aprobar y asignar jurados'
+  }
+
+  if (estado.includes('ENVIADA') || estado.includes('COMITE')) {
+    return 'Aprobar y enviar a consejo académico'
+  }
+
+  return 'Aprobar'
+}
+
 export const getNivelTrabajoGrado = (programa: string | null | undefined): NivelTrabajoGrado =>
   programa?.toLocaleUpperCase('es-CO').includes('DCC') ? 'doctorado' : 'maestria'
 
