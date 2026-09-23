@@ -11,6 +11,10 @@
 .evaluacion-tg__message, .evaluacion-tg__error { padding: .75rem 1rem; border-radius: var(--radius-sm); }
 .evaluacion-tg__message { color: var(--success); background: color-mix(in srgb, var(--success), transparent 90%); }
 .evaluacion-tg__error { color: var(--danger); background: color-mix(in srgb, var(--danger), transparent 90%); }
+.evaluacion-tg__ready { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .9rem; align-items: center; margin-top: 1rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 45%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary), var(--surface) 92%); }
+.evaluacion-tg__ready-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: 50%; background: var(--primary); color: var(--on-primary); font-weight: var(--font-weight-bold); }
+.evaluacion-tg__ready strong { display: block; color: var(--primary); }
+.evaluacion-tg__ready p { margin: .15rem 0 0; color: var(--text-secondary); }
 .evaluacion-tg__actions, .evaluacion-tg__form-actions, .evaluacion-tg__row-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
 .evaluacion-tg button { border: 1px solid var(--primary); padding: .55rem .9rem; background: var(--primary); color: var(--on-primary); cursor: pointer; }
 .evaluacion-tg button.secondary, .evaluacion-tg__row-actions button { background: transparent; color: var(--primary); }
@@ -18,6 +22,9 @@
 .evaluacion-tg button:disabled { opacity: .48; cursor: not-allowed; }
 .evaluacion-tg__form-card, .evaluacion-tg__section { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--outline); border-radius: var(--radius-md); background: var(--surface-container-low); }
 .evaluacion-tg__form-card h4 { margin-top: 0; }
+.evaluacion-tg__section-heading > div { display: grid; gap: .15rem; }
+.evaluacion-tg__section-heading > div > span { color: var(--text-secondary); font-size: var(--font-size-small); }
+.evaluacion-tg__add-evaluator { white-space: nowrap; }
 .evaluacion-tg__form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
 .evaluacion-tg label { display: grid; gap: .3rem; min-width: 0; color: var(--text-secondary); }
 .evaluacion-tg__check { display: flex !important; align-items: center; grid-template-columns: auto 1fr; margin: .9rem 0; }
@@ -43,6 +50,8 @@
 .evaluacion-tg__timeline small { display: block; color: var(--text-secondary); }
 @media (max-width: 760px) {
   .evaluacion-tg__header { display: grid; }
+  .evaluacion-tg__ready { grid-template-columns: auto 1fr; }
+  .evaluacion-tg__ready button { grid-column: 1 / -1; width: 100%; }
   .evaluacion-tg__summary, .evaluacion-tg__form-grid { grid-template-columns: 1fr; }
   .evaluacion-tg__actions > button { flex: 1 1 12rem; }
   .evaluacion-tg table, .evaluacion-tg tbody, .evaluacion-tg tr, .evaluacion-tg td { display: block; }

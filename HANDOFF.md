@@ -13,6 +13,41 @@
 
 ---
 
+# Update 2026-09-23 — acciones intuitivas en el proceso de evaluación
+
+## Estado actual y decisiones
+- En `ProcesoEvaluacionPanel`, la creación de jurados se inicia con **Agregar
+  evaluador**, ubicado en la cabecera de la tabla **Jurados evaluadores**. El
+  formulario conserva la selección obligatoria del documento y la fecha límite.
+- Se ocultó el selector independiente **Definir documento**; no se eliminó el
+  servicio API porque continúa siendo utilizado por la carga de correcciones del
+  estudiante. **Enviar a ajustes** ahora se muestra como **Enviar a
+  correcciones**, sin cambiar su mutación ni transición de backend.
+- Para `CONCEPTOS_REC` y `EN_AJUSTES`, una tarjeta semántica destacada comunica
+  **Conceptos completos**, explica que ya se puede programar la sustentación y
+  contiene el CTA correspondiente. Usa únicamente tokens del tema y reorganiza
+  el CTA a ancho completo en móvil.
+
+## Contratos, paths y próximos pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`
+  y `.css`. No cambiaron DTO, endpoints, schema, paquetes, variables, seeds ni
+  datasets. La designación conserva `documentoEvaluarId` dentro del payload de
+  `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`; correcciones
+  conserva la operación `enviarAAjustes` existente.
+- Verificación 2026-09-23: ESLint focalizado PASS; build PASS (284 módulos,
+  `index-BAvKq9XY.css` 232.60 kB e `index-s05zH_eG.js` 668.02 kB), con el aviso
+  informativo conocido por chunk mayor de 500 kB; `git diff --check` PASS.
+- Pendiente validar con sesión institucional los estados `JUR_POR_DESIG`,
+  `CONCEPTOS_REC` y `EN_AJUSTES`, además de claro/oscuro y móvil. No se generó
+  captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta
+  protegida requiere backend, datos y autenticación institucionales.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
 # Update 2026-09-23 — firma docente de créditos condonables asignados
 
 ## Estado actual y causa corregida
