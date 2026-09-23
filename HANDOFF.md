@@ -1,3 +1,39 @@
+# Update 2026-09-23 — historial real en la línea de tiempo de trabajos de grado
+
+## Estado actual, contrato y salida esperada
+- `ProcesoEvaluacionPanel` obtiene la línea de tiempo mediante `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`, en paralelo con
+  el proceso y sus catálogos. Ya no usa `historial` del DTO general ni fabrica
+  una entrada a partir del estado actual. La consulta se repite después de
+  jurados, invitaciones, correcciones, recordatorios, sustentación o resultado.
+- El envelope esperado es `{ ok: true, message: string, data:
+  HistorialProcesoEvaluacion[] }`. Cada elemento contiene
+  `estadoAnteriorSigla`, `estadoAnterior`, `estadoNuevoSigla`, `estadoNuevo`,
+  `fecha`, `origen`, `responsable`, `detalle` y
+  `minutosEnEstadoAnterior`; los últimos tres valores de negocio pueden ser
+  `null`. La UI muestra estado nuevo, fecha en `America/Bogota`, origen y los
+  campos opcionales presentes. Para un arreglo vacío muestra **No hay cambios
+  de estado registrados.**
+- Implementación y contrato: `src/modules/trabajos-grado/evaluacion/{api.ts,types.ts,ProcesoEvaluacionPanel.tsx}`;
+  presentación: `ProcesoEvaluacionPanel.css`. No cambiaron endpoints de
+  escritura, permisos, schema, paquetes, variables, seeds ni datasets.
+
+## Entorno, resultados y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. No es un proyecto Python. Entorno: Node.js 24.15.0,
+  npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (286 módulos; CSS 233.01 kB y JS 670.02 kB); `git diff --check` PASS. Persisten
+  el warning ambiental npm `Unknown env config "http-proxy"` y el aviso
+  informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional la solicitud `67`, el
+  orden cronológico retornado por el backend y el refresco tras una transición.
+  También revisar la presentación en claro/oscuro y móvil. La ruta protegida no
+  cuenta con credenciales ni datos reproducibles dentro del repositorio.
+
+---
+
 # Update 2026-09-23 — contrato general de programas académicos
 
 ## Estado actual, decisiones y salida esperada

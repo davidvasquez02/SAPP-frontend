@@ -48,6 +48,9 @@
 .evaluacion-tg__timeline li { display: grid; grid-template-columns: 1rem 1fr; gap: .7rem; padding-bottom: 1rem; }
 .evaluacion-tg__timeline li > span { width: .75rem; height: .75rem; margin-top: .35rem; border-radius: 50%; background: var(--primary); }
 .evaluacion-tg__timeline small { display: block; color: var(--text-secondary); }
+.evaluacion-tg__timeline-meta { display: flex; flex-wrap: wrap; gap: .25rem .8rem; margin-top: .3rem; color: var(--text-secondary); font-size: var(--font-size-caption); }
+.evaluacion-tg__timeline-meta b { color: var(--text-primary); }
+.evaluacion-tg__timeline p { margin: .45rem 0 0; overflow-wrap: anywhere; }
 @media (max-width: 760px) {
   .evaluacion-tg__header { display: grid; }
   .evaluacion-tg__ready { grid-template-columns: auto 1fr; }

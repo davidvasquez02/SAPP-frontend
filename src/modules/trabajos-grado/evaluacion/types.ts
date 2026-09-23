@@ -69,10 +69,15 @@ export interface DocumentoEvaluacion {
 }
 
 export interface HistorialProcesoEvaluacion {
-  estadoCodigo: string
-  estadoNombre?: string | null
-  fecha?: string | null
-  observaciones?: string | null
+  estadoAnteriorSigla: string | null
+  estadoAnterior: string | null
+  estadoNuevoSigla: string
+  estadoNuevo: string
+  fecha: string
+  origen: string
+  responsable: string | null
+  detalle: string | null
+  minutosEnEstadoAnterior: number | null
 }
 
 export interface ProcesoEvaluacionTg {
