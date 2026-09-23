@@ -3,7 +3,6 @@ import type { ActaDto } from '../../actas/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../solicitudes/types/documentosAdjuntos'
 import {
   buscarBancoJurados,
-  definirDocumentoEvaluar,
   designarJurados,
   enviarAAjustes,
   enviarRecordatorios,
@@ -32,10 +31,9 @@ interface ProcesoEvaluacionPanelProps {
   onUpdated: () => Promise<void>
 }
 
-type FormularioActivo = 'designar' | 'documento' | 'sustentacion' | 'resultado' | null
+type FormularioActivo = 'designar' | 'sustentacion' | 'resultado' | null
 
 const EMPTY_JURADO: JuradoInput = { nombre: '', correo: '', institucion: '', externo: true, idioma: 'ES' }
-const ESTADOS_CERRADOS = new Set(['SUSTENTADA', 'APLAZADA', 'NO_APROBADA'])
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
 const ESTADOS_CON_SUSTENTACION = new Set(['CONCEPTOS_REC', 'EN_AJUSTES'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
@@ -159,7 +157,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
     [proceso?.jurados],
   )
   const canManageJurors = ESTADOS_CON_DESIGNACION.has(estado)
-  const isClosed = ESTADOS_CERRADOS.has(estado)
 
   const runMutation = async (operation: () => Promise<unknown>, success: string) => {
     setBusy(true)
@@ -251,12 +248,10 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   if (!proceso) return <section className="evaluacion-tg evaluacion-tg--status"><p role="alert">{error}</p><button type="button" onClick={() => void load()}>Reintentar</button></section>
 
   const canSendReminders = ['EN_EVALUACION', 'JUR_INVITADO'].includes(estado)
-  const canDefineDocument = !isClosed && documentos.length > 0
   const canSendToAdjustments = ESTADOS_CON_AJUSTES.has(estado)
   const canScheduleDefense = ESTADOS_CON_SUSTENTACION.has(estado)
   const canRegisterResult = ESTADOS_CON_RESULTADO.has(estado)
-  const hasProcessActions = canManageJurors || canSendReminders || canDefineDocument
-    || canSendToAdjustments || canScheduleDefense || canRegisterResult
+  const hasProcessActions = canSendReminders || canSendToAdjustments || canRegisterResult
   const hasJurorActions = canManageJurors && activeJurors.some((item) => item.activo)
 
   return (
@@ -275,8 +270,18 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       {message && <p className="evaluacion-tg__message" role="status">{message}</p>}
       {error && <p className="evaluacion-tg__error" role="alert">{error}</p>}
 
+      {canScheduleDefense && (
+        <aside className="evaluacion-tg__ready" aria-labelledby="evaluacion-ready-title">
+          <div className="evaluacion-tg__ready-icon" aria-hidden="true">✓</div>
+          <div>
+            <strong id="evaluacion-ready-title">Conceptos completos</strong>
+            <p>Todos los evaluadores emitieron su concepto. La sustentación ya se puede programar.</p>
+          </div>
+          <button type="button" onClick={() => setFormulario('sustentacion')} disabled={busy}>Programar sustentación</button>
+        </aside>
+      )}
+
       {hasProcessActions && <div className="evaluacion-tg__actions" aria-label="Acciones del proceso">
-        {canManageJurors && <button type="button" onClick={() => setFormulario('designar')} disabled={busy}>Designar jurado</button>}
         {canSendReminders && <button type="button" onClick={() => {
           setBusy(true); setError(null); setMessage(null)
           enviarRecordatorios(solicitudId).then(async (count) => {
@@ -285,15 +290,13 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
             setMessage(`Se enviaron ${count} recordatorio(s).`)
           }).catch((e: unknown) => setError(getErrorMessage(e, 'No fue posible enviar recordatorios.'))).finally(() => setBusy(false))
         }} disabled={busy} title="Solo se envían a jurados que aceptaron y aún no evaluaron.">Enviar recordatorios</button>}
-        {canDefineDocument && <button type="button" onClick={() => setFormulario('documento')} disabled={busy}>Definir documento</button>}
-        {canSendToAdjustments && <button type="button" onClick={() => void runMutation(() => enviarAAjustes(solicitudId), 'El trabajo fue enviado a ajustes.')} disabled={busy}>Enviar a ajustes</button>}
-        {canScheduleDefense && <button type="button" onClick={() => setFormulario('sustentacion')} disabled={busy}>Programar sustentación</button>}
+        {canSendToAdjustments && <button type="button" onClick={() => void runMutation(() => enviarAAjustes(solicitudId), 'El trabajo fue enviado a correcciones.')} disabled={busy}>Enviar a correcciones</button>}
         {canRegisterResult && <button type="button" onClick={() => setFormulario('resultado')} disabled={busy}>Registrar resultado</button>}
       </div>}
 
       {formulario === 'designar' && (
         <div className="evaluacion-tg__form-card">
-          <h4>{reemplazando ? `Reemplazar a ${reemplazando.nombre}` : 'Designar jurado'}</h4>
+          <h4>{reemplazando ? `Reemplazar a ${reemplazando.nombre}` : 'Agregar evaluador'}</h4>
           <div className="evaluacion-tg__form-grid">
             <label><span>Nombre *</span><input value={jurado.nombre} onChange={(e) => setJurado((v) => ({ ...v, nombre: e.target.value }))} /></label>
             <label className="evaluacion-tg__autocomplete"><span>Correo *</span><input type="email" value={jurado.correo} onChange={(e) => setJurado((v) => ({ ...v, correo: e.target.value }))} />
@@ -309,13 +312,11 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
         </div>
       )}
 
-      {formulario === 'documento' && <div className="evaluacion-tg__form-card"><h4>Definir documento a evaluar</h4><label><span>Documento</span><select value={documentoId} onChange={(e) => setDocumentoId(e.target.value)}><option value="">Selecciona un documento</option>{documentos.map((doc) => <option key={doc.idDocumento} value={doc.idDocumento}>{doc.nombreArchivo}</option>)}</select></label><div className="evaluacion-tg__form-actions"><button type="button" disabled={!documentoId || busy} onClick={() => void runMutation(() => definirDocumentoEvaluar(solicitudId, Number(documentoId)), 'Documento de evaluación actualizado.')}>Guardar documento</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
-
       {formulario === 'sustentacion' && <div className="evaluacion-tg__form-card"><h4>Programar sustentación</h4><div className="evaluacion-tg__form-grid"><label><span>Fecha y hora *</span><input type="datetime-local" value={fechaSustentacion} onChange={(e) => setFechaSustentacion(e.target.value)} /></label><label><span>Modalidad *</span><select value={modalidad} onChange={(e) => setModalidad(e.target.value)}>{catalogos?.modalidades.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>{modalidad === 'PRESENCIAL' && <label><span>Lugar *</span><input value={lugar} onChange={(e) => setLugar(e.target.value)} /></label>}{modalidad === 'VIRTUAL' && <label><span>Enlace *</span><input type="url" value={enlace} onChange={(e) => setEnlace(e.target.value)} /></label>}</div><label className="evaluacion-tg__check"><input type="checkbox" checked={notificarJurados} onChange={(e) => setNotificarJurados(e.target.checked)} /> Notificar a los jurados</label><div className="evaluacion-tg__form-actions"><button type="button" onClick={submitSustentacion} disabled={busy}>Programar</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
       {formulario === 'resultado' && <div className="evaluacion-tg__form-card"><h4>Registrar resultado</h4><div className="evaluacion-tg__form-grid"><label><span>Resultado *</span><select value={resultado} onChange={(e) => setResultado(e.target.value)}>{catalogos?.resultados.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label><label><span>Acta</span><select value={actaId} onChange={(e) => setActaId(e.target.value)}><option value="">Sin acta asociada</option>{actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} — {acta.nombre}</option>)}</select></label></div>{proceso.tipoSolicitudCodigo === 'CAND_DOCTORAL' && <p>La nota final será calculada por el backend a partir del promedio registrado por los jurados.</p>}<div className="evaluacion-tg__form-actions"><button type="button" disabled={!resultado || busy} onClick={() => void runMutation(() => registrarResultado(solicitudId, { resultadoCodigo: resultado, notaFinal: null, actaId: actaId ? Number(actaId) : null }), 'Resultado registrado y proceso cerrado.')}>Registrar resultado</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
-      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{activeJurors.length === 0 ? <p>No se han designado jurados.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span></td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td><td data-label="Evaluaciones">{item.evaluaciones?.length ? <div className="evaluacion-tg__evaluations">{item.evaluaciones.map((evaluation) => <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} />)}</div> : 'Pendientes'}</td>{hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions"><button type="button" disabled={busy} onClick={() => void runMutation(() => reenviarInvitacion(solicitudId, item.id), 'Invitación reenviada.')}>Reenviar</button><button type="button" disabled={busy} onClick={() => { setReemplazando(item); setJurado(EMPTY_JURADO); setFormulario('designar') }}>Reemplazar</button><button type="button" className="danger" disabled={busy} onClick={() => { if (window.confirm(`¿Retirar a ${item.nombre} del proceso?`)) void runMutation(() => retirarJurado(solicitudId, item.id), 'Jurado retirado.') }}>Retirar</button></div>}</td>}</tr>)}</tbody></table></div>}</section>
+      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><div><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{canManageJurors && <button type="button" className="evaluacion-tg__add-evaluator" onClick={() => { setReemplazando(null); setJurado(EMPTY_JURADO); setFormulario('designar') }} disabled={busy}><span aria-hidden="true">＋</span> Agregar evaluador</button>}</div>{activeJurors.length === 0 ? <p>No se han agregado evaluadores.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span></td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td><td data-label="Evaluaciones">{item.evaluaciones?.length ? <div className="evaluacion-tg__evaluations">{item.evaluaciones.map((evaluation) => <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} />)}</div> : 'Pendientes'}</td>{hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions"><button type="button" disabled={busy} onClick={() => void runMutation(() => reenviarInvitacion(solicitudId, item.id), 'Invitación reenviada.')}>Reenviar</button><button type="button" disabled={busy} onClick={() => { setReemplazando(item); setJurado(EMPTY_JURADO); setFormulario('designar') }}>Reemplazar</button><button type="button" className="danger" disabled={busy} onClick={() => { if (window.confirm(`¿Retirar a ${item.nombre} del proceso?`)) void runMutation(() => retirarJurado(solicitudId, item.id), 'Jurado retirado.') }}>Retirar</button></div>}</td>}</tr>)}</tbody></table></div>}</section>
 
       {proceso.sustentacion && <section className="evaluacion-tg__section"><h4>Sustentación</h4><dl className="evaluacion-tg__summary"><div><dt>Fecha</dt><dd>{formatDate(proceso.sustentacion.fechaSustentacion, true)}</dd></div><div><dt>Modalidad</dt><dd>{proceso.sustentacion.modalidadNombre || proceso.sustentacion.modalidadCodigo}</dd></div><div><dt>Lugar o enlace</dt><dd>{proceso.sustentacion.lugar || proceso.sustentacion.enlace || '—'}</dd></div></dl></section>}
 

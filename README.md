@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Mejora reciente — acciones de evaluación de proyectos de grado (2026-09-23)
+
+- En el detalle de coordinación, **Agregar evaluador** está ahora integrado en la cabecera de la tabla de jurados y abre el mismo formulario que selecciona el documento a evaluar. Se retiró la acción independiente **Definir documento** para evitar que el flujo ofreciera dos lugares distintos para escogerlo.
+- La acción **Enviar a ajustes** se presenta como **Enviar a correcciones**. Cuando el proceso permite pasar a sustentación, una tarjeta destacada confirma que los conceptos están completos y ofrece directamente **Programar sustentación**.
+- La mejora es exclusivamente de presentación: conserva estados, permisos, payloads y endpoints del proceso de evaluación. Los estilos usan los tokens semánticos del tema y se adaptan a móvil, modo claro y modo oscuro.
+
 ## Corrección reciente — cierre de la firma docente al reasignar (2026-09-23)
 
 - Después de que un docente firma correctamente los documentos de un crédito condonable asignado, la interfaz consume de inmediato su asignación local y oculta **Firmar todos los documentos**. Esto evita que el botón permanezca disponible cuando el nuevo estado también es de firma, pero el trámite ya corresponde a otra persona.
