@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — títulos académicos en proyectos de grado (2026-09-23)
+
+- Al crear solicitudes de maestría (tipos 6 y 7), el campo obligatorio se identifica como **Título del trabajo de investigación**; para las solicitudes doctorales de propuesta o defensa (tipos 4 y 5), se identifica como **Título de la tesis**. Los cuatro tipos conservan el resumen obligatorio.
+- El tipo 9, **Examen doctoral**, muestra únicamente **Título del trabajo**: no presenta ni exige el resumen y envía `tituloTrabajo` sin `resumenTrabajo` en `POST /sapp/solicitudesAcademicas`.
+- No cambiaron rutas, permisos, endpoints, esquema, dependencias, variables de entorno, seeds ni datasets. La distinción usa los IDs estables del catálogo y mantiene el contrato existente del backend.
+
 ## Corrección reciente — reasignación del documento ajustado (2026-09-23)
 
 - Cuando un estudiante carga la nueva versión solicitada para un trabajo de grado en estado `EN_AJUSTES`, el frontend conserva primero el documento mediante `POST /sapp/document` y utiliza el `id` real de esa respuesta como `documentoId` para llamar inmediatamente a `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}`.

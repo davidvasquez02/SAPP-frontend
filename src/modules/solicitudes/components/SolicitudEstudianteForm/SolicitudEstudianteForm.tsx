@@ -128,7 +128,9 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
 
 const RENOVACION_CREDITO_CONDONABLE_ID = 12
 const EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID = 2
-const TIPOS_CON_DATOS_TRABAJO = new Set([4, 5, 6, 7])
+const TIPOS_MAESTRIA_CON_DATOS_TRABAJO = new Set([6, 7])
+const TIPOS_DOCTORADO_CON_DATOS_TRABAJO = new Set([4, 5])
+const TIPO_EXAMEN_DOCTORAL_ID = 9
 
 const SolicitudEstudianteForm = ({
   tipos,
@@ -179,7 +181,16 @@ const SolicitudEstudianteForm = ({
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
   const isEdicionRevistasCientificas = modalidadId === EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
-  const requiereDatosTrabajo = tipoSolicitudId !== null && TIPOS_CON_DATOS_TRABAJO.has(tipoSolicitudId)
+  const requiereResumenTrabajo =
+    tipoSolicitudId !== null &&
+    (TIPOS_MAESTRIA_CON_DATOS_TRABAJO.has(tipoSolicitudId) || TIPOS_DOCTORADO_CON_DATOS_TRABAJO.has(tipoSolicitudId))
+  const requiereTituloTrabajo = requiereResumenTrabajo || tipoSolicitudId === TIPO_EXAMEN_DOCTORAL_ID
+  const tituloTrabajoLabel =
+    tipoSolicitudId !== null && TIPOS_MAESTRIA_CON_DATOS_TRABAJO.has(tipoSolicitudId)
+      ? 'Título del trabajo de investigación'
+      : tipoSolicitudId !== null && TIPOS_DOCTORADO_CON_DATOS_TRABAJO.has(tipoSolicitudId)
+        ? 'Título de la tesis'
+        : 'Título del trabajo'
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
   const municipioExpedicionSeleccionado = useMemo(
     () => findMunicipality(departamentoExpedicionCodigo, ciudadExpedicionDocumento),
@@ -368,8 +379,12 @@ const SolicitudEstudianteForm = ({
       setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
       return false
     }
-    if (requiereDatosTrabajo && (!tituloTrabajo.trim() || !resumenTrabajo.trim())) {
-      setErrorMsg('Debes ingresar el título y el resumen del trabajo de grado.')
+    if (requiereTituloTrabajo && !tituloTrabajo.trim()) {
+      setErrorMsg(`Debes ingresar el ${tituloTrabajoLabel.toLocaleLowerCase('es-CO')}.`)
+      return false
+    }
+    if (requiereResumenTrabajo && !resumenTrabajo.trim()) {
+      setErrorMsg('Debes ingresar el resumen del trabajo de grado.')
       return false
     }
     if (isCreditoCondonable) {
@@ -550,9 +565,8 @@ const SolicitudEstudianteForm = ({
 
     const payload: SolicitudEstudiantePayload = {
       tipoSolicitudId,
-      ...(requiereDatosTrabajo
-        ? { tituloTrabajo: tituloTrabajo.trim(), resumenTrabajo: resumenTrabajo.trim() }
-        : {}),
+      ...(requiereTituloTrabajo ? { tituloTrabajo: tituloTrabajo.trim() } : {}),
+      ...(requiereResumenTrabajo ? { resumenTrabajo: resumenTrabajo.trim() } : {}),
       observaciones,
       modalidadId,
       motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
@@ -671,10 +685,10 @@ const SolicitudEstudianteForm = ({
         </select>
       </div>
 
-      {requiereDatosTrabajo && (
+      {requiereTituloTrabajo && (
         <div className="solicitud-estudiante-form__section">
-          <h4>Información del trabajo de grado</h4>
-          <label htmlFor="tituloTrabajo">Título del trabajo *</label>
+          <h4>{tipoSolicitudId === TIPO_EXAMEN_DOCTORAL_ID ? 'Información del examen doctoral' : 'Información del trabajo de grado'}</h4>
+          <label htmlFor="tituloTrabajo">{tituloTrabajoLabel} *</label>
           <input
             id="tituloTrabajo"
             value={tituloTrabajo}
@@ -682,15 +696,19 @@ const SolicitudEstudianteForm = ({
             placeholder="Ingresa el título completo del trabajo"
             required
           />
-          <label htmlFor="resumenTrabajo">Resumen del trabajo *</label>
-          <textarea
-            id="resumenTrabajo"
-            rows={6}
-            value={resumenTrabajo}
-            onChange={(event) => setResumenTrabajo(event.target.value)}
-            placeholder="Describe brevemente el propósito, alcance y metodología del trabajo"
-            required
-          />
+          {requiereResumenTrabajo && (
+            <>
+              <label htmlFor="resumenTrabajo">Resumen del trabajo *</label>
+              <textarea
+                id="resumenTrabajo"
+                rows={6}
+                value={resumenTrabajo}
+                onChange={(event) => setResumenTrabajo(event.target.value)}
+                placeholder="Describe brevemente el propósito, alcance y metodología del trabajo"
+                required
+              />
+            </>
+          )}
         </div>
       )}
 

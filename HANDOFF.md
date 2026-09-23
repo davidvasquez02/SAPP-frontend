@@ -41,6 +41,22 @@
 
 ---
 
+# Update 2026-09-23 — títulos académicos y examen doctoral al crear solicitudes
+
+## Estado actual y contrato
+
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` separa los tipos de maestría 6/7 de los tipos doctorales 4/5. El control se presenta respectivamente como **Título del trabajo de investigación** y **Título de la tesis**; en ambos grupos el título y el resumen siguen siendo obligatorios.
+- El tipo 9 (**Examen doctoral**) presenta la sección **Información del examen doctoral** con un único control obligatorio, **Título del trabajo**. Su payload esperado es `{ "estudianteId": 10, "tipoSolicitudId": 9, "tituloTrabajo": "..." }` más los campos generales existentes; `resumenTrabajo` se omite incluso si quedó un valor local de una selección anterior.
+- La validación diferencia título y resumen, y el payload incluye cada propiedad solo cuando corresponde. No se cambiaron DTO, endpoints, dependencias, variables, seeds ni datasets.
+
+## Validación pendiente y entorno
+
+- Ejecutar una prueba autenticada de los tipos 4, 5, 6, 7 y 9 contra `POST /sapp/solicitudesAcademicas` y confirmar persistencia en el detalle. También falta validar visualmente los textos en claro/oscuro y móvil/escritorio porque el contenedor no dispone de navegador ni sesión/backend institucional.
+- Verificaciones locales del 2026-09-23: ESLint focalizado PASS; build PASS con 283 módulos, `index-CagCtW9j.css` (231.16 kB) e `index-B8Sy5Gag.js` (666.24 kB); `git diff --check` PASS. Persisten únicamente el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node 24.15.0 y npm 11.4.2; las versiones instaladas están fijadas por `package-lock.json`.
+
+---
+
 # Update 2026-09-23 — creación de solicitudes de proyectos de grado
 
 ## Estado actual y decisiones
