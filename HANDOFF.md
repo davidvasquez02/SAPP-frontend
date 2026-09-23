@@ -4963,3 +4963,39 @@ npm run lint
 - Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otra instalación npm. Las versiones exactas están en `package-lock.json`; el proyecto se ejecuta con `npm run dev` y no requiere seeds.
 - La regresión dirigida está en `tests/estadoSolicitud.test.ts` y cubre la sigla, el nombre descriptivo, la etiqueta y el registro de catálogo. Pendiente únicamente la comprobación autenticada contra backend real para ambos roles; el contenedor no dispone de esa sesión institucional.
 - Verificación local del 2026-09-23: `node --test tests/estadoSolicitud.test.ts` PASS (4/4), ESLint focalizado PASS, `npm run build` PASS (284 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-_pxWkai9.js` 668.17 kB) y `git diff --check` PASS. El build conserva el aviso informativo conocido por el chunk JavaScript mayor de 500 kB; npm conserva el warning ambiental conocido por `http-proxy`.
+
+---
+
+# Update 2026-09-23 — resultado condicionado a evaluaciones de sustentación
+
+## Estado actual, regla y salida esperada
+- `ProcesoEvaluacionPanel` ya no habilita **Registrar resultado** solamente por
+  el estado `SUST_PROGRAMADA`: exige además que todos los jurados activos tengan
+  al menos una evaluación de momento `SUSTENTACION`. Un jurado activo que solo
+  tenga `CONCEPTO_DOCUMENTO` mantiene oculta la acción.
+- Los jurados con `activo: false` representan reemplazos/retiros y no participan
+  en la condición. Una lista vacía o sin jurados activos tampoco habilita el
+  botón. Se reconocen `momentoCodigo`, `momento` y `momentoNombre`, incluidas las
+  formas `SUSTENTACION` y `Sustentación`.
+- La misma condición protege el render del formulario ya abierto. No cambió el
+  contrato de escritura: `registrarResultado` conserva el payload
+  `{ resultadoCodigo, notaFinal, actaId }`; no hay cambios de endpoint, DTO,
+  schema, permisos, dependencias, variables, seeds ni datasets.
+
+## Paths, pruebas, entorno y próximos pasos
+- Regla pura: `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts`;
+  integración: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`;
+  regresión: `tests/estadoProcesoEvaluacion.test.ts`.
+- Verificación local 2026-09-23: `node --test
+  tests/estadoProcesoEvaluacion.test.ts` PASS (4/4); ESLint focalizado PASS;
+  `npm run build` PASS (286 módulos; CSS 232.60 kB y JS 668.84 kB). Persiste
+  únicamente el aviso informativo del chunk JS mayor de 500 kB y el warning
+  ambiental npm `Unknown env config "http-proxy"`.
+- Pendiente comprobar con una sesión institucional un proceso con dos jurados:
+  con un solo concepto de sustentación el botón debe estar oculto y, tras la
+  evaluación del segundo jurado, debe aparecer. La ruta requiere backend y
+  autenticación reales.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM
+  19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y
+  ESLint 9.39.2; el proyecto no usa seeds.

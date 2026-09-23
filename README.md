@@ -851,3 +851,17 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   de jurados presenta cada evaluación por separado: momento y concepto para
   `CONCEPTO_DOCUMENTO`, o momento y resultado para `SUSTENTACION`, incluyendo
   observaciones únicamente cuando existen.
+
+## Corrección reciente — resultado tras conceptos de sustentación (2026-09-23)
+
+- En un proceso `SUST_PROGRAMADA`, **Registrar resultado** se muestra únicamente
+  cuando cada jurado activo tiene una evaluación cuyo momento es
+  `SUSTENTACION`. Los jurados reemplazados o retirados (`activo: false`) no
+  bloquean el cierre, pero se exige que exista al menos un jurado activo.
+- La regla admite `momentoCodigo`, `momento` o `momentoNombre` del contrato del
+  backend, normalizando espacios, guiones, mayúsculas y tildes. El formulario
+  también queda protegido por la misma condición si los datos cambian mientras
+  el detalle está abierto.
+- No cambiaron endpoints, payloads, permisos, dependencias, variables, schemas,
+  seeds ni datasets. El backend continúa siendo la autoridad final al procesar
+  el registro del resultado.
