@@ -29,6 +29,7 @@ import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estado
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
 import { tieneProcesoEvaluacionTg } from '../../modules/trabajos-grado/constants'
 import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
+import AjustesEstudiantePanel from '../../modules/trabajos-grado/evaluacion/AjustesEstudiantePanel'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -282,6 +283,20 @@ const SolicitudDetallePage = () => {
     !['ENVIADA', 'EN_REVISION', 'ENVIADA_COMITE', 'ENVIADA_CONSEJO', 'RECHAZADA'].includes(
       solicitud?.estadoSigla?.trim().toLocaleUpperCase() ?? '',
     )
+  const showAjustesEstudiante =
+    isEstudiante &&
+    solicitud != null &&
+    [4, 5, 6, 7, 8].includes(solicitud.tipoSolicitudId)
+  const solicitudEnAjustes =
+    solicitud?.estadoId === 16 || solicitud?.estadoSigla?.trim().toLocaleUpperCase() === 'EN_AJUSTES'
+
+  const refreshSolicitud = useCallback(async () => {
+    if (!solicitud) return
+    const refreshed = await getSolicitudAcademicaById(solicitud.id)
+    setSolicitud(refreshed)
+    const codigo = refreshed.tipoTramiteCodigo?.trim()
+    if (codigo) await loadDocumentos(refreshed.id, codigo)
+  }, [loadDocumentos, solicitud])
 
   useEffect(() => {
     if (!showProcesoEvaluacion || actas.length > 0 || actasLoading || processActasRequestedRef.current) return
@@ -726,6 +741,16 @@ const SolicitudDetallePage = () => {
                 }
               }}
             />
+
+            {showAjustesEstudiante && (
+              <AjustesEstudiantePanel
+                solicitudId={solicitud.id}
+                codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
+                usuarioCargaId={usuarioSappId}
+                enAjustes={solicitudEnAjustes}
+                onUploaded={refreshSolicitud}
+              />
+            )}
 
             {showProcesoEvaluacion && (
               <ProcesoEvaluacionPanel solicitudId={solicitud.id} documentos={documentos} actas={actas} />

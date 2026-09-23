@@ -24,6 +24,7 @@ export interface EvaluacionJurado {
   momentoNombre?: string | null
   conceptoCodigo?: string | null
   conceptoNombre?: string | null
+  concepto?: string | null
   resultadoCodigo?: string | null
   resultadoNombre?: string | null
   nota?: number | null
@@ -41,6 +42,7 @@ export interface JuradoEvaluador {
   activo: boolean
   estadoInvitacion: string
   estadoInvitacionNombre?: string | null
+  estadoInvitacionCodigo?: string | null
   fechaInvitacion?: string | null
   fechaRespuesta?: string | null
   motivoDeclinacion?: string | null
@@ -74,11 +76,13 @@ export interface HistorialProcesoEvaluacion {
 export interface ProcesoEvaluacionTg {
   id?: number | null
   solicitudId: number
+  solicitudAcademicaId?: number
   tipoSolicitudCodigo: string
   tipoSolicitudNombre?: string | null
   titulo: string
   resumen?: string | null
   nombreEstudiante: string
+  estudiante?: string
   programa: string
   estadoSolicitud: string
   estadoSolicitudNombre?: string | null
