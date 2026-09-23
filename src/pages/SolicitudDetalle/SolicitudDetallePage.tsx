@@ -33,6 +33,8 @@ import {
 } from '../../modules/trabajos-grado/constants'
 import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
 import AjustesEstudiantePanel from '../../modules/trabajos-grado/evaluacion/AjustesEstudiantePanel'
+import { getProcesoEvaluacion } from '../../modules/trabajos-grado/evaluacion/api'
+import type { ProcesoEvaluacionTg } from '../../modules/trabajos-grado/evaluacion/types'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -88,6 +90,7 @@ const SolicitudDetallePage = () => {
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
+  const [procesoEvaluacion, setProcesoEvaluacion] = useState<ProcesoEvaluacionTg | null>(null)
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
@@ -128,6 +131,32 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [solicitudId])
+
+  useEffect(() => {
+    if (
+      solicitud == null ||
+      (!isCoordinador && !isEstudiante) ||
+      !tieneProcesoEvaluacionTg(solicitud.tipoSolicitudCodigo)
+    ) {
+      setProcesoEvaluacion(null)
+      return
+    }
+
+    let mounted = true
+    getProcesoEvaluacion(solicitud.id)
+      .then((proceso) => {
+        if (mounted) setProcesoEvaluacion(proceso)
+      })
+      .catch(() => {
+        // El proceso puede no existir antes de la aprobación. En ese caso se
+        // conservan los datos que entregue el detalle de la solicitud.
+        if (mounted) setProcesoEvaluacion(null)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isCoordinador, isEstudiante, solicitud])
 
   useEffect(() => {
     if (!isEstudiante) {
@@ -297,6 +326,9 @@ const SolicitudDetallePage = () => {
     [4, 5, 6, 7, 8].includes(solicitud.tipoSolicitudId)
   const solicitudEnAjustes =
     solicitud?.estadoId === 16 || solicitud?.estadoSigla?.trim().toLocaleUpperCase() === 'EN_AJUSTES'
+  const tituloTrabajo = solicitud?.tituloTrabajo?.trim() || procesoEvaluacion?.titulo?.trim() || ''
+  const resumenTrabajo = solicitud?.resumenTrabajo?.trim() || procesoEvaluacion?.resumen?.trim() || ''
+  const showDatosTrabajo = Boolean(tituloTrabajo || resumenTrabajo)
 
   const refreshSolicitud = useCallback(async () => {
     if (!solicitud) return
@@ -501,6 +533,18 @@ const SolicitudDetallePage = () => {
                 <dt>Fecha resolución</dt>
                 <dd>{formatDate(solicitud.fechaResolucion)}</dd>
               </div>
+              {showDatosTrabajo && (
+                <>
+                  <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                    <dt>Título</dt>
+                    <dd>{tituloTrabajo || 'Sin título registrado.'}</dd>
+                  </div>
+                  <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                    <dt>Resumen</dt>
+                    <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
+                  </div>
+                </>
+              )}
               <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
                 <dt>Observaciones</dt>
                 <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
