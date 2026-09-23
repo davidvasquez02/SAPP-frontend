@@ -1,3 +1,18 @@
+# Update 2026-09-23 — firma ligada a la persona actualmente asignada
+
+## Estado actual, contrato y salida esperada
+- Se corrigió el caso real de la solicitud académica `72`: el crédito condonable devuelve `solicitudCreditoCondonable.personaAsignadaId: 65`, la sesión del director devuelve `detalle.persona.id: 65` y el estado es `PFIR_CAR_CONT`. El detalle muestra ahora **Firmar todos los documentos** porque compara esos identificadores de persona y no exige `DOCENTE_POSGRADOS` ni un rol de gestión específico.
+- La regla general es estado firmable **y** asignación vigente. Si `personaAsignadaId` está presente, prevalece sobre cualquier resultado anterior del listado: igualdad con `session.user.persona.id` habilita la acción y desigualdad la oculta. Si el detalle de otro trámite no expone responsable, el fallback es la pertenencia a `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}`.
+- Contrato incorporado al DTO: `solicitudCreditoCondonable` puede ser `null` o contener `{ id, modalidadId, modalidadNombre, personaAsignadaId, personaAsignadaNombre, solicitudAcademicaId }`. No cambió la firma: `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` sin body. Tras éxito se descarta la asignación anterior y se vuelven a consultar detalle y adjuntos; la salida esperada es que el botón desaparezca cuando el backend reasigna el trámite.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; contrato: `src/modules/solicitudes/api/types.ts`; reglas puras: `src/modules/solicitudes/utils/firmaSolicitud.ts`; regresión: `tests/firmaSolicitud.test.ts`. No existen seeds ni datasets para este flujo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. No es un proyecto Python. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` conserva las versiones exactas.
+- Verificación local 2026-09-23: prueba dirigida PASS (7/7), ESLint focalizado PASS, build PASS (285 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-Crf2ogxd.js` 668.53 kB) y `git diff --check` PASS. Persisten solo el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional que el director `persona.id=65` firma la solicitud `72`, el backend cambia estado/asignación y la respuesta recargada oculta el botón. También validar un trámite no crédito cuyo detalle no incluya responsable para confirmar el fallback al listado asignado. La ruta protegida no dispone de sesión reproducible localmente.
+
+---
+
 # Update 2026-09-23 — agendamiento con conceptos o ajustes recibidos
 
 ## Estado actual y contrato
