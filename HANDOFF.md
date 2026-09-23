@@ -65,6 +65,44 @@
 
 ---
 
+# Update 2026-09-23 — recarga estudiantil del documento en evaluación
+
+## Estado, contrato y decisiones
+- En el detalle, estudiantes con solicitudes tipo 4, 5, 6, 7 u 8 consultan
+  siempre `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` mediante
+  `getProcesoEvaluacion`. La respuesta usa la envoltura `{ ok, message, data }`;
+  se consumen `documentoEvaluarId`, `documentoEvaluarNombre` y
+  `jurados[].evaluaciones[].observaciones`.
+- Si el DTO de la solicitud indica `estadoId: 16` o `estadoSigla: EN_AJUSTES`,
+  `AjustesEstudiantePanel` presenta los conceptos, pide un nuevo archivo con el
+  nombre retornado y relaciona `documentoEvaluarId` con el documento cargado del
+  checklist. La carga conserva el contrato existente de `POST /sapp/document`
+  (tipo documental, trámite, usuario, Base64, MIME, tamaño y SHA-256).
+- Después de una carga exitosa se vuelven a consultar proceso, solicitud,
+  checklist y adjuntos. Fuera de `EN_AJUSTES` la consulta se conserva, pero no
+  se expone el formulario. Coordinación mantiene su panel sin cambios.
+
+## Paths, resultados y siguientes pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`
+  y `.css`; integración en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`;
+  contrato tolerante a aliases del backend en `evaluacion/types.ts`.
+- Pendiente probar con backend autenticado que el checklist contiene un
+  `documentoUploadedResponse.idDocumento` igual a `documentoEvaluarId` y que la
+  nueva versión hace avanzar el flujo. Si backend exige un endpoint específico
+  de reemplazo por ID de documento, debe acordarse y sustituirse solamente la
+  mutación; no inferir IDs.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm,
+  venv, Conda ni Poetry. No existen seeds para este flujo. Versiones exactas en
+  `package-lock.json` y resumen en `README.md`.
+- Verificación: `npm run build` PASS (283 módulos, CSS 231.17 kB y JS 664.76
+  kB; solo aviso conocido de chunk); ESLint focalizado PASS; `git diff
+  --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes en
+  servicios placeholder, admisiones, validación documental y tipos/editor de
+  solicitudes. No se tomó captura: no hay Chromium, Chrome ni Firefox en el
+  contenedor, y el flujo requiere backend y sesión estudiantil.
+
+---
+
 # Update 2026-09-21 — orden unificado de los módulos principales
 
 ## Estado actual y decisión

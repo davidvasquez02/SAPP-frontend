@@ -698,6 +698,13 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-23:** el detalle estudiantil de las solicitudes de trabajo de grado
+  tipo 4, 5, 6, 7 y 8 consulta `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`. Cuando la solicitud está en
+  `EN_AJUSTES` (estado 16), muestra las observaciones de los evaluadores y
+  permite volver a cargar exactamente el documento señalado por
+  `documentoEvaluarId`; al finalizar refresca el proceso, la solicitud y sus
+  adjuntos.
 - **2026-09-21:** se definió un orden único de módulos para la navegación
   principal y los accesos de Inicio: Admisiones, Matrícula, Solicitudes,
   Créditos condonables, Estudiantes, Informes a dependencias, Actas, Fechas y
