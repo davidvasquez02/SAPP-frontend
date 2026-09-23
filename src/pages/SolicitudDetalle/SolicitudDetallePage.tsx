@@ -27,7 +27,10 @@ import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
-import { tieneProcesoEvaluacionTg } from '../../modules/trabajos-grado/constants'
+import {
+  getAprobacionTrabajoGradoLabel,
+  tieneProcesoEvaluacionTg,
+} from '../../modules/trabajos-grado/constants'
 import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
 import AjustesEstudiantePanel from '../../modules/trabajos-grado/evaluacion/AjustesEstudiantePanel'
 import './SolicitudDetallePage.css'
@@ -272,6 +275,11 @@ const SolicitudDetallePage = () => {
     ? isTipoCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
     : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
   const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
+  const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
+    solicitud?.tipoSolicitudId,
+    solicitud?.estadoSigla,
+    solicitud?.estado,
+  )
   const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
     estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
   )
@@ -708,7 +716,7 @@ const SolicitudDetallePage = () => {
                           onClick={handleApproveClick}
                           disabled={isUpdatingEstado}
                         >
-                          {isUpdatingEstado ? 'Procesando...' : 'Aprobar'}
+                          {isUpdatingEstado ? 'Procesando...' : approvalButtonLabel}
                         </button>
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"

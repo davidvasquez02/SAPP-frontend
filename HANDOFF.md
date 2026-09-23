@@ -41,6 +41,43 @@
 
 ---
 
+# Update 2026-09-23 — etiqueta contextual al aprobar proyectos de grado
+
+## Estado actual, contrato y salida esperada
+- `SolicitudDetallePage` calcula la etiqueta de su botón de aprobación mediante
+  `getAprobacionTrabajoGradoLabel`, definido en
+  `src/modules/trabajos-grado/constants.ts`. La regla se aplica únicamente a los
+  IDs incluidos en `TIPOS_TRABAJO_GRADO_IDS`.
+- Una solicitud de proyecto en estado enviado a Comité muestra **Aprobar y enviar
+  a consejo académico**; si el estado contiene Consejo muestra **Aprobar y
+  asignar jurados**. Otros trámites conservan **Aprobar**. La normalización admite
+  siglas y nombres descriptivos, con o sin tilde.
+- Solo cambió el texto visible. `handleApproveClick`, la selección obligatoria de
+  acta, el destino `APROBADA`, los parámetros y las llamadas HTTP no cambiaron.
+  El backend continúa siendo la autoridad de las transiciones.
+
+## Paths, pruebas y próximos pasos
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y
+  `src/modules/trabajos-grado/constants.ts`. Cobertura dirigida:
+  `tests/trabajoGradoApprovalLabel.test.ts`.
+- Pendiente verificar las dos etiquetas con una sesión real de coordinación y
+  datos en `ENVIADA_COMITE`/`ENVIADA` y `ENVIADA_CONSEJO`, además de confirmar el
+  resultado de cada transición contra el backend institucional.
+- Verificación local 2026-09-23: `node --test
+  tests/estadoSolicitud.test.ts tests/trabajoGradoApprovalLabel.test.ts` PASS
+  (6/6); ESLint focalizado PASS; `npm run build` PASS (283 módulos,
+  `index-Ch9v6k1n.css` 231.65 kB e `index-Cs3olfrj.js` 667.10 kB), con el aviso
+  informativo conocido por el chunk mayor de 500 kB; `git diff --check` PASS.
+  No se tomó captura: Chromium, Chrome y Firefox no están instalados y la ruta
+  protegida necesita backend y sesión institucional.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. El proyecto no tiene seeds ni datasets
+  para este flujo. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React
+  Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC
+  4.2.2 y ESLint 9.39.2.
+
+---
+
 # Update 2026-09-23 — títulos académicos y examen doctoral al crear solicitudes
 
 ## Estado actual y contrato

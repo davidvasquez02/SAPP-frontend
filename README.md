@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — aprobación contextual de proyectos de grado (2026-09-23)
+
+- En el detalle de una solicitud de proyecto de grado enviada al Comité Asesor de Posgrados, la acción principal se presenta como **Aprobar y enviar a consejo académico**.
+- Cuando esa solicitud ya está enviada al Consejo Académico, la misma acción se presenta como **Aprobar y asignar jurados**. Los demás tipos de solicitud conservan la etiqueta **Aprobar**.
+- El ajuste es exclusivamente descriptivo: conserva el flujo, la selección obligatoria del acta, los permisos, las transiciones y los contratos HTTP existentes. No agrega dependencias, variables de entorno, seeds, datasets ni cambios de esquema.
+
 ## Corrección reciente — acciones disponibles en la evaluación (2026-09-23)
 
 - El panel de coordinación del proceso de evaluación ya no repite el resumen de estudiante, programa, fecha límite y documento, pues esos datos ya están disponibles en el detalle de la solicitud.
