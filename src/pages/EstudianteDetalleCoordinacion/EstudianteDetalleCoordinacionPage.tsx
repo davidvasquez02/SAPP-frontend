@@ -23,6 +23,7 @@ import { clearEstudiantesListCache } from '../../modules/estudiantes/services/es
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
+import { getProgramaAcademico } from '../../shared/domain/programaAcademico'
 
 const EMPTY_VALUE = '—'
 const SIN_PERIODO_KEY = '__SIN_PERIODO__'
@@ -96,20 +97,7 @@ const getProgramaDisplay = (estudiante: EstudianteCoordinacion) => {
     return EMPTY_VALUE
   }
 
-  const codigoAfterDash = programa.split('-').at(-1)?.trim()
-  if (codigoAfterDash && /^[A-ZÁÉÍÓÚÑ]{2,8}$/.test(codigoAfterDash)) {
-    return codigoAfterDash
-  }
-
-  if (programa.toUpperCase().includes('DOCTORADO')) {
-    return 'DCC'
-  }
-
-  if (programa.toUpperCase().includes('MAESTR')) {
-    return 'MISI'
-  }
-
-  return programa
+  return getProgramaAcademico({ id: estudiante.programaId, nombre: programa })?.nombre ?? programa
 }
 
 const getFotoSrc = (estudiante: EstudianteCoordinacion) => {

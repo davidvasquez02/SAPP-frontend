@@ -12,6 +12,7 @@ import type { ApiResponse } from '../../../../api/types'
 import { httpGet } from '../../../../shared/http/httpClient'
 import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
+import { formatProgramaAcademico } from '../../../../shared/domain/programaAcademico'
 
 type ProgramaOption = {
   programaId: number
@@ -72,23 +73,16 @@ const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
 type ProgramaAcademicoBackend = {
   id: number
   nombre: string
-  codigoNombre: string
+  nivel?: string | null
+  codigoUis?: string | null
+  codigo_uis?: string | null
+  codigoIdp?: string | null
+  codigo_idp?: string | null
+  codigoNombre?: string | null
 }
 
-const buildProgramaLabel = (programa: ProgramaAcademicoBackend): string => {
-  const normalizedName = programa.nombre.trim().toUpperCase()
-  const codigo = programa.codigoNombre.split('-')[1]?.trim().toUpperCase()
-
-  if (normalizedName === 'MISI') {
-    return `${codigo || 'MISI'} - Maestría en Ingeniería de Sistemas e Informática`
-  }
-
-  if (normalizedName === 'DCC') {
-    return `${codigo || 'DCC'} - Doctorado en Ciencias de la Computación`
-  }
-
-  return programa.codigoNombre.trim() || programa.nombre.trim()
-}
+const buildProgramaLabel = (programa: ProgramaAcademicoBackend): string =>
+  formatProgramaAcademico(programa)
 
 const getProgramasAdmision = async (): Promise<ProgramaOption[]> => {
   const response = await httpGet<ApiResponse<ProgramaAcademicoBackend[]>>(PROGRAMAS_ENDPOINT)

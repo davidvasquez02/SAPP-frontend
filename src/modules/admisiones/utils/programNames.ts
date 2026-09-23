@@ -1,8 +1,5 @@
-const PROGRAMAS_LARGOS = new Map<number, string>([
-  [1, 'Maestría en Ingeniería de Sistemas e Informática'],
-  [2, 'Doctorado en Ciencias de la Computación'],
-])
+import { getProgramaAcademico } from '../../../shared/domain/programaAcademico'
 
 export const getProgramaNombreLargo = (programaId: number, fallback: string): string => {
-  return PROGRAMAS_LARGOS.get(programaId) ?? fallback
+  return getProgramaAcademico({ id: programaId, nombre: fallback })?.nombre ?? fallback
 }

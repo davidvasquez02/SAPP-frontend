@@ -14,6 +14,7 @@ import {
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
+import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
 
 const FOTO_CONCURRENCY_LIMIT = 4
@@ -58,18 +59,7 @@ const loadWithConcurrencyLimit = async <T,>(
 }
 
 const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
-  const nombre = programa.nombre.trim().toLowerCase()
-  const codigo = programa.codigo.trim().toLowerCase()
-
-  if (nombre.includes('maestr') || codigo.includes('misi')) {
-    return 'maestria'
-  }
-
-  if (nombre.includes('doctor') || codigo.includes('dcc')) {
-    return 'doctorado'
-  }
-
-  return null
+  return resolveTipoPrograma({ id: programa.id, nombre: programa.nombre, codigoUis: programa.codigo })
 }
 
 const EstudiantesCoordinacionPage = () => {

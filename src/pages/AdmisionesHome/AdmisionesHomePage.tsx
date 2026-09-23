@@ -18,8 +18,8 @@ const PROGRAM_META = new Map<
     icon: string;
   }
 >([
-  [1, { code: "61412 - MISI", icon: "▣" }],
-  [2, { code: "61204 - DCC", icon: "010\n101" }],
+  [1, { code: "302", icon: "▣" }],
+  [2, { code: "347", icon: "010\n101" }],
 ]);
 
 const DATE_ONLY_FORMATTER = new Intl.DateTimeFormat("es-ES", {

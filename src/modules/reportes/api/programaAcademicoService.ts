@@ -4,7 +4,16 @@ import { httpGet } from '../../../shared/http/httpClient'
 export interface ProgramaAcademicoDto {
   id: number
   nombre: string
-  codigoNombre: string
+  nivel?: string
+  codigoUis?: string
+  codigo_uis?: string
+  cantidadSemestres?: number
+  cantidad_semestres?: number
+  puntajeMinimoAdmision?: number
+  puntaje_minimo_admision?: number
+  codigoIdp?: string
+  codigo_idp?: string
+  codigoNombre?: string
 }
 
 export const getProgramasAcademicos = async (): Promise<ProgramaAcademicoDto[]> => {
