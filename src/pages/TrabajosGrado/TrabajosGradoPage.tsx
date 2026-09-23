@@ -64,6 +64,7 @@ const TrabajosGradoPage = () => {
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
             filterSolicitud={filterSolicitud}
+            showAllEstadoOptions
           />
         ) : isCoordinacion && usuarioSappId !== null ? (
           <SolicitudesCoordinadorView
@@ -71,6 +72,7 @@ const TrabajosGradoPage = () => {
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
             filterSolicitud={filterSolicitud}
+            showAllEstadoOptions
           />
         ) : (
           <p className="trabajos-grado-page__status">No tienes permisos para consultar este módulo.</p>

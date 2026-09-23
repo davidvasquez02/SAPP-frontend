@@ -1,5 +1,11 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — catálogo completo de estados en proyectos de grado (2026-09-23)
+
+- Los filtros de **Proyectos de grado** muestran ahora el catálogo completo retornado por `GET /sapp/estadosSolicitud`, tanto para estudiantes como para coordinación. Esto incluye los estados generales del trámite (envío, revisión, aprobación, rechazo, devolución y firmas) y los estados propios de evaluación, ajustes y sustentación.
+- Seleccionar un estado sin solicitudes asociadas produce el resultado vacío habitual, en vez de retirar ese estado del selector. Los demás módulos conservan el comportamiento anterior de mostrar únicamente los estados presentes en sus listados.
+- No cambiaron transiciones, permisos, endpoints, DTO, esquema, dependencias, variables de entorno, seeds ni datasets; el backend continúa siendo la autoridad sobre qué transiciones son válidas.
+
 ## Corrección reciente — títulos académicos en proyectos de grado (2026-09-23)
 
 - Al crear solicitudes de maestría (tipos 6 y 7), el campo obligatorio se identifica como **Título del trabajo de investigación**; para las solicitudes doctorales de propuesta o defensa (tipos 4 y 5), se identifica como **Título de la tesis**. Los cuatro tipos conservan el resumen obligatorio.

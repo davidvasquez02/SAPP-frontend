@@ -4656,3 +4656,18 @@ npm run lint
 - `npx eslint src/modules/trabajos-grado/constants.ts src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx src/pages/TrabajosGrado/TrabajosGradoPage.tsx`: PASS.
 - `npm run build`: PASS; 278 módulos, `dist/assets/index-BBLqYFql.css` e `index-CwDe3c1W.js`; persiste solo el aviso informativo conocido por el chunk JS de 642.58 kB.
 - La comprobación visual autenticada queda pendiente: el contenedor no ofrece navegador ni backend/sesión institucional. El cambio no añade estilos ni elementos visuales; modifica qué filas existentes recibe cada apartado.
+# Update 2026-09-23 — catálogo completo de estados en proyectos de grado
+
+## Estado actual y decisión
+
+- `TrabajosGradoPage` activa `showAllEstadoOptions` en las vistas compartidas de estudiante y coordinación. Por ello, los filtros de ambos niveles (maestría y doctorado) ofrecen todo el catálogo recibido desde `GET /sapp/estadosSolicitud`, no solamente los estados actualmente representados por solicitudes del listado ni únicamente los estados propios de evaluación del proyecto.
+- Las vistas compartidas mantienen por defecto el filtrado histórico mediante `getEstadosPresentesEnSolicitudes`; el nuevo comportamiento es opt-in y, por ahora, exclusivo de Proyectos de grado. Elegir un estado sin coincidencias muestra el vacío normal del listado.
+- El cambio solo amplía las opciones del filtro. No autoriza transiciones en frontend ni modifica el proceso privado de evaluación, contratos, endpoints, DTO, roles, dependencias, variables, schemas, seeds o datasets. Las transiciones válidas siguen bajo control del backend.
+
+## Paths, validación pendiente y entorno
+
+- Integración: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. Props y selección de catálogo: `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx` y `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`.
+- Pendiente verificar con sesión institucional que el selector muestre los estados generales y los de evaluación, y que cada opción filtre correctamente para estudiante y coordinación en ambos niveles. No crear otro entorno: reutilizar `/workspace/SAPP-frontend/node_modules`; el proyecto no usa venv, Conda ni Poetry. Node.js 24.15.0 y npm 11.4.2; versiones exactas restantes en `package-lock.json` y `README.md`.
+- Verificación local del 2026-09-23: prueba Node dirigida PASS (2/2), ESLint focalizado PASS, build PASS (283 módulos; `index-CagCtW9j.css` 231.16 kB e `index-DhEovsif.js` 666.35 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental de npm por `http-proxy` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+
+---
