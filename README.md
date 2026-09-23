@@ -1,5 +1,46 @@
 # Minerva Frontend — EISI UIS
 
+Frontend institucional para centralizar los procesos de posgrado EISI–UIS: admisiones,
+matrícula, solicitudes, créditos condonables, estudiantes, trabajos de grado,
+reportes, actas y configuración académica. Es una SPA modular que consume la API
+Spring Boot mediante servicios HTTP; React Router controla rutas protegidas y los
+módulos conservan separados contratos, servicios, componentes y páginas.
+
+## Actualización de programas académicos (2026-09-23)
+
+- El catálogo vigente usa **302 — MAESTRÍA EN INGENIERÍA DE SISTEMAS E
+  INFORMÁTICA** (id `1`, nivel `MAESTRIA`) y **347 — DOCTORADO EN CIENCIAS DE LA
+  COMPUTACION** (id `2`, nivel `DOCTORADO`). `codigo_uis` ya no corresponde a
+  `61412`/`61204` y `nombre` ya no contiene las siglas `MISI`/`DCC`.
+- La resolución y presentación se centralizaron en
+  `src/shared/domain/programaAcademico.ts`. Catálogos, filtros y visualizaciones
+  consumen el nombre y código vigentes; la lectura mantiene compatibilidad con
+  respuestas históricas para no romper registros ya persistidos. Las siglas que
+  forman parte de códigos reglamentarios de trámites o asignaturas no se alteraron.
+- El contrato tolera las formas camelCase y snake_case de `codigo_uis` y
+  `codigo_idp`, además del legado `codigoNombre`. No cambiaron los endpoints: el
+  catálogo se obtiene de `GET /sapp/programaAcademico` y los procesos continúan
+  enviando `programaId`.
+- No se agregaron dependencias, variables, seeds ni datasets. Se usa el único
+  `node_modules` existente; este repositorio no usa venv, Conda ni Poetry.
+
+## Stack y ejecución
+
+Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3,
+React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint
+9.39.2. Las versiones exactas resueltas están en `package-lock.json`.
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+`VITE_API_URL` vale `/api/sapp` y `VITE_DEV_PROXY_TARGET` apunta por defecto a
+`http://localhost:8080`. No existe un proceso de seeds: todos los catálogos se
+obtienen del backend. Use `npm run lint`, `npm run build` y `npm run preview`
+para validación y previsualización de producción.
+
 ## Corrección reciente — firma por responsable actualmente asignado (2026-09-23)
 
 - **Firmar todos los documentos** depende ahora de la asignación vigente de la persona autenticada, sin restringirse a un rol concreto. En créditos condonables se compara `solicitudCreditoCondonable.personaAsignadaId` con `session.user.persona.id`; por ejemplo, los IDs `65` del director y de la asignación habilitan la acción en `PFIR_CAR_CONT`.

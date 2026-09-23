@@ -1,3 +1,20 @@
+# Update 2026-09-23 — contrato general de programas académicos
+
+## Estado actual, decisiones y salida esperada
+- Se auditó el frontend ante el cambio del catálogo: id `1` es ahora `{ nombre: "MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA", nivel: "MAESTRIA", codigo_uis: "302", codigo_idp: "302:MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA" }`; id `2` es `{ nombre: "DOCTORADO EN CIENCIAS DE LA COMPUTACION", nivel: "DOCTORADO", codigo_uis: "347", codigo_idp: "347:DOCTORADO EN CIENCIAS DE LA COMPUTACION" }`.
+- `src/shared/domain/programaAcademico.ts` es la fuente canónica para clasificar y mostrar programas. Reconoce id, nivel, código UIS, nombre y código IDP en camelCase/snake_case y conserva únicamente compatibilidad de lectura con `MISI`, `DCC`, `61412` y `61204`. La salida visible canónica es `302 - MAESTRÍA...` o `347 - DOCTORADO...`.
+- Se adaptaron el catálogo de reportes, creación de convocatorias, cards de admisiones, selector/listado/detalle de estudiantes y selector de matrícula. Los procesos siguen enviando IDs (`1`/`2`); no se sustituyeron siglas incluidas en códigos de dominio como `PROP_TESIS_DCC`, `DEF_TI_MISI` ni códigos de asignatura.
+- Contrato de entrada de `GET /sapp/programaAcademico`: arreglo dentro del envelope habitual `{ ok, message, data }`; cada elemento requiere `id` y `nombre`, y admite `nivel`, `codigoUis|codigo_uis`, `cantidadSemestres|cantidad_semestres`, `puntajeMinimoAdmision|puntaje_minimo_admision`, `codigoIdp|codigo_idp` y el legado opcional `codigoNombre`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación central: `src/shared/domain/programaAcademico.ts`; regresión: `tests/programaAcademico.test.ts`. Consumidores principales: `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`, `src/pages/Reportes/ReportesPage.tsx`, `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni un segundo árbol npm. No hay seeds nuevos. Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; consultar `package-lock.json` para el árbol completo.
+- Verificación local 2026-09-23: `node --test tests/programaAcademico.test.ts` PASS (3/3), ESLint focalizado PASS y build PASS (286 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-Ckey4Lg-.js` 668.59 kB). Solo persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Reto abierto: verificar con backend real si Jackson publica exclusivamente camelCase o conserva snake_case; la interfaz acepta ambas. Validar visualmente todas las rutas protegidas con sesión institucional y confirmar que ningún payload usa el antiguo código UIS como identificador.
+- Próximos pasos: probar `GET /sapp/programaAcademico`, crear una convocatoria por cada programa, filtrar estudiantes/matrículas/reportes y revisar un detalle estudiantil. No hay credenciales ni backend reproducible en el repositorio.
+
+---
+
 # Update 2026-09-23 — firma ligada a la persona actualmente asignada
 
 ## Estado actual, contrato y salida esperada

@@ -11,6 +11,7 @@ import {
   getProgramasAcademicos,
   type ProgramaAcademicoDto,
 } from '../../modules/reportes/api/programaAcademicoService'
+import { formatProgramaAcademico } from '../../shared/domain/programaAcademico'
 import {
   generarReporteAdmision,
   type ReporteAdmisionGenerado,
@@ -77,7 +78,9 @@ const ReportesPage = () => {
     ])
       .then(([programasData, convocatoriasData, periodosData, actasData]) => {
         if (cancelled) return
-        setProgramas([...programasData].sort((a, b) => a.codigoNombre.localeCompare(b.codigoNombre, 'es')))
+        setProgramas([...programasData].sort((a, b) =>
+          formatProgramaAcademico(a).localeCompare(formatProgramaAcademico(b), 'es'),
+        ))
         setConvocatorias(convocatoriasData)
         setPeriodos([...periodosData].sort((a, b) => b.anio - a.anio || b.periodo - a.periodo))
         setActas([...actasData].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion)))
@@ -181,7 +184,7 @@ const ReportesPage = () => {
               <label>Programa académico
                 <select value={programaId} onChange={(event) => { setProgramaId(event.target.value); setConvocatoriaId(''); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un programa</option>
-                  {programas.map((programa) => <option key={programa.id} value={programa.id}>{programa.codigoNombre || programa.nombre}</option>)}
+                  {programas.map((programa) => <option key={programa.id} value={programa.id}>{formatProgramaAcademico(programa)}</option>)}
                 </select>
               </label>
               {tipo === 'ADMISION' ? (

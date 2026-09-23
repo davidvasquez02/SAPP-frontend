@@ -43,6 +43,7 @@ import {
 } from "../../modules/matricula/utils/matriculaPresentation";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import "./MatriculaPage.css";
+import { formatProgramaAcademico, getProgramaAcademico } from "../../shared/domain/programaAcademico";
 
 const TIPO_TRAMITE_ID_MATRICULA = 2;
 
@@ -68,26 +69,14 @@ const resolvePeriodoActual = (periodos: string[]): string => {
   );
 };
 
-const PROGRAMAS_COORDINACION_LABELS: Record<string, string> = {
-  MISI: "Maestría en Ingeniería de Sistemas e Informática",
-  DCC: "Doctorado en Ciencias de la Computación",
-};
-
 const resolveProgramaLabel = (programa: string): string => {
   if (programa === "TODOS") {
     return "Seleccione un programa...";
   }
 
-  const normalized = programa.toUpperCase();
-  const codigo = Object.keys(PROGRAMAS_COORDINACION_LABELS).find((item) =>
-    normalized.includes(item),
-  );
-
-  if (!codigo) {
-    return programa;
-  }
-
-  return `${codigo} · ${PROGRAMAS_COORDINACION_LABELS[codigo]}`;
+  return getProgramaAcademico(programa)
+    ? formatProgramaAcademico(programa).replace(" - ", " · ")
+    : programa;
 };
 
 const mapDocumentoTramiteToRequerido = (
