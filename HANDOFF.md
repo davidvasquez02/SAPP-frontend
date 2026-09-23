@@ -4658,6 +4658,14 @@ npm run lint
 - La comprobación visual autenticada queda pendiente: el contenedor no ofrece navegador ni backend/sesión institucional. El cambio no añade estilos ni elementos visuales; modifica qué filas existentes recibe cada apartado.
 # Update 2026-09-23 — catálogo completo de estados en proyectos de grado
 
+## Corrección 2026-09-23 — estado enviado a consejo
+
+- Se identificó que el DTO real entrega `estadoId: 10`, `estadoSigla: "ENVIADA_CONSEJO"` y `estado: "ENVIADA A CONSEJO"`, pero la unión tipada, el catálogo local y el mapa de normalización no incluían esa sigla. Como el listado y el detalle pasan preferentemente `estadoSigla` al `StatusBadge`, la normalización devolvía `UNKNOWN` y la UI mostraba **DESCONOCIDO**.
+- `src/modules/solicitudes/utils/estadoSolicitud.ts` incorpora el estado 10, su etiqueta **ENVIADA A CONSEJO ACADEMICO** y aliases descriptivos con/sin tilde. `StatusBadge.tsx` reutiliza la variante visual `enviada`. La prueba dirigida cubre la sigla, el nombre devuelto por el backend y el registro por id.
+- No cambian endpoints ni schemas. Entrada esperada: el contrato anterior; salida visual esperada: **ENVIADA A CONSEJO ACADEMICO** tanto en el listado como en el detalle de proyectos de grado. Reutilizar `node_modules`; no crear venv, Conda, Poetry ni otro entorno.
+- Verificación local: `node --test tests/estadoSolicitud.test.ts` PASS (3/3), ESLint focalizado PASS, `npm run build` PASS (283 módulos; CSS 231.65 kB y JS 666.70 kB) y `git diff --check` PASS. El build conserva el aviso informativo conocido por el chunk JavaScript mayor de 500 kB.
+
+
 ## Estado actual y decisión
 
 - `TrabajosGradoPage` activa `showAllEstadoOptions` en las vistas compartidas de estudiante y coordinación. Por ello, los filtros de ambos niveles (maestría y doctorado) ofrecen todo el catálogo recibido desde `GET /sapp/estadosSolicitud`, no solamente los estados actualmente representados por solicitudes del listado ni únicamente los estados propios de evaluación del proyecto.

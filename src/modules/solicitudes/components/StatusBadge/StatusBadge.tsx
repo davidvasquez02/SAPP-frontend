@@ -16,6 +16,7 @@ const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, strin
   PFIR_DIR_TG: 'en-firma',
   PFIR_COOR_POS: 'en-firma',
   PFIR_CAR_CONT: 'en-firma',
+  ENVIADA_CONSEJO: 'enviada',
   JUR_POR_DESIG: 'en-revision',
   JUR_INVITADO: 'en-revision',
   EN_EVALUACION: 'en-revision',

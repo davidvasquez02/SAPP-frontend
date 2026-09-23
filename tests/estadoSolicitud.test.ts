@@ -45,3 +45,13 @@ test('normaliza en mayúsculas los nombres entregados por el catálogo remoto', 
 
   setEstadoSolicitudCatalog([])
 })
+
+test('reconoce el estado enviado a consejo por sigla y por nombre descriptivo', () => {
+  assert.equal(normalizeEstadoSolicitud('ENVIADA_CONSEJO'), 'ENVIADA_CONSEJO')
+  assert.equal(normalizeEstadoSolicitud('ENVIADA A CONSEJO'), 'ENVIADA_CONSEJO')
+  assert.equal(getEstadoSolicitudLabel('ENVIADA_CONSEJO'), 'ENVIADA A CONSEJO ACADEMICO')
+  assert.deepEqual(
+    DEFAULT_ESTADOS_SOLICITUD_CATALOG.find((estado) => estado.id === 10),
+    { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO ACADEMICO' },
+  )
+})
