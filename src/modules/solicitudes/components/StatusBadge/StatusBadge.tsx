@@ -16,6 +16,15 @@ const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, strin
   PFIR_DIR_TG: 'en-firma',
   PFIR_COOR_POS: 'en-firma',
   PFIR_CAR_CONT: 'en-firma',
+  JUR_POR_DESIG: 'en-revision',
+  JUR_INVITADO: 'en-revision',
+  EN_EVALUACION: 'en-revision',
+  CONCEPTOS_REC: 'en-revision',
+  EN_AJUSTES: 'devuelta',
+  SUST_PROGRAMADA: 'en-revision',
+  SUSTENTADA: 'aprobada',
+  APLAZADA: 'devuelta',
+  NO_APROBADA: 'rechazada',
   UNKNOWN: 'unknown',
 }
 

@@ -40,6 +40,9 @@ const ESTADOS_CON_SUSTENTACION = new Set(['CONCEPTOS_REC', 'EN_AJUSTES'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
 const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION'])
 
+const formatEstadoNombre = (nombre: string | null | undefined, codigo: string): string =>
+  (nombre?.trim() || codigo).toLocaleUpperCase('es-CO')
+
 const formatDate = (value?: string | null, includeTime = false) => {
   if (!value) return '—'
   const date = new Date(value)
@@ -228,7 +231,9 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas }: ProcesoEvalu
           <h3 id="evaluacion-tg-title">Proceso de evaluación</h3>
           <p>{proceso.titulo}</p>
         </div>
-        <span className="evaluacion-tg__state">{proceso.estadoSolicitudNombre || proceso.estadoSolicitud}</span>
+        <span className="evaluacion-tg__state">
+          {formatEstadoNombre(proceso.estadoSolicitudNombre, proceso.estadoSolicitud)}
+        </span>
       </header>
 
       <dl className="evaluacion-tg__summary">
@@ -281,7 +286,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas }: ProcesoEvalu
 
       {proceso.sustentacion && <section className="evaluacion-tg__section"><h4>Sustentación</h4><dl className="evaluacion-tg__summary"><div><dt>Fecha</dt><dd>{formatDate(proceso.sustentacion.fechaSustentacion, true)}</dd></div><div><dt>Modalidad</dt><dd>{proceso.sustentacion.modalidadNombre || proceso.sustentacion.modalidadCodigo}</dd></div><div><dt>Lugar o enlace</dt><dd>{proceso.sustentacion.lugar || proceso.sustentacion.enlace || '—'}</dd></div></dl></section>}
 
-      <section className="evaluacion-tg__section"><h4>Línea de tiempo</h4><ol className="evaluacion-tg__timeline">{(proceso.historial?.length ? proceso.historial : [{ estadoCodigo: proceso.estadoSolicitud, estadoNombre: proceso.estadoSolicitudNombre }]).map((item, index) => <li key={`${item.estadoCodigo}-${index}`}><span aria-hidden="true" /><div><strong>{item.estadoNombre || item.estadoCodigo}</strong><small>{formatDate(item.fecha, true)}</small>{item.observaciones && <p>{item.observaciones}</p>}</div></li>)}</ol></section>
+      <section className="evaluacion-tg__section"><h4>Línea de tiempo</h4><ol className="evaluacion-tg__timeline">{(proceso.historial?.length ? proceso.historial : [{ estadoCodigo: proceso.estadoSolicitud, estadoNombre: proceso.estadoSolicitudNombre }]).map((item, index) => <li key={`${item.estadoCodigo}-${index}`}><span aria-hidden="true" /><div><strong>{formatEstadoNombre(item.estadoNombre, item.estadoCodigo)}</strong><small>{formatDate(item.fecha, true)}</small>{item.observaciones && <p>{item.observaciones}</p>}</div></li>)}</ol></section>
     </section>
   )
 }

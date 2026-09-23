@@ -1,3 +1,46 @@
+# Update 2026-09-23 — estados de proyectos de grado en solicitudes
+
+## Estado actual y decisiones
+
+- `src/modules/solicitudes/utils/estadoSolicitud.ts` reconoce los estados 12 a
+  20: `JUR_POR_DESIG`, `JUR_INVITADO`, `EN_EVALUACION`, `CONCEPTOS_REC`,
+  `EN_AJUSTES`, `SUST_PROGRAMADA`, `SUSTENTADA`, `APLAZADA` y `NO_APROBADA`.
+  El catálogo fallback conserva los IDs y nombres de negocio acordados.
+- El catálogo remoto de `GET /sapp/estadosSolicitud` deja de descartar esas
+  siglas. Todos sus nombres se recortan y convierten a mayúsculas en español;
+  por ello filtros, tarjetas, tablas y detalle comparten exactamente la misma
+  presentación. `StatusBadge` asigna las variantes visuales semánticas
+  existentes sin introducir colores nuevos.
+- El encabezado y la línea de tiempo de `ProcesoEvaluacionPanel` también
+  presentan el nombre del estado en mayúsculas, usando el código como fallback.
+  No cambiaron transiciones, permisos, endpoints, DTO, schemas, seeds,
+  datasets, paquetes ni variables de entorno.
+
+## Contrato, pruebas y próximos pasos
+
+- Contrato esperado de cada estado: `{ "id": 12..20, "nombre": string,
+  "sigla": string }` dentro de la envoltura usual de
+  `GET /sapp/estadosSolicitud`. La salida visible esperada incluye, por
+  ejemplo, `EN EVALUACIÓN`, `EN AJUSTES DEL ESTUDIANTE` y `SUSTENTACIÓN
+  PROGRAMADA` en mayúsculas.
+- Se agregó `tests/estadoSolicitud.test.ts`, que cubre los nueve IDs/siglas,
+  sus nombres fallback y la normalización del catálogo remoto. Verificaciones
+  del 2026-09-23: test dirigido PASS (2/2), lint dirigido PASS, build PASS (283
+  módulos; `index-CagCtW9j.css` 231.16 kB e `index-CXCuEgEZ.js` 665.87 kB) y
+  `git diff --check` PASS. El build conserva el aviso informativo del chunk
+  mayor de 500 kB; npm conserva el warning ambiental `Unknown env config
+  "http-proxy"`.
+- Pendiente validar con sesión institucional los filtros/listados y detalles de
+  estudiante y coordinación, además del proceso de evaluación en temas claro y
+  oscuro. No hubo captura local: las rutas requieren autenticación y datos del
+  backend, y el contenedor no dispone de Chromium, Chrome ni Firefox.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node
+  24.15.0 y npm 11.4.2; el resto de versiones exactas permanece fijado por
+  `package-lock.json` y resumido en `README.md`.
+
+---
+
 # Update 2026-09-23 — creación de solicitudes de proyectos de grado
 
 ## Estado actual y decisiones

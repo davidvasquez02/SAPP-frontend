@@ -698,6 +698,12 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-23:** el catálogo y la presentación de solicitudes reconocen los
+  estados de proyectos de grado 12–20 (`JUR_POR_DESIG`, `JUR_INVITADO`,
+  `EN_EVALUACION`, `CONCEPTOS_REC`, `EN_AJUSTES`, `SUST_PROGRAMADA`,
+  `SUSTENTADA`, `APLAZADA` y `NO_APROBADA`). Sus nombres se muestran siempre
+  en mayúsculas en filtros, listados, detalle y línea de tiempo del proceso,
+  conservando las tildes entregadas por el backend.
 - **2026-09-23:** el detalle estudiantil de las solicitudes de trabajo de grado
   tipo 4, 5, 6, 7 y 8 consulta `GET
   /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`. Cuando la solicitud está en
