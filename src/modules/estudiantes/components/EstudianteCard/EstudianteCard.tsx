@@ -1,3 +1,4 @@
+import { type KeyboardEvent } from 'react'
 import { CalendarDays } from 'lucide-react'
 import type { EstudianteCoordinacion } from '../../types'
 import './EstudianteCard.css'
@@ -28,8 +29,22 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
   const normalizedStatus = estudiante.estadoAcademico?.trim().toUpperCase()
   const isInactive = normalizedStatus === 'INACTIVO'
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onClick()
+  }
+
   return (
-    <article className={`estudiante-card${isInactive ? ' estudiante-card--inactive' : ''}`}>
+    <article
+      className={`estudiante-card${isInactive ? ' estudiante-card--inactive' : ''}`}
+      role="link"
+      tabIndex={0}
+      aria-label={`Ver perfil de ${estudiante.nombreCompleto}`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+    >
       <div className="estudiante-card__identity">
         <div className="estudiante-card__media">
           {estudiante.fotoUrl ? (
@@ -62,10 +77,10 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
         </dl>
       </div>
 
-      <button type="button" className="estudiante-card__action" onClick={onClick} aria-label={`Ver perfil de ${estudiante.nombreCompleto}`}>
+      <div className="estudiante-card__action" aria-hidden="true">
         <span>Ver perfil</span>
         <span aria-hidden="true">→</span>
-      </button>
+      </div>
     </article>
   )
 }

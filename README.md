@@ -6,6 +6,19 @@ reportes, actas y configuración académica. Es una SPA modular que consume la A
 Spring Boot mediante servicios HTTP; React Router controla rutas protegidas y los
 módulos conservan separados contratos, servicios, componentes y páginas.
 
+## Mejora reciente — navegación del listado de estudiantes (2026-09-23)
+
+- La rueda vertical del ratón desplaza horizontalmente los tableros de
+  estudiantes mientras todavía exista contenido en esa dirección. Al alcanzar
+  cualquiera de los extremos, el desplazamiento vuelve a la página para no
+  encerrar la navegación.
+- Toda la tarjeta abre el perfil, además del botón **Ver perfil**. La tarjeta es
+  alcanzable por teclado y responde a `Enter` o barra espaciadora; arrastrar el
+  tablero continúa desplazándolo sin abrir un perfil accidentalmente.
+- No cambiaron rutas, servicios, DTO, permisos, dependencias, variables de
+  entorno, seeds ni datasets. El detalle conserva la ruta
+  `/coordinacion/estudiantes/{id}` y el estado previo del listado.
+
 ## Actualización de programas académicos (2026-09-23)
 
 - El catálogo vigente usa **302 — MAESTRÍA EN INGENIERÍA DE SISTEMAS E
