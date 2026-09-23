@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — firma docente de créditos condonables asignados (2026-09-23)
+
+- Se corrigió el motivo por el que un docente veía un crédito condonable en **Solicitudes asignadas**, pero no encontraba la acción de firma: el detalle restringía `Firmar todos los documentos` exclusivamente a los roles de gestión de posgrados.
+- Un usuario con rol `DOCENTE_POSGRADOS` puede ahora firmar cuando el trámite aparece en `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarioSappId}` y el estado es de firma. La comprobación reconoce tanto los nombres que contienen `POR FIRMA` como las siglas `PFIR_DIR_TG`, `PFIR_COOR_POS` y `PFIR_CAR_CONT`.
+- La asignación se valida nuevamente al abrir el detalle; navegar manualmente a una solicitud ajena no habilita el botón. Los perfiles de gestión conservan el comportamiento anterior y el backend sigue siendo la autoridad final del `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}`.
+- No se agregaron paquetes, variables de entorno, seeds, datasets ni cambios de esquema. Desarrollo: `npm run dev`; verificación: `node --test tests/firmaSolicitud.test.ts`, ESLint focalizado y `npm run build`.
+
 ## Corrección reciente — título y resumen en el detalle de trabajo de grado (2026-09-23)
 
 - El detalle compartido de la solicitud muestra ahora **Título** y **Resumen**, en ese orden y justo antes de **Observaciones**, tanto para coordinación como para estudiantes cuando esos datos fueron solicitados al crear el trámite.

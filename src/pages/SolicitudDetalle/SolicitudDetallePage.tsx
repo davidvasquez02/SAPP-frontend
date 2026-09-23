@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
-import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole, isProfesor } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import {
   firmarDocumentosSolicitudAcademica,
   getSolicitudAcademicaById,
+  getSolicitudesAcademicasAsignadas,
 } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import {
   cambiarEstadoSolicitud,
@@ -27,6 +28,7 @@ import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
+import { puedeFirmarDocumentosSolicitud } from '../../modules/solicitudes/utils/firmaSolicitud'
 import {
   getAprobacionTrabajoGradoLabel,
   tieneProcesoEvaluacionTg,
@@ -58,6 +60,7 @@ const SolicitudDetallePage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = canManagePosgrados(roles)
+  const isDocente = isProfesor(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
@@ -90,6 +93,7 @@ const SolicitudDetallePage = () => {
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
+  const [isAssignedToCurrentUser, setIsAssignedToCurrentUser] = useState(false)
   const [procesoEvaluacion, setProcesoEvaluacion] = useState<ProcesoEvaluacionTg | null>(null)
 
   useEffect(() => {
@@ -131,6 +135,27 @@ const SolicitudDetallePage = () => {
       mounted = false
     }
   }, [solicitudId])
+
+  useEffect(() => {
+    const parsedId = Number(solicitudId ?? '')
+    if (!isDocente || usuarioSappId == null || !Number.isInteger(parsedId)) {
+      setIsAssignedToCurrentUser(false)
+      return
+    }
+
+    let mounted = true
+    getSolicitudesAcademicasAsignadas(usuarioSappId)
+      .then((asignadas) => {
+        if (mounted) setIsAssignedToCurrentUser(asignadas.some((item) => item.id === parsedId))
+      })
+      .catch(() => {
+        if (mounted) setIsAssignedToCurrentUser(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isDocente, solicitudId, usuarioSappId])
 
   useEffect(() => {
     if (
@@ -309,10 +334,13 @@ const SolicitudDetallePage = () => {
     solicitud?.estadoSigla,
     solicitud?.estado,
   )
-  const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
-    estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
-  )
-  const canSignAllDocuments = isCoordinador && estadoPermiteFirma
+  const canSignAllDocuments = puedeFirmarDocumentosSolicitud({
+    esGestionPosgrados: isCoordinador,
+    esDocente: isDocente,
+    estaAsignadaAlUsuario: isAssignedToCurrentUser,
+    estado: solicitud?.estado,
+    estadoSigla: solicitud?.estadoSigla,
+  })
   const showActaAsociada = currentEstado === 'APROBADA' && solicitud?.actaId != null
   const showProcesoEvaluacion =
     isCoordinador &&
