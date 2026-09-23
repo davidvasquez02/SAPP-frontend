@@ -1,5 +1,12 @@
 # Minerva Frontend — EISI UIS
 
+## Corrección reciente — datos del trabajo al crear solicitudes (2026-09-23)
+
+- En **Proyectos de grado**, el formulario estudiantil solicita ahora `tituloTrabajo` y `resumenTrabajo` para los tipos 4, 5, 6 y 7 (propuestas y defensas de doctorado/maestría). Ambos campos son obligatorios, se limpian antes del envío y se incluyen en `POST /sapp/solicitudesAcademicas` con `estudianteId` y `tipoSolicitudId`.
+- Los tipos de solicitud conservan en pantalla el campo `nombre` entregado por `GET /sapp/tipoSolicitud`. En particular, el tipo 13 se muestra como **ENVIO DE TEMA DE TRABAJO DE INVESTIGACION/TESIS** (o exactamente como lo entregue el backend) y ya no se reemplaza por una etiqueta contextual inventada por el frontend.
+- No cambiaron rutas, permisos, endpoints, esquema, dependencias, variables de entorno, seeds ni datasets. Se reutilizan el formulario y los servicios existentes; los campos nuevos solo aparecen para los cuatro tipos indicados.
+- Verificación local: ESLint focalizado y build pasan. El build transformó 281 módulos y generó `index-DhxWK-Ve.css` e `index-Ds21m2NR.js`; permanece el aviso informativo conocido por el chunk JavaScript superior a 500 kB. No hubo captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida requiere backend y sesión institucional.
+
 ## Funcionalidad reciente — proceso privado de evaluación de trabajos de grado (2026-09-22)
 
 - El detalle autenticado de los cinco trámites con jurados (`DEF_TESIS_DCC`, `DEF_TI_MISI`, `CAND_DOCTORAL`, `PROP_TESIS_DCC` y `PROP_TI_MISI`) incorpora la sección de coordinación **Proceso de evaluación**. `TEMA_T` permanece expresamente fuera del proceso.
@@ -17,7 +24,7 @@
 ## Decisión reciente — módulo inicial de Proyectos de grado (2026-09-22)
 
 - Se creó el módulo protegido `/trabajos-grado`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
-- Los tipos de solicitud 13, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y recibe una etiqueta contextual según el nivel.
+- Los tipos de solicitud 13, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y el nombre exacto entregado por el catálogo del backend.
 - Esos seis tipos ya no se muestran ni se ofrecen para crear desde el módulo general de Solicitudes. No se cambiaron endpoints ni DTO: el nuevo módulo reutiliza por ahora los servicios, formularios, filtros, tablas y detalle existentes.
 - El estudiante es dirigido al nivel inferido de su programa y no puede navegar al otro; coordinación dispone de ambos niveles. Las funcionalidades de expediente, avances, evaluadores, defensa y calificación se implementarán posteriormente.
 

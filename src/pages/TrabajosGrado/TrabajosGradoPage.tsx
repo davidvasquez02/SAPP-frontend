@@ -8,7 +8,6 @@ import SolicitudesEstudianteView from '../../modules/solicitudes/components/Soli
 import {
   getNivelTrabajoGrado,
   correspondeSolicitudANivel,
-  contextualizarTipoTrabajoGrado,
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
   type NivelTrabajoGrado,
 } from '../../modules/trabajos-grado/constants'
@@ -26,10 +25,6 @@ const TrabajosGradoPage = () => {
   const programa = session?.kind === 'SAPP' ? session.user.estudiante?.programaCodigoNombre ?? session.user.programa : undefined
   const nivelEstudiante = getNivelTrabajoGrado(programa)
   const nivelSeleccionado = isNivel(nivel) ? nivel : nivelEstudiante
-  const transformTipoSolicitud = useMemo(
-    () => (tipo: Parameters<typeof contextualizarTipoTrabajoGrado>[0]) => contextualizarTipoTrabajoGrado(tipo, nivelSeleccionado),
-    [nivelSeleccionado],
-  )
   const filterSolicitud = useMemo(
     () => (solicitud: Parameters<typeof correspondeSolicitudANivel>[0]) =>
       correspondeSolicitudANivel(solicitud, nivelSeleccionado),
@@ -68,7 +63,6 @@ const TrabajosGradoPage = () => {
           <SolicitudesEstudianteView
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
-            transformTipoSolicitud={transformTipoSolicitud}
             filterSolicitud={filterSolicitud}
           />
         ) : isCoordinacion && usuarioSappId !== null ? (
@@ -76,7 +70,6 @@ const TrabajosGradoPage = () => {
             usuarioSappId={usuarioSappId}
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
-            transformTipoSolicitud={transformTipoSolicitud}
             filterSolicitud={filterSolicitud}
           />
         ) : (

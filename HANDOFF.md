@@ -1,3 +1,28 @@
+# Update 2026-09-23 — creación de solicitudes de proyectos de grado
+
+## Estado actual y decisiones
+
+- El formulario compartido `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` detecta los tipos 4, 5, 6 y 7 y muestra dos controles obligatorios: **Título del trabajo** y **Resumen del trabajo**. La validación impide enviar cualquiera vacío; el payload recorta espacios y los omite para los demás tipos.
+- `SolicitudesEstudianteView.tsx` reenvía ambos valores al contrato ya tipado `CreateSolicitudRequestDto`, de modo que `POST /sapp/solicitudesAcademicas` recibe `{ estudianteId, tipoSolicitudId, tituloTrabajo, resumenTrabajo, ... }`.
+- `TrabajosGradoPage.tsx` dejó de aplicar `contextualizarTipoTrabajoGrado`. El catálogo conserva ahora el `nombre` retornado por `GET /sapp/tipoSolicitud`; además, el selector prioriza explícitamente `nombre` sobre `codigoNombre`. Para el ID 13 la salida esperada es el nombre exacto del backend, por ejemplo `ENVIO DE TEMA DE TRABAJO DE INVESTIGACION/TESIS`, sin sustitución según maestría/doctorado.
+- Se mantienen la clasificación por programa del tipo 13, los tipos permitidos por nivel, documentos, rutas, permisos y resto del flujo. No se añadieron endpoints, paquetes, schemas, variables, seeds ni datasets.
+
+## Contrato y próximos pasos
+
+- Entrada relevante de catálogo: `{ "id": 13, "nombre": "ENVIO DE TEMA DE TRABAJO DE INVESTIGACION/TESIS", "tramiteId": 19 }`. `tipoSolicitudService` sigue normalizando `tramiteId` hacia `tipoTramiteId` solo para consultar documentos y no altera el nombre.
+- Payload esperado para 4/5/6/7: `{ "estudianteId": 10, "tipoSolicitudId": 5, "tituloTrabajo": "...", "resumenTrabajo": "..." }`, además de los campos generales existentes (`fechaResolucion`, `observaciones` y los opcionales aplicables).
+- Pendiente: prueba autenticada contra backend para cada uno de los cuatro IDs, verificación de persistencia en el detalle y captura en claro/oscuro y móvil/escritorio. El contenedor no tiene navegador ni sesión/backend institucional, por lo que no fue posible hacer la validación visual solicitada.
+
+## Entorno y resultados
+
+- Reutilizar únicamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0 y Lucide 0.468.0-local.
+- `npx eslint src/pages/TrabajosGrado/TrabajosGradoPage.tsx src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`: PASS; solo warning ambiental npm `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 281 módulos, `dist/assets/index-DhxWK-Ve.css` (230.07 kB) e `index-Ds21m2NR.js` (661.11 kB). Persiste el warning informativo del chunk mayor de 500 kB. `git diff --check`: PASS. No existe script automatizado `test`.
+
+---
+
+---
+
 # Update 2026-09-22 — proceso privado de evaluación de trabajos de grado
 
 ## Estado actual y decisiones
@@ -28,7 +53,7 @@
 
 ## Estado actual y alcance
 - Existe un nuevo acceso **Proyectos de grado** y las rutas `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`. Estudiantes ven solo el nivel inferido de `programaCodigoNombre`; coordinación puede alternar ambos.
-- La clasificación está centralizada en `src/modules/trabajos-grado/constants.ts`: maestría usa tipos 13, 6 y 7; doctorado usa 13, 8, 4 y 5. El tipo 13 conserva su ID, pero se etiqueta según el nivel.
+- La clasificación está centralizada en `src/modules/trabajos-grado/constants.ts`: maestría usa tipos 13, 6 y 7; doctorado usa 13, 8, 4 y 5. El tipo 13 conserva su ID y el nombre exacto entregado por el backend.
 - Las vistas reutilizables de solicitudes aceptan inclusión/exclusión de tipos, transformación de etiquetas y una ruta de detalle configurable. El módulo general excluye los seis tipos trasladados; no hubo cambios de API, payload, schema, seeds ni datasets.
 - El detalle sigue usando `SolicitudDetallePage` y los endpoints `/sapp/solicitudesAcademicas`. Las futuras funciones de expediente, informes, evaluadores, calificación y defensa no forman parte de este incremento.
 
