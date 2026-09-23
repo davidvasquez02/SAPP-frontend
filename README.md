@@ -321,6 +321,8 @@ Se requiere Node.js 18 o superior (verificado con Node 24.15.0 y npm 11.4.2). No
 
 Frontend de **Minerva**, sistema de apoyo para la gestión de trámites de posgrados de la Escuela de Ingeniería de Sistemas e Informática (**EISI**) de la Universidad Industrial de Santander (**UIS**). La marca anterior era **SAPP**; ese término se conserva únicamente donde forma parte de contratos o identificadores técnicos que no deben migrarse.
 
+> **Decisión 2026-09-23:** el catálogo del frontend reconoce el estado de solicitud `10 / ENVIADA_CONSEJO` y lo presenta como **ENVIADA A CONSEJO ACADEMICO** en los listados y detalles, admitiendo también los nombres descriptivos `ENVIADA A CONSEJO` y `ENVIADA A CONSEJO ACADÉMICO` como entradas compatibles.
+
 ## Propósito y alcance
 
 Minerva centraliza y estandariza la trazabilidad de procesos académicos y administrativos de posgrado:
