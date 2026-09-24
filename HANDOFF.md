@@ -1,3 +1,19 @@
+# Update 2026-09-24 — matrícula financiera
+
+## Estado actual y decisiones
+- Se implementó la navegación jerárquica solicitada: `/matricula` es una portada con dos opciones; el flujo anterior vive en `/matricula/academica`; el nuevo flujo vive en `/matricula/financiera`. El sidebar tiene un submenú desplegable, activo por ruta y operable en móvil.
+- Coordinación dispone de lista/creación de procesos y tablero `/matricula/financiera/procesos/:procesoId`, con resumen, filtros, acciones habilitadas por estado, tabla de alertas, marcar/desmarcar liquidada y Excel. El estudiante dispone de **Mi liquidación**, preguntas dinámicas (no hay textos hardcodeados), valores y estados ternarios mediante radios sin enviar `estudianteId`.
+- Seguridad deliberada: lista y tablero coordinador se muestran solo para perfiles `canManagePosgrados`; el detalle también usa `RequireRoles`. El backend aún no valida estos roles, por lo que esta barrera de interfaz no debe retirarse. Todas las llamadas usan `X-Internal-Token` con el JWT de `SAPP_AUTH_SESSION`.
+
+## Contrato, artefactos y pendientes
+- Contratos y cliente: `src/modules/matricula-financiera/{types,api}.ts`; interfaz: `src/pages/MatriculaHome` y `src/pages/MatriculaFinanciera`; rutas: `src/app/routes/matriculaRoutes.tsx`; navegación: `src/app/navigationItems.ts` y `src/components/Sidebar`. Base esperada: `/api/liquidacionMatricula`; envelope `{ ok, message, data }`; Excel es blob. Dinero llega calculado por backend y nunca se calcula/redondea aquí. Fecha-hora ISO sin zona ya representa Colombia y no debe convertirse desde UTC.
+- La primera entrega cubre el camino principal. Próximos pasos: completar edición de parámetros, publicación con fecha límite, formularios de respuestas/ajustes/exclusión/reinclusión, alta manual, tarifas y certificado ANX-39 (trámite 1018); mostrar el detalle de omitidos de los envíos masivos; agregar paginación cuando el backend la exponga; validar con coordinación las 24 operaciones en dev.
+- Prueba integrada sugerida: periodo libre → crear → convocar → excluir → enviar → responder como estudiante → ajustar → recordar → exportar → marcar liquidada → cerrar/publicar. No reutilizar 2026-2 si ya tiene proceso (unicidad por periodo). MailPit recibe todo el correo de dev. No hay credenciales, seeds ni dataset versionado en este repositorio.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`, Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv/Conda/Poetry ni ejecutar otro `npm install`; las versiones exactas están en `package-lock.json`.
+- Resultado local 2026-09-24: `npm run build` PASS (296 módulos, CSS 239.32 kB, JS 684.81 kB); permanece solo el aviso de chunk >500 kB y el warning ambiental npm `Unknown env config "http-proxy"`. La captura queda pendiente porque no hay navegador instalado ni sesión institucional reproducible.
+
+---
+
 # Update 2026-09-24 — clasificación doctoral en proyectos de grado
 
 ## Estado actual, causa y salida esperada

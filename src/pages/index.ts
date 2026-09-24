@@ -18,6 +18,8 @@ export { InscripcionEntrevistasPage } from "./InscripcionEntrevistas";
 export { InscripcionExamenPage } from "./InscripcionExamen";
 export { InscripcionHojaVidaPage } from "./InscripcionHojaVida";
 export { MatriculaPage } from "./Matricula";
+export { MatriculaHomePage } from "./MatriculaHome";
+export { MatriculaFinancieraPage, ProcesoLiquidacionPage } from "./MatriculaFinanciera";
 export { MatriculaDetalleCoordinacionPage } from "./MatriculaDetalleCoordinacion";
 export { SolicitudesPage } from "./Solicitudes";
 export { SolicitudDetallePage } from "./SolicitudDetalle";

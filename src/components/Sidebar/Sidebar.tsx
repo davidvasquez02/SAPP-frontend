@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../../context/Auth'
 import { getPrimaryNavigationItems } from '../../app/navigationItems'
@@ -25,6 +25,10 @@ const Sidebar = () => {
   const { session, logout } = useAuth()
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_NAV_QUERY).matches)
   const [isOpen, setIsOpen] = useState(false)
+  const location = useLocation()
+  const [expandedItems, setExpandedItems] = useState<string[]>(() =>
+    location.pathname.startsWith('/matricula') ? ['/matricula'] : [],
+  )
   const panelRef = useRef<HTMLElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -146,7 +150,22 @@ const Sidebar = () => {
         </NavLink>
 
         <nav className="sidebar__nav">
-          {sidebarItems.map((item) => (
+          {sidebarItems.map((item) => item.children ? (
+            <div className="sidebar__group" key={item.to}>
+              <div className={`sidebar__link sidebar__link--parent${location.pathname.startsWith(item.to) ? ' sidebar__link--active' : ''}`}>
+                <NavLink to={item.to} className="sidebar__parent-link" title={item.label} tabIndex={mobileTabIndex} onClick={() => isMobile && closeMenu(false)}>
+                  <span className="sidebar__icon" aria-hidden="true"><SidebarModuleIcon modulePath={item.to} /></span>
+                  <span className="sidebar__label">{item.label}</span>
+                </NavLink>
+                <button type="button" className="sidebar__expand" aria-label={`${expandedItems.includes(item.to) ? 'Contraer' : 'Desplegar'} ${item.label}`} aria-expanded={expandedItems.includes(item.to)} onClick={() => setExpandedItems((current) => current.includes(item.to) ? current.filter((value) => value !== item.to) : [...current, item.to])}>
+                  <span aria-hidden="true">⌄</span>
+                </button>
+              </div>
+              {expandedItems.includes(item.to) && <div className="sidebar__submenu">
+                {item.children.map((child) => <NavLink key={child.to} to={child.to} className={({ isActive }) => `sidebar__sublink${isActive ? ' sidebar__sublink--active' : ''}`} onClick={() => isMobile && closeMenu(false)}>{child.label}</NavLink>)}
+              </div>}
+            </div>
+          ) : (
             <NavLink
               key={item.to}
               to={item.to}
