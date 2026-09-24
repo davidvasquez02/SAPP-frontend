@@ -1,3 +1,37 @@
+# Handoff 2026-09-24 — selector compacto de informes
+
+## Estado actual y salida esperada
+- `src/pages/Reportes/ReportesPage.tsx` conserva las tres opciones de proceso,
+  pero cada botón renderiza únicamente su nombre; se retiraron del modelo local
+  y de la interfaz las descripciones pequeñas redundantes.
+- `src/pages/Reportes/ReportesPage.css` reduce el padding de la franja
+  introductoria, elimina el margen residual de su párrafo y compacta los
+  botones. La opción activa conserva borde, fondo y `aria-pressed`; los estilos
+  siguen usando tokens semánticos y funcionan en temas claro/oscuro.
+- Salida esperada en `/coordinacion/reportes`: franja superior sensiblemente más
+  baja y una fila compacta con **Admisión**, **Matrícula** y **Créditos
+  condonables**, sin subtítulos. Formularios, generación y descarga de PDF no
+  cambian.
+
+## Contratos, entorno, pruebas y continuidad
+- No cambiaron API, payloads, DTO, schemas, permisos, rutas, dependencias,
+  variables, seeds ni datasets. Los catálogos y reportes continúan dependiendo
+  del backend institucional configurado mediante las variables Vite existentes.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni
+  venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; el lockfile fija el árbol exacto.
+- Verificación 2026-09-24: ESLint focalizado PASS; suite Node PASS (48/48);
+  build PASS (309 módulos, CSS 246.08 kB y JS 726.99 kB); `git diff --check`
+  PASS. El lint global continúa bloqueado por 9 errores y 1 warning
+  preexistentes. Persisten el warning ambiental npm `Unknown env config
+  "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar visualmente la ruta protegida con una sesión y el
+  backend institucionales en escritorio/móvil y temas claro/oscuro. No se pudo
+  generar captura porque el contenedor no incluye Chromium, Chrome ni Firefox.
+
+---
+
 # Handoff 2026-09-24 — matrícula académica, documentos y navegación estudiantil
 
 ## Update 2026-09-24 — navegación y solicitudes del director
