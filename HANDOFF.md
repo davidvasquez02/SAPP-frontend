@@ -1,3 +1,18 @@
+# Handoff 2026-09-24 — retorno desde una inscripción para profesores
+
+## Estado, decisión y salida esperada
+- `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` calcula el destino del botón superior según el perfil. Un usuario que es evaluador de admisión y no tiene permisos de gestión ve **Volver a inscripciones** y navega a `/admisiones`; allí `AdmisionesProfesorPage` recupera la pantalla de inscripciones desde la que abrió la entrevista.
+- Los perfiles con gestión de posgrados mantienen **Volver a convocatoria** y `/admisiones/convocatoria/:convocatoriaId`. Esto evita enviar al profesor a una ruta exclusiva de coordinación que `RequireRoles` rechazaba y que acababa redirigiéndolo al inicio.
+- No se modificaron rutas, guards, API, DTO, schemas, paquetes, variables, seeds ni datasets. Salida esperada: profesor → listado de inscripciones; coordinación/secretaría/administración → detalle de convocatoria.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`. Rutas relacionadas: `src/app/routes/index.tsx`; listado de origen: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`. No se generaron artefactos ni datasets.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build PASS (314 módulos; CSS 255.39 kB; JS 734.26 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar el recorrido completo con una sesión institucional de profesor y el backend real. La ruta está protegida y el repositorio no contiene credenciales ni un seed reproducible. No se requiere captura porque el cambio corrige exclusivamente el destino y texto del control existente, sin alterar su presentación.
+
+---
+
 # Handoff 2026-09-24 — nombres de origen en homologación
 
 ## Estado, decisión y salida esperada

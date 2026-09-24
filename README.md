@@ -1,3 +1,14 @@
+# Corrección 2026-09-24 — retorno desde una inscripción para profesores
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En el detalle de una inscripción de admisión, el botón de retorno ahora reconoce al profesor que participa únicamente como evaluador. Para ese perfil muestra **Volver a inscripciones** y regresa a `/admisiones`, donde está su listado anterior, en lugar de intentar abrir la convocatoria de coordinación y terminar redirigido al inicio por falta de permisos.
+- Los perfiles de coordinación, secretaría y administración conservan **Volver a convocatoria** y su ruta existente. No cambian rutas registradas, permisos, endpoints, contratos, dependencias, variables, schemas, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build de producción PASS (314 módulos) y `git diff --check` PASS. npm conserva el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-24 — nombres de origen en homologación
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
