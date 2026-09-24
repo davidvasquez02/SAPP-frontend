@@ -5743,3 +5743,21 @@ npm run lint
 - Pendiente integrado: revisar el control con una sesión institucional en escritorio/móvil y ambos temas. No se capturó imagen porque el contenedor no dispone de Chromium, Chrome ni Firefox; el flujo depende además del backend autenticado y no tiene seed local.
 
 ---
+
+# Update 2026-09-24 — modal de eliminación de actas
+
+## Estado actual y decisiones
+
+- En `src/pages/Actas/ActasPage.tsx`, el botón **Eliminar** ya no usa `window.confirm`: abre un diálogo propio con título **Eliminar acta**, advertencia irreversible, nombre y código del registro, cierre explícito y acciones **Cancelar** / **Sí, eliminar acta**.
+- La opción segura recibe el foco al abrir. `Escape`, la `×` y el backdrop cancelan antes de ejecutar; durante la petición todos esos cierres y ambas acciones se deshabilitan. Si `DELETE /actas/{id}` falla, el diálogo permanece abierto y el error general permite reintentar. Si termina bien, el registro sale del estado local, el modal se cierra y se muestra el mensaje temporal existente.
+- `src/pages/Actas/ActasPage.css` sigue el patrón de los modales de SolicitudDetalle y Matrícula Financiera: overlay, tarjeta redondeada, sombra suave, botones pill, tokens semánticos y disposición móvil. Funciona con temas claro/oscuro sin colores fijos salvo las mezclas derivadas de `--danger`.
+
+## Contratos, salida esperada y continuidad
+
+- Contrato intacto: `DELETE /actas/{id}`, sin body y respuesta exitosa sin contenido. No cambiaron API, tipos, rutas, roles, dependencias, variables, schemas, seeds ni datasets. Las actas reales continúan llegando del backend; este repositorio no aporta un seed reproducible ni credenciales institucionales.
+- Salida esperada: al pulsar **Eliminar**, el navegador no debe mostrar su cuadro nativo. Debe aparecer el modal SAPP con el acta seleccionada; cancelar no muta datos, confirmar una vez bloquea dobles envíos, un error conserva la fila y un éxito la elimina.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear otro árbol npm, venv, Conda ni Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: `npx eslint src/pages/Actas/ActasPage.tsx` PASS; suite Node PASS (58/58); `npm run build` PASS (314 módulos; CSS 255.39 kB, JS 734.30 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente integrado: validar la eliminación exitosa y fallida con backend/sesión institucional, temas claro/oscuro, teclado y viewport móvil. No se pudo capturar una imagen en el contenedor porque no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados.
+
+---

@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ModuleLayout } from "../../components";
 import { crearActa, eliminarActa, getActas, getDocumentoActa } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
@@ -90,6 +90,8 @@ const ActasPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileAction, setFileAction] = useState<{ actaId: number; action: FileAction } | null>(null);
   const [deletingActaId, setDeletingActaId] = useState<number | null>(null);
+  const [actaToDelete, setActaToDelete] = useState<ActaDto | null>(null);
+  const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
 
   const loadActas = async () => {
     setIsLoading(true);
@@ -114,6 +116,17 @@ const ActasPage = () => {
     const timeoutId = window.setTimeout(() => setSuccess(null), SUCCESS_MESSAGE_DURATION_MS);
     return () => window.clearTimeout(timeoutId);
   }, [success]);
+
+  useEffect(() => {
+    if (!actaToDelete) return;
+
+    cancelDeleteButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && deletingActaId === null) setActaToDelete(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [actaToDelete, deletingActaId]);
 
   const codigo = `ACTA_${tipoActa}_${codigoActa.trim().toUpperCase()}-${anio}`;
   const years = useMemo(
@@ -164,12 +177,6 @@ const ActasPage = () => {
   };
 
   const handleDelete = async (acta: ActaDto) => {
-    const confirmed = window.confirm(
-      `¿Está seguro de que desea eliminar el acta "${acta.nombre}" (${acta.codigo})? Esta acción no se puede deshacer.`,
-    );
-
-    if (!confirmed) return;
-
     setError(null);
     setSuccess(null);
     setDeletingActaId(acta.id);
@@ -177,6 +184,7 @@ const ActasPage = () => {
       await eliminarActa(acta.id);
       setActas((currentActas) => currentActas.filter((currentActa) => currentActa.id !== acta.id));
       setSuccess(`El acta ${acta.codigo} fue eliminada correctamente.`);
+      setActaToDelete(null);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "No fue posible eliminar el acta.");
     } finally {
@@ -288,11 +296,33 @@ const ActasPage = () => {
               <td className="actas-table__date" data-label="Fecha de creación">{formatDate(acta.fechaCreacion)}</td>
               <td className="actas-table__observations" data-label="Observaciones">{acta.observaciones || "—"}</td>
               <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td>
-              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => void handleDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
+              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => setActaToDelete(acta)}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
             </tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>
+
+        {actaToDelete ? (
+          <div className="actas-delete-modal" role="dialog" aria-modal="true" aria-labelledby="actas-delete-title" aria-describedby="actas-delete-description">
+            <button className="actas-delete-modal__backdrop" type="button" aria-label="Cancelar eliminación" disabled={deletingActaId !== null} onClick={() => setActaToDelete(null)} />
+            <section className="actas-delete-modal__dialog">
+              <button className="actas-delete-modal__close" type="button" aria-label="Cerrar" disabled={deletingActaId !== null} onClick={() => setActaToDelete(null)}>×</button>
+              <div className="actas-delete-modal__icon" aria-hidden="true">!</div>
+              <div className="actas-delete-modal__content">
+                <h2 id="actas-delete-title">Eliminar acta</h2>
+                <p id="actas-delete-description">Esta acción eliminará permanentemente el acta y no se puede deshacer.</p>
+                <dl className="actas-delete-modal__details">
+                  <div><dt>Acta</dt><dd>{actaToDelete.nombre}</dd></div>
+                  <div><dt>Código</dt><dd>{actaToDelete.codigo}</dd></div>
+                </dl>
+              </div>
+              <div className="actas-delete-modal__actions">
+                <button ref={cancelDeleteButtonRef} type="button" className="actas-delete-modal__cancel" disabled={deletingActaId !== null} onClick={() => setActaToDelete(null)}>Cancelar</button>
+                <button type="button" className="actas-delete-modal__confirm" disabled={deletingActaId !== null} onClick={() => void handleDelete(actaToDelete)}>{deletingActaId !== null ? "Eliminando..." : "Sí, eliminar acta"}</button>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </section>
     </ModuleLayout>
   );
