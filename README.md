@@ -1009,6 +1009,10 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-24:** el catálogo de Proyectos de grado de maestría excluye los
+  tipos `8` y `9` de examen de candidatura, exclusivos de doctorado, e incluye
+  el tipo `10` **GRADO**. El catálogo doctoral conserva candidatura y también
+  permite tramitar grado.
 - **2026-09-24:** la selección del nivel en Proyectos de grado reutiliza el
   resolvedor canónico de programas académicos. Además de las siglas históricas
   `MISI`/`DCC`, reconoce los nombres vigentes, los códigos UIS `302`/`347` y
