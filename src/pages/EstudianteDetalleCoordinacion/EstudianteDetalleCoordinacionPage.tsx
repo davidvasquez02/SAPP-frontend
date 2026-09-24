@@ -536,6 +536,14 @@ const StudentProfileHeader = ({
           <dt>Documento</dt>
           <dd>{formatDocumentoIdentidad(estudiante.tipoDocumento, estudiante.numeroDocumento, EMPTY_VALUE)}</dd>
         </div>
+        <div>
+          <dt>Director de trabajo de grado</dt>
+          <dd>{estudiante.directorTg?.nombreCompleto ?? ''}</dd>
+        </div>
+        <div>
+          <dt>Correo del director</dt>
+          <dd>{estudiante.directorTg?.correo ?? ''}</dd>
+        </div>
       </dl>
     </article>
   )

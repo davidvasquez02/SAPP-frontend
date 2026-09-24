@@ -40,6 +40,10 @@ type EstudianteConsultaBackend = {
   numeroDocumento: string | null
   correoInstitucional: string | null
   correoPersonal: string | null
+  directorTg: {
+    nombreCompleto: string
+    correo: string
+  } | null
   persona: {
     id: number
     idpId: string | null
@@ -123,6 +127,12 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     numeroDocumento: item.numeroDocumento?.trim() || item.persona.numeroDocumento?.trim() || 'N/A',
     correoInstitucional: resolveCorreoInstitucional(item),
     correoPersonal: resolveCorreoPersonal(item),
+    directorTg: item.directorTg
+      ? {
+          nombreCompleto: item.directorTg.nombreCompleto?.trim() ?? '',
+          correo: item.directorTg.correo?.trim() ?? '',
+        }
+      : null,
     personaId: item.persona.id ?? null,
     personaIdpId: item.persona.idpId?.trim() || null,
     estadoAcademico: normalizarEstadoAcademico(item.estudiante.estado),

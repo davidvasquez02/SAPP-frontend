@@ -1,3 +1,10 @@
+# Actualización 2026-09-24 — director de trabajo de grado en perfiles estudiantiles
+
+- El perfil del usuario muestra el nombre y correo del director de trabajo de grado dentro de **Información académica** cuando la sesión corresponde a un estudiante. El detalle de coordinación presenta los mismos campos para el estudiante consultado.
+- Se incorporó el contrato opcional y anulable `directorTg: { nombreCompleto, correo } | null` tanto a `detalle.estudiante` de `GET /inicio` como a cada registro de `GET /sapp/estudiantes/consulta`. Si el backend entrega `null`, ambos valores se renderizan vacíos, sin texto sustituto.
+- No cambiaron endpoints, permisos, dependencias, variables, seeds ni datasets. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; validación de producción: `npm run build`.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; el proyecto no usa venv, Conda ni Poetry.
+
 # Corrección 2026-09-24 — solicitudes asignadas ocultas para coordinación
 
 - El usuario con rol exacto `COORDINADOR_POSGRADOS` deja de ver el bloque **Solicitudes asignadas** tanto en el módulo general de **Solicitudes** como en los listados de **Proyectos de grado**. Las solicitudes asignadas también permanecen excluidas del listado general, por lo que no se duplican ni reaparecen allí.
