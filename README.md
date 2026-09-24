@@ -1,3 +1,13 @@
+# Correccion 2026-09-24 — estados disponibles en Proyectos de grado
+
+- El filtro **Estado** de Trabajo de investigacion de maestria y Tesis doctoral ahora sigue la misma regla de creditos condonables: ofrece unicamente los estados representados en los registros cargados para el listado actual. Por tanto, los estados de firma —o cualquier otro estado sin solicitudes visibles— ya no aparecen como opciones vacias.
+- La regla aplica tanto a la vista estudiantil como a la de coordinacion y conserva **Todos** como opcion inicial. No cambian los registros, estados de dominio, endpoints, DTO, permisos, dependencias, variables, schemas, seeds ni datasets; solo cambia el catalogo visible del selector.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro arbol npm.
+- Ejecucion: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; produccion: `npm run build` y `npm run preview`. No existen seeds locales: los estados y solicitudes provienen del backend institucional configurado mediante las variables Vite.
+- Verificacion local: suite Node 58/58 y build de produccion (314 modulos) pasan; ESLint focalizado y `git diff --check` pasan. El lint global conserva 9 errores y 1 warning preexistentes fuera de este cambio; npm mantiene el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-24 — filtro de solicitudes generales
 
 - El selector **Tipo de solicitud** del listado de coordinación muestra

@@ -45,6 +45,23 @@
 
 ---
 
+# Handoff 2026-09-24 — filtro de estados de Proyectos de grado
+
+## Estado, decision y salida esperada
+
+- `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` dejo de solicitar el catalogo completo de estados en `SolicitudesEstudianteView` y `SolicitudesCoordinadorView`. Ambas vistas usan ahora su comportamiento predeterminado, compartido con creditos condonables: `getEstadosPresentesEnSolicitudes` cruza el catalogo de `GET /sapp/estadosSolicitud` con las solicitudes cargadas.
+- En `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`, el selector conserva **Todos** y muestra solo estados presentes en los registros del listado correspondiente. Si no hay registros en `PFIR_DIR_TG`, `PFIR_COOR_POS` o `PFIR_CAR_CONT`, esas opciones de firma no deben aparecer. La seleccion activa vuelve semanticamente a todos si su estado deja de estar disponible.
+- La vista de estudiante calcula las opciones después del tipo seleccionado; la de coordinacion las calcula sobre las filas disponibles no asignadas, tal como ya estaba implementado. No se alteraron estados, filas, endpoints, payloads, schemas, permisos, dependencias, variables, seeds ni datasets.
+
+## Entorno, pruebas y continuidad
+
+- Entorno unico: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otra instalacion ni crear venv, Conda, Poetry o un segundo arbol npm.
+- Implementacion principal: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. Helper y contrato esperado: `src/modules/solicitudes/utils/estadoSolicitud.ts`; vistas consumidoras: `src/modules/solicitudes/components/Solicitudes{Estudiante,Coordinador}View`.
+- Pendiente externo: validar ambos niveles con sesiones institucionales de estudiante y coordinacion y datos reales del backend. La ruta es protegida y el repositorio no contiene credenciales ni seed que reproduzca el listado de la captura.
+- Regresion: `tests/estadoSolicitud.test.ts` comprueba que el helper conserva estados presentes por ID/sigla y excluye las tres siglas `PFIR_*` cuando no existen registros. Validacion local: suite Node 58/58 PASS, ESLint focalizado PASS, build PASS (314 modulos; CSS 252.47 kB; JS 732.60 kB) y `git diff --check` PASS. `npm run lint` mantiene 9 errores y 1 warning preexistentes fuera del alcance; npm avisa por `http-proxy` y Vite por el chunk mayor de 500 kB.
+
+---
+
 # Handoff 2026-09-24 — botones de acciones y convocatoria
 
 ## Update 2026-09-24 — alineación de la flecha del submenú Matrícula
