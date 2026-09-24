@@ -46,6 +46,7 @@ import "./MatriculaPage.css";
 import { formatProgramaAcademico, getProgramaAcademico } from "../../shared/domain/programaAcademico";
 
 const TIPO_TRAMITE_ID_MATRICULA = 2;
+const LISTADO_PAGE_SIZE = 10;
 
 const resolvePeriodoActual = (periodos: string[]): string => {
   const colombiaDateParts = new Intl.DateTimeFormat("en-US", {
@@ -179,6 +180,7 @@ const MatriculaPage = () => {
   const [estadoFilter, setEstadoFilter] = useState("TODOS");
   const [periodoFilter, setPeriodoFilter] = useState("TODOS");
   const [searchText, setSearchText] = useState("");
+  const [listadoPage, setListadoPage] = useState(1);
   const [periodoMatriculaVigente, setPeriodoMatriculaVigente] =
     useState<PeriodoAcademicoMatriculaVigenteDto | null>(null);
   const [isLoadingPeriodoVigente, setIsLoadingPeriodoVigente] = useState(false);
@@ -713,6 +715,24 @@ const MatriculaPage = () => {
       });
   }, [estadoFilter, matriculas, periodoFilter, programaFilter, searchText]);
 
+  const listadoTotalPages = Math.max(
+    1,
+    Math.ceil(filteredMatriculas.length / LISTADO_PAGE_SIZE),
+  );
+  const safeListadoPage = Math.min(listadoPage, listadoTotalPages);
+  const paginatedMatriculas = useMemo(
+    () =>
+      filteredMatriculas.slice(
+        (safeListadoPage - 1) * LISTADO_PAGE_SIZE,
+        safeListadoPage * LISTADO_PAGE_SIZE,
+      ),
+    [filteredMatriculas, safeListadoPage],
+  );
+
+  useEffect(() => {
+    setListadoPage(1);
+  }, [estadoFilter, periodoFilter, programaFilter, searchText]);
+
   const hasAllDocumentsUploadedAndNoRejected = useMemo(() => {
     if (!hasExistingMatricula) {
       return false;
@@ -908,7 +928,7 @@ const MatriculaPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredMatriculas.map((item) => (
+                      {paginatedMatriculas.map((item) => (
                         <tr key={item.id}>
                           <td>
                             <strong>{item.estudianteNombreCompleto}</strong>
@@ -947,7 +967,7 @@ const MatriculaPage = () => {
                       No hay matrículas que coincidan con los filtros seleccionados.
                     </p>
                   ) : null}
-                  {filteredMatriculas.map((item) => (
+                  {paginatedMatriculas.map((item) => (
                     <article className="matricula-page__mobile-card" key={item.id}>
                       <header className="matricula-page__mobile-card-header">
                         <div>
@@ -983,6 +1003,32 @@ const MatriculaPage = () => {
                     </article>
                   ))}
                 </div>
+                {filteredMatriculas.length > 0 ? (
+                  <footer
+                    className="matricula-page__pagination"
+                    aria-label="Paginación de matrículas académicas"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setListadoPage((page) => Math.max(1, page - 1))}
+                      disabled={safeListadoPage <= 1}
+                    >
+                      Anterior
+                    </button>
+                    <span aria-live="polite">
+                      Página {safeListadoPage} de {listadoTotalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setListadoPage((page) => Math.min(listadoTotalPages, page + 1))
+                      }
+                      disabled={safeListadoPage >= listadoTotalPages}
+                    >
+                      Siguiente
+                    </button>
+                  </footer>
+                ) : null}
               </>
             ) : null}
           </section>

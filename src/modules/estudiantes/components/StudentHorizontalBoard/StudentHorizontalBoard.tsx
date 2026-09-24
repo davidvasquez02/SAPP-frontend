@@ -76,6 +76,10 @@ const StudentHorizontalBoard = ({
     if (event.pointerType !== 'mouse' || event.button !== 0) return
     if ((event.target as Element).closest(INTERACTIVE_SELECTOR)) return
 
+    // A drag can finish without the browser dispatching a click. Clear any
+    // stale suppression before starting the next gesture so a normal click
+    // always opens the student on its first attempt.
+    suppressClickRef.current = false
     dragRef.current = {
       pointerId: event.pointerId,
       originX: event.clientX,

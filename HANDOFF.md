@@ -1,3 +1,22 @@
+# Handoff 2026-09-24 — matrícula académica, documentos y navegación estudiantil
+
+## Estado actual y decisiones
+- `src/pages/Matricula/MatriculaPage.tsx` pagina el resultado ya filtrado en grupos de 10. El contrato de UI esperado es **Anterior · Página N de M · Siguiente**; ambos botones están deshabilitados en los extremos, los filtros vuelven a la página 1 y escritorio/móvil muestran el mismo subconjunto. Los estilos en `MatriculaPage.css` replican Solicitudes con tokens semánticos y disposición móvil de dos botones.
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` retiró **Tamaño** de cada tarjeta documental y eliminó su formateador huérfano. No cambió el DTO: `tamanoBytes` puede seguir llegando del backend; simplemente ya no se presenta en esta vista.
+- `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx` reinicia `suppressClickRef` al comenzar un nuevo gesto válido. Causa corregida: tras ciertos arrastres el navegador no emitía `click`, la bandera quedaba activa y consumía el siguiente clic legítimo sobre una tarjeta. Un arrastre actual todavía activa la bandera y su clic sintético continúa bloqueado.
+
+## Contratos, artefactos y salida esperada
+- No cambiaron endpoints, schemas, payloads, rutas, permisos ni persistencia. El listado conserva `MatriculaAcademicaListadoDto[]`; la paginación es exclusivamente cliente después de programa, periodo, estado, búsqueda y orden descendente por `fechaSolicitud`.
+- No hay seeds, datasets ni artifacts nuevos. Rutas principales para revisión autenticada: `/matricula`, `/coordinacion/estudiantes` y `/coordinacion/estudiantes/:id`.
+- Salida esperada: 73 matrículas producen 8 páginas (10 por página, 3 en la última); filtrar recalcula el total y vuelve a página 1. Un clic sencillo en una tarjeta abre el perfil al primer intento, mientras arrastrar horizontalmente no navega. Las tarjetas documentales muestran **Fecha de carga**, pero no **Tamaño**.
+
+## Entorno, pruebas y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Versiones verificadas: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación local: ESLint focalizado PASS; build PASS (309 módulos, CSS 246.09 kB, JS 727.18 kB); suite Node PASS (48/48); `git diff --check` PASS. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite informa un chunk JS mayor de 500 kB.
+- Pendiente externo: validar las tres rutas con sesión/backend institucionales, en claro/oscuro, escritorio/móvil, incluyendo clic, arrastre y retorno al listado. No se generó captura: el contenedor no dispone de Chromium, Chrome ni Firefox y las vistas protegidas necesitan sesión y backend no incluidos.
+
+---
+
 # Update 2026-09-24 — paginación visual unificada en matrícula financiera
 
 ## Estado actual y salida esperada
