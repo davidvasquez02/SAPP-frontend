@@ -40,7 +40,7 @@ export function formatoMonedaEntrada(value: string): string {
   const negative = value.startsWith('-'); const unsigned = negative ? value.slice(1) : value
   const [integer, decimal] = unsigned.split('.')
   const grouped = (integer || '0').replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${negative ? '-' : ''}${grouped}${decimal === undefined ? '' : `,${decimal}`}`
+  return `$ ${negative ? '-' : ''}${grouped}${decimal === undefined ? '' : `,${decimal}`}`
 }
 export const ajustesActuales = (fila: LiquidacionMatricula): AjustesLiquidacionRequest => ({
   semestre: fila.semestre ?? 1, promocion: fila.promocion ?? null, ajusteManual: fila.ajusteManual ?? 0,

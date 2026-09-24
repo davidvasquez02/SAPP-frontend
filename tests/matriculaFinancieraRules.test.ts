@@ -66,7 +66,10 @@ test('la entrada monetaria conserva cero, negativos y hasta cuatro decimales', (
   assert.equal(normalizarMoneda('-1', false), null)
   assert.equal(normalizarMoneda('1,12345', true), null)
   assert.equal(normalizarMoneda('', true), '')
-  assert.equal(formatoMonedaEntrada('-1234.5678'), '-1.234,5678')
+  assert.equal(formatoMonedaEntrada('-1234.5678'), '$ -1.234,5678')
+  assert.equal(formatoMonedaEntrada('30000000'), '$ 30.000.000')
+  assert.equal(formatoMonedaEntrada('0'), '$ 0')
+  assert.equal(formatoMonedaEntrada(''), '')
 })
 test('las etiquetas de estado son textuales y distinguen la exclusión', () => {
   assert.equal(etiquetaEstadoLiquidacion('PENDIENTE_RESPUESTA'), 'Pendiente de respuesta')

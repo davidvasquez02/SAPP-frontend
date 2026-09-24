@@ -1155,3 +1155,12 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
   la interfaz.
 - El ajuste es exclusivamente de contenido. No cambia validaciones, acciones,
   contratos HTTP, DTO, dependencias, variables, seeds ni datasets.
+
+## Decisión reciente — formato monetario durante la edición (2026-09-24)
+
+- Los campos **Valor a sumar o restar al cálculo** y **Total autorizado
+  manualmente** muestran mientras se escribe el prefijo `$` y separadores de
+  miles colombianos. Los valores negativos y hasta cuatro decimales continúan
+  admitidos; el payload enviado al backend permanece numérico y sin formato.
+- No se modificaron endpoints, DTO, reglas de cálculo, dependencias, variables,
+  seeds ni datasets. El servidor conserva la autoridad sobre el total final.
