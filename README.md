@@ -854,6 +854,12 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-24:** la selección del nivel en Proyectos de grado reutiliza el
+  resolvedor canónico de programas académicos. Además de las siglas históricas
+  `MISI`/`DCC`, reconoce los nombres vigentes, los códigos UIS `302`/`347` y
+  variantes con o sin tildes. Así, un estudiante del Doctorado en Ciencias de
+  la Computación recibe exclusivamente el catálogo doctoral al crear una
+  solicitud, en lugar de las opciones de maestría.
 - **2026-09-23:** la línea de tiempo del detalle de evaluación de trabajos de
   grado dejó de depender del historial incluido en el DTO general y consulta
   `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`. Cada cambio

@@ -1,3 +1,18 @@
+# Update 2026-09-24 — clasificación doctoral en proyectos de grado
+
+## Estado actual, causa y salida esperada
+- Se confirmó la causa: `getNivelTrabajoGrado` solo buscaba la sigla histórica `DCC`, por lo que el nombre vigente `347 - DOCTORADO EN CIENCIAS DE LA COMPUTACION` caía en el fallback de maestría. La función ahora delega en el resolvedor canónico `resolveTipoPrograma`, que reconoce nombres oficiales, códigos UIS (`302`/`347`), tildes y siglas legadas.
+- `TrabajosGradoPage` usa este resultado para redirigir al estudiante y elegir el catálogo. Un estudiante doctoral navega a `/trabajos-grado/doctorado` y recibe `[13, 8, 9, 4, 5]`; maestría conserva `[13, 6, 7]`. Un valor ausente o desconocido mantiene por compatibilidad el fallback a maestría.
+- No se modificaron endpoints, DTO, payloads, permisos, schemas ni base de datos. El contrato de sesión sigue leyendo `session.user.estudiante?.programaCodigoNombre` con respaldo en `session.user.programa`.
+
+## Paths, entorno, pruebas y continuidad
+- Resolución compartida: `src/shared/domain/programaAcademico.ts`; integración: `src/modules/trabajos-grado/constants.ts` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresión: `tests/candidaturaDoctoral.test.ts`.
+- Verificación local 2026-09-24: pruebas dirigidas PASS (7/7), suite Node completa PASS (29/29), ESLint focalizado PASS, `npm run build` PASS (287 módulos; CSS 233.01 kB y JS 670.15 kB) y `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JS mayor de 500 kB.
+- Pendiente: validar con backend y una sesión institucional doctoral que no aparezcan los tipos 6 y 7. Confirmar después si el ID legado 8 puede retirarse y reconsiderar el fallback si se incorpora un tercer nivel académico.
+- No hay seeds ni datasets para este flujo. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+---
+
 # Update 2026-09-24 — histórico y selección documental al designar jurados
 
 ## Estado actual, causa y decisiones
