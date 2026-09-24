@@ -70,10 +70,6 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
             <dt><CalendarDays aria-hidden="true" size={16} /> Cohorte</dt>
             <dd>{estudiante.cohorte}</dd>
           </div>
-          <div>
-            <dt><span aria-hidden="true">▣</span> Estado académico</dt>
-            <dd>{getEstadoLabel(estudiante.estadoAcademico)}</dd>
-          </div>
         </dl>
       </div>
 

@@ -1,3 +1,18 @@
+# Update 2026-09-24 — estado académico sin duplicar en tarjetas
+
+## Estado actual, decisión y salida esperada
+- `EstudianteCard` conserva la insignia visual que presenta `estadoAcademico` debajo de la fotografía y elimina la fila redundante **Estado académico** del bloque de detalles. Una tarjeta activa o inactiva debe mostrar ahora **Activo** o **Inactivo** exactamente una vez.
+- La cohorte continúa visible en todos los tamaños. Se retiró la regla móvil que ocultaba el último detalle porque, tras eliminar el estado duplicado, esa regla habría ocultado la cohorte. No cambiaron el mapper, el filtro por estado, la navegación, el contrato ni los servicios.
+- Contrato de entrada sin cambios: `EstudianteCoordinacion.estadoAcademico` sigue siendo una cadena normalizada por el servicio y la tarjeta mantiene las etiquetas para `ACTIVO`, `INACTIVO`, `EGRESADO`, `EN_TRABAJO_DE_GRADO` y `EN_ESPERA_CANDIDATURA`. La salida esperada contiene una insignia de estado, nombre, código UIS, cohorte y la acción **Ver perfil**.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` y `EstudianteCard.css`. No hay schemas, artifacts, dependencias, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: `npx eslint src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` PASS; `npm run build` PASS (309 módulos, CSS 244.73 kB y JS 727.00 kB); `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); `git diff --check` PASS. `npm run lint` sigue fallando por 9 errores y 1 warning preexistentes en otros archivos. Persisten además el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar visualmente el listado protegido con una sesión institucional en escritorio y móvil. No se generó captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere autenticación/backend institucionales.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+
+---
+
 # Update 2026-09-24 — directorio explícito del banco de evaluadores
 
 ## Estado actual y decisiones
