@@ -1,3 +1,10 @@
+# Corrección 2026-09-24 — solicitudes asignadas ocultas para coordinación
+
+- El usuario con rol exacto `COORDINADOR_POSGRADOS` deja de ver el bloque **Solicitudes asignadas** tanto en el módulo general de **Solicitudes** como en los listados de **Proyectos de grado**. Las solicitudes asignadas también permanecen excluidas del listado general, por lo que no se duplican ni reaparecen allí.
+- El cambio es exclusivo de ese rol. Administración, secretaría, dirección, docentes y estudiantes conservan sus listados y permisos actuales; en particular, los docentes siguen usando **Solicitudes asignadas** para atender los trámites que les corresponden.
+- Se reutilizan `GET /sapp/solicitudesAcademicas` y `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}` para calcular la exclusión. No cambiaron endpoints, DTO, transiciones, dependencias, variables, seeds ni datasets.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; validación de producción: `npm run build`. Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no hay venv, Conda ni Poetry.
+
 # Implementación 2026-09-24 — matrícula financiera
 
 - Se completaron las nueve operaciones de interfaz pendientes y el flujo documental: detalle, respaldo por coordinación, ajustes/observaciones, exclusión/reinclusión, edición del proceso, proceso base, alta manual y tarifas. Tablero con filtros/paginación, selección y envíos por lotes, resultados de omitidos y publicación validada. El estudiante dispone de plazo, respuestas, certificado y desglose disponible.

@@ -1,3 +1,19 @@
+# Update 2026-09-24 — ocultamiento de asignadas exclusivo para coordinación
+
+## Estado actual, decisión y salida esperada
+- `SolicitudesCoordinadorView` admite `hideAssignedList`. La vista continúa consultando las asignaciones para retirar sus IDs del listado general, pero no renderiza el bloque **Solicitudes asignadas** cuando la propiedad es `true`.
+- `SolicitudesPage` y `TrabajosGradoPage` activan esa propiedad únicamente si la sesión contiene el rol exacto `COORDINADOR_POSGRADOS`. No se usa `canManagePosgrados` para esta decisión porque esa guarda también incluye `ADMIN_POSGRADOS` y `SECRETARIA_POSGRADOS`, cuyos comportamientos deben permanecer sin cambios.
+- Salida esperada: coordinación no ve solicitudes que tenga asignadas en ninguno de los dos módulos; administración y secretaría conservan el bloque de asignadas y los docentes conservan su listado exclusivo. Estudiantes, dirección, filtros, paginación, navegación y detalle no cambian.
+- Los contratos siguen siendo `GET /sapp/solicitudesAcademicas` para el universo y `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}` para las asignadas. No se modificaron payloads, DTO, backend, esquema, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno y continuidad
+- Implementación: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`, `src/pages/Solicitudes/SolicitudesPage.tsx` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni venv, Conda o Poetry. No es un proyecto Python. Entorno exacto verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol completo.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (44/44); `npm run build` PASS (307 módulos, CSS 243.32 kB y JS 724.18 kB); `git diff --check` PASS. Persisten el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente de validación institucional: iniciar sesión separadamente como coordinación, administración, secretaría y docente; comprobar ambos niveles de proyectos de grado; y simular una asignación/desasignación. El repositorio no incluye credenciales, backend reproducible ni seeds para este flujo.
+
+---
+
 # Implementación 2026-09-24 — continuación autorizada tras auditoría
 
 - El usuario pidió implementar los ajustes del análisis. Se completó la interfaz de las 24 operaciones y documentos; la entrada anterior «sin implementación» es histórica. Resumen y límites: `docs/matricula-financiera-implementacion-2026-09-24.md`.

@@ -29,6 +29,7 @@ interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
   readOnly?: boolean
   assignedOnly?: boolean
+  hideAssignedList?: boolean
   excludeCreditosCondonables?: boolean
   includeTipoSolicitudIds?: readonly number[]
   excludeTipoSolicitudIds?: ReadonlySet<number>
@@ -42,6 +43,7 @@ const SolicitudesCoordinadorView = ({
   usuarioSappId,
   readOnly = false,
   assignedOnly = false,
+  hideAssignedList = false,
   excludeCreditosCondonables = false,
   includeTipoSolicitudIds,
   excludeTipoSolicitudIds,
@@ -200,26 +202,28 @@ const SolicitudesCoordinadorView = ({
       {readOnly ? (
         <p />
       ) : null}
-      <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
-        <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
-        {assignedLoading ? (
-          <p className="solicitudes-coordinador-view__status">Cargando solicitudes asignadas...</p>
-        ) : assignedError ? (
-          <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">
-            {assignedError}
-          </p>
-        ) : assignedRows.length === 0 ? (
-          <p className="solicitudes-coordinador-view__status">No tienes solicitudes asignadas.</p>
-        ) : (
-          <SolicitudesTable
-            mode="COORDINADOR"
-            rows={assignedRows}
-            onRowClick={(solicitudId) =>
-              navigate(detailPath(solicitudId), { state: { fromAssigned: true } })
-            }
-          />
-        )}
-      </section>
+      {!hideAssignedList ? (
+        <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
+          <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
+          {assignedLoading ? (
+            <p className="solicitudes-coordinador-view__status">Cargando solicitudes asignadas...</p>
+          ) : assignedError ? (
+            <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">
+              {assignedError}
+            </p>
+          ) : assignedRows.length === 0 ? (
+            <p className="solicitudes-coordinador-view__status">No tienes solicitudes asignadas.</p>
+          ) : (
+            <SolicitudesTable
+              mode="COORDINADOR"
+              rows={assignedRows}
+              onRowClick={(solicitudId) =>
+                navigate(detailPath(solicitudId), { state: { fromAssigned: true } })
+              }
+            />
+          )}
+        </section>
+      ) : null}
       {!assignedOnly ? (
         <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
           <h3 id="solicitudes-title">Solicitudes</h3>
