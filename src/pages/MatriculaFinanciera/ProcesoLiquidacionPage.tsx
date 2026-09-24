@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { BackButton, ModuleLayout } from '../../components'
 import { actualizarProceso, agregarLiquidacion, ejecutarAccionProceso, exportarProceso, listarLiquidaciones, listarProgramas, obtenerProceso, publicarProceso } from '../../modules/matricula-financiera/api'
 import { etiquetaResumen, puedeEjecutarAccion } from '../../modules/matricula-financiera/flow'
 import { etiquetaEstadoLiquidacion, fechaColombia, hoyColombia, money } from '../../modules/matricula-financiera/rules'
@@ -47,7 +47,7 @@ export function ProcesoLiquidacionPage() {
       setResultado({ titulo: accion === 'enviarSolicitudes' ? 'Resultado de solicitudes' : 'Resultado de recordatorios', mensaje: `${response.enviados} enviados · ${response.omitidos.length} omitidos.`, omitidos: response.omitidos })
     } finally { setProgreso(''); refresh() }
   }, 'Envío terminado. Revisa los omitidos.')
-  return <ModuleLayout title="Tablero de matrícula financiera"><div className="mf-page"><Link className="mf-back" to="/matricula/financiera">← Volver a procesos</Link><Aviso error={op.error || consulta.error} message={op.message} />{op.error && <p>Si una operación de envío falló, revisa el resultado parcial antes de volver a enviar; no se reintenta automáticamente.</p>}{progreso && <p role="status">{progreso}</p>}{resultado && <ResultadoOperacion titulo={resultado.titulo} omitidos={resultado.omitidos} codigos={codigos}>{resultado.mensaje}</ResultadoOperacion>}
+  return <ModuleLayout title="Tablero de matrícula financiera"><div className="mf-page"><BackButton to="/matricula/financiera">Volver a procesos</BackButton><Aviso error={op.error || consulta.error} message={op.message} />{op.error && <p>Si una operación de envío falló, revisa el resultado parcial antes de volver a enviar; no se reintenta automáticamente.</p>}{progreso && <p role="status">{progreso}</p>}{resultado && <ResultadoOperacion titulo={resultado.titulo} omitidos={resultado.omitidos} codigos={codigos}>{resultado.mensaje}</ResultadoOperacion>}
     {consulta.loading && <p role="status">Cargando proceso y liquidaciones…</p>}{consulta.error && <button className="mf-button" onClick={refresh}>Reintentar consulta</button>}
     {proceso && <><header className="mf-page__intro"><div><span className={`mf-badge mf-badge--${proceso.estado.toLowerCase()}`}>{proceso.estado}</span><h1>Liquidaciones · {proceso.periodo}</h1><p>Recepción de respuestas habilitada hasta el {fechaColombia(proceso.fechaLimiteRespuesta)} · SMMLV {money(proceso.valorSmmlv)}</p><p>Pago hasta {fechaColombia(proceso.fechaLimitePago)}</p></div><button disabled={blocked} className="mf-button mf-button--secondary" onClick={() => void op.run(() => exportarProceso(id), 'Excel descargado.')}>Exportar Excel</button></header>
       <section className="mf-summary" aria-label="Resumen del proceso">{Object.entries(proceso.resumen).map(([key, value]) => <div className="mf-card" key={key}><strong>{value}</strong><span>{etiquetaResumen(key)}</span></div>)}</section>
