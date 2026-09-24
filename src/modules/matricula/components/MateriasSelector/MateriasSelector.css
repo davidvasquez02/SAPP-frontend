@@ -1,9 +1,28 @@
 .materias-selector {
   position: relative;
-  width: min(100%, 32rem);
+  width: min(100%, 42rem);
 }
 
-.materias-selector__input {
+.materias-selector__controls {
+  display: grid;
+  grid-template-columns: minmax(16rem, 2fr) minmax(8.5rem, 0.65fr);
+  gap: 0.85rem;
+  align-items: end;
+}
+
+.materias-selector__level-field,
+.materias-selector__search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.materias-selector__input,
+.materias-selector__level-select {
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
   border-radius: 12px;
@@ -13,7 +32,8 @@
   color: var(--text-primary);
 }
 
-.materias-selector__input:focus {
+.materias-selector__input:focus,
+.materias-selector__level-select:focus {
   outline: 2px solid color-mix(in srgb, var(--primary), transparent 40%);
   border-color: color-mix(in srgb, var(--primary), transparent 30%);
 }
@@ -79,7 +99,24 @@
     font-size: 16px;
   }
 
+  .materias-selector__controls {
+    grid-template-columns: minmax(0, 2fr) minmax(7.5rem, 0.7fr);
+    gap: 0.6rem;
+  }
+
+  .materias-selector__level-select {
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   .materias-selector__option {
     min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .materias-selector__controls {
+    grid-template-columns: 1fr;
   }
 }
