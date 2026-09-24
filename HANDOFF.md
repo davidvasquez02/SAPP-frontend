@@ -1,3 +1,10 @@
+# Actualización 2026-09-24 — guía y cierre del flujo de matrícula financiera
+
+## Estado y decisiones
+- `src/modules/matricula-financiera/flow.ts` centraliza las guías por perfil, las etiquetas del resumen y la matriz de acciones: BORRADOR permite convocar/enviar/recalcular; ABIERTO agrega recordatorio/cierre; CERRADO permite reabrir/recalcular/publicar; PUBLICADO es de consulta.
+- `MatriculaFinancieraPage.tsx` muestra el contexto inicial y todos los parámetros de creación. `ProcesoLiquidacionPage.tsx` completa el cierre mediante `POST /liquidacionMatricula/procesos/{id}/publicar` con `{ fechaLimitePago }`. El backend conserva la autoridad de las transiciones.
+- Prueba dirigida: `tests/matriculaFinancieraFlow.test.ts`. Pendiente validar con sesión institucional los cuatro estados, la fecha límite y los temas claro/oscuro. No existen seeds; usar datos del backend. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm.
+
 # Update 2026-09-24 — matrícula financiera
 
 ## Estado actual y decisiones
