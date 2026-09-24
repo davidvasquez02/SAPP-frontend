@@ -1,3 +1,9 @@
+# Actualización 2026-09-24 — guía y cierre del flujo de matrícula financiera
+
+- La portada de matrícula financiera incorpora una **Guía de servicios** inicial adaptada al rol: coordinación recorre configuración, convocatoria, revisión y publicación; el estudiante recorre solicitud, respuestas, revisión y consulta del resultado.
+- El formulario de creación ahora expone todas las reglas enviadas al backend (fuente del SMMLV, porcentajes de votación/salud y base de salud) con restricciones básicas. El tablero habilita la publicación únicamente desde `CERRADO`, exige fecha límite de pago y usa el endpoint existente `POST /liquidacionMatricula/procesos/{id}/publicar`.
+- La matriz de acciones por estado quedó centralizada y probada. No cambiaron endpoints, DTO, autenticación, dependencias, variables, seeds ni datasets.
+
 # Corrección 2026-09-24 — base API unificada para matrícula financiera
 
 - Matrícula financiera conserva ahora la misma base configurada que el resto del proyecto: con `VITE_API_URL=https://sapp.eisi.online/api/sapp`, sus solicitudes se envían a `https://sapp.eisi.online/api/sapp/liquidacionMatricula/...`.
