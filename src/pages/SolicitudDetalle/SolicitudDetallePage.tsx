@@ -33,6 +33,7 @@ import {
   puedeFirmarDocumentosSolicitud,
 } from '../../modules/solicitudes/utils/firmaSolicitud'
 import {
+  esExamenCandidaturaDoctoral,
   getAprobacionTrabajoGradoLabel,
   tieneProcesoEvaluacionTg,
 } from '../../modules/trabajos-grado/constants'
@@ -359,12 +360,16 @@ const SolicitudDetallePage = () => {
   const showAjustesEstudiante =
     isEstudiante &&
     solicitud != null &&
-    [4, 5, 6, 7, 8].includes(solicitud.tipoSolicitudId)
+    [4, 5, 6, 7, 8, 9].includes(solicitud.tipoSolicitudId)
   const solicitudEnAjustes =
     solicitud?.estadoId === 16 || solicitud?.estadoSigla?.trim().toLocaleUpperCase() === 'EN_AJUSTES'
   const tituloTrabajo = solicitud?.tituloTrabajo?.trim() || procesoEvaluacion?.titulo?.trim() || ''
   const resumenTrabajo = solicitud?.resumenTrabajo?.trim() || procesoEvaluacion?.resumen?.trim() || ''
-  const showDatosTrabajo = Boolean(tituloTrabajo || resumenTrabajo)
+  const esCandidaturaDoctoral = esExamenCandidaturaDoctoral(
+    solicitud?.tipoSolicitudId,
+    solicitud?.tipoSolicitudCodigo,
+  )
+  const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
 
   const refreshSolicitud = useCallback(async () => {
     if (!solicitud) return
@@ -580,10 +585,12 @@ const SolicitudDetallePage = () => {
                     <dt>Título</dt>
                     <dd>{tituloTrabajo || 'Sin título registrado.'}</dd>
                   </div>
-                  <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                    <dt>Resumen</dt>
-                    <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
-                  </div>
+                  {!esCandidaturaDoctoral && (
+                    <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                      <dt>Resumen</dt>
+                      <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
+                    </div>
+                  )}
                 </>
               )}
               <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">

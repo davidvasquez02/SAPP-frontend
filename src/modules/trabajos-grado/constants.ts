@@ -14,10 +14,11 @@ export const tieneProcesoEvaluacionTg = (codigo: string | null | undefined): boo
   CODIGOS_PROCESO_EVALUACION_TG.has(codigo?.trim().toLocaleUpperCase('es-CO') ?? '')
 
 export const TIPO_TEMA_TRABAJO_GRADO_ID = 13
+export const TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID = 9
 
 export const TIPOS_TRABAJO_GRADO_POR_NIVEL: Record<NivelTrabajoGrado, readonly number[]> = {
   maestria: [TIPO_TEMA_TRABAJO_GRADO_ID, 6, 7],
-  doctorado: [TIPO_TEMA_TRABAJO_GRADO_ID, 8, 4, 5],
+  doctorado: [TIPO_TEMA_TRABAJO_GRADO_ID, 8, TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID, 4, 5],
 }
 
 export const TIPOS_TRABAJO_GRADO_IDS = new Set(
@@ -26,6 +27,13 @@ export const TIPOS_TRABAJO_GRADO_IDS = new Set(
 
 export const isTipoTrabajoGrado = (tipoSolicitudId: number | undefined): boolean =>
   tipoSolicitudId !== undefined && TIPOS_TRABAJO_GRADO_IDS.has(tipoSolicitudId)
+
+export const esExamenCandidaturaDoctoral = (
+  tipoSolicitudId: number | undefined,
+  tipoSolicitudCodigo?: string | null,
+): boolean =>
+  tipoSolicitudId === TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID ||
+  tipoSolicitudCodigo?.trim().toLocaleUpperCase('es-CO') === 'CAND_DOCTORAL'
 
 const normalizeEstadoResolucion = (value: string | null | undefined): string =>
   value
