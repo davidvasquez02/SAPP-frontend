@@ -12,16 +12,18 @@ interface RespuestasFormProps {
   coordinacion?: boolean
   observaciones?: string | null
   renderCertificado?: () => ReactNode
-  onSave: (value: RespuestasCoordinacionRequest) => Promise<void>
+  onSave: (value: RespuestasCoordinacionRequest) => Promise<boolean | void>
+  onDirtyChange?: (dirty: boolean) => void
 }
-export function RespuestasForm({ respuestas, tipo, preguntas, busy, editable, coordinacion = false, observaciones, renderCertificado, onSave }: RespuestasFormProps) {
+export function RespuestasForm({ respuestas, tipo, preguntas, busy, editable, coordinacion = false, observaciones, renderCertificado, onSave, onDirtyChange }: RespuestasFormProps) {
   const [answers, setAnswers] = useState(respuestas)
   const [notas, setNotas] = useState(observaciones ?? '')
   const completas = respuestasCompletas(answers, tipo, preguntas)
-  return <form className="mf-questions" onSubmit={e => { e.preventDefault(); if (!completas) return; void onSave({ ...seleccionarRespuestas(answers, tipo, preguntas), ...(coordinacion ? { certificadoVotacionRecibido: answers.certificadoVotacion === true, observaciones: notas.trim() || null } : {}) }) }}>
-    {preguntas.filter(q => q.aplica).map(q => <fieldset disabled={busy || !editable} key={q.clave}><legend>{q.texto}</legend>{editable ? <><label><input required type="radio" name={q.clave} checked={answers[q.clave] === true} onChange={() => setAnswers({ ...answers, [q.clave]: true })} />Sí</label><label><input required type="radio" name={q.clave} checked={answers[q.clave] === false} onChange={() => setAnswers({ ...answers, [q.clave]: false })} />No</label>{answers[q.clave] == null && <small>Sin responder</small>}</> : <span>{respuestas[q.clave] == null ? 'Sin responder' : respuestas[q.clave] ? 'Sí' : 'No'}</span>}</fieldset>)}
+  const updateAnswers = (next: RespuestasLiquidacion) => { setAnswers(next); onDirtyChange?.(true) }
+  return <form className="mf-questions" onSubmit={e => { e.preventDefault(); if (!completas) return; void onSave({ ...seleccionarRespuestas(answers, tipo, preguntas), ...(coordinacion ? { certificadoVotacionRecibido: answers.certificadoVotacion === true, observaciones: notas.trim() || null } : {}) }).then(saved => { if (saved !== false) onDirtyChange?.(false) }) }}>
+    {preguntas.filter(q => q.aplica).map(q => <fieldset disabled={busy || !editable} key={q.clave}><legend>{q.texto}</legend>{editable ? <><label><input required type="radio" name={q.clave} checked={answers[q.clave] === true} onChange={() => updateAnswers({ ...answers, [q.clave]: true })} />Sí</label><label><input required type="radio" name={q.clave} checked={answers[q.clave] === false} onChange={() => updateAnswers({ ...answers, [q.clave]: false })} />No</label>{answers[q.clave] == null && <small>Sin responder</small>}</> : <span>{respuestas[q.clave] == null ? 'Sin responder' : respuestas[q.clave] ? 'Sí' : 'No'}</span>}</fieldset>)}
     {answers.certificadoVotacion === true && renderCertificado?.()}
-    {coordinacion && <fieldset className="mf-form mf-fieldset" disabled={busy || !editable}><label>Observaciones (opcional)<textarea value={notas} onChange={e => setNotas(e.target.value)} /></label></fieldset>}
+    {coordinacion && <fieldset className="mf-form mf-fieldset" disabled={busy || !editable}><label>Observaciones (opcional)<textarea value={notas} onChange={e => { setNotas(e.target.value); onDirtyChange?.(true) }} /></label></fieldset>}
     {editable && <button disabled={busy || !completas} className="mf-button" type="submit">{busy ? 'Guardando…' : coordinacion ? 'Registrar respuestas' : 'Guardar respuestas'}</button>}
   </form>
 }

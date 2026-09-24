@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ajustesActuales, fechaColombia, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
 import type { CuerposLiquidacion, EstadoLiquidacion, EstadoProcesoLiquidacion, LiquidacionMatricula } from '../src/modules/matricula-financiera/types.ts'
 
 test('un estudiante nuevo nunca envía los campos exclusivos de vigente, incluso si venían poblados', () => {
@@ -59,4 +59,16 @@ test('la edición preserva el reemplazo completo y el valor final manual cero', 
 test('la fecha local no desplaza el día ni la hora de Colombia', () => {
   assert.equal(fechaColombia('2026-09-24T00:15:43.1234'), '24/09/2026 00:15')
   assert.equal(fechaColombia('2026-09-24'), '24/09/2026')
+})
+test('la entrada monetaria conserva cero, negativos y hasta cuatro decimales', () => {
+  assert.equal(normalizarMoneda('$ -1.234,5678', true), '-1234.5678')
+  assert.equal(normalizarMoneda('0', false), '0')
+  assert.equal(normalizarMoneda('-1', false), null)
+  assert.equal(normalizarMoneda('1,12345', true), null)
+  assert.equal(normalizarMoneda('', true), '')
+  assert.equal(formatoMonedaEntrada('-1234.5678'), '-1.234,5678')
+})
+test('las etiquetas de estado son textuales y distinguen la exclusión', () => {
+  assert.equal(etiquetaEstadoLiquidacion('PENDIENTE_RESPUESTA'), 'Pendiente de respuesta')
+  assert.equal(etiquetaEstadoLiquidacion('NO_LIQUIDAR'), 'Excluida')
 })
