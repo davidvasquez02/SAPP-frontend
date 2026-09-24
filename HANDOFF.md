@@ -1,3 +1,23 @@
+# Handoff 2026-09-24 — evaluación de proyecto de grado visible al estudiante
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` ya consultaba `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` para estudiantes con solicitudes de trabajo de grado. Ahora, cuando existe un proceso, renderiza `ProcesoEvaluacionEstudiante` después del panel de ajustes y antes de la gestión exclusiva de coordinación.
+- La vista destaca `resultadoNombre`, `resultado` o `resultadoCodigo` (en ese orden), `notaFinal` si existe, `fechaResultado` y los datos de sustentación. Acepta el contrato plano mostrado por el backend y conserva compatibilidad con el objeto anidado `sustentacion`.
+- Solo se presentan jurados con `activo: true`, ordenados por `orden`; los reemplazados se omiten para no confundir al estudiante. Se muestran nombre e institución, pero deliberadamente no correo. Cada evaluación presenta momento, concepto/resultado/nota según `momentoCodigo` y observaciones, con placeholders explícitos para valores pendientes.
+
+## Paths, contratos y salida esperada
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante.{tsx,css}`, integración en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y ampliación de contrato en `src/modules/trabajos-grado/evaluacion/types.ts`.
+- Contrato principal: envelope `{ ok, message, data }` de `GET /sapp/procesoEvaluacionTg/solicitud/{id}`. Se consumen `resultado`, `resultadoCodigo`, `fechaResultado`, `notaFinal`, sustentación plana o anidada y `jurados[]`; de cada jurado, `activo`, `orden`, `nombre`, `institucion`, estado y `evaluaciones[]`; de cada evaluación, momento, concepto/resultado/nota y observaciones.
+- Para el ejemplo de solicitud 78, la salida esperada destaca **Aprobado**, la fecha de resultado y la sustentación presencial en sala 104 EISI; lista a fiona, rubi y michi con sus conceptos, resultados y observaciones, y omite a morgan porque fue reemplazado. El correo de ningún jurado debe aparecer.
+- No hay artifacts, schemas, seeds ni datasets nuevos. Ruta a validar con sesión estudiantil: `/trabajos-grado/:nivel/solicitudes/78` (o `/solicitudes/78`, según el punto de entrada).
+
+## Entorno, pruebas y próximos pasos
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otra instalación ni crear venv, Conda o Poetry; no es un proyecto Python.
+- Verificación local: suite Node PASS (53/53); ESLint focalizado PASS; build PASS (312 módulos, CSS 251.67 kB, JS 731.57 kB); `git diff --check` PASS. El build conserva el aviso informativo del chunk JS mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+- Pendiente: validar con sesión/backend institucional el endpoint de la solicitud real y revisar claro/oscuro y móvil. No se generó captura en esta fase porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida requiere sesión institucional.
+
+---
+
 # Handoff 2026-09-24 — grado en el catálogo de maestría
 
 ## Estado, contrato y salida esperada

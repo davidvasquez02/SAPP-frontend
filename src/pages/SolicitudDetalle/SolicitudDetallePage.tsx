@@ -38,6 +38,7 @@ import {
   tieneProcesoEvaluacionTg,
 } from '../../modules/trabajos-grado/constants'
 import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
+import ProcesoEvaluacionEstudiante from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante'
 import AjustesEstudiantePanel from '../../modules/trabajos-grado/evaluacion/AjustesEstudiantePanel'
 import { getProcesoEvaluacion } from '../../modules/trabajos-grado/evaluacion/api'
 import type { ProcesoEvaluacionTg } from '../../modules/trabajos-grado/evaluacion/types'
@@ -850,6 +851,10 @@ const SolicitudDetallePage = () => {
                 enAjustes={solicitudEnAjustes}
                 onUploaded={refreshSolicitud}
               />
+            )}
+
+            {isEstudiante && procesoEvaluacion && (
+              <ProcesoEvaluacionEstudiante proceso={procesoEvaluacion} />
             )}
 
             {showProcesoEvaluacion && (

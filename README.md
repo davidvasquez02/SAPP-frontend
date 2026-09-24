@@ -1,3 +1,15 @@
+# Actualización 2026-09-24 — resultado de proyecto de grado para estudiantes
+
+Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. La aplicación usa páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; el backend Spring Boot/PostgreSQL mantiene reglas y persistencia.
+
+- El detalle estudiantil de una solicitud de proyecto de grado consulta `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` y presenta un resumen del resultado final, fecha, nota cuando exista e información de sustentación disponible.
+- La nueva sección lista únicamente los evaluadores activos para no confundir reemplazos históricos. Por cada evaluador muestra nombre, institución, estado de invitación y todas sus evaluaciones, distinguiendo concepto del documento o resultado/nota de sustentación junto con sus observaciones. Por privacidad, el correo retornado por el endpoint no se expone al estudiante.
+- El contrato tipado admite tanto la sustentación anidada previa como los campos planos reales (`fechaSustentacion`, `modalidadSustentacion`, `lugarSustentacion`, `enlaceSustentacion`), además de `resultado`, `fechaResultado`, `orden` y fechas límite. No se agregaron endpoints, dependencias, variables, seeds ni datasets.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Los datos reales provienen del backend configurado con las variables Vite existentes.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. Verificación: suite Node 53/53, ESLint focalizado, build de producción y `git diff --check` pasan.
+
+---
+
 # Correcciones 2026-09-24 — títulos y filtros de gestión
 
 Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. Mantiene páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; Spring Boot y PostgreSQL continúan siendo responsables de las reglas y la persistencia.
