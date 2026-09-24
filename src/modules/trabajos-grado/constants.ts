@@ -1,4 +1,5 @@
 import type { SolicitudTableRow, TipoSolicitudDto } from '../solicitudes/types'
+import { resolveTipoPrograma } from '../../shared/domain/programaAcademico.ts'
 
 export type NivelTrabajoGrado = 'maestria' | 'doctorado'
 
@@ -65,7 +66,7 @@ export const getAprobacionTrabajoGradoLabel = (
 }
 
 export const getNivelTrabajoGrado = (programa: string | null | undefined): NivelTrabajoGrado =>
-  programa?.toLocaleUpperCase('es-CO').includes('DCC') ? 'doctorado' : 'maestria'
+  resolveTipoPrograma(programa) === 'doctorado' ? 'doctorado' : 'maestria'
 
 export const correspondeSolicitudANivel = (
   solicitud: Pick<SolicitudTableRow, 'tipoSolicitudId' | 'programaAcademico'>,
