@@ -5761,3 +5761,19 @@ npm run lint
 - Pendiente integrado: validar la eliminación exitosa y fallida con backend/sesión institucional, temas claro/oscuro, teclado y viewport móvil. No se pudo capturar una imagen en el contenedor porque no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados.
 
 ---
+
+# Update 2026-09-24 — tabla de profesores por grupo y sidebar
+
+## Estado actual, decisiones y salida esperada
+
+- `src/pages/GestionProfesores/GestionProfesoresPage.tsx` retiró exclusivamente la cabecera y la celda visible **Identificador** de la tabla **Profesores del grupo**. `docente.docenteId ?? docente.id` sigue calculándose y utilizándose como `key`, para identificar las mutaciones de director y retiro; no se cambió el DTO ni se ocultaron las columnas de documento pertenecientes a las otras tablas de profesores.
+- `src/components/Sidebar/Sidebar.css` amplió `--sidebar-expanded-width` de 260 px a 284 px. Al hacer hover o foco en escritorio, **Informes a dependencias** debe verse completo en una sola línea; el ancho contraído permanece en 84 px y el drawer móvil continúa usando `min(84vw, 320px)`.
+- No cambiaron endpoints, payloads, schemas, permisos, rutas, dependencias, variables, seeds ni datasets. El resultado esperado en grupos contiene **Profesor**, **Rol en el grupo** y **Acciones**, mientras que las operaciones siguen enviando el identificador requerido por los servicios existentes.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no ejecutar otro `npm install` ni crear venv, Conda, Poetry u otro árbol npm. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (58/58); `npm run build` PASS (314 módulos; CSS 255.39 kB y JS 734.20 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JS mayor de 500 kB.
+- Pendiente integrado: revisar la tabla con grupos vacíos y poblados, y el sidebar en temas claro/oscuro, hover, foco y viewport móvil usando una sesión institucional. No se tomó captura porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer y la ruta real requiere autenticación/backend; no existe un seed local reproducible.
+
+---

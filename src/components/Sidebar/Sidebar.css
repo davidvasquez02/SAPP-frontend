@@ -1,6 +1,6 @@
 .sidebar {
   --sidebar-collapsed-width: 84px;
-  --sidebar-expanded-width: 260px;
+  --sidebar-expanded-width: 284px;
   width: var(--sidebar-collapsed-width);
   background: linear-gradient(
     180deg,

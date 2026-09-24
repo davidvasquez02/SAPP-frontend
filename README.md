@@ -1,3 +1,15 @@
+# Corrección 2026-09-24 — tabla de grupos y ancho del menú lateral
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En **Gestión profesores > Grupos de investigación**, la tabla de integrantes ya no presenta la columna técnica **Identificador**. El identificador del docente se conserva internamente como clave y para las operaciones de designar director o retirar, por lo que no cambian contratos, endpoints ni comportamiento.
+- El menú lateral expandido pasa de 260 px a 284 px para mostrar completa, en una sola línea, la etiqueta **Informes a dependencias**. El estado contraído continúa en 84 px y la variante móvil conserva su ancho adaptable de hasta 320 px.
+- No se agregaron dependencias, variables, schemas, seeds ni datasets. Los profesores, grupos y permisos siguen viniendo del backend configurado mediante las variables Vite existentes.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build de producción PASS (314 módulos) y `git diff --check` PASS. npm conserva el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-24 — confirmación uniforme al eliminar actas
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas y proyectos de grado. React compone las vistas, los módulos TypeScript encapsulan contratos y transporte, y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
