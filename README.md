@@ -1,3 +1,17 @@
+# Corrección 2026-09-24 — filtro de solicitudes generales
+
+- El selector **Tipo de solicitud** del listado de coordinación muestra
+  exclusivamente los tipos autoritativos `1` (READMISION), `10` (AMPLIACION DE
+  PERMANENCIA), `11` (OTRA) y `2` (HOMOLOGACION DE ASIGNATURAS). La misma regla
+  filtra las filas recibidas para evitar que aparezcan trámites pertenecientes a
+  créditos condonables o proyectos de grado.
+- Las vistas exclusivamente asignadas de profesor y director conservan todos sus
+  tipos, pues su acceso depende de la asignación. No cambian endpoints, DTO,
+  dependencias, variables, schemas, seeds ni datasets; se sigue consumiendo
+  `GET /sapp/tipoSolicitud`.
+
+---
+
 # Corrección 2026-09-24 — tipos de solicitud de Proyectos de grado
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y proyectos de grado. React compone las rutas y vistas, los módulos TypeScript concentran reglas de presentación y servicios HTTP tipados, y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

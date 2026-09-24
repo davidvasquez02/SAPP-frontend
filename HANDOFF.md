@@ -1,3 +1,34 @@
+# Handoff 2026-09-24 — filtro de solicitudes generales de coordinación
+
+## Estado, contrato y salida esperada
+- `src/modules/solicitudes/constants.ts` define los IDs autoritativos
+  `[1, 10, 11, 2]` para Readmisión, Ampliación de permanencia, Otra y
+  Homologación de asignaturas. `SolicitudesPage.tsx` entrega esa inclusión al
+  listado general de coordinación; se filtran tanto el selector como las filas.
+  Las vistas `assignedOnly` de profesor/director no se limitan.
+- Se conserva el envelope `{ ok, message, data }` de
+  `GET /sapp/tipoSolicitud`; cada elemento admite `{ id, nombre, tramiteId }` y
+  el normalizador mantiene `tipoTramiteId`. El selector esperado contiene
+  **Todos**, **READMISION**, **AMPLIACION DE PERMANENCIA**, **OTRA** y
+  **HOMOLOGACION DE ASIGNATURAS**, sin tipos de crédito o trabajo de grado.
+- Regresión: `tests/tiposSolicitudGeneral.test.ts`. No hay schemas, paquetes,
+  variables, seeds ni datasets nuevos. Pendiente: validar `/solicitudes` con
+  backend y sesión institucional; el repositorio no aporta credenciales.
+- Verificación local: regresión dirigida 1/1 PASS, suite Node 57/57 PASS,
+  ESLint focalizado PASS, build PASS (314 módulos; CSS 252.47 kB; JS 732.65
+  kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa la
+  configuración ambiental `http-proxy` y Vite advierte por el chunk mayor de
+  500 kB. No se capturó imagen porque no hay navegador instalado y la ruta
+  protegida requiere sesión/backend institucionales.
+
+## Entorno
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
 # Handoff 2026-09-24 — catálogo autoritativo de Proyectos de grado
 
 ## Estado actual, contrato y salida esperada

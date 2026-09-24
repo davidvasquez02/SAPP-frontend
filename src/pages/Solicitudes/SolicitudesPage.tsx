@@ -7,6 +7,7 @@ import SolicitudesEstudianteView from '../../modules/solicitudes/components/Soli
 import { getEstadosSolicitudCatalog } from '../../modules/solicitudes/api/estadoSolicitudService'
 import './SolicitudesPage.css'
 import { TIPOS_TRABAJO_GRADO_IDS } from '../../modules/trabajos-grado/constants'
+import { TIPOS_SOLICITUD_GENERAL_IDS } from '../../modules/solicitudes/constants'
 
 const SolicitudesPage = () => {
   const { session } = useAuth()
@@ -42,6 +43,9 @@ const SolicitudesPage = () => {
             assignedOnly={isProfesorOnly || isDirector}
             hideAssignedList={isCoordinador}
             excludeCreditosCondonables={isCoordinadorCreditos}
+            includeTipoSolicitudIds={
+              isProfesorOnly || isDirector ? undefined : TIPOS_SOLICITUD_GENERAL_IDS
+            }
             excludeTipoSolicitudIds={TIPOS_TRABAJO_GRADO_IDS}
           />
         )
