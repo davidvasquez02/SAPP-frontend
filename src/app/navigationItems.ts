@@ -4,6 +4,7 @@ export interface PrimaryNavigationItem {
   to: string
   label: string
   icon: string
+  children?: Array<{ to: string; label: string }>
 }
 
 export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationItem[] => {
@@ -23,7 +24,16 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
 
   return [
     { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
+    {
+      to: '/matricula',
+      label: 'Matrícula',
+      icon: '🎓',
+      visible: !isProfesorOnly,
+      children: [
+        { to: '/matricula/academica', label: 'Matrícula académica' },
+        { to: '/matricula/financiera', label: 'Matrícula financiera' },
+      ],
+    },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
     { to: '/trabajos-grado', label: 'Proyectos de grado', icon: '📘', visible: !isProfesorOnly },
     {
@@ -54,5 +64,5 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     },
   ]
     .filter(({ visible }) => visible)
-    .map(({ to, label, icon }) => ({ to, label, icon }))
+    .map(({ to, label, icon, children }) => ({ to, label, icon, children }))
 }
