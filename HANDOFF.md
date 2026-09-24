@@ -1,5 +1,29 @@
 # Handoff 2026-09-24 — botones de acciones y convocatoria
 
+## Update 2026-09-24 — alineación de la flecha del submenú Matrícula
+
+- `src/components/Sidebar/Sidebar.tsx` reemplaza el carácter tipográfico `⌄`
+  por un SVG de flecha; `Sidebar.css` dimensiona el icono a 18 px,
+  lo centra dentro del botón estable de 40 px y conserva la rotación al abrir.
+- Salida esperada: la flecha queda centrada vertical y horizontalmente junto a
+  **Matrícula**, tanto en escritorio como en el panel móvil, y apunta hacia
+  arriba cuando `aria-expanded="true"`. No cambian navegación, permisos,
+  contratos, variables, dependencias, seeds ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Entorno comprobado: Node.js
+  24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript
+  5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (56/56); build PASS
+  (313 módulos; CSS 252.47 kB y JS 732.60 kB); `git diff --check` PASS. El lint
+  global conserva 9 errores y 1 warning preexistentes fuera del alcance. npm
+  muestra el warning ambiental `Unknown env config "http-proxy"` y Vite avisa
+  por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: comprobar visualmente el menú con una sesión institucional
+  en escritorio/móvil y temas claro/oscuro. El contenedor no dispone de
+  Chromium, Chrome ni Firefox y la vista protegida depende del backend.
+
+---
+
 ## Update 2026-09-24 — moneda visible en campos de corrección
 
 - `formatoMonedaEntrada`, en

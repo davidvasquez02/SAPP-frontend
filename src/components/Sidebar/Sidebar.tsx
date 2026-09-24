@@ -21,6 +21,12 @@ const CloseIcon = () => (
   </svg>
 )
 
+const ChevronDownIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+)
+
 const Sidebar = () => {
   const { session, logout } = useAuth()
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_NAV_QUERY).matches)
@@ -158,7 +164,7 @@ const Sidebar = () => {
                   <span className="sidebar__label">{item.label}</span>
                 </NavLink>
                 <button type="button" className="sidebar__expand" aria-label={`${expandedItems.includes(item.to) ? 'Contraer' : 'Desplegar'} ${item.label}`} aria-expanded={expandedItems.includes(item.to)} onClick={() => setExpandedItems((current) => current.includes(item.to) ? current.filter((value) => value !== item.to) : [...current, item.to])}>
-                  <span aria-hidden="true">⌄</span>
+                  <ChevronDownIcon />
                 </button>
               </div>
               {expandedItems.includes(item.to) && <div className="sidebar__submenu">
