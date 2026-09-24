@@ -606,13 +606,16 @@ const InscripcionAdmisionDetallePage = () => {
   const sectionsToRender = isEvaluadorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS
+  const backDestination = isEvaluadorOnly
+    ? '/admisiones'
+    : `/admisiones/convocatoria/${convocatoriaId}`
   const [isProfileMetaExpanded, setIsProfileMetaExpanded] = useState(false)
 
   return (
     <ModuleLayout title="Admisiones">
       <section className="inscripcion-detalle">
-        <BackButton to={`/admisiones/convocatoria/${convocatoriaId}`}>
-          Volver a convocatoria
+        <BackButton to={backDestination}>
+          {isEvaluadorOnly ? 'Volver a inscripciones' : 'Volver a convocatoria'}
         </BackButton>
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
