@@ -1,3 +1,17 @@
+# Update 2026-09-24 — paginación visual unificada en matrícula financiera
+
+## Estado actual y salida esperada
+- `Paginacion`, el componente compartido por los listados de matrícula financiera, usa ahora la clase dedicada `mf-pagination` en lugar de combinar `mf-actions` con los botones primarios/secundarios del flujo. Su presentación replica el patrón de Solicitudes: controles pill compactos, superficie y contorno semánticos, texto neutro y alineación derecha; se centra en tablet y muestra el indicador sobre dos botones del mismo ancho en móvil.
+- El contrato permanece `{ pagina: number, total: number, onChange(page): void }`. La salida accesible es un `nav` llamado **Paginación de matrícula financiera**, botones no submit y un indicador `aria-live="polite"`. Si `total` es cero, la etiqueta y la deshabilitación operan contra una página mínima. No cambiaron la obtención ni el tamaño de las páginas.
+- Implementación: `src/pages/MatriculaFinanciera/FinancieraUi.tsx`; estilos responsive y compatibles con tema claro/oscuro: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. No hay schemas, endpoints, payloads, dependencias, variables, seeds ni datasets nuevos.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-24: ESLint focalizado PASS; suite Node PASS (48/48); build PASS (309 módulos, CSS 245.36 kB y JS 726.81 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar con sesión institucional los listados de procesos y liquidaciones en temas claro/oscuro y anchos de escritorio/móvil. La fixture aislada disponible está en `tests/fixtures/matricula-financiera/preview.html` y usa datos ficticios en memoria. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox.
+
+---
+
 # Update 2026-09-24 — eliminación de textos redundantes en encabezados
 
 ## Estado actual, decisión y salida esperada
