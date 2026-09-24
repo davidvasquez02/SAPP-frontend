@@ -1,5 +1,26 @@
 # Handoff 2026-09-24 — botones de acciones y convocatoria
 
+## Update 2026-09-24 — moneda visible en campos de corrección
+
+- `formatoMonedaEntrada`, en
+  `src/modules/matricula-financiera/rules.ts`, presenta ahora el prefijo `$`
+  junto con agrupación de miles colombiana. En el detalle de liquidación, los
+  campos de ajuste y total manual muestran, por ejemplo, `$ -100` y
+  `$ 30.000.000` durante la escritura. `normalizarMoneda` retira el formato y
+  el contrato de `PUT /liquidaciones/{id}/ajustes` continúa recibiendo números,
+  con hasta cuatro decimales, o `null` para retirar el total manual.
+- Regresión: `tests/matriculaFinancieraRules.test.ts` cubre montos negativos,
+  positivos, cero y vacío. No hay cambios de API, schemas, paquetes, variables,
+  seeds ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm
+  11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Pendiente externo: comprobar el cursor y la edición de montos con sesión y
+  backend institucionales, en escritorio/móvil y temas claro/oscuro.
+
+---
+
 ## Estado, contratos y salida esperada
 - En `ProcesoLiquidacionPage.tsx`, la columna **Acciones** agrupa **Ver
   detalle** y las mutaciones de `LiquidacionActions.tsx` como botones
