@@ -1,3 +1,18 @@
+# Update 2026-09-24 — eliminación de textos redundantes en encabezados
+
+## Estado actual, decisión y salida esperada
+- `SolicitudesCoordinadorView` eliminó el `<h3>Solicitudes</h3>` del listado general porque la ruta `/solicitudes` ya presenta ese título mediante `ModuleLayout`. La región continúa identificada accesiblemente como **Listado de solicitudes** con `aria-label`; el encabezado independiente **Solicitudes asignadas** no cambió.
+- `TrabajosGradoPage` eliminó el texto “En esta primera etapa se agrupan las solicitudes académicas asociadas al desarrollo del proyecto.” de los encabezados de maestría y doctorado. Permanecen el eyebrow contextual y el título del nivel.
+- Salida esperada: una sola aparición visible del título **Solicitudes** en la página general y ningún texto introductorio provisional bajo **Trabajo de investigación de maestría** o **Tesis doctoral**. No cambiaron contratos, filtros, tablas, navegación, permisos ni servicios.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. No hay schemas, artifacts, dependencias, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); `npm run build` PASS (309 módulos, CSS 244.73 kB y JS 726.81 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+- Pendiente: validar visualmente las rutas protegidas `/solicitudes`, `/trabajos-grado/maestria` y `/trabajos-grado/doctorado` con una sesión institucional, en claro/oscuro y escritorio/móvil. El repositorio no incluye credenciales ni backend reproducible.
+
+---
+
 # Update 2026-09-24 — estado académico sin duplicar en tarjetas
 
 ## Estado actual, decisión y salida esperada

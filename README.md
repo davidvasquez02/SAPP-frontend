@@ -1,3 +1,13 @@
+# Corrección 2026-09-24 — encabezados más concisos en solicitudes y proyectos
+
+- El listado de coordinación ya no repite **Solicitudes** dentro de la tarjeta cuando `ModuleLayout` ya presenta ese título. La sección conserva un nombre accesible mediante `aria-label`, y **Solicitudes asignadas** mantiene su encabezado propio cuando corresponde.
+- El encabezado de **Trabajo de investigación de maestría** y **Tesis doctoral** deja de mostrar el texto provisional sobre “esta primera etapa”; se conservan el contexto del perfil y el título académico.
+- El cambio es exclusivamente de presentación: no modifica filtros, tablas, rutas, roles, endpoints, DTO, dependencias, variables, seeds ni datasets. Desarrollo: `npm run dev`; producción: `npm run build`.
+- Verificación local: 48/48 pruebas Node, ESLint focalizado, build (309 módulos) y `git diff --check` pasan. El build conserva el aviso informativo del chunk mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+- Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no crear venv, Conda, Poetry ni otro árbol npm.
+
+---
+
 # Corrección 2026-09-24 — estado único en tarjetas de estudiantes
 
 - Las tarjetas del listado de estudiantes muestran el estado académico una sola vez, en la insignia ubicada bajo la fotografía. Se eliminó la segunda aparición de **Activo** o **Inactivo** en el bloque de detalles y se conserva la cohorte tanto en escritorio como en móvil.
