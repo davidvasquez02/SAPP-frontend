@@ -1,3 +1,26 @@
+# Ajuste 2026-09-24 — selector compacto de informes
+
+SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes,
+matrículas, solicitudes, créditos, candidatura, trabajos de grado e informes. La
+aplicación separa páginas de composición, módulos de dominio y servicios HTTP
+tipados; el backend SAPP mantiene las reglas de negocio y la persistencia.
+
+- En **Informes a dependencias**, la franja introductoria usa menos altura y las
+  opciones **Admisión**, **Matrícula** y **Créditos condonables** muestran solo
+  su nombre. Al retirar las descripciones secundarias y reducir el padding, los
+  tres botones son más compactos sin cambiar la selección ni sus estados.
+- El ajuste es exclusivamente visual y conserva tokens semánticos, temas claro
+  y oscuro, rutas, permisos, contratos, DTO y servicios existentes. No agrega
+  dependencias, variables, schemas, seeds ni datasets.
+- Stack exacto instalado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3,
+  React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint
+  9.39.2. Reutilizar `node_modules`; este frontend no usa venv, Conda ni Poetry.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none
+  tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Los datos
+  se obtienen del backend configurado con las variables Vite de `.env.example`.
+
+---
+
 # Actualización 2026-09-24 — matrícula paginada y acceso estudiantil confiable
 
 SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes, matrículas, solicitudes, créditos, candidatura y trabajos de grado. La aplicación mantiene una arquitectura React por páginas y módulos de dominio: las páginas componen la experiencia, `src/modules` concentra componentes/servicios tipados, `src/api` encapsula el transporte y el backend SAPP conserva las reglas de negocio y persistencia PostgreSQL.

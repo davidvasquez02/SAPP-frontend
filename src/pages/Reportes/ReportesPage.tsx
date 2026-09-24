@@ -29,10 +29,10 @@ import './ReportesPage.css'
 
 type TipoInforme = 'ADMISION' | 'MATRICULA' | 'CREDITOS_CONDONABLES'
 
-const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string; description: string }> = [
-  { id: 'ADMISION', label: 'Admisión', description: 'Informe de una convocatoria de admisión.' },
-  { id: 'MATRICULA', label: 'Matrícula', description: 'Informe de matrícula por período y programa.' },
-  { id: 'CREDITOS_CONDONABLES', label: 'Créditos condonables', description: 'Informe de créditos por período y programa.' },
+const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string }> = [
+  { id: 'ADMISION', label: 'Admisión' },
+  { id: 'MATRICULA', label: 'Matrícula' },
+  { id: 'CREDITOS_CONDONABLES', label: 'Créditos condonables' },
 ]
 
 const findCurrentPeriodoId = (periodos: PeriodoAcademicoDto[]): string => {
@@ -171,7 +171,7 @@ const ReportesPage = () => {
         <div className="reports__processes" aria-label="Tipo de proceso">
           {PROCESS_OPTIONS.map((option) => (
             <button key={option.id} type="button" className={tipo === option.id ? 'reports__process reports__process--active' : 'reports__process'} onClick={() => selectTipo(option.id)} aria-pressed={tipo === option.id}>
-              <strong>{option.label}</strong><span>{option.description}</span>
+              <strong>{option.label}</strong>
             </button>
           ))}
         </div>
