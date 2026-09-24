@@ -57,7 +57,6 @@ const TrabajosGradoPage = () => {
         <header className="trabajos-grado-page__header">
           <p className="trabajos-grado-page__eyebrow">{isCoordinacion ? 'Gestión de coordinación' : 'Mi proyecto de grado'}</p>
           <h3>{titulo}</h3>
-          <p>En esta primera etapa se agrupan las solicitudes académicas asociadas al desarrollo del proyecto.</p>
         </header>
 
         {isEstudiante ? (

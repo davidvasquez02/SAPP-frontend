@@ -225,8 +225,7 @@ const SolicitudesCoordinadorView = ({
         </section>
       ) : null}
       {!assignedOnly ? (
-        <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
-          <h3 id="solicitudes-title">Solicitudes</h3>
+        <section className="solicitudes-coordinador-view__list" aria-label="Listado de solicitudes">
           <SolicitudesFiltersBar
             estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
