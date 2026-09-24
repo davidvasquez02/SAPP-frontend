@@ -21,6 +21,7 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
   const isProfesorOnly =
     isProfesor(roles) &&
     !canManagePosgrados(roles)
+  const isDirector = hasAnyRole(roles, [ROLES.DIRECTOR])
   const canManageMatricula = canManagePosgrados(roles)
 
   return [
@@ -29,14 +30,19 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
       to: '/matricula',
       label: 'Matrícula',
       icon: '🎓',
-      visible: !isProfesorOnly,
+      visible: !isProfesorOnly && !isDirector,
       children: [
         { to: '/matricula/academica', label: 'Matrícula académica' },
         { to: '/matricula/financiera', label: canManageMatricula ? 'Matrícula financiera' : 'Liquidación' },
       ],
     },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
-    { to: '/trabajos-grado', label: 'Proyectos de grado', icon: '📘', visible: !isProfesorOnly },
+    {
+      to: '/trabajos-grado',
+      label: 'Proyectos de grado',
+      icon: '📘',
+      visible: !isProfesorOnly && !isDirector,
+    },
     {
       to: '/creditos-condonables',
       label: 'Créditos condonables',

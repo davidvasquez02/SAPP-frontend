@@ -1021,3 +1021,13 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 - No cambiaron endpoints, payloads, permisos, dependencias, variables, schemas,
   seeds ni datasets. El backend continúa siendo la autoridad final al procesar
   el registro del resultado.
+
+## Decisión reciente — vista del rol director (2026-09-24)
+
+- El menú principal del rol `DIRECTOR` ya no presenta **Matrícula** ni
+  **Proyectos de grado**. Admisiones y Solicitudes permanecen disponibles.
+- En `/solicitudes`, el director consulta únicamente **Solicitudes asignadas**;
+  no se solicita ni se muestra el listado general con filtros. La página conserva
+  un único título principal **Solicitudes**, sin repetirlo dentro del contenido.
+- El cambio es solo de presentación y navegación por rol. No modifica rutas,
+  endpoints, DTO, schemas, variables de entorno, dependencias, seeds ni datasets.
