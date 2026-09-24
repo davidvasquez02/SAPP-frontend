@@ -145,6 +145,10 @@
   transition: background-color 0.2s ease;
 }
 
+.sidebar__link.sidebar__link--parent {
+  padding: 0;
+}
+
 .sidebar__link:hover {
   background-color: rgba(255, 255, 255, 0.12);
 }

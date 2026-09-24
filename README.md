@@ -1,3 +1,10 @@
+# Ajuste 2026-09-24 — presentación estudiantil de matrícula
+
+- Para el perfil estudiante, la opción financiera se presenta como **Liquidación** tanto en la portada de Matrícula y el submenú lateral como en el encabezado de la vista. Los perfiles de gestión conservan el nombre **Matrícula financiera**.
+- La portada estudiantil describe **Matrícula académica** como “Registra asignaturas y documentos requeridos para el proceso de matrícula.” y **Liquidación** como “Información para proceso de liquidación.”; coordinación conserva sus textos operativos.
+- El botón manual **Actualizar** de la vista de liquidación se oculta únicamente al estudiante. La carga inicial y la recarga automática después de guardar respuestas siguen activas; no cambiaron rutas, endpoints, contratos, dependencias, variables, seeds ni datasets.
+- Se corrigió la alineación horizontal de Matrícula en el sidebar eliminando el padding duplicado del contenedor padre. Se mantiene el árbol npm existente (Node.js 24.15.0/npm 11.4.2) y no se usan venv, Conda ni Poetry.
+
 # Actualización 2026-09-24 — guía y cierre del flujo de matrícula financiera
 
 - La portada de matrícula financiera incorpora una **Guía de servicios** inicial adaptada al rol: coordinación recorre configuración, convocatoria, revisión y publicación; el estudiante recorre solicitud, respuestas, revisión y consulta del resultado.
