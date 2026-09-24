@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ajustesActuales, fechaColombia, puedeEditarFila, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+import { ajustesActuales, fechaColombia, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
 import type { CuerposLiquidacion, EstadoLiquidacion, EstadoProcesoLiquidacion, LiquidacionMatricula } from '../src/modules/matricula-financiera/types.ts'
 
 test('un estudiante nuevo nunca envía los campos exclusivos de vigente, incluso si venían poblados', () => {
@@ -18,6 +18,11 @@ test('vigente conserva sus cuatro respuestas ternarias', () => {
   assert.deepEqual(seleccionarRespuestas({ entregoTrabajoGrado: false, cumLaude: true, deseaSalud: false }, 'VIGENTE'), {
     entregoTrabajoGrado: false, cumLaude: true, certificadoVotacion: null, deseaSalud: false,
   })
+})
+test('el registro exige todas las respuestas aplicables', () => {
+  assert.equal(respuestasCompletas({ certificadoVotacion: false, deseaSalud: true }, 'NUEVO'), true)
+  assert.equal(respuestasCompletas({ certificadoVotacion: false }, 'NUEVO'), false)
+  assert.equal(respuestasCompletas({ entregoTrabajoGrado: false, cumLaude: true, certificadoVotacion: true, deseaSalud: false }, 'VIGENTE'), true)
 })
 test('ninguna edición de fila puede realizarse después de publicar', () => {
   const estados: EstadoLiquidacion[] = ['PENDIENTE_RESPUESTA', 'RESPONDIDA', 'NO_LIQUIDAR', 'LIQUIDADA']

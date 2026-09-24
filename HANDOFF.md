@@ -5456,3 +5456,19 @@ npm run lint
 - Pendiente integrado: confirmar con el backend y una sesión institucional que los cinco tipos del catálogo mantienen esos IDs y que un título válido se persiste. Si el catálogo deja de garantizar IDs estables, migrar la configuración a códigos de solicitud sin duplicar la regla en el componente.
 
 ---
+# Handoff actual — ajustes de matrícula financiera (2026-09-24)
+
+## Estado, contratos y salida esperada
+
+- Se completaron los ocho ajustes de UX en `src/pages/MatriculaFinanciera` y la validación reutilizable en `src/modules/matricula-financiera/rules.ts`.
+- El payload de coordinación conserva `RespuestasCoordinacionRequest`: las respuestas aplicables son booleanas, `certificadoVotacionRecibido` se deriva de `certificadoVotacion === true` y `observaciones` es `string | null`. La carga ANX-39 continúa como operación documental separada y opcional.
+- El certificado solo se renderiza cuando la respuesta de votación es Sí. Sus acciones de ver, descargar, cargar y reemplazar no envían accidentalmente el formulario padre. El botón de respuestas requiere 2 respuestas para `NUEVO` y 4 para `VIGENTE`, respetando preguntas dinámicas con `aplica`.
+- No se modificaron API, schemas, variables, seeds ni datasets. El simulador disponible sigue en `tests/fixtures/matricula-financiera/preview.html`.
+
+## Entorno, pruebas y próximos pasos
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no ejecutar otro `npm install` ni crear venv, Conda o Poetry. Es un proyecto Node: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, Router 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación de esta entrega: ESLint focalizado PASS; pruebas Node PASS (51/51); build PASS (309 módulos, CSS 247.18 kB y JS 725.06 kB); `git diff --check` PASS. Avisos no bloqueantes: configuración ambiental npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional los modos claro/oscuro y móvil, los cuatro estados de liquidación, la derivación de recepción y el reemplazo documental. Si hay navegador disponible, capturar las rutas protegidas; este repositorio no aporta credenciales ni backend reproducible.
+
+---
