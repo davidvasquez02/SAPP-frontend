@@ -261,6 +261,34 @@
     display: none;
 }
 
+.matricula-page__pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.2rem;
+}
+
+.matricula-page__pagination span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.matricula-page__pagination button {
+    border: 1px solid var(--outline);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-primary);
+    padding: 0.4rem 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.matricula-page__pagination button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .matricula-page__detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -425,6 +453,11 @@
     .matricula-page__actions {
         justify-content: stretch;
     }
+
+    .matricula-page__pagination {
+        justify-content: center;
+    }
+
     .matricula-page__confirm {
         width: 100%;
     }
@@ -445,5 +478,21 @@
 
     .matricula-page__mobile-card-academic {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .matricula-page__pagination {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .matricula-page__pagination span {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        text-align: center;
+    }
+
+    .matricula-page__pagination button {
+        width: 100%;
+        min-height: 44px;
     }
 }

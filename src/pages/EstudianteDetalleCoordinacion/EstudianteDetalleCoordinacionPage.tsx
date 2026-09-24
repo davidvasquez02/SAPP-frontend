@@ -270,23 +270,6 @@ const getDocumentoEstadoModifier = (estado: string) => {
   return 'is-neutral'
 }
 
-const formatFileSize = (bytes?: number | null) => {
-  if (!bytes || bytes <= 0) {
-    return EMPTY_VALUE
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB']
-  let value = bytes
-  let unitIndex = 0
-
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex += 1
-  }
-
-  return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
-}
-
 const getUploadDocumentKey = (documento: Pick<DocumentCardDocument, 'tramiteId' | 'tipoDocumentoTramiteId'>) => {
   return `${documento.tramiteId ?? 'sin-tramite'}-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}`
 }
@@ -350,10 +333,6 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
           <div>
             <dt>Fecha de carga</dt>
             <dd>{formatDate(documento.fechaCarga)}</dd>
-          </div>
-          <div>
-            <dt>Tamaño</dt>
-            <dd>{formatFileSize(documento.tamanoBytes)}</dd>
           </div>
         </dl>
       </div>

@@ -1,3 +1,15 @@
+# Actualización 2026-09-24 — matrícula paginada y acceso estudiantil confiable
+
+SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes, matrículas, solicitudes, créditos, candidatura y trabajos de grado. La aplicación mantiene una arquitectura React por páginas y módulos de dominio: las páginas componen la experiencia, `src/modules` concentra componentes/servicios tipados, `src/api` encapsula el transporte y el backend SAPP conserva las reglas de negocio y persistencia PostgreSQL.
+
+- El listado de matrículas académicas de coordinación ahora pagina en cliente grupos de 10 registros, reinicia en la primera página al cambiar cualquier filtro y usa el mismo patrón visual/accesible de Solicitudes. La tabla y las tarjetas móviles consumen exactamente el mismo segmento paginado.
+- Las tarjetas de documentos del detalle coordinador del estudiante ya no presentan el metadato **Tamaño**; conservan archivo, fecha, estado y acciones.
+- El tablero horizontal limpia la supresión residual de clic al iniciar cada gesto. Esto evita que un arrastre anterior sin evento `click` obligue a pulsar varias veces para abrir un estudiante, sin perder la protección que impide navegar al finalizar un arrastre real.
+- Stack exacto instalado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. El lockfile y `/workspace/SAPP-frontend/node_modules` son el entorno único; no se usa Python, venv, Conda ni Poetry.
+- Ejecución: `npm run dev`; validación: `npx eslint <archivos>`, `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seeds ni datasets nuevos: los datos provienen del backend configurado mediante las variables Vite existentes.
+
+---
+
 # Corrección 2026-09-24 — paginador consistente en matrícula financiera
 
 - El paginador compartido de matrícula financiera adopta la misma presentación sobria del módulo de Solicitudes: alineación a la derecha, texto secundario y controles compactos con fondo de superficie, borde semántico y forma pill. En pantallas pequeñas se centra y, en móviles, distribuye las acciones en dos columnas con el indicador de página encima.
