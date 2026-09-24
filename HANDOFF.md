@@ -1,5 +1,38 @@
 # Handoff 2026-09-24 — matrícula académica, documentos y navegación estudiantil
 
+## Update 2026-09-24 — navegación y solicitudes del director
+
+### Estado actual y salida esperada
+- `src/app/navigationItems.ts` detecta explícitamente `DIRECTOR` mediante los
+  guards normalizados y excluye del sidebar **Matrícula** y **Proyectos de
+  grado**. El rol conserva **Admisiones** y **Solicitudes**. Los perfiles de
+  estudiante y gestión de posgrados mantienen sus menús anteriores.
+- `src/pages/Solicitudes/SolicitudesPage.tsx` entrega `assignedOnly` para el
+  director. Por ello `SolicitudesCoordinadorView` carga/presenta solamente
+  **Solicitudes asignadas** y omite el listado general y sus filtros. Se conserva
+  la corrección anterior que eliminó el segundo encabezado “Solicitudes”.
+- No cambiaron rutas protegidas, API, schemas, contratos, payloads, dependencias,
+  variables, seeds ni datasets. La restricción solicitada es de navegación y
+  presentación; el backend continúa siendo la autoridad de autorización.
+
+### Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni
+  venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación 2026-09-24: ESLint focalizado PASS; build PASS (309 módulos, CSS
+  246.09 kB, JS 727.22 kB); suite Node PASS (48/48); `git diff --check` PASS.
+  `npm run lint` continúa bloqueado por 9 errores y 1 warning preexistentes en
+  servicios placeholder, admisiones, documentos y tipos/editor de solicitudes.
+  Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el
+  aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar `/solicitudes` y el sidebar con una sesión real de
+  director en escritorio/móvil y temas claro/oscuro. No se generó captura porque
+  el contenedor no incluye Chromium, Chrome ni Firefox y tampoco existe una
+  sesión institucional reproducible.
+
+---
+
 ## Estado actual y decisiones
 - `src/pages/Matricula/MatriculaPage.tsx` pagina el resultado ya filtrado en grupos de 10. El contrato de UI esperado es **Anterior · Página N de M · Siguiente**; ambos botones están deshabilitados en los extremos, los filtros vuelven a la página 1 y escritorio/móvil muestran el mismo subconjunto. Los estilos en `MatriculaPage.css` replican Solicitudes con tokens semánticos y disposición móvil de dos botones.
 - `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` retiró **Tamaño** de cada tarjeta documental y eliminó su formateador huérfano. No cambió el DTO: `tamanoBytes` puede seguir llegando del backend; simplemente ya no se presenta en esta vista.

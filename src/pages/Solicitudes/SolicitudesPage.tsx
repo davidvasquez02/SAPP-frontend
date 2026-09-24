@@ -15,8 +15,8 @@ const SolicitudesPage = () => {
   const isCoordinador = hasAnyRole(roles, [ROLES.COORDINACION])
   const isCoordinadorCreditos = canManagePosgrados(roles)
   const isProfesorRole = isProfesor(roles)
-  const isDirector = hasAnyRole(roles, ['DIRECTOR'])
-  const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
+  const isDirector = hasAnyRole(roles, [ROLES.DIRECTOR])
+  const isEstudiante = hasAnyRole(roles, [ROLES.ESTUDIANTE])
   const canUseCoordinadorList = isCoord || isProfesorRole || isDirector
   const isProfesorOnly = hasAnyRole(roles, ['PROFESOR']) && !isCoord && !isDirector
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
@@ -39,7 +39,7 @@ const SolicitudesPage = () => {
           <SolicitudesCoordinadorView
             usuarioSappId={usuarioSappId}
             readOnly={!isCoord}
-            assignedOnly={isProfesorOnly}
+            assignedOnly={isProfesorOnly || isDirector}
             hideAssignedList={isCoordinador}
             excludeCreditosCondonables={isCoordinadorCreditos}
             excludeTipoSolicitudIds={TIPOS_TRABAJO_GRADO_IDS}
