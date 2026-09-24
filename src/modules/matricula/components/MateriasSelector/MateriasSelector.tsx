@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MateriaDto, MateriaSeleccionada } from '../../types'
+import { filterMaterias, getNivelesMaterias, type NivelMateriaFilter } from './materiasFilter'
 import './MateriasSelector.css'
 
 type MateriasSelectorProps = {
@@ -11,29 +12,17 @@ type MateriasSelectorProps = {
 
 const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: MateriasSelectorProps) => {
   const [query, setQuery] = useState('')
+  const [nivel, setNivel] = useState<NivelMateriaFilter>(null)
   const [isOpen, setIsOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
 
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.id)), [selected])
+  const niveles = useMemo(() => getNivelesMaterias(materias), [materias])
 
-  const filteredMaterias = useMemo(() => {
-    const term = query.trim().toLowerCase()
-    return materias
-      .filter((materia) => {
-        const alreadySelected = selectedIds.has(materia.id)
-        if (alreadySelected) {
-          return false
-        }
-
-        if (!term) {
-          return true
-        }
-
-        const codigo = materia.codigo?.toLowerCase() ?? ''
-        return materia.nombre.toLowerCase().includes(term) || codigo.includes(term)
-      })
-      .sort((first, second) => Number(first.nivel == null) - Number(second.nivel == null))
-  }, [materias, query, selectedIds])
+  const filteredMaterias = useMemo(
+    () => filterMaterias(materias, selectedIds, query, nivel),
+    [materias, nivel, query, selectedIds],
+  )
 
   useEffect(() => {
     const onWindowClick = (event: MouseEvent) => {
@@ -48,18 +37,41 @@ const MateriasSelector = ({ materias, selected, onAdd, disabled = false }: Mater
 
   return (
     <div className="materias-selector" ref={wrapperRef}>
-      <input
-        type="search"
-        className="materias-selector__input"
-        value={query}
-        placeholder="Buscar materia…"
-        disabled={disabled}
-        onChange={(event) => {
-          setQuery(event.target.value)
-          setIsOpen(true)
-        }}
-        onFocus={() => setIsOpen(true)}
-      />
+      <div className="materias-selector__controls">
+        <label className="materias-selector__search-field">
+          <span>Materia</span>
+          <input
+            type="search"
+            className="materias-selector__input"
+            value={query}
+            placeholder="Buscar materia…"
+            disabled={disabled}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setIsOpen(true)
+            }}
+            onFocus={() => setIsOpen(true)}
+          />
+        </label>
+
+        <label className="materias-selector__level-field">
+          <span>Nivel</span>
+          <select
+            className="materias-selector__level-select"
+            value={nivel ?? ''}
+            disabled={disabled}
+            onChange={(event) => {
+              setNivel(event.target.value === '' ? null : Number(event.target.value))
+              setIsOpen(true)
+            }}
+          >
+            <option value="">Todos</option>
+            {niveles.map((item) => (
+              <option key={item} value={item}>Nivel {item}</option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       {isOpen && !disabled ? (
         <ul className="materias-selector__dropdown" role="listbox">

@@ -1,3 +1,15 @@
+# Actualización 2026-09-24 — filtro por nivel en matrícula académica
+
+Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. La aplicación usa páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; el backend Spring Boot/PostgreSQL mantiene las reglas y la persistencia.
+
+- En la creación estudiantil de matrícula académica, el buscador de materias ahora tiene a su lado un selector de nivel construido dinámicamente a partir del catálogo recibido. **Todos** conserva el comportamiento anterior y cada opción **Nivel N** limita las materias regulares al nivel elegido.
+- Las electivas (`nivel: null`) permanecen visibles con cualquier nivel seleccionado. El filtro continúa combinándose con la búsqueda por nombre/código y excluye materias que el estudiante ya agregó.
+- El control usa los tokens semánticos existentes, etiquetas visibles y foco accesible; permanece en dos columnas en escritorio/tablet y se apila en móviles estrechos. No cambiaron endpoints, payloads, DTO, rutas, permisos, dependencias, variables, seeds ni datasets.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Los datos reales provienen del catálogo entregado por el backend configurado con las variables Vite existentes; no hay seeds locales.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+
+---
+
 # Actualización 2026-09-24 — resultado de proyecto de grado para estudiantes
 
 Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. La aplicación usa páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; el backend Spring Boot/PostgreSQL mantiene reglas y persistencia.

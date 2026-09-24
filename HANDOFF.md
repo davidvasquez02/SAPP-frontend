@@ -1,3 +1,19 @@
+# Handoff 2026-09-24 — filtro por nivel en matrícula académica
+
+## Estado actual y salida esperada
+- `src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx` presenta **Materia** y **Nivel** uno al lado del otro durante la creación estudiantil. Los niveles se derivan del catálogo, se ordenan numéricamente y el valor inicial **Todos** no restringe resultados.
+- `materiasFilter.ts` concentra la regla comprobable: un nivel elegido admite las materias de ese nivel y siempre las electivas (`nivel: null`); después combina la búsqueda por nombre/código y retira IDs ya seleccionados. La lista sigue señalando cada electiva y no cambia lo que se envía al registrar la matrícula.
+- Salida esperada: con nivel 2 deben verse materias de nivel 2 más todas las electivas; una búsqueda debe reducir ese conjunto; una materia agregada debe desaparecer. En anchos menores de 480 px los controles se apilan. Los temas claro/oscuro consumen tokens semánticos existentes.
+
+## Contratos, paths y continuidad
+- Contrato de catálogo sin cambios: `MateriaDto` conserva `{ id, nombre, codigo, nivel }`, donde `nivel` es `number | null` y `null` identifica una electiva. No cambiaron endpoints, payloads, schemas, rutas, permisos, dependencias, variables, seeds ni datasets.
+- Implementación: `src/modules/matricula/components/MateriasSelector/{MateriasSelector.tsx,MateriasSelector.css,materiasFilter.ts}`. Regresión: `tests/materiasFilter.test.ts`. Ruta protegida para validación: `/matricula/academica` con estudiante sin matrícula existente en el periodo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación 2026-09-24: ESLint focalizado PASS; suite Node PASS (56/56); build PASS (313 módulos, CSS 252.31 kB y JS 732.48 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar la ruta con sesión/backend institucionales en escritorio/móvil y claro/oscuro, especialmente catálogos con electivas. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la vista requiere sesión y backend no reproducibles.
+
+---
+
 # Handoff 2026-09-24 — evaluación de proyecto de grado visible al estudiante
 
 ## Estado actual y decisiones
