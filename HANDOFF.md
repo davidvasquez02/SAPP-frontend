@@ -5165,3 +5165,15 @@ npm run lint
   "http-proxy"` y el aviso informativo por el chunk mayor de 500 kB.
 
 ---
+# Update 2026-09-24 — base API corregida en matrícula financiera
+
+## Estado actual, contrato y salida esperada
+- `src/modules/matricula-financiera/api.ts` ya no retira `/sapp` de `API_URL`. La base del módulo se forma eliminando solo las barras finales y anexando `/liquidacionMatricula`.
+- Con `VITE_API_URL=https://sapp.eisi.online/api/sapp`, todos los endpoints del módulo deben producir `https://sapp.eisi.online/api/sapp/liquidacionMatricula/...`; por ejemplo, el listado de procesos usa `GET https://sapp.eisi.online/api/sapp/liquidacionMatricula/procesos`.
+- Se conservan los contratos, payloads, cabecera `X-Internal-Token`, descarga Excel y manejo de errores existentes. No cambiaron dependencias, variables de entorno, seeds, datasets ni schema.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Este frontend se ejecuta con Node.js/npm y las versiones exactas están fijadas en `package-lock.json`.
+- Pendiente de validación integrada: abrir matrícula financiera con una sesión institucional y confirmar en la pestaña Network que procesos, liquidaciones, tarifas, vista estudiantil y exportación conservan `/api/sapp/liquidacionMatricula`.
+
+---

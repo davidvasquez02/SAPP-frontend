@@ -2,7 +2,7 @@ import * as AuthStorage from '../../context/Auth/AuthStorage'
 import { API_URL } from '../../api/config'
 import type { FiltrosLiquidaciones, LiquidacionMatricula, MiLiquidacion, ProcesoLiquidacion, RespuestasLiquidacion, ResultadoEnvio, StandardResponse } from './types'
 
-const base = `${API_URL.replace(/\/sapp\/?$/, '')}/liquidacionMatricula`
+const base = `${API_URL.replace(/\/+$/, '')}/liquidacionMatricula`
 
 export class LiquidacionApiError extends Error {
   status: number
