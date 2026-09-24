@@ -1,3 +1,10 @@
+# Corrección 2026-09-24 — estado único en tarjetas de estudiantes
+
+- Las tarjetas del listado de estudiantes muestran el estado académico una sola vez, en la insignia ubicada bajo la fotografía. Se eliminó la segunda aparición de **Activo** o **Inactivo** en el bloque de detalles y se conserva la cohorte tanto en escritorio como en móvil.
+- El cambio es exclusivamente de presentación en `EstudianteCard`: no modifica filtros, navegación, permisos, DTO, endpoints, dependencias, variables, seeds ni datasets. El listado continúa consumiendo `estadoAcademico` y la ruta de detalle sigue siendo `/coordinacion/estudiantes/{id}`.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. Verificación local: 48/48 pruebas, ESLint focalizado, build (309 módulos) y `git diff --check` pasan. El lint global conserva 9 errores y 1 warning preexistentes fuera de este cambio.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; este frontend no usa venv, Conda ni Poetry y no requiere seed local.
+
 # Actualización 2026-09-24 — directorio del banco de evaluadores
 
 - **Agregar evaluador** y **Reemplazar** ya no consultan el banco mientras se escribe el correo. El formulario ofrece **Buscar en el directorio**, carga el listado completo con `GET /sapp/procesoEvaluacionTg/jurados/banco` y solo envía `?q=...` cuando coordinación ejecuta explícitamente el filtro por nombre, correo o institución.
