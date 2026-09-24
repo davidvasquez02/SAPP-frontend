@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Navigate, NavLink, useParams } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole, ROLES } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import SolicitudesCoordinadorView from '../../modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView'
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
@@ -22,6 +22,7 @@ const TrabajosGradoPage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const isCoordinacion = canManagePosgrados(roles)
+  const isCoordinador = hasAnyRole(roles, [ROLES.COORDINACION])
   const programa = session?.kind === 'SAPP' ? session.user.estudiante?.programaCodigoNombre ?? session.user.programa : undefined
   const nivelEstudiante = getNivelTrabajoGrado(programa)
   const nivelSeleccionado = isNivel(nivel) ? nivel : nivelEstudiante
@@ -69,6 +70,7 @@ const TrabajosGradoPage = () => {
         ) : isCoordinacion && usuarioSappId !== null ? (
           <SolicitudesCoordinadorView
             usuarioSappId={usuarioSappId}
+            hideAssignedList={isCoordinador}
             includeTipoSolicitudIds={tipos}
             detailPath={detailPath}
             filterSolicitud={filterSolicitud}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { ModuleLayout } from '../../components'
-import { canManagePosgrados, hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import SolicitudesCoordinadorView from '../../modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView'
 import SolicitudesEstudianteView from '../../modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView'
@@ -12,6 +12,7 @@ const SolicitudesPage = () => {
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoord = canManagePosgrados(roles)
+  const isCoordinador = hasAnyRole(roles, [ROLES.COORDINACION])
   const isCoordinadorCreditos = canManagePosgrados(roles)
   const isProfesorRole = isProfesor(roles)
   const isDirector = hasAnyRole(roles, ['DIRECTOR'])
@@ -39,6 +40,7 @@ const SolicitudesPage = () => {
             usuarioSappId={usuarioSappId}
             readOnly={!isCoord}
             assignedOnly={isProfesorOnly}
+            hideAssignedList={isCoordinador}
             excludeCreditosCondonables={isCoordinadorCreditos}
             excludeTipoSolicitudIds={TIPOS_TRABAJO_GRADO_IDS}
           />
