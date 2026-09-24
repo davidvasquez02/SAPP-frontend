@@ -6,7 +6,7 @@ import {
 } from '../src/modules/solicitudes/utils/datosTrabajoSolicitud.ts'
 
 test('exige título en cada solicitud de proyecto de grado que presenta ese campo', () => {
-  for (const tipoSolicitudId of [4, 5, 6, 7, 9]) {
+  for (const tipoSolicitudId of [4, 5, 6, 7, 8]) {
     const configuracion = getConfiguracionDatosTrabajo(tipoSolicitudId)
 
     assert.equal(configuracion.requiereTitulo, true)
@@ -28,5 +28,6 @@ test('mantiene el resumen obligatorio solo para propuestas y defensas', () => {
     assert.equal(getConfiguracionDatosTrabajo(tipoSolicitudId).requiereResumen, true)
   }
 
-  assert.equal(getConfiguracionDatosTrabajo(9).requiereResumen, false)
+  assert.equal(getConfiguracionDatosTrabajo(8).requiereResumen, false)
+  assert.equal(getConfiguracionDatosTrabajo(9).requiereTitulo, false)
 })

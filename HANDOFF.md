@@ -1,3 +1,19 @@
+# Handoff 2026-09-24 — catálogo autoritativo de Proyectos de grado
+
+## Estado actual, contrato y salida esperada
+- Se corrigió la clasificación basada en el catálogo real de `GET /sapp/tiposSolicitud`. Maestría usa exactamente `[13, 9, 6, 7]`; doctorado usa exactamente `[13, 9, 8, 4, 5]`. El orden interno no afecta la etiqueta, que se toma del backend.
+- IDs autoritativos: `9` = **GRADO**, `8` = **EXAMEN DE CANDIDATURA DOCTORAL**, `10` = **AMPLIACION DE PERMANENCIA**. Por tanto, el ID 10 no debe aparecer en ninguno de los selectores de Proyectos de grado y el ID 9 debe aparecer en ambos. No conservar compatibilidad especulativa con IDs anteriores.
+- `esExamenCandidaturaDoctoral` reconoce el ID 8 o el código `CAND_DOCTORAL`, nunca el ID 9. La configuración de formulario también reserva el título sin resumen para candidatura ID 8, evitando tratar GRADO como examen.
+- No cambian endpoints, DTO, payloads, permisos, schemas, paquetes, variables, seeds ni datasets. Contratos consumidos: envelope `{ ok, message, data }` de `GET /sapp/tiposSolicitud` y registros de `GET /sapp/solicitudesAcademicas`.
+
+## Paths, entorno y continuidad
+- Regla central: `src/modules/trabajos-grado/constants.ts`; formulario: `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`; integración: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresiones: `tests/candidaturaDoctoral.test.ts` y `tests/datosTrabajoSolicitud.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con Node.js 24.15.0 y npm 11.4.2. React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: pruebas dirigidas 8/8 PASS, suite Node 56/56 PASS, ESLint focalizado PASS, build PASS (313 módulos; CSS 252.47 kB; JS 732.59 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm `Unknown env config "http-proxy"` y chunk JavaScript mayor de 500 kB.
+- No existen seeds ni datasets locales. Pendiente externo: validar ambos selectores y sus listados con una sesión institucional y el backend real; la ruta está protegida y no hay credenciales reproducibles en el repositorio.
+
+---
+
 # Handoff 2026-09-24 — botones de acciones y convocatoria
 
 ## Update 2026-09-24 — alineación de la flecha del submenú Matrícula

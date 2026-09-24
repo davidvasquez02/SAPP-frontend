@@ -1,3 +1,16 @@
+# Corrección 2026-09-24 — tipos de solicitud de Proyectos de grado
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y proyectos de grado. React compone las rutas y vistas, los módulos TypeScript concentran reglas de presentación y servicios HTTP tipados, y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- **Trabajo de investigación de maestría** ofrece exclusivamente los tipos `9` (GRADO), `7` (DEFENSA), `6` (PROPUESTA) y `13` (ENVÍO DE TEMA).
+- **Tesis doctoral** ofrece exclusivamente los tipos `9` (GRADO), `5` (DEFENSA), `8` (EXAMEN DE CANDIDATURA), `4` (PROPUESTA) y `13` (ENVÍO DE TEMA). El tipo `10` (AMPLIACION DE PERMANENCIA) no pertenece a ninguno de los dos catálogos.
+- La candidatura doctoral se identifica con el ID `8`; GRADO se identifica con el ID `9`. El filtro continúa usando `GET /sapp/tiposSolicitud` y muestra los nombres entregados por el backend. No cambian endpoints, DTO, payloads, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seeds locales: los catálogos y registros provienen del backend configurado mediante las variables Vite existentes.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación local: regresiones dirigidas 8/8 y suite Node 56/56 pasan; ESLint focalizado, build de producción (313 módulos) y `git diff --check` pasan. El build mantiene el aviso informativo del chunk mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+
+---
+
 # Actualización 2026-09-24 — filtro por nivel en matrícula académica
 
 Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. La aplicación usa páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; el backend Spring Boot/PostgreSQL mantiene las reglas y la persistencia.
@@ -27,7 +40,7 @@ Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matr�
 Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. Mantiene páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; Spring Boot y PostgreSQL continúan siendo responsables de las reglas y la persistencia.
 
 - **Gestión de profesores** conserva el título del `ModuleLayout` y elimina el segundo encabezado visual dentro de la tarjeta; la descripción y todas las pestañas, tablas y operaciones permanecen iguales.
-- **Proyectos de grado** incorpora el tipo 8 (**GRADO**) al catálogo de Trabajo de investigación de maestría. El tipo sigue disponible también en Tesis doctoral; no cambian el endpoint `GET /sapp/tiposSolicitud`, sus DTO ni el filtrado de los demás tipos.
+- **Proyectos de grado** incorpora el tipo 9 (**GRADO**) al catálogo de Trabajo de investigación de maestría. El tipo sigue disponible también en Tesis doctoral; no cambian el endpoint `GET /sapp/tiposSolicitud`, sus DTO ni el filtrado de los demás tipos.
 - **Créditos condonables** reconoce como `PFIR_DIR_TG` tanto la sigla como los nombres descriptivos **POR FIRMA DIRECTOR DE TG**, **POR FIRMA DIRECTOR DE TESIS** y las variantes de trabajo de investigación. Así, un trámite que llegue con el nombre visible se representa en el filtro pendiente mediante la entrada de catálogo de ID 6.
 - No se agregaron endpoints, migraciones, dependencias, variables, seeds ni datasets. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Los datos reales provienen del backend configurado mediante las variables Vite existentes.
 - Entorno exacto comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
@@ -118,8 +131,8 @@ SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes
 
 # Corrección 2026-09-24 — título obligatorio al crear proyectos de grado
 
-- Toda solicitud de proyecto de grado que presenta el campo de título exige ahora un valor no vacío antes de registrarse. La regla cubre propuestas y defensas doctorales (tipos 4 y 5), propuestas y defensas de maestría (tipos 6 y 7) y examen doctoral (tipo 9); además del `required` nativo, la validación rechaza valores compuestos solo por espacios.
-- La configuración del título, su etiqueta académica y la necesidad de resumen quedaron centralizadas en `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`. Solo los tipos 4, 5, 6 y 7 exigen resumen; el tipo 9 continúa enviando únicamente `tituloTrabajo`. Los tipos que no muestran el control no agregan estos campos al payload.
+- Toda solicitud de proyecto de grado que presenta el campo de título exige ahora un valor no vacío antes de registrarse. La regla cubre propuestas y defensas doctorales (tipos 4 y 5), propuestas y defensas de maestría (tipos 6 y 7) y examen doctoral (tipo 8); además del `required` nativo, la validación rechaza valores compuestos solo por espacios.
+- La configuración del título, su etiqueta académica y la necesidad de resumen quedaron centralizadas en `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`. Solo los tipos 4, 5, 6 y 7 exigen resumen; el tipo 8 continúa enviando únicamente `tituloTrabajo`. Los tipos que no muestran el control no agregan estos campos al payload.
 - No cambiaron endpoints, DTO, roles, esquema, dependencias, variables, seeds ni datasets. `POST /sapp/solicitudesAcademicas` conserva `tituloTrabajo` como campo condicional del contrato existente.
 - Verificación: 47/47 pruebas Node y ESLint focalizado pasan; el build de producción pasa (308 módulos). El lint global conserva 9 errores y 1 warning preexistentes fuera de este cambio. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no hay venv, Conda ni Poetry.
 
@@ -196,7 +209,7 @@ módulos conservan separados contratos, servicios, componentes y páginas.
 
 ## Mejora reciente — evaluación del examen de candidatura doctoral (2026-09-23)
 
-- El examen de candidatura (tipo de solicitud `9`, código `CAND_DOCTORAL`) forma
+- El examen de candidatura (tipo de solicitud `8`, código `CAND_DOCTORAL`) forma
   parte del listado doctoral de **Proyectos de grado** y reutiliza el proceso
   completo de propuesta/defensa: designación y gestión de jurados, conceptos,
   correcciones, sustentación, resultado e historial.
@@ -323,7 +336,7 @@ para validación y previsualización de producción.
 ## Corrección reciente — títulos académicos en proyectos de grado (2026-09-23)
 
 - Al crear solicitudes de maestría (tipos 6 y 7), el campo obligatorio se identifica como **Título del trabajo de investigación**; para las solicitudes doctorales de propuesta o defensa (tipos 4 y 5), se identifica como **Título de la tesis**. Los cuatro tipos conservan el resumen obligatorio.
-- El tipo 9, **Examen doctoral**, muestra únicamente **Título del trabajo**: no presenta ni exige el resumen y envía `tituloTrabajo` sin `resumenTrabajo` en `POST /sapp/solicitudesAcademicas`.
+- El tipo 8, **Examen doctoral**, muestra únicamente **Título del trabajo**: no presenta ni exige el resumen y envía `tituloTrabajo` sin `resumenTrabajo` en `POST /sapp/solicitudesAcademicas`.
 - No cambiaron rutas, permisos, endpoints, esquema, dependencias, variables de entorno, seeds ni datasets. La distinción usa los IDs estables del catálogo y mantiene el contrato existente del backend.
 
 ## Corrección reciente — reasignación del documento ajustado (2026-09-23)
@@ -357,7 +370,7 @@ para validación y previsualización de producción.
 ## Decisión reciente — módulo inicial de Proyectos de grado (2026-09-22)
 
 - Se creó el módulo protegido `/trabajos-grado`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
-- Los tipos de solicitud 13, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y el nombre exacto entregado por el catálogo del backend.
+- Los tipos de solicitud 13, 9, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 9, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y el nombre exacto entregado por el catálogo del backend.
 - Esos seis tipos ya no se muestran ni se ofrecen para crear desde el módulo general de Solicitudes. No se cambiaron endpoints ni DTO: el nuevo módulo reutiliza por ahora los servicios, formularios, filtros, tablas y detalle existentes.
 - El estudiante es dirigido al nivel inferido de su programa y no puede navegar al otro; coordinación dispone de ambos niveles. Las funcionalidades de expediente, avances, evaluadores, defensa y calificación se implementarán posteriormente.
 
@@ -1038,10 +1051,10 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   lugar de enlaces subrayados. El botón de la sección de convocatoria ahora
   muestra únicamente **Convocar**; la operación conserva la inclusión de
   estudiantes vigentes y nuevos y no cambia contratos ni permisos.
-- **2026-09-24:** el catálogo de Proyectos de grado de maestría excluye los
-  tipos `8` y `9` de examen de candidatura, exclusivos de doctorado, e incluye
-  el tipo `10` **GRADO**. El catálogo doctoral conserva candidatura y también
-  permite tramitar grado.
+- **2026-09-24:** el catálogo de Proyectos de grado de maestría excluye el tipo `8` de examen de candidatura, exclusivo de doctorado, e incluye
+  el tipo `9` **GRADO**. El catálogo doctoral conserva candidatura y también
+  permite tramitar grado; el tipo `10` (AMPLIACION DE PERMANENCIA) queda fuera
+  de ambos niveles.
 - **2026-09-24:** la selección del nivel en Proyectos de grado reutiliza el
   resolvedor canónico de programas académicos. Además de las siglas históricas
   `MISI`/`DCC`, reconoce los nombres vigentes, los códigos UIS `302`/`347` y
