@@ -1,3 +1,15 @@
+# Actualización 2026-09-24 — ajustes de matrícula financiera
+
+SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes, matrículas, solicitudes, créditos, candidatura, trabajos de grado e informes. Las páginas React componen la experiencia, `src/modules` concentra dominio y transporte tipado, y el backend SAPP conserva cálculos, reglas de negocio y persistencia.
+
+- El tablero financiero convoca siempre vigentes y nuevos con ambos indicadores en `true`; solicitudes y recordatorios se ejecutan sobre todos los elegibles del proceso, sin selección de filas y sin depender de filtros visibles. Las acciones incompatibles con BORRADOR, ABIERTO, CERRADO o PUBLICADO ya no se muestran.
+- La tabla usa Nombre, Código, Programa académico, Tipo de estudiante, Estado, Semestre, Total y Acciones. Conserva búsqueda, programa, estado, alertas, paginación y desplazamiento horizontal contenido en móvil; el alta manual conserva el tipo de estudiante.
+- Se retiró la promoción de la interfaz, pero el ajuste completo preserva su valor histórico en el payload. La creación no envía `procesoBaseId`; creación y edición envían siempre `baseSalud: 'SMMLV'`, sin mutar datos al consultar, y advierten antes de reemplazar una base histórica MATRÍCULA. Tarifas continúan administrándose desde la pantalla principal.
+- Contratos existentes, exportación Excel y cálculos backend permanecen intactos; no hay endpoints, migraciones, dependencias ni seeds nuevos. La fixture visual aislada sigue en `tests/fixtures/matricula-financiera/preview.html`, con datos ficticios sin alertas de promoción.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `npm run dev`, `node --test --test-isolation=none tests/*.test.ts` y `npm run build`; no existen seeds locales y los datos reales provienen del backend configurado en `.env`.
+
+---
+
 # Ajuste 2026-09-24 — selector compacto de informes
 
 SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes,

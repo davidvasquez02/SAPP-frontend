@@ -11,7 +11,7 @@ import '../../../src/styles/globals.css'
 
 const proceso = { id: 1, periodoId: 1, periodo: '2026 - 2', estado: 'ABIERTO', valorSmmlv: 1524569, fuenteSmmlv: 'Fuente de prueba', porcentajeVotacion: 10, porcentajeSalud: 10, baseSalud: 'SMMLV', fechaLimiteRespuesta: '2026-12-15', resumen: {} }
 const respuestas = { entregoTrabajoGrado: null, cumLaude: null, certificadoVotacion: null, deseaSalud: null }
-const rows = Array.from({ length: 26 }, (_, i) => ({ id: i + 1, procesoId: 1, estudianteId: i + 1, codigoEstudiante: `PRUEBA-${i + 1}`, nombreCompleto: `Estudiante ficticio ${i + 1}`, programaId: 1, programa: '302 - MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA', programaCodigo: '302', tipoEstudiante: i === 0 ? 'NUEVO' : 'VIGENTE', semestre: i === 0 ? null : 3, promocion: null, estado: 'PENDIENTE_RESPUESTA', respuestas: { ...respuestas }, ajusteManual: 0, valorFinalManual: null, observaciones: null, totalFinal: null, alertas: ['SIN_RESPUESTA', 'PROMOCION_FALTANTE'], liquidada: false }))
+const rows = Array.from({ length: 26 }, (_, i) => ({ id: i + 1, procesoId: 1, estudianteId: i + 1, codigoEstudiante: `PRUEBA-${i + 1}`, nombreCompleto: `Estudiante ficticio ${i + 1}`, programaId: 1, programa: '302 - MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA', programaCodigo: '302', tipoEstudiante: i === 0 ? 'NUEVO' : 'VIGENTE', semestre: i === 0 ? null : 3, promocion: null, estado: 'PENDIENTE_RESPUESTA', respuestas: { ...respuestas }, ajusteManual: 0, valorFinalManual: null, observaciones: null, totalFinal: null, alertas: ['SIN_RESPUESTA'], liquidada: false }))
 let certificado = null
 let ultimaPeticion = ''
 const tarifas = [{ id: 1, programaId: 1, semestreDesde: 1, semestreHasta: 4, factorMatricula: 1, factorDerechos: 1, activo: true }]
@@ -48,7 +48,7 @@ window.fetch = async (input, options = {}) => {
     if (action && proceso.estado === 'PUBLICADO') return response(null, 409, 'El proceso está publicado')
     if (action === 'respuestas') {
       if (row.tipoEstudiante === 'NUEVO' && ('entregoTrabajoGrado' in body || 'cumLaude' in body)) return response(null, 400, 'NUEVO solo admite votación y salud')
-      row.respuestas = { ...row.respuestas, ...body }; row.estado = 'RESPONDIDA'; row.totalFinal = 3049138; row.alertas = ['PROMOCION_FALTANTE']
+      row.respuestas = { ...row.respuestas, ...body }; row.estado = 'RESPONDIDA'; row.totalFinal = 3049138; row.alertas = []
     }
     if (action === 'ajustes') { Object.assign(row, body); row.totalFinal = body.valorFinalManual ?? 3049138 + body.ajusteManual; row.alertas = [] }
     if (action === 'liquidada') { row.estado = body.liquidada ? 'LIQUIDADA' : 'RESPONDIDA'; row.liquidada = body.liquidada }

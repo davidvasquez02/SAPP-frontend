@@ -30,7 +30,6 @@ export const ALERTAS: Record<string, string> = {
   PERMANENCIA_AMPLIADA: 'Permanencia ampliada: confirmar el acta que la autoriza.',
   SEMESTRE_FUERA_DE_TARIFA: 'Sin tarifa aplicable: revisar tarifas o fijar un valor final autorizado.',
   VOTACION_SIN_CERTIFICADO: 'Falta certificado de votación o su marca de recepción por correo.',
-  PROMOCION_FALTANTE: 'Falta la promoción necesaria para la guía de PUTTY.',
   ESTUDIANTE_NO_ACTIVO: 'Estudiante no activo: revisar si corresponde liquidarlo.',
   CUENTA_IAM_PENDIENTE: 'Sin cuenta propia: registrar respuestas por coordinación y avisar por otro medio.',
 }
