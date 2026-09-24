@@ -229,6 +229,8 @@ const PerfilPage = () => {
             <div><dt>Cohorte</dt><dd>{valueOrPending(user.estudiante?.cohorte)}</dd></div>
             <div><dt>Estado académico</dt><dd>{valueOrPending(user.estudiante?.estado)}</dd></div>
             <div><dt>Fecha de ingreso</dt><dd>{formatDateInColombia(user.estudiante?.fechaIngreso)}</dd></div>
+            <div><dt>Director de trabajo de grado</dt><dd>{user.estudiante?.directorTg?.nombreCompleto ?? ''}</dd></div>
+            <div><dt>Correo del director</dt><dd>{user.estudiante?.directorTg?.correo ?? ''}</dd></div>
             {/* <div><dt>ID de estudiante</dt><dd>{valueOrPending(user.estudiante?.id)}</dd></div> */}
           </dl>
         </section>}

@@ -1,3 +1,18 @@
+# Update 2026-09-24 — director de trabajo de grado en perfil y detalle estudiantil
+
+## Estado actual, contrato y salida esperada
+- `PerfilPage` presenta **Director de trabajo de grado** y **Correo del director** en la tarjeta académica del estudiante. `EstudianteDetalleCoordinacionPage` presenta esos mismos valores en los metadatos del perfil consultado.
+- `GET /inicio` admite `data.detalle.estudiante.directorTg: { nombreCompleto: string, correo: string } | null`. `GET /sapp/estudiantes/consulta` admite el mismo objeto `directorTg` en el nivel raíz de cada registro. Los tipos y el adaptador conservan estos contratos; el mapper de autenticación mantiene completa la proyección de `detalle.estudiante`.
+- Salida esperada: con director se muestran nombre y correo exactamente como llegan; con `directorTg: null` los dos `<dd>` quedan vacíos por decisión de producto. No se muestra “Sin información”, “Pendiente” ni otro placeholder para estos campos.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/api/authTypes.ts`, `src/modules/estudiantes/{types.ts,services/estudiantesMockService.ts}`, `src/pages/Perfil/PerfilPage.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`. Los mocks existentes declaran `directorTg: null`; no hay seeds ni datasets nuevos.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. No es un proyecto Python. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (44/44); `npm run build` PASS (307 módulos, CSS 243.32 kB y JS 724.89 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar visualmente con sesiones institucionales el perfil del estudiante y el detalle abierto por coordinación, tanto con director como con datos históricos nulos. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y las rutas requieren credenciales y backend institucionales no reproducibles en el repositorio.
+
+---
+
 # Update 2026-09-24 — ocultamiento de asignadas exclusivo para coordinación
 
 ## Estado actual, decisión y salida esperada
