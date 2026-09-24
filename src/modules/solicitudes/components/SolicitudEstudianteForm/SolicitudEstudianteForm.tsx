@@ -890,8 +890,8 @@ const SolicitudEstudianteForm = ({
                     <fieldset className="solicitud-estudiante-form__origen">
                       <legend>Materia origen *</legend>
                       <div className="solicitud-estudiante-form__source-toggle">
-                        <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Del listado</button>
-                        <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>No la encuentro</button>
+                        <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Asignatura del listado</button>
+                        <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>Asignatura nueva</button>
                       </div>
                       {item.origenModo === 'catalogo' ? (
                         <select id={`homologacion-${item.id}-origen`} aria-label={`Materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.asignaturaOrigenId == null ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.asignaturaOrigenId == null} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>

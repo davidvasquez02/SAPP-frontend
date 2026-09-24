@@ -1,3 +1,17 @@
+# Handoff 2026-09-24 — nombres de origen en homologación
+
+## Estado, decisión y salida esperada
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` presenta **Asignatura del listado** para elegir una materia recibida en el catálogo y **Asignatura nueva** para capturar manualmente código opcional y nombre obligatorio. Reemplazan únicamente los textos ambiguos **Del listado** y **No la encuentro**.
+- Los valores internos continúan siendo `catalogo` y `manual`. No cambian las validaciones ni el contrato: el primer modo envía `{ asignatura_origen_id, asignatura_destino_id }` y el segundo `{ nombreAsignaturaExterna, codigoAsignaturaExterna?, asignatura_destino_id }` dentro del payload existente de homologación.
+- No se añadieron schemas, paquetes, variables, seeds ni datasets. Pendiente externo: revisar la copia en `/solicitudes` con una sesión estudiantil y el backend institucional; el repositorio no contiene credenciales ni datos reproducibles para esa ruta protegida. No se pudo producir una captura local porque el contenedor no tiene Chromium, Chrome ni Firefox.
+
+## Entorno, paths y validación
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Implementación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Documentación de continuidad: este encabezado y la entrada equivalente en `README.md`. No existen artefactos o datasets nuevos.
+- Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS y build PASS (314 módulos; CSS 255.39 kB; JS 734.21 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+
+---
+
 # Handoff 2026-09-24 — filtro de solicitudes generales de coordinación
 
 ## Estado, contrato y salida esperada
