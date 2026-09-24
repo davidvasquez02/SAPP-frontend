@@ -5072,3 +5072,49 @@ npm run lint
   Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
 
 ---
+# Update 2026-09-23 — evaluación del examen de candidatura doctoral
+
+## Estado actual y decisiones
+- El tipo de solicitud `9` quedó incluido en
+  `TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado`; el código `CAND_DOCTORAL` ya estaba
+  habilitado en `CODIGOS_PROCESO_EVALUACION_TG`. Por ello el examen aparece en
+  el listado doctoral y usa el mismo `ProcesoEvaluacionPanel` de propuestas y
+  defensas, incluidas designación de jurados, correcciones, programación de
+  sustentación, cierre e historial. Se conserva temporalmente el ID `8` del
+  catálogo anterior para compatibilidad con datos existentes.
+- `SolicitudDetallePage` muestra solo `tituloTrabajo` (o el respaldo `titulo`
+  del proceso) para candidatura y nunca renderiza el resumen. También habilita
+  el panel estudiantil de ajustes para el ID `9` bajo las mismas reglas actuales.
+- En la lista de jurados, las evaluaciones `SUSTENTACION` de candidatura usan
+  `nota` y la etiqueta **Nota**; propuesta y defensa siguen usando el resultado
+  nominal. La regla está aislada en
+  `src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts`.
+
+## Contratos, paths y salida esperada
+- Se reutiliza `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`. Para cada
+  jurado se espera `evaluaciones[]` con `{ id, momentoCodigo, nota, ... }`; si
+  `tipoSolicitudCodigo === "CAND_DOCTORAL"` y
+  `momentoCodigo === "SUSTENTACION"`, la UI produce `Nota: <nota>` aunque la
+  respuesta también contenga un `resultadoNombre`.
+- Archivos centrales: `src/modules/trabajos-grado/constants.ts`,
+  `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`,
+  `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` y
+  `presentacionEvaluacion.ts`. Regresión: `tests/candidaturaDoctoral.test.ts`.
+- Pendiente: validar con backend y sesión institucional la presencia del tipo 9
+  en el catálogo, el ciclo completo de correcciones/sustentación y una nota real
+  (incluidos `0` y decimales). Confirmar después con backend si el ID legado `8`
+  puede retirarse. La autoridad de permisos y transiciones continúa en backend.
+
+## Entorno y resultados
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni un segundo árbol npm. No existen seeds/datasets para este flujo.
+  Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM
+  7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación 2026-09-23: pruebas dirigidas PASS (7/7), ESLint focalizado PASS,
+  build PASS (287 módulos; CSS 233.01 kB, JS 670.38 kB) y `git diff --check`
+  PASS. `npm run lint` sigue bloqueado por 9 errores y 1 warning preexistentes
+  en servicios placeholder, admisiones, documentos y tipos/editor de
+  solicitudes. Persisten además el warning ambiental `Unknown env config
+  "http-proxy"` y el aviso informativo por el chunk mayor de 500 kB.
+
+---

@@ -6,6 +6,20 @@ reportes, actas y configuración académica. Es una SPA modular que consume la A
 Spring Boot mediante servicios HTTP; React Router controla rutas protegidas y los
 módulos conservan separados contratos, servicios, componentes y páginas.
 
+## Mejora reciente — evaluación del examen de candidatura doctoral (2026-09-23)
+
+- El examen de candidatura (tipo de solicitud `9`, código `CAND_DOCTORAL`) forma
+  parte del listado doctoral de **Proyectos de grado** y reutiliza el proceso
+  completo de propuesta/defensa: designación y gestión de jurados, conceptos,
+  correcciones, sustentación, resultado e historial.
+- Su detalle muestra el **Título** del proyecto, pero oculta el **Resumen**, aun
+  si una respuesta histórica del backend lo incluyera. El resto de propuestas y
+  defensas conserva ambos campos.
+- En la tabla de jurados, una evaluación del momento `SUSTENTACION` muestra
+  **Nota** y consume `evaluacion.nota` para `CAND_DOCTORAL`. Los otros procesos
+  continúan mostrando **Resultado** desde el catálogo. No cambiaron endpoints,
+  payloads, esquema, dependencias, variables de entorno, seeds ni datasets.
+
 ## Mejora reciente — navegación del listado de estudiantes (2026-09-23)
 
 - La rueda vertical del ratón desplaza horizontalmente los tableros de
