@@ -14,6 +14,34 @@ export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<Li
   if (accion === 'respuestas' || accion === 'excluir') return fila.estado === 'PENDIENTE_RESPUESTA' || fila.estado === 'RESPONDIDA'
   return fila.estado === 'LIQUIDADA' || (fila.estado === 'RESPONDIDA' && fila.totalFinal != null)
 }
+export const etiquetaEstadoLiquidacion = (estado: LiquidacionMatricula['estado']): string => ({
+  PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'Excluida',
+})[estado]
+
+/** Convierte una entrada monetaria colombiana a decimal sin redondearla. */
+export function normalizarMoneda(value: string, admiteNegativo: boolean): string | null {
+  let clean = value.trim().replace(/\s|\$/g, '')
+  if (!clean) return ''
+  const negative = clean.startsWith('-')
+  if (negative) clean = clean.slice(1)
+  if (negative && !admiteNegativo) return null
+  if (!/^[\d.,]+$/.test(clean)) return null
+  const comma = clean.lastIndexOf(','); const dot = clean.lastIndexOf('.'); const decimalAt = Math.max(comma, dot)
+  const tail = decimalAt >= 0 ? clean.slice(decimalAt + 1) : ''
+  if (comma >= 0 && tail.length > 4) return null
+  const hasDecimal = decimalAt >= 0 && tail.length <= 4 && (comma >= 0 || clean.split('.').length === 2)
+  const integer = (hasDecimal ? clean.slice(0, decimalAt) : clean).replace(/[.,]/g, '') || '0'
+  if (!/^\d+$/.test(integer) || (hasDecimal && !/^\d{0,4}$/.test(tail))) return null
+  return `${negative ? '-' : ''}${integer}${hasDecimal ? `.${tail}` : ''}`
+}
+
+export function formatoMonedaEntrada(value: string): string {
+  if (value === '' || value === '-') return value
+  const negative = value.startsWith('-'); const unsigned = negative ? value.slice(1) : value
+  const [integer, decimal] = unsigned.split('.')
+  const grouped = (integer || '0').replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${negative ? '-' : ''}${grouped}${decimal === undefined ? '' : `,${decimal}`}`
+}
 export const ajustesActuales = (fila: LiquidacionMatricula): AjustesLiquidacionRequest => ({
   semestre: fila.semestre ?? 1, promocion: fila.promocion ?? null, ajusteManual: fila.ajusteManual ?? 0,
   valorFinalManual: fila.valorFinalManual ?? null, observaciones: fila.observaciones ?? null,

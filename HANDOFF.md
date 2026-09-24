@@ -5505,3 +5505,24 @@ npm run lint
 - Pendiente: validar con backend y sesión institucional los modos claro/oscuro y móvil, los cuatro estados de liquidación, la derivación de recepción y el reemplazo documental. Si hay navegador disponible, capturar las rutas protegidas; este repositorio no aporta credenciales ni backend reproducible.
 
 ---
+
+---
+
+# Update 2026-09-24 — acciones, correcciones y privacidad de liquidación
+
+## Estado actual y decisiones
+- `LiquidacionActions.tsx` centraliza confirmación, exclusión, desmarcado y reinclusión para tabla/detalle. Sus diálogos identifican estudiante, código y periodo; la confirmación PUTTY incluye total y checkbox exacto. Exclusión conserva el total y envía `{ motivo: string }` recortado. `useOperacion` evita dobles envíos. `PUBLICADO` no permite mutaciones; una fila `LIQUIDADA` debe desmarcarse antes de excluirse.
+- Confirmar requiere `RESPONDIDA` y `totalFinal != null` (incluye `0`); alertas no bloquean. En detalle también se bloquea si el formulario de respuestas o las correcciones tienen cambios locales. Tras una mutación se refrescan fila, tabla y resumen desde el backend.
+- El editor **Corregir cálculo** vive dentro de **Cálculo recibido del sistema** y no desmonta su estado al cerrarse. Los campos monetarios aceptan formato colombiano, ajuste negativo y máximo cuatro decimales. El payload continúa numérico; `valorFinalManual: null` retira la sustitución y `0` se conserva.
+- El filtro `conAlertas` y la columna semestre se retiraron del listado. Las insignias tienen texto y tokens/mezclas compatibles con tema. El botón de flecha del sidebar ahora centra un área estable de 40 px y rota al expandir.
+- Estudiantes solo ven `valores.totalFinal`; jamás se renderiza `valores.desglose`, aunque el DTO se mantiene sin cambios. Coordinación conserva el desglose completo.
+
+## Contratos, paths y salida esperada
+- Sin endpoints ni schemas nuevos: `PUT /liquidaciones/{id}/liquidada` con `{ liquidada: boolean }`, `/excluir` con `{ motivo }`, `/reincluir` sin cuerpo, `/ajustes` con reemplazo completo y `/respuestas` con respuestas aplicables. Base HTTP existente: `/api/sapp`.
+- Paths principales: `src/pages/MatriculaFinanciera/{LiquidacionActions,LiquidacionDetallePage,ProcesoLiquidacionPage,MatriculaFinancieraPage,RespuestasForm}.tsx`, CSS compartido en `MatriculaFinancieraPage.css`, reglas en `src/modules/matricula-financiera/rules.ts` y regresiones en `tests/matriculaFinancieraRules.test.ts`.
+- Salida esperada: cero puede confirmarse; total ausente, estado no respondido o cambios locales deshabilitan confirmación; cancelar un diálogo no muta; motivo vacío/espacios no se envía; fallos del servidor mantienen el diálogo y muestran error. Publicado solo consulta.
+
+## Entorno, resultados y siguientes pasos
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. `package-lock.json` fija el árbol.
+- Validación local: suite Node PASS (53/53), ESLint focalizado PASS, build PASS (310 módulos; CSS 248.52 kB; JS 728.06 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de este alcance (servicios placeholder, admisiones, documentos y solicitudes). npm muestra el warning ambiental `Unknown env config "http-proxy"`; Vite advierte por el chunk >500 kB.
+- Pendiente institucional: probar errores reales de cada mutación, actualización de resumen, permisos y proceso publicado con backend/sesión; revisar teclado, foco, claro/oscuro y escritorio/móvil. No se tomó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox; la ruta real requiere autenticación/backend.

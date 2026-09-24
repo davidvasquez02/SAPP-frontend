@@ -1102,3 +1102,11 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
 - Coordinación ya no marca “Certificado recibido”: la respuesta Sí/No genera `certificadoVotacionRecibido` automáticamente. El registro queda bloqueado y se vuelve a validar en el envío mientras falte alguna respuesta aplicable; observaciones y archivo siguen opcionales. No cambiaron endpoints ni DTO del backend.
 
 ---
+
+## Actualización 2026-09-24 — revisión y confirmación de liquidaciones
+
+- Coordinación dispone de las mismas acciones en tabla y detalle: **Ver detalle**, **Confirmar liquidación en PUTTY** y **Excluir del proceso**. Confirmar exige estado `RESPONDIDA`, total definido (cero es válido), respuestas/correcciones guardadas y aceptación explícita; excluir exige motivo no vacío y confirmación. Desmarcar y reincluir conservan los endpoints existentes y también piden confirmación. Los procesos `PUBLICADO` son de consulta.
+- **Corregir cálculo** está integrado como panel desplegable dentro del cálculo del servidor. Mantiene semestre, ajuste con signo, total manual opcional y motivo; admite moneda colombiana y hasta cuatro decimales sin confundir cero con vacío. El servidor sigue siendo la autoridad del total definitivo.
+- El listado ya no ofrece ni envía `conAlertas`, retiró semestre y presenta insignias textuales para pendiente, respondida, liquidada y excluida. El control del submenú lateral conserva dimensiones estables, centrado y rotación.
+- La vista estudiantil presenta exclusivamente **Total liquidado** cuando está disponible. El desglose permanece en el contrato para compatibilidad, pero solo coordinación lo presenta; el detalle oficial se consulta por canales institucionales del sistema financiero.
+- No se añadieron estados, endpoints, migraciones ni dependencias. Reutilizar `node_modules`; ejecutar `npm run dev`, `npm run lint`, `node --test --test-isolation=none tests/*.test.ts` y `npm run build`. No hay seeds para este flujo; la fixture aislada está en `tests/fixtures/matricula-financiera/preview.html`.

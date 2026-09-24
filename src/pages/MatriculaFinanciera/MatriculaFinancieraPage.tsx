@@ -11,7 +11,7 @@ import type { MiLiquidacion } from '../../modules/matricula-financiera/types'
 import { ParametrosProcesoForm } from './ParametrosProcesoForm'
 import { RespuestasForm } from './RespuestasForm'
 import { CertificadoVotacion } from './CertificadoVotacion'
-import { Aviso, Importe, Paginacion } from './FinancieraUi'
+import { Aviso, Paginacion } from './FinancieraUi'
 import './MatriculaFinancieraPage.css'
 
 export function MatriculaFinancieraPage() {
@@ -51,6 +51,6 @@ function MiLiquidacionCard({ item, onChange }: { item: MiLiquidacion; onChange: 
     <Aviso error={op.error} message={op.message} />
     <RespuestasForm key={JSON.stringify(item.respuestas)} respuestas={item.respuestas} preguntas={item.preguntas} tipo={item.tipoEstudiante} editable={item.puedeResponder} busy={op.busy || documentBusy} renderCertificado={() => <CertificadoVotacion embedded liquidacionId={item.liquidacionId} editable={!op.busy && item.proceso.estado !== 'PUBLICADO'} onBusyChange={setDocumentBusy} onChange={onChange} />} onSave={async answers => { await op.run(async () => { await responderMiLiquidacion(item.liquidacionId, answers); onChange() }, 'Respuestas guardadas.') }} />
     {!item.puedeResponder && <p>Las respuestas están disponibles únicamente para consulta.</p>}
-    {item.valores ? <><dl className="mf-values">{item.valores.desglose && <><Importe titulo="Matrícula" valor={item.valores.desglose.matricula} /><Importe titulo="Derechos académicos" valor={item.valores.desglose.derechosAcademicos} /><Importe titulo="Descuentos" valor={item.valores.desglose.descuentos} /><Importe titulo="Salud" valor={item.valores.desglose.salud} /></>}</dl><div className="mf-total"><span>Total liquidado</span><strong>{money(item.valores.totalFinal)}</strong></div>{!item.valores.desglose && <p>El total incluye un ajuste de coordinación y no tiene desglose disponible.</p>}<p>La liquidación fue registrada en el sistema financiero. Consulta los canales institucionales para realizar el pago.</p></> : <p>El valor estará disponible cuando coordinación marque tu liquidación como realizada.</p>}
+    {item.valores ? <><div className="mf-total"><span>Total liquidado</span><strong>{money(item.valores.totalFinal)}</strong></div><p>Consulta el detalle oficial por los canales institucionales del sistema financiero.</p></> : <p>El total estará disponible cuando coordinación confirme tu liquidación.</p>}
   </article>
 }
