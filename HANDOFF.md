@@ -32,6 +32,32 @@
 
 ---
 
+# Update 2026-09-24 — texto de confirmación de liquidación
+
+## Estado y salida esperada
+- En `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, la tarjeta
+  **Estado de la liquidación** muestra únicamente “Confirma únicamente después
+  de registrar la liquidación en PUTTY.”; se retiró la frase adicional acerca
+  de las alertas por no aportar información relevante en este contexto.
+- No cambiaron las reglas: confirmar continúa sujeto a estado, total y cambios
+  guardados según `LiquidacionActions`. Tampoco cambiaron API, schemas, DTO,
+  permisos, dependencias, variables, seeds ni datasets.
+
+## Entorno y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. El proyecto usa Node.js/npm y las
+  versiones exactas se encuentran en `package-lock.json`.
+- Validación local: suite Node PASS (56/56), ESLint focalizado PASS, build PASS
+  (313 módulos; CSS 252.50 kB y JS 732.44 kB) y `git diff --check` PASS. Avisos
+  no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte
+  por el chunk mayor de 500 kB.
+- Pendiente integrado: comprobar el texto en el detalle con una sesión de
+  coordinación y backend institucional; la ruta protegida no tiene seed local.
+  No se capturó imagen porque el contenedor no dispone de Chromium, Chrome ni
+  Firefox.
+
+---
+
 # Handoff 2026-09-24 — filtro por nivel en matrícula académica
 
 ## Estado actual y salida esperada

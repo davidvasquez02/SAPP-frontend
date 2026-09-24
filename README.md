@@ -1146,3 +1146,12 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
 - Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seeds locales; los datos reales provienen del backend configurado con las variables Vite.
 
 ---
+
+## Decisión reciente — mensaje de confirmación de liquidación (2026-09-24)
+
+- El detalle de matrícula financiera conserva la instrucción de confirmar solo
+  después de registrar la liquidación en PUTTY, pero omite la explicación sobre
+  el carácter no bloqueante de las alertas por no ser relevante en ese punto de
+  la interfaz.
+- El ajuste es exclusivamente de contenido. No cambia validaciones, acciones,
+  contratos HTTP, DTO, dependencias, variables, seeds ni datasets.
