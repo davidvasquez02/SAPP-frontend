@@ -1,3 +1,12 @@
+# Actualización 2026-09-24 — histórico y documento correcto al designar evaluadores
+
+- En el detalle de las solicitudes de trabajo de grado, la sección antes titulada **Línea de tiempo** se presenta ahora como **Histórico de cambios**. Continúa consumiendo `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial` y mostrando los cambios reales reportados por el backend.
+- **Agregar evaluador** ya no muestra la opción **Enviar invitación al guardar**: toda designación nueva envía `enviarInvitaciones: true` de manera obligatoria. El reemplazo conserva su flujo existente de reemplazar e invitar.
+- Al crear un jurado, el frontend persiste primero el documento elegido con `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}` y después ejecuta `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`, cuyo payload conserva el mismo `documentoEvaluarId`. Así se evita que el backend use como alternativa el último documento cargado (por ejemplo, `1192`) cuando coordinación seleccionó explícitamente otro (por ejemplo, `1191`), y la invitación se genera contra la selección ya persistida.
+- No cambiaron rutas, DTO de designación, permisos, dependencias, variables de entorno, seeds ni datasets. El frontend usa Node.js 24.15.0, npm 11.4.2 y las versiones fijadas por `package-lock.json`; se ejecuta con `npm run dev`, sin entornos Python ni pasos de seed.
+
+---
+
 # Minerva Frontend — EISI UIS
 
 Frontend institucional para centralizar los procesos de posgrado EISI–UIS: admisiones,

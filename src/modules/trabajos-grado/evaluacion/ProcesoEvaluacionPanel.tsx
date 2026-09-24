@@ -3,6 +3,7 @@ import type { ActaDto } from '../../actas/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../solicitudes/types/documentosAdjuntos'
 import {
   buscarBancoJurados,
+  definirDocumentoEvaluar,
   designarJurados,
   enviarAAjustes,
   enviarRecordatorios,
@@ -105,7 +106,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   const [jurado, setJurado] = useState<JuradoInput>(EMPTY_JURADO)
   const [fechaLimite, setFechaLimite] = useState('')
   const [documentoId, setDocumentoId] = useState('')
-  const [enviarInvitaciones, setEnviarInvitaciones] = useState(true)
   const [banco, setBanco] = useState<BancoJurado[]>([])
   const [bancoLoading, setBancoLoading] = useState(false)
   const [reemplazando, setReemplazando] = useState<JuradoEvaluador | null>(null)
@@ -218,13 +218,19 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       return
     }
     void runMutation(
-      () => designarJurados(solicitudId, {
-        jurados: [jurado],
-        fechaLimiteEvaluacion: fechaLimite,
-        documentoEvaluarId: selectedDocument,
-        enviarInvitaciones,
-      }),
-      enviarInvitaciones ? 'Jurado registrado e invitación enviada.' : 'Jurado registrado.',
+      async () => {
+        // Persist the explicit selection before sending the invitation. The juror
+        // endpoint also receives the id, but defining it first prevents the backend
+        // from falling back to the most recently uploaded document.
+        await definirDocumentoEvaluar(solicitudId, selectedDocument)
+        await designarJurados(solicitudId, {
+          jurados: [jurado],
+          fechaLimiteEvaluacion: fechaLimite,
+          documentoEvaluarId: selectedDocument,
+          enviarInvitaciones: true,
+        })
+      },
+      'Jurado registrado e invitación enviada.',
     )
   }
 
@@ -318,7 +324,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
             {!reemplazando && <><label><span>Fecha límite *</span><input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} /></label><label><span>Documento a evaluar *</span><select value={documentoId} onChange={(e) => setDocumentoId(e.target.value)}><option value="">Selecciona un documento</option>{documentos.map((doc) => <option key={doc.idDocumento} value={doc.idDocumento}>{doc.nombreArchivo}</option>)}</select></label></>}
           </div>
           <label className="evaluacion-tg__check"><input type="checkbox" checked={jurado.externo} onChange={(e) => setJurado((v) => ({ ...v, externo: e.target.checked }))} /> Evaluador externo a la UIS</label>
-          {!reemplazando && <label className="evaluacion-tg__check"><input type="checkbox" checked={enviarInvitaciones} onChange={(e) => setEnviarInvitaciones(e.target.checked)} /> Enviar invitación al guardar</label>}
           <div className="evaluacion-tg__form-actions"><button type="button" onClick={submitJurado} disabled={busy}>{busy ? 'Guardando…' : reemplazando ? 'Reemplazar e invitar' : 'Guardar jurado'}</button><button type="button" className="secondary" onClick={() => { setFormulario(null); setReemplazando(null); setJurado(EMPTY_JURADO) }} disabled={busy}>Cancelar</button></div>
         </div>
       )}
@@ -332,7 +337,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       {proceso.sustentacion && <section className="evaluacion-tg__section"><h4>Sustentación</h4><dl className="evaluacion-tg__summary"><div><dt>Fecha</dt><dd>{formatDate(proceso.sustentacion.fechaSustentacion, true)}</dd></div><div><dt>Modalidad</dt><dd>{proceso.sustentacion.modalidadNombre || proceso.sustentacion.modalidadCodigo}</dd></div><div><dt>Lugar o enlace</dt><dd>{proceso.sustentacion.lugar || proceso.sustentacion.enlace || '—'}</dd></div></dl></section>}
 
       <section className="evaluacion-tg__section">
-        <h4>Línea de tiempo</h4>
+        <h4>Histórico de cambios</h4>
         {historial.length === 0 ? <p>No hay cambios de estado registrados.</p> : (
           <ol className="evaluacion-tg__timeline">
             {historial.map((item, index) => (

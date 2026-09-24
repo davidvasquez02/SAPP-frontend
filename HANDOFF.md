@@ -1,3 +1,19 @@
+# Update 2026-09-24 — histórico y selección documental al designar jurados
+
+## Estado actual, causa y decisiones
+- `ProcesoEvaluacionPanel` muestra **Histórico de cambios** en vez de **Línea de tiempo**. El contrato de lectura no cambió: `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`, con envelope `{ ok, message, data }` y la lista `HistorialProcesoEvaluacion[]` descrita en la actualización anterior.
+- Se retiró del formulario de creación el checkbox **Enviar invitación al guardar**. Una designación nueva siempre manda `enviarInvitaciones: true`; el usuario no puede desactivarlo. Los reemplazos ya invitaban obligatoriamente y no cambiaron.
+- La selección visual usaba correctamente `SolicitudDocumentoAdjuntoDto.idDocumento`, pero la única escritura era el `documentoEvaluarId` incluido en la designación. Ante el caso observado (selección `1191`, asignación final `1192`), el flujo ahora llama primero a `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}` y solo después a `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`. Ambas operaciones reciben exactamente el ID seleccionado; la primera impide que la creación/invitación dependa del fallback del backend al documento más reciente.
+- Salida esperada: al seleccionar el documento `1191`, la primera URL termina en `/documento-evaluar/1191`, el POST contiene `documentoEvaluarId: 1191` y `enviarInvitaciones: true`, y la recarga del proceso retorna `documentoEvaluarId: 1191` con su nombre correspondiente.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`; texto de error del histórico: `src/modules/trabajos-grado/evaluacion/api.ts`. No hay nuevos schemas, dependencias, seeds, fixtures ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. No es un proyecto Python. Entorno comprobado: Node.js 24.15.0 y npm 11.4.2; React/React DOM, React Router DOM, TypeScript, Vite/Rolldown y ESLint se resuelven con las versiones exactas de `package-lock.json`.
+- Verificación local 2026-09-24: `npx eslint src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx src/modules/trabajos-grado/evaluacion/api.ts` PASS, `npm run build` PASS, `node --test tests/*.test.ts` PASS (28/28) y `git diff --check` PASS. El lint global continúa fallando por 9 errores preexistentes fuera de estos archivos. npm mantiene el warning ambiental conocido `Unknown env config "http-proxy"`; el build mantiene el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional el caso concreto `1191`/`1192`, inspeccionando en red que el PUT finalice antes del POST y comprobando el archivo recibido en el correo. También revisar el nuevo encabezado en claro/oscuro y móvil. La ruta protegida no dispone de credenciales ni backend reproducible dentro del repositorio.
+
+---
+
 # Update 2026-09-23 — historial real en la línea de tiempo de trabajos de grado
 
 ## Estado actual, contrato y salida esperada
