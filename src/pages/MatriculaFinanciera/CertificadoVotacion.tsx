@@ -7,8 +7,8 @@ import { sha256Hex } from '../../utils/sha256'
 import { downloadSolicitudDocument, openSolicitudDocument } from '../../modules/solicitudes/utils/solicitudDocumentFile'
 import { Aviso } from './FinancieraUi'
 
-interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void }
-export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange }: CertificadoVotacionProps) {
+interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void; embedded?: boolean }
+export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange, embedded = false }: CertificadoVotacionProps) {
   const { session } = useAuth()
   const consulta = useConsulta(useCallback((signal: AbortSignal) => listarCertificados(liquidacionId, signal), [liquidacionId]))
   const op = useOperacion()
@@ -16,22 +16,22 @@ export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyC
   const [inputKey, setInputKey] = useState(0)
   const requirement = consulta.data?.find(d => d.codigoTipoDocumentoTramite === 'ANX-39')
   const current = requirement?.documentoUploadedResponse
-  return <section className="mf-card"><h3>Certificado de votación</h3><p>Opcional. Su carga permite resolver la alerta documental; el descuento depende de la respuesta declarada. Reemplazar crea una nueva versión.</p>
+  const upload = () => { if (!file) return; void op.run(async () => {
+    onBusyChange?.(true)
+    try {
+      if (!session?.user.id) throw new Error('No fue posible identificar al usuario que carga el documento.')
+      await cargarCertificado({ tipoDocumentoTramiteId: requirement!.idTipoDocumentoTramite, tramiteId: liquidacionId, nombreArchivo: file.name, usuarioCargaId: session.user.id, aspiranteCargaId: null, contenidoBase64: await fileToBase64(file), mimeType: file.type || 'application/octet-stream', tamanoBytes: file.size, checksum: await sha256Hex(await file.arrayBuffer()) })
+      setFile(null); setInputKey(v => v + 1); consulta.refresh(); onChange()
+    } finally { onBusyChange?.(false) }
+  }, 'Certificado guardado.') }
+  return <section className={embedded ? 'mf-certificate' : 'mf-card'}><h3>Certificado de votación</h3><p>Opcional. Puedes cargarlo como respaldo si coordinación dispone del documento. Reemplazar crea una nueva versión.</p>
     <Aviso error={consulta.error || op.error} message={op.message} />
     {consulta.loading ? <p>Cargando documento…</p> : !requirement ? <p>No está disponible el certificado en el catálogo. Contacta a coordinación.</p> : <>
       <p>{current ? `${current.nombreArchivoDocumento} · Versión ${current.versionDocumento} · ${current.estadoDocumento ?? 'Cargado'}` : 'Sin documento cargado.'}</p>
       {current?.estadoDocumento === 'RECHAZADO' && <p>El documento fue rechazado y no cuenta como recibido. {current.observacionesDocumento}</p>}
-      {current && <div className="mf-actions"><button disabled={op.busy} className="mf-button mf-button--secondary" onClick={() => void op.run(() => openSolicitudDocument(current.base64DocumentoContenido, current.mimeTypeDocumentoContenido, current.nombreArchivoDocumento), '')}>Ver documento</button><button disabled={op.busy} className="mf-button mf-button--secondary" onClick={() => void op.run(() => downloadSolicitudDocument(current.base64DocumentoContenido, current.mimeTypeDocumentoContenido, current.nombreArchivoDocumento), '')}>Descargar</button></div>}
-      {editable && <form className="mf-questions" onSubmit={e => { e.preventDefault(); if (!file) return; void op.run(async () => {
-        onBusyChange?.(true)
-        try {
-        if (!session?.user.id) throw new Error('No fue posible identificar al usuario que carga el documento.')
-        await cargarCertificado({ tipoDocumentoTramiteId: requirement.idTipoDocumentoTramite, tramiteId: liquidacionId, nombreArchivo: file.name, usuarioCargaId: session.user.id, aspiranteCargaId: null, contenidoBase64: await fileToBase64(file), mimeType: file.type || 'application/octet-stream', tamanoBytes: file.size, checksum: await sha256Hex(await file.arrayBuffer()) })
-        setFile(null); setInputKey(v => v + 1); consulta.refresh(); onChange()
-        } finally { onBusyChange?.(false) }
-      }, 'Certificado guardado.') }}><label>{current ? 'Reemplazar certificado' : 'Seleccionar certificado'}<input key={inputKey} type="file" required disabled={op.busy} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label><button className="mf-button" disabled={op.busy || !file}>{op.busy ? 'Cargando…' : 'Guardar certificado'}</button></form>}
+      {current && <div className="mf-actions"><button type="button" disabled={op.busy} className="mf-button mf-button--secondary" onClick={() => void op.run(() => openSolicitudDocument(current.base64DocumentoContenido, current.mimeTypeDocumentoContenido, current.nombreArchivoDocumento), '')}>Ver documento</button><button type="button" disabled={op.busy} className="mf-button mf-button--secondary" onClick={() => void op.run(() => downloadSolicitudDocument(current.base64DocumentoContenido, current.mimeTypeDocumentoContenido, current.nombreArchivoDocumento), '')}>Descargar</button></div>}
+      {editable && <div className="mf-questions"><label>{current ? 'Reemplazar certificado' : 'Seleccionar certificado'}<input key={inputKey} type="file" disabled={op.busy} onChange={e => setFile(e.target.files?.[0] ?? null)} /></label><button type="button" className="mf-button" disabled={op.busy || !file} onClick={upload}>{op.busy ? 'Cargando…' : 'Guardar certificado'}</button></div>}
     </>}
-    {consulta.error && <button className="mf-button mf-button--secondary" onClick={consulta.refresh}>Reintentar consulta</button>}
+    {consulta.error && <button type="button" className="mf-button mf-button--secondary" onClick={consulta.refresh}>Reintentar consulta</button>}
   </section>
 }
-

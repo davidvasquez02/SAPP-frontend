@@ -1079,3 +1079,22 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   un único título principal **Solicitudes**, sin repetirlo dentro del contenido.
 - El cambio es solo de presentación y navegación por rol. No modifica rutas,
   endpoints, DTO, schemas, variables de entorno, dependencias, seeds ni datasets.
+# SAPP Frontend
+
+Interfaz web institucional para centralizar y dar trazabilidad a los procesos de posgrado EISI–UIS: admisiones, matrículas académica y financiera, créditos condonables, solicitudes y trabajos de grado. Es una SPA modular que consume los contratos REST de SAPP; el backend conserva la autoridad sobre reglas, cálculos, permisos y persistencia.
+
+## Arquitectura, stack y ejecución
+
+- React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2 (árbol exacto en `package-lock.json`).
+- Rutas y guards en `src/app`; vistas en `src/pages`; dominio, tipos y transporte por módulo en `src/modules`; componentes compartidos en `src/components`.
+- Reutiliza el entorno npm existente: `npm run dev` inicia desarrollo, `npm run build` genera `dist`, `npm run lint` revisa calidad y `node --test --test-isolation=none tests/*.test.ts` ejecuta las regresiones. No usa venv, Conda ni Poetry.
+- No hay seeds generales ni base local versionada. Los datos provienen del backend institucional; el simulador aislado de matrícula financiera está en `tests/fixtures/matricula-financiera/preview.html` y usa datos ficticios sin red.
+
+## Decisión reciente — claridad y validación de matrícula financiera (2026-09-24)
+
+- Los parámetros usan etiquetas orientadas al usuario, ayudas explicativas y acciones distintas para crear/editar. La base de salud continúa fija internamente en `SMMLV` sin exponerse.
+- Las tarjetas ya solo resumen convocados y pendientes, y todas las vigencias se expresan como “Recepción de respuestas habilitada hasta el…”.
+- El detalle destaca el estado con una variante semántica. El certificado se muestra dentro de las respuestas únicamente al contestar **Sí**, conserva consulta/versionado y sigue cargándose de forma independiente.
+- Coordinación ya no marca “Certificado recibido”: la respuesta Sí/No genera `certificadoVotacionRecibido` automáticamente. El registro queda bloqueado y se vuelve a validar en el envío mientras falte alguna respuesta aplicable; observaciones y archivo siguen opcionales. No cambiaron endpoints ni DTO del backend.
+
+---

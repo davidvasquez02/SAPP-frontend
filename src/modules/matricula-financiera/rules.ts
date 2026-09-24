@@ -4,6 +4,9 @@ export function seleccionarRespuestas(respuestas: RespuestasRequest, tipo: TipoE
   const claves = tipo === 'NUEVO' ? ['certificadoVotacion', 'deseaSalud'] as const : ['entregoTrabajoGrado', 'cumLaude', 'certificadoVotacion', 'deseaSalud'] as const
   return Object.fromEntries(claves.filter(clave => !preguntas || preguntas.some(p => p.clave === clave && p.aplica)).map(clave => [clave, respuestas[clave] ?? null]))
 }
+export function respuestasCompletas(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas?: PreguntaLiquidacion[]): boolean {
+  return Object.values(seleccionarRespuestas(respuestas, tipo, preguntas)).every(respuesta => typeof respuesta === 'boolean')
+}
 export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<LiquidacionMatricula, 'estado' | 'totalFinal'>, accion: keyof CuerposLiquidacion): boolean {
   if (proceso === 'PUBLICADO') return false
   if (accion === 'ajustes') return true
