@@ -5596,3 +5596,15 @@ npm run lint
 - Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. `package-lock.json` fija el árbol.
 - Validación local: suite Node PASS (53/53), ESLint focalizado PASS, build PASS (310 módulos; CSS 248.52 kB; JS 728.06 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de este alcance (servicios placeholder, admisiones, documentos y solicitudes). npm muestra el warning ambiental `Unknown env config "http-proxy"`; Vite advierte por el chunk >500 kB.
 - Pendiente institucional: probar errores reales de cada mutación, actualización de resumen, permisos y proceso publicado con backend/sesión; revisar teclado, foco, claro/oscuro y escritorio/móvil. No se tomó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox; la ruta real requiere autenticación/backend.
+# Update 2026-09-24 — botón Volver del tablero financiero
+
+## Estado, contrato y salida esperada
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` reemplaza el enlace de texto local `mf-back` por el `BackButton` compartido, manteniendo la etiqueta **Volver a procesos** y el destino `/matricula/financiera`.
+- La salida esperada es el mismo control pill utilizado en el resto del sistema, con flecha gestionada por el componente, tokens semánticos, foco visible y hover compatible con temas claro/oscuro. No cambiaron API, schemas, DTO, permisos, rutas, dependencias, seeds ni datasets.
+
+## Entorno y continuidad
+- Proyecto Node.js/npm: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: suite Node PASS (56/56), ESLint focalizado PASS, build PASS (313 módulos; CSS 252.50 kB y JS 732.50 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de este ajuste. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente integrado: revisar el control con una sesión institucional en escritorio/móvil y ambos temas. No se capturó imagen porque el contenedor no dispone de Chromium, Chrome ni Firefox; el flujo depende además del backend autenticado y no tiene seed local.
+
+---

@@ -1139,3 +1139,10 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
 - El listado ya no ofrece ni envía `conAlertas`, retiró semestre y presenta insignias textuales para pendiente, respondida, liquidada y excluida. El control del submenú lateral conserva dimensiones estables, centrado y rotación.
 - La vista estudiantil presenta exclusivamente **Total liquidado** cuando está disponible. El desglose permanece en el contrato para compatibilidad, pero solo coordinación lo presenta; el detalle oficial se consulta por canales institucionales del sistema financiero.
 - No se añadieron estados, endpoints, migraciones ni dependencias. Reutilizar `node_modules`; ejecutar `npm run dev`, `npm run lint`, `node --test --test-isolation=none tests/*.test.ts` y `npm run build`. No hay seeds para este flujo; la fixture aislada está en `tests/fixtures/matricula-financiera/preview.html`.
+# Actualización 2026-09-24 — botón Volver uniforme en liquidaciones
+
+- El tablero de detalle de un proceso de matrícula financiera reutiliza ahora `BackButton`, el control compartido del sistema, para **Volver a procesos**. Esto unifica su presentación pill, borde, superficie, sombra y estados de foco/hover en los temas claro y oscuro, sin cambiar la ruta `/matricula/financiera` ni el comportamiento de navegación.
+- Es un ajuste exclusivamente visual: no modifica contratos HTTP, DTO, permisos, dependencias, variables, seeds ni datasets. El frontend sigue usando React 19.2.3, React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2 sobre Node.js 24.15.0 y npm 11.4.2.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seeds locales; los datos reales provienen del backend configurado con las variables Vite.
+
+---
