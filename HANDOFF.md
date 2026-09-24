@@ -1,8 +1,41 @@
+# Handoff 2026-09-24 — grado en el catálogo de maestría
+
+## Estado, contrato y salida esperada
+- `/trabajos-grado/maestria` usa los tipos `[13, 10, 6, 7]`: envío de tema,
+  grado, propuesta y defensa. Ya no incluye el ID legado `8` ni el ID vigente
+  `9` de candidatura, porque ambos son exclusivos de doctorado.
+- `/trabajos-grado/doctorado` usa `[13, 10, 8, 9, 4, 5]`; conserva las dos
+  variantes de candidatura por compatibilidad con catálogos institucionales y
+  añade **GRADO**. `esExamenCandidaturaDoctoral` reconoce IDs 8/9 y el código
+  `CAND_DOCTORAL`.
+- El contrato REST no cambia. `GET /sapp/tiposSolicitud` debe entregar el tipo
+  `{ id: 10, ...GRADO... }`; los listados siguen llegando desde
+  `GET /sapp/solicitudesAcademicas`. No hay schemas, payloads, dependencias,
+  variables, seeds ni datasets nuevos.
+
+## Paths, entorno y continuidad
+- Regla: `src/modules/trabajos-grado/constants.ts`; integración existente:
+  `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresión:
+  `tests/candidaturaDoctoral.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm
+  ni venv, Conda o Poetry. El frontend usa Node.js 24.15.0 y npm 11.4.2; las
+  versiones exactas de paquetes están fijadas en `package-lock.json`.
+- Verificación 2026-09-24: regresión dirigida 5/5 PASS, suite Node 51/51 PASS,
+  ESLint focalizado PASS, build PASS (309 módulos; CSS 247.18 kB; JS 725.07
+  kB) y `git diff --check` PASS. El lint global conserva 9 errores y 1 warning
+  preexistentes fuera de los archivos tocados; también persisten los avisos no
+  bloqueantes de npm por `http-proxy` y del chunk JavaScript mayor de 500 kB.
+- Pendiente integrado: confirmar que el catálogo institucional conserva el ID
+  10 para **GRADO** y revisar ambos niveles con sesión real. La ruta protegida
+  depende del backend y de credenciales institucionales.
+
+---
+
 # Handoff 2026-09-24 — títulos y filtros de gestión
 
 ## Estado actual y decisiones
 - En `/coordinacion/profesores`, `ModuleLayout` es la única fuente del título **Gestión profesores**. La tarjeta ya no repite un `h1`; conserva la descripción, tabs y operaciones existentes.
-- `TIPO_SOLICITUD_GRADO_ID = 8` queda nombrado en `src/modules/trabajos-grado/constants.ts` y pertenece a los catálogos de maestría y doctorado. Salida esperada: si `GET /sapp/tiposSolicitud` incluye `{ id: 8, ...GRADO... }`, el filtro **Tipo de solicitud** de `/trabajos-grado/maestria` debe ofrecerlo y el listado debe admitir solicitudes con ese ID.
+- La identificación anterior del tipo 8 como **GRADO** fue corregida por el handoff más reciente: 8 es candidatura doctoral legada y **GRADO** corresponde al tipo 10.
 - `normalizeEstadoSolicitud` traduce la sigla `PFIR_DIR_TG` y sus etiquetas descriptivas de director al mismo estado canónico. Salida esperada: una solicitud de crédito con `estado: "POR FIRMA DIRECTOR DE TG"` y sin depender de `estadoId` hace visible la opción de catálogo `{ id: 6, sigla: "PFIR_DIR_TG", label: "POR FIRMA DIRECTOR DE TG" }` en el filtro de pendientes.
 - No cambiaron endpoints, payloads, DTO, roles, schemas, migraciones, paquetes, variables, seeds ni datasets. Se reutilizan `GET /sapp/tiposSolicitud`, `GET /sapp/estadosSolicitud` y `GET /sapp/solicitudesAcademicas`.
 
