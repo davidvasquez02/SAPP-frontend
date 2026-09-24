@@ -36,17 +36,19 @@ export interface EvaluacionJurado {
 
 export interface JuradoEvaluador {
   id: number
+  orden?: number
   nombre: string
   correo: string
   institucion: string | null
   externo: boolean
-  idioma: IdiomaJurado
+  idioma?: IdiomaJurado
   activo: boolean
   estadoInvitacion: string
   estadoInvitacionNombre?: string | null
   estadoInvitacionCodigo?: string | null
   fechaInvitacion?: string | null
   fechaRespuesta?: string | null
+  fechaLimiteEvaluacion?: string | null
   motivoDeclinacion?: string | null
   evaluaciones: EvaluacionJurado[]
 }
@@ -82,13 +84,13 @@ export interface HistorialProcesoEvaluacion {
 
 export interface ProcesoEvaluacionTg {
   id?: number | null
-  solicitudId: number
+  solicitudId?: number
   solicitudAcademicaId?: number
   tipoSolicitudCodigo: string
   tipoSolicitudNombre?: string | null
   titulo: string
   resumen?: string | null
-  nombreEstudiante: string
+  nombreEstudiante?: string
   estudiante?: string
   programa: string
   estadoSolicitud: string
@@ -99,8 +101,16 @@ export interface ProcesoEvaluacionTg {
   documentos?: DocumentoEvaluacion[]
   jurados: JuradoEvaluador[]
   sustentacion?: SustentacionEvaluacion | null
+  fechaSustentacion?: string | null
+  modalidadSustentacionCodigo?: string | null
+  modalidadSustentacion?: string | null
+  lugarSustentacion?: string | null
+  enlaceSustentacion?: string | null
   resultadoCodigo?: string | null
   resultadoNombre?: string | null
+  resultado?: string | null
+  fechaResultado?: string | null
+  sustentacionConNota?: boolean
   notaFinal?: number | null
   actaId?: number | null
   historial?: HistorialProcesoEvaluacion[]
