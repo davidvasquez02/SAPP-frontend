@@ -1,3 +1,16 @@
+# Correcciones 2026-09-24 — títulos y filtros de gestión
+
+Minerva es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables y trabajos de grado. Mantiene páginas React de composición, módulos TypeScript de dominio y servicios HTTP tipados; Spring Boot y PostgreSQL continúan siendo responsables de las reglas y la persistencia.
+
+- **Gestión de profesores** conserva el título del `ModuleLayout` y elimina el segundo encabezado visual dentro de la tarjeta; la descripción y todas las pestañas, tablas y operaciones permanecen iguales.
+- **Proyectos de grado** incorpora el tipo 8 (**GRADO**) al catálogo de Trabajo de investigación de maestría. El tipo sigue disponible también en Tesis doctoral; no cambian el endpoint `GET /sapp/tiposSolicitud`, sus DTO ni el filtrado de los demás tipos.
+- **Créditos condonables** reconoce como `PFIR_DIR_TG` tanto la sigla como los nombres descriptivos **POR FIRMA DIRECTOR DE TG**, **POR FIRMA DIRECTOR DE TESIS** y las variantes de trabajo de investigación. Así, un trámite que llegue con el nombre visible se representa en el filtro pendiente mediante la entrada de catálogo de ID 6.
+- No se agregaron endpoints, migraciones, dependencias, variables, seeds ni datasets. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Los datos reales provienen del backend configurado mediante las variables Vite existentes.
+- Entorno exacto comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: suite Node 50/50, ESLint focalizado, build de producción (309 módulos) y `git diff --check` pasan. El build conserva el aviso informativo de chunk JavaScript mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+
+---
+
 # Actualización 2026-09-24 — ajustes de matrícula financiera
 
 SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes, matrículas, solicitudes, créditos, candidatura, trabajos de grado e informes. Las páginas React componen la experiencia, `src/modules` concentra dominio y transporte tipado, y el backend SAPP conserva cálculos, reglas de negocio y persistencia.

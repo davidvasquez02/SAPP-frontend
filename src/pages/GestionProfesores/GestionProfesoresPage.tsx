@@ -252,7 +252,7 @@ const GestionProfesoresPage = () => {
   return (
     <ModuleLayout title="Gestión profesores">
       <main className="gestion-profesores">
-        <header className="gestion-profesores__hero"><div><h1>Gestión de profesores</h1><p>Administre el acceso de los profesores de la EISI al sistema de posgrados y su participación en grupos de investigación.</p></div></header>
+        <header className="gestion-profesores__hero"><p>Administre el acceso de los profesores de la EISI al sistema de posgrados y su participación en grupos de investigación.</p></header>
         <nav className="gestion-profesores__tabs" aria-label="Funcionalidades de gestión de profesores" role="tablist">
           <button id="gestion-profesores-tab-docentes" type="button" role="tab" aria-selected={vista === 'docentes'} aria-controls="gestion-profesores-panel-docentes" tabIndex={vista === 'docentes' ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, 'docentes')} onClick={() => setVista('docentes')}>Profesores</button>
           <button id="gestion-profesores-tab-grupos" type="button" role="tab" aria-selected={vista === 'grupos'} aria-controls="gestion-profesores-panel-grupos" tabIndex={vista === 'grupos' ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, 'grupos')} onClick={() => setVista('grupos')}>Grupos de investigación</button>

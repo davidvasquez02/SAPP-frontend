@@ -1,3 +1,24 @@
+# Handoff 2026-09-24 — títulos y filtros de gestión
+
+## Estado actual y decisiones
+- En `/coordinacion/profesores`, `ModuleLayout` es la única fuente del título **Gestión profesores**. La tarjeta ya no repite un `h1`; conserva la descripción, tabs y operaciones existentes.
+- `TIPO_SOLICITUD_GRADO_ID = 8` queda nombrado en `src/modules/trabajos-grado/constants.ts` y pertenece a los catálogos de maestría y doctorado. Salida esperada: si `GET /sapp/tiposSolicitud` incluye `{ id: 8, ...GRADO... }`, el filtro **Tipo de solicitud** de `/trabajos-grado/maestria` debe ofrecerlo y el listado debe admitir solicitudes con ese ID.
+- `normalizeEstadoSolicitud` traduce la sigla `PFIR_DIR_TG` y sus etiquetas descriptivas de director al mismo estado canónico. Salida esperada: una solicitud de crédito con `estado: "POR FIRMA DIRECTOR DE TG"` y sin depender de `estadoId` hace visible la opción de catálogo `{ id: 6, sigla: "PFIR_DIR_TG", label: "POR FIRMA DIRECTOR DE TG" }` en el filtro de pendientes.
+- No cambiaron endpoints, payloads, DTO, roles, schemas, migraciones, paquetes, variables, seeds ni datasets. Se reutilizan `GET /sapp/tiposSolicitud`, `GET /sapp/estadosSolicitud` y `GET /sapp/solicitudesAcademicas`.
+
+## Paths, pruebas y continuidad
+- Archivos funcionales: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`, `src/modules/trabajos-grado/constants.ts` y `src/modules/solicitudes/utils/estadoSolicitud.ts`. Regresiones: `tests/candidaturaDoctoral.test.ts` y `tests/estadoSolicitud.test.ts`.
+- Verificación 2026-09-24: pruebas dirigidas 10/10 PASS; suite Node 50/50 PASS; ESLint focalizado PASS; `npm run build` PASS (309 módulos, CSS 246.20 kB, JS 724.29 kB); `git diff --check` PASS. Avisos conocidos: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente externo: validar las tres rutas protegidas con backend y sesión institucional, en escritorio/móvil y claro/oscuro. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y el repositorio no aporta una sesión/backend reproducibles.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. El lockfile fija versiones; no ejecutar otra instalación ni crear venv, Conda, Poetry o un segundo árbol npm.
+
+## Siguientes pasos
+1. Confirmar que el catálogo institucional mantiene el ID 8 para **GRADO**; si el backend migra a IDs no estables, clasificar por código canónico en un único helper.
+2. Verificar un crédito real con cada variante de estado del director y confirmar que seleccionar el filtro conserva únicamente las filas `PFIR_DIR_TG`.
+3. Revisar visualmente el espaciado de la descripción de Gestión de profesores tras retirar el encabezado duplicado.
+
+---
+
 # Handoff 2026-09-24 — ajustes de matrícula financiera
 
 ## Estado actual y decisiones
