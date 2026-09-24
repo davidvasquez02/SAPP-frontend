@@ -1164,3 +1164,13 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
   admitidos; el payload enviado al backend permanece numérico y sin formato.
 - No se modificaron endpoints, DTO, reglas de cálculo, dependencias, variables,
   seeds ni datasets. El servidor conserva la autoridad sobre el total final.
+
+## Corrección reciente — flecha del submenú de matrícula (2026-09-24)
+
+- El control que despliega los submenús de **Matrícula** usa ahora un icono
+  vectorial de flecha consistente con la iconografía del menú. Su caja de 40 px
+  y el SVG de 18 px quedan centrados en ambos ejes, y la rotación comunica
+  el estado expandido sin depender de la alineación tipográfica de un glifo.
+- El ajuste es únicamente visual y conserva la interacción, los atributos
+  accesibles, las rutas, los permisos y los tokens de tema existentes. No cambia
+  contratos HTTP, dependencias, variables, seeds ni datasets.
