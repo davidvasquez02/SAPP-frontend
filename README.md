@@ -1,3 +1,14 @@
+# Corrección 2026-09-24 — nombres de origen en homologación
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En el formulario estudiantil de **Homologación de asignaturas**, las opciones para indicar el origen se presentan ahora como **Asignatura del listado** y **Asignatura nueva**. Los nombres describen directamente si la materia ya existe en el catálogo o si debe escribirse manualmente, sin cambiar el comportamiento del selector.
+- El ajuste es exclusivamente de contenido visual. Se conservan los modos internos `catalogo` y `manual`, el payload de homologación, validaciones, endpoints, roles, dependencias, variables, schemas, seeds y datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build de producción PASS (314 módulos) y `git diff --check` PASS. npm conserva el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-24 — tabla de grupos y ancho del menú lateral
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
