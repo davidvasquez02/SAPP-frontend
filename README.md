@@ -1033,6 +1033,11 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-24:** las acciones de cada fila en la tabla de matrícula financiera
+  se presentan como botones secundarios compactos, incluido **Ver detalle**, en
+  lugar de enlaces subrayados. El botón de la sección de convocatoria ahora
+  muestra únicamente **Convocar**; la operación conserva la inclusión de
+  estudiantes vigentes y nuevos y no cambia contratos ni permisos.
 - **2026-09-24:** el catálogo de Proyectos de grado de maestría excluye los
   tipos `8` y `9` de examen de candidatura, exclusivos de doctorado, e incluye
   el tipo `10` **GRADO**. El catálogo doctoral conserva candidatura y también

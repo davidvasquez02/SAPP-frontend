@@ -1,3 +1,37 @@
+# Handoff 2026-09-24 — botones de acciones y convocatoria
+
+## Estado, contratos y salida esperada
+- En `ProcesoLiquidacionPage.tsx`, la columna **Acciones** agrupa **Ver
+  detalle** y las mutaciones de `LiquidacionActions.tsx` como botones
+  secundarios compactos tipo pill. La presentación usa
+  `.mf-button--table`/`.mf-row-actions` y tokens semánticos existentes. El
+  enlace de detalle conserva su ruta y semántica; diálogos, estados
+  deshabilitados, permisos y payloads no cambiaron.
+- El botón que ejecuta `convocar` muestra **Convocar** en reposo y
+  **Convocando…** durante la operación. Todavía envía
+  `{ incluirVigentes: true, incluirNuevos: true }`; el texto explicativo deja
+  explícito el alcance. No hay nuevos endpoints, schemas, dependencias,
+  variables, seeds ni datasets.
+- Archivos: `src/pages/MatriculaFinanciera/{ProcesoLiquidacionPage,LiquidacionActions}.tsx`
+  y `MatriculaFinancieraPage.css`. Salida esperada: ninguna acción de tabla se
+  ve como enlace subrayado y todas conservan foco visible y estados disabled en
+  temas claro/oscuro.
+
+## Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm
+  ni venv, Conda o Poetry. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM
+  19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y
+  ESLint 9.39.2, fijado por `package-lock.json`.
+- Validación: `npm run lint` PASS; suite Node PASS (56/56); build PASS (313
+  módulos, CSS 252.50 kB y JS 732.52 kB); `git diff --check` PASS. Persisten el
+  warning ambiental npm `Unknown env config "http-proxy"` y el aviso
+  informativo por el chunk JS mayor de 500 kB.
+- Pendiente: validar la tabla protegida con backend y sesión institucional en
+  escritorio/móvil y temas claro/oscuro. El repositorio no incluye credenciales
+  ni un backend reproducible para esa comprobación.
+
+---
+
 # Handoff 2026-09-24 — filtro por nivel en matrícula académica
 
 ## Estado actual y salida esperada
