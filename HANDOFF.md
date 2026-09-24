@@ -1,3 +1,25 @@
+# Handoff 2026-09-24 — ajustes de matrícula financiera
+
+## Estado actual y decisiones
+- `ProcesoLiquidacionPage.tsx` ya no conserva selección de filas. Convocar envía `{ incluirVigentes: true, incluirNuevos: true }`; solicitudes y recordatorios omiten cuerpo para que el backend opere sobre todo el conjunto elegible. Los filtros solo afectan la consulta visible. La matriz de `flow.ts` controla qué acciones se renderizan en cada estado; el `fieldset` las mantiene visibles y bloqueadas durante carga.
+- La tabla presenta ocho columnas: Nombre, Código, Programa académico, Tipo de estudiante, Estado, Semestre, Total y Acciones. Se mantienen programa, estado, texto, solo-alertas y paginación. El filtro de programa tiene mayor ancho y el wrapper contiene el scroll horizontal móvil. `AgregarEstudiante.tsx` conserva el selector VIGENTE/NUEVO.
+- `ParametrosProcesoForm.tsx` no muestra base ni proceso base. Todo guardado construye `baseSalud: 'SMMLV'`; la creación nunca agrega `procesoBaseId`. Una base histórica `MATRICULA` solo produce una advertencia: consultar no dispara PUT ni recálculo. Los porcentajes siguen editables.
+- `LiquidacionDetallePage.tsx` mueve programa, tipo y periodo a **Revisión del caso**, retira ingreso/permanencia, cohorte y promoción, filtra `PROMOCION_FALTANTE` y oculta el campo de promoción. Al guardar ajustes envía `initial.promocion`, preservando el reemplazo completo exigido por el backend. Tipos y datos históricos no se eliminaron, y Excel permanece intacto.
+
+## Contratos y salida esperada
+- `POST /liquidacionMatricula/procesos/{id}/convocar`: `{ incluirVigentes: true, incluirNuevos: true }`.
+- `POST .../enviarSolicitudes` y `POST .../enviarRecordatorio`: sin `liquidacionIds` y sin selección cliente.
+- `POST /liquidacionMatricula/procesos`: parámetros actuales + `periodoId` + `baseSalud: 'SMMLV'`, sin `procesoBaseId`. `PUT /procesos/{id}` usa SMMLV y conserva porcentajes.
+- `PUT /liquidaciones/{id}/ajustes`: reemplazo completo con semestre, promoción histórica no visible, ajuste, valor final y observaciones.
+- No hay endpoints, migraciones, schemas, dependencias ni seeds nuevos. Fixture visual: `tests/fixtures/matricula-financiera/preview.html` y `preview.jsx`; usa memoria local, no valida cálculos ni seguridad backend.
+
+## Entorno, resultados y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación local: ESLint focalizado sin errores (la fixture genera solo aviso de que ESLint la ignora), suite Node 48/48 PASS, build PASS (309 módulos; CSS 246.20 kB, JS 724.17 kB) y `git diff --check` PASS. Avisos ambientales: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente externo: recorrer BORRADOR/ABIERTO/CERRADO/PUBLICADO con backend y sesión institucional, inspeccionar payloads reales y revisar escritorio/móvil y claro/oscuro. No hay navegador instalado ni credenciales/backend reproducibles, por lo que no se pudo generar captura autenticada.
+
+---
+
 # Handoff 2026-09-24 — selector compacto de informes
 
 ## Estado actual y salida esperada
