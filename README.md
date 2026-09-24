@@ -1,3 +1,10 @@
+# Corrección 2026-09-24 — título obligatorio al crear proyectos de grado
+
+- Toda solicitud de proyecto de grado que presenta el campo de título exige ahora un valor no vacío antes de registrarse. La regla cubre propuestas y defensas doctorales (tipos 4 y 5), propuestas y defensas de maestría (tipos 6 y 7) y examen doctoral (tipo 9); además del `required` nativo, la validación rechaza valores compuestos solo por espacios.
+- La configuración del título, su etiqueta académica y la necesidad de resumen quedaron centralizadas en `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`. Solo los tipos 4, 5, 6 y 7 exigen resumen; el tipo 9 continúa enviando únicamente `tituloTrabajo`. Los tipos que no muestran el control no agregan estos campos al payload.
+- No cambiaron endpoints, DTO, roles, esquema, dependencias, variables, seeds ni datasets. `POST /sapp/solicitudesAcademicas` conserva `tituloTrabajo` como campo condicional del contrato existente.
+- Verificación: 47/47 pruebas Node y ESLint focalizado pasan; el build de producción pasa (308 módulos). El lint global conserva 9 errores y 1 warning preexistentes fuera de este cambio. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no hay venv, Conda ni Poetry.
+
 # Actualización 2026-09-24 — director de trabajo de grado en perfiles estudiantiles
 
 - El perfil del usuario muestra el nombre y correo del director de trabajo de grado dentro de **Información académica** cuando la sesión corresponde a un estudiante. El detalle de coordinación presenta los mismos campos para el estudiante consultado.

@@ -15,6 +15,7 @@ import type {
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
+import { getConfiguracionDatosTrabajo, getErrorTituloTrabajo } from '../../utils/datosTrabajoSolicitud'
 import { DaneLocationSelector } from '../DaneLocationSelector/DaneLocationSelector'
 import {
   DEFAULT_DEPARTMENT_CODE,
@@ -128,10 +129,6 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
 
 const RENOVACION_CREDITO_CONDONABLE_ID = 12
 const EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID = 2
-const TIPOS_MAESTRIA_CON_DATOS_TRABAJO = new Set([6, 7])
-const TIPOS_DOCTORADO_CON_DATOS_TRABAJO = new Set([4, 5])
-const TIPO_EXAMEN_DOCTORAL_ID = 9
-
 const SolicitudEstudianteForm = ({
   tipos,
   estudianteId,
@@ -181,16 +178,10 @@ const SolicitudEstudianteForm = ({
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
   const isEdicionRevistasCientificas = modalidadId === EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
-  const requiereResumenTrabajo =
-    tipoSolicitudId !== null &&
-    (TIPOS_MAESTRIA_CON_DATOS_TRABAJO.has(tipoSolicitudId) || TIPOS_DOCTORADO_CON_DATOS_TRABAJO.has(tipoSolicitudId))
-  const requiereTituloTrabajo = requiereResumenTrabajo || tipoSolicitudId === TIPO_EXAMEN_DOCTORAL_ID
-  const tituloTrabajoLabel =
-    tipoSolicitudId !== null && TIPOS_MAESTRIA_CON_DATOS_TRABAJO.has(tipoSolicitudId)
-      ? 'Título del trabajo de investigación'
-      : tipoSolicitudId !== null && TIPOS_DOCTORADO_CON_DATOS_TRABAJO.has(tipoSolicitudId)
-        ? 'Título de la tesis'
-        : 'Título del trabajo'
+  const configuracionDatosTrabajo = getConfiguracionDatosTrabajo(tipoSolicitudId)
+  const requiereTituloTrabajo = configuracionDatosTrabajo.requiereTitulo
+  const requiereResumenTrabajo = configuracionDatosTrabajo.requiereResumen
+  const tituloTrabajoLabel = configuracionDatosTrabajo.tituloLabel
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
   const municipioExpedicionSeleccionado = useMemo(
     () => findMunicipality(departamentoExpedicionCodigo, ciudadExpedicionDocumento),
@@ -379,8 +370,9 @@ const SolicitudEstudianteForm = ({
       setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
       return false
     }
-    if (requiereTituloTrabajo && !tituloTrabajo.trim()) {
-      setErrorMsg(`Debes ingresar el ${tituloTrabajoLabel.toLocaleLowerCase('es-CO')}.`)
+    const tituloTrabajoError = getErrorTituloTrabajo(configuracionDatosTrabajo, tituloTrabajo)
+    if (tituloTrabajoError) {
+      setErrorMsg(tituloTrabajoError)
       return false
     }
     if (requiereResumenTrabajo && !resumenTrabajo.trim()) {
@@ -687,7 +679,7 @@ const SolicitudEstudianteForm = ({
 
       {requiereTituloTrabajo && (
         <div className="solicitud-estudiante-form__section">
-          <h4>{tipoSolicitudId === TIPO_EXAMEN_DOCTORAL_ID ? 'Información del examen doctoral' : 'Información del trabajo de grado'}</h4>
+          <h4>{configuracionDatosTrabajo.esExamenDoctoral ? 'Información del examen doctoral' : 'Información del trabajo de grado'}</h4>
           <label htmlFor="tituloTrabajo">{tituloTrabajoLabel} *</label>
           <input
             id="tituloTrabajo"

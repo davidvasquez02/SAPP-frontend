@@ -5254,3 +5254,17 @@ npm run lint
 - Pendiente: validar visualmente con sesiones institucionales de estudiante y coordinación, en sidebar contraído/expandido y viewport móvil. No hay datos locales para seed; el flujo depende del backend configurado.
 
 ---
+# Update 2026-09-24 — título obligatorio en solicitudes de proyecto de grado
+
+## Estado, contrato y salida esperada
+- `SolicitudEstudianteForm` obtiene la regla desde `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`: los tipos 4, 5, 6, 7 y 9 presentan título y no permiten registrar un valor vacío o compuesto solo por espacios. El input conserva `required` y la validación de aplicación produce `Debes ingresar el <nombre académico del título>.`.
+- Tipos 4/5: etiqueta **Título de la tesis**; tipos 6/7: **Título del trabajo de investigación**; tipo 9: **Título del trabajo**. Los tipos 4–7 también exigen `resumenTrabajo`; el 9 no lo presenta ni lo envía. Un tipo sin control de título (por ejemplo, 13) no exige ni envía esos datos.
+- El contrato HTTP no cambia: `POST /sapp/solicitudesAcademicas` recibe `tituloTrabajo` recortado para los tipos anteriores, junto con `estudianteId`, `tipoSolicitudId` y los campos generales. El backend debe conservar su propia validación; esta corrección cubre el cliente.
+- Artefactos: utilidad `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`, integración `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` y regresión `tests/datosTrabajoSolicitud.test.ts`. No existen seeds o datasets para este flujo.
+
+## Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- PASS: `node --test --test-isolation=none tests/*.test.ts` (47/47), ESLint focalizado, `npm run build` (308 módulos) y `git diff --check`. `npm run lint` continúa con 9 errores y 1 warning preexistentes en servicios placeholder, admisiones, documentos y tipos/editor de solicitudes.
+- Pendiente integrado: confirmar con el backend y una sesión institucional que los cinco tipos del catálogo mantienen esos IDs y que un título válido se persiste. Si el catálogo deja de garantizar IDs estables, migrar la configuración a códigos de solicitud sin duplicar la regla en el componente.
+
+---
