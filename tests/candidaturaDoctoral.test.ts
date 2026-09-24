@@ -5,24 +5,28 @@ import {
   getNivelTrabajoGrado,
   tieneProcesoEvaluacionTg,
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
-  TIPO_EXAMEN_CANDIDATURA_DOCTORAL_LEGACY_ID,
+  TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID,
   TIPO_SOLICITUD_GRADO_ID,
 } from '../src/modules/trabajos-grado/constants.ts'
 import { presentarValorEvaluacion } from '../src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts'
 
 test('incluye el examen de candidatura doctoral en el módulo y su proceso de evaluación', () => {
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(TIPO_EXAMEN_CANDIDATURA_DOCTORAL_LEGACY_ID), true)
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(9), true)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID), true)
   assert.equal(tieneProcesoEvaluacionTg('CAND_DOCTORAL'), true)
-  assert.equal(esExamenCandidaturaDoctoral(9), true)
+  assert.equal(esExamenCandidaturaDoctoral(8), true)
+  assert.equal(esExamenCandidaturaDoctoral(9), false)
   assert.equal(esExamenCandidaturaDoctoral(undefined, ' cand_doctoral '), true)
 })
 
-test('en maestría reemplaza candidatura por la solicitud de grado', () => {
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(TIPO_SOLICITUD_GRADO_ID), true)
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(TIPO_EXAMEN_CANDIDATURA_DOCTORAL_LEGACY_ID), false)
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(9), false)
-  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(TIPO_SOLICITUD_GRADO_ID), true)
+test('usa exclusivamente los tipos definidos por nivel para proyectos de grado', () => {
+  assert.deepEqual(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria, [13, 9, 6, 7])
+  assert.deepEqual(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado, [13, 9, 8, 4, 5])
+  assert.equal(TIPO_SOLICITUD_GRADO_ID, 9)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(8), false)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(6), false)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(7), false)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(10), false)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(10), false)
 })
 
 test('reconoce el nivel doctoral con la nomenclatura vigente y la histórica', () => {

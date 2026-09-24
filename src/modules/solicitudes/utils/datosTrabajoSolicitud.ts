@@ -7,7 +7,7 @@ export interface ConfiguracionDatosTrabajoSolicitud {
 
 const TIPOS_MAESTRIA_CON_DATOS_TRABAJO = new Set([6, 7])
 const TIPOS_DOCTORADO_CON_DATOS_TRABAJO = new Set([4, 5])
-const TIPO_EXAMEN_DOCTORAL_ID = 9
+const TIPO_EXAMEN_DOCTORAL_ID = 8
 
 export const getConfiguracionDatosTrabajo = (
   tipoSolicitudId: number | null,
