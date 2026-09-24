@@ -1,3 +1,16 @@
+# Corrección 2026-09-24 — confirmación uniforme al eliminar actas
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas y proyectos de grado. React compone las vistas, los módulos TypeScript encapsulan contratos y transporte, y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- `/actas` reemplaza la confirmación nativa del navegador por un modal institucional consistente con las demás secciones. Identifica el acta por nombre y código, advierte que la eliminación es irreversible y diferencia claramente **Cancelar** de **Sí, eliminar acta**.
+- El diálogo usa tokens semánticos para temas claro/oscuro, diseño adaptable, foco inicial en la opción segura, cierre mediante `Escape`, botón de cierre o backdrop, y bloqueo de todos los cierres mientras `DELETE /actas/{id}` está en curso. Un error mantiene el acta y permite reintentar; el éxito cierra el modal, actualiza el listado y conserva la notificación temporal existente.
+- No cambiaron el endpoint, DTO, permisos, rutas, dependencias, variables, schemas, seeds ni datasets. El contrato sigue siendo `DELETE /actas/{id}` sin cuerpo y respuesta exitosa sin contenido.
+- Stack comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existen seeds locales para actas: el contenido proviene del backend configurado mediante las variables Vite.
+- Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build de producción PASS (314 módulos) y `git diff --check` PASS. npm conserva el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Correccion 2026-09-24 — estados disponibles en Proyectos de grado
 
 - El filtro **Estado** de Trabajo de investigacion de maestria y Tesis doctoral ahora sigue la misma regla de creditos condonables: ofrece unicamente los estados representados en los registros cargados para el listado actual. Por tanto, los estados de firma —o cualquier otro estado sin solicitudes visibles— ya no aparecen como opciones vacias.
