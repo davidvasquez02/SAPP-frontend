@@ -5,6 +5,7 @@ import {
   getNivelTrabajoGrado,
   tieneProcesoEvaluacionTg,
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
+  TIPO_SOLICITUD_GRADO_ID,
 } from '../src/modules/trabajos-grado/constants.ts'
 import { presentarValorEvaluacion } from '../src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts'
 
@@ -13,6 +14,11 @@ test('incluye el examen de candidatura doctoral en el módulo y su proceso de ev
   assert.equal(tieneProcesoEvaluacionTg('CAND_DOCTORAL'), true)
   assert.equal(esExamenCandidaturaDoctoral(9), true)
   assert.equal(esExamenCandidaturaDoctoral(undefined, ' cand_doctoral '), true)
+})
+
+test('incluye la solicitud de grado en los filtros de ambos niveles', () => {
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.maestria.includes(TIPO_SOLICITUD_GRADO_ID), true)
+  assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(TIPO_SOLICITUD_GRADO_ID), true)
 })
 
 test('reconoce el nivel doctoral con la nomenclatura vigente y la histórica', () => {

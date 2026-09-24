@@ -32,6 +32,12 @@ test('reconoce y presenta en mayúsculas los estados de proyectos de grado', () 
   }
 })
 
+test('normaliza los nombres visibles de firma del director de trabajo de grado', () => {
+  assert.equal(normalizeEstadoSolicitud('POR FIRMA DIRECTOR DE TG'), 'PFIR_DIR_TG')
+  assert.equal(normalizeEstadoSolicitud('POR FIRMA DIRECTOR DE TESIS'), 'PFIR_DIR_TG')
+  assert.equal(normalizeEstadoSolicitud('POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION'), 'PFIR_DIR_TG')
+})
+
 test('normaliza en mayúsculas los nombres entregados por el catálogo remoto', () => {
   setEstadoSolicitudCatalog([
     { id: 14, sigla: 'EN_EVALUACION', label: 'En evaluación' },
