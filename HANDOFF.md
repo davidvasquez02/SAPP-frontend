@@ -1,3 +1,39 @@
+# Update 2026-09-24 — programa doctoral correcto en creación de trabajos de grado
+
+## Estado actual, causa y salida esperada
+- Se corrigió la causa por la que un estudiante doctoral veía tipos de solicitud
+  de maestría en `/trabajos-grado`: `getNivelTrabajoGrado` solo buscaba la sigla
+  histórica `DCC`, mientras el login vigente entrega valores como
+  `347:DOCTORADO EN CIENCIAS DE LA COMPUTACION`. La función delega ahora en
+  `resolveTipoPrograma`, la fuente canónica que reconoce id/nivel/código/nombre
+  vigente y mantiene compatibilidad de lectura con `DCC`, `MISI`, `61204` y
+  `61412`.
+- Con una sesión estudiantil cuyo `detalle.estudiante.programaCodigoNombre` sea
+  doctoral, la ruta redirige a `/trabajos-grado/doctorado` y entrega al formulario
+  los IDs `[13, 8, 9, 4, 5]`; para maestría conserva `[13, 6, 7]`. Los valores
+  ausentes o no reconocidos conservan el fallback anterior a maestría. No hubo
+  cambios de API, DTO, permisos, schema, paquetes, variables, seeds ni datasets.
+
+## Paths, pruebas, entorno y continuidad
+- Implementación: `src/modules/trabajos-grado/constants.ts`; consumidor:
+  `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; fuente canónica:
+  `src/shared/domain/programaAcademico.ts`; regresión:
+  `tests/candidaturaDoctoral.test.ts`.
+- Verificación local 2026-09-24: pruebas dirigidas PASS (7/7), ESLint focalizado
+  PASS, build PASS (287 módulos; CSS 233.01 kB y JS 670.35 kB) y
+  `git diff --check` PASS. Persisten únicamente el warning ambiental npm
+  `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript
+  mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional doctoral que la creación
+  muestre los tipos doctorales y que intentar abrir manualmente la ruta de
+  maestría redirija a doctorado. No hay credenciales reproducibles en el repo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. No es un proyecto Python. Entorno: Node.js 24.15.0,
+  npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+
+---
+
 # Update 2026-09-23 — historial real en la línea de tiempo de trabajos de grado
 
 ## Estado actual, contrato y salida esperada

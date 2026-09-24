@@ -2,10 +2,18 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   esExamenCandidaturaDoctoral,
+  getNivelTrabajoGrado,
   tieneProcesoEvaluacionTg,
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
 } from '../src/modules/trabajos-grado/constants.ts'
 import { presentarValorEvaluacion } from '../src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts'
+
+test('clasifica como doctorado la nomenclatura vigente del programa', () => {
+  assert.equal(getNivelTrabajoGrado('347:DOCTORADO EN CIENCIAS DE LA COMPUTACION'), 'doctorado')
+  assert.equal(getNivelTrabajoGrado('DOCTORADO EN CIENCIAS DE LA COMPUTACION'), 'doctorado')
+  assert.equal(getNivelTrabajoGrado('61204 - DCC'), 'doctorado')
+  assert.equal(getNivelTrabajoGrado('302:MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA'), 'maestria')
+})
 
 test('incluye el examen de candidatura doctoral en el módulo y su proceso de evaluación', () => {
   assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(9), true)

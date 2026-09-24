@@ -845,6 +845,14 @@ obtienen del backend configurado mediante las variables Vite documentadas en
 
 ## Decisiones recientes (changelog ligero)
 
+- **2026-09-24:** la clasificación del programa en **Proyectos de grado**
+  reutiliza ahora la fuente canónica `resolveTipoPrograma`. Un estudiante cuyo
+  login exponga la nomenclatura vigente `347:DOCTORADO EN CIENCIAS DE LA
+  COMPUTACION` (o el nombre completo sin la sigla histórica `DCC`) entra al
+  flujo doctoral y ve exclusivamente sus tipos de solicitud; se conserva la
+  lectura de identificadores históricos y el fallback de maestría para valores
+  ausentes o desconocidos. No cambiaron API, DTO, permisos, dependencias,
+  variables, seeds ni datasets.
 - **2026-09-23:** la línea de tiempo del detalle de evaluación de trabajos de
   grado dejó de depender del historial incluido en el DTO general y consulta
   `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`. Cada cambio
