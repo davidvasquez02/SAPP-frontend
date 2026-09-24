@@ -1,39 +1,58 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { crearProceso, listarMisLiquidaciones, listarProcesos, responderMiLiquidacion } from '../../modules/matricula-financiera/api'
-import type { MiLiquidacion, ProcesoLiquidacion, RespuestasLiquidacion } from '../../modules/matricula-financiera/types'
+import { crearProceso, listarMisLiquidaciones, listarPeriodos, listarProcesos, responderMiLiquidacion } from '../../modules/matricula-financiera/api'
 import { GUIA_COORDINACION, GUIA_ESTUDIANTE } from '../../modules/matricula-financiera/flow'
+import { fechaColombia, money } from '../../modules/matricula-financiera/rules'
+import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
+import type { MiLiquidacion } from '../../modules/matricula-financiera/types'
+import { ParametrosProcesoForm } from './ParametrosProcesoForm'
+import { RespuestasForm } from './RespuestasForm'
+import { CertificadoVotacion } from './CertificadoVotacion'
+import { Aviso, Importe, Paginacion } from './FinancieraUi'
 import './MatriculaFinancieraPage.css'
 
-const money = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 4 }).format(value)
-const EMPTY = { periodoId: '', valorSmmlv: '', fuenteSmmlv: '', porcentajeVotacion: '10', porcentajeSalud: '10', baseSalud: 'SMMLV', fechaLimiteRespuesta: '' }
-
-export const MatriculaFinancieraPage = () => {
-  const { session } = useAuth(); const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const coordinator = canManagePosgrados(roles)
-  const [procesos, setProcesos] = useState<ProcesoLiquidacion[]>([]); const [mias, setMias] = useState<MiLiquidacion[]>([])
-  const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [showCreate, setShowCreate] = useState(false); const [form, setForm] = useState(EMPTY)
-  const load = useCallback(async () => { setLoading(true); setError(''); try { if (coordinator) setProcesos(await listarProcesos()); else setMias(await listarMisLiquidaciones()) } catch (e) { setError(e instanceof Error ? e.message : 'No fue posible cargar la información') } finally { setLoading(false) } }, [coordinator])
-  useEffect(() => { void load() }, [load])
-  const create = async (event: React.FormEvent) => { event.preventDefault(); try { await crearProceso({ ...form, periodoId: Number(form.periodoId), valorSmmlv: Number(form.valorSmmlv), porcentajeVotacion: Number(form.porcentajeVotacion), porcentajeSalud: Number(form.porcentajeSalud) }); setShowCreate(false); setForm(EMPTY); await load() } catch (e) { setError(e instanceof Error ? e.message : 'No fue posible crear el proceso') } }
-  const respond = async (item: MiLiquidacion, answers: Partial<RespuestasLiquidacion>) => { try { await responderMiLiquidacion(item.liquidacionId, answers); await load() } catch (e) { setError(e instanceof Error ? e.message : 'No fue posible guardar las respuestas') } }
+export function MatriculaFinancieraPage() {
+  const { session } = useAuth()
+  const coordinator = canManagePosgrados(session?.user.roles ?? [])
   const guide = coordinator ? GUIA_COORDINACION : GUIA_ESTUDIANTE
-  return <ModuleLayout title={coordinator ? 'Matrícula financiera' : 'Liquidación'}><div className="mf-page">
-    <header className="mf-page__intro"><div><span className="mf-page__icon">💳</span><h1>{coordinator ? 'Procesos de liquidación' : 'Mi liquidación'}</h1><p>{coordinator ? 'Crea, supervisa y publica las liquidaciones de cada periodo.' : 'Responde las preguntas de tu liquidación y consulta los valores publicados.'}</p></div>{coordinator && <button className="mf-button mf-button--secondary" onClick={() => void load()} disabled={loading}>↻ Actualizar</button>}</header>
-    <section className="mf-guide mf-card" aria-labelledby="mf-guide-title"><div className="mf-guide__heading"><span>Guía de servicios</span><h2 id="mf-guide-title">{coordinator ? 'Flujo de matrícula financiera' : '¿Cómo completar tu matrícula financiera?'}</h2><p>{coordinator ? 'Sigue el orden del proceso para conservar la trazabilidad y publicar valores previamente revisados.' : 'Este proceso reúne la información necesaria para que la coordinación prepare y publique tu liquidación.'}</p></div><ol className="mf-guide__steps">{guide.map((step, index) => <li key={step.titulo}><span className="mf-guide__number" aria-hidden="true">{index + 1}</span><div><h3>{step.titulo}</h3><p>{step.descripcion}</p></div></li>)}</ol></section>
-    {error && <div className="mf-notice mf-notice--error" role="alert">{error}</div>}
-    {coordinator && <><div className="mf-toolbar"><button className="mf-button" onClick={() => setShowCreate(!showCreate)}>＋ Nuevo proceso</button></div>
-      {showCreate && <form className="mf-form mf-card" onSubmit={create}><div className="mf-form__heading"><h2>Crear proceso</h2><p>Configura las reglas iniciales. Podrás convocar estudiantes después de guardar.</p></div><label>Id del periodo<input required min="1" type="number" value={form.periodoId} onChange={e => setForm({...form, periodoId:e.target.value})}/></label><label>SMMLV (COP)<input required min="0" type="number" step="0.0001" value={form.valorSmmlv} onChange={e => setForm({...form, valorSmmlv:e.target.value})}/></label><label>Fuente del SMMLV<input required value={form.fuenteSmmlv} placeholder="Decreto o fuente oficial" onChange={e => setForm({...form, fuenteSmmlv:e.target.value})}/></label><label>Fecha límite de respuesta<input required type="date" value={form.fechaLimiteRespuesta} onChange={e => setForm({...form, fechaLimiteRespuesta:e.target.value})}/></label><label>Descuento por votación (%)<input required min="0" max="100" type="number" step="0.01" value={form.porcentajeVotacion} onChange={e => setForm({...form, porcentajeVotacion:e.target.value})}/></label><label>Aporte de salud (%)<input required min="0" max="100" type="number" step="0.01" value={form.porcentajeSalud} onChange={e => setForm({...form, porcentajeSalud:e.target.value})}/></label><label>Base para salud<select value={form.baseSalud} onChange={e => setForm({...form, baseSalud:e.target.value})}><option value="SMMLV">SMMLV</option><option value="MATRICULA">Valor de matrícula</option></select></label><div className="mf-form__actions"><button className="mf-button mf-button--secondary" type="button" onClick={() => setShowCreate(false)}>Cancelar</button><button className="mf-button" type="submit">Crear proceso</button></div></form>}
-      <div className="mf-grid">{procesos.map(p => <Link className="mf-card mf-process" to={`/matricula/financiera/procesos/${p.id}`} key={p.id}><div><span className={`mf-badge mf-badge--${p.estado.toLowerCase()}`}>{p.estado}</span><h2>{p.periodo}</h2><p>Fecha límite: {p.fechaLimiteRespuesta}</p></div><div className="mf-stats"><span><b>{p.resumen.convocados}</b> convocados</span><span><b>{p.resumen.pendientes}</b> pendientes</span><span><b>{p.resumen.conAlertas}</b> con alertas</span></div></Link>)}{!loading && procesos.length === 0 && <div className="mf-empty mf-card">No hay procesos de liquidación creados.</div>}</div></>}
-    {!coordinator && <div className="mf-grid">{mias.map(item => <article className="mf-card mf-my" key={item.liquidacionId}><div><span className={`mf-badge mf-badge--${item.estado.toLowerCase()}`}>{item.estado.replaceAll('_',' ')}</span><h2>{item.programa}</h2><p>{item.codigoEstudiante} · Periodo {item.proceso.periodo}</p></div>{item.puedeResponder && <MiFormulario item={item} onSubmit={answers => respond(item, answers)}/>} {item.valores && <div className="mf-total"><small>Total liquidado</small><strong>{money(item.valores.totalFinal)}</strong></div>}</article>)}{!loading && mias.length === 0 && <div className="mf-empty">No tienes liquidaciones asociadas a esta cuenta.</div>}</div>}
-    {loading && <p className="mf-empty">Cargando liquidaciones…</p>}
+  return <ModuleLayout title={coordinator ? 'Matrícula financiera' : 'Liquidación'}><div className="mf-page"><header className="mf-page__intro"><div><h1>{coordinator ? 'Procesos de liquidación' : 'Mi liquidación'}</h1><p>{coordinator ? 'Prepara, revisa y publica las liquidaciones de cada periodo.' : 'Responde la información y consulta tu liquidación.'}</p></div></header>
+    <section className="mf-guide mf-card"><h2>Flujo de matrícula financiera</h2><ol className="mf-guide__steps">{guide.map((step, index) => <li key={step.titulo}><span className="mf-guide__number">{index + 1}</span><div><h3>{step.titulo}</h3><p>{step.descripcion}</p></div></li>)}</ol></section>
+    {coordinator ? <Procesos /> : <MisLiquidaciones />}
   </div></ModuleLayout>
 }
-
-const MiFormulario = ({ item, onSubmit }: { item: MiLiquidacion; onSubmit: (value: Partial<RespuestasLiquidacion>) => void }) => {
-  const [answers, setAnswers] = useState<Partial<RespuestasLiquidacion>>(item.respuestas)
-  return <form className="mf-questions" onSubmit={e => { e.preventDefault(); onSubmit(answers) }}>{item.preguntas.filter(q => q.aplica).map(q => <fieldset key={q.clave}><legend>{q.texto}</legend><label><input required type="radio" name={q.clave} checked={answers[q.clave] === true} onChange={() => setAnswers({...answers,[q.clave]:true})}/>Sí</label><label><input required type="radio" name={q.clave} checked={answers[q.clave] === false} onChange={() => setAnswers({...answers,[q.clave]:false})}/>No</label></fieldset>)}<button className="mf-button" type="submit">Guardar respuestas</button></form>
+function Procesos() {
+  const navigate = useNavigate()
+  const consulta = useConsulta(useCallback((signal: AbortSignal) => listarProcesos(undefined, signal), []))
+  const periodos = useConsulta(useCallback((signal: AbortSignal) => listarPeriodos(signal), []))
+  const op = useOperacion()
+  const [showCreate, setShowCreate] = useState(false)
+  const [periodo, setPeriodo] = useState('')
+  const [pagina, setPagina] = useState(1)
+  const filtered = (consulta.data ?? []).filter(p => !periodo || p.periodoId === Number(periodo))
+  const page = Math.min(pagina, Math.max(1, Math.ceil(filtered.length / 12)))
+  return <><Aviso error={op.error || consulta.error || periodos.error} message={op.message} /><div className="mf-toolbar"><button className="mf-button" disabled={consulta.loading || op.busy || periodos.loading || !!periodos.error || !!consulta.error} onClick={() => setShowCreate(!showCreate)}>Nuevo proceso</button><Link className="mf-button mf-button--secondary" to="/matricula/financiera/tarifas">Administrar tarifas</Link><button className="mf-button mf-button--secondary" disabled={consulta.loading || op.busy} onClick={() => { consulta.refresh(); periodos.refresh() }}>Actualizar</button></div>
+    {showCreate && <ParametrosProcesoForm periodos={periodos.data ?? []} procesos={consulta.data ?? []} busy={op.busy} onCancel={() => setShowCreate(false)} onSave={async body => { await op.run(async () => { const nuevo = await crearProceso(body); navigate(`/matricula/financiera/procesos/${nuevo.id}`) }) }} />}
+    <div className="mf-filters"><label>Periodo<select value={periodo} onChange={e => { setPeriodo(e.target.value); setPagina(1) }}><option value="">Todos los periodos</option>{(periodos.data ?? []).map(p => <option key={p.id} value={p.id}>{p.anioPeriodo || `${p.anio} - ${p.periodo}`}</option>)}</select></label></div>
+    {consulta.loading ? <p role="status">Cargando procesos…</p> : <><div className="mf-grid">{filtered.slice((page - 1) * 12, page * 12).map(p => <Link className="mf-card mf-process" to={`/matricula/financiera/procesos/${p.id}`} key={p.id}><span className={`mf-badge mf-badge--${p.estado.toLowerCase()}`}>{p.estado}</span><h2>{p.periodo}</h2><p>Respuesta hasta {fechaColombia(p.fechaLimiteRespuesta)}</p><div className="mf-stats"><span><b>{p.resumen.convocados}</b>convocados</span><span><b>{p.resumen.pendientes}</b>pendientes</span><span><b>{p.resumen.conAlertas}</b>con alertas</span></div></Link>)}</div>{!filtered.length && !consulta.error && <p className="mf-empty">No hay procesos para este filtro.</p>}<Paginacion pagina={page} total={Math.ceil(filtered.length / 12)} onChange={setPagina} /></>}
+  </>
+}
+function MisLiquidaciones() {
+  const consulta = useConsulta(useCallback((signal: AbortSignal) => listarMisLiquidaciones(signal), []))
+  return <><Aviso error={consulta.error} />{consulta.error && <button className="mf-button" onClick={consulta.refresh}>Reintentar consulta</button>}{consulta.loading ? <p role="status">Cargando liquidaciones…</p> : <div className="mf-grid">{(consulta.data ?? []).map(item => <MiLiquidacionCard key={item.liquidacionId} item={item} onChange={consulta.refresh} />)}{!consulta.error && consulta.data?.length === 0 && <p className="mf-empty">No tienes liquidaciones disponibles en esta cuenta. Si esperabas una o aún no tienes cuenta propia, comunícate con coordinación para registrar tus respuestas.</p>}</div>}</>
+}
+function MiLiquidacionCard({ item, onChange }: { item: MiLiquidacion; onChange: () => void }) {
+  const op = useOperacion()
+  const [documentBusy, setDocumentBusy] = useState(false)
+  return <article className="mf-card mf-my"><span className={`mf-badge mf-badge--${item.estado.toLowerCase()}`}>{item.estado.replaceAll('_', ' ')}</span><h2>{item.programa}</h2><p>{item.codigoEstudiante} · Periodo {item.proceso.periodo}</p><p>Respuesta hasta {fechaColombia(item.proceso.fechaLimiteRespuesta)} · Proceso {item.proceso.estado}</p>
+    {item.fueraDePlazo && <p className="mf-notice">La fecha de respuesta ya pasó. {item.puedeResponder ? 'Aún puedes responder mientras el proceso siga abierto; quedará registrada la respuesta fuera de plazo.' : 'La recepción está cerrada.'}</p>}
+    <Aviso error={op.error} message={op.message} />
+    <RespuestasForm key={JSON.stringify(item.respuestas)} respuestas={item.respuestas} preguntas={item.preguntas} tipo={item.tipoEstudiante} editable={item.puedeResponder} busy={op.busy || documentBusy} onSave={async answers => { await op.run(async () => { await responderMiLiquidacion(item.liquidacionId, answers); onChange() }, 'Respuestas guardadas.') }} />
+    {!item.puedeResponder && <p>Las respuestas están disponibles únicamente para consulta.</p>}
+    <p>Certificado: {item.certificado.cargado ? 'recibido' : item.certificado.requerido ? 'pendiente de soporte' : 'sin soporte registrado'}.</p>
+    <CertificadoVotacion liquidacionId={item.liquidacionId} editable={!op.busy && item.proceso.estado !== 'PUBLICADO'} onBusyChange={setDocumentBusy} onChange={onChange} />
+    {item.valores ? <><dl className="mf-values">{item.valores.desglose && <><Importe titulo="Matrícula" valor={item.valores.desglose.matricula} /><Importe titulo="Derechos académicos" valor={item.valores.desglose.derechosAcademicos} /><Importe titulo="Descuentos" valor={item.valores.desglose.descuentos} /><Importe titulo="Salud" valor={item.valores.desglose.salud} /></>}</dl><div className="mf-total"><span>Total liquidado</span><strong>{money(item.valores.totalFinal)}</strong></div>{!item.valores.desglose && <p>El total incluye un ajuste de coordinación y no tiene desglose disponible.</p>}<p>La liquidación fue registrada en el sistema financiero. Consulta los canales institucionales para realizar el pago.</p></> : <p>El valor estará disponible cuando coordinación marque tu liquidación como realizada.</p>}
+  </article>
 }

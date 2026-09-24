@@ -1,0 +1,26 @@
+import { useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ModuleLayout } from '../../components'
+import { actualizarTarifa, listarProgramas, listarTarifas } from '../../modules/matricula-financiera/api'
+import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
+import type { TarifaMatricula, TarifaRequest } from '../../modules/matricula-financiera/types'
+import { Aviso } from './FinancieraUi'
+import './MatriculaFinancieraPage.css'
+
+export function TarifasMatriculaPage() {
+  const programas = useConsulta(useCallback((signal: AbortSignal) => listarProgramas(signal), []))
+  const [programaId, setProgramaId] = useState('')
+  return <ModuleLayout title="Tarifas de matrícula"><div className="mf-page"><Link className="mf-back" to="/matricula/financiera">← Volver a procesos</Link><h1>Tarifas por programa</h1><p>Los factores se expresan en SMMLV. Cambiar una tarifa no actualiza las liquidaciones existentes: abre el proceso correspondiente y ejecuta Recalcular antes de revisar y exportar.</p><Aviso error={programas.error} />{programas.error && <button className="mf-button" onClick={programas.refresh}>Reintentar consulta</button>}<div className="mf-filters"><label>Programa<select value={programaId} disabled={programas.loading} onChange={e => setProgramaId(e.target.value)}><option value="">Selecciona un programa</option>{(programas.data ?? []).map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}</select></label></div>{programaId && <TarifasPrograma key={programaId} programaId={Number(programaId)} />}</div></ModuleLayout>
+}
+function TarifasPrograma({ programaId }: { programaId: number }) {
+  const consulta = useConsulta(useCallback((signal: AbortSignal) => listarTarifas(programaId, signal), [programaId]))
+  const op = useOperacion(); const [editing, setEditing] = useState<TarifaMatricula | null>(null)
+  return <><Aviso error={consulta.error || op.error} message={op.message} />{consulta.loading ? <p role="status">Cargando tarifas…</p> : <div className="mf-grid">{(consulta.data ?? []).map(t => <article className="mf-card" key={t.id}><h2>Semestres {t.semestreDesde} a {t.semestreHasta}</h2><p>Matrícula: {t.factorMatricula} SMMLV · Derechos: {t.factorDerechos} SMMLV</p><p>{t.activo ? 'Activa' : 'Inactiva'}</p><button className="mf-button mf-button--secondary" disabled={op.busy} onClick={() => setEditing(t)}>Editar tarifa</button></article>)}</div>}{!consulta.loading && !consulta.error && consulta.data?.length === 0 && <p>No hay tarifas configuradas para este programa. Solicita su configuración a administración.</p>}{consulta.error && <button className="mf-button" onClick={consulta.refresh}>Reintentar consulta</button>}
+    {editing && <TarifaForm key={editing.id} tarifa={editing} busy={op.busy} onCancel={() => setEditing(null)} onSave={async body => { await op.run(async () => { await actualizarTarifa(editing.id, body); setEditing(null); consulta.refresh() }, 'Tarifa guardada. Recalcula los procesos que deban aplicar esta modificación.') }} />}
+  </>
+}
+function TarifaForm({ tarifa, busy, onCancel, onSave }: { tarifa: TarifaMatricula; busy: boolean; onCancel: () => void; onSave: (body: TarifaRequest) => Promise<void> }) {
+  const [form, setForm] = useState({ semestreDesde: String(tarifa.semestreDesde), semestreHasta: String(tarifa.semestreHasta), factorMatricula: String(tarifa.factorMatricula), factorDerechos: String(tarifa.factorDerechos), activo: tarifa.activo })
+  return <form className="mf-card" onSubmit={e => { e.preventDefault(); void onSave({ semestreDesde: Number(form.semestreDesde), semestreHasta: Number(form.semestreHasta), factorMatricula: Number(form.factorMatricula), factorDerechos: Number(form.factorDerechos), activo: form.activo }) }}><h2>Editar tarifa</h2><p>Los rangos activos no pueden cruzarse. El semestre de inicio debe ser único por programa, incluso para tarifas inactivas.</p><fieldset disabled={busy} className="mf-form mf-fieldset"><label>Semestre desde<input type="number" required min="1" step="1" value={form.semestreDesde} onChange={e => setForm({ ...form, semestreDesde: e.target.value })} /></label><label>Semestre hasta<input type="number" required min={form.semestreDesde || 1} step="1" value={form.semestreHasta} onChange={e => setForm({ ...form, semestreHasta: e.target.value })} /></label><label>Factor matrícula<input type="number" required min="0" max="9999.9999" step="0.0001" value={form.factorMatricula} onChange={e => setForm({ ...form, factorMatricula: e.target.value })} /></label><label>Factor derechos académicos<input type="number" required min="0" max="9999.9999" step="0.0001" value={form.factorDerechos} onChange={e => setForm({ ...form, factorDerechos: e.target.value })} /></label><label className="mf-check"><input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} />Activa</label><div className="mf-form__actions"><button type="button" className="mf-button mf-button--secondary" onClick={onCancel}>Cancelar</button><button className="mf-button">Guardar tarifa</button></div></fieldset></form>
+}
+

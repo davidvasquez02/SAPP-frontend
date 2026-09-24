@@ -1,3 +1,18 @@
+# Implementación 2026-09-24 — matrícula financiera
+
+- Se completaron las nueve operaciones de interfaz pendientes y el flujo documental: detalle, respaldo por coordinación, ajustes/observaciones, exclusión/reinclusión, edición del proceso, proceso base, alta manual y tarifas. Tablero con filtros/paginación, selección y envíos por lotes, resultados de omitidos y publicación validada. El estudiante dispone de plazo, respuestas, certificado y desglose disponible.
+- [Detalle de implementación y validación](docs/matricula-financiera-implementacion-2026-09-24.md). Se mantienen `/api/sapp`, los perfiles actuales y los cálculos del servidor. La auditoría anterior describe el estado previo a esta implementación.
+- Verificación: 44/44 pruebas Node, TypeScript y ESLint focalizado PASS; build PASS (305 módulos); recorridos en navegador con datos ficticios PASS. Pendiente validar contratos/permisos y Excel con backend institucional; no hubo despliegue ni correos reales.
+- Desarrollo: `npm run dev`; prueba manual aislada en `/tests/fixtures/matricula-financiera/preview.html`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. El banco usa datos en memoria y no está incluido en la entrada de producción.
+- Entorno sin dependencias nuevas: Node 24.11.0/npm 11.6.1 en Windows. React/DOM 19.2.3, Router 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Reutilizar `node_modules`; no hay seeds de backend ni entornos Python.
+
+# Auditoría 2026-09-24 — cobertura de matrícula financiera
+
+- [Análisis de flujos y brechas](docs/auditoria-matricula-financiera-2026-09-24.md): contraste de los dos HTML aportados con el código actual. La UI conecta 15 de las 24 operaciones documentadas; faltan detalle, respaldo, ajustes, exclusión/reinclusión, edición del proceso, alta manual y tarifas, además de documentos y feedback de envíos. Esta entrada documenta hallazgos; no implementa cambios funcionales.
+- La publicación ya existe. Según el contrato revisado, los valores pueden consultarse al quedar la fila LIQUIDADA, antes de publicar; publicación avisa y congela. Los textos actuales de la guía visual necesitan corregirse. Se conserva la decisión local de base `/api/sapp`; el prefijo diferente de los HTML queda pendiente de verificación del gateway.
+- Prueba dirigida: `node --test --test-isolation=none tests/matriculaFinancieraFlow.test.ts`, 3/3 PASS. Sin validación de backend ni navegador en esta revisión.
+- Entorno Windows observado: Node 24.11.0/npm 11.6.1; las referencias anteriores a Node 24.15.0/npm 11.4.2 pertenecen a otro entorno. Se conserva el árbol `node_modules` del repositorio y el lockfile (React/DOM 19.2.3, Router 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2). Ejecución: `npm run dev`; compilación: `npm run build`. No hay seeds locales ni entornos Python.
+
 # Ajuste 2026-09-24 — presentación estudiantil de matrícula
 
 - Para el perfil estudiante, la opción financiera se presenta como **Liquidación** tanto en la portada de Matrícula y el submenú lateral como en el encabezado de la vista. Los perfiles de gestión conservan el nombre **Matrícula financiera**.
