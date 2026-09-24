@@ -5184,3 +5184,21 @@ npm run lint
 - Pendiente de validación integrada: abrir matrícula financiera con una sesión institucional y confirmar en la pestaña Network que procesos, liquidaciones, tarifas, vista estudiantil y exportación conservan `/api/sapp/liquidacionMatricula`.
 
 ---
+# Update 2026-09-24 — presentación de matrícula para estudiantes
+
+## Estado actual y decisiones
+- La experiencia se adapta con `canManagePosgrados`: para estudiantes, `/matricula` muestra **Liquidación** y los textos solicitados en sus dos tarjetas; `/matricula/financiera` usa **Liquidación** como título y no renderiza **Actualizar**. Coordinación, secretaría y administración conservan **Matrícula financiera**, sus descripciones operativas y el refresco manual.
+- `getPrimaryNavigationItems(roles)` también entrega **Liquidación** como etiqueta del submenú para perfiles sin capacidad administrativa. Las rutas no cambiaron: ambas variantes siguen navegando a `/matricula/financiera`.
+- El desfase del botón Matrícula provenía de dos niveles de padding: `.sidebar__link` y `.sidebar__parent-link`. La regla más específica `.sidebar__link.sidebar__link--parent { padding: 0; }` deja el icono alineado con los demás módulos sin alterar el pill activo ni el submenú.
+
+## Paths, contratos y salida esperada
+- Archivos: `src/pages/MatriculaHome/MatriculaHomePage.tsx`, `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`, `src/app/navigationItems.ts` y `src/components/Sidebar/Sidebar.css`.
+- No cambiaron API, schemas, DTO, permisos, rutas, dependencias, variables, seeds ni datasets. La carga inicial de `GET /liquidacionMatricula/mias` y el refresco posterior a `responderMiLiquidacion` permanecen intactos aunque el estudiante ya no tenga botón manual.
+- Salida estudiantil esperada: tarjetas “Matrícula académica — Registra asignaturas y documentos requeridos para el proceso de matrícula.” y “Liquidación — Información para proceso de liquidación.”; sidebar y título de página dicen “Liquidación”; no aparece “Actualizar”.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2 y versiones exactas fijadas en `package-lock.json`.
+- Validación 2026-09-24: `npm run build` PASS (297 módulos; CSS 240.95 kB, JS 689.62 kB), `npm run lint` PASS, ESLint focalizado PASS, prueba dirigida de matrícula financiera PASS y `git diff --check` PASS. Persisten únicamente el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JS mayor de 500 kB.
+- Pendiente: validar visualmente con sesiones institucionales de estudiante y coordinación, en sidebar contraído/expandido y viewport móvil. No hay datos locales para seed; el flujo depende del backend configurado.
+
+---
