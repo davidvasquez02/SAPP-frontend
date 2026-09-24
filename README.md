@@ -1,9 +1,14 @@
+# Corrección 2026-09-24 — base API unificada para matrícula financiera
+
+- Matrícula financiera conserva ahora la misma base configurada que el resto del proyecto: con `VITE_API_URL=https://sapp.eisi.online/api/sapp`, sus solicitudes se envían a `https://sapp.eisi.online/api/sapp/liquidacionMatricula/...`.
+- La capa del módulo ya no elimina el segmento `/sapp`; únicamente normaliza barras finales antes de agregar `/liquidacionMatricula`. No cambiaron endpoints relativos, payloads, autenticación, dependencias, variables, seeds ni datasets.
+
 # Actualización 2026-09-24 — módulo de matrícula financiera y navegación jerárquica
 
 - **Matrícula** es ahora un módulo contenedor en `/matricula`: su portada ofrece **Matrícula académica** (`/matricula/academica`) y **Matrícula financiera** (`/matricula/financiera`). El menú lateral despliega ambas opciones y conserva comportamiento accesible en escritorio y móvil.
 - Matrícula financiera decide la experiencia por rol: coordinación/administración/secretaría gestiona procesos, resumen, filtros, convocatoria, correos, recálculo, cierre, exportación Excel y marcado de filas; estudiantes consultan `GET /mias`, responden únicamente las preguntas entregadas por el backend y ven el total cuando está disponible. El detalle coordinador está protegido también en la ruta.
 - La capa `src/modules/matricula-financiera/api.ts` encapsula el contrato `/liquidacionMatricula`, agrega `X-Internal-Token`, conserva los mensajes españoles de error y descarga Excel como blob. Los importes se presentan sin calcularlos ni redondearlos en el frontend; las fechas-hora del contrato se tratan como hora Colombia sin conversión UTC.
-- El backend dev esperado es `https://sapp.eisi.online/api/liquidacionMatricula`. No hay seeds locales: para la prueba integrada se usa un periodo libre y los datos históricos del backend (68 estudiantes en el escenario documentado); los correos de dev llegan a MailPit. Reutilice el `node_modules` existente y no cree venv, Conda, Poetry ni otro árbol npm.
+- El backend dev esperado es `https://sapp.eisi.online/api/sapp/liquidacionMatricula`. No hay seeds locales: para la prueba integrada se usa un periodo libre y los datos históricos del backend (68 estudiantes en el escenario documentado); los correos de dev llegan a MailPit. Reutilice el `node_modules` existente y no cree venv, Conda, Poetry ni otro árbol npm.
 
 # Actualización 2026-09-24 — histórico y documento correcto al designar evaluadores
 
