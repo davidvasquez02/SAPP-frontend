@@ -4,6 +4,7 @@ import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
   getEstadoSolicitudCatalog,
   getEstadoSolicitudLabel,
+  getEstadosPresentesEnSolicitudes,
   normalizeEstadoSolicitud,
   setEstadoSolicitudCatalog,
 } from '../src/modules/solicitudes/utils/estadoSolicitud.ts'
@@ -67,4 +68,14 @@ test('reconoce los ajustes recibidos por sigla y por nombre descriptivo', () => 
   assert.equal(normalizeEstadoSolicitud('AJUSTES_RECIB'), 'AJUSTES_RECIB')
   assert.equal(normalizeEstadoSolicitud('AJUSTES RECIBIDOS'), 'AJUSTES_RECIB')
   assert.equal(getEstadoSolicitudLabel('AJUSTES_RECIB'), 'AJUSTES RECIBIDOS')
+})
+
+test('ofrece solo estados representados en los registros del listado', () => {
+  const estados = getEstadosPresentesEnSolicitudes(DEFAULT_ESTADOS_SOLICITUD_CATALOG, [
+    { estadoId: 3, estadoSigla: 'APROBADA' },
+    { estadoSigla: 'EN_EVALUACION' },
+  ])
+
+  assert.deepEqual(estados.map(({ sigla }) => sigla), ['APROBADA', 'EN_EVALUACION'])
+  assert.equal(estados.some(({ sigla }) => sigla.startsWith('PFIR_')), false)
 })
