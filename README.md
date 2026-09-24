@@ -1,3 +1,12 @@
+# Corrección 2026-09-24 — paginador consistente en matrícula financiera
+
+- El paginador compartido de matrícula financiera adopta la misma presentación sobria del módulo de Solicitudes: alineación a la derecha, texto secundario y controles compactos con fondo de superficie, borde semántico y forma pill. En pantallas pequeñas se centra y, en móviles, distribuye las acciones en dos columnas con el indicador de página encima.
+- Se retiró la reutilización visual de los botones de acción financiera, que hacía que la navegación se viera sobredimensionada y con el color primario. El componente conserva el mismo contrato `pagina`, `total` y `onChange`, limita el total visible a una página y mejora su semántica con botones `type="button"`, etiqueta contextual y anuncio no intrusivo del estado.
+- El ajuste es exclusivamente de presentación y accesibilidad: no modifica rutas, permisos, API, DTO, dependencias, variables, seeds ni datasets. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`.
+- Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; no crear venv, Conda, Poetry ni otro árbol npm.
+
+---
+
 # Corrección 2026-09-24 — encabezados más concisos en solicitudes y proyectos
 
 - El listado de coordinación ya no repite **Solicitudes** dentro de la tarjeta cuando `ModuleLayout` ya presenta ese título. La sección conserva un nombre accesible mediante `aria-label`, y **Solicitudes asignadas** mantiene su encabezado propio cuando corresponde.

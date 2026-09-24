@@ -15,5 +15,17 @@ export function ResultadoOperacion({ titulo, children, omitidos = [], codigos = 
   return <section className="mf-card" aria-label="Resultado de la operación"><h2>{titulo}</h2><div role="status">{children}</div>{omitidos.length > 0 && <><h3>Omitidos ({omitidos.length})</h3><ul>{omitidos.map((o, i) => <li key={`${o.estudianteId}-${i}`}><strong>{codigos[o.estudianteId] ?? `Estudiante #${o.estudianteId}`}</strong>: {o.motivo}</li>)}</ul><p>Revisa los motivos antes de realizar otro envío.</p></>}</section>
 }
 export function Paginacion({ pagina, total, onChange }: { pagina: number; total: number; onChange: (page: number) => void }) {
-  return <nav className="mf-actions" aria-label="Paginación"><button className="mf-button mf-button--secondary" disabled={pagina <= 1} onClick={() => onChange(pagina - 1)}>Anterior</button><span>Página {pagina} de {Math.max(1, total)}</span><button className="mf-button mf-button--secondary" disabled={pagina >= total} onClick={() => onChange(pagina + 1)}>Siguiente</button></nav>
+  const totalPaginas = Math.max(1, total)
+
+  return (
+    <nav className="mf-pagination" aria-label="Paginación de matrícula financiera">
+      <button type="button" disabled={pagina <= 1} onClick={() => onChange(pagina - 1)}>
+        Anterior
+      </button>
+      <span aria-live="polite">Página {pagina} de {totalPaginas}</span>
+      <button type="button" disabled={pagina >= totalPaginas} onClick={() => onChange(pagina + 1)}>
+        Siguiente
+      </button>
+    </nav>
+  )
 }
