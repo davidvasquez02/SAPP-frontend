@@ -10,6 +10,7 @@ import type {
   ProgramarSustentacionRequest,
   RegistrarResultadoRequest,
 } from './types'
+import { buildBancoJuradosPath } from './bancoJurados'
 
 const BASE = '/sapp/procesoEvaluacionTg'
 
@@ -37,8 +38,8 @@ export const getCatalogosEvaluacion = async (): Promise<CatalogosEvaluacion> =>
     'No fue posible consultar los catálogos de evaluación.',
   )
 
-export const buscarBancoJurados = async (query: string): Promise<BancoJurado[]> => {
-  const response = await httpGet<ApiResponse<BancoJurado[]>>(`${BASE}/jurados/banco?q=${encodeURIComponent(query)}`)
+export const buscarBancoJurados = async (query = ''): Promise<BancoJurado[]> => {
+  const response = await httpGet<ApiResponse<BancoJurado[]>>(buildBancoJuradosPath(query))
   return unwrap(response, 'No fue posible consultar el banco de jurados.') ?? []
 }
 

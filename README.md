@@ -1,3 +1,11 @@
+# Actualización 2026-09-24 — directorio del banco de evaluadores
+
+- **Agregar evaluador** y **Reemplazar** ya no consultan el banco mientras se escribe el correo. El formulario ofrece **Buscar en el directorio**, carga el listado completo con `GET /sapp/procesoEvaluacionTg/jurados/banco` y solo envía `?q=...` cuando coordinación ejecuta explícitamente el filtro por nombre, correo o institución.
+- Cada resultado muestra nombre, correo, institución, procedencia, idioma, número de participaciones y última participación. **Seleccionar** cierra el directorio y completa automáticamente nombre, correo, institución, indicador de evaluador externo e idioma; los campos permanecen editables antes de guardar.
+- El directorio contempla carga, lista vacía y error, funciona con los tokens semánticos de los temas claro/oscuro y se reorganiza en una columna en móvil. No cambiaron el payload de designación, los permisos, el esquema, las dependencias, las variables, los seeds ni los datasets.
+- Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. Verificación local: 48/48 pruebas, ESLint focalizado, build (308 módulos) y `git diff --check` pasan. El build conserva el aviso informativo del chunk mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules`; este frontend no usa venv, Conda ni Poetry y no requiere seed local.
+
 # Corrección 2026-09-24 — título obligatorio al crear proyectos de grado
 
 - Toda solicitud de proyecto de grado que presenta el campo de título exige ahora un valor no vacío antes de registrarse. La regla cubre propuestas y defensas doctorales (tipos 4 y 5), propuestas y defensas de maestría (tipos 6 y 7) y examen doctoral (tipo 9); además del `required` nativo, la validación rechaza valores compuestos solo por espacios.

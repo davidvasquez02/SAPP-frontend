@@ -108,6 +108,9 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   const [documentoId, setDocumentoId] = useState('')
   const [banco, setBanco] = useState<BancoJurado[]>([])
   const [bancoLoading, setBancoLoading] = useState(false)
+  const [directorioAbierto, setDirectorioAbierto] = useState(false)
+  const [filtroBanco, setFiltroBanco] = useState('')
+  const [bancoError, setBancoError] = useState<string | null>(null)
   const [reemplazando, setReemplazando] = useState<JuradoEvaluador | null>(null)
   const [modalidad, setModalidad] = useState('')
   const [fechaSustentacion, setFechaSustentacion] = useState('')
@@ -141,22 +144,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   }, [solicitudId])
 
   useEffect(() => { void load() }, [load])
-
-  useEffect(() => {
-    const query = jurado.correo.trim() || jurado.nombre.trim()
-    if (query.length < 3 || reemplazando) {
-      setBanco([])
-      return
-    }
-    const timeout = window.setTimeout(() => {
-      setBancoLoading(true)
-      buscarBancoJurados(query)
-        .then(setBanco)
-        .catch(() => setBanco([]))
-        .finally(() => setBancoLoading(false))
-    }, 350)
-    return () => window.clearTimeout(timeout)
-  }, [jurado.correo, jurado.nombre, reemplazando])
 
   const estado = proceso?.estadoSolicitud ?? ''
   const activeJurors = useMemo(
@@ -197,7 +184,27 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       externo: item.externo ?? true,
       idioma: item.idioma ?? 'ES',
     })
-    setBanco([])
+    setDirectorioAbierto(false)
+    setBancoError(null)
+  }
+
+  const consultarBanco = async (query = '') => {
+    setBancoLoading(true)
+    setBancoError(null)
+    try {
+      setBanco(await buscarBancoJurados(query))
+    } catch (searchError) {
+      setBanco([])
+      setBancoError(getErrorMessage(searchError, 'No fue posible consultar el banco de evaluadores.'))
+    } finally {
+      setBancoLoading(false)
+    }
+  }
+
+  const abrirDirectorio = () => {
+    setDirectorioAbierto(true)
+    setFiltroBanco('')
+    void consultarBanco()
   }
 
   const submitJurado = () => {
@@ -314,11 +321,34 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       {formulario === 'designar' && (
         <div className="evaluacion-tg__form-card">
           <h4>{reemplazando ? `Reemplazar a ${reemplazando.nombre}` : 'Agregar evaluador'}</h4>
+          <div className="evaluacion-tg__directory-access">
+            <div><strong>Banco de evaluadores</strong><span>Consulta el directorio y selecciona un evaluador para completar sus datos automáticamente.</span></div>
+            <button type="button" className="secondary" onClick={abrirDirectorio} disabled={bancoLoading}>Buscar en el directorio</button>
+          </div>
+          {directorioAbierto && (
+            <section className="evaluacion-tg__directory" aria-labelledby="banco-evaluadores-title">
+              <div className="evaluacion-tg__directory-heading">
+                <div><h5 id="banco-evaluadores-title">Directorio de evaluadores</h5><span>{banco.length} resultado(s)</span></div>
+                <button type="button" className="secondary" onClick={() => setDirectorioAbierto(false)}>Cerrar</button>
+              </div>
+              <form className="evaluacion-tg__directory-search" onSubmit={(event) => { event.preventDefault(); void consultarBanco(filtroBanco) }}>
+                <label htmlFor="filtro-banco-evaluadores"><span>Filtrar por nombre, correo o institución</span><input id="filtro-banco-evaluadores" type="search" value={filtroBanco} onChange={(event) => setFiltroBanco(event.target.value)} placeholder="Ej. Ana Torres o universidad.edu" /></label>
+                <button type="submit" disabled={bancoLoading}>{bancoLoading ? 'Buscando…' : 'Buscar'}</button>
+              </form>
+              {bancoError && <p className="evaluacion-tg__directory-error" role="alert">{bancoError}</p>}
+              {!bancoLoading && !bancoError && banco.length === 0 && <p className="evaluacion-tg__directory-empty">No se encontraron evaluadores con ese filtro.</p>}
+              {banco.length > 0 && <div className="evaluacion-tg__directory-list">{banco.map((item) => (
+                <article key={item.correo} className="evaluacion-tg__directory-item">
+                  <div><strong>{item.nombre}</strong><span>{item.correo}</span><span>{item.institucion || 'Institución no registrada'}</span></div>
+                  <div className="evaluacion-tg__directory-meta"><span>{item.externo ? 'Externo' : 'UIS'}</span><span>{item.idioma || 'ES'}</span><span>{item.participaciones} participación(es)</span>{item.ultimaParticipacion && <span>Última: {formatDate(item.ultimaParticipacion)}</span>}</div>
+                  <button type="button" onClick={() => selectBanco(item)}>Seleccionar</button>
+                </article>
+              ))}</div>}
+            </section>
+          )}
           <div className="evaluacion-tg__form-grid">
             <label><span>Nombre *</span><input value={jurado.nombre} onChange={(e) => setJurado((v) => ({ ...v, nombre: e.target.value }))} /></label>
-            <label className="evaluacion-tg__autocomplete"><span>Correo *</span><input type="email" value={jurado.correo} onChange={(e) => setJurado((v) => ({ ...v, correo: e.target.value }))} />
-              {(bancoLoading || banco.length > 0) && <div className="evaluacion-tg__suggestions">{bancoLoading ? <p>Buscando…</p> : banco.map((item) => <button type="button" key={item.correo} onClick={() => selectBanco(item)}><strong>{item.nombre}</strong><span>{item.correo} · {item.participaciones} participación(es)</span></button>)}</div>}
-            </label>
+            <label><span>Correo *</span><input type="email" value={jurado.correo} onChange={(e) => setJurado((v) => ({ ...v, correo: e.target.value }))} /></label>
             <label><span>Institución *</span><input value={jurado.institucion} onChange={(e) => setJurado((v) => ({ ...v, institucion: e.target.value }))} /></label>
             <label><span>Idioma de la invitación</span><select value={jurado.idioma} onChange={(e) => setJurado((v) => ({ ...v, idioma: e.target.value as IdiomaJurado }))}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>
             {!reemplazando && <><label><span>Fecha límite *</span><input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} /></label><label><span>Documento a evaluar *</span><select value={documentoId} onChange={(e) => setDocumentoId(e.target.value)}><option value="">Selecciona un documento</option>{documentos.map((doc) => <option key={doc.idDocumento} value={doc.idDocumento}>{doc.nombreArchivo}</option>)}</select></label></>}

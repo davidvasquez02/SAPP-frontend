@@ -1,3 +1,18 @@
+# Update 2026-09-24 — directorio explícito del banco de evaluadores
+
+## Estado actual y decisiones
+- En `ProcesoEvaluacionPanel`, escribir nombre o correo ya no dispara búsquedas automáticas. Tanto al agregar como al reemplazar aparece **Buscar en el directorio**; abrirlo consulta `GET /sapp/procesoEvaluacionTg/jurados/banco` sin query y el formulario de filtro consulta la misma ruta con `?q={texto}` únicamente al pulsar **Buscar**.
+- El listado muestra todos los campos útiles del contrato. Seleccionar una fila copia `nombre`, `correo`, `institucion`, `externo` e `idioma` al `JuradoInput`, cierra el directorio y permite revisar/editar el formulario antes de la designación. Estados esperados: indicador de carga, resultado vacío, error recuperable y cantidad de resultados.
+- Contrato del banco: envelope `{ ok: boolean, message: string, data: BancoJurado[] }`; cada elemento admite `{ correo, nombre, institucion?, externo?, idioma?, participaciones, ultimaParticipacion? }`. Sin filtro la URL no debe contener `?q=`; con filtro se recortan espacios y se codifica el valor. El payload y la secuencia de designación/reemplazo no cambiaron.
+
+## Paths, pruebas y continuidad
+- Implementación: `src/modules/trabajos-grado/evaluacion/{ProcesoEvaluacionPanel.tsx,ProcesoEvaluacionPanel.css,api.ts,bancoJurados.ts}`. Regresión del constructor de URL: `tests/bancoJurados.test.ts`. No hay dependencias, schemas, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); ESLint focalizado PASS; `npm run build` PASS (308 módulos, CSS 244.78 kB, JS 727.14 kB); `git diff --check` PASS. Avisos no bloqueantes: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente: validación autenticada con backend institucional del listado sin filtro, filtro real y selección en agregar/reemplazar; revisar claro/oscuro y móvil. No se pudo capturar la vista porque este contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere sesión/backend.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+
+---
+
 # Update 2026-09-24 — director de trabajo de grado en perfil y detalle estudiantil
 
 ## Estado actual, contrato y salida esperada
