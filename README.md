@@ -1,3 +1,16 @@
+# SAPP Frontend — historial de homologaciones en revisión
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+## Cambio 2026-09-25
+
+- En el detalle de una solicitud de homologación pendiente, coordinación puede desplegar **Ver historial de homologaciones**. La consulta se realiza bajo demanda mediante `GET /homologaciones/historial` y presenta materias de origen/destino, fecha, vigencia y acta como contexto informativo para decidir. La acción no aparece cuando la solicitud ya está `APROBADA` o `RECHAZADA`, ni en la vista estudiantil.
+- El detalle de cualquier solicitud para estudiantes queda exclusivamente en modo de consulta: se retiraron **Editar solicitud**, sus campos y el editor de documentos asociado. La creación de nuevas solicitudes y los demás flujos no cambian.
+- Stack instalado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seed ni credenciales para la ruta protegida: los datos provienen del backend institucional configurado mediante las variables Vite existentes.
+
+---
+
 # Mejora 2026-09-25 — advertencia antes de convocar estudiantes
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

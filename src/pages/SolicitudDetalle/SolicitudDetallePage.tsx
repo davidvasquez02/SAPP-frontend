@@ -4,9 +4,9 @@ import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
 import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import {
   firmarDocumentosSolicitudAcademica,
+  getHistorialHomologaciones,
   getSolicitudAcademicaById,
   getSolicitudesAcademicasAsignadas,
 } from '../../modules/solicitudes/api/solicitudesAcademicasService'
@@ -14,17 +14,12 @@ import {
   cambiarEstadoSolicitud,
   type SolicitudEstadoTarget,
 } from '../../modules/solicitudes/api/solicitudCambioEstadoService'
-import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { getSolicitudDocumentosAdjuntos } from '../../modules/solicitudes/api/solicitudDocumentosService'
 import { getActas } from '../../modules/actas/api'
 import type { ActaDto } from '../../modules/actas/types'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
-import SolicitudDocumentosEditor, {
-  type SolicitudDocumentosEditorHandle,
-} from '../../modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor'
-import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
-import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
+import type { HomologacionHistorialDto, SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
@@ -56,9 +51,6 @@ const formatDate = (value: string | null) => {
   return `${day}/${month}/${year}`
 }
 
-const getTipoSolicitudCode = (tipo: TipoSolicitudDto | undefined) =>
-  tipo?.codigoNombre?.split(' - ', 1)[0]?.trim().toLocaleUpperCase() ?? ''
-
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
@@ -67,20 +59,15 @@ const SolicitudDetallePage = () => {
   const isCoordinador = canManagePosgrados(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
-  const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
   const processActasRequestedRef = useRef(false)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
-  const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
-  const [editMode, setEditMode] = useState(false)
-  const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
-  const [draftObservaciones, setDraftObservaciones] = useState('')
-  const [draftMotivosCredito, setDraftMotivosCredito] = useState<string[]>([''])
-  const [formError, setFormError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [historialHomologaciones, setHistorialHomologaciones] = useState<HomologacionHistorialDto[]>([])
+  const [showHistorialHomologaciones, setShowHistorialHomologaciones] = useState(false)
+  const [historialLoading, setHistorialLoading] = useState(false)
+  const [historialError, setHistorialError] = useState<string | null>(null)
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -112,6 +99,9 @@ const SolicitudDetallePage = () => {
     let mounted = true
     setLoading(true)
     setError(null)
+    setHistorialHomologaciones([])
+    setShowHistorialHomologaciones(false)
+    setHistorialError(null)
 
     getSolicitudAcademicaById(parsedId)
       .then((response) => {
@@ -120,10 +110,6 @@ const SolicitudDetallePage = () => {
         }
         setSolicitud(response)
         setIsSignedAssignmentConsumed(false)
-        setDraftTipoSolicitudId(response.tipoSolicitudId)
-        setDraftObservaciones(response.observaciones ?? '')
-        setDraftMotivosCredito(response.motivosCreditoCondonable?.length ? response.motivosCreditoCondonable : [''])
-        setEditMode(false)
       })
       .catch((fetchError) => {
         if (!mounted) {
@@ -189,30 +175,6 @@ const SolicitudDetallePage = () => {
     }
   }, [isCoordinador, isEstudiante, solicitud])
 
-  useEffect(() => {
-    if (!isEstudiante) {
-      setTiposSolicitud([])
-      return
-    }
-
-    let mounted = true
-    getTiposSolicitud()
-      .then((tipos) => {
-        if (mounted) {
-          setTiposSolicitud(tipos)
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setTiposSolicitud([])
-        }
-      })
-
-    return () => {
-      mounted = false
-    }
-  }, [isEstudiante])
-
   const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramite: string) => {
     setDocsLoading(true)
     setDocsError(null)
@@ -250,77 +212,6 @@ const SolicitudDetallePage = () => {
     void loadDocumentos(solicitudTramiteId, codigoTipoTramite)
   }, [codigoTipoTramite, loadDocumentos, solicitudTramiteId])
 
-  const editableSolicitud =
-    isEstudiante &&
-    ['ENVIADA', 'EN_REVISION', 'DEVUELTA', 'RECHAZADA'].includes(
-      normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado),
-    )
-
-  const handleGuardarEdicion = async () => {
-    if (!solicitud || draftTipoSolicitudId == null) {
-      setFormError('Debes seleccionar un tipo de solicitud.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    setFormError(null)
-    setSuccessMessage(null)
-
-    try {
-      const updated = await updateSolicitudEstudiante(solicitud.id, {
-        tipoSolicitudId: draftTipoSolicitudId,
-        observaciones: draftObservaciones.trim(),
-        motivosCreditoCondonable: showDraftMotivosCredito
-          ? draftMotivosCredito.map((item) => item.trim()).filter(Boolean)
-          : [],
-      })
-
-      if (documentosEditorRef.current) {
-        await documentosEditorRef.current.commitChanges()
-      }
-
-      setSolicitud(updated)
-      setDraftTipoSolicitudId(updated.tipoSolicitudId)
-      setDraftObservaciones(updated.observaciones ?? '')
-      setDraftMotivosCredito(updated.motivosCreditoCondonable?.length ? updated.motivosCreditoCondonable : [''])
-      setEditMode(false)
-      setSuccessMessage('Cambios guardados (mock)')
-      const codigoTipoTramite = updated.tipoTramiteCodigo?.trim()
-      if (codigoTipoTramite) {
-        await loadDocumentos(updated.id, codigoTipoTramite)
-      }
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'No fue posible guardar los cambios.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCancelarEdicion = () => {
-    if (!solicitud) {
-      return
-    }
-    setDraftTipoSolicitudId(solicitud.tipoSolicitudId)
-    setDraftObservaciones(solicitud.observaciones ?? '')
-    setDraftMotivosCredito(solicitud.motivosCreditoCondonable?.length ? solicitud.motivosCreditoCondonable : [''])
-    setFormError(null)
-    setEditMode(false)
-  }
-
-
-  const updateDraftMotivo = (index: number, value: string) => {
-    setDraftMotivosCredito((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)))
-  }
-
-  const addDraftMotivo = () => {
-    setDraftMotivosCredito((current) => [...current, ''])
-  }
-
-  const removeDraftMotivo = (index: number) => {
-    setDraftMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
-  }
-
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
   const estadoAntesDeResolver = `${solicitud?.estadoSigla ?? ''} ${solicitud?.estado ?? ''}`
     .normalize('NFD')
@@ -330,10 +221,6 @@ const SolicitudDetallePage = () => {
   const estabaEnInstanciaResolutiva =
     currentEstado === 'ENVIADA' || estadoAntesDeResolver.includes('COMITE') || estabaEnConsejo
   const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
-  const draftTipoSolicitud = tiposSolicitud.find((tipo) => tipo.id === draftTipoSolicitudId)
-  const showDraftMotivosCredito = draftTipoSolicitud
-    ? isTipoCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
-    : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
   const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
   const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
     solicitud?.tipoSolicitudId,
@@ -371,6 +258,28 @@ const SolicitudDetallePage = () => {
     solicitud?.tipoSolicitudCodigo,
   )
   const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
+  const isHomologacion = solicitud?.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG'
+  const showHistorialAction = isCoordinador && isHomologacion && !['APROBADA', 'RECHAZADA'].includes(currentEstado)
+
+  const handleToggleHistorial = async () => {
+    if (showHistorialHomologaciones) {
+      setShowHistorialHomologaciones(false)
+      return
+    }
+
+    setShowHistorialHomologaciones(true)
+    if (historialHomologaciones.length > 0 || historialLoading) return
+
+    setHistorialLoading(true)
+    setHistorialError(null)
+    try {
+      setHistorialHomologaciones(await getHistorialHomologaciones())
+    } catch (historyError) {
+      setHistorialError(getErrorMessage(historyError, 'No fue posible cargar el historial de homologaciones.'))
+    } finally {
+      setHistorialLoading(false)
+    }
+  }
 
   const refreshSolicitud = useCallback(async () => {
     if (!solicitud) return
@@ -650,7 +559,20 @@ const SolicitudDetallePage = () => {
 
             {solicitud.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG' && (
               <section className="solicitud-detalle-page__homologaciones" aria-labelledby="homologaciones-title">
-                <h3 id="homologaciones-title">Materias solicitadas para homologación</h3>
+                <div className="solicitud-detalle-page__section-heading">
+                  <h3 id="homologaciones-title">Materias solicitadas para homologación</h3>
+                  {showHistorialAction && (
+                    <button
+                      className="solicitud-detalle-page__history-button"
+                      type="button"
+                      aria-expanded={showHistorialHomologaciones}
+                      aria-controls="historial-homologaciones"
+                      onClick={() => void handleToggleHistorial()}
+                    >
+                      {showHistorialHomologaciones ? 'Ocultar historial' : 'Ver historial de homologaciones'}
+                    </button>
+                  )}
+                </div>
                 {solicitud.solicitudHomologacionesAsignaturas?.length ? (
                   <div className="solicitud-detalle-page__table-wrapper">
                     <table>
@@ -679,6 +601,48 @@ const SolicitudDetallePage = () => {
                 ) : (
                   <p>No hay materias de homologación registradas.</p>
                 )}
+                {showHistorialAction && showHistorialHomologaciones && (
+                  <div id="historial-homologaciones" className="solicitud-detalle-page__history" aria-live="polite">
+                    <div>
+                      <h4>Homologaciones anteriores</h4>
+                      <p>Consulta estos antecedentes como apoyo informativo antes de tomar una decisión.</p>
+                    </div>
+                    {historialLoading ? (
+                      <p>Cargando historial...</p>
+                    ) : historialError ? (
+                      <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                        {historialError}
+                      </p>
+                    ) : historialHomologaciones.length === 0 ? (
+                      <p>No se encontraron homologaciones anteriores.</p>
+                    ) : (
+                      <div className="solicitud-detalle-page__table-wrapper">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th scope="col">Materia de origen</th>
+                              <th scope="col">Materia homologada</th>
+                              <th scope="col">Fecha</th>
+                              <th scope="col">Estado</th>
+                              <th scope="col">Acta</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {historialHomologaciones.map((homologacion) => (
+                              <tr key={homologacion.id}>
+                                <td><strong>{homologacion.asignaturaOrigenNombre}</strong><span>{homologacion.asignaturaOrigenCodigo || 'Sin código'}</span></td>
+                                <td><strong>{homologacion.asignaturaDestinoNombre}</strong><span>{homologacion.asignaturaDestinoCodigo || 'Sin código'}</span></td>
+                                <td>{formatDate(homologacion.fechaHomologacion)}</td>
+                                <td>{homologacion.activa ? 'Activa' : 'Inactiva'}</td>
+                                <td><strong>{homologacion.actaCodigo || 'Sin acta asociada'}</strong>{homologacion.actaNombre && <span>{homologacion.actaNombre}</span>}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             )}
 
@@ -700,99 +664,6 @@ const SolicitudDetallePage = () => {
                   </p>
                 )}
                 {signSuccess && <p className="solicitud-detalle-page__success">{signSuccess}</p>}
-              </section>
-            )}
-
-            {isEstudiante && (
-              <section className="solicitud-detalle-page__estado-editor">
-                {!editMode ? (
-                  <>
-                    {editableSolicitud && (
-                      <button
-                        className="solicitud-detalle-page__save"
-                        type="button"
-                        onClick={() => {
-                          setEditMode(true)
-                          setSuccessMessage(null)
-                          setFormError(null)
-                        }}
-                      >
-                        Editar solicitud
-                      </button>
-                    )}
-
-                  </>
-                ) : (
-                  <div className="solicitud-detalle-page__student-editor">
-                    <h3>Editar solicitud</h3>
-                    <label className="solicitud-detalle-page__field">
-                      <span>Tipo de solicitud</span>
-                      <select
-                        value={draftTipoSolicitudId ?? ''}
-                        onChange={(event) => {
-                          setDraftTipoSolicitudId(Number(event.target.value))
-                          setFormError(null)
-                        }}
-                      >
-                        <option value="" disabled>
-                          Selecciona un tipo
-                        </option>
-                        {tiposSolicitud.map((tipo) => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.codigoNombre}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="solicitud-detalle-page__field">
-                      <span>Observaciones</span>
-                      <textarea
-                        rows={4}
-                        value={draftObservaciones}
-                        onChange={(event) => setDraftObservaciones(event.target.value)}
-                      />
-                    </label>
-                    {showDraftMotivosCredito && <div className="solicitud-detalle-page__field">
-                      <span>Motivos para la solicitud del crédito condonable</span>
-                      {draftMotivosCredito.map((motivo, index) => (
-                        <div key={`edit-motivo-${index}`} className="solicitud-detalle-page__motivo-row">
-                          <input value={motivo} onChange={(event) => updateDraftMotivo(index, event.target.value)} />
-                          <button type="button" className="solicitud-detalle-page__back" onClick={() => removeDraftMotivo(index)} disabled={draftMotivosCredito.length === 1}>−</button>
-                        </div>
-                      ))}
-                      <button type="button" className="solicitud-detalle-page__back" onClick={addDraftMotivo}>+ Agregar motivo</button>
-                    </div>}
-
-                    {draftTipoSolicitudId && (
-                      <SolicitudDocumentosEditor
-                        ref={documentosEditorRef}
-                        solicitudId={solicitud.id}
-                        codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
-                        usuarioCargaId={usuarioSappId}
-                        editable={editableSolicitud}
-                        showSaveButton={false}
-                        onDocsCommitted={() => {
-                          const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
-                          if (codigoTipoTramite) {
-                            void loadDocumentos(solicitud.id, codigoTipoTramite)
-                          }
-                        }}
-                      />
-                    )}
-
-                    {formError && <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{formError}</p>}
-
-                    <div className="solicitud-detalle-page__estado-controls">
-                      <button className="solicitud-detalle-page__save" type="button" onClick={handleGuardarEdicion} disabled={saving}>
-                        {saving ? 'Guardando...' : 'Guardar cambios'}
-                      </button>
-                      <button className="solicitud-detalle-page__back" type="button" onClick={handleCancelarEdicion} disabled={saving}>
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
               </section>
             )}
 

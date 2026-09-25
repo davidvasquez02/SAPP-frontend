@@ -253,6 +253,49 @@
     margin: 0;
 }
 
+.solicitud-detalle-page__section-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.solicitud-detalle-page__history-button {
+    border: 1px solid var(--primary);
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    background: var(--surface);
+    color: var(--primary);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.solicitud-detalle-page__history-button:hover,
+.solicitud-detalle-page__history-button:focus-visible {
+    background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+    outline: 2px solid var(--inverse-primary);
+    outline-offset: 2px;
+}
+
+.solicitud-detalle-page__history {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 70%);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--primary) 5%, var(--surface-container-low));
+}
+
+.solicitud-detalle-page__history h4 {
+    margin: 0 0 0.25rem;
+}
+
+.solicitud-detalle-page__history > div > p {
+    color: var(--text-secondary);
+}
+
 .solicitud-detalle-page__table-wrapper {
     overflow-x: auto;
     border: 1px solid var(--outline);
@@ -264,6 +307,10 @@
     min-width: 34rem;
     border-collapse: collapse;
     background: var(--surface-container-low);
+}
+
+.solicitud-detalle-page__history table {
+    min-width: 58rem;
 }
 
 .solicitud-detalle-page__homologaciones th,
