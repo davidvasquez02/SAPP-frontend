@@ -1,9 +1,14 @@
-.evaluacion-tg { margin-top: 1.5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-xs); color: var(--text-primary); }
+.evaluacion-tg { margin-top: .5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-xs); color: var(--text-primary); }
 .evaluacion-tg--status { text-align: center; }
 .evaluacion-tg__header, .evaluacion-tg__section-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
 .evaluacion-tg__header h3, .evaluacion-tg__header p, .evaluacion-tg__section h4 { margin: 0; }
 .evaluacion-tg__eyebrow { color: var(--primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); letter-spacing: .08em; text-transform: uppercase; }
 .evaluacion-tg__state, .evaluacion-tg__chip { display: inline-flex; width: fit-content; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--outline); background: var(--surface-container-low); font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); }
+.evaluacion-tg__final-grade { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; margin-top: 1.25rem; padding: 1rem 1.25rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 55%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
+.evaluacion-tg__final-grade > div { display: flex; align-items: baseline; gap: .75rem; }
+.evaluacion-tg__final-grade span { color: var(--text-secondary); font-weight: var(--font-weight-semibold); }
+.evaluacion-tg__final-grade strong { color: var(--primary); font-size: clamp(1.6rem, 5vw, 2.25rem); line-height: 1; }
+.evaluacion-tg__final-grade p { margin: 0; color: var(--text-secondary); text-align: right; }
 .evaluacion-tg__summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin: 1.25rem 0; }
 .evaluacion-tg__summary div { min-width: 0; padding: .8rem; border-radius: var(--radius-sm); background: var(--surface-container-low); }
 .evaluacion-tg dt { color: var(--text-secondary); font-size: var(--font-size-caption); }
@@ -17,10 +22,11 @@
 .evaluacion-tg__ready strong { display: block; color: var(--primary); }
 .evaluacion-tg__ready p { margin: .15rem 0 0; color: var(--text-secondary); }
 .evaluacion-tg__actions, .evaluacion-tg__form-actions, .evaluacion-tg__row-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
-.evaluacion-tg button { border: 1px solid var(--primary); padding: .55rem .9rem; background: var(--primary); color: var(--on-primary); cursor: pointer; }
+.evaluacion-tg button { min-height: 2.5rem; border: 1px solid var(--primary); border-radius: 999px; padding: .55rem .9rem; background: var(--primary); color: var(--on-primary); cursor: pointer; font: inherit; font-weight: var(--font-weight-semibold); }
 .evaluacion-tg button.secondary, .evaluacion-tg__row-actions button { background: transparent; color: var(--primary); }
 .evaluacion-tg button.danger { border-color: var(--danger); color: var(--danger); }
 .evaluacion-tg button:disabled { opacity: .48; cursor: not-allowed; }
+.evaluacion-tg button:focus-visible, .evaluacion-tg a:focus-visible { outline: 2px solid var(--inverse-primary); outline-offset: 2px; }
 .evaluacion-tg__form-card, .evaluacion-tg__section { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--outline); border-radius: var(--radius-md); background: var(--surface-container-low); }
 .evaluacion-tg__form-card h4 { margin-top: 0; }
 .evaluacion-tg__section-heading > div { display: grid; gap: .15rem; }
@@ -69,6 +75,8 @@
   .evaluacion-tg__ready { grid-template-columns: auto 1fr; }
   .evaluacion-tg__ready button { grid-column: 1 / -1; width: 100%; }
   .evaluacion-tg__summary, .evaluacion-tg__form-grid { grid-template-columns: 1fr; }
+  .evaluacion-tg__final-grade { align-items: flex-start; flex-direction: column; }
+  .evaluacion-tg__final-grade p { text-align: left; }
   .evaluacion-tg__directory-access, .evaluacion-tg__directory-heading { align-items: stretch; flex-direction: column; }
   .evaluacion-tg__directory-search, .evaluacion-tg__directory-item { grid-template-columns: 1fr; }
   .evaluacion-tg__actions > button { flex: 1 1 12rem; }
@@ -77,4 +85,13 @@
   .evaluacion-tg tr { margin-bottom: .8rem; padding: .5rem; border: 1px solid var(--outline); border-radius: var(--radius-sm); }
   .evaluacion-tg td { display: grid; grid-template-columns: minmax(6rem, 35%) 1fr; gap: .5rem; border: 0; }
   .evaluacion-tg td::before { content: attr(data-label); color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); }
+  .evaluacion-tg__row-actions button { flex: 1 1 8rem; }
+}
+
+@media (max-width: 440px) {
+  .evaluacion-tg { padding: .85rem; }
+  .evaluacion-tg__section, .evaluacion-tg__form-card { padding: .85rem; }
+  .evaluacion-tg__section-heading { display: grid; }
+  .evaluacion-tg__add-evaluator, .evaluacion-tg__form-actions > button { width: 100%; }
+  .evaluacion-tg td { grid-template-columns: 1fr; }
 }

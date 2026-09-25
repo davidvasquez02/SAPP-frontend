@@ -1,5 +1,15 @@
 # SAPP Frontend — historial de homologaciones en revisión
 
+## Mejora 2026-09-25 — detalle uniforme y nota final de candidatura doctoral
+
+- El detalle de proyectos de grado presenta una jerarquía visual unificada: encabezado institucional, tarjetas con los mismos radios, bordes y superficies semánticas, acciones pill, foco visible y adaptaciones específicas para tablas, formularios y botones en pantallas de 760 px y 440 px.
+- Cuando `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` retorna `tipoSolicitudCodigo: "CAND_DOCTORAL"` y una `notaFinal` numérica, coordinación y estudiante ven **Calificación definitiva** / **Nota final** con dos decimales. La nota no se presenta para los demás tipos ni cuando está ausente; no cambian el endpoint, el DTO ni el registro del resultado.
+- SAPP continúa siendo la SPA institucional EISI–UIS para admisiones, matrículas, solicitudes, créditos, actas y proyectos de grado. Las rutas/guards están en `src/app`, las vistas en `src/pages`, la lógica y los contratos por dominio en `src/modules`, y los componentes compartidos en `src/components`; el backend Spring Boot/PostgreSQL sigue siendo la fuente de reglas y datos.
+- Entorno exacto comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existen seeds ni credenciales locales para la ruta protegida; los datos provienen del backend institucional.
+
+---
+
 ## Mejora 2026-09-25 — información de sustentación programada
 
 - En el detalle de trabajos de grado, estudiantes y coordinación pueden consultar la fecha y hora, modalidad y lugar de una sustentación programada. Si la modalidad es virtual y el backend entrega `enlaceSustentacion`, la interfaz presenta un enlace accesible que se abre en una pestaña nueva.

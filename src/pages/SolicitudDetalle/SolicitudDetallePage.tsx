@@ -258,6 +258,7 @@ const SolicitudDetallePage = () => {
     solicitud?.tipoSolicitudCodigo,
   )
   const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
+  const esSolicitudTrabajoGrado = tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo)
   const isHomologacion = solicitud?.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG'
   const showHistorialAction = isCoordinador && isHomologacion && !['APROBADA', 'RECHAZADA'].includes(currentEstado)
 
@@ -431,7 +432,7 @@ const SolicitudDetallePage = () => {
 
   return (
     <ModuleLayout title="Detalle de solicitud">
-      <section className="solicitud-detalle-page">
+      <section className={`solicitud-detalle-page${esSolicitudTrabajoGrado ? ' solicitud-detalle-page--trabajo-grado' : ''}`}>
         <BackButton
           to={location.pathname.startsWith('/creditos-condonables')
             ? '/creditos-condonables'
@@ -456,9 +457,8 @@ const SolicitudDetallePage = () => {
         ) : (
           <>
             <header className="solicitud-detalle-page__header">
-              <h2>
-                Solicitud {solicitud.id} — {solicitud.tipoSolicitud}
-              </h2>
+              {esSolicitudTrabajoGrado && <p>Proyecto de grado · Solicitud {solicitud.id}</p>}
+              <h2>{esSolicitudTrabajoGrado ? solicitud.tipoSolicitud : `Solicitud ${solicitud.id} — ${solicitud.tipoSolicitud}`}</h2>
             </header>
 
             <dl className="solicitud-detalle-page__grid">

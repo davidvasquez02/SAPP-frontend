@@ -30,11 +30,55 @@
 
 .solicitud-detalle-page__header h2 {
     margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .solicitud-detalle-page__header p {
     margin: 0.25rem 0 0;
     color: var(--text-secondary);
+}
+
+.solicitud-detalle-page--trabajo-grado {
+    gap: 1.25rem;
+    padding: clamp(1rem, 3vw, 2rem);
+    border-radius: var(--radius-card);
+}
+
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__header {
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 60%);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--primary) 6%, var(--surface-container-low));
+}
+
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__header p {
+    margin: 0 0 .35rem;
+    color: var(--primary);
+    font-size: var(--font-size-caption, .8rem);
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__grid {
+    gap: .75rem;
+}
+
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__item {
+    padding: 1rem;
+    border-radius: var(--radius-sm, .9rem);
+}
+
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__estado-editor,
+.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__signature-actions {
+    padding: 1.25rem;
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    background: var(--surface-container-low);
+}
+
+.solicitud-detalle-page--trabajo-grado .evaluacion-tg {
+    margin-top: 0;
 }
 
 .solicitud-detalle-page__grid {
