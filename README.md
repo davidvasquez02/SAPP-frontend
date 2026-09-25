@@ -1,5 +1,13 @@
 # SAPP Frontend — historial de homologaciones en revisión
 
+## Mejora 2026-09-25 — retroalimentación al gestionar jurados
+
+- En el detalle de coordinación de trabajos de grado, los mensajes de éxito de las acciones del proceso (por ejemplo, **Jurado registrado e invitación enviada.**) se eliminan automáticamente después de cinco segundos, con limpieza del temporizador al cambiar o desmontar la vista.
+- Mientras está abierto el formulario para agregar o reemplazar un evaluador, la acción **Agregar evaluador** de la cabecera de **Jurados evaluadores** se oculta para evitar una invitación duplicada o confusa. Al cancelar o completar el formulario, la acción vuelve a estar disponible si el estado permite gestionar jurados.
+- No cambiaron endpoints, DTO, payloads, permisos, estados, dependencias, variables, schemas, seeds ni datasets. La ruta protegida usa el backend institucional; para desarrollo se reutilizan `node_modules` y `package-lock.json` con `npm run dev`.
+
+---
+
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
 
 ## Cambio 2026-09-25
