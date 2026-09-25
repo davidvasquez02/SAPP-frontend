@@ -7,6 +7,12 @@ export function seleccionarRespuestas(respuestas: RespuestasRequest, tipo: TipoE
 export function respuestasCompletas(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas?: PreguntaLiquidacion[]): boolean {
   return Object.values(seleccionarRespuestas(respuestas, tipo, preguntas)).every(respuesta => typeof respuesta === 'boolean')
 }
+export function ordenarPreguntasEstudiante(preguntas: PreguntaLiquidacion[]): PreguntaLiquidacion[] {
+  return [
+    ...preguntas.filter(pregunta => pregunta.clave !== 'certificadoVotacion'),
+    ...preguntas.filter(pregunta => pregunta.clave === 'certificadoVotacion'),
+  ]
+}
 export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<LiquidacionMatricula, 'estado' | 'totalFinal'>, accion: keyof CuerposLiquidacion): boolean {
   if (proceso === 'PUBLICADO') return false
   if (accion === 'ajustes') return true
