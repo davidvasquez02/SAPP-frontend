@@ -1,3 +1,15 @@
+# Corrección 2026-09-25 — confirmaciones de Gestión profesores
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- **Gestión profesores** ya no usa los cuadros de confirmación nativos del navegador. Agregar o retirar el rol de docente de posgrados, retirar un integrante de un grupo y designar su director muestran ahora un diálogo institucional uniforme con el resto de SAPP, identificación explícita del profesor, explicación del efecto y acciones tipo píldora.
+- El modal usa los tokens semánticos globales en temas claro/oscuro, se adapta a móvil, enfoca inicialmente **Cancelar**, admite cierre seguro con `Escape`, botón de cierre o backdrop y bloquea todos los cierres mientras la mutación está en curso. Los errores conservan abierto el diálogo para permitir reintentar; el éxito lo cierra y mantiene las notificaciones existentes.
+- No cambian rutas, permisos, endpoints ni contratos: asignar y retirar el rol siguen operando por UUID; las operaciones de grupo siguen usando `grupoId` y `docenteId`. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build de producción PASS (314 módulos) y `git diff --check` PASS. npm conserva el warning ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-24 — botones de retorno de matrícula financiera
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

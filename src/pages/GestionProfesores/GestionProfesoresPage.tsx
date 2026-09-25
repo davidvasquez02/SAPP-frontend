@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import {
   asignarDirectorGrupoInvestigacion,
@@ -18,6 +18,10 @@ import type {
 import './GestionProfesoresPage.css'
 
 type Vista = 'docentes' | 'grupos'
+type ConfirmationAction =
+  | { type: 'role'; docente: DocenteDto; assign: boolean }
+  | { type: 'group'; docente: GrupoInvestigacionDocenteDto }
+  | { type: 'director'; docente: GrupoInvestigacionDocenteDto }
 const PAGE_SIZE = 10
 
 const normalize = (value: string) =>
@@ -46,6 +50,20 @@ const GestionProfesoresPage = () => {
   const [changingDirectorId, setChangingDirectorId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [confirmation, setConfirmation] = useState<ConfirmationAction | null>(null)
+  const cancelConfirmationRef = useRef<HTMLButtonElement>(null)
+
+  const confirmationBusy = changingRoleUuid !== null || deletingId !== null || changingDirectorId !== null
+
+  useEffect(() => {
+    if (!confirmation) return
+    cancelConfirmationRef.current?.focus()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !confirmationBusy) setConfirmation(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [confirmation, confirmationBusy])
 
   const loadDocentes = useCallback(async () => {
     setDocentes(await getDocentes())
@@ -158,8 +176,6 @@ const GestionProfesoresPage = () => {
   }, [paginasDisponibles])
 
   const changeRole = async (docente: DocenteDto, assign: boolean) => {
-    const verb = assign ? 'agregar a' : 'retirar de'
-    if (!window.confirm(`¿Desea ${verb} posgrados a ${docente.fullName.trim()}?`)) return
     setChangingRoleUuid(docente.uuid)
     setError(null)
     setSuccess(null)
@@ -168,6 +184,7 @@ const GestionProfesoresPage = () => {
       else await eliminarRolDocentePosgrados(docente.uuid)
       await loadDocentes()
       setSuccess(assign ? 'El profesor fue agregado a posgrados.' : 'El profesor fue retirado de posgrados.')
+      setConfirmation(null)
     } catch (roleError) {
       setError(roleError instanceof Error ? roleError.message : 'No fue posible actualizar el rol del profesor.')
     } finally {
@@ -192,7 +209,7 @@ const GestionProfesoresPage = () => {
   }
 
   const handleDelete = async (docente: GrupoInvestigacionDocenteDto) => {
-    if (!grupoId || !window.confirm(`¿Retirar a ${docente.nombre.trim()} del grupo?`)) return
+    if (!grupoId) return
     const docenteId = docente.docenteId ?? docente.id
     setDeletingId(docenteId)
     setError(null)
@@ -201,6 +218,7 @@ const GestionProfesoresPage = () => {
       await eliminarDocenteGrupoInvestigacion(Number(grupoId), docenteId)
       setDocentesGrupo((current) => current.filter((item) => (item.docenteId ?? item.id) !== docenteId))
       setSuccess('El docente fue retirado del grupo de investigación.')
+      setConfirmation(null)
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'No fue posible retirar el docente.')
     } finally {
@@ -209,7 +227,7 @@ const GestionProfesoresPage = () => {
   }
 
   const handleAssignDirector = async (docente: GrupoInvestigacionDocenteDto) => {
-    if (!grupoId || !window.confirm(`¿Designar a ${docente.nombre.trim()} como director del grupo?`)) return
+    if (!grupoId) return
     const docenteId = docente.docenteId ?? docente.id
     setChangingDirectorId(docenteId)
     setError(null)
@@ -218,11 +236,50 @@ const GestionProfesoresPage = () => {
       await asignarDirectorGrupoInvestigacion(Number(grupoId), docenteId)
       setDocentesGrupo(await getDocentesGrupoInvestigacion(Number(grupoId)))
       setSuccess(`${docente.nombre.trim()} es ahora el director del grupo de investigación.`)
+      setConfirmation(null)
     } catch (directorError) {
       setError(directorError instanceof Error ? directorError.message : 'No fue posible asignar el director del grupo.')
     } finally {
       setChangingDirectorId(null)
     }
+  }
+
+  const confirmationCopy = confirmation
+    ? confirmation.type === 'role'
+      ? {
+          title: confirmation.assign ? 'Agregar profesor a posgrados' : 'Retirar profesor de posgrados',
+          description: confirmation.assign
+            ? 'El profesor obtendrá acceso a las funcionalidades asignadas al rol de docente de posgrados.'
+            : 'El profesor dejará de tener acceso a las funcionalidades asignadas al rol de docente de posgrados.',
+          name: confirmation.docente.fullName.trim(),
+          label: confirmation.assign ? 'Sí, agregar a posgrados' : 'Sí, retirar de posgrados',
+          busyLabel: 'Actualizando...',
+          danger: !confirmation.assign,
+        }
+      : confirmation.type === 'group'
+        ? {
+            title: 'Retirar profesor del grupo',
+            description: `El profesor dejará de pertenecer a ${selectedGroup?.codigoNombre ?? 'este grupo de investigación'}.`,
+            name: confirmation.docente.nombre.trim(),
+            label: 'Sí, retirar del grupo',
+            busyLabel: 'Retirando...',
+            danger: true,
+          }
+        : {
+            title: 'Designar director del grupo',
+            description: `El profesor quedará registrado como director de ${selectedGroup?.codigoNombre ?? 'este grupo de investigación'}.`,
+            name: confirmation.docente.nombre.trim(),
+            label: 'Sí, designar director',
+            busyLabel: 'Asignando...',
+            danger: false,
+          }
+    : null
+
+  const confirmAction = () => {
+    if (!confirmation) return
+    if (confirmation.type === 'role') void changeRole(confirmation.docente, confirmation.assign)
+    else if (confirmation.type === 'group') void handleDelete(confirmation.docente)
+    else void handleAssignDirector(confirmation.docente)
   }
 
   const renderDocentesTable = (
@@ -239,7 +296,7 @@ const GestionProfesoresPage = () => {
         <tbody>{items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((docente) => (
           <tr key={docente.uuid}>
             <td data-label="Nombre">{docente.fullName.trim()}</td><td data-label="Documento">{docente.documentNumber || '—'}</td><td data-label="Correo institucional">{docente.email || '—'}</td>
-            <td className="gestion-profesores__action-cell"><button className={assign ? 'gestion-profesores__assign' : 'gestion-profesores__delete'} type="button" disabled={changingRoleUuid !== null} onClick={() => void changeRole(docente, assign)}>{changingRoleUuid === docente.uuid ? 'Actualizando...' : assign ? 'Agregar a posgrados' : 'Retirar de posgrados'}</button></td>
+            <td className="gestion-profesores__action-cell"><button className={assign ? 'gestion-profesores__assign' : 'gestion-profesores__delete'} type="button" disabled={changingRoleUuid !== null} onClick={() => setConfirmation({ type: 'role', docente, assign })}>{changingRoleUuid === docente.uuid ? 'Actualizando...' : assign ? 'Agregar a posgrados' : 'Retirar de posgrados'}</button></td>
           </tr>
         ))}</tbody>
       </table>
@@ -281,7 +338,7 @@ const GestionProfesoresPage = () => {
               <>
                 <section className="gestion-profesores__group-section" aria-labelledby="integrantes-title">
                   <div className="gestion-profesores__subheading"><div><h3 id="integrantes-title">Profesores del grupo</h3><p>Integrantes registrados actualmente en el grupo de investigación.</p></div><span>{docentesGrupo.length} profesores</span></div>
-                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Rol en el grupo</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; const isMutating = deletingId !== null || savingUuid !== null || changingDirectorId !== null; return <tr key={id}><td data-label="Profesor">{docente.nombre.trim()}</td><td data-label="Rol en el grupo">{docente.esDirector ? <span className="gestion-profesores__director-badge">Director</span> : 'Integrante'}</td><td className="gestion-profesores__action-cell"><div className="gestion-profesores__row-actions">{!docente.esDirector ? <button className="gestion-profesores__director" type="button" disabled={isMutating} onClick={() => void handleAssignDirector(docente)}>{changingDirectorId === id ? 'Asignando...' : 'Hacer director'}</button> : null}<button className="gestion-profesores__delete" type="button" disabled={isMutating} onClick={() => void handleDelete(docente)}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></div></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Rol en el grupo</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; const isMutating = deletingId !== null || savingUuid !== null || changingDirectorId !== null; return <tr key={id}><td data-label="Profesor">{docente.nombre.trim()}</td><td data-label="Rol en el grupo">{docente.esDirector ? <span className="gestion-profesores__director-badge">Director</span> : 'Integrante'}</td><td className="gestion-profesores__action-cell"><div className="gestion-profesores__row-actions">{!docente.esDirector ? <button className="gestion-profesores__director" type="button" disabled={isMutating} onClick={() => setConfirmation({ type: 'director', docente })}>{changingDirectorId === id ? 'Asignando...' : 'Hacer director'}</button> : null}<button className="gestion-profesores__delete" type="button" disabled={isMutating} onClick={() => setConfirmation({ type: 'group', docente })}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></div></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
                 </section>
                 <section className="gestion-profesores__group-section" aria-labelledby="disponibles-title">
                   <div className="gestion-profesores__subheading"><div><h3 id="disponibles-title">Profesores de posgrados disponibles</h3><p>Agregue al grupo únicamente profesores que tienen activo el rol de posgrados.</p></div><span>{docentesDisponibles.length} profesores</span></div>
@@ -293,6 +350,24 @@ const GestionProfesoresPage = () => {
             )}
           </section>
         )}
+        {confirmation && confirmationCopy ? (
+          <div className="gestion-profesores__confirmation" role="dialog" aria-modal="true" aria-labelledby="gestion-profesores-confirmation-title" aria-describedby="gestion-profesores-confirmation-description">
+            <button className="gestion-profesores__confirmation-backdrop" type="button" aria-label="Cancelar acción" disabled={confirmationBusy} onClick={() => setConfirmation(null)} />
+            <section className="gestion-profesores__confirmation-dialog">
+              <button className="gestion-profesores__confirmation-close" type="button" aria-label="Cerrar" disabled={confirmationBusy} onClick={() => setConfirmation(null)}>×</button>
+              <div className={`gestion-profesores__confirmation-icon${confirmationCopy.danger ? ' gestion-profesores__confirmation-icon--danger' : ''}`} aria-hidden="true">!</div>
+              <div className="gestion-profesores__confirmation-content">
+                <h2 id="gestion-profesores-confirmation-title">{confirmationCopy.title}</h2>
+                <p id="gestion-profesores-confirmation-description">{confirmationCopy.description}</p>
+                <dl><div><dt>Profesor</dt><dd>{confirmationCopy.name}</dd></div></dl>
+              </div>
+              <div className="gestion-profesores__confirmation-actions">
+                <button ref={cancelConfirmationRef} type="button" className="gestion-profesores__confirmation-cancel" disabled={confirmationBusy} onClick={() => setConfirmation(null)}>Cancelar</button>
+                <button type="button" className={confirmationCopy.danger ? 'gestion-profesores__confirmation-confirm gestion-profesores__confirmation-confirm--danger' : 'gestion-profesores__confirmation-confirm'} disabled={confirmationBusy} onClick={confirmAction}>{confirmationBusy ? confirmationCopy.busyLabel : confirmationCopy.label}</button>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </main>
     </ModuleLayout>
   )
