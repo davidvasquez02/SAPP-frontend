@@ -6159,3 +6159,20 @@ npm run lint
 - `tests/matriculaFinancieraFlow.test.ts` comprueba que tanto el botón como `<AgregarEstudiante>` estén dentro de la sección **Seguimiento y cierre**. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; CSS 261.83 kB y JS 739.86 kB).
 - Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Pendiente institucional: probar apertura/cierre, búsqueda, alta exitosa/fallida y refresco de tabla en BORRADOR/ABIERTO, escritorio/móvil y temas claro/oscuro. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — feedback temporal y acción única de evaluadores
+
+## Estado, contrato y salida esperada
+
+- `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` elimina automáticamente cada mensaje exitoso cinco segundos después de mostrarlo y limpia el temporizador al reemplazar el mensaje o desmontar el panel. Los errores permanecen visibles para permitir diagnóstico y reintento.
+- Cuando `formulario === 'designar'`, la cabecera de **Jurados evaluadores** oculta **Agregar evaluador**. El título y los controles del formulario abierto siguen indicando si se agrega o reemplaza un jurado; al cancelar o completar la operación, la acción reaparece cuando el estado admite designaciones.
+- No cambiaron endpoints, DTO, payloads, estados, permisos, rutas, estilos, schemas, variables, dependencias, seeds ni datasets. La salida esperada en `/trabajos-grado/doctorado/solicitudes/:id` es un solo rótulo **Agregar evaluador** durante la captura y la desaparición del aviso exitoso después de 5 s.
+
+## Pruebas, entorno y continuidad
+
+- La regresión está en `tests/procesoEvaluacionFeedback.test.ts`; valida el intervalo, la limpieza del temporizador y la condición que evita la acción duplicada. Prueba focalizada PASS (2/2), suite Node PASS (69/69), ESLint focalizado PASS, build PASS (308 módulos; CSS 260.89 kB y JS 732.68 kB) y `git diff --check` PASS. `npm run lint` global sigue fallando por 9 errores y 1 aviso preexistentes en servicios, admisiones, documentos y solicitudes ajenos a este cambio.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. Este frontend usa Node/npm y obtiene datos del backend institucional; no hay seed, dataset o credenciales reproducibles para la ruta protegida.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Pendiente institucional: validar el alta, reemplazo, reenvío, retiro, recordatorios, correcciones y resultado con sesión/backend reales, además del temporizador, teclado, móvil y temas claro/oscuro. No se obtuvo captura porque el contenedor no tiene Chromium, Chrome ni Firefox, y la ruta protegida carece de credenciales y backend reproducible.
