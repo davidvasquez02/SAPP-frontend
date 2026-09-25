@@ -6096,3 +6096,19 @@ npm run lint
 - `tests/matriculaFinancieraFlow.test.ts` verifica las dos nuevas parejas `<dt>/<dd>` y la ausencia de **Cierre** y **Publicación**. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-DzFjpMER.js` 739.35 kB).
 - Entorno sin cambios: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Pendiente institucional: validar el acordeón abierto con valores presentes y ausentes, temas claro/oscuro y móvil. El repositorio no incluye backend, credenciales ni seed reproducible para la ruta protegida.
+
+---
+
+# Update 2026-09-25 — porcentajes separados y edición contextual
+
+## Estado y salida esperada
+
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` reemplazó el elemento combinado **Votación / salud** por dos pares de definición: **Porcentaje de votación** con `proceso.porcentajeVotacion` y **Porcentaje de salud** con `proceso.porcentajeSalud`. Ambos muestran `%` y conservan exactamente los valores del DTO.
+- **Editar parámetros** se renderiza ahora dentro del `<details>` **Parámetros y fechas del proceso**, después de la lista de valores. Sigue oculto cuando `proceso.estado === 'PUBLICADO'`, incluye `type="button"` y queda deshabilitado con `blocked`. El formulario que activa conserva su posición y contrato. **Agregar estudiante** permanece fuera del acordeón y solo aparece cuando `allowed('convocar')`.
+- No cambiaron endpoints, payloads, DTO, validaciones, cálculos, estados, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica las dos etiquetas y valores separados, la ausencia del elemento combinado, la ubicación de **Editar parámetros** dentro de `<details>` y la permanencia de **Agregar estudiante** fuera. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; CSS 261.03 kB y JS 739.54 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: comprobar el acordeón, el botón y el formulario con procesos BORRADOR/ABIERTO/CERRADO/PUBLICADO, temas claro/oscuro, teclado y móvil. No existe backend, credenciales ni seed local reproducible para la ruta protegida.

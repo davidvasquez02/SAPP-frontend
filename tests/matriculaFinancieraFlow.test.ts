@@ -55,7 +55,17 @@ test('presenta los parámetros operativos solicitados en el tablero financiero',
   const source = readFileSync(new URL('../src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx', import.meta.url), 'utf8')
 
   assert.match(source, /<dt>SMMLV<\/dt><dd>{money\(proceso\.valorSmmlv\)}<\/dd>/)
+  assert.match(source, /<dt>Porcentaje de votación<\/dt><dd>{proceso\.porcentajeVotacion}%<\/dd>/)
+  assert.match(source, /<dt>Porcentaje de salud<\/dt><dd>{proceso\.porcentajeSalud}%<\/dd>/)
+  assert.doesNotMatch(source, /<dt>Votación \/ salud<\/dt>/)
   assert.match(source, /<dt>Fecha límite recepción respuestas<\/dt><dd>{fechaColombia\(proceso\.fechaLimiteRespuesta\)}<\/dd>/)
   assert.doesNotMatch(source, /<dt>Cierre<\/dt>/)
   assert.doesNotMatch(source, /<dt>Publicación<\/dt>/)
+
+  const detailsStart = source.indexOf('<details className="mf-card">')
+  const detailsEnd = source.indexOf('</details>', detailsStart)
+  const editButton = source.indexOf('>Editar parámetros</button>', detailsStart)
+  const addButton = source.indexOf('>Agregar estudiante</button>', detailsEnd)
+  assert.ok(detailsStart >= 0 && editButton > detailsStart && editButton < detailsEnd)
+  assert.ok(addButton > detailsEnd)
 })

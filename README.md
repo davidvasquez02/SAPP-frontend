@@ -1432,3 +1432,9 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El acordeón **Parámetros y fechas del proceso** del tablero muestra **Fuente SMMLV**, **SMMLV**, **Votación / salud**, **Primer envío** y **Fecha límite recepción respuestas**. Se retiraron de esa sección **Cierre** y **Publicación**.
 - Los valores provienen del mismo DTO: `valorSmmlv` usa el formato monetario institucional y `fechaLimiteRespuesta` usa la fecha de Colombia. `fechaCierre` y `fechaPublicacion` permanecen en el contrato para compatibilidad y reglas del proceso; no cambiaron endpoints, payloads, estados, permisos, dependencias, schemas, variables, seeds ni datasets.
 - Verificación: ESLint focalizado PASS; pruebas Node PASS (64/64); build PASS (312 módulos, CSS 261.03 kB, JS 739.35 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-25 — porcentajes y edición dentro del acordeón
+
+- **Votación / salud** se separó en **Porcentaje de votación** y **Porcentaje de salud**, cada uno con su valor independiente. El botón **Editar parámetros** ahora aparece dentro de **Parámetros y fechas del proceso**; conserva su disponibilidad para procesos no publicados y su bloqueo mientras hay una operación en curso. **Agregar estudiante** continúa como acción independiente fuera del acordeón.
+- No cambiaron el formulario ni su payload: siguen utilizándose `porcentajeVotacion` y `porcentajeSalud`. Tampoco cambiaron endpoints, permisos, estados, dependencias, schemas, variables, seeds ni datasets.
+- Verificación: ESLint focalizado PASS; pruebas Node PASS (64/64); build PASS (312 módulos, CSS 261.03 kB, JS 739.54 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
