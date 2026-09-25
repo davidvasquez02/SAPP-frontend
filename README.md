@@ -1366,3 +1366,14 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
   tipos, reglas de cálculo, permisos, dependencias, variables, seeds ni datasets.
   Reutilizar `node_modules`; el flujo real continúa dependiendo del backend y de
   una sesión institucional.
+
+---
+
+# Mejora 2026-09-25 — fecha límite destacada en la liquidación estudiantil
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En **Mi liquidación**, la fecha **Recepción de respuestas habilitada hasta el …** aparece inmediatamente después del nombre del programa y antes del código y período del estudiante. Se presenta en un aviso destacado con borde y fondo derivados de `--primary`; la fecha usa mayor peso visual para que el límite del proceso sea identificable rápidamente en temas claro y oscuro.
+- El ajuste es únicamente de jerarquía y presentación. La fecha continúa proviniendo de `item.proceso.fechaLimiteRespuesta` y se formatea con `fechaColombia`; no cambian endpoints, DTO, validaciones, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seed reproducible para la ruta protegida; la fixture aislada permanece en `tests/fixtures/matricula-financiera/` y los datos reales vienen del backend institucional.
