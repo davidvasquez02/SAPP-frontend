@@ -64,6 +64,14 @@ export interface SolicitudHomologacionAsignaturaDetalleDto {
   asignaturaDestinoNombre: string
 }
 
+export interface HomologacionHistorialDto extends SolicitudHomologacionAsignaturaDetalleDto {
+  fechaHomologacion: string
+  activa: boolean
+  actaId: number | null
+  actaCodigo: string | null
+  actaNombre: string | null
+}
+
 export interface CreateSolicitudRequestDto {
   estudianteId: number
   tipoSolicitudId: number

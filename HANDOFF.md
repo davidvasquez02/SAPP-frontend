@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — historial de homologaciones y detalle estudiantil de solo lectura
+
+## Estado, decisiones, contrato y salida esperada
+- `SolicitudDetallePage` ofrece a coordinación **Ver historial de homologaciones** solamente para una solicitud `HOMOLOG` que aún no esté `APROBADA` ni `RECHAZADA`. El panel se carga bajo demanda, se puede ocultar y comunica estados de carga, vacío y error; su tabla muestra origen, destino, fecha, vigencia y acta. Es información de apoyo y no altera la decisión ni selecciona automáticamente una equivalencia.
+- Contrato nuevo de lectura: `GET /homologaciones/historial`, envelope `{ ok, message, data }`. Cada elemento contiene `id`, IDs/códigos/nombres de asignaturas de origen y destino, `fechaHomologacion`, `activa`, y `actaId`/`actaCodigo`/`actaNombre` anulables. Se preservan literalmente los `null` del API y se representan con **Sin código** o **Sin acta asociada**.
+- En todos los tipos de solicitud, la vista estudiante del detalle ya no muestra ni ejecuta edición. Se retiraron el botón **Editar solicitud**, el formulario local, la mutación mock y el editor documental de esa sección; documentos y datos continúan visibles. No cambiaron permisos de coordinación, resolución, firmas, creación, endpoints existentes ni schemas de backend.
+
+## Paths, pruebas, entorno y continuidad
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`; contrato/servicio: `src/modules/solicitudes/api/types.ts` y `solicitudesAcademicasService.ts`; regresión: `tests/historialHomologaciones.test.ts`. No se añadieron paquetes, variables, seeds, datasets ni artefactos persistentes; `dist/` es salida ignorada.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 67/67 PASS; build PASS (308 módulos; CSS 260.89 kB; JS 732.53 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Siguiente paso externo: validar el endpoint y la ruta protegida con sesiones reales de coordinación y estudiante, incluyendo vacío/error, temas claro/oscuro y ancho móvil. No se produjo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la vista depende de autenticación/backend institucionales.
+
+---
+
 # Handoff 2026-09-25 — advertencia antes de convocar estudiantes
 
 ## Estado, decisión, contrato y salida esperada
