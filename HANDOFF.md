@@ -1,3 +1,20 @@
+# Handoff 2026-09-25 — certificado obligatorio al responder Sí
+
+## Estado, decisión, contrato y salida esperada
+- La visual estudiantil de matrícula financiera ya impide guardar respuestas cuando `certificadoVotacion === true` hasta confirmar que ANX-39 tiene un documento vigente. `CertificadoVotacion` comunica a `RespuestasForm` la validez derivada de la consulta documental; no se considera válido un documento con `estadoDocumento === 'RECHAZADO'`.
+- `respuestasListasParaGuardar` centraliza la regla: exige todas las respuestas aplicables y, solo para estudiante con respuesta afirmativa, un certificado válido. El botón usa esta regla y el `onSubmit` vuelve a comprobarla. Al pasar de **No** a **Sí** la validez se reinicia antes de consultar el archivo, evitando una habilitación transitoria con estado obsoleto.
+- Salida esperada: **No** permite guardar sin archivo; **Sí** muestra el cargue, el mensaje de requisito y **Guardar respuestas** deshabilitado; una carga exitosa seguida por la consulta actualizada habilita el botón. Coordinación conserva el registro manual y su derivación de `certificadoVotacionRecibido`, sin convertir ANX-39 en requisito del flujo administrativo.
+- Contratos sin cambios: listado/carga documental ANX-39 permanecen separados del envío de respuestas; no cambian endpoints, DTO, rutas, roles, schemas, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`, `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. Regla pura: `src/modules/matricula-financiera/rules.ts`. Regresión: `tests/matriculaFinancieraRules.test.ts`. La adaptación de la firma del render prop en `LiquidacionDetallePage.tsx` preserva el flujo de coordinación.
+- Fixture/dataset: `tests/fixtures/matricula-financiera/` contiene una vista aislada, no un seed de backend. La ruta real requiere sesión y servicios institucionales; no hay credenciales o seed reproducible en el repositorio. `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 13/13 PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.76 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Reto externo/siguiente paso: validar con el backend real los estados documentales distintos de `RECHAZADO`, una carga fallida y una exitosa, además de escritorio/móvil y temas claro/oscuro. La implementación asume, de acuerdo con la visual existente, que cualquier documento actual no rechazado cuenta como cargado correctamente.
+
+---
+
 # Handoff 2026-09-25 — certificado de votación al final del formulario
 
 ## Estado, decisión y salida esperada

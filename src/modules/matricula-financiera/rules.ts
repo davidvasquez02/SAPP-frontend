@@ -7,6 +7,9 @@ export function seleccionarRespuestas(respuestas: RespuestasRequest, tipo: TipoE
 export function respuestasCompletas(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas?: PreguntaLiquidacion[]): boolean {
   return Object.values(seleccionarRespuestas(respuestas, tipo, preguntas)).every(respuesta => typeof respuesta === 'boolean')
 }
+export function respuestasListasParaGuardar(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas: PreguntaLiquidacion[], certificadoValido: boolean, coordinacion = false): boolean {
+  return respuestasCompletas(respuestas, tipo, preguntas) && (coordinacion || respuestas.certificadoVotacion !== true || certificadoValido)
+}
 export function ordenarPreguntasEstudiante(preguntas: PreguntaLiquidacion[]): PreguntaLiquidacion[] {
   return [
     ...preguntas.filter(pregunta => pregunta.clave !== 'certificadoVotacion'),

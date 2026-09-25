@@ -1,3 +1,15 @@
+# Corrección 2026-09-25 — certificado obligatorio al responder Sí
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En la visual estudiantil de matrícula financiera, responder **Sí** a **¿Tienes certificado de votación vigente?** mantiene deshabilitado **Guardar respuestas** hasta que ANX-39 se consulte o cargue correctamente. Un documento rechazado no cumple el requisito; responder **No** no exige archivo. La coordinación conserva su flujo independiente y puede registrar el respaldo recibido por otros medios.
+- La tarjeta comunica que el archivo es obligatorio en este caso y muestra una indicación mientras falta. El control vuelve a validarse al cambiar de **No** a **Sí**, al consultar el documento y después de una carga exitosa; el submit también aplica la misma condición para impedir el envío por una vía distinta al botón.
+- Contrato preservado: la carga continúa por el servicio documental ANX-39 y las respuestas usan el endpoint y DTO existentes. No cambian rutas, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; regresiones: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existe seed institucional para esta ruta protegida; la fixture aislada está en `tests/fixtures/matricula-financiera/`. Verificación local: ESLint focalizado PASS, regresión dirigida 13/13 PASS, suite Node 60/60 PASS, build PASS (314 módulos) y `git diff --check` PASS. npm conserva el aviso ambiental `Unknown env config "http-proxy"` y Vite el aviso informativo del chunk mayor de 500 kB.
+
+---
+
 # Corrección 2026-09-25 — certificado de votación junto a su cargue
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

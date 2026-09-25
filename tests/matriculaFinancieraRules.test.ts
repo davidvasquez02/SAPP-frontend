@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, ordenarPreguntasEstudiante, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, ordenarPreguntasEstudiante, puedeEditarFila, respuestasCompletas, respuestasListasParaGuardar, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
 import type { CuerposLiquidacion, EstadoLiquidacion, EstadoProcesoLiquidacion, LiquidacionMatricula } from '../src/modules/matricula-financiera/types.ts'
 
 test('un estudiante nuevo nunca envía los campos exclusivos de vigente, incluso si venían poblados', () => {
@@ -23,6 +23,18 @@ test('el registro exige todas las respuestas aplicables', () => {
   assert.equal(respuestasCompletas({ certificadoVotacion: false, deseaSalud: true }, 'NUEVO'), true)
   assert.equal(respuestasCompletas({ certificadoVotacion: false }, 'NUEVO'), false)
   assert.equal(respuestasCompletas({ entregoTrabajoGrado: false, cumLaude: true, certificadoVotacion: true, deseaSalud: false }, 'VIGENTE'), true)
+})
+test('el estudiante que responde sí a votación solo puede guardar con certificado válido', () => {
+  const preguntas = [
+    { clave: 'certificadoVotacion', aplica: true, texto: 'Votación' },
+    { clave: 'deseaSalud', aplica: true, texto: 'Salud' },
+  ] as const
+  const afirmativas = { certificadoVotacion: true, deseaSalud: false }
+
+  assert.equal(respuestasListasParaGuardar(afirmativas, 'NUEVO', [...preguntas], false), false)
+  assert.equal(respuestasListasParaGuardar(afirmativas, 'NUEVO', [...preguntas], true), true)
+  assert.equal(respuestasListasParaGuardar({ ...afirmativas, certificadoVotacion: false }, 'NUEVO', [...preguntas], false), true)
+  assert.equal(respuestasListasParaGuardar(afirmativas, 'NUEVO', [...preguntas], false, true), true)
 })
 test('la pregunta del certificado queda de última sin mutar el orden recibido', () => {
   const preguntas = [
