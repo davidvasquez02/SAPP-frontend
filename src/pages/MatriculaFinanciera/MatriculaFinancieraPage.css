@@ -17,7 +17,9 @@
 
 /* Claridad de parámetros, estado y respaldo documental integrado. */
 .mf-form label small{color:var(--text-secondary);font-weight:400;line-height:1.4}.mf-stats{grid-template-columns:repeat(2,1fr)}.mf-review-status{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.1rem;padding-bottom:1rem;border-bottom:1px solid var(--outline);font-weight:650}.mf-review-status .mf-badge{font-size:.9rem;padding:.5rem .85rem}.mf-badge--pendiente_respuesta{background:color-mix(in srgb,var(--outline),transparent 75%);color:var(--on-surface,var(--text-primary))}.mf-badge--no_liquidar{background:var(--error-container,var(--surface-container-low));color:var(--on-error-container,var(--error))}.mf-certificate{display:grid;gap:.75rem;border:1px solid var(--outline);border-radius:1rem;padding:1rem;background:var(--surface)}.mf-certificate h3,.mf-certificate p{margin:0}.mf-certificate .mf-questions{margin-top:0}
+.mf-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.mf-section-heading h2{margin-bottom:.35rem}.mf-section-heading p{margin-bottom:0}.mf-readonly-field{display:grid;gap:.35rem;padding:.85rem 0}.mf-readonly-field p{margin:0;white-space:pre-wrap}
 @media(max-width:520px){.mf-review-status{align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){.mf-section-heading{align-items:stretch;flex-direction:column}.mf-section-heading .mf-button{width:100%}}
 
 /* Estados, correcciones y confirmaciones de liquidación. */
 .mf-badge--pendiente_respuesta{background:color-mix(in srgb,#b86b00,transparent 84%);color:color-mix(in srgb,#b86b00,var(--text-primary) 35%)}
