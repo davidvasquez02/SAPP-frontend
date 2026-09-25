@@ -1,5 +1,15 @@
 # SAPP Frontend — historial de homologaciones en revisión
 
+## Mejora 2026-09-25 — información de sustentación programada
+
+- En el detalle de trabajos de grado, estudiantes y coordinación pueden consultar la fecha y hora, modalidad y lugar de una sustentación programada. Si la modalidad es virtual y el backend entrega `enlaceSustentacion`, la interfaz presenta un enlace accesible que se abre en una pestaña nueva.
+- La presentación admite el contrato plano real (`fechaSustentacion`, `modalidadSustentacion`, `modalidadSustentacionCodigo`, `lugarSustentacion`, `enlaceSustentacion`) y conserva compatibilidad con el objeto `sustentacion` anterior. La información ya capturada por `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` se reutiliza sin endpoints ni payloads nuevos.
+- Stack instalado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`.
+- No existen seeds ni credenciales reproducibles para la ruta protegida. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: regresión de sustentación 3/3, suite Node 72/72, ESLint focalizado y build de producción (309 módulos) pasan. El build conserva el aviso informativo por el chunk JavaScript mayor de 500 kB y npm informa `Unknown env config "http-proxy"`.
+
+---
+
 ## Mejora 2026-09-25 — retroalimentación al gestionar jurados
 
 - En el detalle de coordinación de trabajos de grado, los mensajes de éxito de las acciones del proceso (por ejemplo, **Jurado registrado e invitación enviada.**) se eliminan automáticamente después de cinco segundos, con limpieza del temporizador al cambiar o desmontar la vista.

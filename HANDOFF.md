@@ -6176,3 +6176,21 @@ npm run lint
 - Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. Este frontend usa Node/npm y obtiene datos del backend institucional; no hay seed, dataset o credenciales reproducibles para la ruta protegida.
 - Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 - Pendiente institucional: validar el alta, reemplazo, reenvío, retiro, recordatorios, correcciones y resultado con sesión/backend reales, además del temporizador, teclado, móvil y temas claro/oscuro. No se obtuvo captura porque el contenedor no tiene Chromium, Chrome ni Firefox, y la ruta protegida carece de credenciales y backend reproducible.
+
+---
+
+# Update 2026-09-25 — visualización de la sustentación programada
+
+## Estado, contrato y salida esperada
+
+- Estudiante y coordinación muestran la información ya retornada por `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`: fecha/hora, modalidad y lugar. Para modalidad `VIRTUAL`, si existe `enlaceSustentacion`, se presenta **Ingresar a la sustentación** como enlace en una pestaña nueva; un enlace no se muestra para una modalidad presencial.
+- `src/modules/trabajos-grado/evaluacion/sustentacion.ts` normaliza tanto el contrato plano real (`fechaSustentacion`, `modalidadSustentacion`, `modalidadSustentacionCodigo`, `lugarSustentacion`, `enlaceSustentacion`) como el objeto legado `sustentacion`. `ProcesoEvaluacionEstudiante.tsx` y `ProcesoEvaluacionPanel.tsx` consumen la misma normalización para evitar divergencias.
+- Para el response de referencia en estado `SUST_PROGRAMADA`, la salida esperada es **25 de septiembre de 2026, 3:03 p. m.**, **Presencial** y **uis**. No debe aparecer un enlace porque `enlaceSustentacion` es `null` y la modalidad es presencial.
+- No cambiaron API, endpoints, payloads, DTO del backend, rutas, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Paths principales: `src/modules/trabajos-grado/evaluacion/sustentacion.ts`, `ProcesoEvaluacionEstudiante.tsx`, `ProcesoEvaluacionPanel.tsx` y sus CSS. Regresión: `tests/sustentacionDetalle.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Resultados locales: regresión focalizada PASS (3/3), suite Node PASS (72/72), ESLint focalizado PASS y build PASS (309 módulos; CSS 261.13 kB y JS 733.39 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso institucional: validar con sesiones reales de estudiante y coordinación los casos presencial/virtual, temas claro/oscuro, móvil, teclado y apertura del enlace. La ruta protegida no tiene credenciales, backend ni seed reproducible en este entorno.

@@ -1,4 +1,5 @@
 import { presentarValorEvaluacion } from './presentacionEvaluacion'
+import { obtenerDetalleSustentacion, tieneDetalleSustentacion } from './sustentacion'
 import type { ProcesoEvaluacionTg } from './types'
 import './ProcesoEvaluacionEstudiante.css'
 
@@ -28,14 +29,8 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
     .sort((first, second) => (first.orden ?? 0) - (second.orden ?? 0))
   const resultado = proceso.resultadoNombre || proceso.resultado || proceso.resultadoCodigo
   const fechaResultado = formatDate(proceso.fechaResultado)
-  const fechaSustentacion = formatDate(
-    proceso.sustentacion?.fechaSustentacion || proceso.fechaSustentacion,
-    true,
-  )
-  const modalidad = proceso.sustentacion?.modalidadNombre || proceso.sustentacion?.modalidadCodigo ||
-    proceso.modalidadSustentacion || proceso.modalidadSustentacionCodigo
-  const ubicacion = proceso.sustentacion?.lugar || proceso.sustentacion?.enlace ||
-    proceso.lugarSustentacion || proceso.enlaceSustentacion
+  const sustentacion = obtenerDetalleSustentacion(proceso)
+  const fechaSustentacion = formatDate(sustentacion.fecha, true)
 
   return (
     <section className="evaluacion-estudiante" aria-labelledby="evaluacion-estudiante-title">
@@ -53,11 +48,14 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
         </div>
       </header>
 
-      {(fechaSustentacion || modalidad || ubicacion) && (
+      {tieneDetalleSustentacion(sustentacion) && (
         <dl className="evaluacion-estudiante__defense" aria-label="Información de la sustentación">
           {fechaSustentacion && <div><dt>Fecha de sustentación</dt><dd>{fechaSustentacion}</dd></div>}
-          {modalidad && <div><dt>Modalidad</dt><dd>{modalidad}</dd></div>}
-          {ubicacion && <div><dt>Lugar o enlace</dt><dd>{ubicacion}</dd></div>}
+          {sustentacion.modalidad && <div><dt>Modalidad</dt><dd>{sustentacion.modalidad}</dd></div>}
+          {sustentacion.lugar && <div><dt>Lugar</dt><dd>{sustentacion.lugar}</dd></div>}
+          {sustentacion.esVirtual && sustentacion.enlace && (
+            <div><dt>Enlace de sustentación</dt><dd><a href={sustentacion.enlace} target="_blank" rel="noreferrer">Ingresar a la sustentación</a></dd></div>
+          )}
         </dl>
       )}
 

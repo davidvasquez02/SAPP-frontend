@@ -8,6 +8,7 @@
 .evaluacion-tg__summary div { min-width: 0; padding: .8rem; border-radius: var(--radius-sm); background: var(--surface-container-low); }
 .evaluacion-tg dt { color: var(--text-secondary); font-size: var(--font-size-caption); }
 .evaluacion-tg dd { margin: .2rem 0 0; overflow-wrap: anywhere; font-weight: var(--font-weight-semibold); }
+.evaluacion-tg__summary a { color: var(--primary); text-decoration-thickness: .08em; text-underline-offset: .18em; }
 .evaluacion-tg__message, .evaluacion-tg__error { padding: .75rem 1rem; border-radius: var(--radius-sm); }
 .evaluacion-tg__message { color: var(--success); background: color-mix(in srgb, var(--success), transparent 90%); }
 .evaluacion-tg__error { color: var(--danger); background: color-mix(in srgb, var(--danger), transparent 90%); }
