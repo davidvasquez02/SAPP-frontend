@@ -5915,3 +5915,35 @@ npm run lint
 - Pendiente integrado: revisar la tabla con grupos vacíos y poblados, y el sidebar en temas claro/oscuro, hover, foco y viewport móvil usando una sesión institucional. No se tomó captura porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer y la ruta real requiere autenticación/backend; no existe un seed local reproducible.
 
 ---
+
+# Update 2026-09-25 — semestre sin origen técnico en liquidaciones
+
+## Estado, contrato y salida esperada
+
+- `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx` ahora renderiza en
+  **Revisión del caso > Semestre** exclusivamente `fila.semestre`, con el fallback
+  **Sin calcular**. Ya no concatena `fila.semestreOrigen`, por lo que un registro
+  `{ semestre: 3, semestreOrigen: 'CALCULADO' }` debe verse como **3** y no como
+  **3 · CALCULADO**. La misma regla oculta también `MANUAL` y **Sin origen**.
+- El contrato permanece intacto: `LiquidacionMatricula.semestre` sigue siendo
+  `number | null` y `semestreOrigen` sigue siendo `'CALCULADO' | 'MANUAL'` opcional.
+  No cambiaron rutas, endpoints, payloads, permisos, reglas de cálculo, schemas,
+  dependencias, variables, seeds ni datasets. La ruta objetivo es
+  `/matricula/financiera/procesos/:procesoId/liquidaciones/:liquidacionId`.
+
+## Entorno, resultados y continuidad
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y
+  `package-lock.json`; no crear otro árbol npm, venv, Conda ni Poetry. Entorno
+  comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM
+  7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (60/60); `npm run
+  build` PASS (314 módulos; CSS 259.16 kB y JS 738.94 kB); `git diff --check`
+  PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y
+  Vite advierte por el chunk JS mayor de 500 kB.
+- Pendiente institucional: comprobar visualmente el detalle con semestre
+  calculado, manual y ausente usando una sesión real. No se generó captura local
+  porque el contenedor no incluye Chromium, Chrome ni Firefox y esta ruta
+  protegida no dispone de credenciales o seed reproducible.
+
+---
