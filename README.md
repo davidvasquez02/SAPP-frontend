@@ -1410,3 +1410,13 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El ajuste es únicamente de jerarquía y presentación. La fecha continúa proviniendo de `item.proceso.fechaLimiteRespuesta` y se formatea con `fechaColombia`; no cambian endpoints, DTO, validaciones, permisos, dependencias, variables, schemas, seeds ni datasets.
 - Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seed reproducible para la ruta protegida; la fixture aislada permanece en `tests/fixtures/matricula-financiera/` y los datos reales vienen del backend institucional.
+
+---
+
+# Ajuste 2026-09-25 — resumen de procesos de matrícula financiera
+
+- Las tarjetas de `/matricula/financiera` para coordinación muestran únicamente estado, periodo y fecha límite de recepción. Los conteos de **convocados** y **pendientes** se consultan al entrar al detalle del proceso.
+- En `/matricula/financiera/procesos/:procesoId`, el encabezado ya no presenta **Pago hasta Sin registro** ni ninguna variante de esa línea, y el resumen deja de renderizar la tarjeta **Con alertas**. Permanecen **Convocados**, **Liquidadas**, **No liquidar**, **Pendientes** y **Respondidas**.
+- Es un cambio de presentación. `resumen.convocados`, `resumen.pendientes`, `resumen.conAlertas` y `fechaLimitePago` continúan en el DTO y disponibles para reglas internas, publicación y compatibilidad con el backend; no cambiaron endpoints, payloads, permisos, rutas, dependencias, schemas, variables, seeds ni datasets.
+- Entorno verificado: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar el `node_modules` y `package-lock.json` existentes; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y, para revisar la salida compilada, `npm run preview`. No existe seed local para estas rutas protegidas; los datos reales provienen del backend institucional.
+- Verificación: ESLint focalizado PASS; pruebas Node PASS (63/63); build PASS (312 módulos, CSS 261.02 kB, JS 739.16 kB); `git diff --check` PASS. Avisos no bloqueantes: configuraciones npm heredadas `msvs_version`/`python` y chunk JavaScript mayor de 500 kB.

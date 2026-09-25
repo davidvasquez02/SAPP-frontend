@@ -6042,3 +6042,25 @@ npm run lint
 - Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 - Validación local: ESLint focalizado PASS; suite Node PASS (60/60); build PASS (314 módulos; CSS 260.58 kB y JS 740.48 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
 - Próximo paso: validar visualmente con una sesión estudiantil real la fecha vigente, temas claro/oscuro y viewport móvil. No se generó captura local porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida depende de credenciales/backend institucionales.
+
+---
+
+# Update 2026-09-25 — simplificación del resumen de matrícula financiera
+
+## Estado actual y salida esperada
+
+- `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` retiró los conteos visibles **convocados** y **pendientes** de cada tarjeta de proceso. En `/matricula/financiera`, coordinación debe ver estado, periodo y fecha de recepción; al seleccionar la tarjeta entra al detalle con las métricas operativas.
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` retiró por completo la línea **Pago hasta ...** del encabezado y filtra `conAlertas` al construir el resumen. La salida esperada contiene cinco tarjetas: **Convocados**, **Liquidadas**, **No liquidar**, **Pendientes** y **Respondidas**. `MatriculaFinancieraPage.css` usa cinco columnas en escritorio y conserva dos en viewports de hasta 800 px.
+- Los estilos huérfanos de `.mf-stats` se eliminaron. No hay cambios de comportamiento en filtros, navegación, tabla, publicación o acciones de liquidación.
+
+## Contratos, artefactos y entorno exacto
+
+- El contrato no se modificó: `ResumenProceso` conserva `convocados`, `pendientes`, `respondidas`, `noLiquidar`, `liquidadas` y `conAlertas`; el proceso conserva `fechaLimitePago`. Esos valores siguen disponibles para la publicación y la lógica existente aunque ya no todos se muestren en los dos lugares ajustados. No cambiaron API, DTO, endpoints, payloads, roles, rutas, schemas, variables, seeds ni datasets.
+- Paths principales: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`, `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Fixture disponible: `tests/fixtures/matricula-financiera/`; no es un seed del backend ni reproduce la sesión institucional.
+- Entorno comprobado en Windows/PowerShell: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar el `node_modules` y `package-lock.json` del repositorio; no ejecutar una instalación paralela ni crear venv, Conda o Poetry.
+
+## Pruebas, logs y siguientes pasos
+
+- ESLint focalizado sobre ambas páginas: PASS. `node --test --test-isolation=none tests/*.test.ts`: PASS, 63/63. `npm run build`: PASS, 312 módulos; `dist/assets/index-CcDkOfjD.css` 261.02 kB y `dist/assets/index-CCTiD07k.js` 739.16 kB. `git diff --check`: PASS.
+- Avisos no bloqueantes observados: npm marca las configuraciones heredadas `msvs_version` y `python` como futuras incompatibilidades, y Vite advierte que el chunk JavaScript supera 500 kB.
+- Siguiente paso institucional: abrir `/matricula/financiera` y `/matricula/financiera/procesos/2` con backend y sesión de coordinación para validar temas claro/oscuro y escritorio/móvil. Confirmar que no aparezcan los dos conteos en tarjetas, ninguna línea **Pago hasta**, ni la tarjeta **Con alertas**, y que las cinco métricas restantes ocupen el ancho disponible. No hay credenciales ni seed local reproducible para esa comprobación.
