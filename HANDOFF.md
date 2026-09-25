@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — estado del proceso omitido en la vista estudiantil
+
+## Estado, decisión, contrato y salida esperada
+- `MiLiquidacionCard`, en `MatriculaFinancieraPage.tsx`, ya no concatena `· Proceso {estado}` después de la fecha límite. La salida esperada en la tarjeta estudiantil es **Recepción de respuestas habilitada hasta el DD/MM/AAAA**, sin la leyenda **Proceso ABIERTO** señalada en la referencia visual.
+- La decisión es exclusivamente de presentación: la vista estudiantil recibe liquidaciones de procesos vigentes y repetir su estado no aporta información. `item.proceso.estado` permanece en el DTO y sigue controlando la edición del certificado; `item.puedeResponder` y `item.fueraDePlazo` conservan los avisos y permisos existentes.
+- No se modificaron filtros de consulta, endpoints, payloads, rutas, roles, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. Referencia aislada existente: `tests/fixtures/matricula-financiera/`; no es un seed y no reproduce la ruta autenticada completa. `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 260.16 kB; JS 740.39 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar `/matricula/financiera` con sesión estudiantil y backend institucional. No se produjo captura nueva porque el contenedor no incluye Chromium, Chrome ni Firefox; la imagen aportada documenta el texto anterior.
+
+---
+
 # Handoff 2026-09-25 — ayudas de campos en revisión de liquidación
 
 ## Estado, decisiones y salida esperada
