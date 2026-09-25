@@ -58,6 +58,8 @@ test('presenta los parámetros operativos solicitados en el tablero financiero',
   assert.match(source, /<dt>Porcentaje de votación<\/dt><dd>{proceso\.porcentajeVotacion}%<\/dd>/)
   assert.match(source, /<dt>Porcentaje de salud<\/dt><dd>{proceso\.porcentajeSalud}%<\/dd>/)
   assert.doesNotMatch(source, /<dt>Votación \/ salud<\/dt>/)
+  assert.match(source, /<dt>Fecha del primer envío de solicitudes<\/dt><dd>{fechaColombia\(proceso\.fechaEnvioSolicitudes\)}<\/dd>/)
+  assert.doesNotMatch(source, /<dt>Primer envío<\/dt>/)
   assert.match(source, /<dt>Fecha límite recepción respuestas<\/dt><dd>{fechaColombia\(proceso\.fechaLimiteRespuesta\)}<\/dd>/)
   assert.doesNotMatch(source, /<dt>Cierre<\/dt>/)
   assert.doesNotMatch(source, /<dt>Publicación<\/dt>/)
@@ -68,4 +70,12 @@ test('presenta los parámetros operativos solicitados en el tablero financiero',
   const addButton = source.indexOf('>Agregar estudiante</button>', detailsEnd)
   assert.ok(detailsStart >= 0 && editButton > detailsStart && editButton < detailsEnd)
   assert.ok(addButton > detailsEnd)
+})
+
+test('destaca las consecuencias de guardar cambios en los parámetros', () => {
+  const source = readFileSync(new URL('../src/pages/MatriculaFinanciera/ParametrosProcesoForm.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /className="mf-parameter-warning" role="note"/)
+  assert.match(source, /Consecuencias de guardar cambios/)
+  assert.match(source, /Guardar recalcula las filas sin valor final manual\. Revisa los valores antes de exportar nuevamente\./)
 })

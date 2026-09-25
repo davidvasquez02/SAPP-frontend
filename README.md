@@ -1438,3 +1438,9 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - **Votación / salud** se separó en **Porcentaje de votación** y **Porcentaje de salud**, cada uno con su valor independiente. El botón **Editar parámetros** ahora aparece dentro de **Parámetros y fechas del proceso**; conserva su disponibilidad para procesos no publicados y su bloqueo mientras hay una operación en curso. **Agregar estudiante** continúa como acción independiente fuera del acordeón.
 - No cambiaron el formulario ni su payload: siguen utilizándose `porcentajeVotacion` y `porcentajeSalud`. Tampoco cambiaron endpoints, permisos, estados, dependencias, schemas, variables, seeds ni datasets.
 - Verificación: ESLint focalizado PASS; pruebas Node PASS (64/64); build PASS (312 módulos, CSS 261.03 kB, JS 739.54 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-25 — primer envío y advertencia de recálculo
+
+- El parámetro **Primer envío** se presenta ahora como **Fecha del primer envío de solicitudes**, conservando `fechaEnvioSolicitudes` como fuente. En **Editar parámetros**, el texto sobre el recálculo se muestra dentro de una advertencia titulada **Consecuencias de guardar cambios**, con icono, borde lateral, fondo y contraste derivados de tokens semánticos para temas claro y oscuro.
+- Se conserva literalmente la consecuencia funcional: guardar recalcula las filas sin valor final manual y requiere revisar los valores antes de exportar nuevamente. No cambiaron el recálculo, el formulario, payloads, endpoints, permisos, estados, dependencias, schemas, variables, seeds ni datasets.
+- Verificación: ESLint focalizado PASS; pruebas Node PASS (65/65); build PASS (312 módulos, CSS 261.83 kB, JS 739.91 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.

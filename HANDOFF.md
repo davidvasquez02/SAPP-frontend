@@ -6112,3 +6112,19 @@ npm run lint
 - `tests/matriculaFinancieraFlow.test.ts` verifica las dos etiquetas y valores separados, la ausencia del elemento combinado, la ubicación de **Editar parámetros** dentro de `<details>` y la permanencia de **Agregar estudiante** fuera. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; CSS 261.03 kB y JS 739.54 kB).
 - Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Pendiente institucional: comprobar el acordeón, el botón y el formulario con procesos BORRADOR/ABIERTO/CERRADO/PUBLICADO, temas claro/oscuro, teclado y móvil. No existe backend, credenciales ni seed local reproducible para la ruta protegida.
+
+---
+
+# Update 2026-09-25 — claridad del primer envío y advertencia de edición
+
+## Estado y salida esperada
+
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` etiqueta `fechaEnvioSolicitudes` como **Fecha del primer envío de solicitudes**; ya no debe aparecer el rótulo ambiguo **Primer envío**.
+- Cuando `ParametrosProcesoForm` edita un proceso existente, presenta un bloque `role="note"` con `aria-label="Consecuencias de guardar los parámetros"`, icono `!`, título **Consecuencias de guardar cambios** y el texto: **Guardar recalcula las filas sin valor final manual. Revisa los valores antes de exportar nuevamente.** La creación de un proceso conserva su texto introductorio simple.
+- `MatriculaFinancieraPage.css` define `mf-parameter-warning` con `--error`, `--error-container`, `--on-error` y `--on-error-container`, incluyendo fallbacks. No se hardcodearon colores de superficie o texto fuera de los fallbacks semánticos. No cambiaron comportamiento, DTO, API, payloads, reglas de recálculo, permisos, rutas, estados, dependencias, schemas, variables, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica la nueva etiqueta, la ausencia del rótulo anterior y la estructura/contenido de la advertencia. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; `dist/assets/index-CnU3E77y.css` 261.83 kB y `dist/assets/index-chOILRqA.js` 739.91 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: validar la advertencia en temas claro/oscuro, zoom alto y móvil, y confirmar visualmente su jerarquía frente al formulario. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.
