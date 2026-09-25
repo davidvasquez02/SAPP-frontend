@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ModuleLayout } from '../../components'
+import { useParams } from 'react-router-dom'
+import { BackButton, ModuleLayout } from '../../components'
 import { actualizarLiquidacion, obtenerLiquidacion, obtenerProceso } from '../../modules/matricula-financiera/api'
 import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
 import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, puedeEditarFila } from '../../modules/matricula-financiera/rules'
@@ -19,7 +19,7 @@ export function LiquidacionDetallePage() {
     if (fila.procesoId !== procesoId) throw new Error('La liquidación no pertenece a este proceso.')
     return { fila, proceso }
   }, [id, procesoId]))
-  return <ModuleLayout title="Detalle de liquidación"><div className="mf-page"><Link className="mf-back" to={`/matricula/financiera/procesos/${procesoId}`}>← Volver al proceso</Link><Aviso error={consulta.error} />{consulta.error && <button className="mf-button" onClick={consulta.refresh}>Reintentar consulta</button>}{consulta.loading ? <p role="status">Cargando liquidación…</p> : consulta.data && <Detalle key={JSON.stringify(consulta.data)} {...consulta.data} onChange={consulta.refresh} />}</div></ModuleLayout>
+  return <ModuleLayout title="Detalle de liquidación"><div className="mf-page"><BackButton to={`/matricula/financiera/procesos/${procesoId}`}>Volver al proceso</BackButton><Aviso error={consulta.error} />{consulta.error && <button className="mf-button" onClick={consulta.refresh}>Reintentar consulta</button>}{consulta.loading ? <p role="status">Cargando liquidación…</p> : consulta.data && <Detalle key={JSON.stringify(consulta.data)} {...consulta.data} onChange={consulta.refresh} />}</div></ModuleLayout>
 }
 function Detalle({ fila, proceso, onChange }: { fila: LiquidacionMatricula; proceso: ProcesoLiquidacion; onChange: () => void }) {
   const op = useOperacion(); const [documentBusy, setDocumentBusy] = useState(false); const [responsesDirty, setResponsesDirty] = useState(false)

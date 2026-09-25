@@ -1,3 +1,18 @@
+# Handoff 2026-09-24 — botones de retorno de matrícula financiera
+
+## Estado, decisión y salida esperada
+- `LiquidacionDetallePage` y `TarifasMatriculaPage` dejaron de renderizar enlaces `mf-back` independientes y ahora consumen el `BackButton` compartido. `ProcesoLiquidacionPage` ya lo usaba, por lo que las tres pantallas internas de matrícula financiera quedan alineadas con el patrón global del sistema.
+- Se preservan textos y destinos: **Volver al proceso** navega a `/matricula/financiera/procesos/:procesoId`; **Volver a procesos** navega a `/matricula/financiera`. La salida esperada es el botón tipo píldora definido en `src/components/BackButton/BackButton.css`, compatible con tema claro/oscuro y foco por teclado.
+- No se modificaron contratos HTTP, payloads, rutas registradas, permisos, schemas, paquetes, variables, seeds ni datasets. Se eliminó únicamente la regla CSS local ya huérfana `.mf-back`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, `src/pages/MatriculaFinanciera/TarifasMatriculaPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Patrón reutilizado: `src/components/BackButton/BackButton.tsx` y `BackButton.css`. No se generaron datasets ni artefactos persistentes; `dist/` es solo salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 58/58 PASS; build PASS (314 módulos; CSS 255.36 kB; JS 734.21 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar visualmente ambas rutas con sesión institucional y backend real. No se produjo una captura local porque el contenedor no dispone de navegador y las vistas requieren autenticación/datos remotos; la imagen reportada sirve como referencia del estado anterior.
+
+---
+
 # Handoff 2026-09-24 — retorno desde una inscripción para profesores
 
 ## Estado, decisión y salida esperada
