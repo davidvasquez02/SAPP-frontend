@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — certificado de votación al final del formulario
+
+## Estado, decisión y salida esperada
+- `RespuestasForm` ordena las preguntas de la visual estudiantil mediante `ordenarPreguntasEstudiante`: conserva el orden relativo de todas las demás y mueve `certificadoVotacion` al final. El cargue condicional ya se renderizaba después del listado, por lo que al responder **Sí** queda pegado a **¿Tienes certificado de votación vigente?**.
+- La regla crea un arreglo nuevo y no muta el contrato recibido. Solo se aplica cuando `coordinacion` es falso; la vista de coordinación conserva el orden definido localmente. Se mantienen la selección de respuestas, obligatoriedad, carga/versionado independiente del documento y payloads existentes.
+- No se modificaron API, DTO, permisos, rutas, schemas, paquetes, variables, seeds ni datasets. La salida esperada para estudiante termina con la pregunta de votación y, si la respuesta es afirmativa, con la tarjeta **Certificado de votación** inmediatamente debajo.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`; regla pura: `src/modules/matricula-financiera/rules.ts`; regresión: `tests/matriculaFinancieraRules.test.ts`. Fixture visual disponible en `tests/fixtures/matricula-financiera/preview.html`; no existen credenciales ni seed institucional para la ruta real.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 12/12 PASS; suite Node 59/59 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.20 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar la vista estudiantil autenticada con backend real en escritorio/móvil y temas claro/oscuro. Si se usa la fixture para captura, actualizar sus datos/markup para reflejar el orden productivo; no confundirla con un seed de backend.
+
+---
+
 # Handoff 2026-09-25 — confirmaciones de Gestión profesores
 
 ## Estado, decisión y salida esperada

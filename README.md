@@ -1,3 +1,14 @@
+# Corrección 2026-09-25 — certificado de votación junto a su cargue
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En la visual estudiantil de matrícula financiera, **¿Tienes certificado de votación vigente?** se presenta como la última pregunta aplicable. Al responder **Sí**, el cargue del certificado aparece inmediatamente después de esa pregunta, sin que otra respuesta lo separe visualmente.
+- El orden recibido del backend no se muta y la vista de coordinación conserva su orden actual. No cambian validaciones, respuestas, endpoints, DTO, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seed institucional para esta ruta protegida; la fixture aislada permanece en `tests/fixtures/matricula-financiera/preview.html`.
+
+---
+
 # Corrección 2026-09-25 — confirmaciones de Gestión profesores
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

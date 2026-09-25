@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, ordenarPreguntasEstudiante, puedeEditarFila, respuestasCompletas, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
 import type { CuerposLiquidacion, EstadoLiquidacion, EstadoProcesoLiquidacion, LiquidacionMatricula } from '../src/modules/matricula-financiera/types.ts'
 
 test('un estudiante nuevo nunca envía los campos exclusivos de vigente, incluso si venían poblados', () => {
@@ -23,6 +23,17 @@ test('el registro exige todas las respuestas aplicables', () => {
   assert.equal(respuestasCompletas({ certificadoVotacion: false, deseaSalud: true }, 'NUEVO'), true)
   assert.equal(respuestasCompletas({ certificadoVotacion: false }, 'NUEVO'), false)
   assert.equal(respuestasCompletas({ entregoTrabajoGrado: false, cumLaude: true, certificadoVotacion: true, deseaSalud: false }, 'VIGENTE'), true)
+})
+test('la pregunta del certificado queda de última sin mutar el orden recibido', () => {
+  const preguntas = [
+    { clave: 'certificadoVotacion', aplica: true, texto: 'Votación' },
+    { clave: 'deseaSalud', aplica: true, texto: 'Salud' },
+    { clave: 'cumLaude', aplica: true, texto: 'Cum Laude' },
+  ] as const
+  const ordenadas = ordenarPreguntasEstudiante([...preguntas])
+
+  assert.deepEqual(ordenadas.map(({ clave }) => clave), ['deseaSalud', 'cumLaude', 'certificadoVotacion'])
+  assert.deepEqual(preguntas.map(({ clave }) => clave), ['certificadoVotacion', 'deseaSalud', 'cumLaude'])
 })
 test('ninguna edición de fila puede realizarse después de publicar', () => {
   const estados: EstadoLiquidacion[] = ['PENDIENTE_RESPUESTA', 'RESPONDIDA', 'NO_LIQUIDAR', 'LIQUIDADA']
