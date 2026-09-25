@@ -45,6 +45,22 @@
 
 ---
 
+# Handoff 2026-09-25 — modo de consulta inicial para respuestas de coordinación
+
+## Estado, decisión y salida esperada
+- En `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, **Respuestas y respaldo de coordinación** inicia siempre en consulta. Si la matriz de negocio permite modificar la fila, **Editar respuestas** habilita radios, observaciones y carga/reemplazo de ANX-39; el aviso visible indica que coordinación está contestando en nombre del estudiante.
+- **Cancelar edición** descarta el estado local del formulario y vuelve a consulta. Un guardado exitoso también cierra la edición; si la petición falla, el formulario permanece abierto con el mensaje de error para permitir correcciones y reintento. En procesos publicados o filas no editables no aparece el botón de edición.
+- `CertificadoVotacion` también recibe el modo de edición, por lo que **Ver documento** y **Descargar** continúan disponibles en consulta, pero seleccionar o reemplazar archivos exige activar explícitamente la edición. No cambiaron endpoints, DTO, roles, permisos, rutas, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, contratos, entorno y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`; estilos responsivos y temáticos: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`; formulario y documento reutilizados sin alterar sus contratos: `RespuestasForm.tsx` y `CertificadoVotacion.tsx`. No se generaron datasets ni artefactos persistentes; `dist/` es salida ignorada del build.
+- Contratos preservados: las respuestas usan `actualizarLiquidacion(id, 'respuestas', RespuestasCoordinacionRequest)` y el certificado usa el catálogo documental ANX-39. Salida esperada inicial: valores textuales **Sí**, **No** o **Sin responder**, observaciones en consulta y respaldo descargable; los controles mutables aparecen solamente en edición.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 259.16 kB; JS 739.05 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar el flujo con sesión de coordinación y backend institucional en escritorio/móvil y temas claro/oscuro. No se pudo producir captura local porque el contenedor no tiene Chromium, Chrome ni Firefox; la ruta protegida además depende de autenticación y datos remotos.
+
+---
+
 # Handoff 2026-09-25 — confirmaciones de Gestión profesores
 
 ## Estado, decisión y salida esperada

@@ -1,3 +1,14 @@
+# Corrección 2026-09-25 — edición consciente de respuestas por coordinación
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- **Detalle de liquidación** abre ahora **Respuestas y respaldo de coordinación** en modo de consulta. Los radios, las observaciones y la carga o reemplazo del certificado permanecen ocultos o inactivos hasta que coordinación pulsa **Editar respuestas**.
+- El modo de edición presenta un aviso explícito de que la persona coordinadora está actuando en nombre del estudiante, ofrece **Cancelar edición** para descartar cambios locales y regresa automáticamente a consulta después de guardar correctamente. Los casos no editables por estado conservan únicamente la visualización.
+- Se preservan los endpoints, DTO, permisos, rutas, schemas, dependencias, variables, seeds y datasets existentes. La respuesta sigue enviándose mediante el servicio de liquidaciones y el respaldo continúa usando el tipo documental ANX-39.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; ejecutar con `npm run dev`, probar con `node --test --test-isolation=none tests/*.test.ts` y compilar con `npm run build`. No hay seeds locales para esta ruta protegida; los datos provienen del backend institucional.
+
+---
+
 # Corrección 2026-09-25 — guardado unificado de respuestas y certificado
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
