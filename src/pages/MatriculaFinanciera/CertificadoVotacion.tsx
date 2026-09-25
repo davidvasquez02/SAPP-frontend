@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/Auth'
 import { cargarCertificado, listarCertificados } from '../../modules/matricula-financiera/api'
 import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
@@ -7,8 +7,8 @@ import { sha256Hex } from '../../utils/sha256'
 import { downloadSolicitudDocument, openSolicitudDocument } from '../../modules/solicitudes/utils/solicitudDocumentFile'
 import { Aviso } from './FinancieraUi'
 
-interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void; embedded?: boolean }
-export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange, embedded = false }: CertificadoVotacionProps) {
+interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void; onValidChange?: (value: boolean) => void; embedded?: boolean; required?: boolean }
+export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange, onValidChange, embedded = false, required = false }: CertificadoVotacionProps) {
   const { session } = useAuth()
   const consulta = useConsulta(useCallback((signal: AbortSignal) => listarCertificados(liquidacionId, signal), [liquidacionId]))
   const op = useOperacion()
@@ -16,6 +16,8 @@ export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyC
   const [inputKey, setInputKey] = useState(0)
   const requirement = consulta.data?.find(d => d.codigoTipoDocumentoTramite === 'ANX-39')
   const current = requirement?.documentoUploadedResponse
+  const valid = Boolean(current && current.estadoDocumento !== 'RECHAZADO')
+  useEffect(() => { onValidChange?.(valid) }, [onValidChange, valid])
   const upload = () => { if (!file) return; void op.run(async () => {
     onBusyChange?.(true)
     try {
@@ -24,7 +26,7 @@ export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyC
       setFile(null); setInputKey(v => v + 1); consulta.refresh(); onChange()
     } finally { onBusyChange?.(false) }
   }, 'Certificado guardado.') }
-  return <section className={embedded ? 'mf-certificate' : 'mf-card'}><h3>Certificado de votación</h3><p>Opcional. Puedes cargarlo como respaldo si coordinación dispone del documento. Reemplazar crea una nueva versión.</p>
+  return <section className={embedded ? 'mf-certificate' : 'mf-card'}><h3>Certificado de votación</h3><p>{required ? 'Obligatorio para guardar una respuesta afirmativa.' : 'Opcional. Puedes cargarlo como respaldo si coordinación dispone del documento.'} Reemplazar crea una nueva versión.</p>
     <Aviso error={consulta.error || op.error} message={op.message} />
     {consulta.loading ? <p>Cargando documento…</p> : !requirement ? <p>No está disponible el certificado en el catálogo. Contacta a coordinación.</p> : <>
       <p>{current ? `${current.nombreArchivoDocumento} · Versión ${current.versionDocumento} · ${current.estadoDocumento ?? 'Cargado'}` : 'Sin documento cargado.'}</p>
