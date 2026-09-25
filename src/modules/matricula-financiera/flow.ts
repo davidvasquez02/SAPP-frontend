@@ -11,7 +11,7 @@ export const GUIA_COORDINACION: PasoGuiaLiquidacion[] = [
 ]
 
 export const GUIA_ESTUDIANTE: PasoGuiaLiquidacion[] = [
-  { titulo: 'Revisa la solicitud', descripcion: 'Confirma el periodo, el programa y la fecha límite indicada por la coordinación.' },
+  { titulo: 'Revisa la solicitud', descripcion: 'Verifica los datos de tu liquidacion: el periodo academico, el programa academico, ten presente la fecha limite para llevar a cabo tu proceso.' },
   { titulo: 'Responde la información', descripcion: 'Contesta todas las preguntas que apliquen a tu caso y guarda las respuestas dentro del plazo.' },
   { titulo: 'Espera la liquidación', descripcion: 'La coordinación recibe la información y realiza el proceso de liquidación.' },
   { titulo: 'Consulta el resultado', descripcion: 'Cuando coordinación confirme tu liquidación, podrás consultar el total liquidado para continuar con el pago.' },

@@ -16,6 +16,13 @@ test('el paso de espera estudiantil describe la liquidación sin atribuir una va
   })
 })
 
+test('el primer paso estudiantil pide verificar los datos de la liquidación', () => {
+  assert.deepEqual(GUIA_ESTUDIANTE[0], {
+    titulo: 'Revisa la solicitud',
+    descripcion: 'Verifica los datos de tu liquidacion: el periodo academico, el programa academico, ten presente la fecha limite para llevar a cabo tu proceso.',
+  })
+})
+
 test('solo permite acciones compatibles con el estado del proceso', () => {
   assert.equal(puedeEjecutarAccion('BORRADOR', 'convocar'), true)
   assert.equal(puedeEjecutarAccion('BORRADOR', 'publicar'), false)
