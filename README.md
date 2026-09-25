@@ -1,3 +1,14 @@
+# Mejora 2026-09-25 — advertencia antes de convocar estudiantes
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En el detalle administrativo de un proceso de matrícula financiera, **Convocar estudiantes** presenta ahora un aviso destacado que explica que la acción lista a todos los estudiantes activos, tanto vigentes como nuevos. El mensaje exige revisar cada fila y excluir desde el detalle los casos que no correspondan antes de enviar las solicitudes, porque el envío también habilita el proceso y remite correo a las personas incluidas.
+- El aviso usa `role="note"`, una etiqueta accesible y tokens semánticos (`--primary`, `--on-primary`, `--surface`) compatibles con temas claro y oscuro. La acción **Convocar**, su payload `{ incluirVigentes: true, incluirNuevos: true }`, los estados y los contratos HTTP no cambian.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existe un seed reproducible para la ruta protegida; los datos reales provienen del backend institucional y la fixture aislada permanece en `tests/fixtures/matricula-financiera/`.
+
+---
+
 # Corrección 2026-09-25 — introducción y verificación de la liquidación
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

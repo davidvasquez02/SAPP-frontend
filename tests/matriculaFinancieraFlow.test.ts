@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { etiquetaResumen, GUIA_COORDINACION, GUIA_ESTUDIANTE, puedeEjecutarAccion } from '../src/modules/matricula-financiera/flow.ts'
 
@@ -35,4 +36,13 @@ test('presenta las métricas con etiquetas de negocio legibles', () => {
   assert.equal(etiquetaResumen('noLiquidar'), 'No liquidar')
   assert.equal(etiquetaResumen('conAlertas'), 'Con alertas')
   assert.equal(etiquetaResumen('otra'), 'otra')
+})
+
+test('advierte el alcance y las consecuencias antes de convocar estudiantes', () => {
+  const source = readFileSync(new URL('../src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /todos los estudiantes activos \(vigentes y nuevos\)/)
+  assert.match(source, /antes de enviar las solicitudes/)
+  assert.match(source, /se habilitará el proceso y se enviará correo/)
+  assert.match(source, /role="note"/)
 })
