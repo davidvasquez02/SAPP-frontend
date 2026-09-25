@@ -33,7 +33,11 @@ test('solo permite acciones compatibles con el estado del proceso', () => {
 })
 
 test('presenta las métricas con etiquetas de negocio legibles', () => {
-  assert.equal(etiquetaResumen('noLiquidar'), 'No liquidar')
+  assert.equal(etiquetaResumen('convocados'), 'Estudiantes registrados en el proceso de matrícula')
+  assert.equal(etiquetaResumen('liquidadas'), 'Matrículas registradas en el sistema financiero (PUTTY)')
+  assert.equal(etiquetaResumen('noLiquidar'), 'Estudiantes excluidos de liquidación')
+  assert.equal(etiquetaResumen('pendientes'), 'Estudiantes pendientes de responder')
+  assert.equal(etiquetaResumen('respondidas'), 'Estudiantes que registraron sus respuestas')
   assert.equal(etiquetaResumen('conAlertas'), 'Con alertas')
   assert.equal(etiquetaResumen('otra'), 'otra')
 })

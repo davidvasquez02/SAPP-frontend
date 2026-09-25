@@ -6064,3 +6064,19 @@ npm run lint
 - ESLint focalizado sobre ambas páginas: PASS. `node --test --test-isolation=none tests/*.test.ts`: PASS, 63/63. `npm run build`: PASS, 312 módulos; `dist/assets/index-CcDkOfjD.css` 261.02 kB y `dist/assets/index-CCTiD07k.js` 739.16 kB. `git diff --check`: PASS.
 - Avisos no bloqueantes observados: npm marca las configuraciones heredadas `msvs_version` y `python` como futuras incompatibilidades, y Vite advierte que el chunk JavaScript supera 500 kB.
 - Siguiente paso institucional: abrir `/matricula/financiera` y `/matricula/financiera/procesos/2` con backend y sesión de coordinación para validar temas claro/oscuro y escritorio/móvil. Confirmar que no aparezcan los dos conteos en tarjetas, ninguna línea **Pago hasta**, ni la tarjeta **Con alertas**, y que las cinco métricas restantes ocupen el ancho disponible. No hay credenciales ni seed local reproducible para esa comprobación.
+
+---
+
+# Update 2026-09-25 — etiquetas explicativas del resumen financiero
+
+## Estado y contrato esperado
+
+- `src/modules/matricula-financiera/flow.ts` conserva las claves de `ResumenProceso`, pero `etiquetaResumen` presenta: `convocados` → **Estudiantes registrados en el proceso de matrícula**; `liquidadas` → **Matrículas registradas en el sistema financiero (PUTTY)**; `noLiquidar` → **Estudiantes excluidos de liquidación**; `pendientes` → **Estudiantes pendientes de responder**; `respondidas` → **Estudiantes que registraron sus respuestas**.
+- `conAlertas` mantiene su etiqueta interna por compatibilidad, aunque la tarjeta continúa oculta en el tablero por la decisión anterior. No cambiaron cifras, filtros, estados, DTO, API, endpoints, payloads, permisos, rutas, schemas, variables, seeds ni datasets.
+- `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css` retiró la capitalización automática, alinea el contenido largo al inicio y agrega interlineado para que las descripciones se envuelvan sin perder legibilidad. El resumen conserva cinco columnas en escritorio y dos hasta 800 px.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` cubre literalmente las cinco etiquetas y mantiene los casos de compatibilidad. ESLint focalizado PASS; suite Node PASS (63/63); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-C2HUxB3H.js` 739.33 kB).
+- Reutilizar el `node_modules` y `package-lock.json` actuales; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Avisos no bloqueantes: configuraciones npm heredadas `msvs_version`/`python` y chunk JavaScript mayor de 500 kB.
+- Pendiente institucional: verificar las cinco descripciones con datos reales en escritorio y móvil, temas claro/oscuro y zoom alto. La ruta requiere backend y sesión de coordinación; no existe un seed local reproducible.

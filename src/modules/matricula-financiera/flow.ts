@@ -27,4 +27,11 @@ const ACCIONES_POR_ESTADO: Record<EstadoProcesoLiquidacion, readonly AccionProce
 export const puedeEjecutarAccion = (estado: EstadoProcesoLiquidacion | undefined, accion: AccionProceso): boolean =>
   estado ? ACCIONES_POR_ESTADO[estado].includes(accion) : false
 
-export const etiquetaResumen = (clave: string): string => ({ convocados: 'Convocados', pendientes: 'Pendientes', respondidas: 'Respondidas', noLiquidar: 'No liquidar', liquidadas: 'Liquidadas', conAlertas: 'Con alertas' })[clave] ?? clave
+export const etiquetaResumen = (clave: string): string => ({
+  convocados: 'Estudiantes registrados en el proceso de matrícula',
+  liquidadas: 'Matrículas registradas en el sistema financiero (PUTTY)',
+  noLiquidar: 'Estudiantes excluidos de liquidación',
+  pendientes: 'Estudiantes pendientes de responder',
+  respondidas: 'Estudiantes que registraron sus respuestas',
+  conAlertas: 'Con alertas',
+})[clave] ?? clave
