@@ -50,3 +50,12 @@ test('advierte el alcance y las consecuencias antes de convocar estudiantes', ()
   assert.match(source, /se habilitará el proceso y se enviará correo/)
   assert.match(source, /role="note"/)
 })
+
+test('presenta los parámetros operativos solicitados en el tablero financiero', () => {
+  const source = readFileSync(new URL('../src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /<dt>SMMLV<\/dt><dd>{money\(proceso\.valorSmmlv\)}<\/dd>/)
+  assert.match(source, /<dt>Fecha límite recepción respuestas<\/dt><dd>{fechaColombia\(proceso\.fechaLimiteRespuesta\)}<\/dd>/)
+  assert.doesNotMatch(source, /<dt>Cierre<\/dt>/)
+  assert.doesNotMatch(source, /<dt>Publicación<\/dt>/)
+})

@@ -6080,3 +6080,19 @@ npm run lint
 - `tests/matriculaFinancieraFlow.test.ts` cubre literalmente las cinco etiquetas y mantiene los casos de compatibilidad. ESLint focalizado PASS; suite Node PASS (63/63); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-C2HUxB3H.js` 739.33 kB).
 - Reutilizar el `node_modules` y `package-lock.json` actuales; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Avisos no bloqueantes: configuraciones npm heredadas `msvs_version`/`python` y chunk JavaScript mayor de 500 kB.
 - Pendiente institucional: verificar las cinco descripciones con datos reales en escritorio y móvil, temas claro/oscuro y zoom alto. La ruta requiere backend y sesión de coordinación; no existe un seed local reproducible.
+
+---
+
+# Update 2026-09-25 — parámetros del tablero financiero
+
+## Estado, contrato y salida esperada
+
+- En `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`, **Parámetros y fechas del proceso** presenta, en orden: **Fuente SMMLV**, **SMMLV**, **Votación / salud**, **Primer envío** y **Fecha límite recepción respuestas**. Ya no renderiza los elementos `<dt>` **Cierre** y **Publicación**.
+- `SMMLV` presenta `money(proceso.valorSmmlv)` y la nueva fecha presenta `fechaColombia(proceso.fechaLimiteRespuesta)`. `fechaCierre` y `fechaPublicacion` no se eliminaron del DTO ni de los tipos: pueden seguir siendo utilizados por el flujo y el backend, pero no deben reaparecer en este acordeón sin una nueva decisión de producto.
+- No cambiaron API, endpoints, payloads, estados, permisos, rutas, schemas, variables, dependencias, seeds ni datasets. La ruta objetivo sigue siendo `/matricula/financiera/procesos/:procesoId`.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica las dos nuevas parejas `<dt>/<dd>` y la ausencia de **Cierre** y **Publicación**. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-DzFjpMER.js` 739.35 kB).
+- Entorno sin cambios: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: validar el acordeón abierto con valores presentes y ausentes, temas claro/oscuro y móvil. El repositorio no incluye backend, credenciales ni seed reproducible para la ruta protegida.

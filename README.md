@@ -1426,3 +1426,9 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El resumen del tablero financiero reemplaza las etiquetas breves por descripciones operativas: **Estudiantes registrados en el proceso de matrícula**, **Matrículas registradas en el sistema financiero (PUTTY)**, **Estudiantes excluidos de liquidación**, **Estudiantes pendientes de responder** y **Estudiantes que registraron sus respuestas**.
 - Las claves y cifras del backend permanecen intactas; el cambio se concentra en `etiquetaResumen` y en la legibilidad de las tarjetas. No se modificaron contratos, cálculos, estados, endpoints, permisos, dependencias, variables, schemas, seeds ni datasets.
 - Verificación: ESLint focalizado PASS; pruebas Node PASS (63/63); build PASS (312 módulos, CSS 261.03 kB, JS 739.33 kB). Persisten únicamente los avisos ambientales de npm y el warning conocido por el chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-25 — parámetros visibles del proceso financiero
+
+- El acordeón **Parámetros y fechas del proceso** del tablero muestra **Fuente SMMLV**, **SMMLV**, **Votación / salud**, **Primer envío** y **Fecha límite recepción respuestas**. Se retiraron de esa sección **Cierre** y **Publicación**.
+- Los valores provienen del mismo DTO: `valorSmmlv` usa el formato monetario institucional y `fechaLimiteRespuesta` usa la fecha de Colombia. `fechaCierre` y `fechaPublicacion` permanecen en el contrato para compatibilidad y reglas del proceso; no cambiaron endpoints, payloads, estados, permisos, dependencias, schemas, variables, seeds ni datasets.
+- Verificación: ESLint focalizado PASS; pruebas Node PASS (64/64); build PASS (312 módulos, CSS 261.03 kB, JS 739.35 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
