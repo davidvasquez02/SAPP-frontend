@@ -1,3 +1,19 @@
+# Handoff 2026-09-25 — ayudas de campos en revisión de liquidación
+
+## Estado, decisiones y salida esperada
+- `LiquidacionDetallePage.tsx` muestra un botón circular `?` al lado de Tipo de estudiante, Origen de respuesta y las cuatro fechas operativas. Cada botón revela su explicación con hover o foco/pulsación y vincula el texto mediante `aria-describedby` y `role="tooltip"`.
+- Los mensajes aclaran la convención solicitada: VIGENTE corresponde al ingreso a primer semestre y NUEVO a segundo semestre o posterior; el origen distingue ESTUDIANTE/COORDINADOR; las fechas diferencian solicitud, recordatorio, registro de respuestas y marcación en PUTTY.
+- Salida esperada: los valores y su distribución permanecen iguales, con una ayuda contextual discreta al lado de cada etiqueta indicada. Los tooltips usan variables semánticas, admiten teclado/táctil y temas claro/oscuro. No cambian API, DTO, rutas, permisos, schemas, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`; presentación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. La fixture aislada existente está en `tests/fixtures/matricula-financiera/`, pero no es un seed y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: ESLint focalizado PASS, suite Node 60/60 PASS, build PASS (314 módulos; CSS 260.16 kB; JS 740.42 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar con un caso real la nomenclatura VIGENTE/NUEVO y revisar la posición de las ayudas en escritorio/móvil y temas claro/oscuro. El contenedor no incluye Chromium, Chrome ni Firefox, por lo que no puede producir una captura local de la ruta protegida.
+
+---
+
 # Handoff 2026-09-25 — detalle simplificado del certificado de votación
 
 ## Estado, decisión, contrato y salida esperada
