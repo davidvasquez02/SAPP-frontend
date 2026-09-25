@@ -18,7 +18,7 @@ export function MatriculaFinancieraPage() {
   const { session } = useAuth()
   const coordinator = canManagePosgrados(session?.user.roles ?? [])
   const guide = coordinator ? GUIA_COORDINACION : GUIA_ESTUDIANTE
-  return <ModuleLayout title={coordinator ? 'Matrícula financiera' : 'Liquidación'}><div className="mf-page"><header className="mf-page__intro"><div><h1>{coordinator ? 'Procesos de liquidación' : 'Mi liquidación'}</h1><p>{coordinator ? 'Prepara, revisa y publica las liquidaciones de cada periodo.' : 'Responde la información y consulta tu liquidación.'}</p></div></header>
+  return <ModuleLayout title={coordinator ? 'Matrícula financiera' : 'Liquidación'}><div className="mf-page"><header className="mf-page__intro"><div><h1>{coordinator ? 'Procesos de liquidación' : 'Mi liquidación'}</h1>{coordinator && <p>Prepara, revisa y publica las liquidaciones de cada periodo.</p>}</div></header>
     <section className="mf-guide mf-card"><h2>Flujo de matrícula financiera</h2><ol className="mf-guide__steps">{guide.map((step, index) => <li key={step.titulo}><span className="mf-guide__number">{index + 1}</span><div><h3>{step.titulo}</h3><p>{step.descripcion}</p></div></li>)}</ol></section>
     {coordinator ? <Procesos /> : <MisLiquidaciones />}
   </div></ModuleLayout>

@@ -1,3 +1,19 @@
+# Handoff 2026-09-25 — copia inicial de Mi liquidación
+
+## Estado, decisión, contrato y salida esperada
+- `MatriculaFinancieraPage` omite el párrafo introductorio debajo de **Mi liquidación** para estudiantes. La copia **Prepara, revisa y publica las liquidaciones de cada periodo.** permanece visible únicamente en el encabezado de coordinación.
+- `GUIA_ESTUDIANTE[0]` conserva el título **Revisa la solicitud** y muestra la descripción solicitada: **Verifica los datos de tu liquidacion: el periodo academico, el programa academico, ten presente la fecha limite para llevar a cabo tu proceso.**
+- La salida esperada en `/matricula/financiera` para estudiante es el título seguido directamente por **Flujo de matrícula financiera**, con la nueva descripción en el paso 1. No cambian API, DTO, rutas, roles, estados, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` y `src/modules/matricula-financiera/flow.ts`; regresión textual: `tests/matriculaFinancieraFlow.test.ts`. La fixture en `tests/fixtures/matricula-financiera/` es una referencia aislada, no un seed, y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 5/5 PASS; suite Node 62/62 PASS; build PASS (314 módulos; CSS 260.58 kB; JS 740.46 kB); `git diff --check` PASS. npm informa `Unknown env config "http-proxy"` y Vite conserva el aviso informativo del chunk mayor de 500 kB.
+- Pendiente externo: comprobar la copia final en la ruta autenticada, en escritorio/móvil y temas claro/oscuro. No se produjo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta real requiere sesión y backend institucionales.
+
+---
+
 # Handoff 2026-09-25 — texto del paso de espera de liquidación
 
 ## Estado, decisión, contrato y salida esperada
