@@ -1,5 +1,22 @@
 # Handoff 2026-09-25 — historial de homologaciones y detalle estudiantil de solo lectura
 
+## Update 2026-09-25 — calificación definitiva y uniformidad del detalle de proyectos
+
+### Estado, contrato y salida esperada
+
+- Implementado en `src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts`: `presentarNotaFinalCandidatura(notaFinal, tipoSolicitudCodigo)` retorna una nota localizada con dos decimales exclusivamente para `CAND_DOCTORAL`; retorna `null` para nota ausente/no finita o cualquier otro tipo.
+- `ProcesoEvaluacionPanel.tsx` muestra una tarjeta **Calificación definitiva** si el contrato real contiene, por ejemplo, `tipoSolicitudCodigo: "CAND_DOCTORAL"` y `notaFinal: 4.00`; la salida visible esperada es `4,00`. `ProcesoEvaluacionEstudiante.tsx` aplica la misma regla en su resumen. El endpoint continúa siendo `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` y no cambiaron DTO, payloads ni estados.
+- `SolicitudDetallePage.tsx` agrega el modificador visual `solicitud-detalle-page--trabajo-grado` solo a tipos con proceso de evaluación. Su CSS y `ProcesoEvaluacionPanel.css` unifican encabezado, superficies, bordes, radios, botones pill, foco y responsive a 760/440 px sin alterar callbacks, permisos, navegación o acciones.
+- Artefactos: los cinco archivos anteriores, `src/pages/SolicitudDetalle/SolicitudDetallePage.css` y la regresión `tests/candidaturaDoctoral.test.ts`. No hay datasets ni seeds nuevos; la ruta protegida depende de sesión y backend institucionales.
+
+### Pruebas, entorno y próximos pasos
+
+- ESLint focalizado PASS; regresiones dirigidas PASS (16/16); suite Node PASS (74/74); build PASS (309 módulos, CSS 263.63 kB, JS 734.86 kB); `git diff --check` PASS. El lint global conserva 9 errores preexistentes ajenos a este cambio. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite reporta el chunk JavaScript mayor de 500 kB.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Próximo paso: validar `/trabajos-grado/doctorado/solicitudes/:id` con el response institucional de candidatura ya sustentada, ambos roles, temas claro/oscuro, teclado y viewports móvil/escritorio. No se tomó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y no dispone de credenciales/backend reproducibles.
+
+---
+
 ## Estado, decisiones, contrato y salida esperada
 - `SolicitudDetallePage` ofrece a coordinación **Ver historial de homologaciones** solamente para una solicitud `HOMOLOG` que aún no esté `APROBADA` ni `RECHAZADA`. El panel se carga bajo demanda, se puede ocultar y comunica estados de carga, vacío y error; su tabla muestra origen, destino, fecha, vigencia y acta. Es información de apoyo y no altera la decisión ni selecciona automáticamente una equivalencia.
 - Contrato nuevo de lectura: `GET /homologaciones/historial`, envelope `{ ok, message, data }`. Cada elemento contiene `id`, IDs/códigos/nombres de asignaturas de origen y destino, `fechaHomologacion`, `activa`, y `actaId`/`actaCodigo`/`actaNombre` anulables. Se preservan literalmente los `null` del API y se representan con **Sin código** o **Sin acta asociada**.

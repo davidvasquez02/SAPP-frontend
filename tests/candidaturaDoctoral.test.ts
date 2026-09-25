@@ -8,7 +8,10 @@ import {
   TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID,
   TIPO_SOLICITUD_GRADO_ID,
 } from '../src/modules/trabajos-grado/constants.ts'
-import { presentarValorEvaluacion } from '../src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts'
+import {
+  presentarNotaFinalCandidatura,
+  presentarValorEvaluacion,
+} from '../src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts'
 
 test('incluye el examen de candidatura doctoral en el módulo y su proceso de evaluación', () => {
   assert.equal(TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado.includes(TIPO_EXAMEN_CANDIDATURA_DOCTORAL_ID), true)
@@ -56,4 +59,11 @@ test('conserva el resultado de sustentación para propuesta y defensa', () => {
   }, 'DEF_TESIS_DCC')
 
   assert.deepEqual(presentada, { etiqueta: 'Resultado', valor: 'APROBADO' })
+})
+
+test('presenta la nota final únicamente para candidatura doctoral cuando existe', () => {
+  assert.equal(presentarNotaFinalCandidatura(4, 'CAND_DOCTORAL'), '4,00')
+  assert.equal(presentarNotaFinalCandidatura(4.25, ' cand_doctoral '), '4,25')
+  assert.equal(presentarNotaFinalCandidatura(null, 'CAND_DOCTORAL'), null)
+  assert.equal(presentarNotaFinalCandidatura(4, 'DEF_TESIS_DCC'), null)
 })

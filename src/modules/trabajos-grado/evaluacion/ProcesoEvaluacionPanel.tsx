@@ -31,7 +31,7 @@ import {
   todosLosJuradosActivosEvaluaronSustentacion,
 } from './estadoProcesoEvaluacion'
 import { esExamenCandidaturaDoctoral } from '../constants'
-import { presentarValorEvaluacion } from './presentacionEvaluacion'
+import { presentarNotaFinalCandidatura, presentarValorEvaluacion } from './presentacionEvaluacion'
 import { obtenerDetalleSustentacion, tieneDetalleSustentacion } from './sustentacion'
 import './ProcesoEvaluacionPanel.css'
 
@@ -287,6 +287,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   const canRegisterResult = ESTADOS_CON_RESULTADO.has(estado)
     && todosLosJuradosActivosEvaluaronSustentacion(activeJurors)
   const esCandidaturaDoctoral = esExamenCandidaturaDoctoral(undefined, proceso.tipoSolicitudCodigo)
+  const notaFinalPresentada = presentarNotaFinalCandidatura(proceso.notaFinal, proceso.tipoSolicitudCodigo)
   const notaFinalNumero = notaFinal.trim() === '' ? Number.NaN : Number(notaFinal)
   const notaFinalValida = Number.isFinite(notaFinalNumero) && notaFinalNumero >= 0 && notaFinalNumero <= 5
   const hasProcessActions = canSendReminders || canSendToAdjustments || canRegisterResult
@@ -305,6 +306,16 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
           {formatEstadoNombre(proceso.estadoSolicitudNombre, proceso.estadoSolicitud)}
         </span>
       </header>
+
+      {notaFinalPresentada && (
+        <aside className="evaluacion-tg__final-grade" aria-label="Calificación definitiva">
+          <div>
+            <span>Calificación definitiva</span>
+            <strong>{notaFinalPresentada}</strong>
+          </div>
+          <p>Nota final registrada para el examen de candidatura doctoral.</p>
+        </aside>
+      )}
 
       {message && <p className="evaluacion-tg__message" role="status">{message}</p>}
       {error && <p className="evaluacion-tg__error" role="alert">{error}</p>}

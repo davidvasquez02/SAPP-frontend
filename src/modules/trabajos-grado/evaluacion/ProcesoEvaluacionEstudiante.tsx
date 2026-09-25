@@ -1,4 +1,4 @@
-import { presentarValorEvaluacion } from './presentacionEvaluacion'
+import { presentarNotaFinalCandidatura, presentarValorEvaluacion } from './presentacionEvaluacion'
 import { obtenerDetalleSustentacion, tieneDetalleSustentacion } from './sustentacion'
 import type { ProcesoEvaluacionTg } from './types'
 import './ProcesoEvaluacionEstudiante.css'
@@ -29,6 +29,7 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
     .sort((first, second) => (first.orden ?? 0) - (second.orden ?? 0))
   const resultado = proceso.resultadoNombre || proceso.resultado || proceso.resultadoCodigo
   const fechaResultado = formatDate(proceso.fechaResultado)
+  const notaFinal = presentarNotaFinalCandidatura(proceso.notaFinal, proceso.tipoSolicitudCodigo)
   const sustentacion = obtenerDetalleSustentacion(proceso)
   const fechaSustentacion = formatDate(sustentacion.fecha, true)
 
@@ -43,7 +44,7 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
         <div className="evaluacion-estudiante__result" aria-label={`Resultado: ${resultado || 'Pendiente'}`}>
           <span>Resultado</span>
           <strong>{resultado || 'Pendiente'}</strong>
-          {proceso.notaFinal != null && <small>Nota final: {proceso.notaFinal}</small>}
+          {notaFinal && <small>Nota final: {notaFinal}</small>}
           {fechaResultado && <small>Registrado el {fechaResultado}</small>}
         </div>
       </header>
