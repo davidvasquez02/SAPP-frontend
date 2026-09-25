@@ -32,6 +32,13 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 
 ---
 
+# Corrección 2026-09-25 — detalle simplificado del certificado de votación
+
+- En el detalle del certificado de votación de matrícula financiera se muestra únicamente el nombre del archivo cargado. La versión interna y el estado documental dejan de exponerse junto al nombre porque no aportan al proceso operativo.
+- Los estados conservan su uso interno para validar el certificado y, si fue rechazado, se mantiene el aviso accionable con sus observaciones. No cambian contratos HTTP, DTO, carga, descarga, versionado, permisos, rutas, dependencias, variables, schemas, seeds ni datasets.
+
+---
+
 # Corrección 2026-09-25 — certificado de votación junto a su cargue
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

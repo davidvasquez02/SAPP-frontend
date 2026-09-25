@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — detalle simplificado del certificado de votación
+
+## Estado, decisión, contrato y salida esperada
+- `CertificadoVotacion` presenta solamente `nombreArchivoDocumento` en el detalle de un archivo cargado; ya no concatena `versionDocumento` ni `estadoDocumento`. El cambio aplica a las visuales estudiantil y de coordinación que comparten el componente.
+- El estado sigue formando parte del DTO y de la lógica: un documento `RECHAZADO` no cuenta como vigente y conserva el aviso con `observacionesDocumento`. También se mantienen sin cambios la consulta ANX-39, apertura, descarga, reemplazo y versionado en backend.
+- Salida esperada: donde antes aparecía `archivo.pdf · Versión 2 · POR_REVISAR`, ahora aparece `archivo.pdf`. No cambian endpoints, payloads, permisos, rutas, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx`. Vista aislada disponible en `tests/fixtures/matricula-financiera/`; no es un seed de backend. La ruta institucional requiere autenticación y servicios remotos.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. Verificación local: ESLint focalizado PASS, suite Node 60/60 PASS, build PASS (314 módulos; CSS 259.16 kB; JS 738.98 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar la ruta autenticada con el backend institucional en escritorio/móvil y temas claro/oscuro. No se produjo captura local porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta real requiere autenticación/datos remotos; la imagen reportada documenta el estado anterior.
+
+---
+
 # Handoff 2026-09-25 — guardado unificado de respuestas y certificado
 
 ## Estado, decisión, contrato y salida esperada
