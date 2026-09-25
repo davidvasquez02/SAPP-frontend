@@ -1333,3 +1333,14 @@ Interfaz web institucional para centralizar y dar trazabilidad a los procesos de
 - El ajuste es únicamente visual y conserva la interacción, los atributos
   accesibles, las rutas, los permisos y los tokens de tema existentes. No cambia
   contratos HTTP, dependencias, variables, seeds ni datasets.
+
+## Decisión reciente — semestre en el detalle de liquidación (2026-09-25)
+
+- En la tarjeta **Revisión del caso** del detalle de matrícula financiera, el
+  parámetro **Semestre** presenta solamente el número o **Sin calcular** cuando
+  no existe. El origen técnico `CALCULADO`/`MANUAL` permanece en el DTO para
+  compatibilidad, pero ya no se muestra junto al valor.
+- El cambio es exclusivamente de presentación: no modifica endpoints, payloads,
+  tipos, reglas de cálculo, permisos, dependencias, variables, seeds ni datasets.
+  Reutilizar `node_modules`; el flujo real continúa dependiendo del backend y de
+  una sesión institucional.
