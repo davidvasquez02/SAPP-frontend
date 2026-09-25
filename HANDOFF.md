@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — guardado unificado de respuestas y certificado
+
+## Estado, decisión, contrato y salida esperada
+- La vista estudiantil de matrícula financiera presenta un único botón **Guardar respuestas**. `CertificadoVotacion` registra en `RespuestasForm` una operación de carga pendiente cuando el usuario selecciona un archivo; no muestra **Guardar certificado** en este flujo.
+- Al enviar, `RespuestasForm` ejecuta secuencialmente la carga ANX-39 y el guardado de respuestas. Una falla documental corta la secuencia. Sin archivo nuevo, un ANX-39 vigente permite guardar directamente las respuestas. La selección pendiente también satisface la habilitación del botón; un documento rechazado sin reemplazo no la satisface.
+- Coordinación mantiene el botón documental independiente y `Registrar respuestas`, pues su respaldo puede llegar por otros medios. Se preservan los servicios, payloads, roles y rutas existentes; no hay cambios de backend, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`, `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. El servicio documental sigue en `src/modules/matricula-financiera/api.ts`; no se generaron artefactos persistentes y `dist/` continúa siendo salida ignorada.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. No existen credenciales o seed reproducible para la ruta autenticada.
+- Pendiente externo: validar con backend institucional que una carga fallida no registre respuestas y que una exitosa genere primero el documento y después la respuesta; revisar además escritorio/móvil y temas claro/oscuro. El contenedor no dispone de Chromium, Chrome ni Firefox para producir una captura local.
+
+---
+
 # Handoff 2026-09-25 — certificado obligatorio al responder Sí
 
 ## Estado, decisión, contrato y salida esperada

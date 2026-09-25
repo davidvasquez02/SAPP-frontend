@@ -1,3 +1,14 @@
+# Corrección 2026-09-25 — guardado unificado de respuestas y certificado
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- En la visual estudiantil de matrícula financiera se eliminó el botón independiente **Guardar certificado**. El usuario selecciona el archivo y ejecuta todo desde el único botón **Guardar respuestas**.
+- El guardado unificado llama primero al servicio documental ANX-39 y, únicamente si la carga termina correctamente, llama al servicio de respuestas. Si ya existe un certificado vigente y no se selecciona un reemplazo, guarda solo las respuestas; si la carga falla, no envía las respuestas y permite reintentar sin perder la selección.
+- La coordinación conserva su flujo administrativo y el guardado documental independiente. No cambian endpoints, DTO, permisos, rutas, dependencias, variables, schemas, seeds ni datasets.
+- Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; ejecutar con `npm run dev`, probar con `node --test --test-isolation=none tests/*.test.ts` y compilar con `npm run build`. No hay seeds locales para esta ruta; los datos provienen del backend institucional.
+
+---
+
 # Corrección 2026-09-25 — certificado obligatorio al responder Sí
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
