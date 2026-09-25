@@ -1,3 +1,19 @@
+# Handoff 2026-09-25 — confirmaciones de Gestión profesores
+
+## Estado, decisión y salida esperada
+- `src/pages/GestionProfesores/GestionProfesoresPage.tsx` reemplaza los tres usos de `window.confirm`: cambio del rol de docente de posgrados, retiro de un grupo y designación de director. Un estado discriminado conserva la acción y el DTO objetivo hasta que el usuario confirma; los servicios y sus argumentos no cambiaron.
+- La salida esperada es un modal institucional centrado que muestra título, consecuencia, nombre del profesor, **Cancelar** y una acción explícita. Las acciones destructivas usan `--danger`; agregar el rol y designar director usan `--primary`. El modal consume exclusivamente tokens semánticos, responde a temas claro/oscuro y apila sus controles en móvil.
+- Accesibilidad y seguridad: `role="dialog"`, `aria-modal`, nombre y descripción enlazados, foco inicial en **Cancelar**, cierre mediante `Escape`, botón × o backdrop, y cierres/acciones bloqueados durante la petición. Si el servicio falla, el modal permanece abierto y aparece el mensaje ya existente; si finaliza bien, se cierra después de actualizar los datos.
+- No se modificaron API, DTO, permisos, rutas, schemas, paquetes, variables, seeds ni datasets. Contratos preservados: rol por UUID mediante `asignarRolDocentePosgrados`/`eliminarRolDocentePosgrados`; grupo por `grupoId` y `docenteId` mediante `eliminarDocenteGrupoInvestigacion`/`asignarDirectorGrupoInvestigacion`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; presentación: `src/pages/GestionProfesores/GestionProfesoresPage.css`; servicios sin cambios: `src/api/gruposInvestigacionService.ts`. No se generaron artefactos persistentes ni datasets; `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx` PASS; suite Node 58/58 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.07 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar `/coordinacion/profesores` con sesión institucional y backend real en escritorio/móvil y temas claro/oscuro. No se produjo una captura local porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere autenticación/datos remotos.
+
+---
+
 # Handoff 2026-09-24 — botones de retorno de matrícula financiera
 
 ## Estado, decisión y salida esperada
