@@ -5978,3 +5978,20 @@ npm run lint
   protegida no dispone de credenciales o seed reproducible.
 
 ---
+
+---
+
+# Update 2026-09-25 — fecha límite visible bajo el programa de liquidación
+
+## Estado, decisión y salida esperada
+
+- En la tarjeta estudiantil de `/matricula/financiera`, `MiLiquidacionCard` renderiza **Recepción de respuestas habilitada hasta el {fecha}** inmediatamente debajo de `item.programa`; el código UIS y el período aparecen después. La fecha está en negrita dentro de un aviso `mf-response-deadline` con borde lateral, borde sutil y fondo derivados del token `--primary`.
+- La salida esperada para el ejemplo reportado es: título **DOCTORADO EN CIENCIAS DE LA COMPUTACION**, debajo el aviso destacado **Recepción de respuestas habilitada hasta el 26/09/2026**, y luego **2127132 · Periodo 2026 - 2**. El diseño debe conservar contraste y jerarquía en temas claro/oscuro y adaptarse sin desbordar en móvil.
+- Contrato intacto: `MiLiquidacion.proceso.fechaLimiteRespuesta` continúa siendo la fuente y `fechaColombia` produce `dd/mm/aaaa`. No cambiaron API, DTO, lógica de plazo, rutas, roles, dependencias, variables, schemas, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+
+- Artefactos: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Fixture de referencia: `tests/fixtures/matricula-financiera/`; la ruta real necesita backend y sesión institucional y no tiene seed local reproducible.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (60/60); build PASS (314 módulos; CSS 260.58 kB y JS 740.48 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso: validar visualmente con una sesión estudiantil real la fecha vigente, temas claro/oscuro y viewport móvil. No se generó captura local porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida depende de credenciales/backend institucionales.
