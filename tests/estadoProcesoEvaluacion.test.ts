@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  promedioNotasSustentacion,
   puedeAgendarSustentacion,
   todosLosJuradosActivosEvaluaronSustentacion,
 } from '../src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts'
@@ -52,4 +53,16 @@ test('ignora jurados reemplazados y exige al menos un jurado activo', () => {
   ]), true)
   assert.equal(todosLosJuradosActivosEvaluaronSustentacion([jurado(2, false, [])]), false)
   assert.equal(todosLosJuradosActivosEvaluaronSustentacion([]), false)
+})
+
+test('calcula el promedio de notas de sustentación de los jurados activos', () => {
+  const primero = jurado(1, true, [{ momentoCodigo: 'SUSTENTACION' }])
+  const segundo = jurado(2, true, [{ momentoNombre: 'Sustentación' }])
+  const retirado = jurado(3, false, [{ momento: 'SUSTENTACION' }])
+  primero.evaluaciones[0].nota = 3.75
+  segundo.evaluaciones[0].nota = 4.5
+  retirado.evaluaciones[0].nota = 5
+
+  assert.equal(promedioNotasSustentacion([primero, segundo, retirado]), 4.13)
+  assert.equal(promedioNotasSustentacion([jurado(4, true, [{ momentoCodigo: 'CONCEPTO_DOCUMENTO' }])]), null)
 })

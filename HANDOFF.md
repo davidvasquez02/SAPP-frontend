@@ -6194,3 +6194,41 @@ npm run lint
 - Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 - Resultados locales: regresión focalizada PASS (3/3), suite Node PASS (72/72), ESLint focalizado PASS y build PASS (309 módulos; CSS 261.13 kB y JS 733.39 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
 - Próximo paso institucional: validar con sesiones reales de estudiante y coordinación los casos presencial/virtual, temas claro/oscuro, móvil, teclado y apertura del enlace. La ruta protegida no tiene credenciales, backend ni seed reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — nota definitiva de candidatura doctoral
+
+## Estado actual, contrato y salida esperada
+
+- `ProcesoEvaluacionPanel` distingue `CAND_DOCTORAL` mediante
+  `esExamenCandidaturaDoctoral`. En ese único tipo reemplaza **Resultado** por un
+  `input[type=number]` **Nota final**, con rango 0–5 y paso 0.01. La persona de
+  coordinación puede editar el valor antes de enviarlo.
+- Al abrir **Registrar resultado**, `promedioNotasSustentacion` calcula el
+  promedio de las notas de evaluaciones `SUSTENTACION` pertenecientes a jurados
+  activos, lo redondea a dos decimales y lo precarga. Ignora conceptos de
+  documento, notas ausentes/no numéricas y jurados inactivos.
+- Endpoint sin cambios: `POST
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/resultado`. Contrato para
+  candidatura: `{ "resultadoCodigo": "", "notaFinal": 4.00, "actaId": 5 }`.
+  El botón queda deshabilitado sin una nota válida. Para los demás tipos sigue
+  enviándose `{ resultadoCodigo: <selección>, notaFinal: null, actaId }`.
+- Paths: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`,
+  `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts` y
+  `tests/estadoProcesoEvaluacion.test.ts`. No hay datasets ni seeds nuevos.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación focalizada 2026-09-25: prueba de estado/promedio PASS (5/5),
+  ESLint focalizado PASS y build PASS (309 módulos; CSS 261.13 kB y JS 734.12
+  kB). Avisos no bloqueantes: configuración npm heredada `http-proxy` y chunk
+  JavaScript mayor de 500 kB.
+- Pendiente: comprobar con backend y sesión institucional que el acta real se
+  asocie, que la API acepte el resultado vacío y que el promedio/edición sean
+  correctos con varios jurados, temas claro/oscuro y móvil. La ruta protegida no
+  dispone de credenciales ni seed reproducible en el contenedor.

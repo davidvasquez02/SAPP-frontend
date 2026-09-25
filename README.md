@@ -1357,6 +1357,24 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   un único título principal **Solicitudes**, sin repetirlo dentro del contenido.
 - El cambio es solo de presentación y navegación por rol. No modifica rutas,
   endpoints, DTO, schemas, variables de entorno, dependencias, seeds ni datasets.
+
+## Decisión reciente — nota definitiva de candidatura doctoral (2026-09-25)
+
+- Al registrar la calificación definitiva de una solicitud
+  `CAND_DOCTORAL`, coordinación ve un campo numérico **Nota final** en lugar del
+  catálogo Aprobado/No aprobado/Aplazado. El campo admite valores entre 0 y 5,
+  con dos decimales, y permanece editable.
+- La nota se precarga con el promedio de las calificaciones de sustentación de
+  los jurados activos; las evaluaciones de otros momentos y los jurados
+  retirados o reemplazados no alteran el cálculo. El promedio se redondea a dos
+  decimales.
+- Se conserva `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/resultado`.
+  Para candidatura doctoral el payload esperado es
+  `{ "resultadoCodigo": "", "notaFinal": 4.00, "actaId": 5 }`; los demás
+  tipos conservan el selector de resultado y envían `notaFinal: null`.
+- No cambiaron rutas, permisos, dependencias, variables, schemas, seeds ni
+  datasets. El proyecto usa el `node_modules` existente y se ejecuta con
+  `npm run dev`; no requiere venv, Conda ni Poetry.
 # SAPP Frontend
 
 Interfaz web institucional para centralizar y dar trazabilidad a los procesos de posgrado EISI–UIS: admisiones, matrículas académica y financiera, créditos condonables, solicitudes y trabajos de grado. Es una SPA modular que consume los contratos REST de SAPP; el backend conserva la autoridad sobre reglas, cálculos, permisos y persistencia.
