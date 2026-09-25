@@ -6128,3 +6128,19 @@ npm run lint
 - `tests/matriculaFinancieraFlow.test.ts` verifica la nueva etiqueta, la ausencia del rótulo anterior y la estructura/contenido de la advertencia. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; `dist/assets/index-CnU3E77y.css` 261.83 kB y `dist/assets/index-chOILRqA.js` 739.91 kB).
 - Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Pendiente institucional: validar la advertencia en temas claro/oscuro, zoom alto y móvil, y confirmar visualmente su jerarquía frente al formulario. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — agregar estudiante dentro de seguimiento y cierre
+
+## Estado y salida esperada
+
+- En `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`, el botón **Agregar estudiante** ya no ocupa un bloque independiente debajo de los parámetros. Se renderiza como la primera acción de **Seguimiento y cierre**, inmediatamente antes de enviar solicitudes, recordatorios, recalcular o cerrar/reabrir la recepción.
+- Al activarlo, `AgregarEstudiante` se monta dentro de la misma tarjeta **Seguimiento y cierre**, después de la fila de acciones y antes de los mensajes de cierre. La tabla y sus filtros continúan a continuación, por lo que alta manual y listado quedan en el mismo contexto visual.
+- La condición permanece `allowed('convocar')`; los estados y permisos no cambiaron. Se reutilizan `buscarEstudiantes`, `agregarLiquidacion`, el payload `{ estudianteId, tipoEstudiante }`, el bloqueo `blocked` y el refresco existente. No hay cambios de API, DTO, validaciones, rutas, dependencias, variables, schemas, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` comprueba que tanto el botón como `<AgregarEstudiante>` estén dentro de la sección **Seguimiento y cierre**. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; CSS 261.83 kB y JS 739.86 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: probar apertura/cierre, búsqueda, alta exitosa/fallida y refresco de tabla en BORRADOR/ABIERTO, escritorio/móvil y temas claro/oscuro. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.

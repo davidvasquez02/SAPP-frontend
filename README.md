@@ -1444,3 +1444,9 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El parámetro **Primer envío** se presenta ahora como **Fecha del primer envío de solicitudes**, conservando `fechaEnvioSolicitudes` como fuente. En **Editar parámetros**, el texto sobre el recálculo se muestra dentro de una advertencia titulada **Consecuencias de guardar cambios**, con icono, borde lateral, fondo y contraste derivados de tokens semánticos para temas claro y oscuro.
 - Se conserva literalmente la consecuencia funcional: guardar recalcula las filas sin valor final manual y requiere revisar los valores antes de exportar nuevamente. No cambiaron el recálculo, el formulario, payloads, endpoints, permisos, estados, dependencias, schemas, variables, seeds ni datasets.
 - Verificación: ESLint focalizado PASS; pruebas Node PASS (65/65); build PASS (312 módulos, CSS 261.83 kB, JS 739.91 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-25 — alta manual dentro de seguimiento
+
+- **Agregar estudiante** y el formulario **Agregar estudiante manualmente** se trasladaron a la tarjeta **Seguimiento y cierre**, junto a las acciones que administran el conjunto de estudiantes y antes del listado filtrable. La acción continúa visible solo cuando el estado permite `convocar` y conserva el mismo servicio, payload, validaciones y bloqueo durante operaciones.
+- No cambiaron contratos, endpoints, permisos, reglas de elegibilidad, estados, dependencias, schemas, variables, seeds ni datasets.
+- Verificación: ESLint focalizado PASS; pruebas Node PASS (65/65); build PASS (312 módulos, CSS 261.83 kB, JS 739.86 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.

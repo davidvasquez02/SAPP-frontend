@@ -67,9 +67,14 @@ test('presenta los parámetros operativos solicitados en el tablero financiero',
   const detailsStart = source.indexOf('<details className="mf-card">')
   const detailsEnd = source.indexOf('</details>', detailsStart)
   const editButton = source.indexOf('>Editar parámetros</button>', detailsStart)
-  const addButton = source.indexOf('>Agregar estudiante</button>', detailsEnd)
   assert.ok(detailsStart >= 0 && editButton > detailsStart && editButton < detailsEnd)
-  assert.ok(addButton > detailsEnd)
+
+  const trackingStart = source.indexOf('<section className="mf-card"><h2>Seguimiento y cierre</h2>')
+  const trackingEnd = source.indexOf('</section>', trackingStart)
+  const addButton = source.indexOf('>Agregar estudiante</button>', trackingStart)
+  const addForm = source.indexOf('<AgregarEstudiante', trackingStart)
+  assert.ok(trackingStart >= 0 && addButton > trackingStart && addButton < trackingEnd)
+  assert.ok(addForm > addButton && addForm < trackingEnd)
 })
 
 test('destaca las consecuencias de guardar cambios en los parámetros', () => {
