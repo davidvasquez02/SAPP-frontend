@@ -1,3 +1,18 @@
+# Handoff 2026-09-25 — advertencia antes de convocar estudiantes
+
+## Estado, decisión, contrato y salida esperada
+- `ProcesoLiquidacionPage` reemplaza el párrafo discreto de **Convocar estudiantes** por un aviso visual y accesible. La copia aclara que convocar lista a todos los estudiantes activos —vigentes y nuevos— y que coordinación debe revisar cada fila y excluir los casos incorrectos antes de enviar solicitudes para no habilitar el proceso ni remitir correo a quien no corresponda.
+- La salida esperada en `/matricula/financiera/procesos/:procesoId` es un bloque con acento institucional, icono `!`, título **Importante antes de convocar** y la consecuencia explícita antes del botón **Convocar**. Usa `role="note"`, `aria-label` y únicamente tokens semánticos compatibles con temas claro/oscuro.
+- Se preservan la acción `convocar`, el payload `{ incluirVigentes: true, incluirNuevos: true }`, estados, API, DTO, rutas, roles, schemas, paquetes, variables, seeds y datasets. La regresión textual comprueba alcance, momento de revisión, consecuencia y semántica accesible.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`; presentación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`; regresión: `tests/matriculaFinancieraFlow.test.ts`. La fixture en `tests/fixtures/matricula-financiera/` es aislada, no un seed, y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 6/6 PASS; suite Node 63/63 PASS; build PASS (314 módulos; CSS 261.26 kB; JS 740.96 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar la advertencia y el flujo completo con sesión institucional y backend real en escritorio/móvil y temas claro/oscuro. El contenedor no incluye Chromium, Chrome ni Firefox, y la ruta protegida requiere autenticación y datos remotos; por ello no se produjo una captura local.
+
+---
+
 # Handoff 2026-09-25 — copia inicial de Mi liquidación
 
 ## Estado, decisión, contrato y salida esperada
