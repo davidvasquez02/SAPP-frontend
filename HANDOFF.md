@@ -1,3 +1,19 @@
+# Handoff 2026-09-25 — texto del paso de espera de liquidación
+
+## Estado, decisión, contrato y salida esperada
+- `GUIA_ESTUDIANTE[2]`, consumida por **Flujo de matrícula financiera**, muestra el título **Espera la liquidación** y la descripción **La coordinación recibe la información y realiza el proceso de liquidación.**
+- Se retiraron **Espera la revisión**, la atribución de validación a coordinación y la indicación de atender novedades. La decisión refleja que coordinación recibe los datos y liquida, pero no valida lo ingresado ni solicita correcciones en este flujo.
+- La salida esperada cambia únicamente el contenido del paso 3 en `/matricula/financiera` para el rol estudiante. No cambian el arreglo de coordinación, estados, API, DTO, rutas, roles, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/matricula-financiera/flow.ts`; regresión textual: `tests/matriculaFinancieraFlow.test.ts`; render: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. La fixture aislada existente está en `tests/fixtures/matricula-financiera/`; no es un seed y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: regresión Node 61/61 PASS, ESLint focalizado PASS, build PASS (314 módulos; CSS 260.58 kB; JS 740.46 kB) y `git diff --check` PASS. El lint global continúa bloqueado por nueve errores preexistentes fuera de estos archivos y una advertencia; npm informa además `Unknown env config "http-proxy"` y Vite conserva el aviso del chunk mayor de 500 kB.
+- Pendiente externo: comprobar el texto en la ruta autenticada, tanto en escritorio como en móvil. Si se dispone de navegador y credenciales, capturar la vista final; el contenedor no incluye Chromium, Chrome ni Firefox.
+
+---
+
 # Handoff 2026-09-25 — estado del proceso omitido en la vista estudiantil
 
 ## Estado, decisión, contrato y salida esperada

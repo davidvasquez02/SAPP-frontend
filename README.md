@@ -1,3 +1,14 @@
+# Corrección 2026-09-25 — descripción fiel de la espera de liquidación
+
+SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.
+
+- El paso 3 del **Flujo de matrícula financiera** para estudiantes ahora se titula **Espera la liquidación** y explica: **La coordinación recibe la información y realiza el proceso de liquidación.** Se eliminó la afirmación de que coordinación valida las respuestas o solicita correcciones, porque no corresponde al proceso real.
+- Es un ajuste exclusivamente de contenido en la guía estudiantil. No cambia el flujo de coordinación, lógica, estados, endpoints, DTO, rutas, permisos, dependencias, schemas, variables, seeds ni datasets.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry.
+- Ejecución: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existe un seed reproducible para la ruta protegida; la fixture aislada está en `tests/fixtures/matricula-financiera/` y los datos reales provienen del backend institucional.
+
+---
+
 # Corrección 2026-09-25 — estado del proceso omitido en la vista estudiantil
 
 SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones, matrículas, solicitudes, créditos condonables, actas, informes y proyectos de grado. React compone las vistas, TypeScript mantiene los contratos del cliente y el backend Spring Boot/PostgreSQL conserva las reglas académicas y la persistencia.

@@ -9,6 +9,13 @@ test('la guía explica el proceso completo para ambos perfiles', () => {
   assert.match(GUIA_ESTUDIANTE.at(-1)?.descripcion ?? '', /total/)
 })
 
+test('el paso de espera estudiantil describe la liquidación sin atribuir una validación a coordinación', () => {
+  assert.deepEqual(GUIA_ESTUDIANTE[2], {
+    titulo: 'Espera la liquidación',
+    descripcion: 'La coordinación recibe la información y realiza el proceso de liquidación.',
+  })
+})
+
 test('solo permite acciones compatibles con el estado del proceso', () => {
   assert.equal(puedeEjecutarAccion('BORRADOR', 'convocar'), true)
   assert.equal(puedeEjecutarAccion('BORRADOR', 'publicar'), false)
