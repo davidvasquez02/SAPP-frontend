@@ -6502,3 +6502,20 @@ npm run lint
   asocie, que la API acepte el resultado vacío y que el promedio/edición sean
   correctos con varios jurados, temas claro/oscuro y móvil. La ruta protegida no
   dispone de credenciales ni seed reproducible en el contenedor.
+
+# Update 2026-09-26 — claridad visual de previsualización y alcance de firma
+
+## Estado, contratos y salida esperada
+
+- `SolicitudEstudianteForm` agrega la clase específica `solicitud-estudiante-form__preview-action`: habilitada usa `--primary`/`--on-primary`; deshabilitada usa `--surface-container-low`, texto atenuado, borde semántico y cursor `not-allowed`. No se alteran las demás acciones inline ni la condición `!canPreviewCredito || previewLoading`.
+- En `SolicitudDetallePage`, la acción visible cambió de **Firmar todos los documentos** a **Firmar documentos**. Tras un `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` exitoso y la recarga del detalle/documentos, se presenta **Se firmaron únicamente los documentos que requieren tu firma y la información fue actualizada correctamente.**
+- No cambiaron endpoints, payloads, DTO, reglas de asignación/firma, permisos, dependencias, variables, schemas, seeds ni datasets. Paths principales: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.{tsx,css}`, `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `tests/firmaSolicitud.test.ts`.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. El proyecto usa Node/npm y no dispone de seed, dataset, backend o credenciales reproducibles para la ruta protegida.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Resultados locales: regresión focalizada PASS (9/9), suite Node PASS (98/98), ESLint focalizado PASS y build PASS (314 módulos; CSS 268.18 kB; JS 738.31 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso institucional: validar el contraste habilitado/deshabilitado y el mensaje posterior a la firma con una solicitud real, en escritorio/móvil, teclado y temas claro/oscuro.
+
+---

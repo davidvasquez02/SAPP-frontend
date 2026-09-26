@@ -856,7 +856,7 @@ const SolicitudEstudianteForm = ({
           )}
           <button
             type="button"
-            className="solicitud-estudiante-form__add-inline"
+            className="solicitud-estudiante-form__add-inline solicitud-estudiante-form__preview-action"
             onClick={handlePreviewCredito}
             disabled={!canPreviewCredito || previewLoading}
           >

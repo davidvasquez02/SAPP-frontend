@@ -356,7 +356,9 @@ const SolicitudDetallePage = () => {
       setSolicitud(solicitudActualizada)
       setIsSignedAssignmentConsumed(false)
       setDocumentos(documentosActualizados)
-      setSignSuccess('Todos los documentos fueron firmados y la información fue actualizada correctamente.')
+      setSignSuccess(
+        'Se firmaron únicamente los documentos que requieren tu firma y la información fue actualizada correctamente.',
+      )
     } catch (signingError) {
       setSignError(
         firmaCompletada
@@ -676,7 +678,7 @@ const SolicitudDetallePage = () => {
                     onClick={handleFirmarDocumentos}
                     disabled={isSigning}
                   >
-                    {isSigning ? 'Firmando documentos...' : 'Firmar todos los documentos'}
+                    {isSigning ? 'Firmando documentos...' : 'Firmar documentos'}
                   </button>
                 )}
                 {signError && (

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import {
   estaAsignadaSolicitudAlUsuario,
   puedeFirmarDocumentosSolicitud,
@@ -62,4 +63,30 @@ test('oculta la firma al docente cuando el trámite pasa a otro responsable', ()
     estado: 'POR FIRMA COORDINACION DE POSGRADOS',
     estadoSigla: 'PFIR_COOR_POS',
   }), false)
+})
+
+test('la acción y confirmación aclaran el alcance de la firma del usuario', () => {
+  const source = readFileSync(
+    new URL('../src/pages/SolicitudDetalle/SolicitudDetallePage.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /'Firmar documentos'/)
+  assert.match(source, /Se firmaron únicamente los documentos que requieren tu firma/)
+  assert.doesNotMatch(source, /'Firmar todos los documentos'/)
+})
+
+test('la previsualización distingue visualmente el estado deshabilitado', () => {
+  const formSource = readFileSync(
+    new URL('../src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx', import.meta.url),
+    'utf8',
+  )
+  const styles = readFileSync(
+    new URL('../src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.css', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(formSource, /solicitud-estudiante-form__preview-action/)
+  assert.match(styles, /\.solicitud-estudiante-form__preview-action:disabled/)
+  assert.match(styles, /cursor: not-allowed/)
 })
