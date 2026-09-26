@@ -14,6 +14,7 @@ interface DocumentUploadCardProps {
   fileAccept?: string
   previewAsImage?: boolean
   multiple?: boolean
+  maxFiles?: number
   selectedFiles?: File[]
   onSelectFiles?: (id: number, files: File[]) => void
   onRemoveSelectedFile?: (id: number, index: number) => void
@@ -63,6 +64,7 @@ export const DocumentUploadCard = ({
   previewAsImage = false,
   showUploadButton = true,
   multiple = false,
+  maxFiles,
   selectedFiles = [],
   onSelectFiles,
   onRemoveSelectedFile,
@@ -92,10 +94,12 @@ export const DocumentUploadCard = ({
     : previewAsImage
       ? 'Seleccionar foto'
       : 'Seleccionar archivo'
+  const reachedFileLimit = multiple && maxFiles != null && selectedFiles.length >= maxFiles
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (multiple && onSelectFiles) {
-      const files = Array.from(event.target.files ?? [])
+      const remainingSlots = maxFiles == null ? Number.POSITIVE_INFINITY : Math.max(maxFiles - selectedFiles.length, 0)
+      const files = Array.from(event.target.files ?? []).slice(0, remainingSlots)
       if (files.length > 0) onSelectFiles(item.id, files)
       event.target.value = ''
       return
@@ -155,6 +159,11 @@ export const DocumentUploadCard = ({
       </div>
 
       <div className="document-upload-card__actions">
+        {multiple && maxFiles != null ? (
+          <p className="document-upload-card__file-limit" id={`${inputId}-limit`}>
+            Puedes adjuntar máximo {maxFiles} documentos. {selectedFiles.length} de {maxFiles} seleccionados.
+          </p>
+        ) : null}
         <label className="document-upload-card__file">
           <input
             id={inputId}
@@ -162,9 +171,10 @@ export const DocumentUploadCard = ({
             accept={fileAccept}
             multiple={multiple}
             onChange={handleChange}
-            disabled={disabled}
+            disabled={disabled || reachedFileLimit}
+            aria-describedby={multiple && maxFiles != null ? `${inputId}-limit` : undefined}
           />
-          <span>{multiple ? 'Seleccionar archivos' : selectButtonLabel}</span>
+          <span>{reachedFileLimit ? 'Límite alcanzado' : multiple ? 'Seleccionar archivos' : selectButtonLabel}</span>
         </label>
         {multiple && selectedFiles.length > 0 ? (
           <ul className="document-upload-card__selected-files" aria-label="Archivos seleccionados">
