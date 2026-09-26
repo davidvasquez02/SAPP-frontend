@@ -4,6 +4,7 @@ import type { DocumentChecklistItemDto } from '../../../../api/documentChecklist
 import { uploadDocument } from '../../../../api/documentUploadService'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
+import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { downloadSolicitudDocument, openSolicitudDocument } from '../../utils/solicitudDocumentFile'
 import './SolicitudDocumentosEditor.css'
 
@@ -200,9 +201,16 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                           Reemplazar
                           <input
                             type="file"
+                            accept={PDF_FILE_ACCEPT}
                             disabled={!editable}
                             onChange={(event) => {
                               const file = event.target.files?.[0] ?? null
+                              if (file && !isPdfFile(file)) {
+                                setUploadError('Solo se permiten archivos PDF.')
+                                event.target.value = ''
+                                return
+                              }
+                              setUploadError(null)
                               setSelectedFiles((prev) => ({
                                 ...prev,
                                 [requirement.idTipoDocumentoTramite]: file,

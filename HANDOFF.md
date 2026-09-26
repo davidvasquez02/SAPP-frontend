@@ -1,3 +1,26 @@
+# Handoff 2026-09-26 — selección exclusiva de PDF en solicitudes y trabajos de grado
+
+## Estado actual, decisión y salida esperada
+
+- Se restringieron a PDF todos los selectores manuales del flujo de creación de solicitudes académicas y trabajos de grado, el editor/reemplazo documental y la recarga del documento evaluado durante ajustes. Cada `input[type="file"]` afectado usa exactamente `accept="application/pdf,.pdf"`, por lo que el diálogo del sistema debe filtrar a PDF.
+- La selección también se valida en TypeScript con `isPdfFile`: acepta MIME `application/pdf` o extensión `.pdf` sin distinguir mayúsculas, y rechaza imágenes, documentos ofimáticos y otros tipos aun si se inyectan fuera del selector normal. En adjuntos múltiples se preservan los PDF válidos y se informa si la tanda contenía archivos incompatibles.
+- Excepciones conservadas: fotos (selectores `image/png,image/jpeg`) y archivos producidos automáticamente por créditos condonables. El máximo de cinco soportes adicionales, la conversión automática HTML→PDF y los contratos de carga existentes no cambiaron.
+
+## Artefactos, contratos y retos abiertos
+
+- Regla compartida: `src/shared/files/pdfFile.ts`. Creación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Reemplazo: `src/modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor.tsx`. Ajustes de evaluación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`. Regresión: `tests/pdfDocumentSelection.test.ts`.
+- Se conserva `POST /sapp/document` y su payload actual (`tipoDocumentoTramiteId`, nombre, IDs de carga/trámite, base64, MIME, tamaño y checksum); no hay endpoints, DTO, schemas, variables, paquetes, seeds ni datasets nuevos.
+- Salida esperada: el selector solo ofrece PDF; un archivo no PDF forzado por el navegador no queda seleccionado ni se carga y muestra **Solo se permiten archivos PDF.** Las fotos siguen aceptando imágenes y los PDF generados de créditos continúan sin intervención.
+- Pendiente externo: validar los diálogos nativos y los mensajes con una sesión institucional en solicitudes generales y rutas de maestría/doctorado. La ruta protegida depende de autenticación y backend institucionales, sin credenciales ni seed local reproducible.
+
+## Entorno y resultados recientes
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No usa venv, Conda ni Poetry; reutilizar este árbol y no crear otro entorno npm.
+- Comandos: `npm run dev`; suite `node --test --test-isolation=none tests/*.test.ts`; build `npm run build`; preview `npm run preview`.
+- Verificación: regresiones dirigidas 5/5 PASS; suite Node 100/100 PASS; ESLint focalizado sin errores y con una advertencia preexistente de dependencia de hook en `SolicitudDocumentosEditor`; build PASS (315 módulos, CSS 268.18 kB, JS 738.49 kB); `git diff --check` PASS. Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
 # Handoff 2026-09-26 — confirmación de Consejo únicamente desde Comité
 
 ## Estado actual, decisión y salida esperada
