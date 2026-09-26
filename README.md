@@ -10,6 +10,12 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-26 — previsualización y firma de créditos condonables
+
+- En la creación de créditos condonables, **Previsualizar documento de solicitud** usa el color primario cuando está disponible y una superficie atenuada, menor contraste y cursor no permitido cuando faltan datos. Ambos estados consumen tokens semánticos y funcionan en temas claro y oscuro.
+- En el detalle, la acción se llama **Firmar documentos**. Después de completarla, el mensaje confirma que se firmaron únicamente los documentos que requieren la firma del usuario; no implica que todos los adjuntos o documentos asignados a otros responsables hayan sido firmados.
+- Se conserva el endpoint `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}`, la recarga posterior del detalle y los adjuntos, y las reglas existentes de asignación y estado. No cambiaron DTO, permisos, dependencias, variables, schemas, seeds ni datasets.
+
 ## Corrección 2026-09-26 — confirmación de envío al Consejo solo desde Comité
 
 - Al aprobar una solicitud de tipo **OTRA**, el diálogo **¿Requiere aprobación del Consejo Académico?** se abre únicamente cuando la solicitud está en Comité Asesor de Posgrados. Si ya está en el estado enviado al Consejo, **Aprobar** continúa directamente con la selección del acta de Consejo y no vuelve a preguntar si debe enviarse allí.
