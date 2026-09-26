@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
   getEstadoSolicitudCatalog,
@@ -62,6 +63,22 @@ test('reconoce el estado enviado a consejo por sigla y por nombre descriptivo', 
     DEFAULT_ESTADOS_SOLICITUD_CATALOG.find((estado) => estado.id === 10),
     { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO ACADEMICO' },
   )
+})
+
+test('destaca con el color primario los envios a comite y consejo', () => {
+  const component = readFileSync(
+    new URL('../src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx', import.meta.url),
+    'utf8',
+  )
+  const styles = readFileSync(
+    new URL('../src/modules/solicitudes/components/StatusBadge/StatusBadge.css', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(component, /ENVIADA: 'enviada-organo'/)
+  assert.match(component, /ENVIADA_CONSEJO: 'enviada-organo'/)
+  assert.match(styles, /\.status-badge\.status-badge--enviada-organo\s*{[^}]*background: var\(--primary\);/s)
+  assert.match(styles, /\.status-badge\.status-badge--enviada-organo\s*{[^}]*color: var\(--on-primary\);/s)
 })
 
 test('reconoce los ajustes recibidos por sigla y por nombre descriptivo', () => {

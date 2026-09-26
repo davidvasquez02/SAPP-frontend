@@ -8,7 +8,7 @@ interface StatusBadgeProps {
 }
 
 const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, string> = {
-  ENVIADA: 'enviada',
+  ENVIADA: 'enviada-organo',
   EN_REVISION: 'en-revision',
   APROBADA: 'aprobada',
   RECHAZADA: 'rechazada',
@@ -16,7 +16,7 @@ const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, strin
   PFIR_DIR_TG: 'en-firma',
   PFIR_COOR_POS: 'en-firma',
   PFIR_CAR_CONT: 'en-firma',
-  ENVIADA_CONSEJO: 'enviada',
+  ENVIADA_CONSEJO: 'enviada-organo',
   JUR_POR_DESIG: 'en-revision',
   JUR_INVITADO: 'en-revision',
   EN_EVALUACION: 'en-revision',
