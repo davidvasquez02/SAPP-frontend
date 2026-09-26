@@ -18,10 +18,10 @@
   font-size: 0.8rem;
 }
 
-.status-badge.status-badge--enviada {
-  background: color-mix(in srgb, var(--inverse-primary), transparent 86%);
-  border-color: color-mix(in srgb, var(--inverse-primary), transparent 55%);
-  color: var(--inverse-primary);
+.status-badge.status-badge--enviada-organo {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 
 .status-badge.status-badge--en-revision,

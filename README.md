@@ -10,6 +10,12 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-26 — estados enviados a comité y consejo
+
+- Las etiquetas **ENVIADA A COMITE ASESOR DE POSGRADOS** y **ENVIADA A CONSEJO ACADEMICO** usan ahora el fondo sólido `--primary` y el texto contrastante `--on-primary`, en vez de la presentación translúcida que podía parecer inactiva. La solución se adapta automáticamente a los temas claro y oscuro.
+- El cambio se centralizó en `StatusBadge`, por lo que se aplica de forma uniforme en listados, tarjetas y detalles compartidos de solicitudes académicas, créditos condonables y proyectos de grado. No cambian estados, etiquetas, endpoints, DTO, permisos ni persistencia.
+- No se agregaron dependencias, variables, schemas, seeds ni datasets. La regresión se encuentra en `tests/estadoSolicitud.test.ts`.
+
 ## Corrección 2026-09-26 — aislamiento del detalle de solicitudes por estudiante
 
 - El detalle común de solicitudes valida ahora la identidad estudiantil antes de mostrar cualquier tipo de solicitud. Para una sesión exclusivamente estudiantil, obtiene el `estudiante.id` autenticado, consulta `GET /sapp/solicitudesAcademicas/estudiante?estudianteId={id}` y solo presenta el registro si su `id` está dentro de esa colección; una URL copiada de otro estudiante muestra **No tienes permiso para consultar esta solicitud.**

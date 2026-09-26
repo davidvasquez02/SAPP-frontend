@@ -1,3 +1,25 @@
+# Handoff 2026-09-26 — contraste de estados enviados a órganos académicos
+
+## Estado actual y decisión
+
+- `StatusBadge` asigna tanto `ENVIADA` (**ENVIADA A COMITE ASESOR DE POSGRADOS**) como `ENVIADA_CONSEJO` (**ENVIADA A CONSEJO ACADEMICO**) al modificador compartido `status-badge--enviada-organo`.
+- Ese modificador usa `background` y `border-color: var(--primary)` con `color: var(--on-primary)`. Se eligió una superficie primaria sólida para que el trámite se perciba activo, mantener contraste y respetar automáticamente los temas `body.light` y `body.dark` sin colores fijos.
+- La presentación está centralizada y alcanza los listados de escritorio, tarjetas móviles y detalle común que reutilizan `StatusBadge`, incluyendo solicitudes académicas, créditos condonables y proyectos de grado. No cambiaron etiquetas, normalización, endpoints, DTO, roles, schemas ni persistencia.
+
+## Artefactos, contrato y salida esperada
+
+- Implementación: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `StatusBadge.css`; regresión: `tests/estadoSolicitud.test.ts`.
+- Salida esperada: ambos estados enviados a órgano académico se presentan como pills con fondo primario sólido y texto `--on-primary`; los demás estados conservan su semántica visual existente.
+- No existen artefactos binarios, paquetes, variables, seeds o datasets nuevos. La ruta protegida continúa dependiendo de sesión y backend institucionales.
+
+## Entorno, pruebas y continuidad
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: regresión dirigida 7/7 PASS; suite Node 95/95 PASS; ESLint focalizado PASS; build PASS (314 módulos, CSS 267.78 kB, JS 738.24 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB y npm informa la configuración antigua `http-proxy`.
+- Pendiente externo: revisar con una sesión institucional el resultado en listados y detalles, temas claro/oscuro y móvil/escritorio. El contenedor no incluye Chromium, Chrome ni Firefox y no hay credenciales o seed local para capturar la ruta autenticada.
+
+---
+
 # Handoff 2026-09-26 — autorización del detalle de solicitudes estudiantiles
 
 ## Estado actual, decisión y salida esperada
