@@ -3,6 +3,7 @@ import { DocumentUploadCard } from '../../../../components'
 import { getDocumentosPorTipoTramite } from '../../../../api/tramiteDocumentService'
 import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
+import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { getAsignaturasCatalogo, getAsignaturasExternasActivas } from '../../api/asignaturasService'
 import { getModalidadesContraprestacion } from '../../api/modalidadContraprestacionService'
 import type {
@@ -348,16 +349,16 @@ const SolicitudEstudianteForm = ({
   }, [isHomologacion])
 
   const handleFileChange = (documentoId: number, file: File | null) => {
-    const isPdf = file === null || file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    const invalidFile = file !== null && !isPdfFile(file)
     setDocumentosDraft((current) =>
       current.map((documento) =>
         documento.id === documentoId
           ? {
               ...documento,
-              file: isEdicionRevistasCientificas && !isPdf ? null : file,
+              file: invalidFile ? null : file,
               error:
-                isEdicionRevistasCientificas && !isPdf
-                  ? 'Para esta modalidad solo se permiten archivos PDF.'
+                invalidFile
+                  ? 'Solo se permiten archivos PDF.'
                   : documento.obligatorio && file === null
                     ? 'Este documento es obligatorio.'
                     : null,
@@ -370,11 +371,17 @@ const SolicitudEstudianteForm = ({
   const handleFilesChange = (documentoId: number, files: File[]) => {
     setDocumentosDraft((current) => current.map((documento) => {
       if (documento.id !== documentoId) return documento
+      const pdfFiles = files.filter(isPdfFile)
       const selectedFiles = limitarDocumentosSoporte(
         [documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null),
-        files,
+        pdfFiles,
       )
-      return { ...documento, file: selectedFiles[0] ?? null, additionalFiles: selectedFiles.slice(1), error: null }
+      return {
+        ...documento,
+        file: selectedFiles[0] ?? null,
+        additionalFiles: selectedFiles.slice(1),
+        error: pdfFiles.length === files.length ? null : 'Solo se permiten archivos PDF.',
+      }
     }))
   }
 
@@ -985,7 +992,7 @@ const SolicitudEstudianteForm = ({
                 selectedFiles={[documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)}
                 onSelectFiles={handleFilesChange}
                 onRemoveSelectedFile={handleRemoveSelectedFile}
-                fileAccept={isEdicionRevistasCientificas ? 'application/pdf,.pdf' : undefined}
+                fileAccept={PDF_FILE_ACCEPT}
               />
             ))}
           </div>

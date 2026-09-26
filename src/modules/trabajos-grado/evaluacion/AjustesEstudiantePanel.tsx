@@ -4,6 +4,7 @@ import type { DocumentChecklistItemDto } from '../../../api/documentChecklistTyp
 import { uploadDocument } from '../../../api/documentUploadService'
 import { fileToBase64 } from '../../../utils/fileToBase64'
 import { sha256Hex } from '../../../utils/sha256'
+import { isPdfFile, PDF_FILE_ACCEPT } from '../../../shared/files/pdfFile'
 import { definirDocumentoEvaluar, getProcesoEvaluacion } from './api'
 import type { ProcesoEvaluacionTg } from './types'
 import './AjustesEstudiantePanel.css'
@@ -122,7 +123,22 @@ const AjustesEstudiantePanel = ({
         <div className="ajustes-estudiante__upload">
           <label>
             <span>Nuevo archivo para {documentName}</span>
-            <input type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} disabled={uploading} />
+            <input
+              type="file"
+              accept={PDF_FILE_ACCEPT}
+              onChange={(event) => {
+                const selectedFile = event.target.files?.[0] ?? null
+                if (selectedFile && !isPdfFile(selectedFile)) {
+                  setFile(null)
+                  setError('Solo se permiten archivos PDF.')
+                  event.target.value = ''
+                  return
+                }
+                setError(null)
+                setFile(selectedFile)
+              }}
+              disabled={uploading}
+            />
           </label>
           {file && <p>Archivo seleccionado: {file.name}</p>}
           <button type="button" onClick={() => void handleUpload()} disabled={!file || uploading}>

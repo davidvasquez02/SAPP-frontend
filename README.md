@@ -2,6 +2,13 @@
 
 SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula académica y financiera, solicitudes, créditos condonables, actas, informes y trabajos de grado. El frontend organiza rutas y guards en `src/app`, vistas en `src/pages`, contratos y lógica por dominio en `src/modules`, y componentes comunes en `src/components`. El backend Spring Boot/PostgreSQL continúa siendo la fuente de reglas académicas, autorización y persistencia.
 
+## Corrección 2026-09-26 — adjuntos PDF en solicitudes y trabajos de grado
+
+- Los selectores de documentos al crear solicitudes académicas y trabajos de grado muestran únicamente archivos PDF mediante `accept="application/pdf,.pdf"`. La misma restricción se aplica al reemplazo de documentos y a la nueva versión que un estudiante carga durante ajustes de evaluación.
+- Además del filtro del selector, el cliente rechaza archivos cuyo MIME o extensión no corresponda a PDF. Los soportes adicionales múltiples conservan el máximo de cinco y omiten cualquier selección incompatible con un mensaje explícito.
+- Las fotografías mantienen sus selectores de imagen y los documentos generados automáticamente en créditos condonables no se alteran. No cambiaron endpoints, DTO, permisos, dependencias, variables, schemas, seeds ni datasets.
+- La regla reutilizable está en `src/shared/files/pdfFile.ts`; su regresión está en `tests/pdfDocumentSelection.test.ts`.
+
 ## Entorno y ejecución
 
 - Entorno comprobado el 2026-09-26: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
