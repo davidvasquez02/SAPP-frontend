@@ -8,6 +8,7 @@ import {
   firmarDocumentosSolicitudAcademica,
   getHistorialHomologaciones,
   getSolicitudAcademicaById,
+  getSolicitudesAcademicasByEstudiante,
   getSolicitudesAcademicasAsignadas,
 } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import {
@@ -58,6 +59,10 @@ const SolicitudDetallePage = () => {
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = canManagePosgrados(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
+  const estudianteId = session?.kind === 'SAPP'
+    ? (session.user.estudiante?.id ?? session.user.detalle.estudiante?.id ?? null)
+    : null
+  const debeValidarPropiedadEstudiante = isEstudiante && !isCoordinador
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
   const processActasRequestedRef = useRef(false)
 
@@ -99,11 +104,26 @@ const SolicitudDetallePage = () => {
     let mounted = true
     setLoading(true)
     setError(null)
+    setSolicitud(null)
     setHistorialHomologaciones([])
     setShowHistorialHomologaciones(false)
     setHistorialError(null)
 
-    getSolicitudAcademicaById(parsedId)
+    const solicitudRequest = debeValidarPropiedadEstudiante
+      ? estudianteId == null
+        ? Promise.reject(new Error('No fue posible validar el estudiante de la sesión.'))
+        : getSolicitudesAcademicasByEstudiante(estudianteId).then((solicitudes) => {
+            const solicitudPropia = solicitudes.find((item) => item.id === parsedId)
+
+            if (!solicitudPropia) {
+              throw new Error('No tienes permiso para consultar esta solicitud.')
+            }
+
+            return solicitudPropia
+          })
+      : getSolicitudAcademicaById(parsedId)
+
+    solicitudRequest
       .then((response) => {
         if (!mounted) {
           return
@@ -126,7 +146,7 @@ const SolicitudDetallePage = () => {
     return () => {
       mounted = false
     }
-  }, [solicitudId])
+  }, [debeValidarPropiedadEstudiante, estudianteId, solicitudId])
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
