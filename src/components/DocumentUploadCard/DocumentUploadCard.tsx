@@ -13,6 +13,10 @@ interface DocumentUploadCardProps {
   disabled?: boolean
   fileAccept?: string
   previewAsImage?: boolean
+  multiple?: boolean
+  selectedFiles?: File[]
+  onSelectFiles?: (id: number, files: File[]) => void
+  onRemoveSelectedFile?: (id: number, index: number) => void
 }
 
 const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
@@ -58,6 +62,10 @@ export const DocumentUploadCard = ({
   fileAccept,
   previewAsImage = false,
   showUploadButton = true,
+  multiple = false,
+  selectedFiles = [],
+  onSelectFiles,
+  onRemoveSelectedFile,
 }: DocumentUploadCardProps) => {
   const [selectedPreviewDataUrl, setSelectedPreviewDataUrl] = useState<string | null>(null)
   const inputId = `document-upload-${item.id}`
@@ -86,6 +94,12 @@ export const DocumentUploadCard = ({
       : 'Seleccionar archivo'
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (multiple && onSelectFiles) {
+      const files = Array.from(event.target.files ?? [])
+      if (files.length > 0) onSelectFiles(item.id, files)
+      event.target.value = ''
+      return
+    }
     const file = event.target.files?.[0] ?? null
     if (previewAsImage && file?.type.startsWith('image/')) {
       const reader = new FileReader()
@@ -146,11 +160,26 @@ export const DocumentUploadCard = ({
             id={inputId}
             type="file"
             accept={fileAccept}
+            multiple={multiple}
             onChange={handleChange}
             disabled={disabled}
           />
-          <span>{selectButtonLabel}</span>
+          <span>{multiple ? 'Seleccionar archivos' : selectButtonLabel}</span>
         </label>
+        {multiple && selectedFiles.length > 0 ? (
+          <ul className="document-upload-card__selected-files" aria-label="Archivos seleccionados">
+            {selectedFiles.map((file, index) => (
+              <li key={`${file.name}-${file.size}-${file.lastModified}-${index}`}>
+                <span>{file.name}</span>
+                {onRemoveSelectedFile ? (
+                  <button type="button" onClick={() => onRemoveSelectedFile(item.id, index)} disabled={disabled}>
+                    Quitar
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {item.selectedFile && onRemoveFile ? (
           <button
             type="button"
