@@ -8,10 +8,12 @@ import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocato
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
+import type { AspiranteCreateResponseDto } from "../../modules/admisiones/api/aspiranteCreateTypes";
 import { CreateAspiranteModal } from "../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal";
 import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import { getNombreCompletoAspirante } from "../../modules/admisiones/utils/aspiranteNombre";
 import {
   filterAspirantes,
   paginateAspirantes,
@@ -255,10 +257,10 @@ const ConvocatoriaDetallePage = () => {
 
   const handleCreated = useCallback(
     (result: {
-      created: { nombre: string };
+      created: AspiranteCreateResponseDto;
       uploadSummary: { failedItems: { id: number }[] };
     }) => {
-      const aspiranteNombre = result.created.nombre.trim() || "nuevo aspirante";
+      const aspiranteNombre = getNombreCompletoAspirante(result.created) || "nuevo aspirante";
       if (result.uploadSummary.failedItems.length > 0) {
         setToast({
           tone: "warning",

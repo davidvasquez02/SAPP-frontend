@@ -1,10 +1,29 @@
-# Handoff 2026-09-26 — alta y listado de aspirantes
+# Handoff 2026-09-26 — contrato real del nombre al crear aspirante
+
+## Estado, causa y corrección
+
+- El backend real de `POST /sapp/aspirante` retorna `data.nombre1`, `nombre2`, `apellido1` y `apellido2`; no retorna `data.nombre`. El toast reciente ejecutaba `result.created.nombre.trim()`, por lo que la creación y los uploads podían completarse, pero el callback lanzaba **Cannot read properties of undefined (reading 'trim')** antes de cerrar el modal.
+- `AspiranteCreateResponseDto` eliminó `nombre` e incorporó los cuatro campos desagregados con nulabilidad en los nombres opcionales. `ConvocatoriaDetallePage` tipa `created` con ese DTO y usa `getNombreCompletoAspirante(result.created)` antes de construir el toast.
+- `src/modules/admisiones/utils/aspiranteNombre.ts` es una utilidad pura: recorta cada parte de forma segura con acceso opcional, omite nulos/vacíos y conserva el orden nombre1, nombre2, apellido1, apellido2. El transporte HTTP no contiene lógica de presentación.
+
+## Artefactos, contrato y verificación
+
+- Contrato: `src/modules/admisiones/api/aspiranteCreateTypes.ts`; consumo: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`; utilidad: `src/modules/admisiones/utils/aspiranteNombre.ts`.
+- Regresión: `tests/aspiranteCreateResponse.test.ts` reproduce IDs y nombres de la respuesta institucional aportada y cubre nombres opcionales nulos. El toast esperado para ese caso es **Se creó al aspirante davidxzz david vasquezzz vasquez de manera correcta.**
+- Pruebas dirigidas 8/8 PASS; suite Node 86/86 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 266.39 kB, JS 733.84 kB). Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambian request, endpoints, persistencia, permisos, schemas, dependencias, variables, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-26 — alta y listado de aspirantes
 
 ## Estado y decisiones
 
 - `/admisiones` usa ahora `ModuleLayout title="Módulo de Admisiones"`. Se retiraron el mapa visual `PROGRAM_META` y `.admisiones-program-card__code`; el `programaId` continúa intacto para agrupación, selección, creación y navegación.
 - `CreateAspiranteModal` retiró Observaciones del estado y del formulario, pero envía `observaciones: null` para mantener `AspiranteCreateRequestDto`. Mientras `isSubmitting` es verdadero, la capa `role="status"` es hermana del diálogo y se posiciona sobre todo el viewport del modal; así cubre también las zonas no visibles del formulario desplazable. Fondo, `Escape` y acciones quedan bloqueados hasta finalizar.
-- En éxito, `handleCreated` toma `result.created.nombre`, cierra explícitamente el modal, conserva la ruta actual del detalle, recarga inscripciones y crea un toast fijo por cinco segundos con **Se creó al aspirante {nombre} de manera correcta.** El toast puede cerrarse manualmente. Un upload parcial usa tono de advertencia y conserva el flujo existente de documentos fallidos.
+- En éxito, `handleCreated` compone el nombre desde `result.created.nombre1`, `nombre2`, `apellido1` y `apellido2`, cierra explícitamente el modal, conserva la ruta actual del detalle, recarga inscripciones y crea un toast fijo por cinco segundos con **Se creó al aspirante {nombre} de manera correcta.** El toast puede cerrarse manualmente. Un upload parcial usa tono de advertencia y conserva el flujo existente de documentos fallidos.
 - `ConvocatoriaDetallePage` reemplazó el tablero horizontal por una cuadrícula paginada de ocho tarjetas. Se eliminaron `ResizeObserver`, `scrollBy`, captura de puntero, arrastre y `suppressBoardClickRef`: esta última podía permanecer activa si el navegador no emitía el clic posterior al arrastre y cancelar el siguiente clic real en una inscripción.
 - El buscador único filtra `nombreAspirante` y `numeroInscripcion`, normaliza mayúsculas/tildes, reinicia en página 1 y muestra rango/total. La paginación ajusta páginas fuera de rango y ofrece **Anterior/Siguiente**; `StudentCard` conserva `onClick` y teclado sin un capturador ancestro que impida navegar.
 
@@ -23,8 +42,6 @@
 - Pendiente externo: validar con sesión institucional el spinner durante archivos grandes, el resultado parcial de uploads y la apertura de tarjetas filtradas/paginadas en móvil y escritorio. No hay seed/credenciales locales para reproducir el backend autenticado.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Handoff 2026-09-25 — evaluadores automáticos de convocatoria
 
@@ -3611,7 +3628,7 @@
 ## Contrato y salida esperada
 - Request: `POST ${VITE_API_URL || '/api/sapp'}/aspirante` con JSON `{ nombre1: string, nombre2: string | null, apellido1: string, apellido2: string | null, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`.
 - `nombre1` y `apellido1` deben contener texto no vacío. Los dos campos opcionales se recortan y se envían como `null` si el usuario no los diligencia.
-- La respuesta no fue modificada por esta tanda: la UI continúa esperando el envelope exitoso con `data.id` y `data.inscripcionAdmisionId` para asociar los documentos. `AspiranteCreateResponseDto.nombre` se conserva mientras el backend aún lo entregue como nombre de presentación.
+- **Supersedido por el contrato verificado el 2026-09-26:** el envelope exitoso conserva `data.id` y `data.inscripcionAdmisionId` para asociar documentos, pero el nombre llega desagregado en `nombre1`, `nombre2`, `apellido1` y `apellido2`; no existe `AspiranteCreateResponseDto.nombre`.
 - El backend también informó el mismo cambio para `PUT /aspirante`; no existe en esta UI un formulario general de edición de datos personales. `src/api/aspiranteService.ts` contiene un PUT limitado a grupo/director de investigación y no se amplió sin un contrato completo de esa operación.
 
 ## Paths, artefactos y próximos pasos

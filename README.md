@@ -10,6 +10,12 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Corrección 2026-09-26 — nombre del aspirante después de crearlo
+
+- `POST /sapp/aspirante` retorna el nombre desagregado como `nombre1`, `nombre2`, `apellido1` y `apellido2`; `AspiranteCreateResponseDto` quedó alineado con ese contrato y ya no declara el campo inexistente `nombre`.
+- El toast compone el nombre completo con `getNombreCompletoAspirante`, omite partes nulas o vacías y evita ejecutar `.trim()` sobre un valor inexistente. Esto elimina **Cannot read properties of undefined (reading 'trim')** después de una creación que ya había sido persistida.
+- La utilidad pura vive en `src/modules/admisiones/utils/aspiranteNombre.ts` y la regresión reproduce la respuesta real en `tests/aspiranteCreateResponse.test.ts`. Verificación: pruebas dirigidas 8/8, suite Node 86/86, ESLint focalizado y build PASS (311 módulos; CSS 266.39 kB; JS 733.84 kB).
+
 ## Mejora 2026-09-26 — alta y consulta de aspirantes
 
 - La portada `/admisiones` se titula **Módulo de Admisiones** y las tarjetas dejaron de repetir debajo del nombre el código numérico del programa. La identificación y navegación siguen usando el `programaId` real, sin depender del texto visible.
