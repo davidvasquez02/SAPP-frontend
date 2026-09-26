@@ -12,9 +12,9 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 
 ## Corrección 2026-09-26 — múltiples soportes adicionales por solicitud
 
-- **Documento soporte adicional** permite seleccionar, acumular y quitar varios archivos en cualquier tipo de solicitud académica, crédito condonable o trabajo de grado que incluya ese requisito. Los demás requisitos documentales conservan la selección de un solo archivo.
+- **Documento soporte adicional** permite seleccionar, acumular y quitar hasta cinco archivos en cualquier tipo de solicitud académica, crédito condonable o trabajo de grado que incluya ese requisito. La tarjeta informa el máximo y el contador seleccionado; al completar cinco deshabilita nuevas selecciones. Los demás requisitos documentales conservan la selección de un solo archivo.
 - Al registrar la solicitud, cada archivo adicional se aplana como una carga independiente con el mismo `tipoDocumentoTramiteId`; se reutiliza sin cambios `POST /sapp/document` y su contrato de base64, metadatos y checksum. No se agregaron endpoints, dependencias, variables, schemas, seeds ni datasets.
-- La detección tolera código o nombre, separadores, mayúsculas y tildes. La regresión está en `tests/documentosSolicitudMultiples.test.ts`. Verificación: prueba dirigida 2/2, suite Node 91/91, ESLint focalizado y build PASS (314 módulos; CSS 267.68 kB; JS 737.44 kB).
+- La detección tolera código o nombre, separadores, mayúsculas y tildes. La regresión está en `tests/documentosSolicitudMultiples.test.ts`. Verificación: prueba dirigida 3/3, suite Node 92/92, ESLint focalizado y build PASS (314 módulos; CSS 267.87 kB; JS 737.90 kB).
 
 ## Mejora 2026-09-26 — formulario de homologación de asignaturas
 

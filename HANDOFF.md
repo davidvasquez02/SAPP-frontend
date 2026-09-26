@@ -2,13 +2,13 @@
 
 ## Estado, decisión y salida esperada
 
-- Implementado en el formulario común de registro de solicitudes: cualquier requisito cuyo código o nombre represente **Documento soporte adicional** habilita selección múltiple. El usuario puede agregar nuevas tandas sin perder las anteriores y retirar archivos individualmente; los requisitos restantes siguen siendo monodocumento.
+- Implementado en el formulario común de registro de solicitudes: cualquier requisito cuyo código o nombre represente **Documento soporte adicional** habilita selección múltiple con un máximo efectivo de cinco archivos. La tarjeta muestra el límite y un contador, recorta cualquier tanda que exceda los cupos restantes y deshabilita la selección al llegar a cinco. El usuario puede retirar un archivo para liberar un cupo; los requisitos restantes siguen siendo monodocumento.
 - `SolicitudDocumentoDraft` conserva el primer `file` por compatibilidad y almacena el resto en `additionalFiles`. Al enviar, el formulario aplana todos los archivos y `SolicitudesEstudianteView` ejecuta una llamada existente a `POST /sapp/document` por archivo, siempre con el mismo `tipoDocumentoTramiteId` del requisito. Salida esperada: N archivos elegidos producen N cargas independientes, sin endpoints ni contratos nuevos.
 - La regla común está en `src/modules/solicitudes/utils/documentosSolicitud.ts`; UI en `src/components/DocumentUploadCard/`; integración en `src/modules/solicitudes/components/SolicitudEstudianteForm/`; regresión en `tests/documentosSolicitudMultiples.test.ts`. No existen nuevos datasets, seeds, variables, paquetes ni migraciones.
 
 ## Verificación, retos y continuidad
 
-- Prueba dirigida 2/2 PASS; suite Node 91/91 PASS; ESLint focalizado PASS; build PASS (314 módulos, CSS 267.68 kB, JS 737.44 kB). El build conserva únicamente el aviso no bloqueante por el chunk JavaScript superior a 500 kB y npm avisa sobre `http-proxy`.
+- Prueba dirigida 3/3 PASS; suite Node 92/92 PASS; ESLint focalizado PASS; build PASS (314 módulos, CSS 267.87 kB, JS 737.90 kB). El build conserva únicamente el aviso no bloqueante por el chunk JavaScript superior a 500 kB y npm avisa sobre `http-proxy`.
 - Entorno único comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`. Pendiente externo: validar con sesión/backend institucional que el servidor acepta varias filas del mismo tipo documental para una solicitud y revisar el selector/listado en claro, oscuro y móvil. No hay credenciales ni seed local para esa ruta protegida y el contenedor no incluye navegador para captura autenticada.
 

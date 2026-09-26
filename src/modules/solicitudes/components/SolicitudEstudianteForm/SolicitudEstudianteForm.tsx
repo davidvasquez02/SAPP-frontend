@@ -16,7 +16,11 @@ import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { getConfiguracionDatosTrabajo, getErrorTituloTrabajo } from '../../utils/datosTrabajoSolicitud'
-import { permiteMultiplesArchivos } from '../../utils/documentosSolicitud'
+import {
+  limitarDocumentosSoporte,
+  MAX_DOCUMENTOS_SOPORTE_ADICIONAL,
+  permiteMultiplesArchivos,
+} from '../../utils/documentosSolicitud'
 import { DaneLocationSelector } from '../DaneLocationSelector/DaneLocationSelector'
 import {
   DEFAULT_DEPARTMENT_CODE,
@@ -364,11 +368,14 @@ const SolicitudEstudianteForm = ({
   }
 
   const handleFilesChange = (documentoId: number, files: File[]) => {
-    setDocumentosDraft((current) => current.map((documento) =>
-      documento.id === documentoId
-        ? { ...documento, file: documento.file ?? files[0] ?? null, additionalFiles: [...documento.additionalFiles, ...files.slice(documento.file ? 0 : 1)], error: null }
-        : documento,
-    ))
+    setDocumentosDraft((current) => current.map((documento) => {
+      if (documento.id !== documentoId) return documento
+      const selectedFiles = limitarDocumentosSoporte(
+        [documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null),
+        files,
+      )
+      return { ...documento, file: selectedFiles[0] ?? null, additionalFiles: selectedFiles.slice(1), error: null }
+    }))
   }
 
   const handleRemoveSelectedFile = (documentoId: number, index: number) => {
@@ -974,6 +981,7 @@ const SolicitudEstudianteForm = ({
                 onSelectFile={handleFileChange}
                 onRemoveFile={permiteMultiplesArchivos(documento) ? undefined : (documentoId) => handleFileChange(documentoId, null)}
                 multiple={permiteMultiplesArchivos(documento)}
+                maxFiles={permiteMultiplesArchivos(documento) ? MAX_DOCUMENTOS_SOPORTE_ADICIONAL : undefined}
                 selectedFiles={[documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)}
                 onSelectFiles={handleFilesChange}
                 onRemoveSelectedFile={handleRemoveSelectedFile}

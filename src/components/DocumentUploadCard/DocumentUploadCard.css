@@ -111,6 +111,18 @@
   align-items: center;
 }
 
+.document-upload-card__file-limit {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__file:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .document-upload-card__selected-files {
   flex-basis: 100%;
   display: grid;
