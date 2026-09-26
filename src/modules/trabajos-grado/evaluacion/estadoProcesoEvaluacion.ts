@@ -3,7 +3,6 @@ import type { JuradoEvaluador } from './types'
 const ESTADOS_AGENDABLES = new Set([
   'CONCEPTOS_REC',
   'CONCEPTOS_RECIBIDOS',
-  'EN_AJUSTES',
   'AJUSTES_RECIB',
   'AJUSTES_RECIBIDOS',
 ])
