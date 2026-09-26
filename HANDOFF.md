@@ -1,4 +1,24 @@
-# Handoff 2026-09-26 — cabecera del detalle de convocatoria
+# Handoff 2026-09-26 — formulario estudiantil de homologación
+
+## Estado y decisiones
+
+- `SolicitudEstudianteForm` alinea los selectores de materia origen y destino mediante una fila visual equivalente (`solicitud-estudiante-form__homologacion-alignment`). Esta reserva existe solo en escritorio; hasta 640 px desaparece porque los campos se presentan en una sola columna.
+- Los dos puntos de entrada para añadir una homologación muestran **Agregar asignaturas** y comparten el estilo compacto `solicitud-estudiante-form__add-homologacion`, centrado y de ancho natural.
+- En modo **Asignatura nueva**, `codigoAsignaturaExterna` y `nombreAsignaturaExterna` deben contener texto. El código tiene `required`, estado accesible de error y el placeholder **Código de la materia \***. Si falta cualquiera, el formulario no construye la solicitud y explica que deben completarse código y nombre.
+- La rama manual de `SolicitudHomologacionAsignaturaRequestDto` exige `codigoAsignaturaExterna: string`; el payload lo envía recortado y sin omisión condicional. La rama de asignatura existente conserva `{ asignatura_origen_id, asignatura_destino_id }`.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`, su CSS y `src/modules/solicitudes/api/types.ts`. Regresión: `tests/homologacionSolicitudForm.test.ts`.
+- Salida esperada: dos selectores alineados en escritorio, campos apilados sin separador vacío en móvil, botón pequeño **Agregar asignaturas** y bloqueo del envío cuando una asignatura nueva no tenga código.
+- Prueba dirigida 2/2 PASS; suite Node 89/89 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 267.21 kB, JS 734.59 kB). Vite conserva únicamente el aviso no bloqueante del chunk JavaScript mayor de 500 kB.
+- No hay endpoints, variables, schemas de base de datos, seeds, datasets ni paquetes nuevos. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-26 — cabecera del detalle de convocatoria
 
 ## Estado y decisión visual
 
@@ -14,8 +34,6 @@
 - No cambian endpoints, DTO, payloads, permisos, dependencias, variables, schemas, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Handoff 2026-09-26 — contrato real del nombre al crear aspirante
 

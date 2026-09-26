@@ -10,6 +10,13 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-26 — formulario de homologación de asignaturas
+
+- En la creación estudiantil de solicitudes de homologación, los controles de **Materia origen** y **Materia destino del programa** conservan una fila equivalente para que ambos selectores queden alineados horizontalmente. En pantallas de hasta 640 px se elimina el espacio de alineación y las columnas se apilan sin huecos adicionales.
+- La acción para incorporar otro registro se llama **Agregar asignaturas**, usa un botón pill compacto de ancho natural y mantiene una altura táctil accesible en móvil.
+- Cuando se utiliza **Asignatura nueva**, tanto el código como el nombre son obligatorios. El código se marca visual y semánticamente como requerido, participa en la validación previa y se envía siempre en `codigoAsignaturaExterna`; el DTO del caso manual ya no lo declara opcional.
+- No cambian endpoints, permisos, persistencia ni dependencias. Regresión: `tests/homologacionSolicitudForm.test.ts`. Verificación: prueba dirigida 2/2, suite Node 89/89, ESLint focalizado y build PASS (311 módulos; CSS 267.21 kB; JS 734.59 kB).
+
 ## Mejora 2026-09-26 — jerarquía visual del detalle de convocatoria
 
 - La cabecera del detalle presenta una etiqueta discreta **Convocatoria de admisión**, el título **Aspirantes inscritos** y el nombre oficial del programa en líneas separadas. Código y período académico quedan como metadatos secundarios compactos, separados tipográficamente y sin repetir el nombre del programa.

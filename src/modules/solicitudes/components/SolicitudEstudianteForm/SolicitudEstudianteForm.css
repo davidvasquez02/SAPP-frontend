@@ -167,8 +167,25 @@
 
 .solicitud-estudiante-form__origen legend,
 .solicitud-estudiante-form__destino label {
-  margin-bottom: 0.55rem;
   font-weight: 600;
+}
+
+.solicitud-estudiante-form__source-toggle,
+.solicitud-estudiante-form__homologacion-alignment {
+  min-height: 2.25rem;
+}
+
+.solicitud-estudiante-form__add-homologacion {
+  align-self: center;
+  width: auto;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  background: var(--surface);
+  color: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .solicitud-estudiante-form__selected-subject,
@@ -253,6 +270,10 @@
 
   .solicitud-estudiante-form__source-toggle {
     align-items: stretch;
+  }
+
+  .solicitud-estudiante-form__homologacion-alignment {
+    display: none;
   }
 
   .solicitud-estudiante-form__source-toggle button {

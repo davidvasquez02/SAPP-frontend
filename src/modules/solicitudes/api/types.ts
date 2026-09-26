@@ -122,7 +122,7 @@ export type SolicitudHomologacionAsignaturaRequestDto =
     }
   | {
       nombreAsignaturaExterna: string
-      codigoAsignaturaExterna?: string
+      codigoAsignaturaExterna: string
       asignatura_destino_id: number
     }
 
