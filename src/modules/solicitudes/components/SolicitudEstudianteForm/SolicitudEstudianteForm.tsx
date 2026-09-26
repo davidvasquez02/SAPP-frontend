@@ -16,6 +16,7 @@ import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { getConfiguracionDatosTrabajo, getErrorTituloTrabajo } from '../../utils/datosTrabajoSolicitud'
+import { permiteMultiplesArchivos } from '../../utils/documentosSolicitud'
 import { DaneLocationSelector } from '../DaneLocationSelector/DaneLocationSelector'
 import {
   DEFAULT_DEPARTMENT_CODE,
@@ -78,6 +79,7 @@ const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumento
   nombre: documento.nombre,
   obligatorio: documento.obligatorio,
   file: null,
+  additionalFiles: [],
   error: null,
 })
 
@@ -361,6 +363,23 @@ const SolicitudEstudianteForm = ({
     )
   }
 
+  const handleFilesChange = (documentoId: number, files: File[]) => {
+    setDocumentosDraft((current) => current.map((documento) =>
+      documento.id === documentoId
+        ? { ...documento, file: documento.file ?? files[0] ?? null, additionalFiles: [...documento.additionalFiles, ...files.slice(documento.file ? 0 : 1)], error: null }
+        : documento,
+    ))
+  }
+
+  const handleRemoveSelectedFile = (documentoId: number, index: number) => {
+    setDocumentosDraft((current) => current.map((documento) => {
+      if (documento.id !== documentoId) return documento
+      const files = [documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)
+      files.splice(index, 1)
+      return { ...documento, file: files[0] ?? null, additionalFiles: files.slice(1) }
+    }))
+  }
+
   const validate = (): boolean => {
     if (tipoSolicitudId === null) {
       setErrorMsg('Debes seleccionar un tipo de trámite.')
@@ -573,12 +592,14 @@ const SolicitudEstudianteForm = ({
               codigoAsignaturaExterna: item.codigoAsignaturaExterna.trim(),
               asignatura_destino_id: item.asignaturaDestinoId as number,
             }),
-      documentos: documentosDraft.map((documento) => ({
-        id: documento.id,
-        nombre: documento.nombre,
-        obligatorio: documento.obligatorio,
-        file: documento.file,
-      })),
+      documentos: documentosDraft.flatMap((documento) =>
+        [documento.file, ...documento.additionalFiles].map((file) => ({
+          id: documento.id,
+          nombre: documento.nombre,
+          obligatorio: documento.obligatorio,
+          file,
+        })),
+      ),
     }
 
     try {
@@ -951,7 +972,11 @@ const SolicitudEstudianteForm = ({
                 key={documento.id}
                 item={mapDraftToCardItem(documento)}
                 onSelectFile={handleFileChange}
-                onRemoveFile={(documentoId) => handleFileChange(documentoId, null)}
+                onRemoveFile={permiteMultiplesArchivos(documento) ? undefined : (documentoId) => handleFileChange(documentoId, null)}
+                multiple={permiteMultiplesArchivos(documento)}
+                selectedFiles={[documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)}
+                onSelectFiles={handleFilesChange}
+                onRemoveSelectedFile={handleRemoveSelectedFile}
                 fileAccept={isEdicionRevistasCientificas ? 'application/pdf,.pdf' : undefined}
               />
             ))}
