@@ -1,4 +1,48 @@
-# Handoff 2026-09-25 — mensaje de convocatoria duplicada
+# Handoff 2026-09-26 — alta y listado de aspirantes
+
+## Estado y decisiones
+
+- `/admisiones` usa ahora `ModuleLayout title="Módulo de Admisiones"`. Se retiraron el mapa visual `PROGRAM_META` y `.admisiones-program-card__code`; el `programaId` continúa intacto para agrupación, selección, creación y navegación.
+- `CreateAspiranteModal` retiró Observaciones del estado y del formulario, pero envía `observaciones: null` para mantener `AspiranteCreateRequestDto`. Mientras `isSubmitting` es verdadero muestra una capa `role="status"` con spinner y texto de creación/carga; el fondo, `Escape` y las acciones quedan bloqueados hasta finalizar. Los fallos parciales y **Reintentar fallidos** se conservan.
+- `ConvocatoriaDetallePage` reemplazó el tablero horizontal por una cuadrícula paginada de ocho tarjetas. Se eliminaron `ResizeObserver`, `scrollBy`, captura de puntero, arrastre y `suppressBoardClickRef`: esta última podía permanecer activa si el navegador no emitía el clic posterior al arrastre y cancelar el siguiente clic real en una inscripción.
+- El buscador único filtra `nombreAspirante` y `numeroInscripcion`, normaliza mayúsculas/tildes, reinicia en página 1 y muestra rango/total. La paginación ajusta páginas fuera de rango y ofrece **Anterior/Siguiente**; `StudentCard` conserva `onClick` y teclado sin un capturador ancestro que impida navegar.
+
+## Artefactos, contratos y salida esperada
+
+- Portada: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx` y `.css`.
+- Alta: `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx` y `.css`. `POST /sapp/aspirante` mantiene sus campos y recibe `observaciones: null`; la secuencia de uploads y sus checksums no cambia.
+- Listado: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`, más `src/modules/admisiones/components/StudentCard/StudentCard.css`.
+- Lógica pura: `src/modules/admisiones/utils/aspirantesList.ts`; regresión: `tests/aspirantesList.test.ts`. La salida esperada es una cuadrícula sin scroll horizontal, ocho resultados por página, búsqueda combinada nombre/código y apertura inmediata al hacer clic o pulsar Enter/Espacio.
+- No hay paquetes, variables, schemas, seeds ni datasets nuevos. La ruta protegida continúa dependiendo de sesión y backend institucionales.
+
+## Verificación y continuidad
+
+- Pruebas dirigidas 5/5 PASS; suite Node 83/83 PASS; ESLint focalizado PASS; build PASS (310 módulos, CSS 264.99 kB, JS 733.19 kB); `git diff --check` PASS. Vite conserva el aviso informativo del chunk JS mayor de 500 kB.
+- Entorno: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente externo: validar con sesión institucional el spinner durante archivos grandes, el resultado parcial de uploads y la apertura de tarjetas filtradas/paginadas en móvil y escritorio. No hay seed/credenciales locales para reproducir el backend autenticado.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-25 — evaluadores automáticos de convocatoria
+
+## Estado, decisión y salida esperada
+
+- En `CreateConvocatoriaModal`, el bloque se llama **Evaluadores** y siempre presenta primero dos filas confirmadas: **Coordinador Posgrados** y **Director de Escuela**. Cada una tiene icono de verificación, subtítulo **Evaluador incluido automáticamente** e insignia **Incluido**; no ofrece **Quitar**.
+- El selector se rotula implícitamente como adicional mediante el placeholder **Seleccione un evaluador adicional...**. Los docentes elegidos desde `GET /sapp/docentes` aparecen después con su acción **Quitar**. Si no se elige ninguno, se informa que es posible agregar evaluadores adicionales, pero el formulario no bloquea la creación: los dos cargos automáticos satisfacen la lectura visual de evaluadores ya asignados.
+- Los cargos automáticos son representación de una regla existente, no registros sintéticos: no tienen UUID ni se incluyen en `POST /sapp/evaluadorConvocatoria`. Si los nombres históricos asociados a esos cargos llegan en el catálogo, se filtran para evitar duplicarlos; solo los evaluadores adicionales seleccionados se envían con `{ evaluadorUuid, convocatoriaId }`.
+
+## Artefactos, verificación y continuidad
+
+- Implementación: `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx` y `.css`. Regresión visual/estructural: `tests/convocatoriaEvaluadores.test.ts`.
+- Verificación: pruebas dirigidas 3/3 PASS, suite Node 78/78 PASS, ESLint focalizado PASS y build PASS (309 módulos, CSS 264.36 kB, JS 733.98 kB). `git diff --check` PASS; Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambiaron endpoints, DTO, payload de creación, schemas, dependencias, variables, seeds ni datasets. Entorno único: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+- Pendiente externo: confirmar con una sesión institucional que el backend efectivamente asocia esos dos cargos conforme a su regla existente y revisar el resultado visual en temas claro/oscuro y móvil/escritorio.
+
+---
+
+## Handoff 2026-09-25 — mensaje de convocatoria duplicada
 
 ## Estado, contrato y salida esperada
 
@@ -14,8 +58,6 @@
 - Pendiente externo: reproducir el conflicto con la sesión y backend institucionales para confirmar la presentación visual del mensaje; la prueba automatizada usa el texto técnico real aportado en la captura.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Handoff 2026-09-25 — creación directa de convocatorias de admisión
 

@@ -89,6 +89,33 @@
   padding: 0.45rem 0.75rem;
 }
 
+.create-convocatoria-modal__chip--automatic {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  border-color: color-mix(in srgb, var(--primary), transparent 55%);
+  background: color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.create-convocatoria-modal__automatic-icon {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 800;
+}
+
+.create-convocatoria-modal__automatic-badge {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 60%);
+  border-radius: 999px;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
 .create-convocatoria-modal__chip strong {
   display: block;
   line-height: 1.15;
@@ -193,6 +220,15 @@
 
   .create-convocatoria-modal__chip {
     border-radius: 16px;
+  }
+
+  .create-convocatoria-modal__chip--automatic {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .create-convocatoria-modal__automatic-badge {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .create-convocatoria-modal__field,

@@ -10,6 +10,20 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-26 — alta y consulta de aspirantes
+
+- La portada `/admisiones` se titula **Módulo de Admisiones** y las tarjetas dejaron de repetir debajo del nombre el código numérico del programa. La identificación y navegación siguen usando el `programaId` real, sin depender del texto visible.
+- **Crear aspirante** ya no presenta Observaciones; el contrato existente conserva `observaciones: null`. Al enviar, una capa de progreso con spinner cubre el diálogo durante la creación y carga documental, informa **Creando aspirante y subiendo documentos…** / **Subiendo documentos…** y evita cerrar accidentalmente el modal con fondo o `Escape` hasta terminar.
+- El detalle de convocatoria eliminó el carrusel horizontal, el arrastre con puntero y la captura que podía cancelar el siguiente clic legítimo sobre una tarjeta. Los aspirantes se muestran en una cuadrícula paginada de ocho registros; cada tarjeta conserva navegación directa a la inscripción.
+- El mismo buscador filtra en cliente por nombre —ignorando mayúsculas y tildes— o por código de inscripción. Presenta rango y total, vacío específico y controles **Anterior/Siguiente** cuando hay más de una página. La lógica está aislada en `src/modules/admisiones/utils/aspirantesList.ts`.
+- Regresión: `tests/aspirantesList.test.ts`. Verificación: 5/5 pruebas dirigidas, suite Node 83/83, ESLint focalizado y build PASS (310 módulos; CSS 264.99 kB; JS 733.19 kB). No cambian endpoints, permisos, schemas, dependencias, variables, seeds ni datasets.
+
+## Mejora 2026-09-25 — evaluadores automáticos de convocatoria
+
+- El bloque **Profesores** del formulario de convocatoria se renombró **Evaluadores**. Antes de cualquier selección muestra a **Coordinador Posgrados** y **Director de Escuela** con marca de confirmación, texto **Evaluador incluido automáticamente** e insignia **Incluido**.
+- Estos cargos son informativos y no usan UUID ficticios ni se envían de nuevo al backend. El selector carga solo el catálogo de evaluadores adicionales, los agrega al seleccionarlos y permite retirarlos; ya no es obligatorio agregar uno adicional porque los dos cargos automáticos ya forman parte de la evaluación.
+- La presentación usa tokens semánticos en temas claro/oscuro y reorganiza la insignia en móvil. Regresión: `tests/convocatoriaEvaluadores.test.ts`. Verificación: prueba conjunta dirigida 3/3 PASS, suite Node 78/78 PASS, ESLint focalizado PASS y build PASS (309 módulos; CSS 264.36 kB; JS 733.98 kB).
+
 ## Corrección 2026-09-25 — mensaje de convocatoria duplicada
 
 - Al crear una convocatoria para una combinación programa+período que ya existe, el formulario ya no expone el error SQL ni la restricción `uq_convocatoria`. Presenta **Ya existe una convocatoria para el programa seleccionado en el período académico AAAA-S.** usando el año y semestre visibles en el formulario.
@@ -19,7 +33,7 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 ## Mejora 2026-09-25 — creación directa de convocatorias
 
 - En `/admisiones`, cuando un programa no tiene convocatoria del período actual ni otra abierta, coordinación, secretaría y administración ven ahora **Crear convocatoria** en la misma tarjeta. La acción abre el formulario sin abandonar la pantalla y preselecciona el programa de esa tarjeta; los perfiles sin permiso continúan viendo el estado no disponible sin acceso a creación.
-- El formulario **Nueva convocatoria** ya no muestra **Observaciones** ni el botón intermedio **Agregar**. Elegir un profesor lo incorpora inmediatamente a la lista y el selector vuelve a **Seleccione profesor...**, permitiendo agregar otro o retirar uno ya elegido.
+- El formulario **Nueva convocatoria** ya no muestra **Observaciones** ni el botón intermedio **Agregar**. Elegir un evaluador adicional lo incorpora inmediatamente a la lista y el selector vuelve a su opción inicial, permitiendo agregar otro o retirar uno ya elegido.
 - El contrato de `POST /sapp/convocatoriaAdmision` se conserva: `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones }`; como el backend aún tipa `observaciones` como obligatorio, el cliente envía `observaciones: ""`. Las asociaciones continúan enviándose después de crear la convocatoria mediante `POST /sapp/evaluadorConvocatoria`, una por profesor y con `{ evaluadorUuid, convocatoriaId }`.
 - No se añadieron dependencias, variables, schemas, seeds ni datasets. Verificación: ESLint focalizado PASS, suite Node 75/75 PASS, build PASS (308 módulos; CSS 263.58 kB; JS 733.25 kB) y `git diff --check` PASS. El lint global conserva nueve errores y una advertencia preexistentes fuera de los archivos modificados; Vite mantiene el aviso informativo por el chunk mayor de 500 kB.
 

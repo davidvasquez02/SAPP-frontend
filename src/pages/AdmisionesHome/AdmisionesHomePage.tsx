@@ -12,17 +12,6 @@ import { CreateConvocatoriaModal } from "../../modules/admisiones/components/Cre
 import { CompactPeriodSelect } from "./CompactPeriodSelect";
 import "./AdmisionesHomePage.css";
 
-const PROGRAM_META = new Map<
-  number,
-  {
-    code: string;
-    icon: string;
-  }
->([
-  [1, { code: "302", icon: "▣" }],
-  [2, { code: "347", icon: "010\n101" }],
-]);
-
 const DATE_ONLY_FORMATTER = new Intl.DateTimeFormat("es-ES", {
   day: "numeric",
   month: "short",
@@ -277,7 +266,7 @@ const AdmisionesHomePage = () => {
   );
 
   return (
-    <ModuleLayout title="Admisiones" compactOnMobile>
+    <ModuleLayout title="Módulo de Admisiones" compactOnMobile>
       <section
         className="admisiones-section-card"
         aria-labelledby="admisiones-section-title"
@@ -408,8 +397,6 @@ const AdmisionesHomePage = () => {
                 programa.programaId,
                 programa.programa,
               );
-              const programaMeta = PROGRAM_META.get(programa.programaId);
-
               return (
                 <article
                   key={programa.programaId}
@@ -420,19 +407,10 @@ const AdmisionesHomePage = () => {
                   hidden={isMobileProgramLayout && programa.programaId !== activeProgramId}
                 >
                   <header className="admisiones-program-card__header">
-                    {/* <span
-                      className="admisiones-program-card__icon"
-                      aria-hidden="true"
-                    >
-                      {programaMeta?.icon ?? "🎓"}
-                    </span> */}
                     <div>
                       <h3 className="admisiones-program-card__title">
                         {programaNombre}
                       </h3>
-                      <p className="admisiones-program-card__code">
-                        {programaMeta?.code ?? programa.programa}
-                      </p>
                     </div>
                   </header>
 

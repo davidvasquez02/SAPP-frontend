@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ScrollText, UsersRound } from "lucide-react";
 import { BackButton, ModuleLayout } from "../../components";
@@ -12,10 +12,12 @@ import { CreateAspiranteModal } from "../../modules/admisiones/components/Create
 import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import {
+  filterAspirantes,
+  paginateAspirantes,
+} from "../../modules/admisiones/utils/aspirantesList";
 import { resolveProgramaIdFromInscripciones } from "../../modules/admisiones/utils/resolveProgramaId";
 import "./ConvocatoriaDetallePage.css";
-
-const BOARD_DRAG_THRESHOLD = 8;
 
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? "").trim().toUpperCase().replaceAll(" ", "_");
@@ -25,14 +27,6 @@ const ConvocatoriaDetallePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { session } = useAuth();
-  const boardRef = useRef<HTMLDivElement | null>(null);
-  const dragStateRef = useRef({
-    active: false,
-    startX: 0,
-    startScrollLeft: 0,
-    moved: false,
-  });
-  const suppressBoardClickRef = useRef(false);
 
   const [inscripciones, setInscripciones] = useState<InscripcionAdmisionDto[]>(
     [],
@@ -41,6 +35,8 @@ const ConvocatoriaDetallePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [aspirantesQuery, setAspirantesQuery] = useState("");
+  const [aspirantesPage, setAspirantesPage] = useState(1);
   const [selectedAspirante, setSelectedAspirante] =
     useState<InscripcionAdmisionDto | null>(null);
   const [createdAspiranteIds, setCreatedAspiranteIds] = useState<Set<number>>(
@@ -48,11 +44,6 @@ const ConvocatoriaDetallePage = () => {
   );
   const [convocatoria, setConvocatoria] =
     useState<ConvocatoriaAdmisionDto | null>(null);
-  const [boardOverflow, setBoardOverflow] = useState({
-    hasOverflow: false,
-    canScrollLeft: false,
-    canScrollRight: false,
-  });
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } =
     useMemo(() => {
@@ -148,6 +139,14 @@ const ConvocatoriaDetallePage = () => {
       { label: "No admitidos", value: noAdmitidos, icon: "×", tone: "danger" },
     ];
   }, [inscripciones]);
+  const filteredInscripciones = useMemo(
+    () => filterAspirantes(inscripciones, aspirantesQuery),
+    [aspirantesQuery, inscripciones],
+  );
+  const aspirantesPagination = useMemo(
+    () => paginateAspirantes(filteredInscripciones, aspirantesPage),
+    [aspirantesPage, filteredInscripciones],
+  );
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {
@@ -240,107 +239,6 @@ const ConvocatoriaDetallePage = () => {
         },
       },
     );
-  };
-
-  const updateBoardOverflow = useCallback(() => {
-    const board = boardRef.current;
-    if (!board) {
-      setBoardOverflow({
-        hasOverflow: false,
-        canScrollLeft: false,
-        canScrollRight: false,
-      });
-      return;
-    }
-
-    const maxScrollLeft = Math.max(0, board.scrollWidth - board.clientWidth);
-    setBoardOverflow({
-      hasOverflow: maxScrollLeft > 2,
-      canScrollLeft: board.scrollLeft > 2,
-      canScrollRight: board.scrollLeft < maxScrollLeft - 2,
-    });
-  }, []);
-
-  useEffect(() => {
-    const board = boardRef.current;
-    if (!board || inscripciones.length === 0) {
-      updateBoardOverflow();
-      return;
-    }
-
-    updateBoardOverflow();
-    const resizeObserver = new ResizeObserver(updateBoardOverflow);
-    resizeObserver.observe(board);
-    Array.from(board.children).forEach((child) => resizeObserver.observe(child));
-    board.addEventListener("scroll", updateBoardOverflow, { passive: true });
-
-    return () => {
-      resizeObserver.disconnect();
-      board.removeEventListener("scroll", updateBoardOverflow);
-    };
-  }, [inscripciones, updateBoardOverflow]);
-
-  const scrollBoard = (direction: "left" | "right") => {
-    const board = boardRef.current;
-    if (!board) return;
-    const distance = Math.max(240, board.clientWidth * 0.82);
-    board.scrollBy({
-      left: direction === "right" ? distance : -distance,
-      behavior: "smooth",
-    });
-  };
-
-  const handleBoardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "mouse" || event.button !== 0) return;
-    const board = boardRef.current;
-    if (!board) return;
-    dragStateRef.current = {
-      active: true,
-      startX: event.clientX,
-      startScrollLeft: board.scrollLeft,
-      moved: false,
-    };
-    board.setPointerCapture(event.pointerId);
-  };
-
-  const handleBoardPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const board = boardRef.current;
-    const drag = dragStateRef.current;
-    if (!board || !drag.active) return;
-    const delta = event.clientX - drag.startX;
-    if (!drag.moved && Math.abs(delta) < BOARD_DRAG_THRESHOLD) return;
-    if (!drag.moved) {
-      drag.moved = true;
-      board.classList.add("is-dragging");
-    }
-    board.scrollLeft = drag.startScrollLeft - delta;
-  };
-
-  const finishBoardDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    const board = boardRef.current;
-    const wasMoved = dragStateRef.current.moved;
-    dragStateRef.current.active = false;
-    dragStateRef.current.moved = false;
-    board?.classList.remove("is-dragging");
-    if (board?.hasPointerCapture(event.pointerId)) {
-      board.releasePointerCapture(event.pointerId);
-    }
-    if (wasMoved) suppressBoardClickRef.current = true;
-  };
-
-  const handleBoardClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!suppressBoardClickRef.current) return;
-    event.preventDefault();
-    event.stopPropagation();
-    suppressBoardClickRef.current = false;
-  };
-
-  const handleBoardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) return;
-    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      event.preventDefault();
-      scrollBoard(event.key === "ArrowRight" ? "right" : "left");
-    }
   };
 
   const handleCreated = useCallback(
@@ -584,33 +482,22 @@ const ConvocatoriaDetallePage = () => {
             aria-labelledby="applicants-board-title"
           >
             <div className="applicants-board-header">
-              <div>
-                <h2 id="applicants-board-title">Listado de aspirantes</h2>
-                {boardOverflow.hasOverflow ? (
-                  <p>Desliza horizontalmente para ver más aspirantes</p>
-                ) : null}
-              </div>
-              {boardOverflow.hasOverflow ? <div
-                className="applicants-board-header__controls"
-                aria-label="Controles de desplazamiento horizontal"
-              >
-                <button
-                  type="button"
-                  aria-label="Desplazar aspirantes a la izquierda"
-                  onClick={() => scrollBoard("left")}
-                  disabled={!boardOverflow.canScrollLeft}
-                >
-                  <span aria-hidden="true">←</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Desplazar aspirantes a la derecha"
-                  onClick={() => scrollBoard("right")}
-                  disabled={!boardOverflow.canScrollRight}
-                >
-                  <span aria-hidden="true">→</span>
-                </button>
-              </div> : null}
+              <h2 id="applicants-board-title">Listado de aspirantes</h2>
+              {inscripciones.length > 0 ? (
+                <label className="applicants-board-search">
+                  <span className="sr-only">Buscar aspirante por nombre o código de inscripción</span>
+                  <span className="applicants-board-search__icon" aria-hidden="true">⌕</span>
+                  <input
+                    type="search"
+                    value={aspirantesQuery}
+                    placeholder="Buscar por nombre o código de inscripción"
+                    onChange={(event) => {
+                      setAspirantesQuery(event.target.value);
+                      setAspirantesPage(1);
+                    }}
+                  />
+                </label>
+              ) : null}
             </div>
 
             {inscripciones.length === 0 ? (
@@ -618,28 +505,53 @@ const ConvocatoriaDetallePage = () => {
                 <span aria-hidden="true">👤</span>
                 <p>No hay aspirantes inscritos en esta convocatoria.</p>
               </div>
-            ) : (
-              <div
-                ref={boardRef}
-                className="applicants-horizontal-board convocatoria-detalle__grid"
-                tabIndex={0}
-                aria-label="Listado horizontal de aspirantes inscritos"
-                onPointerDown={handleBoardPointerDown}
-                onPointerMove={handleBoardPointerMove}
-                onPointerUp={finishBoardDrag}
-                onPointerCancel={finishBoardDrag}
-                onClickCapture={handleBoardClickCapture}
-                onKeyDown={handleBoardKeyDown}
-              >
-                {inscripciones.map((inscripcion) => (
-                  <StudentCard
-                    key={inscripcion.id}
-                    inscripcion={inscripcion}
-                    photoUrl={resolveAspirantePhoto(inscripcion)}
-                    onClick={() => handleRowClick(inscripcion)}
-                  />
-                ))}
+            ) : filteredInscripciones.length === 0 ? (
+              <div className="convocatoria-detalle__empty">
+                <span aria-hidden="true">⌕</span>
+                <p>No hay aspirantes que coincidan con la búsqueda.</p>
               </div>
+            ) : (
+              <>
+                <p className="applicants-board-results" aria-live="polite">
+                  Mostrando {aspirantesPagination.start}–{aspirantesPagination.end} de{' '}
+                  {filteredInscripciones.length} aspirantes
+                </p>
+                <div
+                  className="convocatoria-detalle__grid"
+                  aria-label="Aspirantes inscritos"
+                >
+                  {aspirantesPagination.items.map((inscripcion) => (
+                    <StudentCard
+                      key={inscripcion.id}
+                      inscripcion={inscripcion}
+                      photoUrl={resolveAspirantePhoto(inscripcion)}
+                      onClick={() => handleRowClick(inscripcion)}
+                    />
+                  ))}
+                </div>
+                {aspirantesPagination.pageCount > 1 ? (
+                  <nav className="applicants-pagination" aria-label="Paginación de aspirantes">
+                    <button
+                      type="button"
+                      onClick={() => setAspirantesPage(aspirantesPagination.page - 1)}
+                      disabled={aspirantesPagination.page === 1}
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      Página <strong>{aspirantesPagination.page}</strong> de{' '}
+                      {aspirantesPagination.pageCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAspirantesPage(aspirantesPagination.page + 1)}
+                      disabled={aspirantesPagination.page === aspirantesPagination.pageCount}
+                    >
+                      Siguiente
+                    </button>
+                  </nav>
+                ) : null}
+              </>
             )}
           </section>
         ) : null}

@@ -57,7 +57,6 @@ interface FormState {
   emailPersonal: string
   telefono: string
   numeroInscripcionUis: string
-  observaciones: string
 }
 
 const initialFormState: FormState = {
@@ -70,7 +69,6 @@ const initialFormState: FormState = {
   emailPersonal: '',
   telefono: '',
   numeroInscripcionUis: '',
-  observaciones: '',
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -198,7 +196,7 @@ export const CreateAspiranteModal = ({
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isSubmitting) {
         onClose()
       }
     }
@@ -209,7 +207,7 @@ export const CreateAspiranteModal = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open, onClose])
+  }, [isSubmitting, open, onClose])
 
   const formTitleId = useMemo(() => 'create-aspirante-title', [])
 
@@ -439,7 +437,7 @@ export const CreateAspiranteModal = ({
           emailPersonal: formState.emailPersonal.trim(),
           numeroInscripcionUis: formState.numeroInscripcionUis.trim(),
           telefono: formState.telefono.trim() || null,
-          observaciones: formState.observaciones.trim() || null,
+          observaciones: null,
           programaId: programaId ?? 0,
           convocatoriaAdmisionId: convocatoriaAdmisionId ?? 0,
         }
@@ -523,10 +521,12 @@ export const CreateAspiranteModal = ({
         role="bn"
         tabIndex={0}
         aria-label="Cerrar"
-        onClick={onClose}
+        onClick={() => {
+          if (!isSubmitting) onClose()
+        }}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
-            onClose()
+            if (!isSubmitting) onClose()
           }
         }}
       />
@@ -536,6 +536,17 @@ export const CreateAspiranteModal = ({
         aria-modal="true"
         aria-labelledby={formTitleId}
       >
+        {isSubmitting ? (
+          <div className="create-aspirante-modal__progress" role="status" aria-live="polite">
+            <span className="create-aspirante-modal__spinner" aria-hidden="true" />
+            <strong>
+              {isAspiranteCreated
+                ? 'Subiendo documentos…'
+                : 'Creando aspirante y subiendo documentos…'}
+            </strong>
+            <span>Espere mientras finaliza el proceso.</span>
+          </div>
+        ) : null}
         <header className="create-aspirante-modal__header">
           <h2 id={formTitleId}>Crear aspirante</h2>
           <p>Complete la información para registrar el aspirante en el programa.</p>
@@ -750,17 +761,6 @@ export const CreateAspiranteModal = ({
               </span>
             ) : null}
           </div>
-
-          <label className="create-aspirante-modal__field create-aspirante-modal__field--full">
-            <span>Observaciones</span>
-            <textarea
-              placeholder="Notas adicionales"
-              value={formState.observaciones}
-              onChange={(event) => handleChange('observaciones', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
-              rows={3}
-            />
-          </label>
 
           {uploadSummary.status === 'partial' ? (
             <div className="create-aspirante-modal__summary create-aspirante-modal__field--full">
