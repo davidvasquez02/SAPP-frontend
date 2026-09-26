@@ -10,6 +10,12 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-26 — jerarquía visual del detalle de convocatoria
+
+- La cabecera del detalle presenta una etiqueta discreta **Convocatoria de admisión**, el título **Aspirantes inscritos** y el nombre oficial del programa en líneas separadas. Código y período académico quedan como metadatos secundarios compactos, separados tipográficamente y sin repetir el nombre del programa.
+- Se retiraron los iconos decorativos de calendario, birrete y suma. **Crear aspirante** ocupa su ancho natural y se alinea con la cabecera en escritorio; en móvil conserva el ancho completo. El código y nombre se resuelven desde el catálogo común, con fallback al texto del backend.
+- No cambian navegación, acciones, permisos ni contratos. Regresión incorporada en `tests/aspirantesList.test.ts`. Verificación: prueba dirigida 7/7, suite Node 87/87, ESLint focalizado y build PASS (311 módulos; CSS 266.79 kB; JS 734.14 kB).
+
 ## Corrección 2026-09-26 — nombre del aspirante después de crearlo
 
 - `POST /sapp/aspirante` retorna el nombre desagregado como `nombre1`, `nombre2`, `apellido1` y `apellido2`; `AspiranteCreateResponseDto` quedó alineado con ese contrato y ya no declara el campo inexistente `nombre`.

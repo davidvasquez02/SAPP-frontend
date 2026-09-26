@@ -100,3 +100,13 @@ test('al completar la creación muestra un toast con el nombre del aspirante', a
   assert.match(source, /convocatoria-detalle__toast/)
   assert.match(source, /setIsCreateModalOpen\(false\)/)
 })
+
+test('presenta una cabecera jerárquica de convocatoria sin iconos decorativos', async () => {
+  const source = await readFile(convocatoriaDetallePath, 'utf8')
+
+  assert.match(source, /Convocatoria de admisión/)
+  assert.match(source, /convocatoria-detalle__program-name/)
+  assert.match(source, /<span>Código<\/span>/)
+  assert.match(source, /<span>Período académico<\/span>/)
+  assert.doesNotMatch(source, /📅|🎓|＋/)
+})

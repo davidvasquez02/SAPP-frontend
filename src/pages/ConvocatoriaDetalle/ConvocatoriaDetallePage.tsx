@@ -4,6 +4,7 @@ import { ScrollText, UsersRound } from "lucide-react";
 import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
+import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
 import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
@@ -101,6 +102,14 @@ const ConvocatoriaDetallePage = () => {
     inscripciones[0]?.programaAcademico ??
     convocatoria?.programa ??
     null;
+  const programaCatalogo = getProgramaAcademico({
+    id: resolvedProgramaId ?? undefined,
+    nombre: programaConvocatoria ?? "",
+  });
+  const programaNombrePresentacion =
+    programaCatalogo?.nombre ?? programaConvocatoria?.replace(/^\s*\d+\s*-\s*/, "") ?? null;
+  const programaCodigo =
+    programaCatalogo?.codigoUis ?? programaConvocatoria?.match(/^\s*(\d+)\s*-/)?.[1] ?? null;
 
   const cuposConvocatoria = typeof cupos === "number" ? cupos : null;
   const cuposExcedidos =
@@ -303,24 +312,30 @@ const ConvocatoriaDetallePage = () => {
 
         <header className="admission-detail-header convocatoria-detalle__header">
           <div className="admission-detail-header__content">
+            <p className="admission-detail-header__eyebrow">
+              Convocatoria de admisión
+            </p>
             <h1 className="admission-detail-header__title convocatoria-detalle__title">
               Aspirantes inscritos
             </h1>
 
-            <div
-              className="admission-context-chips"
-              aria-label="Contexto de la convocatoria"
-            >
-              {periodoConvocatoria ? (
-                <span className="admission-context-chip">
-                  <span aria-hidden="true">📅</span> Período:{" "}
-                  {periodoConvocatoria}
+            {programaNombrePresentacion ? (
+              <p className="convocatoria-detalle__program-name">
+                {programaNombrePresentacion}
+              </p>
+            ) : null}
+
+            <div className="convocatoria-detalle__metadata" aria-label="Datos de la convocatoria">
+              {programaCodigo ? (
+                <span className="convocatoria-detalle__metadata-item">
+                  <span>Código</span>
+                  <strong>{programaCodigo}</strong>
                 </span>
               ) : null}
-              {programaConvocatoria ? (
-                <span className="admission-context-chip">
-                  <span aria-hidden="true">🎓</span> Programa:{" "}
-                  {programaConvocatoria}
+              {periodoConvocatoria ? (
+                <span className="convocatoria-detalle__metadata-item">
+                  <span>Período académico</span>
+                  <strong>{periodoConvocatoria}</strong>
                 </span>
               ) : null}
             </div>
@@ -352,7 +367,7 @@ const ConvocatoriaDetallePage = () => {
                   cuposExcedidos
                 }
               >
-                <span aria-hidden="true">＋</span> Crear aspirante
+                Crear aspirante
               </button> : null}
               {(!resolvedProgramaId || !parsedConvocatoriaId) &&
                 !isLoading &&

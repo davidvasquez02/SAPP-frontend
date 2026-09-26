@@ -1,4 +1,23 @@
-# Handoff 2026-09-26 — contrato real del nombre al crear aspirante
+# Handoff 2026-09-26 — cabecera del detalle de convocatoria
+
+## Estado y decisión visual
+
+- `ConvocatoriaDetallePage` reorganiza la cabecera en esta jerarquía: eyebrow **Convocatoria de admisión**, H1 **Aspirantes inscritos**, nombre oficial del programa y una línea secundaria `Código {codigo} · Período académico {periodo}`. Se eliminaron los emoji de calendario/birrete y el símbolo `+` de la acción.
+- El nombre y código se resuelven con `getProgramaAcademico({ id: resolvedProgramaId, nombre: programaConvocatoria })`; si el programa no está en el catálogo común, se elimina únicamente el prefijo numérico del nombre recibido y se extrae ese código como fallback. Los IDs y valores originales siguen controlando la navegación y creación.
+- `.convocatoria-detalle__actions` ya no reserva una columna de 25 rem: usa ancho natural y alinea **Crear aspirante** a la derecha. Hasta 760 px, cabecera y acción pasan a columna y el botón ocupa el ancho disponible. Código/período también se apilan sin separador hasta 560 px.
+
+## Artefactos y verificación
+
+- Implementación: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`; regresión estructural: `tests/aspirantesList.test.ts`.
+- Salida esperada: una cabecera tipográfica, sin iconos decorativos, donde el nombre extenso del programa dispone de una línea propia y la acción no domina el ancho de la tarjeta.
+- Prueba dirigida 7/7 PASS; suite Node 87/87 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 266.79 kB, JS 734.14 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambian endpoints, DTO, payloads, permisos, dependencias, variables, schemas, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-26 — contrato real del nombre al crear aspirante
 
 ## Estado, causa y corrección
 
@@ -14,8 +33,6 @@
 - No cambian request, endpoints, persistencia, permisos, schemas, dependencias, variables, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Handoff 2026-09-26 — alta y listado de aspirantes
 
