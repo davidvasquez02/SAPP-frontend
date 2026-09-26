@@ -4,11 +4,17 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 
 ## Entorno y ejecución
 
-- Entorno comprobado el 2026-09-25: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Entorno comprobado el 2026-09-26: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 - Reutilizar `node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry y no se debe crear un segundo entorno npm.
 - Desarrollo: `npm run dev`. Producción: `npm run build` y luego `npm run preview`.
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
+
+## Corrección 2026-09-26 — confirmación de envío al Consejo solo desde Comité
+
+- Al aprobar una solicitud de tipo **OTRA**, el diálogo **¿Requiere aprobación del Consejo Académico?** se abre únicamente cuando la solicitud está en Comité Asesor de Posgrados. Si ya está en el estado enviado al Consejo, **Aprobar** continúa directamente con la selección del acta de Consejo y no vuelve a preguntar si debe enviarse allí.
+- La detección separa explícitamente Comité y Consejo antes de habilitar la resolución, de modo que un texto de estado que contiene `CONSEJO` nunca se clasifica también como Comité. Se conservan el filtro de actas por instancia, el `actaId` obligatorio y el contrato existente de `enviarConsejo` para la transición originada en Comité.
+- No cambiaron endpoints, DTO, permisos, dependencias, variables, schemas, seeds ni datasets. La regresión está en `tests/solicitudDetalleAutorizacion.test.ts`.
 
 ## Mejora 2026-09-26 — estados enviados a comité y consejo
 
@@ -847,7 +853,7 @@ npm run lint
 - **Actas** permite clasificar y cargar documentos del Comité Asesor de Posgrados o del Consejo Académico. El formulario envía `tipoConsejo: false` para comité y `tipoConsejo: true` para consejo, genera respectivamente códigos `ACTA_COMITE_XXX-AAAA` o `ACTA_CONSEJO_XXX-AAAA`, y muestra el tipo institucional en el listado.
 - En **Gestión profesores → Grupos de investigación**, al seleccionar un grupo se muestran primero sus integrantes y, debajo, una tabla paginada y filtrable con los profesores de posgrados todavía disponibles. Cada fila permite agregar mediante `POST /sapp/gruposInvestigacionDocentes`; la acción existente para retirar mediante `DELETE` se conserva.
 - La creación de convocatorias obtiene los evaluadores desde `GET /sapp/docentes` y solo ofrece profesores con `tieneRolDocentePosgrados: true`. Gestión de profesores separa los usuarios de posgrados de los demás profesores EISI y permite asignar o retirar ese rol; después de cada operación vuelve a consultar el catálogo para actualizar ambos listados.
-- Al aprobar una solicitud de tipo **OTRA** (`tipoSolicitudId: 11`), cualquier rol de gestión autorizado debe indicar en un diálogo si requiere aprobación del Consejo Académico. La opción afirmativa añade `enviarConsejo=true` al cambio de estado y la aprobación directa añade explícitamente `enviarConsejo=false`, según el contrato vigente del backend.
+- Al aprobar desde Comité una solicitud de tipo **OTRA** (`tipoSolicitudId: 11`), cualquier rol de gestión autorizado debe indicar en un diálogo si requiere aprobación del Consejo Académico. La opción afirmativa añade `enviarConsejo=true` al cambio de estado y la aprobación directa añade explícitamente `enviarConsejo=false`, según el contrato vigente del backend. Si la solicitud ya está en Consejo, no se repite la pregunta y se continúa con la selección de su acta.
 - En las solicitudes de crédito condonable y renovación, el lugar de expedición se selecciona con el catálogo DANE suministrado: Santander aparece por defecto, el municipio usa un desplegable filtrable con la misma identidad visual del selector de departamento y el contrato HTTP conserva únicamente el nombre del municipio seleccionado.
 - `ADMIN_POSGRADOS`, `SECRETARIA_POSGRADOS` y `COORDINADOR_POSGRADOS` conservan identidades separadas, pero comparten actualmente todos los módulos y acciones de gestión. La equivalencia se define una sola vez en `ROLES_GESTION_POSGRADOS`/`canManagePosgrados`, y se aplica a rutas, navegación y acciones internas para evitar diferencias accidentales.
 - Al completar el inicio de sesión, el layout protegido consulta la firma del `UsuarioSapp` autenticado mediante `GET /sapp/firmaUsuario/{usuarioId}`. Si no existe contenido de firma, muestra un recordatorio tipo toast con acceso directo a `/perfil`; los errores de red o autorización no se confunden con una firma faltante.

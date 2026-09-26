@@ -1,3 +1,20 @@
+# Handoff 2026-09-26 — confirmación de Consejo únicamente desde Comité
+
+## Estado actual, decisión y salida esperada
+
+- En `SolicitudDetallePage`, **Aprobar** una solicitud de tipo OTRA muestra **¿Requiere aprobación del Consejo Académico?** solo si el estado anterior corresponde al Comité Asesor de Posgrados. Una solicitud que ya contiene `CONSEJO` en `estadoSigla`/`estado` omite ese diálogo y abre directamente la selección obligatoria de un acta del Consejo.
+- `estabaEnComite` exige que el estado no sea de Consejo y luego reconoce la sigla normalizada `ENVIADA` o la descripción de Comité. `estabaEnInstanciaResolutiva` continúa admitiendo ambas instancias, por lo que la corrección no oculta los controles de aprobación/rechazo en Consejo.
+- El contrato HTTP no cambia: una decisión tomada desde Comité puede enviar `enviarConsejo=true|false`; desde Consejo se omite ese parámetro y la aprobación conserva el `actaId` seleccionado. No cambiaron endpoints, DTO, roles, estilos, paquetes, variables, schemas, seeds ni datasets.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regresión: `tests/solicitudDetalleAutorizacion.test.ts`. Salida esperada: estado Comité + tipo OTRA abre la pregunta; estado Consejo + tipo OTRA abre directamente el selector de acta filtrado a `tipoConsejo === true`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. El frontend no dispone de seed, backend ni credenciales institucionales locales para reproducir la ruta protegida.
+- Verificación local: regresión dirigida PASS (3/3), suite Node PASS (96/96), ESLint focalizado PASS, build PASS (314 módulos; CSS 267.78 kB; JS 738.26 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa la configuración heredada `http-proxy` y Vite advierte que el chunk JavaScript supera 500 kB.
+- Pendiente externo: validar con una sesión de gestión y solicitudes OTRA reales en Comité y Consejo, incluyendo selección de acta, aprobación, temas claro/oscuro y móvil. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida tampoco cuenta con backend, credenciales o seed reproducible.
+
+---
+
 # Handoff 2026-09-26 — contraste de estados enviados a órganos académicos
 
 ## Estado actual y decisión

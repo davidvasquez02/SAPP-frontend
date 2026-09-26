@@ -238,8 +238,9 @@ const SolicitudDetallePage = () => {
     .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
   const estabaEnConsejo = estadoAntesDeResolver.includes('CONSEJO')
-  const estabaEnInstanciaResolutiva =
-    currentEstado === 'ENVIADA' || estadoAntesDeResolver.includes('COMITE') || estabaEnConsejo
+  const estabaEnComite =
+    !estabaEnConsejo && (currentEstado === 'ENVIADA' || estadoAntesDeResolver.includes('COMITE'))
+  const estabaEnInstanciaResolutiva = estabaEnComite || estabaEnConsejo
   const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
   const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
   const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
@@ -426,7 +427,7 @@ const SolicitudDetallePage = () => {
   }
 
   const handleApproveClick = () => {
-    if (isSolicitudOtra) {
+    if (isSolicitudOtra && estabaEnComite) {
       setShowConsejoConfirmation(true)
       return
     }

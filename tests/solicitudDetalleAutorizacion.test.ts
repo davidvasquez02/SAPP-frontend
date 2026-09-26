@@ -15,3 +15,12 @@ test('el cambio de sesión vuelve a ejecutar la validación y limpia el detalle 
   assert.match(detailSource, /setSolicitud\(null\)/)
   assert.match(detailSource, /\[debeValidarPropiedadEstudiante, estudianteId, solicitudId\]/)
 })
+
+test('solo pregunta si una solicitud OTRA en comité debe enviarse al Consejo', () => {
+  assert.match(
+    detailSource,
+    /const estabaEnComite =\s*!estabaEnConsejo && \(currentEstado === 'ENVIADA' \|\| estadoAntesDeResolver\.includes\('COMITE'\)\)/,
+  )
+  assert.match(detailSource, /if \(isSolicitudOtra && estabaEnComite\) \{\s*setShowConsejoConfirmation\(true\)/)
+  assert.match(detailSource, /const estabaEnInstanciaResolutiva = estabaEnComite \|\| estabaEnConsejo/)
+})
