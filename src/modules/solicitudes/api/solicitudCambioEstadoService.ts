@@ -11,8 +11,8 @@ export async function cambiarEstadoSolicitud(
 ): Promise<void> {
   const params = new URLSearchParams({ siglaEstado: target })
 
-  if (options.enviarConsejo === true) {
-    params.set('enviarConsejo', 'true')
+  if (options.enviarConsejo !== undefined) {
+    params.set('enviarConsejo', String(options.enviarConsejo))
   }
 
   if (options.actaId != null) {

@@ -1966,17 +1966,36 @@
 
 ---
 
+# Update 2026-09-26 — parámetro explícito al aprobar directamente solicitudes OTRA
+
+## Estado actual
+
+- Se corrigió `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`: `cambiarEstadoSolicitud` serializa `enviarConsejo` siempre que la opción esté definida, tanto para `true` como para `false`.
+- En el flujo de `SolicitudDetallePage`, **Sí, enviar al Consejo** produce `enviarConsejo=true` y **No, aprobar directamente** produce `enviarConsejo=false`. Los demás tipos continúan omitiendo el parámetro porque llaman el servicio con `undefined`.
+
+## Contrato y salida esperada
+
+- Remisión a Consejo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true&actaId={id}`, sin body.
+- Aprobación directa de OTRA: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=false&actaId={id}`, sin body.
+- Aprobación de tipos diferentes de OTRA: se omite `enviarConsejo`. No cambiaron endpoints, DTOs, paquetes, variables, schemas, seeds ni datasets.
+
+## Entorno, validación y próximos pasos
+
+- Usar el entorno Node/npm existente del repositorio y `node_modules`; no crear venv, conda, Poetry ni una instalación paralela. Las versiones exactas siguen declaradas en `package.json` y fijadas en `package-lock.json`.
+- Validaciones de esta entrega: `npm run build` completó correctamente (con la advertencia existente por un chunk mayor a 500 kB) y `npx eslint src/modules/solicitudes/api/solicitudCambioEstadoService.ts` pasó. `npm run lint` continúa fallando por 9 errores y 1 advertencia preexistentes en archivos no modificados, entre ellos los `no-explicit-any` de `src/api/*Service.ts` y `react-hooks/set-state-in-effect` de `RequireEvaluacionEnabled.tsx`.
+- Próximo paso manual recomendado: inspeccionar en DevTools la solicitud PUT de ambas decisiones para confirmar los literales booleanos y validar la respuesta con el backend integrado.
+
 # Update 2026-09-18 — Consejo Académico al aprobar solicitudes OTRA
 
 ## Estado actual y decisión
 - En el detalle de solicitudes, los roles habilitados por `canManagePosgrados` siguen compartiendo la acción **Aprobar**. Cuando la solicitud tiene `tipoSolicitudId === 11` (**OTRA**, asociada al trámite 15), esa acción abre un diálogo obligatorio antes de llamar al backend.
-- **Sí, enviar al Consejo** aprueba con `enviarConsejo=true`; **No, aprobar directamente** conserva literalmente el comportamiento anterior y omite el query param. **Cancelar** y el backdrop cierran el diálogo sin cambiar el estado. Rechazar y aprobar tipos distintos de OTRA no abren el diálogo.
-- El cliente acepta una opción `enviarConsejo?: boolean`, pero serializa el parámetro únicamente cuando es `true`. Esto evita enviar `false` a backends que esperan el contrato histórico cuando no se requiere Consejo.
+- **Sí, enviar al Consejo** aprueba con `enviarConsejo=true`; **No, aprobar directamente** representa la decisión negativa. Desde la corrección del 2026-09-26 esta última se serializa explícitamente como `enviarConsejo=false`. **Cancelar** y el backdrop cierran el diálogo sin cambiar el estado. Rechazar y aprobar tipos distintos de OTRA no abren el diálogo.
+- El cliente acepta una opción `enviarConsejo?: boolean`. El comportamiento histórico descrito originalmente aquí fue reemplazado por el contrato documentado en la actualización del 2026-09-26.
 
 ## Paths, contrato y salida esperada
 - Orquestación/diálogo: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; apariencia temática y responsive: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; URL HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`.
 - Entrada discriminante: `SolicitudAcademicaDto.tipoSolicitudId === 11`. No depender del texto visible para evitar diferencias entre **OTRA**/**OTRO** o cambios de capitalización.
-- Contrato afirmativo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true`, sin body. Contrato negativo y resto de tipos: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA`, sin body.
+- Contrato afirmativo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true`, sin body. Desde el 2026-09-26, el contrato negativo usa `enviarConsejo=false`; el resto de tipos omite el parámetro.
 - El `actaId=2` incluido en el ejemplo del requerimiento no se añadió: este flujo no dispone de selección de acta y el contrato anterior del frontend tampoco enviaba `actaId`. Confirmar con backend/producto si debe existir una fuente real y dinámica para ese valor; no hardcodear `2` sin esa definición.
 
 ## Retos y próximos pasos
