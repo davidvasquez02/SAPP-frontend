@@ -38,8 +38,7 @@
   flex-direction: column;
   gap: 0.7rem;
   padding: 1.5rem;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--surface), transparent 8%);
+  background: color-mix(in srgb, var(--surface), transparent 6%);
   color: var(--text-primary);
   text-align: center;
   backdrop-filter: blur(2px);

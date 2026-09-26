@@ -78,6 +78,11 @@ test('crear aspirante omite observaciones y presenta progreso durante la carga',
   assert.match(source, /observaciones: null/)
   assert.match(source, /create-aspirante-modal__spinner/)
   assert.match(source, /Subiendo documentos/)
+  assert.ok(
+    source.indexOf('create-aspirante-modal__progress')
+      < source.indexOf('create-aspirante-modal__dialog'),
+    'el progreso debe ser hermano y superponerse al diálogo completo',
+  )
 })
 
 test('el listado usa búsqueda y paginación sin captura de arrastre horizontal', async () => {
@@ -86,4 +91,12 @@ test('el listado usa búsqueda y paginación sin captura de arrastre horizontal'
   assert.match(source, /Buscar por nombre o código de inscripción/)
   assert.match(source, /Paginación de aspirantes/)
   assert.doesNotMatch(source, /onPointerDown|onClickCapture|scrollBoard/)
+})
+
+test('al completar la creación muestra un toast con el nombre del aspirante', async () => {
+  const source = await readFile(convocatoriaDetallePath, 'utf8')
+
+  assert.match(source, /Se creó al aspirante \$\{aspiranteNombre\} de manera correcta/)
+  assert.match(source, /convocatoria-detalle__toast/)
+  assert.match(source, /setIsCreateModalOpen\(false\)/)
 })

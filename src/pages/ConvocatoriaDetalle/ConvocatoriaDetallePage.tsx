@@ -22,6 +22,11 @@ import "./ConvocatoriaDetallePage.css";
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? "").trim().toUpperCase().replaceAll(" ", "_");
 
+type ToastFeedback = {
+  message: string;
+  tone: "success" | "warning";
+};
+
 const ConvocatoriaDetallePage = () => {
   const { convocatoriaId } = useParams();
   const navigate = useNavigate();
@@ -33,7 +38,7 @@ const ConvocatoriaDetallePage = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastFeedback | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [aspirantesQuery, setAspirantesQuery] = useState("");
   const [aspirantesPage, setAspirantesPage] = useState(1);
@@ -211,6 +216,13 @@ const ConvocatoriaDetallePage = () => {
     loadInscripciones();
   }, [convocatoriaId, loadInscripciones]);
 
+  useEffect(() => {
+    if (!toast) return;
+
+    const timeoutId = window.setTimeout(() => setToast(null), 5_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
   const resolveAspirantePhoto = (
     inscripcion: InscripcionAdmisionDto,
   ): string | null => {
@@ -242,16 +254,23 @@ const ConvocatoriaDetallePage = () => {
   };
 
   const handleCreated = useCallback(
-    (result: { uploadSummary: { failedItems: { id: number }[] } }) => {
+    (result: {
+      created: { nombre: string };
+      uploadSummary: { failedItems: { id: number }[] };
+    }) => {
+      const aspiranteNombre = result.created.nombre.trim() || "nuevo aspirante";
       if (result.uploadSummary.failedItems.length > 0) {
-        setSuccessMessage(
-          `Aspirante creado. Falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
-        );
+        setToast({
+          tone: "warning",
+          message: `Se creó al aspirante ${aspiranteNombre}, pero falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
+        });
       } else {
-        setSuccessMessage(
-          "Aspirante creado y documentos cargados correctamente.",
-        );
+        setToast({
+          tone: "success",
+          message: `Se creó al aspirante ${aspiranteNombre} de manera correcta.`,
+        });
       }
+      setIsCreateModalOpen(false);
       loadInscripciones();
     },
     [loadInscripciones],
@@ -304,11 +323,6 @@ const ConvocatoriaDetallePage = () => {
               ) : null}
             </div>
 
-            {successMessage ? (
-              <p className="convocatoria-detalle__status convocatoria-detalle__status--success">
-                {successMessage}
-              </p>
-            ) : null}
           </div>
 
           {convocatoriaCerrada || canCreateAspirante ? (
@@ -557,6 +571,22 @@ const ConvocatoriaDetallePage = () => {
         ) : null}
       </section>
 
+      {toast ? (
+        <div
+          className={`convocatoria-detalle__toast convocatoria-detalle__toast--${toast.tone}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="convocatoria-detalle__toast-icon" aria-hidden="true">
+            {toast.tone === "success" ? "✓" : "!"}
+          </span>
+          <p>{toast.message}</p>
+          <button type="button" aria-label="Cerrar notificación" onClick={() => setToast(null)}>
+            ×
+          </button>
+        </div>
+      ) : null}
+
       <CreateAspiranteModal
         open={isCreateModalOpen && Boolean(convocatoria) && !convocatoriaCerrada}
         onClose={() => setIsCreateModalOpen(false)}
@@ -569,7 +599,10 @@ const ConvocatoriaDetallePage = () => {
         onClose={() => setSelectedAspirante(null)}
         onCreated={(estudiante) => {
           setCreatedAspiranteIds((current) => new Set(current).add(estudiante.idAspirante));
-          setSuccessMessage(`Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`);
+          setToast({
+            tone: "success",
+            message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`,
+          });
         }}
       />
     </ModuleLayout>

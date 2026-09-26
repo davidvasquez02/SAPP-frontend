@@ -13,10 +13,11 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 ## Mejora 2026-09-26 — alta y consulta de aspirantes
 
 - La portada `/admisiones` se titula **Módulo de Admisiones** y las tarjetas dejaron de repetir debajo del nombre el código numérico del programa. La identificación y navegación siguen usando el `programaId` real, sin depender del texto visible.
-- **Crear aspirante** ya no presenta Observaciones; el contrato existente conserva `observaciones: null`. Al enviar, una capa de progreso con spinner cubre el diálogo durante la creación y carga documental, informa **Creando aspirante y subiendo documentos…** / **Subiendo documentos…** y evita cerrar accidentalmente el modal con fondo o `Escape` hasta terminar.
+- **Crear aspirante** ya no presenta Observaciones; el contrato existente conserva `observaciones: null`. Al enviar, una capa de progreso con spinner se superpone a toda la pantalla modal —no al contenido desplazable— durante la creación y carga documental, informa **Creando aspirante y subiendo documentos…** / **Subiendo documentos…** y evita cerrar accidentalmente el flujo hasta terminar.
+- Al completar correctamente, el formulario se cierra, el usuario permanece en el detalle de la convocatoria, el listado se recarga y un toast durante cinco segundos confirma **Se creó al aspirante {nombre} de manera correcta.** El nombre proviene de la respuesta de creación. Si existen fallos documentales, el toast usa estado de advertencia e indica cuántos documentos fallaron.
 - El detalle de convocatoria eliminó el carrusel horizontal, el arrastre con puntero y la captura que podía cancelar el siguiente clic legítimo sobre una tarjeta. Los aspirantes se muestran en una cuadrícula paginada de ocho registros; cada tarjeta conserva navegación directa a la inscripción.
 - El mismo buscador filtra en cliente por nombre —ignorando mayúsculas y tildes— o por código de inscripción. Presenta rango y total, vacío específico y controles **Anterior/Siguiente** cuando hay más de una página. La lógica está aislada en `src/modules/admisiones/utils/aspirantesList.ts`.
-- Regresión: `tests/aspirantesList.test.ts`. Verificación: 5/5 pruebas dirigidas, suite Node 83/83, ESLint focalizado y build PASS (310 módulos; CSS 264.99 kB; JS 733.19 kB). No cambian endpoints, permisos, schemas, dependencias, variables, seeds ni datasets.
+- Regresión: `tests/aspirantesList.test.ts`. Verificación: 6/6 pruebas dirigidas, suite Node 84/84, ESLint focalizado y build PASS (310 módulos; CSS 266.39 kB; JS 733.74 kB). No cambian endpoints, permisos, schemas, dependencias, variables, seeds ni datasets.
 
 ## Mejora 2026-09-25 — evaluadores automáticos de convocatoria
 

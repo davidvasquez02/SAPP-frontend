@@ -3,7 +3,8 @@
 ## Estado y decisiones
 
 - `/admisiones` usa ahora `ModuleLayout title="Módulo de Admisiones"`. Se retiraron el mapa visual `PROGRAM_META` y `.admisiones-program-card__code`; el `programaId` continúa intacto para agrupación, selección, creación y navegación.
-- `CreateAspiranteModal` retiró Observaciones del estado y del formulario, pero envía `observaciones: null` para mantener `AspiranteCreateRequestDto`. Mientras `isSubmitting` es verdadero muestra una capa `role="status"` con spinner y texto de creación/carga; el fondo, `Escape` y las acciones quedan bloqueados hasta finalizar. Los fallos parciales y **Reintentar fallidos** se conservan.
+- `CreateAspiranteModal` retiró Observaciones del estado y del formulario, pero envía `observaciones: null` para mantener `AspiranteCreateRequestDto`. Mientras `isSubmitting` es verdadero, la capa `role="status"` es hermana del diálogo y se posiciona sobre todo el viewport del modal; así cubre también las zonas no visibles del formulario desplazable. Fondo, `Escape` y acciones quedan bloqueados hasta finalizar.
+- En éxito, `handleCreated` toma `result.created.nombre`, cierra explícitamente el modal, conserva la ruta actual del detalle, recarga inscripciones y crea un toast fijo por cinco segundos con **Se creó al aspirante {nombre} de manera correcta.** El toast puede cerrarse manualmente. Un upload parcial usa tono de advertencia y conserva el flujo existente de documentos fallidos.
 - `ConvocatoriaDetallePage` reemplazó el tablero horizontal por una cuadrícula paginada de ocho tarjetas. Se eliminaron `ResizeObserver`, `scrollBy`, captura de puntero, arrastre y `suppressBoardClickRef`: esta última podía permanecer activa si el navegador no emitía el clic posterior al arrastre y cancelar el siguiente clic real en una inscripción.
 - El buscador único filtra `nombreAspirante` y `numeroInscripcion`, normaliza mayúsculas/tildes, reinicia en página 1 y muestra rango/total. La paginación ajusta páginas fuera de rango y ofrece **Anterior/Siguiente**; `StudentCard` conserva `onClick` y teclado sin un capturador ancestro que impida navegar.
 
@@ -17,7 +18,7 @@
 
 ## Verificación y continuidad
 
-- Pruebas dirigidas 5/5 PASS; suite Node 83/83 PASS; ESLint focalizado PASS; build PASS (310 módulos, CSS 264.99 kB, JS 733.19 kB); `git diff --check` PASS. Vite conserva el aviso informativo del chunk JS mayor de 500 kB.
+- Pruebas dirigidas 6/6 PASS; suite Node 84/84 PASS; ESLint focalizado PASS; build PASS (310 módulos, CSS 266.39 kB, JS 733.74 kB); `git diff --check` PASS. Vite conserva el aviso informativo del chunk JS mayor de 500 kB.
 - Entorno: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 - Pendiente externo: validar con sesión institucional el spinner durante archivos grandes, el resultado parcial de uploads y la apertura de tarjetas filtradas/paginadas en móvil y escritorio. No hay seed/credenciales locales para reproducir el backend autenticado.
 
