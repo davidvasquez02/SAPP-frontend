@@ -89,4 +89,8 @@ test('la previsualización distingue visualmente el estado deshabilitado', () =>
   assert.match(formSource, /solicitud-estudiante-form__preview-action/)
   assert.match(styles, /\.solicitud-estudiante-form__preview-action:disabled/)
   assert.match(styles, /cursor: not-allowed/)
+  assert.doesNotMatch(
+    formSource,
+    /El teléfono y el correo institucional se tomarán automáticamente de la sesión/,
+  )
 })

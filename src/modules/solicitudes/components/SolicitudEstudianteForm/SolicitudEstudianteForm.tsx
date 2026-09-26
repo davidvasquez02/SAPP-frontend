@@ -851,9 +851,6 @@ const SolicitudEstudianteForm = ({
                   />
                 </div>
               </div>
-              <p className="solicitud-estudiante-form__help">
-                El teléfono y el correo institucional se tomarán automáticamente de la sesión.
-              </p>
               {(!telefonoEstudiante.trim() || !correoEstudiante.trim()) && (
                 <p className="solicitud-estudiante-form__doc-error">
                   La sesión no contiene teléfono y correo suficientes para generar la previsualización.

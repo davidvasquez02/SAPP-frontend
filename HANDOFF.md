@@ -6542,3 +6542,20 @@ npm run lint
 - Próximo paso institucional: validar el contraste habilitado/deshabilitado y el mensaje posterior a la firma con una solicitud real, en escritorio/móvil, teclado y temas claro/oscuro.
 
 ---
+
+# Update 2026-09-26 — textos de créditos condonables y aprobación directa
+
+## Estado, decisiones y salida esperada
+
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` dejó de renderizar el texto **El teléfono y el correo institucional se tomarán automáticamente de la sesión.** encima de la previsualización del crédito condonable. Se conserva el error condicional por datos faltantes y la condición existente que deshabilita el botón; no se alteró el uso interno de teléfono o correo para generar el documento.
+- `getAprobacionTrabajoGradoLabel` en `src/modules/trabajos-grado/constants.ts` devuelve **Aprobar** para **Envío de tema** (`TIPO_TEMA_TRABAJO_GRADO_ID = 13`) y **Grado** (`TIPO_SOLICITUD_GRADO_ID = 9`), independientemente del rótulo de estado enviado/comité. Esos dos trámites se aprueban directamente y no pasan al Consejo.
+- El alcance es deliberadamente específico: otros tipos de trabajo de grado conservan **Aprobar y enviar a consejo académico** cuando están en Comité y **Aprobar y asignar jurados** cuando están en Consejo. No cambiaron endpoints, payloads, DTO, transiciones del backend, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Artefactos, pruebas, entorno y continuidad
+
+- Regresiones: `tests/firmaSolicitud.test.ts` comprueba que el texto retirado no reaparezca; `tests/trabajoGradoApprovalLabel.test.ts` cubre los IDs 13 y 9 y preserva los rótulos de los demás tipos.
+- Resultados: suite Node PASS (101/101), ESLint focalizado PASS, build PASS (315 módulos; CSS 268.18 kB; JS 738.35 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite conserva el warning por el chunk JavaScript mayor de 500 kB.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry y no debe crearse otro árbol npm.
+- No existe seed, dataset, backend ni credenciales reproducibles para estas rutas protegidas. Próximo paso institucional: validar con solicitudes reales de ambos tipos que el botón diga **Aprobar**, que el backend las deje aprobadas directamente y que otros tipos conserven su flujo; revisar también la creación/previsualización del crédito en escritorio y móvil.
+
+---

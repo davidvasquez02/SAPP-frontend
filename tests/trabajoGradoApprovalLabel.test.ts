@@ -7,9 +7,16 @@ test('describe el siguiente paso al aprobar un proyecto enviado a comité', () =
     getAprobacionTrabajoGradoLabel(6, 'ENVIADA_COMITE', 'ENVIADA A COMITÉ ASESOR DE POSGRADOS'),
     'Aprobar y enviar a consejo académico',
   )
+})
+
+test('aprueba directamente las solicitudes de envío de tema y de grado', () => {
   assert.equal(
     getAprobacionTrabajoGradoLabel(13, 'ENVIADA', 'ENVIADA A COMITE ASESOR DE POSGRADOS'),
-    'Aprobar y enviar a consejo académico',
+    'Aprobar',
+  )
+  assert.equal(
+    getAprobacionTrabajoGradoLabel(9, 'ENVIADA', 'ENVIADA A COMITE ASESOR DE POSGRADOS'),
+    'Aprobar',
   )
 })
 
