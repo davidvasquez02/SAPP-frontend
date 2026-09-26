@@ -13,6 +13,7 @@ import { httpGet } from '../../../../shared/http/httpClient'
 import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
 import { formatProgramaAcademico } from '../../../../shared/domain/programaAcademico'
+import { getConvocatoriaCreateErrorMessage } from '../../utils/convocatoriaCreateError'
 
 type ProgramaOption = {
   programaId: number
@@ -440,10 +441,7 @@ export const CreateConvocatoriaModal = ({
     } catch (error) {
       setSubmitStep('idle')
       setErrors({
-        general:
-          error instanceof Error
-            ? error.message
-            : 'No fue posible crear la convocatoria. Inténtelo nuevamente.',
+        general: getConvocatoriaCreateErrorMessage(error, periodoSeleccionado),
       })
     } finally {
       setIsSubmitting(false)

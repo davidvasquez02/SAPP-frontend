@@ -10,6 +10,12 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Corrección 2026-09-25 — mensaje de convocatoria duplicada
+
+- Al crear una convocatoria para una combinación programa+período que ya existe, el formulario ya no expone el error SQL ni la restricción `uq_convocatoria`. Presenta **Ya existe una convocatoria para el programa seleccionado en el período académico AAAA-S.** usando el año y semestre visibles en el formulario.
+- El mapeo se limita a la restricción de negocio `uq_convocatoria` —o al equivalente técnico que menciona clave duplicada, `programa_id` y `periodo_id`—; cualquier otro rechazo conserva su mensaje para no encubrir validaciones distintas.
+- No cambian endpoints, payloads, schemas ni estados. La regresión está en `tests/convocatoriaCreateError.test.ts`. Verificación: prueba dirigida 2/2 PASS, suite Node 77/77 PASS, ESLint focalizado PASS y build PASS (309 módulos; CSS 263.58 kB; JS 733.59 kB).
+
 ## Mejora 2026-09-25 — creación directa de convocatorias
 
 - En `/admisiones`, cuando un programa no tiene convocatoria del período actual ni otra abierta, coordinación, secretaría y administración ven ahora **Crear convocatoria** en la misma tarjeta. La acción abre el formulario sin abandonar la pantalla y preselecciona el programa de esa tarjeta; los perfiles sin permiso continúan viendo el estado no disponible sin acceso a creación.

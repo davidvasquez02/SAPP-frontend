@@ -1,4 +1,23 @@
-# Handoff 2026-09-25 — creación directa de convocatorias de admisión
+# Handoff 2026-09-25 — mensaje de convocatoria duplicada
+
+## Estado, contrato y salida esperada
+
+- `CreateConvocatoriaModal` transforma únicamente el error de unicidad de programa+período en un mensaje de negocio. Para el formulario con año `2026` y semestre `1`, la salida visible exacta es **Ya existe una convocatoria para el programa seleccionado en el período académico 2026-1.**
+- La detección vive en `src/modules/admisiones/utils/convocatoriaCreateError.ts`: reconoce `uq_convocatoria` y, como compatibilidad, un mensaje que contenga simultáneamente `duplicate key`, `programa_id` y `periodo_id`. No depende del status HTTP porque el backend observado envolvió el conflicto como error inesperado; los errores no coincidentes conservan su mensaje original.
+- El modal pasa `periodoSeleccionado` al normalizador desde su `catch`. No cambiaron `POST /sapp/convocatoriaAdmision`, su payload `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones: "" }`, la creación del período ni la asociación de profesores.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/admisiones/utils/convocatoriaCreateError.ts` y `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`. Regresión: `tests/convocatoriaCreateError.test.ts`, con casos de duplicado y error no relacionado.
+- Verificación: prueba dirigida 2/2 PASS; suite Node 77/77 PASS; ESLint focalizado PASS; build PASS (309 módulos, CSS 263.58 kB, JS 733.59 kB). Vite conserva únicamente el aviso del chunk mayor de 500 kB.
+- Entorno único: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. No hay nuevos seeds, datasets, variables o dependencias.
+- Pendiente externo: reproducir el conflicto con la sesión y backend institucionales para confirmar la presentación visual del mensaje; la prueba automatizada usa el texto técnico real aportado en la captura.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-25 — creación directa de convocatorias de admisión
 
 ## Estado actual y decisiones
 
@@ -23,8 +42,6 @@
 - Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`. Próximo paso externo: validar con sesión real de coordinación los dos programas, temas claro/oscuro y anchos móvil/escritorio, porque no existen credenciales o seed local que reproduzcan la ruta autenticada.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Handoff 2026-09-25 — detalle de matrícula académica de coordinación
 
