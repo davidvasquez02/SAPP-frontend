@@ -29,8 +29,9 @@ test('permite agendar sustentación cuando los conceptos o ajustes fueron recibi
   }
 })
 
-test('conserva la posibilidad existente mientras el estudiante está en ajustes', () => {
-  assert.equal(puedeAgendarSustentacion('EN_AJUSTES'), true)
+test('impide agendar mientras el estudiante está en ajustes', () => {
+  assert.equal(puedeAgendarSustentacion('EN_AJUSTES'), false)
+  assert.equal(puedeAgendarSustentacion('EN AJUSTES'), false)
   assert.equal(puedeAgendarSustentacion('EN EVALUACION'), false)
   assert.equal(puedeAgendarSustentacion('SUST_PROGRAMADA'), false)
 })

@@ -2,6 +2,13 @@
 
 SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula académica y financiera, solicitudes, créditos condonables, actas, informes y trabajos de grado. El frontend organiza rutas y guards en `src/app`, vistas en `src/pages`, contratos y lógica por dominio en `src/modules`, y componentes comunes en `src/components`. El backend Spring Boot/PostgreSQL continúa siendo la fuente de reglas académicas, autorización y persistencia.
 
+## Corrección 2026-09-26 — sustentación durante ajustes y retiro de jurados
+
+- El proceso de evaluación ya no ofrece **Programar sustentación** cuando la solicitud está en `EN_AJUSTES` o **EN AJUSTES**. La acción permanece habilitada para conceptos completos (`CONCEPTOS_REC`) y reaparece después de que el backend confirme la recepción de la nueva versión (`AJUSTES_RECIB`).
+- **Retirar** un jurado reemplaza la confirmación nativa del navegador por un diálogo institucional: identifica al evaluador, explica el efecto, conserva el historial y ofrece acciones tipo píldora. El modal usa tokens semánticos, foco inicial en **Cancelar**, cierre con Escape/fondo y disposición adaptable a móvil y temas claro/oscuro.
+- Se conserva `DELETE /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados/{juradoId}` y el contrato de programación existente. No cambiaron payloads, DTO, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Regresiones: `tests/estadoProcesoEvaluacion.test.ts` y `tests/retiroJuradoModal.test.ts`. Verificación local: suite Node 103/103, ESLint focalizado y build de producción (315 módulos; CSS 271.25 kB; JS 740.07 kB) pasan; Vite mantiene el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Ajuste 2026-09-26 — textos de créditos condonables y aprobación directa
 
 - El formulario de crédito condonable ya no muestra, encima de **Previsualizar documento de solicitud**, el texto informativo sobre tomar el teléfono y el correo institucional desde la sesión. La validación existente conserva el aviso de error cuando alguno de esos datos realmente falta, así como el bloqueo de la previsualización.
@@ -633,7 +640,7 @@ para validación y previsualización de producción.
 ## Corrección reciente — agendamiento tras recibir ajustes (2026-09-23)
 
 - El detalle de coordinación de trabajos de grado muestra **Programar sustentación** tanto en `CONCEPTOS_REC` como en `AJUSTES_RECIB`; también tolera los nombres descriptivos **CONCEPTOS RECIBIDOS** y **AJUSTES RECIBIDOS** entregados por el backend.
-- La regla se centralizó y conserva el comportamiento previo para `EN_AJUSTES`. No cambiaron el formulario, el endpoint `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion`, su payload, los permisos ni las validaciones del backend.
+- La regla se centralizó y, desde el ajuste del 2026-09-26, bloquea expresamente `EN_AJUSTES`: la sustentación solo vuelve a estar disponible cuando el backend informa `AJUSTES_RECIB`. No cambiaron el formulario, el endpoint `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion`, su payload, los permisos ni las validaciones del backend.
 - No se agregaron dependencias, variables de entorno, seeds o datasets. La regresión se cubre con una prueba Node específica de los estados habilitados y bloqueados.
 
 ## Corrección reciente — estado de ajustes recibidos en proyectos de grado (2026-09-23)

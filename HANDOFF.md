@@ -1,3 +1,24 @@
+# Handoff 2026-09-26 — bloqueo de sustentación en ajustes y modal de retiro
+
+## Estado actual y decisiones
+
+- `puedeAgendarSustentacion` ya no considera agendable `EN_AJUSTES` (ni su variante descriptiva normalizada **EN AJUSTES**). Coordinación no ve la tarjeta **Conceptos completos** ni puede abrir el formulario de sustentación mientras el estudiante debe corregir; la acción reaparece para `AJUSTES_RECIB`/`AJUSTES RECIBIDOS`. `CONCEPTOS_REC` conserva el comportamiento anterior.
+- El retiro de jurados en `ProcesoEvaluacionPanel` ya no usa `window.confirm`. Se incorporó un diálogo accesible con nombre del jurado, explicación de la consecuencia, botones **Cancelar** y **Sí, retirar jurado**, cierre por Escape/fondo, foco inicial de cancelación y bloqueo durante la mutación. Sus estilos replican los patrones institucionales existentes y consumen `--surface`, `--outline`, `--danger` y tokens de texto/sombra para tema claro y oscuro.
+
+## Contratos, artefactos y salida esperada
+
+- Implementación: `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts`, `ProcesoEvaluacionPanel.tsx` y `ProcesoEvaluacionPanel.css`. Regresiones: `tests/estadoProcesoEvaluacion.test.ts` y `tests/retiroJuradoModal.test.ts`.
+- El retiro conserva `DELETE /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados/{juradoId}` y vuelve a consultar proceso/historial tras completarse. Programar conserva `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion`; solo cambió la elegibilidad visual previa. El backend continúa siendo autoridad y también debe rechazar intentos en `EN_AJUSTES`.
+- Salida esperada: en `EN_AJUSTES` no aparece **Programar sustentación**; en `AJUSTES_RECIB` sí aparece. Al pulsar **Retirar**, la página queda cubierta por el modal institucional y la petición solo se ejecuta al confirmar. No hay nuevos DTO, payloads, rutas, paquetes, variables, schemas, seeds ni datasets.
+
+## Entorno, pruebas y continuidad
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No usa venv, Conda ni Poetry; no crear otro árbol npm.
+- Comandos: desarrollo `npm run dev`; pruebas `node --test --test-isolation=none tests/*.test.ts`; build `npm run build`; preview `npm run preview`. Resultados: regresiones dirigidas 7/7 PASS, suite Node 103/103 PASS, ESLint focalizado PASS y build PASS (315 módulos; CSS 271.25 kB; JS 740.07 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Reto abierto: validar con backend y sesión institucionales los estados reales, la respuesta del DELETE, teclado, foco, móvil y temas claro/oscuro. No hay credenciales, backend ni seed reproducible para esta ruta protegida. No se obtuvo captura por esas limitaciones y porque el contenedor no incluye un navegador compatible.
+
+---
+
 # Handoff 2026-09-26 — selección exclusiva de PDF en solicitudes y trabajos de grado
 
 ## Estado actual, decisión y salida esperada
