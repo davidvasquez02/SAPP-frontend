@@ -1,4 +1,32 @@
-# Handoff 2026-09-25 — detalle de matrícula académica de coordinación
+# Handoff 2026-09-25 — creación directa de convocatorias de admisión
+
+## Estado actual y decisiones
+
+- Implementados los tres ajustes solicitados en admisiones. En `/admisiones`, una tarjeta sin convocatoria destacada ofrece **Crear convocatoria** únicamente si `canManagePosgrados` autoriza la sesión; abre el modal compartido en la misma vista y preselecciona el `programaId` de la tarjeta. Para perfiles sin gestión, el control permanece deshabilitado como **No disponible**.
+- `CreateConvocatoriaModal` acepta ahora `initialProgramaId?: number | null`. El valor se resuelve contra el catálogo real de `GET /sapp/programaAcademico`; si no existe o no se entrega, conserva el fallback al primer programa disponible.
+- Se retiró por completo el campo visual **Observaciones**. El contrato vigente de creación aún exige `observaciones: string`, por lo que `POST /sapp/convocatoriaAdmision` recibe una cadena vacía sin pedir un dato sin uso al usuario.
+- El selector de profesores agrega inmediatamente la opción escogida, la elimina del conjunto disponible y vuelve a su placeholder. Se retiraron el estado temporal `profesorUuid` y el botón **Agregar**; **Quitar** y la validación de al menos un profesor siguen funcionando. Las asociaciones posteriores a la creación y su reintento parcial no cambiaron.
+
+## Artefactos, contratos y salida esperada
+
+- Pantalla y estilos: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx` y `.css`.
+- Modal y estilos: `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx` y `.css`.
+- Contrato conservado: `POST /sapp/convocatoriaAdmision` con `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones: "" }`. La creación/resolución del período y `POST /sapp/evaluadorConvocatoria` con `{ evaluadorUuid, convocatoriaId }` continúan sin cambios.
+- Salida esperada: en una tarjeta con insignia **NO DISPONIBLE**, un gestor pulsa **Crear convocatoria**, ve el programa correcto ya seleccionado, no ve Observaciones y cada cambio válido del selector de profesores crea de inmediato su chip con acción **Quitar**. Al guardar, la vista recarga las convocatorias y presenta el mensaje de éxito.
+- No hay artefactos binarios, datasets ni seeds nuevos. `dist/` es salida ignorada; la ruta protegida usa datos y sesión del backend institucional.
+
+## Verificación, retos y siguientes pasos
+
+- ESLint focalizado sobre los dos TSX modificados: PASS. Suite Node: 75/75 PASS. Build de producción: PASS, 308 módulos, CSS 263.58 kB y JS 733.25 kB. `git diff --check`: PASS.
+- `npm run lint` global sigue bloqueado por nueve errores y una advertencia preexistentes en `src/api/*`, `RequireEvaluacionEnabled.tsx`, `mockStudentPhoto.ts`, `validacionDocumentosService.ts`, `SolicitudDocumentosEditor.tsx` y `modules/solicitudes/types.ts`; no fueron introducidos ni modificados en este trabajo. Avisos no bloqueantes: npm reporta configuraciones antiguas `msvs_version`/`python` y Vite el chunk JS mayor de 500 kB.
+- Entorno exacto comprobado: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`. Próximo paso externo: validar con sesión real de coordinación los dos programas, temas claro/oscuro y anchos móvil/escritorio, porque no existen credenciales o seed local que reproduzcan la ruta autenticada.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-25 — detalle de matrícula académica de coordinación
 
 ## Estado actual y decisión
 
@@ -21,8 +49,6 @@
 - No hay seed reproducible para la ruta protegida. El siguiente paso externo es validar con una sesión real de `COORDINACION` que un registro del listado abre su detalle, que una URL histórica también lo hace y que documentos/asignaturas corresponden al ID seleccionado. La imagen aportada documenta el listado, pero la validación autenticada depende del backend institucional.
 
 ---
-
-# Historial de handoffs anteriores
 
 ## Update 2026-09-25 — calificación definitiva y uniformidad del detalle de proyectos
 

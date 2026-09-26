@@ -8,6 +8,7 @@ import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convo
 import { getProgramaNombreLargo } from "../../modules/admisiones/utils/programNames";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import { CreateConvocatoriaModal } from "../../modules/admisiones/components/CreateConvocatoriaModal";
 import { CompactPeriodSelect } from "./CompactPeriodSelect";
 import "./AdmisionesHomePage.css";
 
@@ -137,19 +138,22 @@ const AdmisionesHomePage = () => {
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [createForProgramaId, setCreateForProgramaId] = useState<number | null>(null);
   const programTabRefs = useRef(new Map<number, HTMLButtonElement>());
   const isMobileProgramLayout = useMobileProgramLayout();
   const canManageConvocatorias =
     session?.kind === "SAPP" &&
     canManagePosgrados(session.user.roles);
 
-  const loadConvocatorias = useCallback(async () => {
+  const loadConvocatorias = useCallback(async (): Promise<ConvocatoriaAdmisionDto[]> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const data = await getConvocatoriasAdmision();
       setConvocatorias(data);
+      return data;
     } catch (err) {
       const message =
         err instanceof Error
@@ -157,6 +161,7 @@ const AdmisionesHomePage = () => {
           : "No fue posible cargar las convocatorias.";
       setError(message);
       setConvocatorias([]);
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -526,17 +531,26 @@ const AdmisionesHomePage = () => {
 
                     <button
                       type="button"
-                      className={`admisiones-enter-button ${!convocatoriaEstaAbierta
+                      className={`admisiones-enter-button ${(!convocatoriaDestacada && canManageConvocatorias)
+                        ? ""
+                        : !convocatoriaEstaAbierta
                         ? "admisiones-enter-button--inactive"
                         : ""
                         }`}
-                      disabled={!convocatoriaDestacada}
-                      onClick={() =>
-                        convocatoriaDestacada &&
-                        handleNavigate(convocatoriaDestacada, programaNombre)
-                      }
+                      disabled={!convocatoriaDestacada && !canManageConvocatorias}
+                      onClick={() => {
+                        if (convocatoriaDestacada) {
+                          handleNavigate(convocatoriaDestacada, programaNombre);
+                        } else if (canManageConvocatorias) {
+                          setCreateForProgramaId(programa.programaId);
+                        }
+                      }}
                     >
-                      {convocatoriaEstaAbierta
+                      {!convocatoriaDestacada
+                        ? canManageConvocatorias
+                          ? "Crear convocatoria"
+                          : "No disponible"
+                        : convocatoriaEstaAbierta
                         ? "Entrar a la convocatoria"
                         : "Consultar convocatoria"}
                       <span aria-hidden="true">→</span>
@@ -582,6 +596,18 @@ const AdmisionesHomePage = () => {
           </>
         ) : null}
       </section>
+      {feedback ? <p className="admisiones-feedback" role="status">{feedback}</p> : null}
+      <CreateConvocatoriaModal
+        open={createForProgramaId !== null}
+        convocatorias={convocatorias}
+        initialProgramaId={createForProgramaId}
+        onClose={() => setCreateForProgramaId(null)}
+        onRefreshConvocatorias={loadConvocatorias}
+        onSuccess={(message) => {
+          setFeedback(message);
+          setCreateForProgramaId(null);
+        }}
+      />
     </ModuleLayout>
   );
 };

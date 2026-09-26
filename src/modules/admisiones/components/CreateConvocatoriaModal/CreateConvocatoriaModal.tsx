@@ -27,6 +27,7 @@ type PendingAssignment = {
 type CreateConvocatoriaModalProps = {
   open: boolean
   convocatorias: ConvocatoriaAdmisionDto[]
+  initialProgramaId?: number | null
   onClose: () => void
   onRefreshConvocatorias: () => Promise<ConvocatoriaAdmisionDto[]>
   onSuccess: (message: string) => void
@@ -41,11 +42,13 @@ type FormState = {
   cupos: string
   fechaInicio: string
   fechaFin: string
-  observaciones: string
-  profesorUuid: string
 }
 
-type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string; warning?: string }
+type FormErrors = Partial<Record<keyof FormState, string>> & {
+  profesorUuid?: string
+  general?: string
+  warning?: string
+}
 
 const nowYear = new Date().getFullYear()
 
@@ -106,13 +109,12 @@ const initialFormState: FormState = {
   cupos: '1',
   fechaInicio: initialDates.inicio,
   fechaFin: initialDates.fin,
-  observaciones: '',
-  profesorUuid: '',
 }
 
 export const CreateConvocatoriaModal = ({
   open,
   convocatorias,
+  initialProgramaId,
   onClose,
   onRefreshConvocatorias,
   onSuccess,
@@ -166,9 +168,12 @@ export const CreateConvocatoriaModal = ({
 
         setProfesores(selectableProfesores)
         setProgramas(resolvedProgramas)
+        const initialPrograma = resolvedProgramas.find(
+          (programa) => programa.programaId === initialProgramaId
+        ) ?? resolvedProgramas[0]
         setFormState({
           ...initialFormState,
-          programaId: resolvedProgramas[0] ? String(resolvedProgramas[0].programaId) : '',
+          programaId: initialPrograma ? String(initialPrograma.programaId) : '',
           anio: String(nextYear),
           fechaInicio: defaultDates.inicio,
           fechaFin: defaultDates.fin,
@@ -198,7 +203,7 @@ export const CreateConvocatoriaModal = ({
     return () => {
       active = false
     }
-  }, [convocatorias, open])
+  }, [convocatorias, initialProgramaId, open])
 
   useEffect(() => {
     if (!open) {
@@ -280,8 +285,7 @@ export const CreateConvocatoriaModal = ({
     handleField(field, value)
   }
 
-  const handleAddProfesor = () => {
-    const selectedUuid = formState.profesorUuid
+  const handleAddProfesor = (selectedUuid: string) => {
     if (!selectedUuid) {
       return
     }
@@ -299,7 +303,6 @@ export const CreateConvocatoriaModal = ({
       return [...prev, profesor]
     })
 
-    setFormState((prev) => ({ ...prev, profesorUuid: '' }))
     setErrors((prev) => ({ ...prev, profesorUuid: undefined }))
   }
 
@@ -402,7 +405,7 @@ export const CreateConvocatoriaModal = ({
         cupos: Number(formState.cupos),
         fechaInicio: formState.fechaInicio,
         fechaFin: formState.fechaFin,
-        observaciones: formState.observaciones.trim(),
+        observaciones: '',
       }
 
       const created = await createConvocatoriaAdmision(payload)
@@ -560,23 +563,12 @@ export const CreateConvocatoriaModal = ({
             ) : null}
           </label>
 
-          <label className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
-            Observaciones
-            <textarea
-              rows={3}
-              value={formState.observaciones}
-              onChange={(event) => handleField('observaciones', event.target.value)}
-              disabled={isSubmitting || Boolean(pendingAssignment)}
-              placeholder="Opcional"
-            />
-          </label>
-
           <div className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
             <span>Profesores</span>
             <div className="create-convocatoria-modal__profesor-picker">
               <select
-                value={formState.profesorUuid}
-                onChange={(event) => handleField('profesorUuid', event.target.value)}
+                value=""
+                onChange={(event) => handleAddProfesor(event.target.value)}
                 disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
               >
                 <option value="">Seleccione profesor...</option>
@@ -587,14 +579,6 @@ export const CreateConvocatoriaModal = ({
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="create-convocatoria-modal__button create-convocatoria-modal__button--ghost"
-                onClick={handleAddProfesor}
-                disabled={!formState.profesorUuid || isSubmitting || Boolean(pendingAssignment)}
-              >
-                Agregar
-              </button>
             </div>
 
             <div className="create-convocatoria-modal__chips">

@@ -10,6 +10,13 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 - Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
 - No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
 
+## Mejora 2026-09-25 — creación directa de convocatorias
+
+- En `/admisiones`, cuando un programa no tiene convocatoria del período actual ni otra abierta, coordinación, secretaría y administración ven ahora **Crear convocatoria** en la misma tarjeta. La acción abre el formulario sin abandonar la pantalla y preselecciona el programa de esa tarjeta; los perfiles sin permiso continúan viendo el estado no disponible sin acceso a creación.
+- El formulario **Nueva convocatoria** ya no muestra **Observaciones** ni el botón intermedio **Agregar**. Elegir un profesor lo incorpora inmediatamente a la lista y el selector vuelve a **Seleccione profesor...**, permitiendo agregar otro o retirar uno ya elegido.
+- El contrato de `POST /sapp/convocatoriaAdmision` se conserva: `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones }`; como el backend aún tipa `observaciones` como obligatorio, el cliente envía `observaciones: ""`. Las asociaciones continúan enviándose después de crear la convocatoria mediante `POST /sapp/evaluadorConvocatoria`, una por profesor y con `{ evaluadorUuid, convocatoriaId }`.
+- No se añadieron dependencias, variables, schemas, seeds ni datasets. Verificación: ESLint focalizado PASS, suite Node 75/75 PASS, build PASS (308 módulos; CSS 263.58 kB; JS 733.25 kB) y `git diff --check` PASS. El lint global conserva nueve errores y una advertencia preexistentes fuera de los archivos modificados; Vite mantiene el aviso informativo por el chunk mayor de 500 kB.
+
 ## Corrección 2026-09-25 — apertura del detalle de matrícula académica
 
 - En el listado de coordinación, los enlaces **Ver detalle** de tabla y tarjetas móviles navegan ahora a la ruta canónica `/matricula/academica/:matriculaId`. Antes usaban `/matricula/:matriculaId`, cuya redirección descartaba el identificador y devolvía al listado.

@@ -78,6 +78,15 @@
   color: var(--text-secondary);
 }
 
+.admisiones-feedback {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--success), transparent 55%);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--success), transparent 90%);
+  color: var(--text-primary);
+}
+
 .admisiones-status--error {
   display: flex;
   flex-direction: column;
