@@ -39,6 +39,9 @@ export const getMatriculaEstadoModifier = (estado: string): string => {
   return 'default'
 }
 
+export const getMatriculaAcademicaDetallePath = (matriculaId: number | string): string =>
+  `/matricula/academica/${encodeURIComponent(matriculaId)}`
+
 /**
  * The student endpoint is scoped to the authenticated student but returns an array.
  * Prefer the requested period when one is known; otherwise choose deterministically by

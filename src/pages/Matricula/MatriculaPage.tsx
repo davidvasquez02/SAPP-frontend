@@ -38,6 +38,7 @@ import type {
 } from "../../modules/matricula/types";
 import {
   formatBackendDateTime,
+  getMatriculaAcademicaDetallePath,
   getMatriculaEstadoLabel,
   getMatriculaEstadoModifier,
 } from "../../modules/matricula/utils/matriculaPresentation";
@@ -947,7 +948,7 @@ const MatriculaPage = () => {
                           <td>{formatBackendDateTime(item.fechaSolicitud)}</td>
                           <td>
                             <Link
-                              to={`/matricula/${item.id}`}
+                              to={getMatriculaAcademicaDetallePath(item.id)}
                               className="matricula-page__detail-button"
                             >
                               Ver detalle
@@ -995,7 +996,7 @@ const MatriculaPage = () => {
                         <p>{formatBackendDateTime(item.fechaSolicitud)}</p>
                       </div>
                       <Link
-                        to={`/matricula/${item.id}`}
+                        to={getMatriculaAcademicaDetallePath(item.id)}
                         className="matricula-page__detail-button matricula-page__mobile-detail-button"
                       >
                         Ver detalle

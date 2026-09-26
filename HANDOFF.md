@@ -1,4 +1,28 @@
-# Handoff 2026-09-25 — historial de homologaciones y detalle estudiantil de solo lectura
+# Handoff 2026-09-25 — detalle de matrícula académica de coordinación
+
+## Estado actual y decisión
+
+- Corregido el retorno involuntario al listado al pulsar **Ver detalle** en `/matricula/academica`. La causa era el uso residual de `/matricula/{id}` después de separar el módulo en matrícula académica y financiera; la ruta heredada enviaba siempre a `/matricula/academica` y perdía el ID.
+- Tabla y tarjetas móviles usan ahora `getMatriculaAcademicaDetallePath(item.id)` y producen `/matricula/academica/:matriculaId`. La ruta heredada `/matricula/:matriculaId` usa `LegacyMatriculaDetailRedirect`, conserva el parámetro y lo lleva al mismo detalle canónico para no romper marcadores o enlaces antiguos.
+- El detalle existente no cambió: lee `matriculaId`, consulta `GET /sapp/matriculaAcademica`, selecciona `item.id === matriculaId` y consulta el checklist documental con el ID de la matrícula. No se modificaron contratos, API, DTO, estados, roles, schemas, dependencias, variables, seeds ni datasets.
+
+## Artefactos, contrato y salida esperada
+
+- Navegación del listado: `src/pages/Matricula/MatriculaPage.tsx`.
+- Rutas y compatibilidad: `src/app/routes/matriculaRoutes.tsx` y `src/app/routes/LegacyMatriculaDetailRedirect.tsx`.
+- Constructor canónico: `src/modules/matricula/utils/matriculaPresentation.ts`.
+- Regresión: `tests/matriculaPresentation.test.ts` comprueba que IDs numéricos y textuales generan `/matricula/academica/41`.
+- Salida esperada: al seleccionar la matrícula `41`, la URL termina en `/matricula/academica/41` y permanece en `MatriculaDetalleCoordinacionPage` mientras carga matrícula, asignaturas y documentos. Una URL antigua `/matricula/41` se reemplaza por esa misma URL canónica sin volver al listado.
+
+## Verificación, retos y siguientes pasos
+
+- ESLint focalizado PASS; regresión dirigida 5/5 PASS; suite Node 75/75 PASS; build PASS (308 módulos, CSS 263.63 kB, JS 733.41 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa configuraciones antiguas `msvs_version`/`python` y Vite reporta el chunk JavaScript mayor de 500 kB.
+- Entorno comprobado: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- No hay seed reproducible para la ruta protegida. El siguiente paso externo es validar con una sesión real de `COORDINACION` que un registro del listado abre su detalle, que una URL histórica también lo hace y que documentos/asignaturas corresponden al ID seleccionado. La imagen aportada documenta el listado, pero la validación autenticada depende del backend institucional.
+
+---
+
+# Historial de handoffs anteriores
 
 ## Update 2026-09-25 — calificación definitiva y uniformidad del detalle de proyectos
 

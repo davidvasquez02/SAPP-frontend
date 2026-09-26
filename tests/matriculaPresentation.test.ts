@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   formatBackendDateTime,
   getAsignaturaEstadoLabel,
+  getMatriculaAcademicaDetallePath,
   getMatriculaEstadoLabel,
   selectStudentMatricula,
 } from '../src/modules/matricula/utils/matriculaPresentation.ts'
@@ -63,4 +64,9 @@ test('selecciona por periodo y no por posición; usa una etiqueta neutral para e
 test('formatea fechas sin agregar zona horaria ni desplazar día u hora', () => {
   assert.equal(formatBackendDateTime('2026-03-08 14:30:00'), '08/03/2026, 14:30')
   assert.equal(formatBackendDateTime('valor no estándar'), 'valor no estándar')
+})
+
+test('construye la ruta canónica del detalle de matrícula académica', () => {
+  assert.equal(getMatriculaAcademicaDetallePath(41), '/matricula/academica/41')
+  assert.equal(getMatriculaAcademicaDetallePath('41'), '/matricula/academica/41')
 })

@@ -1,4 +1,24 @@
-# SAPP Frontend — historial de homologaciones en revisión
+# SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
+
+SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula académica y financiera, solicitudes, créditos condonables, actas, informes y trabajos de grado. El frontend organiza rutas y guards en `src/app`, vistas en `src/pages`, contratos y lógica por dominio en `src/modules`, y componentes comunes en `src/components`. El backend Spring Boot/PostgreSQL continúa siendo la fuente de reglas académicas, autorización y persistencia.
+
+## Entorno y ejecución
+
+- Entorno comprobado el 2026-09-25: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Reutilizar `node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry y no se debe crear un segundo entorno npm.
+- Desarrollo: `npm run dev`. Producción: `npm run build` y luego `npm run preview`.
+- Pruebas: `node --test --test-isolation=none tests/*.test.ts`. Lint: `npm run lint` o ESLint focalizado sobre los archivos modificados.
+- No hay seeds ni credenciales locales para las rutas protegidas; los datos provienen del backend institucional configurado mediante las variables Vite existentes.
+
+## Corrección 2026-09-25 — apertura del detalle de matrícula académica
+
+- En el listado de coordinación, los enlaces **Ver detalle** de tabla y tarjetas móviles navegan ahora a la ruta canónica `/matricula/academica/:matriculaId`. Antes usaban `/matricula/:matriculaId`, cuya redirección descartaba el identificador y devolvía al listado.
+- Las URLs históricas `/matricula/:matriculaId` siguen admitidas, pero ahora preservan el ID y redirigen al detalle académico correcto. La pantalla carga el registro seleccionado con `GET /sapp/matriculaAcademica` y sus documentos por `tramiteId`; no cambian endpoints, DTO, permisos, estados ni persistencia.
+- Se centralizó la construcción de la URL en `getMatriculaAcademicaDetallePath` y se añadió una regresión. Verificación: ESLint focalizado PASS, prueba dirigida 5/5 PASS, suite Node 75/75 PASS, build PASS (308 módulos; CSS 263.63 kB; JS 733.41 kB) y `git diff --check` PASS. El build conserva únicamente el aviso informativo del chunk mayor de 500 kB.
+
+---
+
+# Historial de cambios anteriores
 
 ## Mejora 2026-09-25 — detalle uniforme y nota final de candidatura doctoral
 
