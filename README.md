@@ -2,6 +2,13 @@
 
 SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula académica y financiera, solicitudes, créditos condonables, actas, informes y trabajos de grado. El frontend organiza rutas y guards en `src/app`, vistas en `src/pages`, contratos y lógica por dominio en `src/modules`, y componentes comunes en `src/components`. El backend Spring Boot/PostgreSQL continúa siendo la fuente de reglas académicas, autorización y persistencia.
 
+## Ajuste 2026-09-26 — textos de créditos condonables y aprobación directa
+
+- El formulario de crédito condonable ya no muestra, encima de **Previsualizar documento de solicitud**, el texto informativo sobre tomar el teléfono y el correo institucional desde la sesión. La validación existente conserva el aviso de error cuando alguno de esos datos realmente falta, así como el bloqueo de la previsualización.
+- En el detalle de coordinación, las solicitudes **Envío de tema** (`tipoSolicitudId: 13`) y **Grado** (`tipoSolicitudId: 9`) presentan **Aprobar**, pues estos trámites quedan aprobados directamente y no pasan al Consejo Académico. Los demás tipos conservan sin cambios sus etiquetas contextuales **Aprobar y enviar a consejo académico** o **Aprobar y asignar jurados**.
+- No cambiaron endpoints, payloads, DTO, estados, permisos, dependencias, variables, schemas, seeds ni datasets. Las regresiones están en `tests/firmaSolicitud.test.ts` y `tests/trabajoGradoApprovalLabel.test.ts`.
+- Verificación: suite Node 101/101, ESLint focalizado, build de producción (315 módulos; CSS 268.18 kB; JS 738.35 kB) y `git diff --check` pasan. El build mantiene el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
 ## Corrección 2026-09-26 — adjuntos PDF en solicitudes y trabajos de grado
 
 - Los selectores de documentos al crear solicitudes académicas y trabajos de grado muestran únicamente archivos PDF mediante `accept="application/pdf,.pdf"`. La misma restricción se aplica al reemplazo de documentos y a la nueva versión que un estudiante carga durante ajustes de evaluación.

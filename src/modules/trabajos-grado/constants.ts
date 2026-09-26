@@ -59,6 +59,13 @@ export const getAprobacionTrabajoGradoLabel = (
     return 'Aprobar'
   }
 
+  if (
+    tipoSolicitudId === TIPO_TEMA_TRABAJO_GRADO_ID ||
+    tipoSolicitudId === TIPO_SOLICITUD_GRADO_ID
+  ) {
+    return 'Aprobar'
+  }
+
   const estado = `${normalizeEstadoResolucion(estadoSigla)} ${normalizeEstadoResolucion(estadoNombre)}`
 
   if (estado.includes('CONSEJO')) {
