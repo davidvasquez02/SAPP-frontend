@@ -1,3 +1,20 @@
+# Handoff 2026-09-26 — autorización del detalle de solicitudes estudiantiles
+
+## Estado actual, decisión y salida esperada
+
+- `SolicitudDetallePage` trata como sesión estudiantil restringida a quien tenga `ESTUDIANTE`/`ESTUDIANTE_POSGRADOS` y no tenga permisos de gestión. Resuelve el ID desde `session.user.estudiante.id` con fallback a `session.user.detalle.estudiante.id`, consulta exclusivamente `getSolicitudesAcademicasByEstudiante(estudianteId)` y busca allí el `solicitudId` de la URL.
+- Si el ID no pertenece a la colección del estudiante autenticado, no se llama al endpoint global de detalle, no se montan documentos ni paneles derivados y se muestra **No tienes permiso para consultar esta solicitud.** Al iniciar cada validación se ejecuta `setSolicitud(null)`; cambiar de cuenta dispara de nuevo el efecto por sus dependencias de estudiante y permisos.
+- La regla está en el detalle compartido y por tanto aplica a cualquier tipo de solicitud mostrado por `/solicitudes/:solicitudId` y `/trabajos-grado/:nivel/solicitudes/:solicitudId`. Los gestores conservan `GET /sapp/solicitudesAcademicas/{id}`. La ruta de créditos condonables ya exige gestión en el router.
+
+## Contratos, artefactos y próximos pasos
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regresión: `tests/solicitudDetalleAutorizacion.test.ts`. Contrato usado: `GET /sapp/solicitudesAcademicas/estudiante?estudianteId={id}`, envelope `{ ok, message, data: SolicitudAcademicaDto[] }`; salida autorizada: detalle normal, salida no autorizada: mensaje genérico sin datos de la solicitud ajena.
+- No se agregaron paquetes, schemas, variables, seeds, datasets ni artefactos persistentes. Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación: regresión dirigida 2/2 PASS, suite Node 94/94 PASS, ESLint focalizado PASS y build PASS (314 módulos; CSS 267.87 kB; JS 738.22 kB). Avisos no bloqueantes: npm informa `http-proxy` obsoleto y Vite advierte por el chunk JS mayor de 500 kB.
+- Reto de seguridad pendiente: esta defensa del cliente no reemplaza control de acceso backend. Confirmar que `GET /sapp/solicitudesAcademicas/{id}`, el listado por estudiante y los endpoints de documentos verifican el sujeto autenticado e ignoran/rechazan IDs de otro estudiante con 403/404. Luego validar con dos cuentas institucionales: copiar la URL de A, cerrar sesión, entrar como B y confirmar que no aparecen datos ni se disparan consultas auxiliares. No hay credenciales ni seed local para reproducirlo aquí.
+
+---
+
 # Handoff 2026-09-26 — múltiples documentos de soporte adicional
 
 ## Estado, decisión y salida esperada
