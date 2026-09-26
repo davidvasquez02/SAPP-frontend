@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-26 — separación y adaptación del proceso de evaluación
+
+- Los paneles de evaluación de proyectos de grado para coordinación y estudiantes ahora responden al ancho **real de la tarjeta de detalle**, no solo al ancho de la ventana. Esto evita encabezados, estados, conceptos, formularios y datos de sustentación comprimidos cuando la barra lateral reduce el área útil.
+- La alerta **Conceptos completos** separa su acción del contenido en espacios estrechos; las acciones generales tienen margen propio y las cuadrículas pasan a una columna antes de perder legibilidad. Se añadieron también `min-width: 0`, `box-sizing` y cortes compactos para impedir desbordamientos en todas las solicitudes de proyecto de grado que reutilizan estos paneles.
+- No cambian estados, permisos, endpoints, DTO ni payloads. Regresión: `tests/procesoEvaluacionResponsive.test.ts`. Verificación: pruebas dirigidas 13/13, suite Node 105/105, ESLint focalizado y build PASS (315 módulos; CSS 273.04 kB; JS 740.07 kB). El build conserva el aviso informativo del chunk mayor de 500 kB.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; este frontend no utiliza venv, Conda ni Poetry. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existen seeds ni credenciales locales para las rutas protegidas.
+
 SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula académica y financiera, solicitudes, créditos condonables, actas, informes y trabajos de grado. El frontend organiza rutas y guards en `src/app`, vistas en `src/pages`, contratos y lógica por dominio en `src/modules`, y componentes comunes en `src/components`. El backend Spring Boot/PostgreSQL continúa siendo la fuente de reglas académicas, autorización y persistencia.
 
 ## Corrección 2026-09-26 — sustentación durante ajustes y retiro de jurados

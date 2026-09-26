@@ -19,6 +19,24 @@
 
 ---
 
+## Handoff 2026-09-26 — responsive del proceso de evaluación de proyectos
+
+### Estado y decisión
+
+- Se corrigió la composición apretada observada en **Proceso de evaluación**. El problema era que los cortes responsive dependían del viewport (`@media`), aunque el panel puede quedar estrecho dentro del contenido junto a la barra lateral en una ventana de escritorio.
+- `ProcesoEvaluacionPanel.css` y `ProcesoEvaluacionEstudiante.css` establecen ahora contenedores inline y usan `@container` para reorganizar encabezados, estados, alerta de conceptos completos, acciones, formularios, directorio, nota final, sustentación y evaluación de jurados según el espacio realmente disponible. La acción posterior a **Conceptos completos** conserva un margen de 1 rem y ya no queda pegada a la alerta.
+- El contenedor de detalle de toda solicitud de trabajo de grado tiene `min-width: 0` y `box-sizing: border-box`, de modo que ambos paneles compartidos pueden contraerse sin desbordar. No se modificaron componentes React, lógica, permisos, API, DTO, estados, schemas, variables, dependencias, datasets ni seeds.
+
+### Artefactos, pruebas y continuidad
+
+- Estilos de coordinación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.css`; estilos del estudiante: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante.css`; contenedor común: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; regresión: `tests/procesoEvaluacionResponsive.test.ts`.
+- Salida esperada: en áreas de hasta 700 px, la cabecera y las cuadrículas dejan de competir horizontalmente, **Conceptos completos** coloca su botón en una fila completa y las acciones quedan separadas; hasta 430 px se compacta el padding sin eliminar el aire visual. Aplica a todos los tipos con proceso de evaluación (`PROP_MAESTRIA`, `PROP_DOCTORAL`, `TRAB_MAESTRIA`, `TESIS_DOCTORAL` y `CAND_DOCTORAL`) porque comparten los paneles.
+- Pruebas dirigidas 13/13 PASS; suite Node 105/105 PASS; ESLint focalizado PASS; build PASS (315 módulos, CSS 273.04 kB, JS 740.07 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante del chunk mayor de 500 kB. No se pudo tomar captura en el contenedor porque no incluye Chromium, Chrome ni Firefox y la ruta requiere sesión/backend institucionales.
+- Entorno único: `/workspace/SAPP-frontend`, Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Próximo paso externo: validar con sesiones reales de coordinación y estudiante, temas claro/oscuro y anchos de contenido de 360–700 px; confirmar especialmente estado largo, alerta de conceptos completos, formularios y tablas con varios jurados.
+
+---
+
 # Handoff 2026-09-26 — selección exclusiva de PDF en solicitudes y trabajos de grado
 
 ## Estado actual, decisión y salida esperada

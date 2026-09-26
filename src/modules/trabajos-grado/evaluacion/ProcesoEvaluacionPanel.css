@@ -1,6 +1,8 @@
-.evaluacion-tg { margin-top: .5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-xs); color: var(--text-primary); }
+.evaluacion-tg { container-type: inline-size; min-width: 0; box-sizing: border-box; margin-top: .5rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-xs); color: var(--text-primary); }
 .evaluacion-tg--status { text-align: center; }
-.evaluacion-tg__header, .evaluacion-tg__section-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.evaluacion-tg__header, .evaluacion-tg__section-heading { display: flex; min-width: 0; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.evaluacion-tg__header > div, .evaluacion-tg__section-heading > div { min-width: 0; }
+.evaluacion-tg__header > div > p:last-child { margin-top: .3rem; color: var(--text-secondary); overflow-wrap: anywhere; }
 .evaluacion-tg__header h3, .evaluacion-tg__header p, .evaluacion-tg__section h4 { margin: 0; }
 .evaluacion-tg__eyebrow { color: var(--primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); letter-spacing: .08em; text-transform: uppercase; }
 .evaluacion-tg__state, .evaluacion-tg__chip { display: inline-flex; width: fit-content; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--outline); background: var(--surface-container-low); font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); }
@@ -17,11 +19,12 @@
 .evaluacion-tg__message, .evaluacion-tg__error { padding: .75rem 1rem; border-radius: var(--radius-sm); }
 .evaluacion-tg__message { color: var(--success); background: color-mix(in srgb, var(--success), transparent 90%); }
 .evaluacion-tg__error { color: var(--danger); background: color-mix(in srgb, var(--danger), transparent 90%); }
-.evaluacion-tg__ready { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .9rem; align-items: center; margin-top: 1rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 45%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary), var(--surface) 92%); }
+.evaluacion-tg__ready { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .9rem; align-items: center; margin-top: 1.25rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 45%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary), var(--surface) 92%); }
 .evaluacion-tg__ready-icon { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: 50%; background: var(--primary); color: var(--on-primary); font-weight: var(--font-weight-bold); }
 .evaluacion-tg__ready strong { display: block; color: var(--primary); }
 .evaluacion-tg__ready p { margin: .15rem 0 0; color: var(--text-secondary); }
 .evaluacion-tg__actions, .evaluacion-tg__form-actions, .evaluacion-tg__row-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
+.evaluacion-tg__actions { margin-top: 1rem; }
 .evaluacion-tg button { min-height: 2.5rem; border: 1px solid var(--primary); border-radius: 999px; padding: .55rem .9rem; background: var(--primary); color: var(--on-primary); cursor: pointer; font: inherit; font-weight: var(--font-weight-semibold); }
 .evaluacion-tg button.secondary, .evaluacion-tg__row-actions button { background: transparent; color: var(--primary); }
 .evaluacion-tg button.danger { border-color: var(--danger); color: var(--danger); }
@@ -104,6 +107,28 @@
   .evaluacion-tg td { display: grid; grid-template-columns: minmax(6rem, 35%) 1fr; gap: .5rem; border: 0; }
   .evaluacion-tg td::before { content: attr(data-label); color: var(--text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); }
   .evaluacion-tg__row-actions button { flex: 1 1 8rem; }
+}
+
+/* The detail can be narrow while the viewport is still wide because the app
+   sidebar consumes part of the available space. Container queries keep every
+   project-degree request comfortable in that real content width. */
+@container (max-width: 700px) {
+  .evaluacion-tg__header { display: grid; }
+  .evaluacion-tg__state { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .evaluacion-tg__ready { grid-template-columns: auto minmax(0, 1fr); }
+  .evaluacion-tg__ready button { grid-column: 1 / -1; width: 100%; }
+  .evaluacion-tg__summary, .evaluacion-tg__form-grid { grid-template-columns: 1fr; }
+  .evaluacion-tg__final-grade { align-items: flex-start; flex-direction: column; }
+  .evaluacion-tg__final-grade p { text-align: left; }
+  .evaluacion-tg__directory-access, .evaluacion-tg__directory-heading { align-items: stretch; flex-direction: column; }
+  .evaluacion-tg__directory-search, .evaluacion-tg__directory-item { grid-template-columns: 1fr; }
+  .evaluacion-tg__actions > button { flex: 1 1 12rem; }
+}
+
+@container (max-width: 430px) {
+  .evaluacion-tg__section, .evaluacion-tg__form-card { padding: .85rem; }
+  .evaluacion-tg__section-heading { display: grid; }
+  .evaluacion-tg__add-evaluator, .evaluacion-tg__form-actions > button { width: 100%; }
 }
 
 @media (max-width: 440px) {
