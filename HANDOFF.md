@@ -19,6 +19,23 @@
 
 ---
 
+# Update 2026-09-27 — alineación del formulario de homologación
+
+## Estado, contrato y salida esperada
+
+- En `SolicitudEstudianteForm.tsx`, el grupo **Asignatura del listado / Asignatura nueva** está fuera de la cuadrícula y antes de **Materia origen**. Después aparece la cuadrícula de dos columnas con **Materia origen** y **Materia destino del programa** alineadas desde sus rótulos.
+- `SolicitudEstudianteForm.css` da `width: 100%`, `min-width: 0` y `box-sizing: border-box` a ambos selectores y a los campos manuales. Se eliminó el espaciador artificial `solicitud-estudiante-form__homologacion-alignment`; en móvil la cuadrícula sigue pasando a una columna.
+- No se modifican estado, validación, DTO, payloads, endpoints, permisos, schemas, seeds, datasets ni dependencias. La salida funcional continúa enviando una materia de catálogo o el código/nombre manual de origen junto con `asignaturaDestinoId`.
+
+## Artefactos, entorno y continuidad
+
+- Paths: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`, su CSS contiguo y `tests/homologacionSolicitudForm.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. El frontend usa Node/npm y no incluye backend, credenciales o seed reproducible para la ruta estudiantil protegida.
+- Resultados locales: regresión dirigida PASS (2/2), suite Node PASS (105/105), ESLint focalizado PASS, build PASS (315 módulos; CSS 273.00 kB; JS 740.01 kB) y `git diff --check` PASS. `npm run lint` global sigue bloqueado por nueve errores y una advertencia preexistentes en servicios, admisiones, documentos y tipos de solicitudes; Vite avisa además que el chunk JavaScript supera 500 kB.
+- Próximo paso institucional: revisar la tarjeta con una sesión estudiantil real, materias de nombres largos, ambos temas y anchos de escritorio/móvil; confirmar visualmente que los selectores conserven el mismo tamaño.
+
+---
+
 ## Handoff 2026-09-26 — responsive del proceso de evaluación de proyectos
 
 ### Estado y decisión

@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — alineación de asignaturas en homologación
+
+- En la creación estudiantil de homologaciones, **Asignatura del listado** y **Asignatura nueva** aparecen ahora sobre el rótulo **Materia origen**, como selector común del modo de captura.
+- **Materia origen** y **Materia destino del programa** comienzan en la misma fila y sus selectores ocupan todo el ancho disponible de columnas equivalentes. En móvil se mantienen apilados y los botones reparten el ancho disponible.
+- No cambian validaciones, payloads, endpoints, permisos ni dependencias. La regresión está en `tests/homologacionSolicitudForm.test.ts`.
+- Verificación: regresión dirigida 2/2, suite Node 105/105, ESLint focalizado, build de producción (315 módulos; CSS 273.00 kB; JS 740.01 kB) y `git diff --check` pasan. El lint global conserva nueve errores y una advertencia preexistentes fuera de este cambio; Vite mantiene el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Corrección 2026-09-26 — separación y adaptación del proceso de evaluación
 
 - Los paneles de evaluación de proyectos de grado para coordinación y estudiantes ahora responden al ancho **real de la tarjeta de detalle**, no solo al ancho de la ventana. Esto evita encabezados, estados, conceptos, formularios y datos de sustentación comprimidos cuando la barra lateral reduce el área útil.

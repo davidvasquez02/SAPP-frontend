@@ -12,17 +12,22 @@ const stylesPath = new URL(
 )
 const typesPath = new URL('../src/modules/solicitudes/api/types.ts', import.meta.url)
 
-test('presenta alineados los controles de homologación y una acción compacta', async () => {
+test('presenta el modo de origen antes de las materias y alinea sus controles', async () => {
   const [component, styles] = await Promise.all([
     readFile(componentPath, 'utf8'),
     readFile(stylesPath, 'utf8'),
   ])
 
-  assert.match(component, /solicitud-estudiante-form__homologacion-alignment/)
+  const sourceTogglePosition = component.indexOf('solicitud-estudiante-form__source-toggle')
+  const originLegendPosition = component.indexOf('<legend>Materia origen')
+  assert.ok(sourceTogglePosition >= 0)
+  assert.ok(originLegendPosition > sourceTogglePosition)
+  assert.doesNotMatch(component, /solicitud-estudiante-form__homologacion-alignment/)
   assert.match(component, /solicitud-estudiante-form__add-homologacion/)
   assert.match(component, /Agregar asignaturas/)
   assert.doesNotMatch(component, /Agregar otro par|Agregar par de homologación/)
-  assert.match(styles, /\.solicitud-estudiante-form__homologacion-alignment/)
+  assert.match(styles, /\.solicitud-estudiante-form__origen select,[\s\S]*?\.solicitud-estudiante-form__destino select[\s\S]*?width: 100%;/)
+  assert.doesNotMatch(styles, /\.solicitud-estudiante-form__homologacion-alignment/)
   assert.match(styles, /\.solicitud-estudiante-form__add-homologacion[\s\S]*?width: auto;/)
 })
 
