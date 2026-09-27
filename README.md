@@ -1,5 +1,30 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — búsqueda manual de estudiantes por nombre
+
+- **Agregar estudiante manualmente** en matrícula financiera conserva la consulta
+  rápida `GET /sapp/estudiantes?query=` por código. Cuando una búsqueda textual
+  no devuelve coincidencias, usa como respaldo
+  `GET /sapp/estudiantes/consulta?egresados=false` y filtra los nombres en el
+  cliente sin distinguir mayúsculas, minúsculas ni tildes; varios términos pueden
+  coincidir en cualquier parte del nombre.
+- La salida del respaldo se reduce a `{ id, codigoNombre }`, con la etiqueta
+  `código UIS · nombre completo`; la interfaz no expone los demás datos de la
+  proyección. Las consultas numéricas y las coincidencias del catálogo existente
+  no generan la consulta adicional. No cambiaron el alta manual, roles, DTO de
+  creación, schemas, dependencias, variables, seeds ni datasets.
+- SAPP continúa siendo la SPA institucional EISI–UIS para admisiones, matrículas,
+  solicitudes, créditos, actas, informes y trabajos de grado. React organiza la
+  interfaz en `src/pages` y `src/modules`; el backend Spring Boot/PostgreSQL sigue
+  siendo la fuente de persistencia y reglas académicas.
+- Entorno único comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3,
+  React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint
+  9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda,
+  Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas:
+  `node --test --test-isolation=none tests/*.test.ts`; producción:
+  `npm run build` y `npm run preview`. No existen seed, backend ni credenciales
+  locales para reproducir la ruta protegida.
+
 ## Corrección 2026-09-27 — tipo de estudiante en matrícula financiera
 
 - El tablero y el detalle de liquidación presentan **VIGENTE** para quien ya
