@@ -1,3 +1,21 @@
+# Handoff 2026-09-27 — tags azules diferenciados para Comité y Consejo
+
+## Estado actual, decisión y salida esperada
+
+- `StatusBadge` asigna `ENVIADA` a `status-badge--enviada-comite` y `ENVIADA_CONSEJO` a `status-badge--enviada-consejo`. Se reemplazó la superficie primaria sólida por fondos azules claros mezclados con `--surface`, bordes del mismo matiz y texto contrastante; Comité usa azul y Consejo azul cian.
+- La apariencia vuelve a ser la de un tag informativo y no la de un botón. Las variantes oscuras aclaran el texto bajo `body.dark`; el fondo y el borde se adaptan automáticamente a la superficie temática.
+- Como listados, tarjetas móviles y detalle reutilizan el componente, la salida cubre todos los tipos de solicitudes académicas, proyectos de grado y créditos condonables. Los dos órganos deben poder distinguirse sin perder su asociación cromática. No cambiaron etiquetas, normalización, API, DTO, permisos, paquetes, schemas, variables, seeds ni datasets.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `StatusBadge.css`. Regresión estructural: `tests/estadoSolicitud.test.ts`. No hay artefactos binarios ni datasets nuevos.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend no usa venv, Conda ni Poetry; reutilizar el árbol instalado y no crear otro entorno npm.
+- Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`.
+- Resultados recientes: regresión dirigida 7/7 PASS; suite Node 113/113 PASS; ESLint focalizado PASS; build PASS (317 módulos, CSS 275.30 kB, JS 743.36 kB); `git diff --check` PASS. Vite mantiene el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar visualmente ambos estados con una sesión y backend institucionales, en listado/detalle, móvil/escritorio y temas claro/oscuro. Las rutas protegidas no disponen de credenciales ni seed local reproducible.
+
+---
+
 # Handoff 2026-09-27 — motivo de rechazo para toda solicitud
 
 ## Estado actual, contrato y salida esperada

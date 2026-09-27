@@ -65,7 +65,7 @@ test('reconoce el estado enviado a consejo por sigla y por nombre descriptivo', 
   )
 })
 
-test('destaca con el color primario los envios a comite y consejo', () => {
+test('diferencia con tonos azules suaves los envios a comite y consejo', () => {
   const component = readFileSync(
     new URL('../src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx', import.meta.url),
     'utf8',
@@ -75,10 +75,11 @@ test('destaca con el color primario los envios a comite y consejo', () => {
     'utf8',
   )
 
-  assert.match(component, /ENVIADA: 'enviada-organo'/)
-  assert.match(component, /ENVIADA_CONSEJO: 'enviada-organo'/)
-  assert.match(styles, /\.status-badge\.status-badge--enviada-organo\s*{[^}]*background: var\(--primary\);/s)
-  assert.match(styles, /\.status-badge\.status-badge--enviada-organo\s*{[^}]*color: var\(--on-primary\);/s)
+  assert.match(component, /ENVIADA: 'enviada-comite'/)
+  assert.match(component, /ENVIADA_CONSEJO: 'enviada-consejo'/)
+  assert.match(styles, /\.status-badge\.status-badge--enviada-comite\s*{[^}]*background: color-mix\([^;]+var\(--surface\) 86%\);/s)
+  assert.match(styles, /\.status-badge\.status-badge--enviada-consejo\s*{[^}]*background: color-mix\([^;]+var\(--surface\) 86%\);/s)
+  assert.doesNotMatch(styles, /status-badge--enviada-(?:comite|consejo)[^{]*{[^}]*background:\s*var\(--primary\)/s)
 })
 
 test('reconoce los ajustes recibidos por sigla y por nombre descriptivo', () => {
