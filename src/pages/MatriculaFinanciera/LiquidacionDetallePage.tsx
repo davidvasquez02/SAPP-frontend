@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
 import { actualizarLiquidacion, obtenerLiquidacion, obtenerProceso } from '../../modules/matricula-financiera/api'
 import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
-import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, puedeEditarFila } from '../../modules/matricula-financiera/rules'
+import { ajustesActuales, etiquetaEstadoLiquidacion, etiquetaTipoEstudiante, fechaColombia, formatoMonedaEntrada, normalizarMoneda, puedeEditarFila } from '../../modules/matricula-financiera/rules'
 import type { LiquidacionMatricula, ProcesoLiquidacion, PreguntaLiquidacion } from '../../modules/matricula-financiera/types'
 import { Aviso, Alertas, Importe } from './FinancieraUi'
 import { RespuestasForm } from './RespuestasForm'
@@ -12,7 +12,7 @@ import { LiquidacionActions } from './LiquidacionActions'
 import './MatriculaFinancieraPage.css'
 
 const AYUDAS_REVISION = {
-  tipoEstudiante: 'VIGENTE indica que el estudiante ingresa a primer semestre. NUEVO indica que cursa segundo semestre o uno posterior.',
+  tipoEstudiante: 'NUEVO indica que el estudiante ingresa a primer semestre. VIGENTE indica que ya cuenta con matrículas previas.',
   origenRespuesta: 'Indica quién registró las respuestas: ESTUDIANTE desde su plataforma o COORDINADOR durante un ingreso o ajuste manual.',
   solicitudEnviada: 'Fecha y hora en que se envió al estudiante el correo para solicitar sus respuestas.',
   ultimoRecordatorio: 'Fecha y hora en que se envió al estudiante el recordatorio para diligenciar sus respuestas.',
@@ -48,7 +48,7 @@ function Detalle({ fila, proceso, onChange }: { fila: LiquidacionMatricula; proc
   ]
   const saveAdjustments = async () => { await op.run(async () => { await actualizarLiquidacion(fila.id, 'ajustes', { semestre: Number(ajustes.semestre), promocion: initial.promocion, ajusteManual: Number(ajustes.ajusteManual), valorFinalManual: ajustes.valorFinalManual === '' ? null : Number(ajustes.valorFinalManual), observaciones: ajustes.observaciones.trim() || null }); onChange() }, 'Correcciones guardadas.') }
   return <><header><h1>{fila.codigoEstudiante} · {fila.nombreCompleto || 'Nombre no disponible'}</h1></header><Aviso error={op.error} message={op.message} />
-    <section className="mf-card"><div className="mf-review-status"><span>Estado de la liquidación</span><strong className={`mf-badge mf-badge--${fila.estado.toLowerCase()}`}>{etiquetaEstadoLiquidacion(fila.estado)}</strong></div><h2>Revisión del caso</h2><Alertas alertas={fila.alertas.filter(alerta => alerta !== 'PROMOCION_FALTANTE')} />{fila.motivoExclusion && <p>Motivo de exclusión: {fila.motivoExclusion}</p>}<dl className="mf-values"><div><dt>Programa académico</dt><dd>{fila.programa}</dd></div><div><dt><EtiquetaConAyuda id="tipo-estudiante" ayuda={AYUDAS_REVISION.tipoEstudiante}>Tipo de estudiante</EtiquetaConAyuda></dt><dd>{fila.tipoEstudiante}</dd></div><div><dt>Periodo</dt><dd>{proceso.periodo}</dd></div><div><dt>Semestre</dt><dd>{fila.semestre ?? 'Sin calcular'}</dd></div><div><dt><EtiquetaConAyuda id="origen-respuesta" ayuda={AYUDAS_REVISION.origenRespuesta}>Origen de respuesta</EtiquetaConAyuda></dt><dd>{fila.origenRespuesta ?? 'Sin respuesta'}</dd></div>{([
+    <section className="mf-card"><div className="mf-review-status"><span>Estado de la liquidación</span><strong className={`mf-badge mf-badge--${fila.estado.toLowerCase()}`}>{etiquetaEstadoLiquidacion(fila.estado)}</strong></div><h2>Revisión del caso</h2><Alertas alertas={fila.alertas.filter(alerta => alerta !== 'PROMOCION_FALTANTE')} />{fila.motivoExclusion && <p>Motivo de exclusión: {fila.motivoExclusion}</p>}<dl className="mf-values"><div><dt>Programa académico</dt><dd>{fila.programa}</dd></div><div><dt><EtiquetaConAyuda id="tipo-estudiante" ayuda={AYUDAS_REVISION.tipoEstudiante}>Tipo de estudiante</EtiquetaConAyuda></dt><dd>{etiquetaTipoEstudiante(fila.tipoEstudiante)}</dd></div><div><dt>Periodo</dt><dd>{proceso.periodo}</dd></div><div><dt>Semestre</dt><dd>{fila.semestre ?? 'Sin calcular'}</dd></div><div><dt><EtiquetaConAyuda id="origen-respuesta" ayuda={AYUDAS_REVISION.origenRespuesta}>Origen de respuesta</EtiquetaConAyuda></dt><dd>{fila.origenRespuesta ?? 'Sin respuesta'}</dd></div>{([
       ['Solicitud enviada', fila.fechaEnvioSolicitud, AYUDAS_REVISION.solicitudEnviada, 'solicitud-enviada'],
       ['Último recordatorio', fila.fechaUltimoRecordatorio, AYUDAS_REVISION.ultimoRecordatorio, 'ultimo-recordatorio'],
       ['Respuesta recibida', fila.fechaRespuesta, AYUDAS_REVISION.respuestaRecibida, 'respuesta-recibida'],

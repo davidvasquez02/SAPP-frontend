@@ -84,3 +84,14 @@ test('destaca las consecuencias de guardar cambios en los parámetros', () => {
   assert.match(source, /Consecuencias de guardar cambios/)
   assert.match(source, /Guardar recalcula las filas sin valor final manual\. Revisa los valores antes de exportar nuevamente\./)
 })
+
+test('muestra la denominación académica del tipo de estudiante', () => {
+  const processSource = readFileSync(new URL('../src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx', import.meta.url), 'utf8')
+  const detailSource = readFileSync(new URL('../src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx', import.meta.url), 'utf8')
+  const addSource = readFileSync(new URL('../src/pages/MatriculaFinanciera/AgregarEstudiante.tsx', import.meta.url), 'utf8')
+
+  assert.match(processSource, /etiquetaTipoEstudiante\(row\.tipoEstudiante\)/)
+  assert.match(detailSource, /etiquetaTipoEstudiante\(fila\.tipoEstudiante\)/)
+  assert.match(detailSource, /NUEVO indica que el estudiante ingresa a primer semestre\. VIGENTE indica que ya cuenta con matrículas previas\./)
+  assert.match(addSource, /<option value="VIGENTE">Nuevo<\/option><option value="NUEVO">Vigente<\/option>/)
+})

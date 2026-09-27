@@ -1,5 +1,30 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — tipo de estudiante en matrícula financiera
+
+- El tablero y el detalle de liquidación presentan **VIGENTE** para quien ya
+  cuenta con matrículas previas y **NUEVO** para quien ingresa a primer
+  semestre. Esto corrige casos como el estudiante 2198160, cuya matrícula de
+  2026-1 debe impedir que se muestre como nuevo en el proceso 2026-2.
+- El servicio financiero conserva por compatibilidad su convención histórica
+  inversa (`NUEVO` identifica segundo semestre o posterior y `VIGENTE` el
+  ingreso inicial). La traducción se centraliza en
+  `etiquetaTipoEstudiante`; el alta manual muestra la denominación académica,
+  pero envía los valores esperados por el contrato existente. No cambiaron
+  endpoints, DTO, cálculos, schemas, dependencias, variables, seeds ni datasets.
+- SAPP es la SPA institucional EISI–UIS para admisiones, matrículas,
+  solicitudes, créditos, actas, informes y proyectos de grado. Las rutas y
+  guards viven en `src/app`, las vistas en `src/pages`, los contratos y reglas
+  de cliente en `src/modules` y los elementos reutilizables en `src/components`;
+  Spring Boot/PostgreSQL sigue siendo la fuente de datos y reglas académicas.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3,
+  React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint
+  9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv,
+  Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas:
+  `node --test --test-isolation=none tests/*.test.ts`; producción:
+  `npm run build` y `npm run preview`. No existe seed, backend ni credenciales
+  locales para reproducir la ruta protegida.
+
 ## Mejora 2026-09-27 — envío manual de recordatorios de candidatura doctoral
 
 - El nivel **Tesis doctoral** del módulo **Proyectos de grado** muestra exclusivamente al rol `COORDINADOR_POSGRADOS` una tarjeta para iniciar manualmente el envío masivo de recordatorios del examen de candidatura doctoral. Se ubicó como acción global antes del listado doctoral —no dentro de una solicitud individual ni en Solicitudes generales— porque la candidatura pertenece a Proyectos de grado y el backend selecciona a todos los estudiantes elegibles.

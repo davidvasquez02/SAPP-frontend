@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { ajustesActuales, etiquetaEstadoLiquidacion, fechaColombia, formatoMonedaEntrada, normalizarMoneda, ordenarPreguntasEstudiante, puedeEditarFila, respuestasCompletas, respuestasListasParaGuardar, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+import { ajustesActuales, etiquetaEstadoLiquidacion, etiquetaTipoEstudiante, fechaColombia, formatoMonedaEntrada, normalizarMoneda, ordenarPreguntasEstudiante, puedeEditarFila, respuestasCompletas, respuestasListasParaGuardar, seleccionarRespuestas } from '../src/modules/matricula-financiera/rules.ts'
+
+test('presenta como vigente al estudiante con matrículas previas según el contrato financiero', () => {
+  assert.equal(etiquetaTipoEstudiante('NUEVO'), 'VIGENTE')
+  assert.equal(etiquetaTipoEstudiante('VIGENTE'), 'NUEVO')
+})
 import type { CuerposLiquidacion, EstadoLiquidacion, EstadoProcesoLiquidacion, LiquidacionMatricula } from '../src/modules/matricula-financiera/types.ts'
 
 test('un estudiante nuevo nunca envía los campos exclusivos de vigente, incluso si venían poblados', () => {
