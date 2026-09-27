@@ -14,12 +14,16 @@ test('retirar un jurado usa el diálogo institucional en lugar de window.confirm
   assert.match(source, /Retirar jurado evaluador/)
   assert.match(source, /Sí, retirar jurado/)
   assert.match(source, /setJuradoARetirar\(item\)/)
+  assert.doesNotMatch(source, /<button className="evaluacion-tg__confirmation-backdrop"/)
+  assert.match(source, /className="evaluacion-tg__confirmation" role="presentation" onMouseDown=/)
 })
 
 test('el diálogo de retiro conserva tokens de tema y adaptación móvil', async () => {
   const styles = await readFile(stylesPath, 'utf8')
 
   assert.match(styles, /\.evaluacion-tg__confirmation-dialog/)
+  assert.match(styles, /\.evaluacion-tg__confirmation \{[^}]*background:[^;]*transparent 48%/)
+  assert.doesNotMatch(styles, /\.evaluacion-tg__confirmation-backdrop/)
   assert.match(styles, /background: var\(--surface\)/)
   assert.match(styles, /border[^;]*var\(--outline\)/)
   assert.match(styles, /background: var\(--danger\)/)

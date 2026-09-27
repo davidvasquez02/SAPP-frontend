@@ -64,24 +64,21 @@
 .evaluacion-tg__evaluation span { color: var(--text-secondary); font-size: var(--font-size-caption); overflow-wrap: anywhere; }
 .evaluacion-tg__evaluation span b { color: var(--text-primary); }
 .evaluacion-tg__inactive { opacity: .58; }
-.evaluacion-tg__confirmation { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; }
-.evaluacion-tg__confirmation-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 0; padding: 0; background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 55%); cursor: default; }
-.evaluacion-tg__confirmation-dialog { position: relative; display: grid; width: min(100%, 32rem); grid-template-columns: auto minmax(0, 1fr); gap: 1rem; box-sizing: border-box; border: 1px solid var(--outline); border-radius: 20px; padding: 1.5rem; background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-soft, 0 1.25rem 3rem color-mix(in srgb, var(--outline), transparent 45%)); }
+.evaluacion-tg__confirmation { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 1rem; background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 48%); backdrop-filter: blur(2px); }
+.evaluacion-tg__confirmation-dialog { position: relative; display: grid; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 1.4rem; padding: clamp(1.25rem, 4vw, 1.75rem); background: var(--surface); color: var(--text-primary); box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 62%); }
 .evaluacion-tg__confirmation-icon { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--danger), transparent 88%); color: var(--danger); font-size: 1.4rem; font-weight: 800; }
 .evaluacion-tg__confirmation-content h2, .evaluacion-tg__confirmation-content p, .evaluacion-tg__confirmation-content dl { margin: 0; }
-.evaluacion-tg__confirmation-content h2 { padding-right: 2rem; font-size: 1.35rem; }
+.evaluacion-tg__confirmation-content h2 { font-size: 1.35rem; }
 .evaluacion-tg__confirmation-content > p { margin-top: .45rem; color: var(--text-secondary); line-height: 1.5; }
 .evaluacion-tg__confirmation-content dl { margin-top: 1.15rem; border-radius: 14px; padding: .9rem 1rem; background: var(--surface-container-low); }
 .evaluacion-tg__confirmation-content dl div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .75rem; }
 .evaluacion-tg__confirmation-content dt { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
 .evaluacion-tg__confirmation-content dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
-.evaluacion-tg__confirmation-close { position: absolute; top: 1rem; right: 1rem; display: grid; width: 2.25rem; height: 2.25rem; min-height: 0; place-items: center; border: 0; border-radius: 50%; padding: 0; background: transparent; color: var(--text-secondary); font-size: 1.55rem; line-height: 1; cursor: pointer; }
-.evaluacion-tg__confirmation-close:hover:not(:disabled), .evaluacion-tg__confirmation-close:focus-visible { background: var(--surface-container-low); color: var(--text-primary); }
 .evaluacion-tg__confirmation-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: .75rem; margin-top: .25rem; }
 .evaluacion-tg__confirmation-actions button { min-height: 44px; border-radius: 999px; padding: .65rem 1.15rem; font-weight: 700; }
 .evaluacion-tg button.evaluacion-tg__confirmation-cancel { border-color: var(--outline); background: var(--surface); color: var(--text-primary); }
 .evaluacion-tg button.evaluacion-tg__confirmation-confirm { border-color: var(--danger); background: var(--danger); color: var(--on-danger, var(--surface)); }
-.evaluacion-tg__confirmation-actions button:disabled, .evaluacion-tg__confirmation-close:disabled { cursor: wait; }
+.evaluacion-tg__confirmation-actions button:disabled { cursor: wait; }
 .evaluacion-tg__chip--aceptada { border-color: var(--success); color: var(--success); }
 .evaluacion-tg__chip--declinada, .evaluacion-tg__chip--reemplazado { border-color: var(--danger); color: var(--danger); }
 .evaluacion-tg__timeline { margin: 1rem 0 0; padding: 0; list-style: none; }
@@ -139,7 +136,6 @@
   .evaluacion-tg td { grid-template-columns: 1fr; }
   .evaluacion-tg__confirmation-dialog { grid-template-columns: minmax(0, 1fr); gap: .85rem; padding: 1.25rem; }
   .evaluacion-tg__confirmation-icon { width: 2.75rem; height: 2.75rem; }
-  .evaluacion-tg__confirmation-actions { display: grid; }
+  .evaluacion-tg__confirmation-actions { display: flex; flex-direction: column-reverse; }
   .evaluacion-tg__confirmation-actions button { width: 100%; }
-  .evaluacion-tg__confirmation-confirm { order: -1; }
 }

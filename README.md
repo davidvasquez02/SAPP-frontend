@@ -114,9 +114,9 @@ SPA institucional para centralizar y dar trazabilidad a admisiones, matrícula a
 ## Corrección 2026-09-26 — sustentación durante ajustes y retiro de jurados
 
 - El proceso de evaluación ya no ofrece **Programar sustentación** cuando la solicitud está en `EN_AJUSTES` o **EN AJUSTES**. La acción permanece habilitada para conceptos completos (`CONCEPTOS_REC`) y reaparece después de que el backend confirme la recepción de la nueva versión (`AJUSTES_RECIB`).
-- **Retirar** un jurado reemplaza la confirmación nativa del navegador por un diálogo institucional: identifica al evaluador, explica el efecto, conserva el historial y ofrece acciones tipo píldora. El modal usa tokens semánticos, foco inicial en **Cancelar**, cierre con Escape/fondo y disposición adaptable a móvil y temas claro/oscuro.
+- **Retirar** un jurado reemplaza la confirmación nativa del navegador por un diálogo institucional: identifica al evaluador, explica el efecto, conserva el historial y ofrece acciones tipo píldora. El fondo atenuado ahora es una capa neutra, no un botón, por lo que no hereda el fondo verde global del módulo. El modal usa tokens semánticos, foco inicial en **Sí, retirar jurado**, cierre con Escape/fondo, devolución del foco al disparador y disposición adaptable a móvil y temas claro/oscuro.
 - Se conserva `DELETE /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados/{juradoId}` y el contrato de programación existente. No cambiaron payloads, DTO, permisos, dependencias, variables, schemas, seeds ni datasets.
-- Regresiones: `tests/estadoProcesoEvaluacion.test.ts` y `tests/retiroJuradoModal.test.ts`. Verificación local: suite Node 103/103, ESLint focalizado y build de producción (315 módulos; CSS 271.25 kB; JS 740.07 kB) pasan; Vite mantiene el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+- Regresiones: `tests/estadoProcesoEvaluacion.test.ts`, `tests/retiroJuradoModal.test.ts`, `tests/procesoEvaluacionResponsive.test.ts` y `tests/procesoEvaluacionFeedback.test.ts`. Verificación del ajuste visual: pruebas dirigidas 6/6, ESLint focalizado y build de producción (320 módulos; CSS 283.17 kB; JS 749.41 kB) pasan; Vite mantiene el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
 
 ## Ajuste 2026-09-26 — textos de créditos condonables y aprobación directa
 
