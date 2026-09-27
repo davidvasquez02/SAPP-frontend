@@ -6857,3 +6857,21 @@ npm run lint
 - La protección implementada pertenece al frontend. El backend también debe rechazar `POST /procesos/{id}/cerrar` cuando existan filas `PENDIENTE_RESPUESTA` o `RESPONDIDA`, para garantizar la regla ante clientes externos o peticiones directas.
 
 ---
+
+# Update 2026-09-27 — fecha límite de pago para coordinación y estudiante
+
+## Estado y contrato
+
+- `ProcesoLiquidacionPage.tsx` agrega a **Parámetros y fechas del proceso** el par **Fecha límite de pago en el sistema de la universidad** / `fechaColombia(proceso.fechaLimitePago)`. Si el proceso todavía no tiene fecha publicada, el formateador presenta **Sin registro**.
+- `MatriculaFinancieraPage.tsx` muestra la fecha dentro de `MiLiquidacionCard` únicamente en el bloque donde ya existe `item.valores`, inmediatamente después de **Total liquidado**. La salida usa `fechaColombia(item.proceso.fechaLimitePago)` y el texto **Fecha límite de pago en el sistema de la universidad**.
+- `MiLiquidacion.proceso` amplió su `Pick<ProcesoLiquidacion, ...>` con `fechaLimitePago`. El campo ya era opcional en `ProcesoLiquidacion`; no se inventó una propiedad ni cambiaron respuestas, endpoints o payloads. El backend de `/mias` debe incluir este valor para que el estudiante vea la fecha real.
+- El bloque `.mf-payment-deadline` usa tokens semánticos y se apila por debajo de 520 px. No usa colores fijos para fondo, texto o borde.
+
+## Paths y verificación
+
+- Implementación: `src/modules/matricula-financiera/types.ts`; `src/pages/MatriculaFinanciera/{MatriculaFinancieraPage,ProcesoLiquidacionPage}.tsx`; estilos compartidos en `MatriculaFinancieraPage.css`. Regresión en `tests/matriculaFinancieraFlow.test.ts`.
+- Resultado acumulado 2026-09-27: focalizadas PASS (28/28), suite Node PASS (124/124), ESLint focalizado PASS y build PASS (318 módulos; `dist/assets/index-Di8aYI7f.css` 278.48 kB y `dist/assets/index-xBXjKdZ6.js` 745.72 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+- No se agregaron dependencias, variables, schemas, seeds ni datasets. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: verificar que `/mias` incluya `proceso.fechaLimitePago` después de publicar y validar el bloque destacado y el acordeón con sesión real, temas claro/oscuro y móvil.
+
+---

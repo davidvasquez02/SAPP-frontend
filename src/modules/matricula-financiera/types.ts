@@ -32,7 +32,7 @@ export interface LiquidacionMatricula {
 }
 export interface PreguntaLiquidacion { clave: keyof RespuestasLiquidacion; aplica: boolean; texto: string }
 export interface MiLiquidacion {
-  liquidacionId: number; proceso: Pick<ProcesoLiquidacion, 'id' | 'periodo' | 'estado' | 'fechaLimiteRespuesta'>
+  liquidacionId: number; proceso: Pick<ProcesoLiquidacion, 'id' | 'periodo' | 'estado' | 'fechaLimiteRespuesta' | 'fechaLimitePago'>
   programa: string; codigoEstudiante: string; tipoEstudiante: TipoEstudianteLiquidacion; estado: EstadoLiquidacion
   puedeResponder: boolean; fueraDePlazo: boolean; preguntas: PreguntaLiquidacion[]; respuestas: RespuestasLiquidacion
   certificado: { requerido: boolean; cargado: boolean }

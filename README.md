@@ -1754,3 +1754,10 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - **Publicar resultados** ya no muestra el conteo de alertas y aclara que la fecha solicitada es la **Fecha límite de pago de las liquidaciones en el sistema de la universidad**.
 - **Cerrar recepción** permanece visible para procesos abiertos, pero queda deshabilitado mientras `resumen.pendientes` o `resumen.respondidas` sea mayor que cero. La interfaz explica que todas las filas deben terminar como **Liquidada** o **No liquidar**. La regla pura `puedeCerrarProceso` y una guarda adicional evitan invocar el endpoint desde la acción deshabilitada.
 - No cambiaron estados, DTO, endpoints, payloads, permisos, dependencias, variables, schemas, seeds ni datasets. Verificación: pruebas focalizadas PASS (27/27), suite Node PASS (123/123), ESLint focalizado PASS y build PASS (318 módulos; CSS 277.90 kB; JS 745.37 kB). Persisten los avisos ambientales de npm y el warning conocido por el chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-27 — fecha límite de pago visible
+
+- Coordinación consulta **Fecha límite de pago en el sistema de la universidad** dentro de **Parámetros y fechas del proceso**, usando `proceso.fechaLimitePago` y el formateo local de Colombia.
+- En **Mi liquidación**, cuando existe un total liquidado, la misma fecha aparece inmediatamente después del total en un bloque destacado construido con `--primary`, `--outline` y variables de superficie para conservar contraste en temas claro y oscuro y adaptación móvil.
+- `MiLiquidacion.proceso` incluye `fechaLimitePago` en su proyección tipada. No cambió el endpoint `/mias`, la publicación `POST /procesos/{id}/publicar`, su payload, ni el DTO base `ProcesoLiquidacion`.
+- Verificación acumulada: pruebas focalizadas PASS (28/28), suite Node PASS (124/124), ESLint focalizado PASS y build PASS (318 módulos; CSS 278.48 kB; JS 745.72 kB). Persisten únicamente los avisos ambientales de npm y el warning conocido por el chunk JavaScript mayor de 500 kB.

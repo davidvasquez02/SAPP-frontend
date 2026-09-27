@@ -127,3 +127,15 @@ test('aplica los textos y controles operativos del hallazgo de cierre', () => {
   assert.match(processSource, /{proceso\.resumen\.liquidadas} liquidadas · {proceso\.resumen\.pendientes} pendientes\.<\/p>/)
   assert.doesNotMatch(processSource, /{proceso\.resumen\.conAlertas} con alertas\./)
 })
+
+test('muestra la fecha límite de pago a coordinación y al estudiante', () => {
+  const listSource = readFileSync(new URL('../src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx', import.meta.url), 'utf8')
+  const processSource = readFileSync(new URL('../src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx', import.meta.url), 'utf8')
+  const styles = readFileSync(new URL('../src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css', import.meta.url), 'utf8')
+
+  assert.match(processSource, /<dt>Fecha límite de pago en el sistema de la universidad<\/dt><dd>{fechaColombia\(proceso\.fechaLimitePago\)}<\/dd>/)
+  assert.match(listSource, /className="mf-payment-deadline"/)
+  assert.match(listSource, /fechaColombia\(item\.proceso\.fechaLimitePago\)/)
+  assert.match(styles, /\.mf-my \.mf-payment-deadline/)
+  assert.match(styles, /background:color-mix\(in srgb,var\(--primary\),transparent 88%\)/)
+})
