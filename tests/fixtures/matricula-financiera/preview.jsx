@@ -22,7 +22,7 @@ window.fetch = async (input, options = {}) => {
   const body = options.body ? JSON.parse(String(options.body)) : {}
   ultimaPeticion = `${options.method ?? 'GET'} ${path} ${JSON.stringify(body)}`
   window.dispatchEvent(new Event('peticion-prueba'))
-  if (path === '/periodoAcademico') return response([{ id: 1, anio: 2026, periodo: 2, anioPeriodo: '2026 - 2' }, { id: 2, anio: 2027, periodo: 1, anioPeriodo: '2027 - 1' }])
+  if (path === '/procesos/periodosDisponibles') return response([{ id: 1, anio: 2026, periodo: 2, anioPeriodo: '2026 - 2' }, { id: 2, anio: 2027, periodo: 1, anioPeriodo: '2027 - 1' }])
   if (path === '/programaAcademico') return response([{ id: 1, nombre: '302 - Maestría' }, { id: 2, nombre: '347 - Doctorado' }])
   if (path === '/estudiantes') return response([{ id: 99, codigoNombre: 'PRUEBA-99 · Readmisión ficticia' }])
   if (path === '/document') {

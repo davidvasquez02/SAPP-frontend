@@ -33,7 +33,8 @@ export async function buscarEstudiantes(query: string, signal?: AbortSignal): Pr
   const estudiantes = await call<EstudianteConsultaBusqueda[]>('/estudiantes/consulta?egresados=false', { signal }, true)
   return filtrarEstudiantesPorNombre(estudiantes, texto)
 }
-export const listarPeriodos = (signal?: AbortSignal) => call<PeriodoFinanciera[]>('/periodoAcademico', { signal }, true)
+export const listarPeriodosDisponibles = (signal?: AbortSignal) =>
+  call<PeriodoFinanciera[]>('/procesos/periodosDisponibles', { signal })
 export const listarProgramas = (signal?: AbortSignal) => call<ProgramaFinanciera[]>('/programaAcademico', { signal }, true)
 export const listarTarifas = (programaId: number, signal?: AbortSignal) => call<TarifaMatricula[]>(`/tarifas?programaId=${programaId}`, { signal })
 export const actualizarTarifa = (id: number, body: TarifaRequest) => call<TarifaMatricula>(`/tarifas/${id}`, json('PUT', body))

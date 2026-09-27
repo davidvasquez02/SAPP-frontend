@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { crearProceso, listarMisLiquidaciones, listarPeriodos, listarProcesos, responderMiLiquidacion } from '../../modules/matricula-financiera/api'
+import { crearProceso, listarMisLiquidaciones, listarPeriodosDisponibles, listarProcesos, responderMiLiquidacion } from '../../modules/matricula-financiera/api'
 import { etiquetaResumen, GUIA_COORDINACION, GUIA_ESTUDIANTE } from '../../modules/matricula-financiera/flow'
 import { etiquetaEstadoLiquidacion, fechaColombia, money } from '../../modules/matricula-financiera/rules'
 import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
@@ -26,16 +26,20 @@ export function MatriculaFinancieraPage() {
 function Procesos() {
   const navigate = useNavigate()
   const consulta = useConsulta(useCallback((signal: AbortSignal) => listarProcesos(undefined, signal), []))
-  const periodos = useConsulta(useCallback((signal: AbortSignal) => listarPeriodos(signal), []))
+  const periodosDisponibles = useConsulta(useCallback((signal: AbortSignal) => listarPeriodosDisponibles(signal), []))
   const op = useOperacion()
   const [showCreate, setShowCreate] = useState(false)
   const [periodo, setPeriodo] = useState('')
   const [pagina, setPagina] = useState(1)
   const filtered = (consulta.data ?? []).filter(p => !periodo || p.periodoId === Number(periodo))
+  const periodosConProceso = Array.from(
+    new Map((consulta.data ?? []).map(proceso => [proceso.periodoId, proceso.periodo])).entries(),
+    ([id, label]) => ({ id, label }),
+  )
   const page = Math.min(pagina, Math.max(1, Math.ceil(filtered.length / 12)))
-  return <><Aviso error={op.error || consulta.error || periodos.error} message={op.message} /><div className="mf-toolbar"><button className="mf-button" disabled={consulta.loading || op.busy || periodos.loading || !!periodos.error || !!consulta.error} onClick={() => setShowCreate(!showCreate)}>Crear proceso</button><Link className="mf-button mf-button--secondary" to="/matricula/financiera/tarifas">Administrar tarifas</Link><button className="mf-button mf-button--secondary" disabled={consulta.loading || op.busy} onClick={() => { consulta.refresh(); periodos.refresh() }}>Actualizar</button></div>
-    {showCreate && <ParametrosProcesoForm periodos={periodos.data ?? []} procesos={consulta.data ?? []} busy={op.busy} onCancel={() => setShowCreate(false)} onSave={async body => { await op.run(async () => { const nuevo = await crearProceso(body); navigate(`/matricula/financiera/procesos/${nuevo.id}`) }) }} />}
-    <div className="mf-filters"><label>Periodo<select value={periodo} onChange={e => { setPeriodo(e.target.value); setPagina(1) }}><option value="">Todos los periodos</option>{(periodos.data ?? []).map(p => <option key={p.id} value={p.id}>{p.anioPeriodo || `${p.anio} - ${p.periodo}`}</option>)}</select></label></div>
+  return <><Aviso error={op.error || consulta.error || periodosDisponibles.error} message={op.message} /><div className="mf-toolbar"><button className="mf-button" disabled={consulta.loading || op.busy || periodosDisponibles.loading || !!periodosDisponibles.error || !!consulta.error} onClick={() => setShowCreate(!showCreate)}>Crear proceso</button><Link className="mf-button mf-button--secondary" to="/matricula/financiera/tarifas">Administrar tarifas</Link><button className="mf-button mf-button--secondary" disabled={consulta.loading || op.busy} onClick={() => { consulta.refresh(); periodosDisponibles.refresh() }}>Actualizar</button></div>
+    {showCreate && <ParametrosProcesoForm periodos={periodosDisponibles.data ?? []} busy={op.busy} onCancel={() => setShowCreate(false)} onSave={async body => { await op.run(async () => { const nuevo = await crearProceso(body); navigate(`/matricula/financiera/procesos/${nuevo.id}`) }) }} />}
+    <div className="mf-filters"><label>Periodo<select value={periodo} onChange={e => { setPeriodo(e.target.value); setPagina(1) }}><option value="">Todos los periodos</option>{periodosConProceso.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label></div>
     {consulta.loading ? <p role="status">Cargando procesos…</p> : <><div className="mf-grid">{filtered.slice((page - 1) * 12, page * 12).map(p => <Link className="mf-card mf-process" to={`/matricula/financiera/procesos/${p.id}`} key={p.id}><span className={`mf-badge mf-badge--${p.estado.toLowerCase()}`}>{p.estado}</span><h2>{p.periodo}</h2><p>Recepción de respuestas habilitada hasta el {fechaColombia(p.fechaLimiteRespuesta)}</p><p className="mf-process__metric"><strong>{p.resumen.respondidas}</strong> <span>{etiquetaResumen('respondidas')}</span></p></Link>)}</div>{!filtered.length && !consulta.error && <p className="mf-empty">No hay procesos para este filtro.</p>}<Paginacion pagina={page} total={Math.ceil(filtered.length / 12)} onChange={setPagina} /></>}
   </>
 }

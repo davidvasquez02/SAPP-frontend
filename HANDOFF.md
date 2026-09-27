@@ -15,6 +15,23 @@
 
 ---
 
+# Handoff 2026-09-27 — períodos disponibles para procesos financieros
+
+## Estado, contrato y salida esperada
+
+- `listarPeriodosDisponibles(signal)` usa el cliente del módulo financiero con la ruta `/procesos/periodosDisponibles`; con la base predeterminada produce `GET /api/sapp/liquidacionMatricula/procesos/periodosDisponibles` y espera el envelope habitual `{ ok, message, data: PeriodoFinanciera[] }`.
+- `ParametrosProcesoForm` recibe esa colección ya filtrada. Eliminó la prop `procesos`, el conjunto local `occupied`, las opciones deshabilitadas y el sufijo **(ya tiene proceso)**. El payload de `crearProceso` conserva `periodoId`, SMMLV, fuente, porcentajes, base de salud y fecha límite.
+- El selector **Periodo** del tablero no puede usar el nuevo catálogo porque este excluye los períodos que ya tienen proceso. Sus opciones se deduplican desde `listarProcesos()` mediante `periodoId` y `periodo`; filtrar procesos históricos y vigentes continúa funcionando aunque no sean elegibles para otra creación.
+
+## Paths, pruebas, entorno y continuidad
+
+- Transporte: `src/modules/matricula-financiera/api.ts`; orquestación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`; formulario: `ParametrosProcesoForm.tsx`; fixture: `tests/fixtures/matricula-financiera/preview.jsx`; regresión: `tests/periodosDisponiblesMatriculaFinanciera.test.ts`.
+- Verificación local: regresiones dirigidas 21/21 PASS, ESLint focalizado PASS, build PASS (320 módulos; CSS 283.17 kB; JS 749.56 kB) y `git diff --check` PASS. Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`.
+- Pendiente externo: validar con sesión institucional que el endpoint devuelva períodos previos o futuros solo cuando el backend los considere elegibles y que un período recién utilizado desaparezca del catálogo después de crear el proceso. No hay backend, credenciales ni seed local reproducible.
+
+---
+
 # Handoff 2026-09-27 — búsqueda manual de estudiantes por nombre
 
 ## Estado, decisión y contrato

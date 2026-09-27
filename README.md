@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — períodos disponibles para matrícula financiera
+
+- **Matrícula financiera > Crear proceso** obtiene ahora el selector desde `GET /sapp/liquidacionMatricula/procesos/periodosDisponibles`, que entrega únicamente períodos habilitados para crear una liquidación. Se retiró de este flujo la consulta general `GET /sapp/periodoAcademico`.
+- El selector ya no compara contra los procesos cargados, no deshabilita opciones y no agrega **(ya tiene proceso)**. Si el endpoint retorna una lista vacía, informa que no hay períodos disponibles.
+- El filtro del tablero continúa mostrando los períodos de los procesos existentes, pero ahora deriva sus opciones de `GET /sapp/liquidacionMatricula/procesos`; así no depende del catálogo de creación, que por definición excluye períodos ocupados. El POST de creación, sus parámetros, permisos y navegación no cambiaron.
+- Regresión: `tests/periodosDisponiblesMatriculaFinanciera.test.ts`. Verificación local: pruebas dirigidas 21/21, ESLint focalizado y build de producción PASS (320 módulos; CSS 283.17 kB; JS 749.56 kB). Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No hay seeds ni credenciales locales para esta ruta protegida.
+
 ## Corrección 2026-09-27 — búsqueda manual de estudiantes por nombre
 
 - **Agregar estudiante manualmente** en matrícula financiera conserva la consulta
