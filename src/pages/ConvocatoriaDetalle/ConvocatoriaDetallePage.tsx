@@ -5,13 +5,14 @@ import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
-import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
-import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
+import { getConvocatoriasAdmision, getEvaluadoresConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import type { ConvocatoriaAdmisionDto, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
 import type { AspiranteCreateResponseDto } from "../../modules/admisiones/api/aspiranteCreateTypes";
 import { CreateAspiranteModal } from "../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal";
 import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
+import { EvaluadoresConvocatoriaDialog } from "../../modules/admisiones/components/EvaluadoresConvocatoriaDialog";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import { getNombreCompletoAspirante } from "../../modules/admisiones/utils/aspiranteNombre";
@@ -53,6 +54,10 @@ const ConvocatoriaDetallePage = () => {
   );
   const [convocatoria, setConvocatoria] =
     useState<ConvocatoriaAdmisionDto | null>(null);
+  const [isEvaluadoresOpen, setIsEvaluadoresOpen] = useState(false);
+  const [evaluadores, setEvaluadores] = useState<EvaluadorConvocatoriaDto[]>([]);
+  const [evaluadoresLoading, setEvaluadoresLoading] = useState(false);
+  const [evaluadoresError, setEvaluadoresError] = useState<string | null>(null);
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } =
     useMemo(() => {
@@ -82,6 +87,9 @@ const ConvocatoriaDetallePage = () => {
       ROLES.SECRETARIA,
       ROLES.ADMIN,
     ]);
+  const canViewEvaluadores =
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION]);
 
   const parsedConvocatoriaId = useMemo(() => {
     if (!convocatoriaId) {
@@ -294,6 +302,34 @@ const ConvocatoriaDetallePage = () => {
     setIsCreateModalOpen(true);
   }, [convocatoria, convocatoriaCerrada, cuposConvocatoria, cuposExcedidos]);
 
+  const loadEvaluadores = useCallback(async () => {
+    if (!parsedConvocatoriaId) {
+      setEvaluadoresError("Convocatoria inválida.");
+      return;
+    }
+
+    setEvaluadoresLoading(true);
+    setEvaluadoresError(null);
+
+    try {
+      setEvaluadores(await getEvaluadoresConvocatoria(parsedConvocatoriaId));
+    } catch (err) {
+      setEvaluadores([]);
+      setEvaluadoresError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible consultar los evaluadores de la convocatoria.",
+      );
+    } finally {
+      setEvaluadoresLoading(false);
+    }
+  }, [parsedConvocatoriaId]);
+
+  const handleOpenEvaluadores = useCallback(() => {
+    setIsEvaluadoresOpen(true);
+    void loadEvaluadores();
+  }, [loadEvaluadores]);
+
   return (
     <ModuleLayout title="Admisiones">
       <section className="admission-detail-page convocatoria-detalle">
@@ -331,7 +367,7 @@ const ConvocatoriaDetallePage = () => {
 
           </div>
 
-          {convocatoriaCerrada || canCreateAspirante ? (
+          {convocatoriaCerrada || canCreateAspirante || canViewEvaluadores ? (
             <div className="convocatoria-detalle__actions">
               {convocatoriaCerrada ? (
                 <aside className="convocatoria-detalle__closed-notice">
@@ -358,6 +394,16 @@ const ConvocatoriaDetallePage = () => {
               >
                 Crear aspirante
               </button> : null}
+              {canViewEvaluadores ? (
+                <button
+                  type="button"
+                  className="convocatoria-detalle__evaluators-button"
+                  onClick={handleOpenEvaluadores}
+                  disabled={!parsedConvocatoriaId || evaluadoresLoading}
+                >
+                  Ver evaluadores
+                </button>
+              ) : null}
               {(!resolvedProgramaId || !parsedConvocatoriaId) &&
                 !isLoading &&
                 !error ? (
@@ -610,6 +656,14 @@ const ConvocatoriaDetallePage = () => {
             message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`,
           });
         }}
+      />
+      <EvaluadoresConvocatoriaDialog
+        open={isEvaluadoresOpen}
+        evaluadores={evaluadores}
+        loading={evaluadoresLoading}
+        error={evaluadoresError}
+        onClose={() => setIsEvaluadoresOpen(false)}
+        onRetry={() => void loadEvaluadores()}
       />
     </ModuleLayout>
   );

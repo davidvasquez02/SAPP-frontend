@@ -27,7 +27,16 @@ export type UpdateConvocatoriaFechasRequest = {
   fechaFin?: string
 }
 
+export type EvaluadorConvocatoriaDto = {
+  convocatoriaId: number
+  evaluador: string
+  evaluadorId: number
+  id: number
+  programa: string
+}
+
 export type ConvocatoriaAdmisionListResponse = ApiResponse<ConvocatoriaAdmisionDto[]>
 export type ConvocatoriaAdmisionCreateResponse = ApiResponse<ConvocatoriaAdmisionDto | null>
 export type ConvocatoriaAdmisionCloseResponse = ApiResponse<null>
 export type ConvocatoriaAdmisionDatesUpdateResponse = ApiResponse<ConvocatoriaAdmisionDto | null>
+export type EvaluadoresConvocatoriaResponse = ApiResponse<EvaluadorConvocatoriaDto[]>

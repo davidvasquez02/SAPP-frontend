@@ -1,3 +1,19 @@
+# Handoff 2026-09-27 — evaluadores informativos en el detalle de convocatoria
+
+## Estado, contrato y salida esperada
+
+- `ConvocatoriaDetallePage` presenta **Ver evaluadores** solo cuando la sesión SAPP contiene `COORDINADOR_POSGRADOS`. Secretaría, administración, docentes, dirección y demás perfiles no reciben esta acción. Abrir el diálogo dispara la consulta; cerrarlo no muta información.
+- `getEvaluadoresConvocatoria(convocatoriaId)` ejecuta `GET /sapp/evaluadorConvocatoria/convocatoria/{id}` y espera `{ ok, message, data: EvaluadorConvocatoriaDto[] }`, donde cada fila contiene `convocatoriaId`, `evaluador`, `evaluadorId`, `id` y `programa`. Una respuesta sin `data` se normaliza a `[]`; `ok: false` utiliza el mensaje del servidor.
+- Salida visual esperada: lista con nombre depurado mediante `trim()` y programa; los IDs no se presentan. El diálogo incluye carga, error con reintento, resultado vacío, cierre por botón, fondo o Escape y restauración de foco.
+
+## Paths, entorno y continuidad
+
+- Servicio/contrato: `src/modules/admisiones/api/convocatoriaAdmisionService.ts` y `convocatoriaAdmisionTypes.ts`; integración: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`; diálogo: `src/modules/admisiones/components/EvaluadoresConvocatoriaDialog/`; regresión: `tests/evaluadoresConvocatoriaDetalle.test.ts`.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. No hay seeds, backend ni credenciales locales para ejecutar la ruta protegida.
+- Verificación: pruebas dirigidas 11/11 PASS, suite Node 131/131 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 752.87 kB). Pendiente externo: validar con sesión institucional de coordinación un caso con evaluadores, otro vacío y la respuesta de autorización del endpoint.
+
+---
+
 # Handoff 2026-09-27 — reversión del tipo visible en matrícula financiera
 
 ## Estado, decisión y salida esperada

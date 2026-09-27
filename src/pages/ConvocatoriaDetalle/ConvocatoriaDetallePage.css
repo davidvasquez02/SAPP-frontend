@@ -14,9 +14,12 @@
 .convocatoria-detalle__actions { display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: .6rem; min-width: 0; padding-top: 3rem; }
 .convocatoria-detalle__create-button,
 .convocatoria-detalle__student-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .7rem 1.3rem; border: 0; border-radius: 999px; background: var(--primary); color: var(--on-primary); font: inherit; font-weight: 800; cursor: pointer; box-shadow: 0 9px 20px color-mix(in srgb, var(--primary), transparent 78%); }
-.convocatoria-detalle__create-button:disabled { opacity: .58; cursor: not-allowed; box-shadow: none; }
+.convocatoria-detalle__evaluators-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .7rem 1.3rem; border: 1px solid var(--primary); border-radius: 999px; background: var(--surface); color: var(--primary); font: inherit; font-weight: 800; cursor: pointer; }
+.convocatoria-detalle__create-button:disabled,
+.convocatoria-detalle__evaluators-button:disabled { opacity: .58; cursor: not-allowed; box-shadow: none; }
 .convocatoria-detalle__create-button:focus-visible,
-.convocatoria-detalle__student-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%); outline-offset: 2px; }
+.convocatoria-detalle__student-button:focus-visible,
+.convocatoria-detalle__evaluators-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 55%); outline-offset: 2px; }
 .convocatoria-detalle__closed-notice { display: flex; align-items: flex-start; gap: .7rem; padding: .8rem .9rem; border: 1px solid color-mix(in srgb, var(--inverse-primary), var(--outline) 55%); border-radius: 14px; background: color-mix(in srgb, var(--inverse-primary), var(--surface) 90%); color: var(--text-primary); }
 .convocatoria-detalle__closed-notice > svg { flex: 0 0 auto; width: 1.25rem; margin-top: .08rem; color: var(--inverse-primary); }
 .convocatoria-detalle__closed-notice strong { display: block; line-height: 1.3; }
@@ -80,7 +83,8 @@
   .admission-detail-page, .convocatoria-detalle { gap: 1rem; }
   .admission-detail-header, .convocatoria-detalle__header { flex-direction: column; gap: .85rem; }
   .convocatoria-detalle__actions { align-items: stretch; width: 100%; padding-top: 0; }
-  .convocatoria-detalle__create-button { width: 100%; }
+  .convocatoria-detalle__create-button,
+  .convocatoria-detalle__evaluators-button { width: 100%; }
   .convocatoria-detalle__table-wrap { display: none; }
   .convocatoria-detalle__admitted-cards { display: grid; gap: .7rem; }
   .convocatoria-detalle__admitted-card { display: grid; gap: .75rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 30%); border-radius: 14px; background: var(--surface); }

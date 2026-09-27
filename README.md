@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Mejora 2026-09-27 — consulta informativa de evaluadores por convocatoria
+
+- El detalle de una convocatoria de admisión muestra **Ver evaluadores** exclusivamente a `COORDINADOR_POSGRADOS`. La consulta se ejecuta al abrir el diálogo y consume `GET /sapp/evaluadorConvocatoria/convocatoria/{convocatoriaId}` con el envelope `{ ok, message, data }`.
+- El diálogo informa nombre y programa de cada evaluador, además de estados de carga, error con reintento y lista vacía. Los identificadores técnicos recibidos se mantienen en el DTO para estabilidad de claves, pero no se muestran al usuario. La consulta es de solo lectura y no altera evaluadores, convocatoria ni aspirantes.
+- La presentación reutiliza tokens semánticos (`--surface`, `--primary`, `--outline`), botones tipo píldora y adaptación móvil para temas claro/oscuro. No cambiaron endpoints existentes, payloads, permisos de escritura, dependencias, variables, schemas, seeds ni datasets. Regresión: `tests/evaluadoresConvocatoriaDetalle.test.ts`.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Verificación: pruebas dirigidas 11/11, suite Node 131/131, ESLint focalizado y build PASS (323 módulos; CSS 286.92 kB; JS 752.87 kB). Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Reversión 2026-09-27 — tipo visible en matrícula financiera
 
 - Se revirtió el cambio `436a87c` (`fix: corregir tipo visible en matrícula financiera`): **VIGENTE** vuelve a mostrarse como **Vigente** y **NUEVO** como **Nuevo**, sin intercambiar el significado entregado por el backend.
