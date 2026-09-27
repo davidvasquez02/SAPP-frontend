@@ -6700,3 +6700,20 @@ npm run lint
 - No existe seed, dataset, backend ni credenciales reproducibles para estas rutas protegidas. Próximo paso institucional: validar con solicitudes reales de ambos tipos que el botón diga **Aprobar**, que el backend las deje aprobadas directamente y que otros tipos conserven su flujo; revisar también la creación/previsualización del crédito en escritorio y móvil.
 
 ---
+# Update 2026-09-27 — recordatorios masivos de candidatura doctoral
+
+## Estado, decisión y contrato
+
+- `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` monta `RecordatoriosCandidatura` únicamente cuando la sesión incluye el rol `ROLES.COORDINACION` (`COORDINADOR_POSGRADOS`) y el nivel activo es `doctorado`. La acción está antes del listado doctoral porque candidatura pertenece a Proyectos de grado y opera sobre el conjunto completo de estudiantes elegibles, no sobre las filas o filtros visibles. No debe volver a ubicarse en Solicitudes generales.
+- `src/modules/trabajos-grado/components/RecordatoriosCandidatura/` contiene la tarjeta adaptable y su confirmación accesible. Al confirmar reutiliza `enviarRecordatorios(1)` de `src/modules/trabajos-grado/evaluacion/api.ts`: `POST /sapp/procesoEvaluacionTg/solicitud/1/recordatorios`, sin body, con respuesta esperada `{ ok: boolean, message?: string, data: number }`. `data` es la cantidad de correos enviados.
+- La selección final de destinatarios es responsabilidad del backend. La UI no envía correos, estudiantes ni filtros, evita una ejecución accidental mediante el diálogo, bloquea doble envío y muestra éxito/error. No se añadieron rutas, variables, dependencias, schemas, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Paths: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.{tsx,css}`, `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` y `tests/recordatoriosCandidatura.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run lint`, `npm run build` y `npm run preview`. No hay seed, backend ni credenciales reproducibles para la ruta protegida.
+- Resultados locales: regresión focalizada PASS (3/3), suite Node PASS (116/116), ESLint focalizado PASS, build PASS (319 módulos; CSS 277.74 kB; JS 745.92 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes en archivos ajenos. El contenedor no tiene Chromium, Chrome ni Firefox, por lo que no fue posible capturar la nueva vista; Vite mantiene el aviso informativo del chunk mayor de 500 kB.
+- Próximo paso institucional: confirmar que el identificador fijo `1` es el agregador previsto por backend, que `data` representa los estudiantes notificados, que el servidor aplica autorización de coordinación e idempotencia, y validar el correo real, teclado, móvil y temas claro/oscuro con una sesión institucional.
+
+---
