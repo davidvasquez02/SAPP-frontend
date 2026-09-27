@@ -1,3 +1,45 @@
+# Handoff 2026-09-27 — búsqueda manual de estudiantes por nombre
+
+## Estado, decisión y contrato
+
+- Se corrigió **Matrícula financiera > Seguimiento y cierre > Agregar estudiante
+  manualmente**. `buscarEstudiantes` consulta primero el catálogo existente
+  `GET /sapp/estudiantes?query={texto}`; si el texto no es exclusivamente numérico
+  y ese catálogo no responde coincidencias, consulta
+  `GET /sapp/estudiantes/consulta?egresados=false`.
+- La respuesta de respaldo esperada contiene elementos con
+  `{ estudiante: { id, codigoEstudianteUis }, nombreCompleto }`. El cliente
+  normaliza nombre y términos (minúsculas y sin diacríticos), exige que todos los
+  términos aparezcan y proyecta exclusivamente
+  `{ id, codigoNombre: "código · nombre" }` para el selector. La mutación posterior
+  sigue enviando `{ estudianteId, tipoEstudiante }`; no cambiaron roles, schemas,
+  endpoints de escritura, dependencias, variables, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Implementación HTTP: `src/modules/matricula-financiera/api.ts`; normalización y
+  proyección comprobable: `studentSearch.ts` en el mismo directorio; regresión:
+  `tests/matriculaFinancieraTransport.test.ts`. Salida esperada para
+  `jonnathan ramos`: una persona llamada `Jónnathan Alfredo Ramos Chaux` aparece
+  aunque el catálogo por código haya retornado vacío.
+- Reto abierto externo: comprobar con sesión institucional que la proyección de
+  consulta general está autorizada para coordinación sin `programaId` y que incluye
+  todos los estudiantes no egresados requeridos por el proceso. No hay backend,
+  credenciales ni seed local reproducible para esa validación.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`;
+  Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0,
+  TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda,
+  Poetry ni un segundo árbol npm. Comandos: `npm run dev`,
+  `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y
+  `npm run preview`.
+- Verificación local: regresión dirigida 5/5 PASS, suite Node 119/119 PASS,
+  ESLint focalizado PASS, build PASS (320 módulos; CSS 277.74 kB; JS 746.49 kB)
+  y `git diff --check` PASS. El warning npm heredado `Unknown env config
+  "http-proxy"` y el aviso de Vite por el chunk JavaScript mayor de 500 kB no
+  bloquean la ejecución.
+
+---
+
 # Handoff 2026-09-27 — tags azules diferenciados para Comité y Consejo
 
 ## Estado actual, decisión y salida esperada

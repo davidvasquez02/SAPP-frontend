@@ -6,6 +6,7 @@ import type { CuerposAcciones, CuerposLiquidacion, CrearProcesoRequest, Estudian
 
 export { LiquidacionApiError } from './transport'
 import { createLiquidacionClient } from './transport'
+import { filtrarEstudiantesPorNombre, type EstudianteConsultaBusqueda } from './studentSearch'
 const { call, file } = createLiquidacionClient(API_URL, AuthStorage)
 const json = (method: string, body?: unknown): RequestInit => ({ method, body: body === undefined ? undefined : JSON.stringify(body) })
 export const listarProcesos = (periodoId?: number, signal?: AbortSignal) => call<ProcesoLiquidacion[]>(`/procesos${periodoId ? `?periodoId=${periodoId}` : ''}`, { signal })
@@ -22,7 +23,16 @@ export const obtenerLiquidacion = (id: number, signal?: AbortSignal) => call<Liq
 export const actualizarLiquidacion = <K extends keyof CuerposLiquidacion>(id: number, accion: K, body?: CuerposLiquidacion[K]) => call<LiquidacionMatricula>(`/liquidaciones/${id}/${accion}`, json('PUT', body))
 export const agregarLiquidacion = (procesoId: number, body: { estudianteId: number; tipoEstudiante: TipoEstudianteLiquidacion }) => call<LiquidacionMatricula>(`/procesos/${procesoId}/liquidaciones`, json('POST', body))
 // Buscador existente del catálogo de estudiantes, fuera del controlador financiero.
-export const buscarEstudiantes = (query: string, signal?: AbortSignal) => call<EstudianteBusqueda[]>(`/estudiantes?query=${encodeURIComponent(query)}`, { signal }, true)
+export async function buscarEstudiantes(query: string, signal?: AbortSignal): Promise<EstudianteBusqueda[]> {
+  const texto = query.trim()
+  const coincidenciasCatalogo = await call<EstudianteBusqueda[]>(`/estudiantes?query=${encodeURIComponent(texto)}`, { signal }, true)
+  if (coincidenciasCatalogo.length > 0 || /^\d+$/.test(texto)) return coincidenciasCatalogo
+
+  // El catálogo histórico solo resuelve códigos en algunos despliegues. Para
+  // nombres se consulta la proyección de estudiantes y se filtra en el cliente.
+  const estudiantes = await call<EstudianteConsultaBusqueda[]>('/estudiantes/consulta?egresados=false', { signal }, true)
+  return filtrarEstudiantesPorNombre(estudiantes, texto)
+}
 export const listarPeriodos = (signal?: AbortSignal) => call<PeriodoFinanciera[]>('/periodoAcademico', { signal }, true)
 export const listarProgramas = (signal?: AbortSignal) => call<ProgramaFinanciera[]>('/programaAcademico', { signal }, true)
 export const listarTarifas = (programaId: number, signal?: AbortSignal) => call<TarifaMatricula[]>(`/tarifas?programaId=${programaId}`, { signal })

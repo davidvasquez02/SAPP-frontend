@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { createLiquidacionClient, LiquidacionApiError } from '../src/modules/matricula-financiera/transport.ts'
+import { filtrarEstudiantesPorNombre } from '../src/modules/matricula-financiera/studentSearch.ts'
 
 test('preserva /api/sapp, token interno, cuerpo JSON y rutas hermanas de documentos/catálogos', async t => {
   const requests: Array<{ url: string; init?: RequestInit }> = []
@@ -49,4 +51,18 @@ test('propaga señal de cancelación y errores de red sin reintentar una mutaci�
   const client = createLiquidacionClient('/api/sapp', { getSession: () => null, clearSession: () => {} })
   await assert.rejects(client.call('/procesos/1/publicar', { method: 'POST', signal: controller.signal }), /Red interrumpida/)
   assert.equal(calls, 1)
+})
+
+test('filtra la consulta general por nombres parciales sin depender de mayúsculas ni tildes', () => {
+  assert.deepEqual(filtrarEstudiantesPorNombre([
+    { estudiante: { id: 27, codigoEstudianteUis: '2127132' }, nombreCompleto: 'Jónnathan Alfredo Ramos Chaux' },
+    { estudiante: { id: 28, codigoEstudianteUis: '2198160' }, nombreCompleto: 'Alexander Martinez Mendez' },
+  ], 'jonnathan ramos'), [
+    { id: 27, codigoNombre: '2127132 · Jónnathan Alfredo Ramos Chaux' },
+  ])
+
+  const apiSource = readFileSync(new URL('../src/modules/matricula-financiera/api.ts', import.meta.url), 'utf8')
+  assert.match(apiSource, /coincidenciasCatalogo\.length > 0 \|\| \/\^\\d\+\$\//)
+  assert.match(apiSource, /\/estudiantes\/consulta\?egresados=false/)
+  assert.match(apiSource, /filtrarEstudiantesPorNombre\(estudiantes, texto\)/)
 })
