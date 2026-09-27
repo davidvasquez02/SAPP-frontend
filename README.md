@@ -1768,3 +1768,9 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - En **Mi liquidación**, cuando existe un total liquidado, la misma fecha aparece inmediatamente después del total en un bloque destacado construido con `--primary`, `--outline` y variables de superficie para conservar contraste en temas claro y oscuro y adaptación móvil.
 - `MiLiquidacion.proceso` incluye `fechaLimitePago` en su proyección tipada. No cambió el endpoint `/mias`, la publicación `POST /procesos/{id}/publicar`, su payload, ni el DTO base `ProcesoLiquidacion`.
 - Verificación acumulada: pruebas focalizadas PASS (28/28), suite Node PASS (124/124), ESLint focalizado PASS y build PASS (318 módulos; CSS 278.48 kB; JS 745.72 kB). Persisten únicamente los avisos ambientales de npm y el warning conocido por el chunk JavaScript mayor de 500 kB.
+
+## Ajuste 2026-09-27 — validación de documentos de aspirantes
+
+- En la revisión documental de coordinación, los botones **Aprobar** y **Rechazar** quedan deshabilitados cuando `validacionEstado` es `APROBADO`, además de las condiciones existentes por carga, operación en curso o estado final.
+- Se retiraron los iconos decorativos de la columna **Documento**. La etiqueta **Obligatorio** ahora usa una presentación neutra con borde y variables del tema; el verde queda reservado para el estado **Aprobado**.
+- No cambiaron servicios, DTO, endpoints, payloads ni permisos. ESLint focalizado y `npm run build` PASS (318 módulos; CSS 279.22 kB; JS 746.12 kB).

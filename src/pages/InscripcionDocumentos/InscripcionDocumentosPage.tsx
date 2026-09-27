@@ -25,24 +25,6 @@ const EVALUACION_RETRY_DELAY_MS = 500
 const normalizeBadgeKey = (value?: string | null) =>
   (value ?? 'NEUTRO').trim().toUpperCase().replace(/\s+/g, '_').replace(/_/g, '-')
 
-const getDocumentIcon = (documentName: string, mimeType?: string | null) => {
-  const normalized = `${documentName} ${mimeType ?? ''}`.toLowerCase()
-
-  if (normalized.includes('foto') || normalized.includes('image') || normalized.includes('jpg') || normalized.includes('png')) {
-    return '🖼️'
-  }
-
-  if (normalized.includes('pdf')) {
-    return '📕'
-  }
-
-  if (normalized.includes('referencia') || normalized.includes('acad')) {
-    return '🎓'
-  }
-
-  return '📄'
-}
-
 const InscripcionDocumentosPage = () => {
   const { convocatoriaId, inscripcionId } = useParams()
   const { isEstadoFinal, onEvaluacionStarted } =
@@ -401,7 +383,9 @@ const InscripcionDocumentosPage = () => {
             const filename =
               documentoResponse?.nombreArchivoDocumento ??
               `documento_${documento.idTipoDocumentoTramite}.pdf`
-            const disableValidation = !uploaded || isLoadingDecision || isEstadoFinal
+            const estadoDocumento = uploaded ? getEstadoDocumento(documento) ?? 'CARGADO' : 'PENDIENTE'
+            const isApproved = validacionEstado === 'APROBADO'
+            const disableValidation = !uploaded || isLoadingDecision || isEstadoFinal || isApproved
             const isRejectMode = documentoId != null && rejectingDocId === documentoId
             const currentRejectNote =
               documentoId != null
@@ -409,16 +393,11 @@ const InscripcionDocumentosPage = () => {
                 : ''
             const currentRejectError = documentoId != null ? rejectErrors[documentoId] : null
             const canOpenActions = uploaded && documentoId != null
-            const estadoDocumento = uploaded ? getEstadoDocumento(documento) ?? 'CARGADO' : 'PENDIENTE'
             const estadoBadgeKey = normalizeBadgeKey(estadoDocumento)
-            const documentIcon = getDocumentIcon(documento.nombreTipoDocumentoTramite, mimeType)
 
             return (
               <div key={documento.idTipoDocumentoTramite} className="inscripcion-documentos__table-row document-row">
                 <div className="inscripcion-documentos__doc-cell document-name-cell">
-                  <span className="inscripcion-documentos__doc-icon" aria-hidden="true">
-                    {documentIcon}
-                  </span>
                   <div>
                     <p className="inscripcion-documentos__doc-name">
                       {documento.nombreTipoDocumentoTramite}

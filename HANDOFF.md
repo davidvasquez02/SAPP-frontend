@@ -40,6 +40,14 @@
 
 ---
 
+# Update 2026-09-27 — validación documental de aspirantes
+
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: `disableValidation` incluye `validacionEstado === 'APROBADO'`, por lo que ambos botones de decisión quedan deshabilitados al aprobar; se eliminaron `getDocumentIcon` y el nodo visual de icono.
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.css`: se retiró el estilo del icono; **Obligatorio** usa superficie neutra, borde de `--outline` y texto principal, claramente distinto del verde de **Aprobado**. Compatible con temas claro/oscuro y móvil mediante tokens existentes.
+- Contratos y entorno sin cambios. Verificación: ESLint focalizado PASS; `npm run build` PASS, 318 módulos (`index-DBe9D806.css` 279.22 kB, `index-DVhQOQ77.js` 746.12 kB). Continúan los avisos conocidos de configuración npm y chunk mayor de 500 kB.
+
+---
+
 # Handoff 2026-09-27 — tags azules diferenciados para Comité y Consejo
 
 ## Estado actual, decisión y salida esperada
