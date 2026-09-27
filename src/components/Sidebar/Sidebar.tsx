@@ -3,6 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../../context/Auth'
 import { getPrimaryNavigationItems } from '../../app/navigationItems'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
+import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
 import { SidebarModuleIcon } from './SidebarModuleIcon'
 import './Sidebar.css'
 
@@ -39,7 +41,45 @@ const Sidebar = () => {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const sidebarItems = getPrimaryNavigationItems(roles)
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
+  const evaluatorUserId = isEvaluadorOnly && session?.kind === 'SAPP' ? session.user.id : null
+  const [admisionesAccess, setAdmisionesAccess] = useState<{
+    userId: number | null
+    hasAssigned: boolean | null
+  }>({ userId: null, hasAssigned: null })
+  const hasAssignedAdmisiones = admisionesAccess.userId === evaluatorUserId
+    ? admisionesAccess.hasAssigned
+    : null
+  const sidebarItems = getPrimaryNavigationItems(
+    roles,
+    !isEvaluadorOnly || hasAssignedAdmisiones === true,
+  )
+
+  useEffect(() => {
+    if (!isEvaluadorOnly || evaluatorUserId === null) return
+
+    let isMounted = true
+
+    getConvocatoriasAdmision()
+      .then((convocatorias) => {
+        if (isMounted) {
+          setAdmisionesAccess({
+            userId: evaluatorUserId,
+            hasAssigned: convocatorias.length > 0,
+          })
+        }
+      })
+      .catch(() => {
+        // Un fallo temporal no debe retirar una opción que el usuario sí podría tener asignada.
+        if (isMounted) {
+          setAdmisionesAccess({ userId: evaluatorUserId, hasAssigned: true })
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [evaluatorUserId, isEvaluadorOnly])
 
   const closeMenu = useCallback((restoreFocus = true) => {
     setIsOpen(false)

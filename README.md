@@ -1,11 +1,18 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — Admisiones solo para docentes con convocatoria asignada
+
+- La navegación consulta las convocatorias disponibles para el evaluador mediante el mismo `GET /sapp/convocatoriaAdmision` que alimenta **Mis entrevistas**. Para `DOCENTE_POSGRADOS` y `DIRECTOR` sin perfil administrativo, **Admisiones** permanece oculto durante la comprobación y solo aparece cuando la respuesta contiene al menos una convocatoria asignada.
+- Una respuesta válida vacía oculta el módulo. La disponibilidad se asocia al ID del usuario para impedir que un cambio de sesión reutilice el resultado anterior. Ante un error temporal de consulta se conserva el acceso para no retirar indebidamente una asignación que no pudo verificarse.
+- Coordinación, secretaría y administración no dependen de esta comprobación y mantienen su acceso habitual. No cambiaron rutas, permisos del backend, contratos, dependencias, variables, schemas, seeds ni datasets. Regresión: `tests/admisionesNavigation.test.ts`.
+- Verificación acumulada: pruebas dirigidas 12/12, suite Node 133/133, ESLint focalizado y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Mejora 2026-09-27 — consulta informativa de evaluadores por convocatoria
 
 - El detalle de una convocatoria de admisión muestra **Ver evaluadores** exclusivamente a `COORDINADOR_POSGRADOS`. La consulta se ejecuta al abrir el diálogo y consume `GET /sapp/evaluadorConvocatoria/convocatoria/{convocatoriaId}` con el envelope `{ ok, message, data }`.
 - El diálogo informa nombre y programa de cada evaluador, además de estados de carga, error con reintento y lista vacía. Los identificadores técnicos recibidos se mantienen en el DTO para estabilidad de claves, pero no se muestran al usuario. La consulta es de solo lectura y no altera evaluadores, convocatoria ni aspirantes.
 - La presentación reutiliza tokens semánticos (`--surface`, `--primary`, `--outline`), botones tipo píldora y adaptación móvil para temas claro/oscuro. No cambiaron endpoints existentes, payloads, permisos de escritura, dependencias, variables, schemas, seeds ni datasets. Regresión: `tests/evaluadoresConvocatoriaDetalle.test.ts`.
-- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Verificación: pruebas dirigidas 11/11, suite Node 131/131, ESLint focalizado y build PASS (323 módulos; CSS 286.92 kB; JS 752.87 kB). Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Verificación acumulada: pruebas dirigidas 12/12, suite Node 133/133, ESLint focalizado y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
 
 ## Reversión 2026-09-27 — tipo visible en matrícula financiera
 

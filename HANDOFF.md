@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — visibilidad de Admisiones según asignación docente
+
+## Estado, decisión y salida esperada
+
+- `Sidebar` identifica los perfiles exclusivamente evaluadores mediante `isEvaluadorAdmision(roles) && !canManagePosgrados(roles)`. Para esos usuarios consulta `getConvocatoriasAdmision()` y pasa el resultado a `getPrimaryNavigationItems`; una colección vacía elimina **Admisiones** del menú y una colección con elementos lo habilita.
+- El módulo permanece oculto mientras la consulta está pendiente, evitando un destello de acceso. El resultado se guarda junto al `session.user.id`, por lo que otro usuario no hereda la disponibilidad anterior. Si la consulta falla, el menú queda visible: un error de conectividad no se interpreta como ausencia confirmada de asignaciones.
+- Los roles de coordinación, secretaría y administración conservan **Admisiones** independientemente de esta verificación. La pantalla docente sigue consultando el mismo contrato, por lo que menú y contenido comparten la fuente de verdad entregada por el backend.
+
+## Paths y continuidad
+
+- Decisión del menú: `src/app/navigationItems.ts`; consulta y estado por sesión: `src/components/Sidebar/Sidebar.tsx`; regresión: `tests/admisionesNavigation.test.ts`. No se añadieron paquetes, endpoints, variables, schemas, seeds ni datasets.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación acumulada: pruebas dirigidas de admisiones 12/12 PASS, suite Node 133/133 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+- Pendiente externo: validar con dos sesiones institucionales de docente —una con asignaciones y otra sin ellas— que `GET /sapp/convocatoriaAdmision` continúe filtrando por el usuario autenticado, tal como ya presupone **Mis entrevistas**.
+
+---
+
 # Handoff 2026-09-27 — evaluadores informativos en el detalle de convocatoria
 
 ## Estado, contrato y salida esperada
@@ -10,7 +27,7 @@
 
 - Servicio/contrato: `src/modules/admisiones/api/convocatoriaAdmisionService.ts` y `convocatoriaAdmisionTypes.ts`; integración: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`; diálogo: `src/modules/admisiones/components/EvaluadoresConvocatoriaDialog/`; regresión: `tests/evaluadoresConvocatoriaDetalle.test.ts`.
 - Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. No hay seeds, backend ni credenciales locales para ejecutar la ruta protegida.
-- Verificación: pruebas dirigidas 11/11 PASS, suite Node 131/131 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 752.87 kB). Pendiente externo: validar con sesión institucional de coordinación un caso con evaluadores, otro vacío y la respuesta de autorización del endpoint.
+- Verificación acumulada: pruebas dirigidas de admisiones 12/12 PASS, suite Node 133/133 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Pendiente externo: validar con sesión institucional de coordinación un caso con evaluadores, otro vacío y la respuesta de autorización del endpoint.
 
 ---
 

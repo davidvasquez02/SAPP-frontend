@@ -7,8 +7,11 @@ export interface PrimaryNavigationItem {
   children?: Array<{ to: string; label: string }>
 }
 
-export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationItem[] => {
-  const canSeeAdmisiones = hasAnyRole(roles, [
+export const getPrimaryNavigationItems = (
+  roles: string[],
+  hasAssignedAdmisiones = true,
+): PrimaryNavigationItem[] => {
+  const canAccessAdmisiones = hasAnyRole(roles, [
     ROLES.COORDINACION,
     ROLES.SECRETARIA,
     ROLES.ADMIN,
@@ -16,6 +19,11 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     ROLES.DOCENTE,
     ROLES.DIRECTOR,
   ])
+  const isEvaluadorOnly =
+    hasAnyRole(roles, [ROLES.PROFESOR, ROLES.DOCENTE, ROLES.DIRECTOR]) &&
+    !canManagePosgrados(roles)
+  const canSeeAdmisiones =
+    canAccessAdmisiones && (!isEvaluadorOnly || hasAssignedAdmisiones)
   const canSeeGestionEstudiantes = canManagePosgrados(roles)
   const canSeeGestionCoordinacion = canManagePosgrados(roles)
   const isProfesorOnly =
