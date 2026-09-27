@@ -377,8 +377,10 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [entrevistaItems],
   )
   const gruposEntrevista = useMemo(
-    () => groupByEvaluador(itemsSinResumen),
-    [itemsSinResumen],
+    () => groupByEvaluador(itemsSinResumen).sort((a, b) =>
+      Number(b.items.every(belongsToCurrentUser)) - Number(a.items.every(belongsToCurrentUser)),
+    ),
+    [itemsSinResumen, belongsToCurrentUser],
   )
 
   const content = (
@@ -544,28 +546,11 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 modifiedByRow={modifiedByRow}
                 isSavingBulk={savingBulk}
                 onChangeDraft={handleChangeDraft}
+                onSaveBulk={grupo.items.every(belongsToCurrentUser) ? handleSaveBulk : undefined}
                 isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
               />
             </ResponsiveInterviewGroup>
           ))}
-          <div className="evaluacion-etapa-page__interview-footer">
-            <button
-              type="button"
-              className="evaluacion-etapa-section__button"
-              disabled={
-                !Object.values(modifiedByRow).some(Boolean) ||
-                Object.entries(errorsByRow).some(
-                  ([id, errorMessage]) => modifiedByRow[Number(id)] && Boolean(errorMessage),
-                ) ||
-                savingBulk
-              }
-              onClick={() => {
-                void handleSaveBulk()
-              }}
-            >
-              {savingBulk ? 'Enviando calificaciones...' : 'Enviar calificaciones'}
-            </button>
-          </div>
         </div>
       )}
     </section>

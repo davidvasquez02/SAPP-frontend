@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — calificaciones propias primero en entrevistas
+
+- En entrevistas, el bloque del usuario autenticado aparece antes de los demás evaluadores. Su botón **Actualizar** se ubica inmediatamente debajo de sus componentes, reutilizando el guardado y las validaciones de la sección. Los demás bloques permanecen de consulta.
+- Verificación: ESLint focalizado y build PASS. Sin cambios de contratos ni dependencias; pendiente comprobación visual con sesión institucional de coordinación.
+
 ## Ajuste 2026-09-27 — disposición y calificaciones de admisión
 
 - La evaluación cambia de tabla a tarjetas cuando su panel tiene 980 px o menos, incluso al compartir pantalla con el PDF. Las observaciones ocupan una fila completa y los criterios se pueden desplegar. El encabezado del visor admite varias filas.
