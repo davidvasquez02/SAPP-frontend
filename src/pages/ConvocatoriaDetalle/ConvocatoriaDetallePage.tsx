@@ -15,6 +15,7 @@ import { CreateEstudianteModal } from "../../modules/admisiones/components/Creat
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import { getNombreCompletoAspirante } from "../../modules/admisiones/utils/aspiranteNombre";
+import { getAspiranteFotoSrc } from "../../modules/admisiones/utils/aspiranteFoto";
 import {
   filterAspirantes,
   paginateAspirantes,
@@ -233,18 +234,6 @@ const ConvocatoriaDetallePage = () => {
     const timeoutId = window.setTimeout(() => setToast(null), 5_000);
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
-
-  const resolveAspirantePhoto = (
-    inscripcion: InscripcionAdmisionDto,
-  ): string | null => {
-    const contenidoBase64 = inscripcion.foto?.contenidoBase64?.trim();
-    if (!contenidoBase64) {
-      return null;
-    }
-
-    const mimeType = inscripcion.foto?.mimeType?.trim() || "image/jpeg";
-    return `data:${mimeType};base64,${contenidoBase64}`;
-  };
 
   const handleRowClick = (inscripcion: InscripcionAdmisionDto) => {
     if (!convocatoriaId) {
@@ -555,7 +544,7 @@ const ConvocatoriaDetallePage = () => {
                     <StudentCard
                       key={inscripcion.id}
                       inscripcion={inscripcion}
-                      photoUrl={resolveAspirantePhoto(inscripcion)}
+                      photoUrl={getAspiranteFotoSrc(inscripcion.foto)}
                       onClick={() => handleRowClick(inscripcion)}
                     />
                   ))}

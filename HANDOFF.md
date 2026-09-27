@@ -40,6 +40,16 @@
 
 ---
 
+# Update 2026-09-27 — fotos en admisiones de docente y director
+
+- `AdmisionesProfesorPage.tsx` cambió el encabezado interno de **Admisiones — Mis entrevistas** a **Mis entrevistas**. `ModuleLayout` conserva el título global **Admisiones**.
+- La pantalla ya no consume el servicio duplicado de `modules/admisionesProfesor` ni `getMockStudentPhotoUrl`; reutiliza `getConvocatoriasAdmision`, `getInscripcionesByConvocatoria` y `InscripcionAdmisionDto`, igual que coordinación. El dato esperado continúa siendo `foto: { contenidoBase64, mimeType, ... }` dentro de cada inscripción.
+- `src/modules/admisiones/utils/aspiranteFoto.ts` convierte la foto a URL de datos, conserva valores que ya vengan con prefijo `data:` y retorna `null` sin contenido. `ConvocatoriaDetallePage.tsx` también usa este helper para evitar divergencias.
+- La tarjeta del docente/director muestra la foto real o el texto **Sin foto** cuando falta contenido o falla la carga. Estilos con variables semánticas en `AdmisionesProfesorPage.css`.
+- Validación: `tests/aspiranteFoto.test.ts` PASS (2/2), ESLint focalizado PASS, build PASS con 317 módulos (`index-CP78F7Vz.css` 279.48 kB, `index-B4MyKCRD.js` 745.49 kB) y `git diff --check` sin errores salvo el aviso informativo LF/CRLF. Sin dependencias ni entornos nuevos.
+
+---
+
 # Update 2026-09-27 — validación documental de aspirantes
 
 - `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: `disableValidation` incluye `validacionEstado === 'APROBADO'`, por lo que ambos botones de decisión quedan deshabilitados al aprobar; se eliminaron `getDocumentIcon` y el nodo visual de icono.

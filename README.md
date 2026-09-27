@@ -1774,3 +1774,10 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - En la revisión documental de coordinación, los botones **Aprobar** y **Rechazar** quedan deshabilitados cuando `validacionEstado` es `APROBADO`, además de las condiciones existentes por carga, operación en curso o estado final.
 - Se retiraron los iconos decorativos de la columna **Documento**. La etiqueta **Obligatorio** ahora usa una presentación neutra con borde y variables del tema; el verde queda reservado para el estado **Aprobado**.
 - No cambiaron servicios, DTO, endpoints, payloads ni permisos. ESLint focalizado y `npm run build` PASS (318 módulos; CSS 279.22 kB; JS 746.12 kB).
+
+## Ajuste 2026-09-27 — admisiones para docente y director
+
+- La pantalla conserva **Admisiones** como título del módulo y presenta **Mis entrevistas** como encabezado interno, evitando la repetición anterior.
+- La lista dejó de usar fotos simuladas. Docentes y directores consultan ahora las convocatorias e inscripciones mediante los mismos servicios de admisiones usados por coordinación y muestran `inscripcion.foto` con su MIME y contenido Base64.
+- El formateador compartido `getAspiranteFotoSrc` se usa también en el detalle de convocatoria de coordinación. Si el backend no entrega contenido o la imagen no puede cargarse, la tarjeta muestra **Sin foto**.
+- Pruebas del formateador PASS (2/2), ESLint focalizado PASS y `npm run build` PASS (317 módulos; CSS 279.48 kB; JS 745.37 kB). Sin cambios de endpoints, contratos, permisos, dependencias, schemas, variables, seeds ni datasets.
