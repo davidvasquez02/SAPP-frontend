@@ -97,6 +97,9 @@ const SolicitudDetallePage = () => {
   const [actasLoading, setActasLoading] = useState(false)
   const [actasError, setActasError] = useState<string | null>(null)
   const [pendingEnviarConsejo, setPendingEnviarConsejo] = useState<boolean | undefined>()
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionReasonError, setRejectionReasonError] = useState<string | null>(null)
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
@@ -402,6 +405,7 @@ const SolicitudDetallePage = () => {
     target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>,
     enviarConsejo?: boolean,
     actaId?: number,
+    observaciones?: string,
   ) => {
     if (!solicitud || !canResolveSolicitud) {
       return
@@ -412,7 +416,7 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo, actaId })
+      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo, actaId, observaciones })
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -473,6 +477,23 @@ const SolicitudDetallePage = () => {
 
     setShowActaSelection(false)
     void handleResolverSolicitud('APROBADA', pendingEnviarConsejo, actaId)
+  }
+
+  const handleRejectClick = () => {
+    setRejectionReason('')
+    setRejectionReasonError(null)
+    setShowRejectionDialog(true)
+  }
+
+  const handleConfirmRejection = () => {
+    const motivo = rejectionReason.trim()
+    if (!motivo) {
+      setRejectionReasonError('Debes indicar el motivo del rechazo.')
+      return
+    }
+
+    setShowRejectionDialog(false)
+    void handleResolverSolicitud('RECHAZADA', undefined, undefined, motivo)
   }
 
   return (
@@ -549,7 +570,7 @@ const SolicitudDetallePage = () => {
                 </>
               )}
               <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                <dt>Observaciones</dt>
+                <dt>{currentEstado === 'RECHAZADA' ? 'Motivo de rechazo' : 'Observaciones'}</dt>
                 <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
               </div>
               {showMotivosCredito && (
@@ -759,7 +780,7 @@ const SolicitudDetallePage = () => {
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
                           type="button"
-                          onClick={() => void handleResolverSolicitud('RECHAZADA')}
+                          onClick={handleRejectClick}
                           disabled={isUpdatingEstado}
                         >
                           {isUpdatingEstado ? 'Procesando...' : 'Rechazar'}
@@ -923,6 +944,66 @@ const SolicitudDetallePage = () => {
                       className="solicitud-detalle-page__back"
                       type="button"
                       onClick={() => setShowActaSelection(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showRejectionDialog && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="rejection-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar rechazo"
+                  onClick={() => setShowRejectionDialog(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="rejection-title">Motivo de rechazo</h3>
+                  <p>Explica por qué se rechaza la solicitud. El motivo será visible en su detalle.</p>
+                  <label className="solicitud-detalle-page__field">
+                    <span>Motivo *</span>
+                    <textarea
+                      value={rejectionReason}
+                      rows={4}
+                      maxLength={1000}
+                      autoFocus
+                      onChange={(event) => {
+                        setRejectionReason(event.target.value)
+                        setRejectionReasonError(null)
+                      }}
+                      aria-invalid={Boolean(rejectionReasonError)}
+                      aria-describedby={rejectionReasonError ? 'rejection-reason-error' : undefined}
+                    />
+                  </label>
+                  {rejectionReasonError && (
+                    <p
+                      id="rejection-reason-error"
+                      className="solicitud-detalle-page__status solicitud-detalle-page__status--error"
+                      role="alert"
+                    >
+                      {rejectionReasonError}
+                    </p>
+                  )}
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
+                      type="button"
+                      onClick={handleConfirmRejection}
+                    >
+                      Confirmar rechazo
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowRejectionDialog(false)}
                     >
                       Cancelar
                     </button>

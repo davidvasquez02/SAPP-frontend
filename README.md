@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Mejora 2026-09-27 — motivo obligatorio al rechazar solicitudes
+
+- El detalle común de solicitudes académicas, créditos condonables y proyectos de grado abre ahora un diálogo **Motivo de rechazo** al seleccionar **Rechazar**. El motivo es obligatorio, se recorta antes de enviarlo y admite hasta 1000 caracteres; cancelar no cambia el estado.
+- El cambio conserva `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}` y agrega el query param `observaciones` junto a `siglaEstado=RECHAZADA`. Tras la respuesta exitosa se recarga el detalle. Si el estado es `RECHAZADA`, el campo se rotula **Motivo de rechazo** y muestra `solicitud.observaciones`, por lo que el comportamiento es uniforme en los tres módulos que reutilizan esta vista.
+- El diálogo y su `textarea` usan los tokens semánticos existentes para superficies, bordes, texto, peligro y foco en claro/oscuro. No cambiaron DTO, rutas, permisos, dependencias, schemas, variables, seeds ni datasets. Regresión: `tests/solicitudRechazoMotivo.test.ts`.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`; no existen backend, credenciales ni seed local reproducible para las rutas protegidas.
+- Verificación local: regresión dirigida 2/2, suite Node 113/113, ESLint focalizado, build de producción (317 módulos; CSS 274.94 kB; JS 743.36 kB) y `git diff --check` pasan. Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Corrección 2026-09-27 — error de eliminación dentro del modal de actas
 
 - Cuando `DELETE /actas/{id}` falla, el mensaje entregado por el backend permanece ahora dentro del diálogo **Eliminar acta**, debajo de los datos del acta. El diálogo no se cierra y permite reintentar o cancelar; el error ya no aparece en la franja global detrás del modal.

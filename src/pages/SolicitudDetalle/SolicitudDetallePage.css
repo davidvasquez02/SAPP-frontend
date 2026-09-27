@@ -502,7 +502,8 @@
     font-weight: 700;
 }
 
-.solicitud-detalle-page__modal-dialog select {
+.solicitud-detalle-page__modal-dialog select,
+.solicitud-detalle-page__modal-dialog textarea {
     width: 100%;
     border: 1px solid var(--outline);
     border-radius: 0.75rem;
@@ -511,7 +512,12 @@
     padding: 0.7rem 0.8rem;
 }
 
-.solicitud-detalle-page__modal-dialog select:focus-visible {
+.solicitud-detalle-page__modal-dialog textarea {
+    resize: vertical;
+}
+
+.solicitud-detalle-page__modal-dialog select:focus-visible,
+.solicitud-detalle-page__modal-dialog textarea:focus-visible {
     outline: 2px solid var(--inverse-primary, var(--primary));
     outline-offset: 2px;
 }
