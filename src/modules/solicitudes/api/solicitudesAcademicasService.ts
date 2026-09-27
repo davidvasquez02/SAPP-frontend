@@ -7,6 +7,7 @@ import type {
   PreviewSolicitudCreditoResponseDto,
   SolicitudAcademicaDto,
   HomologacionHistorialDto,
+  SolicitudHistorialDto,
 } from './types'
 
 const ENDPOINT_BY_ESTUDIANTE = '/sapp/solicitudesAcademicas/estudiante'
@@ -80,6 +81,18 @@ export async function getSolicitudAcademicaById(solicitudId: number): Promise<So
   }
 
   return response.data
+}
+
+export async function getHistorialSolicitudAcademica(solicitudId: number): Promise<SolicitudHistorialDto[]> {
+  const response = await httpGet<ApiResponse<SolicitudHistorialDto[]>>(
+    `/solicitudesAcademicas/${encodeURIComponent(solicitudId)}/historial`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar el histórico de cambios de la solicitud.')
+  }
+
+  return response.data ?? []
 }
 
 export async function getHistorialHomologaciones(): Promise<HomologacionHistorialDto[]> {

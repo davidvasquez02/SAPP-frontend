@@ -28,7 +28,7 @@ export const getProcesoEvaluacion = async (solicitudId: number): Promise<Proceso
 
 export const getHistorialProcesoEvaluacion = async (solicitudId: number): Promise<HistorialProcesoEvaluacion[]> =>
   unwrap(
-    await httpGet<ApiResponse<HistorialProcesoEvaluacion[]>>(`${BASE}/solicitud/${solicitudId}/historial`),
+    await httpGet<ApiResponse<HistorialProcesoEvaluacion[]>>(`/solicitudesAcademicas/${encodeURIComponent(solicitudId)}/historial`),
     'No fue posible consultar el histórico de cambios del proceso.',
   )
 

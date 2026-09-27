@@ -7,6 +7,7 @@ import { useAuth } from '../../context/Auth'
 import {
   firmarDocumentosSolicitudAcademica,
   getHistorialHomologaciones,
+  getHistorialSolicitudAcademica,
   getSolicitudAcademicaById,
   getSolicitudesAcademicasByEstudiante,
   getSolicitudesAcademicasAsignadas,
@@ -20,7 +21,7 @@ import { getActas } from '../../modules/actas/api'
 import type { ActaDto } from '../../modules/actas/types'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
-import type { HomologacionHistorialDto, SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
+import type { HomologacionHistorialDto, SolicitudAcademicaDto, SolicitudHistorialDto } from '../../modules/solicitudes/api/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
 import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
@@ -52,6 +53,13 @@ const formatDate = (value: string | null) => {
   return `${day}/${month}/${year}`
 }
 
+const formatHistoryDate = (value: string) => {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return value
+  const [, year, month, day, hour, minute, second] = match
+  return `${day}/${month}/${year}, ${hour}:${minute}${second ? `:${second}` : ''}`
+}
+
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
@@ -73,6 +81,9 @@ const SolicitudDetallePage = () => {
   const [showHistorialHomologaciones, setShowHistorialHomologaciones] = useState(false)
   const [historialLoading, setHistorialLoading] = useState(false)
   const [historialError, setHistorialError] = useState<string | null>(null)
+  const [historialSolicitud, setHistorialSolicitud] = useState<SolicitudHistorialDto[]>([])
+  const [historialSolicitudLoading, setHistorialSolicitudLoading] = useState(false)
+  const [historialSolicitudError, setHistorialSolicitudError] = useState<string | null>(null)
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
@@ -108,6 +119,9 @@ const SolicitudDetallePage = () => {
     setHistorialHomologaciones([])
     setShowHistorialHomologaciones(false)
     setHistorialError(null)
+    setHistorialSolicitud([])
+    setHistorialSolicitudLoading(true)
+    setHistorialSolicitudError(null)
 
     const solicitudRequest = debeValidarPropiedadEstudiante
       ? estudianteId == null
@@ -125,21 +139,28 @@ const SolicitudDetallePage = () => {
 
     solicitudRequest
       .then((response) => {
-        if (!mounted) {
-          return
-        }
+        if (!mounted) return
         setSolicitud(response)
         setIsSignedAssignmentConsumed(false)
+        setLoading(false)
+        getHistorialSolicitudAcademica(response.id)
+          .then((history) => {
+            if (mounted) setHistorialSolicitud(history)
+          })
+          .catch((historyError) => {
+            if (mounted) {
+              setHistorialSolicitudError(getErrorMessage(historyError, 'No fue posible cargar el histórico de cambios.'))
+            }
+          })
+          .finally(() => {
+            if (mounted) setHistorialSolicitudLoading(false)
+          })
       })
       .catch((fetchError) => {
-        if (!mounted) {
-          return
-        }
-        setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar la solicitud.')
-      })
-      .finally(() => {
         if (mounted) {
+          setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar la solicitud.')
           setLoading(false)
+          setHistorialSolicitudLoading(false)
         }
       })
 
@@ -307,6 +328,7 @@ const SolicitudDetallePage = () => {
     if (!solicitud) return
     const refreshed = await getSolicitudAcademicaById(solicitud.id)
     setSolicitud(refreshed)
+    setHistorialSolicitud(await getHistorialSolicitudAcademica(refreshed.id))
     const codigo = refreshed.tipoTramiteCodigo?.trim()
     if (codigo) await loadDocumentos(refreshed.id, codigo)
   }, [loadDocumentos, solicitud])
@@ -665,6 +687,35 @@ const SolicitudDetallePage = () => {
                       </div>
                     )}
                   </div>
+                )}
+              </section>
+            )}
+
+            {!showProcesoEvaluacion && (
+              <section className="solicitud-detalle-page__change-history" aria-labelledby="historial-solicitud-title">
+                <h3 id="historial-solicitud-title">Histórico de cambios</h3>
+                {historialSolicitudLoading ? (
+                  <p role="status">Cargando histórico...</p>
+                ) : historialSolicitudError ? (
+                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                    {historialSolicitudError}
+                  </p>
+                ) : historialSolicitud.length === 0 ? (
+                  <p>No hay cambios de estado registrados.</p>
+                ) : (
+                  <ol>
+                    {historialSolicitud.map((item, index) => (
+                      <li key={`${item.estadoNuevoSigla}-${item.fecha}-${index}`}>
+                        <span aria-hidden="true" />
+                        <div>
+                          <strong>{item.estadoNuevo || item.estadoNuevoSigla}</strong>
+                          <small>{formatHistoryDate(item.fecha)}</small>
+                          {item.responsable && <p><b>Responsable:</b> {item.responsable}</p>}
+                          {item.detalle && <p>{item.detalle}</p>}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
                 )}
               </section>
             )}

@@ -342,6 +342,58 @@
     color: var(--text-secondary);
 }
 
+.solicitud-detalle-page__change-history {
+    padding: 1rem;
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-md);
+    background: var(--surface-container-low);
+}
+
+.solicitud-detalle-page__change-history h3,
+.solicitud-detalle-page__change-history p {
+    margin: 0;
+}
+
+.solicitud-detalle-page__change-history ol {
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.solicitud-detalle-page__change-history li {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: 0.7rem;
+    padding-bottom: 1rem;
+}
+
+.solicitud-detalle-page__change-history li:last-child {
+    padding-bottom: 0;
+}
+
+.solicitud-detalle-page__change-history li > span {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
+.solicitud-detalle-page__change-history small {
+    display: block;
+    color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__change-history li p {
+    margin-top: 0.3rem;
+    overflow-wrap: anywhere;
+    color: var(--text-secondary);
+}
+
+.solicitud-detalle-page__change-history li b {
+    color: var(--text-primary);
+}
+
 .solicitud-detalle-page__table-wrapper {
     overflow-x: auto;
     border: 1px solid var(--outline);

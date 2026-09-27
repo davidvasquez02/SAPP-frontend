@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — histórico unificado de solicitudes
+
+- El detalle de solicitudes académicas normales, créditos condonables y proyectos de grado consulta ahora `GET /solicitudesAcademicas/{id}/historial`. Se retiró del proceso de evaluación de trabajos de grado el consumo del endpoint específico `/sapp/procesoEvaluacionTg/solicitud/{id}/historial`.
+- El contrato compartido conserva el envelope `{ ok, message, data }`; cada cambio contiene `estadoNuevoSigla`, `estadoNuevo`, `fecha`, `responsable` y `detalle`. La interfaz presenta estado, fecha, responsable y detalle, además de estados de carga, vacío y error, sin fabricar estado anterior, origen ni duración que el contrato nuevo no entrega.
+- La sección **Histórico de cambios** está disponible para todos los tipos de solicitud en el detalle común. Cuando coordinación visualiza un proceso de evaluación, el mismo historial se mantiene dentro de ese panel y se refresca tras sus mutaciones.
+- No se añadieron dependencias, variables, seeds ni datasets. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; el frontend no usa venv, Conda ni Poetry. Regresión: `tests/historialSolicitudes.test.ts`.
+
 ## Ajuste 2026-09-27 — selector de archivos uniforme en actas
 
 - La carga de PDF del formulario **Nueva acta** ya no presenta el control nativo del navegador: reutiliza el mismo botón tipo píldora que las tarjetas documentales de solicitudes. El texto cambia entre **Seleccionar archivo** y **Reemplazar archivo**, y el nombre y tamaño quedan en una línea separada.
@@ -574,7 +581,7 @@ SAPP Frontend es la SPA institucional de EISI–UIS para admisiones, estudiantes
 
 # Actualización 2026-09-24 — histórico y documento correcto al designar evaluadores
 
-- En el detalle de las solicitudes de trabajo de grado, la sección antes titulada **Línea de tiempo** se presenta ahora como **Histórico de cambios**. Continúa consumiendo `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial` y mostrando los cambios reales reportados por el backend.
+- En el detalle de las solicitudes de trabajo de grado, la sección antes titulada **Línea de tiempo** se presenta ahora como **Histórico de cambios**. En esa fecha consumía `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`; desde el ajuste del 2026-09-27 usa el contrato unificado `GET /solicitudesAcademicas/{id}/historial` descrito al inicio de este documento.
 - **Agregar evaluador** ya no muestra la opción **Enviar invitación al guardar**: toda designación nueva envía `enviarInvitaciones: true` de manera obligatoria. El reemplazo conserva su flujo existente de reemplazar e invitar.
 - Al crear un jurado, el frontend persiste primero el documento elegido con `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}` y después ejecuta `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`, cuyo payload conserva el mismo `documentoEvaluarId`. Así se evita que el backend use como alternativa el último documento cargado (por ejemplo, `1192`) cuando coordinación seleccionó explícitamente otro (por ejemplo, `1191`), y la invitación se genera contra la selección ya persistida.
 - No cambiaron rutas, DTO de designación, permisos, dependencias, variables de entorno, seeds ni datasets. El frontend usa Node.js 24.15.0, npm 11.4.2 y las versiones fijadas por `package-lock.json`; se ejecuta con `npm run dev`, sin entornos Python ni pasos de seed.
@@ -1444,12 +1451,12 @@ obtienen del backend configurado mediante las variables Vite documentadas en
   variantes con o sin tildes. Así, un estudiante del Doctorado en Ciencias de
   la Computación recibe exclusivamente el catálogo doctoral al crear una
   solicitud, en lugar de las opciones de maestría.
-- **2026-09-23:** la línea de tiempo del detalle de evaluación de trabajos de
-  grado dejó de depender del historial incluido en el DTO general y consulta
-  `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`. Cada cambio
-  presenta el nuevo estado, fecha en horario de Colombia, origen, responsable,
-  detalle y minutos transcurridos en el estado anterior cuando esos valores
-  existen. El historial se refresca también después de las mutaciones del
+- **2026-09-23 (reemplazado el 2026-09-27):** la línea de tiempo del detalle de
+  evaluación dejó de depender del historial incluido en el DTO general. La
+  consulta específica que se incorporó entonces fue sustituida por
+  `GET /solicitudesAcademicas/{id}/historial`; ahora cada cambio presenta solo
+  el nuevo estado, fecha, responsable y detalle definidos por el contrato
+  unificado. El historial se refresca también después de las mutaciones del
   proceso.
 - **2026-09-23:** el catálogo y la presentación de solicitudes reconocen los
   estados de proyectos de grado 12–20 (`JUR_POR_DESIG`, `JUR_INVITADO`,
