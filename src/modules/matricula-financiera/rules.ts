@@ -43,11 +43,14 @@ export function normalizarMoneda(value: string, admiteNegativo: boolean): string
   if (negative) clean = clean.slice(1)
   if (negative && !admiteNegativo) return null
   if (!/^[\d.,]+$/.test(clean)) return null
-  const comma = clean.lastIndexOf(','); const dot = clean.lastIndexOf('.'); const decimalAt = Math.max(comma, dot)
-  const tail = decimalAt >= 0 ? clean.slice(decimalAt + 1) : ''
-  if (comma >= 0 && tail.length > 4) return null
-  const hasDecimal = decimalAt >= 0 && tail.length <= 4 && (comma >= 0 || clean.split('.').length === 2)
-  const integer = (hasDecimal ? clean.slice(0, decimalAt) : clean).replace(/[.,]/g, '') || '0'
+  // En la entrada localizada es-CO, el punto siempre agrupa miles y la coma
+  // separa decimales. Así, el punto que el propio campo inserta al mostrar
+  // 1.234 no se reinterpreta como decimal cuando la persona escribe el 5.
+  if ((clean.match(/,/g) ?? []).length > 1) return null
+  const decimalAt = clean.indexOf(',')
+  const hasDecimal = decimalAt >= 0
+  const tail = hasDecimal ? clean.slice(decimalAt + 1) : ''
+  const integer = (hasDecimal ? clean.slice(0, decimalAt) : clean).replace(/\./g, '') || '0'
   if (!/^\d+$/.test(integer) || (hasDecimal && !/^\d{0,4}$/.test(tail))) return null
   return `${negative ? '-' : ''}${integer}${hasDecimal ? `.${tail}` : ''}`
 }

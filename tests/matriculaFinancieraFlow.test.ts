@@ -95,3 +95,11 @@ test('muestra la denominación académica del tipo de estudiante', () => {
   assert.match(detailSource, /NUEVO indica que el estudiante ingresa a primer semestre\. VIGENTE indica que ya cuenta con matrículas previas\./)
   assert.match(addSource, /<option value="VIGENTE">Nuevo<\/option><option value="NUEVO">Vigente<\/option>/)
 })
+
+test('el detalle unitario explica de forma amable la conservación de correcciones', () => {
+  const source = readFileSync(new URL('../src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx', import.meta.url), 'utf8')
+
+  assert.match(source, /Ingresa las correcciones necesarias y revisa los valores antes de guardar\./)
+  assert.match(source, /Si cierras esta sección, tus cambios se conservarán\./)
+  assert.doesNotMatch(source, /El cálculo definitivo siempre viene del servidor/)
+})

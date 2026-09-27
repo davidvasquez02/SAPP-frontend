@@ -99,6 +99,19 @@ test('la entrada monetaria conserva cero, negativos y hasta cuatro decimales', (
   assert.equal(formatoMonedaEntrada('0'), '$ 0')
   assert.equal(formatoMonedaEntrada(''), '')
 })
+test('el quinto dígito conserva el punto automático como separador de miles', () => {
+  const cuatroDigitos = normalizarMoneda('1234', true)
+  assert.equal(cuatroDigitos, '1234')
+  assert.equal(formatoMonedaEntrada(cuatroDigitos ?? ''), '$ 1.234')
+
+  const entradaConQuintoDigito = `${formatoMonedaEntrada(cuatroDigitos ?? '')}5`
+  const cincoDigitosConSigno = normalizarMoneda(entradaConQuintoDigito, true)
+  const cincoDigitosSinSigno = normalizarMoneda(entradaConQuintoDigito, false)
+  assert.equal(cincoDigitosConSigno, '12345')
+  assert.equal(cincoDigitosSinSigno, '12345')
+  assert.equal(formatoMonedaEntrada(cincoDigitosConSigno ?? ''), '$ 12.345')
+  assert.equal(normalizarMoneda('$ 12.345,6789', true), '12345.6789')
+})
 test('las etiquetas de estado son textuales y distinguen la exclusión', () => {
   assert.equal(etiquetaEstadoLiquidacion('PENDIENTE_RESPUESTA'), 'Pendiente de respuesta')
   assert.equal(etiquetaEstadoLiquidacion('NO_LIQUIDAR'), 'Excluida')

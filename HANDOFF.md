@@ -6809,3 +6809,27 @@ npm run lint
 - Próximo paso institucional: confirmar que el identificador fijo `1` es el agregador previsto por backend, que `data` representa los estudiantes notificados, que el servidor aplica autorización de coordinación e idempotencia, y validar el correo real, teclado, móvil y temas claro/oscuro con una sesión institucional.
 
 ---
+
+# Update 2026-09-27 — entrada monetaria en correcciones unitarias
+
+## Estado actual y decisión
+
+- Se corrigió el formulario **Corregir cálculo** de `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, que es el flujo de matrícula financiera unitaria. Los dos campos afectados usan la misma función `normalizarMoneda`: **Valor a sumar o restar al cálculo (COP)** la invoca con negativos habilitados y **Total autorizado manualmente (COP, opcional)** con negativos deshabilitados.
+- `src/modules/matricula-financiera/rules.ts` interpreta ahora la entrada visible según `es-CO`: `.` es siempre agrupador de miles y `,` es el único separador decimal, con máximo cuatro cifras. Esto elimina la ambigüedad creada por el formato controlado: escribir `1234` muestra `$ 1.234`; añadir `5` normaliza `12345` y muestra `$ 12.345`. `$ 12.345,6789` se normaliza como `12345.6789`.
+- El contrato de guardado no cambió: `PATCH /sapp/...` continúa recibiendo `ajusteManual: Number(...)` y `valorFinalManual: Number(...) | null` a través de `actualizarLiquidacion(fila.id, 'ajustes', body)`. Cero se conserva y vacío retira el total manual. El backend sigue calculando el resultado definitivo.
+- El texto anterior sobre el servidor fue reemplazado por **Ingresa las correcciones necesarias y revisa los valores antes de guardar. Si cierras esta sección, tus cambios se conservarán.** No hubo cambios visuales, de tokens, permisos, rutas, endpoints, DTO, dependencias, schemas, seeds o datasets.
+
+## Paths, pruebas y salida esperada
+
+- Implementación: `src/modules/matricula-financiera/rules.ts` y `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`.
+- Regresiones: `tests/matriculaFinancieraRules.test.ts` reproduce la secuencia real del cuarto al quinto dígito para ambos modos (con y sin signo) y comprueba cuatro decimales con coma; `tests/matriculaFinancieraFlow.test.ts` protege el nuevo mensaje del detalle unitario.
+- Resultado después de integrar `origin/main` el 2026-09-27: suite `node --test --test-isolation=none tests/*.test.ts` PASS (121/121), ESLint focalizado PASS y `npm run build` PASS (318 módulos; `dist/assets/index-Bjsd1pjT.css` 277.74 kB y `dist/assets/index-DMrsiMnx.js` 744.90 kB). Se conservaron las regresiones remotas del tipo de estudiante y las regresiones monetarias; los únicos conflictos eran adiciones concurrentes en este documento y `tests/matriculaFinancieraFlow.test.ts`, resueltas manteniendo ambos bloques. Avisos no bloqueantes: npm reporta las configuraciones heredadas `msvs_version`/`python` y Vite advierte por el chunk JavaScript mayor de 500 kB. No se guardó un log separado; la salida fue la de terminal. `dist/` es salida generada e ignorada.
+
+## Entorno y continuidad
+
+- Workspace: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`. Reutilizar su `node_modules` y `package-lock.json`; no crear otro árbol npm ni entornos venv, Conda o Poetry.
+- Versiones comprobadas: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, `@vitejs/plugin-react-swc` 4.2.2 y ESLint 9.39.2.
+- Comandos: `npm run dev`; pruebas `node --test --test-isolation=none tests/*.test.ts`; lint focalizado `npx eslint src/modules/matricula-financiera/rules.ts src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx tests/matriculaFinancieraRules.test.ts tests/matriculaFinancieraFlow.test.ts`; producción `npm run build` y `npm run preview`.
+- Próximo paso institucional: con sesión y backend reales, validar ambos inputs mediante teclado y pegado, incluyendo `12.345`, `-12.345`, `12.345,6789`, cero y vacío, en escritorio/móvil y temas claro/oscuro. No hay seed, dataset, backend ni credenciales reproducibles para esa ruta protegida; la fixture aislada está en `tests/fixtures/matricula-financiera/preview.html`.
+
+---
