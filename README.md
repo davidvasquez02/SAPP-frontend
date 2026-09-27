@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — error de eliminación dentro del modal de actas
+
+- Cuando `DELETE /actas/{id}` falla, el mensaje entregado por el backend permanece ahora dentro del diálogo **Eliminar acta**, debajo de los datos del acta. El diálogo no se cierra y permite reintentar o cancelar; el error ya no aparece en la franja global detrás del modal.
+- El aviso usa `role="alert"`, admite mensajes técnicos extensos sin desbordarse y consume el token semántico `--danger` sobre la superficie temática del diálogo, por lo que conserva contraste en temas claro y oscuro.
+- Se separó el estado del error de eliminación de los errores generales de carga, visualización y creación. Al abrir otra confirmación se limpia cualquier error anterior. No cambiaron endpoint, DTO, payload, permisos, dependencias, variables, schemas, seeds ni datasets.
+- Regresión: `tests/actasDeleteModal.test.ts`. Verificación local: prueba dirigida 2/2, suite Node 111/111, ESLint focalizado, build de producción (317 módulos; CSS 274.77 kB; JS 741.67 kB) y `git diff --check` pasan. Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — histórico unificado de solicitudes
 
 - El detalle de solicitudes académicas normales, créditos condonables y proyectos de grado consulta ahora `GET /solicitudesAcademicas/{id}/historial`. Se retiró del proceso de evaluación de trabajos de grado el consumo del endpoint específico `/sapp/procesoEvaluacionTg/solicitud/{id}/historial`.

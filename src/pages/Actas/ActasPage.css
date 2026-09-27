@@ -149,6 +149,18 @@
   overflow-wrap: anywhere;
 }
 
+.actas-delete-modal__error {
+  margin-top: 1rem;
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 35%);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--danger), transparent 90%);
+  color: var(--danger);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .actas-delete-modal__close {
   position: absolute;
   top: 1rem;
