@@ -11,6 +11,7 @@ import {
   TIPOS_TRABAJO_GRADO_POR_NIVEL,
   type NivelTrabajoGrado,
 } from '../../modules/trabajos-grado/constants'
+import RecordatoriosCandidatura from '../../modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura'
 import './TrabajosGradoPage.css'
 
 const isNivel = (value: string | undefined): value is NivelTrabajoGrado =>
@@ -58,6 +59,8 @@ const TrabajosGradoPage = () => {
           <p className="trabajos-grado-page__eyebrow">{isCoordinacion ? 'Gestión de coordinación' : 'Mi proyecto de grado'}</p>
           <h3>{titulo}</h3>
         </header>
+
+        {isCoordinador && nivel === 'doctorado' ? <RecordatoriosCandidatura /> : null}
 
         {isEstudiante ? (
           <SolicitudesEstudianteView
