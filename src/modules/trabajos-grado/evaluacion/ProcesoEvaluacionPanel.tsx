@@ -441,10 +441,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
                   <strong>{formatEstadoNombre(item.estadoNuevo, item.estadoNuevoSigla)}</strong>
                   <small>{formatDate(item.fecha, true)}</small>
                   <div className="evaluacion-tg__timeline-meta">
-                    {item.estadoAnteriorSigla && <span><b>Estado anterior:</b> {formatEstadoNombre(item.estadoAnterior, item.estadoAnteriorSigla)}</span>}
-                    <span><b>Origen:</b> {item.origen}</span>
                     {item.responsable && <span><b>Responsable:</b> {item.responsable}</span>}
-                    {item.minutosEnEstadoAnterior != null && <span><b>Tiempo en estado anterior:</b> {item.minutosEnEstadoAnterior} min</span>}
                   </div>
                   {item.detalle && <p>{item.detalle}</p>}
                 </div>

@@ -1,3 +1,19 @@
+# Handoff 2026-09-27 — histórico unificado de solicitudes académicas
+
+## Estado, contrato y salida esperada
+
+- Se implementó `GET /solicitudesAcademicas/{id}/historial` para el detalle común de todas las solicitudes: normales, créditos condonables y proyectos de grado. El panel de evaluación de trabajos de grado dejó de consultar `GET /sapp/procesoEvaluacionTg/solicitud/{id}/historial` y usa también el contrato unificado.
+- Envelope esperado: `{ ok: boolean, message: string, data: SolicitudHistorialDto[] }`. Cada elemento contiene `estadoNuevoSigla: string`, `estadoNuevo: string`, `fecha: string`, `responsable: string | null` y `detalle: string | null`. No agregar campos de estado anterior, origen o minutos: no existen en el contrato informado.
+- La salida visual se titula **Histórico de cambios** y muestra estado, fecha, responsable y detalle. Incluye carga, resultado vacío y error. En coordinación de proyectos de grado se presenta dentro de `ProcesoEvaluacionPanel`; los demás detalles, incluidos los de estudiante y créditos, usan la sección común de `SolicitudDetallePage`.
+
+## Artefactos, entorno y continuidad
+
+- Servicio/DTO: `src/modules/solicitudes/api/solicitudesAcademicasService.ts` y `types.ts`. Adaptación de proyectos: `src/modules/trabajos-grado/evaluacion/api.ts`, `types.ts` y `ProcesoEvaluacionPanel.tsx`. Presentación común: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`. Regresión: `tests/historialSolicitudes.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. No existen seeds ni credenciales reproducibles para las rutas protegidas.
+- Resultados locales: regresión dirigida 2/2 PASS, suite Node 109/109 PASS, ESLint focalizado PASS y build PASS (317 módulos, CSS 274.49 kB y JS 741.54 kB). Avisos no bloqueantes: configuración heredada `http-proxy` de npm y chunk JavaScript mayor de 500 kB. Próximo paso externo: validar el contrato con backend y sesiones institucionales de estudiante/coordinación en solicitudes normales, créditos y trabajos de grado. No se obtuvo captura: el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere backend y sesión institucionales sin credenciales o seed local reproducible.
+
+---
+
 # Handoff 2026-09-27 — selector documental compartido para actas
 
 ## Estado, decisión y salida esperada
