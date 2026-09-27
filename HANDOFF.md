@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — motivo de rechazo para toda solicitud
+
+## Estado actual, contrato y salida esperada
+
+- `SolicitudDetallePage` es la vista compartida por solicitudes generales, créditos condonables y proyectos de grado. Su acción **Rechazar** abre un diálogo, exige un motivo no vacío, limita la captura a 1000 caracteres y solo entonces ejecuta la transición. No duplicar formularios en los módulos: las tres rutas ya reciben este comportamiento desde el detalle común.
+- Contrato utilizado: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=RECHAZADA&observaciones={motivo}`, sin body y con el envelope existente `{ ok, message, data }`. `observaciones` se serializa con `URLSearchParams`. Al completar, el cliente vuelve a consultar el detalle; para `estadoSigla`/estado normalizado `RECHAZADA`, presenta `solicitud.observaciones` bajo **Motivo de rechazo**.
+- Salida esperada: pulsar **Rechazar** no realiza una petición inmediatamente; una confirmación vacía muestra **Debes indicar el motivo del rechazo.**; una confirmación válida cierra el diálogo, envía el texto recortado y recarga la solicitud. Cancelar o pulsar el fondo solo cierra el diálogo.
+
+## Artefactos, pruebas, entorno y continuidad
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`; contrato HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`; regresión: `tests/solicitudRechazoMotivo.test.ts`; documentación: `README.md` y este archivo. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend usa Node/npm y no usa venv, Conda ni Poetry: no crear otro entorno o árbol npm.
+- Resultados locales: `node --test --test-isolation=none tests/solicitudRechazoMotivo.test.ts` PASS (2/2); ESLint focalizado PASS; `npm run build` PASS (317 módulos; CSS 274.94 kB; JS 743.36 kB); suite Node PASS (113/113); `git diff --check` PASS. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Reto externo: confirmar con backend que `observaciones` queda persistido y vuelve en el DTO para cada tipo; revisar teclado, foco, móvil y temas claro/oscuro con sesiones institucionales. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y las rutas protegidas no tienen backend, credenciales o seed reproducible.
+
+---
+
 # Handoff 2026-09-27 — error de eliminación dentro del modal de actas
 
 ## Estado actual, decisión y salida esperada
