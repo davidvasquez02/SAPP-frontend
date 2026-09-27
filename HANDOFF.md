@@ -6858,6 +6858,15 @@ npm run lint
 
 ---
 
+# Update 2026-09-27 — informes a dependencias
+
+- Fuente: Documento sin título (6).docx. El usuario confirmó que matrícula y admisión devuelven el mismo JSON de faltantes; no implementar campos alternativos de estudiantes ni cambiar el contrato.
+- `src/pages/Reportes/ReportesPage.tsx`: convocatorias descendentes por período con comparación numérica; ayuda del acta con botón accesible y tooltip; etiquetas de estudiantes para informes distintos de admisión; no presentar inscripción como identificador de matrícula; controles deshabilitados durante la solicitud para evitar mezclar contextos.
+- Estilos en `ReportesPage.css` con tokens semánticos. Se conserva el parser y el panel compartido, que ya estaban conectados a ambos endpoints. La captura del listado ausente no se reprodujo usando el contrato confirmado; queda pendiente verificar respuesta real y versión desplegada si persiste.
+- `tests/reportesFaltantes.test.mjs` utiliza Vite SSR y fetch simulado con HTTP 409, ejecuta ambos servicios reales y el parser real, comprueba listas institucionales/personales e igualdad entre endpoints. No realiza solicitudes remotas.
+- Validación: `node --test --test-isolation=none tests/reportesFaltantes.test.mjs` PASS (1/1); `npx eslint src/pages/Reportes/ReportesPage.tsx tests/reportesFaltantes.test.mjs` PASS; `npm run build` PASS (318 módulos). La ejecución de Node con aislamiento por proceso dio spawn EPERM; usar el comando documentado sin aislamiento. Sin validación visual en sesión autenticada.
+- Node 24.11.0; React/React DOM 19.2.3; TypeScript 5.9.3; rolldown-vite 7.2.5. Reutilizar node_modules/package-lock.json. Sin instalaciones ni entornos adicionales. Avisos existentes de npm y tamaño de chunk mayor de 500 kB.
+
 # Update 2026-09-27 — fecha límite de pago para coordinación y estudiante
 
 ## Estado y contrato

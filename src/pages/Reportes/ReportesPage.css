@@ -10,7 +10,14 @@
 .reports__process--active { border-color: var(--primary); background: color-mix(in srgb, var(--surface), var(--primary) 9%); box-shadow: inset 0 0 0 1px var(--primary); }
 .reports__form { display: grid; gap: 1.25rem; }
 .reports__form-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-.reports__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.reports__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.reports__acta-field { display: grid; gap: .5rem; }
+.reports__acta-heading { display: flex; align-items: center; gap: .4rem; }
+.reports__help { position: relative; display: inline-flex; }
+.reports__help button { display: grid; place-items: center; width: 1.4rem; height: 1.4rem; min-height: 0; padding: 0; border: 1px solid var(--outline); border-radius: 50%; background: var(--surface); color: var(--primary); font: inherit; font-weight: 700; cursor: help; }
+.reports__help button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.reports__help [role="tooltip"] { position: absolute; z-index: 10; bottom: calc(100% + .5rem); right: -2rem; width: min(18rem, calc(100vw - 4rem)); padding: .8rem; border: 1px solid var(--outline); border-radius: .75rem; background: var(--inverse-surface, var(--on-surface)); color: var(--inverse-on-surface, var(--surface)); font-size: .85rem; line-height: 1.4; visibility: hidden; }
+.reports__help:hover [role="tooltip"], .reports__help:focus-within [role="tooltip"] { visibility: visible; }
 .reports__fields label { display: grid; gap: .5rem; font-weight: 650; }
 .reports__fields select { width: 100%; min-height: 3rem; padding: .65rem .8rem; color: inherit; border: 1px solid var(--outline); border-radius: 12px; background: var(--surface); }
 .reports__fields select:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 72%); border-color: var(--primary); }

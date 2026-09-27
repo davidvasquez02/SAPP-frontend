@@ -81,7 +81,9 @@ const ReportesPage = () => {
         setProgramas([...programasData].sort((a, b) =>
           formatProgramaAcademico(a).localeCompare(formatProgramaAcademico(b), 'es'),
         ))
-        setConvocatorias(convocatoriasData)
+        setConvocatorias([...convocatoriasData].sort((a, b) =>
+          b.periodo.localeCompare(a.periodo, 'es', { numeric: true }),
+        ))
         setPeriodos([...periodosData].sort((a, b) => b.anio - a.anio || b.periodo - a.periodo))
         setActas([...actasData].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion)))
         setPeriodoId(findCurrentPeriodoId(periodosData))
@@ -170,7 +172,7 @@ const ReportesPage = () => {
 
         <div className="reports__processes" aria-label="Tipo de proceso">
           {PROCESS_OPTIONS.map((option) => (
-            <button key={option.id} type="button" className={tipo === option.id ? 'reports__process reports__process--active' : 'reports__process'} onClick={() => selectTipo(option.id)} aria-pressed={tipo === option.id}>
+            <button key={option.id} type="button" disabled={generating} className={tipo === option.id ? 'reports__process reports__process--active' : 'reports__process'} onClick={() => selectTipo(option.id)} aria-pressed={tipo === option.id}>
               <strong>{option.label}</strong>
             </button>
           ))}
@@ -180,7 +182,7 @@ const ReportesPage = () => {
           <div className="reports__form-heading"><h2>Parámetros del informe</h2><span>Todos los campos son obligatorios</span></div>
           {loading ? <p role="status">Cargando programas, períodos, convocatorias y actas...</p> : null}
           {!loading ? (
-            <div className="reports__fields">
+            <fieldset className="reports__fields" disabled={generating}>
               <label>Programa académico
                 <select value={programaId} onChange={(event) => { setProgramaId(event.target.value); setConvocatoriaId(''); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un programa</option>
@@ -202,13 +204,20 @@ const ReportesPage = () => {
                   </select>
                 </label>
               )}
-              <label>Acta asociada
-                <select value={actaId} onChange={(event) => { setActaId(event.target.value); setGeneratedPdf(null) }} required>
+              <div className="reports__acta-field">
+                <div className="reports__acta-heading">
+                  <label htmlFor="reports-acta">Acta asociada</label>
+                  <span className="reports__help">
+                    <button type="button" aria-label="Ayuda sobre Acta asociada" aria-describedby="reports-acta-help">?</button>
+                    <span id="reports-acta-help" role="tooltip">Seleccione el acta del Comité Asesor o del Consejo de Escuela donde se registraron las decisiones relacionadas con el proceso de admisión, matrícula o créditos condonables.</span>
+                  </span>
+                </div>
+                <select id="reports-acta" value={actaId} onChange={(event) => { setActaId(event.target.value); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un acta</option>
                   {actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} · {acta.nombre}</option>)}
                 </select>
-              </label>
-            </div>
+              </div>
+            </fieldset>
           ) : null}
           {error ? <p className="reports__feedback reports__feedback--error" role="alert">{error}</p> : null}
           {faltantes ? (
@@ -218,7 +227,7 @@ const ReportesPage = () => {
                   <h3 id="reports-missing-title">Información pendiente para generar el informe</h3>
                   <p>Complete los siguientes requisitos y vuelva a intentar.</p>
                 </div>
-                <span>{faltantes.aspirantesConDocumentosFaltantes.length} aspirante{faltantes.aspirantesConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
+                <span>{faltantes.aspirantesConDocumentosFaltantes.length} {tipo === 'ADMISION' ? 'aspirante' : 'estudiante'}{faltantes.aspirantesConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
               </div>
               {faltantes.categoriasInstitucionalesFaltantes.length > 0 ? (
                 <div className="reports__missing-institutional">
@@ -230,7 +239,7 @@ const ReportesPage = () => {
                 {faltantes.aspirantesConDocumentosFaltantes.map((aspirante) => (
                   <details key={aspirante.inscripcionId} className="reports__missing-person">
                     <summary>
-                      <span><strong>{aspirante.nombreCompleto}</strong><small>Documento {aspirante.documento || 'no registrado'} · Inscripción {aspirante.inscripcionId}</small></span>
+                      <span><strong>{aspirante.nombreCompleto}</strong><small>Documento {aspirante.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${aspirante.inscripcionId}` : ''}</small></span>
                       <span className="reports__missing-count">{aspirante.documentosFaltantes.length} pendiente{aspirante.documentosFaltantes.length === 1 ? '' : 's'}</span>
                     </summary>
                     <ul>{aspirante.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>

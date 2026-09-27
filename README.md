@@ -1755,6 +1755,13 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - **Cerrar recepción** permanece visible para procesos abiertos, pero queda deshabilitado mientras `resumen.pendientes` o `resumen.respondidas` sea mayor que cero. La interfaz explica que todas las filas deben terminar como **Liquidada** o **No liquidar**. La regla pura `puedeCerrarProceso` y una guarda adicional evitan invocar el endpoint desde la acción deshabilitada.
 - No cambiaron estados, DTO, endpoints, payloads, permisos, dependencias, variables, schemas, seeds ni datasets. Verificación: pruebas focalizadas PASS (27/27), suite Node PASS (123/123), ESLint focalizado PASS y build PASS (318 módulos; CSS 277.90 kB; JS 745.37 kB). Persisten los avisos ambientales de npm y el warning conocido por el chunk JavaScript mayor de 500 kB.
 
+## Ajuste 2026-09-27 — informes a dependencias
+
+- Admisión ordena las convocatorias por período descendente. Acta asociada incorpora ayuda accesible mediante foco, toque o cursor sobre el botón `?`, explicando el acta del Comité Asesor o Consejo de Escuela.
+- Matrícula reutiliza el listado desplegable de faltantes de admisión, con etiquetas de estudiantes. El usuario confirmó el mismo contrato JSON para ambos endpoints: `data.faltantes.{categoriasInstitucionalesFaltantes,aspirantesConDocumentosFaltantes}`. La prueba de integración con HTTP simulado confirma que ambos servicios conservan exactamente el mismo detalle; no se reprodujo la ausencia del listado con ese contrato.
+- Durante la generación se bloquean los parámetros y el cambio de proceso. No cambiaron endpoints ni payloads.
+- Verificación: `node --test --test-isolation=none tests/reportesFaltantes.test.mjs` PASS; ESLint focalizado y `npm run build` PASS. Entorno existente: Node 24.11.0, React/React DOM 19.2.3, TypeScript 5.9.3 y rolldown-vite 7.2.5. Sin nuevas dependencias.
+
 ## Ajuste 2026-09-27 — fecha límite de pago visible
 
 - Coordinación consulta **Fecha límite de pago en el sistema de la universidad** dentro de **Parámetros y fechas del proceso**, usando `proceso.fechaLimitePago` y el formateo local de Colombia.
