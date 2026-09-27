@@ -6833,3 +6833,27 @@ npm run lint
 - Próximo paso institucional: con sesión y backend reales, validar ambos inputs mediante teclado y pegado, incluyendo `12.345`, `-12.345`, `12.345,6789`, cero y vacío, en escritorio/móvil y temas claro/oscuro. No hay seed, dataset, backend ni credenciales reproducibles para esa ruta protegida; la fixture aislada está en `tests/fixtures/matricula-financiera/preview.html`.
 
 ---
+
+# Update 2026-09-27 — estados finales y cierre de matrícula financiera
+
+## Estado actual y salida esperada
+
+- `etiquetaEstadoLiquidacion('NO_LIQUIDAR')` devuelve **No liquidar**. La tabla y el detalle consumen esa función; el filtro ya usaba la misma denominación. La acción sigue llamándose **Excluir del proceso** porque describe la operación, no el estado resultante.
+- En `LiquidacionDetallePage.tsx`, cuando existe `motivoExclusion`, la salida es **Motivo de exclusión del proceso de liquidación: {motivo}**.
+- Las tarjetas de `MatriculaFinancieraPage.tsx` presentan `p.resumen.respondidas` con **Estudiantes que registraron sus respuestas**. El detalle del proceso conserva sus cinco métricas y sigue excluyendo `conAlertas` del resumen visual.
+- En **Publicar resultados**, el resumen visible contiene solo liquidaciones y pendientes; se retiró **con alertas**. El campo de fecha se etiqueta **Fecha límite de pago de las liquidaciones en el sistema de la universidad**. El payload `publicarProceso(id, fechaPago)` permanece intacto.
+- `puedeCerrarProceso` en `src/modules/matricula-financiera/flow.ts` permite el cierre únicamente cuando `pendientes === 0` y `respondidas === 0`. En procesos abiertos, **Cerrar recepción** queda deshabilitado si alguna fila no está en estado final, el `onClick` repite la guarda y se muestra la instrucción de llevarlas a **Liquidada** o **No liquidar**.
+
+## Contratos, paths y verificación
+
+- No cambiaron `EstadoLiquidacion`, `ResumenProceso`, endpoints ni cuerpos HTTP. Se reutilizan `ProcesoLiquidacion.resumen.respondidas`, `.pendientes`, `.liquidadas` y `.conAlertas`; esta última clave permanece en el DTO para compatibilidad aunque ya no se muestre al publicar.
+- Paths: `src/modules/matricula-financiera/{flow,rules}.ts`; `src/pages/MatriculaFinanciera/{MatriculaFinancieraPage,ProcesoLiquidacionPage,LiquidacionDetallePage}.tsx`; estilos en `MatriculaFinancieraPage.css`; regresiones en `tests/matriculaFinanciera{Flow,Rules}.test.ts`.
+- Resultado local 2026-09-27: pruebas focalizadas PASS (27/27), suite `node --test --test-isolation=none tests/*.test.ts` PASS (123/123), ESLint focalizado PASS y `npm run build` PASS (318 módulos; `dist/assets/index-BBFGJfoW.css` 277.90 kB y `dist/assets/index-DW94RMNd.js` 745.35 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. No se agregaron seeds, datasets ni artefactos persistentes. La fixture aislada continúa en `tests/fixtures/matricula-financiera/preview.html`.
+
+## Continuidad
+
+- Validar con backend y sesión institucional la tarjeta de período, los textos del detalle y publicación, y el botón de cierre en escritorio/móvil y temas claro/oscuro.
+- La protección implementada pertenece al frontend. El backend también debe rechazar `POST /procesos/{id}/cerrar` cuando existan filas `PENDIENTE_RESPUESTA` o `RESPONDIDA`, para garantizar la regla ante clientes externos o peticiones directas.
+
+---

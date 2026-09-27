@@ -112,7 +112,7 @@ test('el quinto dígito conserva el punto automático como separador de miles', 
   assert.equal(formatoMonedaEntrada(cincoDigitosConSigno ?? ''), '$ 12.345')
   assert.equal(normalizarMoneda('$ 12.345,6789', true), '12345.6789')
 })
-test('las etiquetas de estado son textuales y distinguen la exclusión', () => {
+test('las etiquetas de estado usan únicamente la denominación No liquidar', () => {
   assert.equal(etiquetaEstadoLiquidacion('PENDIENTE_RESPUESTA'), 'Pendiente de respuesta')
-  assert.equal(etiquetaEstadoLiquidacion('NO_LIQUIDAR'), 'Excluida')
+  assert.equal(etiquetaEstadoLiquidacion('NO_LIQUIDAR'), 'No liquidar')
 })

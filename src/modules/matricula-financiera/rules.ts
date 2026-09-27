@@ -24,7 +24,7 @@ export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<Li
   return fila.estado === 'LIQUIDADA' || (fila.estado === 'RESPONDIDA' && fila.totalFinal != null)
 }
 export const etiquetaEstadoLiquidacion = (estado: LiquidacionMatricula['estado']): string => ({
-  PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'Excluida',
+  PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'No liquidar',
 })[estado]
 
 /**

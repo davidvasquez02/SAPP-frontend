@@ -4,8 +4,8 @@ import { ModuleLayout } from '../../components'
 import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { crearProceso, listarMisLiquidaciones, listarPeriodos, listarProcesos, responderMiLiquidacion } from '../../modules/matricula-financiera/api'
-import { GUIA_COORDINACION, GUIA_ESTUDIANTE } from '../../modules/matricula-financiera/flow'
-import { fechaColombia, money } from '../../modules/matricula-financiera/rules'
+import { etiquetaResumen, GUIA_COORDINACION, GUIA_ESTUDIANTE } from '../../modules/matricula-financiera/flow'
+import { etiquetaEstadoLiquidacion, fechaColombia, money } from '../../modules/matricula-financiera/rules'
 import { useConsulta, useOperacion } from '../../modules/matricula-financiera/hooks'
 import type { MiLiquidacion } from '../../modules/matricula-financiera/types'
 import { ParametrosProcesoForm } from './ParametrosProcesoForm'
@@ -36,7 +36,7 @@ function Procesos() {
   return <><Aviso error={op.error || consulta.error || periodos.error} message={op.message} /><div className="mf-toolbar"><button className="mf-button" disabled={consulta.loading || op.busy || periodos.loading || !!periodos.error || !!consulta.error} onClick={() => setShowCreate(!showCreate)}>Crear proceso</button><Link className="mf-button mf-button--secondary" to="/matricula/financiera/tarifas">Administrar tarifas</Link><button className="mf-button mf-button--secondary" disabled={consulta.loading || op.busy} onClick={() => { consulta.refresh(); periodos.refresh() }}>Actualizar</button></div>
     {showCreate && <ParametrosProcesoForm periodos={periodos.data ?? []} procesos={consulta.data ?? []} busy={op.busy} onCancel={() => setShowCreate(false)} onSave={async body => { await op.run(async () => { const nuevo = await crearProceso(body); navigate(`/matricula/financiera/procesos/${nuevo.id}`) }) }} />}
     <div className="mf-filters"><label>Periodo<select value={periodo} onChange={e => { setPeriodo(e.target.value); setPagina(1) }}><option value="">Todos los periodos</option>{(periodos.data ?? []).map(p => <option key={p.id} value={p.id}>{p.anioPeriodo || `${p.anio} - ${p.periodo}`}</option>)}</select></label></div>
-    {consulta.loading ? <p role="status">Cargando procesos…</p> : <><div className="mf-grid">{filtered.slice((page - 1) * 12, page * 12).map(p => <Link className="mf-card mf-process" to={`/matricula/financiera/procesos/${p.id}`} key={p.id}><span className={`mf-badge mf-badge--${p.estado.toLowerCase()}`}>{p.estado}</span><h2>{p.periodo}</h2><p>Recepción de respuestas habilitada hasta el {fechaColombia(p.fechaLimiteRespuesta)}</p></Link>)}</div>{!filtered.length && !consulta.error && <p className="mf-empty">No hay procesos para este filtro.</p>}<Paginacion pagina={page} total={Math.ceil(filtered.length / 12)} onChange={setPagina} /></>}
+    {consulta.loading ? <p role="status">Cargando procesos…</p> : <><div className="mf-grid">{filtered.slice((page - 1) * 12, page * 12).map(p => <Link className="mf-card mf-process" to={`/matricula/financiera/procesos/${p.id}`} key={p.id}><span className={`mf-badge mf-badge--${p.estado.toLowerCase()}`}>{p.estado}</span><h2>{p.periodo}</h2><p>Recepción de respuestas habilitada hasta el {fechaColombia(p.fechaLimiteRespuesta)}</p><p className="mf-process__metric"><strong>{p.resumen.respondidas}</strong> <span>{etiquetaResumen('respondidas')}</span></p></Link>)}</div>{!filtered.length && !consulta.error && <p className="mf-empty">No hay procesos para este filtro.</p>}<Paginacion pagina={page} total={Math.ceil(filtered.length / 12)} onChange={setPagina} /></>}
   </>
 }
 function MisLiquidaciones() {
@@ -46,7 +46,7 @@ function MisLiquidaciones() {
 function MiLiquidacionCard({ item, onChange }: { item: MiLiquidacion; onChange: () => void }) {
   const op = useOperacion()
   const [documentBusy, setDocumentBusy] = useState(false)
-  return <article className="mf-card mf-my"><span className={`mf-badge mf-badge--${item.estado.toLowerCase()}`}>{item.estado.replaceAll('_', ' ')}</span><h2>{item.programa}</h2><p className="mf-response-deadline"><span>Recepción de respuestas habilitada hasta el</span> <strong>{fechaColombia(item.proceso.fechaLimiteRespuesta)}</strong></p><p>{item.codigoEstudiante} · Periodo {item.proceso.periodo}</p>
+  return <article className="mf-card mf-my"><span className={`mf-badge mf-badge--${item.estado.toLowerCase()}`}>{etiquetaEstadoLiquidacion(item.estado)}</span><h2>{item.programa}</h2><p className="mf-response-deadline"><span>Recepción de respuestas habilitada hasta el</span> <strong>{fechaColombia(item.proceso.fechaLimiteRespuesta)}</strong></p><p>{item.codigoEstudiante} · Periodo {item.proceso.periodo}</p>
     {item.fueraDePlazo && <p className="mf-notice">La fecha de respuesta ya pasó. {item.puedeResponder ? 'Aún puedes responder mientras el proceso siga abierto; quedará registrada la respuesta fuera de plazo.' : 'La recepción está cerrada.'}</p>}
     <Aviso error={op.error} message={op.message} />
     <RespuestasForm key={JSON.stringify(item.respuestas)} respuestas={item.respuestas} preguntas={item.preguntas} tipo={item.tipoEstudiante} editable={item.puedeResponder} busy={op.busy || documentBusy} renderCertificado={(onValidChange, onPendingUploadChange) => <CertificadoVotacion embedded required deferredUpload liquidacionId={item.liquidacionId} editable={!op.busy && item.proceso.estado !== 'PUBLICADO'} onBusyChange={setDocumentBusy} onValidChange={onValidChange} onPendingUploadChange={onPendingUploadChange} onChange={onChange} />} onSave={async answers => { await op.run(async () => { await responderMiLiquidacion(item.liquidacionId, answers); onChange() }, 'Respuestas guardadas.') }} />

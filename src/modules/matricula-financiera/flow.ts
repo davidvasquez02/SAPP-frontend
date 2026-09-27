@@ -1,4 +1,4 @@
-import type { EstadoProcesoLiquidacion } from './types'
+import type { EstadoProcesoLiquidacion, ResumenProceso } from './types'
 
 export type AccionProceso = 'convocar' | 'enviarSolicitudes' | 'enviarRecordatorio' | 'cerrar' | 'reabrir' | 'recalcular' | 'publicar'
 export interface PasoGuiaLiquidacion { titulo: string; descripcion: string }
@@ -26,6 +26,9 @@ const ACCIONES_POR_ESTADO: Record<EstadoProcesoLiquidacion, readonly AccionProce
 
 export const puedeEjecutarAccion = (estado: EstadoProcesoLiquidacion | undefined, accion: AccionProceso): boolean =>
   estado ? ACCIONES_POR_ESTADO[estado].includes(accion) : false
+
+export const puedeCerrarProceso = (resumen: Pick<ResumenProceso, 'pendientes' | 'respondidas'>): boolean =>
+  resumen.pendientes === 0 && resumen.respondidas === 0
 
 export const etiquetaResumen = (clave: string): string => ({
   convocados: 'Estudiantes registrados en el proceso de matrícula',
