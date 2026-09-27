@@ -40,6 +40,22 @@
 
 ---
 
+# Update 2026-09-27 — diálogo para finalizar evaluación de admisión
+
+- `InscripcionAdmisionDetallePage.tsx` sustituyó el `window.confirm` de `handleFinalizarInscripcion` por estado `isFinalizeDialogOpen` y un diálogo accesible. La acción primaria sigue llamando el flujo existente; el diálogo se cierra antes de iniciar y la pantalla muestra los errores o el éxito en el bloque de finalización.
+- El diálogo informa que calculará los puntajes y cerrará la evaluación para edición. Puede cancelarse con el botón secundario, Escape o el fondo; devuelve el foco al botón **Finalizar inscripción**. Durante la operación se mantiene el bloqueo existente mediante `finalizing`.
+- `InscripcionAdmisionDetallePage.css` agrega fondo, tarjeta, jerarquía, acciones pill y diseño móvil con variables `--surface`, `--primary`, `--on-primary`, `--outline` y tokens de texto; compatible con temas claro/oscuro.
+- Validación: ESLint focalizado PASS; `npm run build` PASS, 317 módulos (`index-DeRxdMR6.css` 281.57 kB, `index-BoDCFwqD.js` 747.13 kB). Sin dependencias, variables, schemas, seeds ni datasets nuevos. Persiste el warning conocido del chunk mayor de 500 kB.
+
+# Update 2026-09-27 — diálogo para cerrar convocatorias
+
+- Nuevo componente compartido `src/modules/admisiones/components/CloseConvocatoriaDialog/` con diálogo institucional accesible y estilos propios basados en tokens semánticos. Presenta período, programa, consecuencia del cierre y estado ocupado.
+- `ConvocatoriasAdmisionConfigPage.tsx` y `FechasModulePage.tsx` reemplazaron sus confirmaciones nativas. Ambas conservan `cerrarConvocatoriaAdmision`, refrescan los catálogos y mantienen los mensajes existentes de éxito/error.
+- El diálogo se cancela mediante botón, fondo o Escape cuando no está procesando; enfoca la acción primaria y restaura el foco al control de origen al cerrarse. En móvil apila las acciones.
+- Validación: no quedan usos de `window.confirm` para cerrar convocatorias; ESLint focalizado PASS y build PASS, 320 módulos (`index-Bv_VbPYd.css` 283.68 kB, `index-BMNnk2O2.js` 749.32 kB). Sin cambios de endpoints, payloads, contratos, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+---
+
 # Update 2026-09-27 — fotos en admisiones de docente y director
 
 - `AdmisionesProfesorPage.tsx` cambió el encabezado interno de **Admisiones — Mis entrevistas** a **Mis entrevistas**. `ModuleLayout` conserva el título global **Admisiones**.

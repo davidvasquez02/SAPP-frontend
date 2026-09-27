@@ -1781,3 +1781,16 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - La lista dejó de usar fotos simuladas. Docentes y directores consultan ahora las convocatorias e inscripciones mediante los mismos servicios de admisiones usados por coordinación y muestran `inscripcion.foto` con su MIME y contenido Base64.
 - El formateador compartido `getAspiranteFotoSrc` se usa también en el detalle de convocatoria de coordinación. Si el backend no entrega contenido o la imagen no puede cargarse, la tarjeta muestra **Sin foto**.
 - Pruebas del formateador PASS (2/2), ESLint focalizado PASS y `npm run build` PASS (317 módulos; CSS 279.48 kB; JS 745.37 kB). Sin cambios de endpoints, contratos, permisos, dependencias, schemas, variables, seeds ni datasets.
+
+## Ajuste 2026-09-27 — confirmación para finalizar evaluación
+
+- La finalización de una inscripción dejó de usar `window.confirm`. Ahora presenta un diálogo institucional con el nombre del aspirante, la consecuencia de cerrar la evaluación y acciones **Cancelar** / **Calcular y finalizar**.
+- El diálogo usa tokens semánticos, botones pill, fondo atenuado y adaptación móvil. Incluye `role="dialog"`, nombre y descripción accesibles, foco inicial, cierre mediante Escape o el fondo y devolución del foco al botón de origen.
+- La secuencia funcional permanece igual: validar la evaluación, calcular puntajes, finalizar, invalidar caché y recargar estados. No cambiaron servicios, endpoints, payloads ni permisos. ESLint focalizado y build PASS (317 módulos; CSS 281.57 kB; JS 747.13 kB).
+
+## Ajuste 2026-09-27 — confirmación para cerrar convocatorias
+
+- Los cierres disponibles en **Configuración de convocatorias** y **Fechas académicas** dejaron de usar `window.confirm` y comparten `CloseConvocatoriaDialog`.
+- El diálogo identifica período y programa, explica el efecto del cierre, usa acciones **Cancelar** / **Cerrar convocatoria** y presenta **Cerrando…** mientras responde el servidor. Admite Escape, clic en el fondo, foco inicial y retorno del foco al botón que lo abrió.
+- La presentación usa tokens semánticos, fondo atenuado, tarjeta redondeada, botones pill y adaptación móvil para conservar los temas claro y oscuro. No cambiaron el endpoint, payload, contrato ni permisos del cierre.
+- ESLint focalizado y build PASS (320 módulos; CSS 283.68 kB; JS 749.32 kB).

@@ -127,6 +127,7 @@ const InscripcionAdmisionDetallePage = () => {
   const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [finalizing, setFinalizing] = useState(false)
+  const [isFinalizeDialogOpen, setIsFinalizeDialogOpen] = useState(false)
   const [finalizeError, setFinalizeError] = useState<string[] | null>(null)
   const [finalizeSuccess, setFinalizeSuccess] = useState<string | null>(null)
   const [componentReloadVersion, setComponentReloadVersion] = useState(0)
@@ -157,6 +158,7 @@ const InscripcionAdmisionDetallePage = () => {
     promise: Promise<void>
   } | null>(null)
   const prevActiveRef = useRef<ActiveWindow>(null)
+  const finalizeButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const nombreAspirante = inscripcionDetalle?.nombreAspirante ?? routeState?.nombreAspirante ?? 'Aspirante'
   const pageTitle = 'Inscripción'
@@ -514,13 +516,7 @@ const InscripcionAdmisionDetallePage = () => {
       return
     }
 
-    const shouldContinue = window.confirm(
-      '¿Deseas calcular puntajes y finalizar esta inscripción? Esta acción bloqueará/confirmará el proceso.',
-    )
-    if (!shouldContinue) {
-      return
-    }
-
+    setIsFinalizeDialogOpen(false)
     setFinalizing(true)
     setFinalizeError(null)
     setFinalizeSuccess(null)
@@ -549,6 +545,30 @@ const InscripcionAdmisionDetallePage = () => {
     parsedInscripcionId,
     reloadInscripcionDetalle,
   ])
+
+  const closeFinalizeDialog = useCallback(() => {
+    if (finalizing) {
+      return
+    }
+
+    setIsFinalizeDialogOpen(false)
+    window.requestAnimationFrame(() => finalizeButtonRef.current?.focus())
+  }, [finalizing])
+
+  useEffect(() => {
+    if (!isFinalizeDialogOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeFinalizeDialog()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [closeFinalizeDialog, isFinalizeDialogOpen])
 
   const sectionAvailability = useMemo<Record<InscripcionSectionKey, boolean>>(
     () => ({
@@ -777,9 +797,10 @@ const InscripcionAdmisionDetallePage = () => {
               Finaliza la evaluación y calcula puntajes finales.
             </p>
             <button
+              ref={finalizeButtonRef}
               type="button"
               className="inscripcion-detalle__finalize-button"
-              onClick={() => void handleFinalizarInscripcion()}
+              onClick={() => setIsFinalizeDialogOpen(true)}
               disabled={finalizing || evaluacionStatus !== 'STARTED'}
               title={
                 evaluacionStatus !== 'STARTED'
@@ -807,6 +828,58 @@ const InscripcionAdmisionDetallePage = () => {
               </p>
             ) : null}
           </section>
+        ) : null}
+
+        {isFinalizeDialogOpen ? (
+          <div
+            className="inscripcion-detalle__dialog-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeFinalizeDialog()
+              }
+            }}
+          >
+            <section
+              className="inscripcion-detalle__dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="finalize-dialog-title"
+              aria-describedby="finalize-dialog-description"
+            >
+              <div className="inscripcion-detalle__dialog-heading">
+                <span className="inscripcion-detalle__dialog-mark" aria-hidden="true">✓</span>
+                <div>
+                  <h2 id="finalize-dialog-title">Finalizar evaluación</h2>
+                  <p id="finalize-dialog-description">
+                    Se calcularán los puntajes finales de {nombreAspirante} y la evaluación quedará cerrada para edición.
+                  </p>
+                </div>
+              </div>
+              <p className="inscripcion-detalle__dialog-note">
+                Confirma únicamente cuando todas las calificaciones y observaciones estén completas.
+              </p>
+              <div className="inscripcion-detalle__dialog-actions">
+                <button
+                  type="button"
+                  className="inscripcion-detalle__dialog-button inscripcion-detalle__dialog-button--secondary"
+                  disabled={finalizing}
+                  onClick={closeFinalizeDialog}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="inscripcion-detalle__dialog-button inscripcion-detalle__dialog-button--primary"
+                  disabled={finalizing}
+                  autoFocus
+                  onClick={() => void handleFinalizarInscripcion()}
+                >
+                  {finalizing ? 'Finalizando…' : 'Calcular y finalizar'}
+                </button>
+              </div>
+            </section>
+          </div>
         ) : null}
       </section>
     </ModuleLayout>

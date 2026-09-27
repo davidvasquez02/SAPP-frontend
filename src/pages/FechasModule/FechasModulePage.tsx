@@ -7,6 +7,7 @@ import {
 } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { CreateConvocatoriaModal } from "../../modules/admisiones/components/CreateConvocatoriaModal";
+import CloseConvocatoriaDialog from "../../modules/admisiones/components/CloseConvocatoriaDialog";
 import { EditConvocatoriaFechasModal } from "../../modules/admisiones/components/EditConvocatoriaFechasModal";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import { getPeriodosAcademicosWithFechas } from "../../modules/configFechas/api/periodoAcademicoService";
@@ -75,6 +76,7 @@ const FechasModulePage = () => {
   const [vigenteFilter, setVigenteFilter] = useState<VigenteFilter>("TODOS");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingConvocatoria, setEditingConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null);
+  const [closingConvocatoria, setClosingConvocatoria] = useState<ConvocatoriaAdmisionDto | null>(null);
   const [closingConvocatoriaId, setClosingConvocatoriaId] = useState<number | null>(null);
   const [selectedProgramaId, setSelectedProgramaId] = useState<number | null>(null);
   const programaTabRefs = useRef(new Map<number, HTMLButtonElement>());
@@ -181,22 +183,27 @@ const FechasModulePage = () => {
     });
   }, [sections]);
 
-  const handleCloseConvocatoria = useCallback(async (convocatoria: ConvocatoriaAdmisionDto) => {
-    if (closingConvocatoriaId !== null) return;
-    if (!window.confirm(`¿Cerrar convocatoria ${convocatoria.periodo} - ${convocatoria.programa}?`)) return;
-    setClosingConvocatoriaId(convocatoria.id);
+  const handleConfirmCloseConvocatoria = useCallback(async () => {
+    if (!closingConvocatoria || closingConvocatoriaId !== null) return;
+    setClosingConvocatoriaId(closingConvocatoria.id);
     setError(null);
     setFeedback(null);
     try {
-      await cerrarConvocatoriaAdmision(convocatoria.id);
+      await cerrarConvocatoriaAdmision(closingConvocatoria.id);
       await loadData(true);
       setFeedback("Convocatoria cerrada correctamente.");
+      setClosingConvocatoria(null);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No fue posible cerrar la convocatoria.");
+      setClosingConvocatoria(null);
     } finally {
       setClosingConvocatoriaId(null);
     }
-  }, [closingConvocatoriaId, loadData]);
+  }, [closingConvocatoria, closingConvocatoriaId, loadData]);
+
+  const handleCancelCloseConvocatoria = useCallback(() => {
+    if (closingConvocatoriaId === null) setClosingConvocatoria(null);
+  }, [closingConvocatoriaId]);
 
   const selectPrograma = (programaId: number, focus = false) => {
     setSelectedProgramaId(programaId);
@@ -293,7 +300,7 @@ const FechasModulePage = () => {
                     <td data-label="Fecha de fin" className="config-module__convocatoria-end">{formatFecha(item.fechaFin)}</td>
                     <td data-label="Estado" className="config-module__convocatoria-status"><span className={`config-module__badge config-module__badge--${vigente ? "vigente" : "cerrada"}`}>{vigente ? "VIGENTE" : "CERRADA"}</span></td>
                     <td data-label="Observaciones" className="config-module__convocatoria-notes"><span className="config-module__observaciones">{item.observaciones?.trim() || "—"}</span></td>
-                    <td data-label="Acciones" className="config-module__convocatoria-actions"><div className="config-module__row-actions"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/admisiones/convocatoria/${item.id}`, { state: { programaId: item.programaId, programaNombre: section.programaLabel, periodoLabel: item.periodo, periodoAcademico: item.periodo, cupos: item.cupos } })}>Ver inscripciones</button><button type="button" className="config-module__edit-button" onClick={() => setEditingConvocatoria(item)} disabled={actionsDisabled}>Editar</button>{vigente ? <button type="button" onClick={() => void handleCloseConvocatoria(item)} disabled={actionsDisabled}>{closingConvocatoriaId === item.id ? "Cerrando..." : "Cerrar"}</button> : null}</div></td>
+                    <td data-label="Acciones" className="config-module__convocatoria-actions"><div className="config-module__row-actions"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/admisiones/convocatoria/${item.id}`, { state: { programaId: item.programaId, programaNombre: section.programaLabel, periodoLabel: item.periodo, periodoAcademico: item.periodo, cupos: item.cupos } })}>Ver inscripciones</button><button type="button" className="config-module__edit-button" onClick={() => setEditingConvocatoria(item)} disabled={actionsDisabled}>Editar</button>{vigente ? <button type="button" onClick={() => setClosingConvocatoria(item)} disabled={actionsDisabled}>{closingConvocatoriaId === item.id ? "Cerrando..." : "Cerrar"}</button> : null}</div></td>
                   </tr>; })}</tbody></table></div> : null}
                 {section.items.length > 0 ? <div className="config-module__pagination"><button type="button" disabled={page === 1} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page - 1 }))}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setProgramPages((current) => ({ ...current, [section.programaId]: page + 1 }))}>Siguiente</button></div> : null}
               </section>;
@@ -304,6 +311,7 @@ const FechasModulePage = () => {
 
       <CreateConvocatoriaModal open={isCreateModalOpen} convocatorias={convocatorias} onClose={() => setIsCreateModalOpen(false)} onRefreshConvocatorias={() => loadData(true)} onSuccess={setFeedback} />
       <EditConvocatoriaFechasModal convocatoria={editingConvocatoria} onClose={() => setEditingConvocatoria(null)} onSuccess={async (message) => { setEditingConvocatoria(null); await loadData(true); setFeedback(message); }} />
+      <CloseConvocatoriaDialog convocatoria={closingConvocatoria} busy={closingConvocatoriaId !== null} onCancel={handleCancelCloseConvocatoria} onConfirm={() => void handleConfirmCloseConvocatoria()} />
     </ModuleLayout>
   );
 };
