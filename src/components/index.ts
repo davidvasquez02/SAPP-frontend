@@ -1,5 +1,6 @@
 export { BackButton } from './BackButton/BackButton'
 export { DocumentUploadCard } from './DocumentUploadCard'
+export { FileSelectButton } from './FileSelectButton/FileSelectButton'
 export { Layout } from './Layout'
 export { ModuleLayout } from './ModuleLayout'
 export { Sidebar } from './Sidebar'

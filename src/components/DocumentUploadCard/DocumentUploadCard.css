@@ -118,11 +118,6 @@
   font-size: 0.85rem;
 }
 
-.document-upload-card__file:has(input:disabled) {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
 .document-upload-card__selected-files {
   flex-basis: 100%;
   display: grid;
@@ -150,23 +145,6 @@
   color: var(--primary);
   cursor: pointer;
   font-weight: 600;
-}
-
-.document-upload-card__file {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  border: 1px dashed var(--outline);
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--surface), var(--outline) 10%);
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.document-upload-card__file input {
-  display: none;
 }
 
 .document-upload-card__button {

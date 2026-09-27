@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
 import { openBase64InNewTab } from '../../shared/files/base64FileUtils'
+import { FileSelectButton } from '../FileSelectButton/FileSelectButton'
 import './DocumentUploadCard.css'
 
 interface DocumentUploadCardProps {
@@ -164,18 +165,16 @@ export const DocumentUploadCard = ({
             Puedes adjuntar máximo {maxFiles} documentos. {selectedFiles.length} de {maxFiles} seleccionados.
           </p>
         ) : null}
-        <label className="document-upload-card__file">
-          <input
-            id={inputId}
-            type="file"
-            accept={fileAccept}
-            multiple={multiple}
-            onChange={handleChange}
-            disabled={disabled || reachedFileLimit}
-            aria-describedby={multiple && maxFiles != null ? `${inputId}-limit` : undefined}
-          />
-          <span>{reachedFileLimit ? 'Límite alcanzado' : multiple ? 'Seleccionar archivos' : selectButtonLabel}</span>
-        </label>
+        <FileSelectButton
+          id={inputId}
+          accept={fileAccept}
+          multiple={multiple}
+          onChange={handleChange}
+          disabled={disabled || reachedFileLimit}
+          aria-describedby={multiple && maxFiles != null ? `${inputId}-limit` : undefined}
+        >
+          {reachedFileLimit ? 'Límite alcanzado' : multiple ? 'Seleccionar archivos' : selectButtonLabel}
+        </FileSelectButton>
         {multiple && selectedFiles.length > 0 ? (
           <ul className="document-upload-card__selected-files" aria-label="Archivos seleccionados">
             {selectedFiles.map((file, index) => (

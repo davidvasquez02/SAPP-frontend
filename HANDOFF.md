@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — selector documental compartido para actas
+
+## Estado, decisión y salida esperada
+
+- La sección **Archivo del acta (PDF, máximo 15 MB)** de `ActasPage` usa `FileSelectButton`, igual que `DocumentUploadCard`, en lugar del `input[type=file]` nativo visible. Sin archivo presenta **Seleccionar archivo** y **Sin archivo seleccionado**; después de elegirlo presenta **Reemplazar archivo** y `{nombre} · {tamaño}`.
+- El componente común conserva un `input` accesible visualmente oculto, foco visible y estado deshabilitado. Sus colores provienen exclusivamente de tokens semánticos (`--surface`, `--outline`, `--primary`, `--text-primary`), por lo que funciona en temas claro y oscuro.
+- Se preservan `accept="application/pdf,.pdf"`, la validación PDF y máximo 15 MB en `handleFile`, y el payload `CrearActaRequest` con base64, MIME, tamaño y checksum. No hay cambios de API, DTO, permisos, schemas, seeds, datasets, variables o dependencias.
+
+## Artefactos, entorno y continuidad
+
+- Implementación compartida: `src/components/FileSelectButton/FileSelectButton.tsx` y `.css`; integración documental: `src/components/DocumentUploadCard/DocumentUploadCard.tsx`; integración de actas: `src/pages/Actas/ActasPage.tsx` y `.css`; regresión: `tests/fileUploadStyleConsistency.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Resultados locales: regresión dirigida 2/2 PASS; suite Node 107/107 PASS; ESLint focalizado PASS; build PASS (317 módulos, CSS 273.55 kB, JS 740.34 kB); `git diff --check` PASS. Avisos no bloqueantes: npm reporta la configuración heredada `http-proxy` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso externo: revisar el formulario autenticado de actas y las tarjetas de solicitudes en claro/oscuro, teclado y móvil/escritorio. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere backend y sesión institucionales, sin credenciales o seed local reproducible.
+
+---
+
 # Handoff 2026-09-26 — bloqueo de sustentación en ajustes y modal de retiro
 
 ## Estado actual y decisiones
