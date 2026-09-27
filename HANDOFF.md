@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — error de eliminación dentro del modal de actas
+
+## Estado actual, decisión y salida esperada
+
+- `ActasPage` mantiene `deleteError` separado del error general. Si `DELETE /sapp/actas/{id}` rechaza la operación —por ejemplo, porque solicitudes académicas todavía referencian el acta— conserva abierto el diálogo **Eliminar acta** y presenta exactamente el `Error.message` recibido debajo del nombre y código.
+- El mensaje usa `role="alert"` y `.actas-delete-modal__error`; su borde, superficie y texto derivan de `--danger`, y `overflow-wrap: anywhere` contiene respuestas extensas. Funciona con los temas claro y oscuro. Al pulsar **Eliminar** en una fila se limpia el error de un intento anterior; un éxito continúa cerrando el modal, retirando el acta y mostrando la confirmación global temporal.
+- No cambiaron el contrato, DTO, payload, rutas, autorización ni persistencia. Entrada: `DELETE /api/sapp/actas/{actaId}` sin body. Salida exitosa: se elimina la fila local; salida fallida: el modal queda abierto con el mensaje del backend y permite reintentar o cancelar.
+
+## Artefactos, entorno, pruebas y continuidad
+
+- Implementación: `src/pages/Actas/ActasPage.tsx` y `src/pages/Actas/ActasPage.css`. Regresión: `tests/actasDeleteModal.test.ts`. Documentación: `README.md` y este `HANDOFF.md`. No se agregaron paquetes, variables, schemas, seeds, datasets ni artefactos binarios.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend no usa venv, Conda ni Poetry: reutilizar el árbol existente y no crear otro entorno npm.
+- Comandos y resultados: `node --test --test-isolation=none tests/actasDeleteModal.test.ts` PASS (2/2); `npx eslint src/pages/Actas/ActasPage.tsx tests/actasDeleteModal.test.ts` PASS; `npm run build` PASS (317 módulos, CSS 274.77 kB, JS 741.67 kB); `node --test --test-isolation=none tests/*.test.ts` PASS (111/111); `git diff --check` PASS. Avisos no bloqueantes: npm informa la configuración heredada `http-proxy` y Vite advierte que el chunk JavaScript supera 500 kB.
+- Próximo paso externo: validar con backend y sesión institucionales un acta referenciada por una solicitud, el reintento/cancelación, teclado, móvil y ambos temas. No se obtuvo captura nueva: el contenedor no incluye Chromium, Chrome, Firefox ni credenciales/seed para la ruta protegida.
+
+---
+
 # Handoff 2026-09-27 — histórico unificado de solicitudes académicas
 
 ## Estado, contrato y salida esperada
