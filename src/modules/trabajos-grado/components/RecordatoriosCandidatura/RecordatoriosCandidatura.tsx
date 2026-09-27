@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { enviarRecordatorios } from '../../evaluacion/api'
+import { enviarRecordatoriosCandidatura } from '../../evaluacion/api'
 import './RecordatoriosCandidatura.css'
-
-const SOLICITUD_RECORDATORIOS_CANDIDATURA_ID = 1
 
 const RecordatoriosCandidatura = () => {
   const [confirmando, setConfirmando] = useState(false)
@@ -20,7 +18,7 @@ const RecordatoriosCandidatura = () => {
     setMensaje(null)
 
     try {
-      const enviados = await enviarRecordatorios(SOLICITUD_RECORDATORIOS_CANDIDATURA_ID)
+      const enviados = await enviarRecordatoriosCandidatura()
       setMensaje(
         enviados === 1
           ? 'Se envió 1 recordatorio de examen de candidatura doctoral.'
