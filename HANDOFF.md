@@ -1,19 +1,3 @@
-# Handoff 2026-09-27 — correo automático de inicio de matrícula
-
-## Estado, decisión y salida esperada
-
-- `MatriculaPage.tsx` ya no monta la tarjeta **Notificación de inicio de matrícula**, no consulta `GET /sapp/periodoAcademicoFecha/vigente` para esa acción y no ofrece el POST manual `/sapp/matriculaAcademica/notificarAperturaMatricula`. El DTO y ambos helpers exclusivos de ese flujo se retiraron de `matriculaAcademicaService.ts`.
-- `ConfigFechasAdmisionesPage.tsx` muestra únicamente al crear un período la nota: **El correo de recordatorio de inicio del proceso de matrícula se enviará automáticamente cuando comience la fecha de matrículas indicada.** El aviso queda debajo de las fechas de matrícula, usa tokens semánticos y ocupa una o dos columnas según el viewport.
-- La responsabilidad de ejecutar el envío automático permanece en el backend al alcanzar la fecha configurada. El frontend solo comunica esa regla; no programa temporizadores ni dispara el correo al guardar. La creación y actualización conservan sus payloads actuales y `TIPO_TRAMITE_ADMISIONES`; no cambiaron permisos, rutas de fechas, schemas, paquetes, variables, seeds ni datasets.
-
-## Paths, entorno, pruebas y continuidad
-
-- Implementación: `src/pages/Matricula/MatriculaPage.{tsx,css}`, `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.{tsx,css}` y `src/modules/matricula/services/matriculaAcademicaService.ts`. Regresión: `tests/matriculaInicioAutomatico.test.ts`.
-- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`.
-- Verificación local: pruebas dirigidas 7/7 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 282.46 kB; JS 747.39 kB). El aviso de Vite por el chunk JavaScript mayor de 500 kB no bloquea. Pendiente externo: confirmar con backend y sesión institucional que el proceso programado envía el correo exactamente al inicio de la fecha de matrículas; no hay credenciales, backend ni seed local reproducible.
-
----
-
 # Handoff 2026-09-27 — búsqueda manual de estudiantes por nombre
 
 ## Estado, decisión y contrato
@@ -2783,9 +2767,31 @@
 
 ---
 
-# Update 2026-09-09 — Correo de apertura de matrícula (supersedido el 2026-09-27)
+# Update 2026-09-09 — Correo de apertura de matrícula
 
-- Esta entrada se conserva solo como antecedente. La tarjeta, la consulta de vigencia, el DTO y el POST manual fueron retirados el 2026-09-27. El estado vigente está documentado al inicio de este archivo: el backend envía el correo automáticamente y el formulario de creación de períodos informa esa regla.
+## Estado actual y decisión
+- En la vista de matrícula de `COORDINACION` y `ADMIN` se agregó una tarjeta **Notificación de inicio de matrícula**. Al montar, consulta las fechas vigentes y solo habilita **Enviar correo de inicio** cuando encuentra un elemento de tipo `MATRICULA`.
+- La acción pide confirmación incluyendo `periodo.anioPeriodo`, se bloquea durante el envío y presenta mensajes de éxito o error accesibles. Si no existe fecha vigente, permanece deshabilitada y explica la causa.
+- Se usan tokens semánticos del tema y un layout adaptable; no se agregaron colores fijos, paquetes, variables de entorno, schemas, seeds ni datasets.
+
+## Paths, contratos y salida esperada
+- Servicio y DTO: `src/modules/matricula/services/matriculaAcademicaService.ts`; orquestación: `src/pages/Matricula/MatriculaPage.tsx`; presentación: `src/pages/Matricula/MatriculaPage.css`.
+- Verificación: `GET /sapp/periodoAcademicoFecha/vigente` -> `ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>`. El frontend selecciona el primer registro cuyo `tipoTramite.nombre`, normalizado, sea `MATRICULA`; el ejemplo vigente usa `periodo.id=2`, `anioPeriodo="2026 - 2"`, `fechaInicio="2026-07-18"` y `fechaFin="2026-12-18"`.
+- Envío: `POST /sapp/matriculaAcademica/notificarAperturaMatricula?periodoId={periodo.id}`, sin body. Acepta envelope `ApiResponse<unknown>` o HTTP 204; se muestra `message` cuando está disponible.
+- Con `VITE_API_URL=/api/sapp`, el cliente normaliza esas rutas a `/api/sapp/periodoAcademicoFecha/vigente` y `/api/sapp/matriculaAcademica/notificarAperturaMatricula?periodoId={id}`, sin duplicar `sapp`.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional de coordinación que el endpoint vigente retorna la fecha de matrícula y que `periodo.id` es el identificador esperado por la notificación.
+2. Confirmar con backend la audiencia del correo y su idempotencia ante un segundo envío; la interfaz evita dobles clics concurrentes, pero permite una nueva ejecución posterior.
+3. Revisar visualmente la tarjeta en escritorio/móvil y temas claro/oscuro con datos reales.
+
+## Entorno y verificaciones
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Versiones exactas y comandos de arranque permanecen documentados en `README.md`; no hay script `test` configurado.
+- `npx eslint src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts` (2026-09-09): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `git diff --check` (2026-09-09): PASS antes de actualizar esta bitácora.
+- `npm run build` (2026-09-09): PASS; TypeScript y rolldown-vite transformaron 253 módulos y generaron `dist/assets/index-CCv-vI1Q.css` e `index-CatGG6Ho.js`. Persiste el warning no bloqueante por el chunk JavaScript de 530.68 kB.
+- `npm run lint` (2026-09-09): FAIL por los 9 errores y 1 warning preexistentes en servicios API, admisiones, documentos y solicitudes; el lint focalizado de los dos archivos TypeScript modificados sí pasa.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`; además, la ruta protegida y su estado vigente requieren sesión institucional y backend.
 
 ---
 

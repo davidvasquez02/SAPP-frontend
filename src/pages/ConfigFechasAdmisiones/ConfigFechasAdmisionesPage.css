@@ -40,16 +40,6 @@
   grid-column: span 2;
 }
 
-.config-fechas-admisiones__notice {
-  grid-column: span 2;
-  margin: 0;
-  border-left: 4px solid var(--primary);
-  border-radius: 0 12px 12px 0;
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-  color: var(--text-secondary);
-  padding: 0.75rem 0.9rem;
-}
-
 .config-fechas-admisiones__field input,
 .config-fechas-admisiones__field select,
 .config-fechas-admisiones__field textarea {
@@ -150,10 +140,6 @@
   }
 
   .config-fechas-admisiones__field--full {
-    grid-column: span 1;
-  }
-
-  .config-fechas-admisiones__notice {
     grid-column: span 1;
   }
 }

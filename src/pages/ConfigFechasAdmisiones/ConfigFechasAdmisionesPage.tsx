@@ -205,12 +205,6 @@ const ConfigFechasAdmisionesPage = () => {
               />
             </label>
 
-            {form.periodoId === null ? (
-              <p className="config-fechas-admisiones__notice" role="note">
-                El correo de recordatorio de inicio del proceso de matrícula se enviará automáticamente cuando comience la fecha de matrículas indicada.
-              </p>
-            ) : null}
-
             <label className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
               Descripción
               <textarea rows={3} value={form.descripcion} onChange={(event) => setForm((c) => ({ ...c, descripcion: event.target.value }))} />
