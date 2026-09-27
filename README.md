@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Reversión 2026-09-27 — tipo visible en matrícula financiera
+
+- Se revirtió el cambio `436a87c` (`fix: corregir tipo visible en matrícula financiera`): **VIGENTE** vuelve a mostrarse como **Vigente** y **NUEVO** como **Nuevo**, sin intercambiar el significado entregado por el backend.
+- El tablero y el detalle unitario presentan directamente `tipoEstudiante`; el alta manual mantiene alineados el valor y la etiqueta de cada opción. También se retiró el traductor `etiquetaTipoEstudiante` y se restauró la ayuda anterior del detalle.
+- No cambiaron endpoints, payloads, permisos ni dependencias. La resolución conservó los ajustes posteriores del cierre del proceso, fechas de pago, motivo de exclusión, búsqueda manual y períodos disponibles. Regresión: `tests/matriculaFinancieraFlow.test.ts`.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación local: regresiones financieras dirigidas 35/35, suite Node 128/128, ESLint focalizado y build de producción PASS (320 módulos; CSS 283.17 kB; JS 749.52 kB). Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
 ## Corrección 2026-09-27 — períodos disponibles para matrícula financiera
 
 - **Matrícula financiera > Crear proceso** obtiene ahora el selector desde `GET /sapp/liquidacionMatricula/procesos/periodosDisponibles`, que entrega únicamente períodos habilitados para crear una liquidación. Se retiró de este flujo la consulta general `GET /sapp/periodoAcademico`.
@@ -31,31 +39,6 @@
   Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas:
   `node --test --test-isolation=none tests/*.test.ts`; producción:
   `npm run build` y `npm run preview`. No existen seed, backend ni credenciales
-  locales para reproducir la ruta protegida.
-
-## Corrección 2026-09-27 — tipo de estudiante en matrícula financiera
-
-- El tablero y el detalle de liquidación presentan **VIGENTE** para quien ya
-  cuenta con matrículas previas y **NUEVO** para quien ingresa a primer
-  semestre. Esto corrige casos como el estudiante 2198160, cuya matrícula de
-  2026-1 debe impedir que se muestre como nuevo en el proceso 2026-2.
-- El servicio financiero conserva por compatibilidad su convención histórica
-  inversa (`NUEVO` identifica segundo semestre o posterior y `VIGENTE` el
-  ingreso inicial). La traducción se centraliza en
-  `etiquetaTipoEstudiante`; el alta manual muestra la denominación académica,
-  pero envía los valores esperados por el contrato existente. No cambiaron
-  endpoints, DTO, cálculos, schemas, dependencias, variables, seeds ni datasets.
-- SAPP es la SPA institucional EISI–UIS para admisiones, matrículas,
-  solicitudes, créditos, actas, informes y proyectos de grado. Las rutas y
-  guards viven en `src/app`, las vistas en `src/pages`, los contratos y reglas
-  de cliente en `src/modules` y los elementos reutilizables en `src/components`;
-  Spring Boot/PostgreSQL sigue siendo la fuente de datos y reglas académicas.
-- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3,
-  React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint
-  9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv,
-  Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas:
-  `node --test --test-isolation=none tests/*.test.ts`; producción:
-  `npm run build` y `npm run preview`. No existe seed, backend ni credenciales
   locales para reproducir la ruta protegida.
 
 ## Mejora 2026-09-27 — envío manual de recordatorios de candidatura doctoral

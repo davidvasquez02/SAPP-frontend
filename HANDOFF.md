@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — reversión del tipo visible en matrícula financiera
+
+## Estado, decisión y salida esperada
+
+- Se revirtió el commit `436a87c` sin descartar los cambios posteriores. La convención vigente vuelve a ser literal: `VIGENTE` se presenta como **Vigente** y `NUEVO` como **Nuevo** en el selector de alta manual, el tablero y el detalle unitario.
+- Se eliminó `etiquetaTipoEstudiante` de `src/modules/matricula-financiera/rules.ts`; las vistas usan `row.tipoEstudiante` y `fila.tipoEstudiante`. El texto de ayuda restaurado indica que `VIGENTE` corresponde al ingreso a primer semestre y `NUEVO` a segundo semestre o uno posterior.
+- Salida esperada: una fila recibida como `{ tipoEstudiante: "VIGENTE" }` muestra `VIGENTE`; una recibida como `{ tipoEstudiante: "NUEVO" }` muestra `NUEVO`. El formulario envía el mismo valor que exhibe su opción, sin traducción cruzada.
+
+## Paths, continuidad y entorno
+
+- Archivos principales: `src/modules/matricula-financiera/rules.ts`, `src/pages/MatriculaFinanciera/AgregarEstudiante.tsx`, `ProcesoLiquidacionPage.tsx` y `LiquidacionDetallePage.tsx`. Regresión: `tests/matriculaFinancieraFlow.test.ts` y `tests/matriculaFinancieraRules.test.ts`.
+- Al resolver la reversión se conservaron los cambios posteriores: bloqueo del cierre con filas pendientes/respondidas, texto completo del motivo de exclusión, fecha límite de pago, consulta de períodos disponibles y búsqueda manual de estudiantes.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`. No hay seeds, backend ni credenciales locales para validar la ruta protegida.
+- Verificación local: regresiones financieras 35/35 PASS, suite Node 128/128 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 283.17 kB; JS 749.52 kB). Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+
+---
+
 # Handoff 2026-09-27 — visualización del motivo de rechazo
 
 ## Estado, contrato y salida esperada
@@ -535,56 +552,6 @@
 - Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
 - Verificación local: ESLint focalizado PASS; suite Node 67/67 PASS; build PASS (308 módulos; CSS 260.89 kB; JS 732.53 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
 - Siguiente paso externo: validar el endpoint y la ruta protegida con sesiones reales de coordinación y estudiante, incluyendo vacío/error, temas claro/oscuro y ancho móvil. No se produjo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la vista depende de autenticación/backend institucionales.
-
----
-
-# Handoff 2026-09-27 — tipo de estudiante en matrícula financiera
-
-## Estado, causa verificada, contrato y salida esperada
-
-- Se verificó que la interfaz imprimía directamente `tipoEstudiante` y que el
-  contrato financiero histórico usa una semántica inversa a la denominación
-  académica: el valor técnico `NUEVO` representa a quien cursa segundo semestre
-  o uno posterior, mientras `VIGENTE` representa el ingreso inicial. Por eso un
-  estudiante con matrícula previa, como el código 2198160 en 2026-1, aparecía
-  como **NUEVO** en 2026-2 aunque el backend lo había clasificado conforme a su
-  convención interna.
-- `etiquetaTipoEstudiante` traduce en un único lugar `NUEVO -> VIGENTE` y
-  `VIGENTE -> NUEVO`. El listado y el detalle consumen esa función. La ayuda
-  ahora explica que **NUEVO** es primer semestre y **VIGENTE** significa que
-  existen matrículas previas. El selector de alta manual muestra esas mismas
-  etiquetas, manteniendo como valores del `option` los enums que exige el API.
-- Salida esperada: Alexander Martinez Mendez (2198160) debe verse como
-  **VIGENTE** en el proceso 2026-2. El cambio no infiere historial ni altera
-  cálculos en el navegador; conserva preguntas, payloads y reglas del servidor.
-  No cambiaron endpoints, DTO, rutas, permisos, schemas, dependencias,
-  variables, seeds ni datasets.
-
-## Paths, entorno, pruebas y continuidad
-
-- Implementación: `src/modules/matricula-financiera/rules.ts`,
-  `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`,
-  `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx` y
-  `src/pages/MatriculaFinanciera/AgregarEstudiante.tsx`. Regresión:
-  `tests/matriculaFinancieraRules.test.ts`. La fixture aislada en
-  `tests/fixtures/matricula-financiera/` no es un seed ni reproduce la ruta
-  autenticada.
-- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`;
-  Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0,
-  TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda,
-  Poetry ni otro árbol npm. Comandos: `npm run dev`,
-  `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y
-  `npm run preview`.
-- Resultados locales: pruebas focalizadas 23/23 PASS, suite Node 118/118 PASS,
-  ESLint focalizado PASS, build PASS (319 módulos; CSS 277.74 kB; JS 745.94
-  kB) y `git diff --check` PASS. npm informa `Unknown env config
-  "http-proxy"` y Vite conserva el aviso no bloqueante por el chunk JavaScript
-  mayor de 500 kB.
-- Reto externo: validar con backend y sesión institucional que 2198160 se vea
-  como **VIGENTE** en lista y detalle, y que el alta manual conserve el cálculo
-  esperado para ambos tipos. No existen backend, credenciales ni seed local;
-  revisar también si el backend puede normalizar el enum en una versión futura,
-  en cuyo caso debe retirarse conjuntamente esta traducción de compatibilidad.
 
 ---
 
