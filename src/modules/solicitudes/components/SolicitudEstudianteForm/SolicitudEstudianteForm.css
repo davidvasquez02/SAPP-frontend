@@ -136,6 +136,7 @@
 
 .solicitud-estudiante-form__source-toggle {
   justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .solicitud-estudiante-form__source-toggle button.is-active {
@@ -165,14 +166,17 @@
   gap: 0.55rem;
 }
 
+.solicitud-estudiante-form__origen select,
+.solicitud-estudiante-form__destino select,
+.solicitud-estudiante-form__manual-origin input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .solicitud-estudiante-form__origen legend,
 .solicitud-estudiante-form__destino label {
   font-weight: 600;
-}
-
-.solicitud-estudiante-form__source-toggle,
-.solicitud-estudiante-form__homologacion-alignment {
-  min-height: 2.25rem;
 }
 
 .solicitud-estudiante-form__add-homologacion {
@@ -270,10 +274,6 @@
 
   .solicitud-estudiante-form__source-toggle {
     align-items: stretch;
-  }
-
-  .solicitud-estudiante-form__homologacion-alignment {
-    display: none;
   }
 
   .solicitud-estudiante-form__source-toggle button {
