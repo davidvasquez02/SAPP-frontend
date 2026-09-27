@@ -1,3 +1,11 @@
+# Handoff 2026-09-27 — evaluación adaptable y rueda en notas
+
+- `src/modules/admisiones/components/EvaluacionEtapaSection/`: el CSS usa el contenedor `evaluacion` y tarjetas hasta 980 px de ancho disponible, con observaciones completas. El input numérico compartido retira el foco mediante `onWheel` para evitar incrementos accidentales conservando validación y desplazamiento de página.
+- `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.css`: paneles con `min-width: 0` y barra de herramientas del PDF flexible.
+- ESLint focalizado y `npm run build` PASS (323 módulos; CSS 287.03 kB; JS 753.32 kB); aviso conocido de chunk grande. No se realizó prueba visual interactiva: validar con sesión institucional notas enfocadas y scroll, observaciones completas junto al PDF y móvil. Reutilizar el entorno Node/npm y `node_modules` ya documentados; sin paquetes, variables ni contratos nuevos.
+
+---
+
 # Handoff 2026-09-27 — visibilidad de Admisiones según asignación docente
 
 ## Estado, decisión y salida esperada

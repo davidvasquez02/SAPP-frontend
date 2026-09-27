@@ -3,6 +3,8 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
+  container: evaluacion / inline-size;
 }
 
 .evaluacion-etapa-section__title {
@@ -165,14 +167,14 @@
   justify-content: flex-end;
 }
 
-@media (max-width: 768px) {
-  .evaluacion-etapa-section__title { display: none; }
+@container evaluacion (max-width: 980px) {
   .evaluacion-etapa-section__table-wrapper { overflow: visible; border: 0; background: transparent; }
   .evaluacion-etapa-section__table,
   .evaluacion-etapa-section__table tbody { display: grid; min-width: 0; gap: .75rem; }
   .evaluacion-etapa-section__table thead { display: none; }
   .evaluacion-etapa-section__table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, .45fr); gap: .65rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 35%); border-radius: 14px; background: var(--surface); }
   .evaluacion-etapa-section__table td { display: block; padding: 0; border: 0; min-width: 0; text-align: left; }
+  .evaluacion-etapa-section__table td { overflow-wrap: anywhere; }
   .evaluacion-etapa-section__table td::before { content: attr(data-label); display: block; margin-bottom: .2rem; color: var(--text-secondary); font-size: .8rem; font-weight: 700; }
   .evaluacion-etapa-section__table .evaluacion-etapa-section__aspecto,
   .evaluacion-etapa-section__table td[data-label="Consideraciones"],
@@ -185,7 +187,7 @@
   .evaluacion-etapa-section__nota-input { min-width: 0; text-align: left; }
   .evaluacion-etapa-section__nota-field label { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; }
   .evaluacion-etapa-section__input,
-  .evaluacion-etapa-section__textarea { font-size: 16px; min-height: 44px; }
+  .evaluacion-etapa-section__textarea { box-sizing: border-box; max-width: 100%; font-size: 16px; min-height: 44px; }
   .evaluacion-etapa-section__mobile-label { display: block; margin-bottom: .35rem; }
   .evaluacion-etapa-section__footer,
   .evaluacion-etapa-section__button { width: 100%; min-height: 44px; }

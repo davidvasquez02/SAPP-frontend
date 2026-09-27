@@ -169,6 +169,7 @@ const EvaluacionEtapaSection = ({
                           aria-describedby={errorMessage ? errorId : undefined}
                           value={puntajeValue}
                           disabled={isReadOnly}
+                          onWheel={(event) => event.currentTarget.blur()}
                           onChange={(event) => {
                             const value = event.target.value
                             const parsed = value === '' ? undefined : Number(value)

@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — disposición y calificaciones de admisión
+
+- La evaluación cambia de tabla a tarjetas cuando su panel tiene 980 px o menos, incluso al compartir pantalla con el PDF. Las observaciones ocupan una fila completa y los criterios se pueden desplegar. El encabezado del visor admite varias filas.
+- La rueda del mouse retira el foco de las notas para permitir desplazar la página sin cambiar el puntaje; se conservan el tipo numérico, límites y decimales en hoja de vida, examen y entrevista.
+- Verificación: ESLint focalizado y build de producción PASS; continúa el aviso de tamaño del chunk. Pendiente validación visual en una sesión institucional. No se añadieron dependencias ni se modificaron contratos.
+
 ## Ajuste 2026-09-27 — Admisiones solo para docentes con convocatoria asignada
 
 - La navegación consulta las convocatorias disponibles para el evaluador mediante el mismo `GET /sapp/convocatoriaAdmision` que alimenta **Mis entrevistas**. Para `DOCENTE_POSGRADOS` y `DIRECTOR` sin perfil administrativo, **Admisiones** permanece oculto durante la comprobación y solo aparece cuando la respuesta contiene al menos una convocatoria asignada.
