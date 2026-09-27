@@ -428,6 +428,56 @@
 
 ---
 
+# Handoff 2026-09-27 — tipo de estudiante en matrícula financiera
+
+## Estado, causa verificada, contrato y salida esperada
+
+- Se verificó que la interfaz imprimía directamente `tipoEstudiante` y que el
+  contrato financiero histórico usa una semántica inversa a la denominación
+  académica: el valor técnico `NUEVO` representa a quien cursa segundo semestre
+  o uno posterior, mientras `VIGENTE` representa el ingreso inicial. Por eso un
+  estudiante con matrícula previa, como el código 2198160 en 2026-1, aparecía
+  como **NUEVO** en 2026-2 aunque el backend lo había clasificado conforme a su
+  convención interna.
+- `etiquetaTipoEstudiante` traduce en un único lugar `NUEVO -> VIGENTE` y
+  `VIGENTE -> NUEVO`. El listado y el detalle consumen esa función. La ayuda
+  ahora explica que **NUEVO** es primer semestre y **VIGENTE** significa que
+  existen matrículas previas. El selector de alta manual muestra esas mismas
+  etiquetas, manteniendo como valores del `option` los enums que exige el API.
+- Salida esperada: Alexander Martinez Mendez (2198160) debe verse como
+  **VIGENTE** en el proceso 2026-2. El cambio no infiere historial ni altera
+  cálculos en el navegador; conserva preguntas, payloads y reglas del servidor.
+  No cambiaron endpoints, DTO, rutas, permisos, schemas, dependencias,
+  variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+
+- Implementación: `src/modules/matricula-financiera/rules.ts`,
+  `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`,
+  `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx` y
+  `src/pages/MatriculaFinanciera/AgregarEstudiante.tsx`. Regresión:
+  `tests/matriculaFinancieraRules.test.ts`. La fixture aislada en
+  `tests/fixtures/matricula-financiera/` no es un seed ni reproduce la ruta
+  autenticada.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`;
+  Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0,
+  TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda,
+  Poetry ni otro árbol npm. Comandos: `npm run dev`,
+  `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y
+  `npm run preview`.
+- Resultados locales: pruebas focalizadas 23/23 PASS, suite Node 118/118 PASS,
+  ESLint focalizado PASS, build PASS (319 módulos; CSS 277.74 kB; JS 745.94
+  kB) y `git diff --check` PASS. npm informa `Unknown env config
+  "http-proxy"` y Vite conserva el aviso no bloqueante por el chunk JavaScript
+  mayor de 500 kB.
+- Reto externo: validar con backend y sesión institucional que 2198160 se vea
+  como **VIGENTE** en lista y detalle, y que el alta manual conserve el cálculo
+  esperado para ambos tipos. No existen backend, credenciales ni seed local;
+  revisar también si el backend puede normalizar el enum en una versión futura,
+  en cuyo caso debe retirarse conjuntamente esta traducción de compatibilidad.
+
+---
+
 # Handoff 2026-09-25 — advertencia antes de convocar estudiantes
 
 ## Estado, decisión, contrato y salida esperada

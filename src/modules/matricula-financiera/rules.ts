@@ -27,6 +27,14 @@ export const etiquetaEstadoLiquidacion = (estado: LiquidacionMatricula['estado']
   PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'Excluida',
 })[estado]
 
+/**
+ * Traduce la clasificación histórica del servicio a la denominación académica
+ * que debe ver el usuario. El contrato financiero usa NUEVO para quienes ya
+ * cursan segundo semestre o uno posterior y VIGENTE para el ingreso inicial.
+ */
+export const etiquetaTipoEstudiante = (tipo: TipoEstudianteLiquidacion): 'NUEVO' | 'VIGENTE' =>
+  tipo === 'NUEVO' ? 'VIGENTE' : 'NUEVO'
+
 /** Convierte una entrada monetaria colombiana a decimal sin redondearla. */
 export function normalizarMoneda(value: string, admiteNegativo: boolean): string | null {
   let clean = value.trim().replace(/\s|\$/g, '')
