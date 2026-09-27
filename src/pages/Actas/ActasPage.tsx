@@ -1,5 +1,5 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { ModuleLayout } from "../../components";
+import { FileSelectButton, ModuleLayout } from "../../components";
 import { crearActa, eliminarActa, getActas, getDocumentoActa } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
@@ -269,7 +269,15 @@ const ActasPage = () => {
             <label><span>Nombre del acta *</span><input value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder={tipoActa === "CONSEJO" ? "Ej. Consejo Académico" : "Ej. Comité Asesor de Posgrados"} required /></label>
             <label><span>Código del acta *</span><div className="actas-form__code"><span>ACTA_{tipoActa}_</span><input value={codigoActa} onChange={(event) => setCodigoActa(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))} placeholder="001" required /><span>-</span><input aria-label="Año del acta" inputMode="numeric" maxLength={4} value={anio} onChange={(event) => setAnio(event.target.value.replace(/\D/g, ""))} required /></div><small>Código generado: {codigo}</small></label>
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
-            <label className="actas-form__wide actas-form__file"><span>Archivo del acta (PDF, máximo 15 MB) *</span><input type="file" accept="application/pdf,.pdf" onChange={handleFile} required={!file} />{file ? <small>{file.name} · {formatSize(file.size)}</small> : null}</label>
+            <div className="actas-form__wide actas-form__file" role="group" aria-labelledby="actas-file-label">
+              <span id="actas-file-label">Archivo del acta (PDF, máximo 15 MB) *</span>
+              <FileSelectButton accept="application/pdf,.pdf" onChange={handleFile}>
+                {file ? "Reemplazar archivo" : "Seleccionar archivo"}
+              </FileSelectButton>
+              <small className={file ? undefined : "actas-form__file-empty"}>
+                {file ? `${file.name} · ${formatSize(file.size)}` : "Sin archivo seleccionado"}
+              </small>
+            </div>
             <div className="actas-form__actions"><button className="actas-page__primary" type="submit" disabled={isSaving}>{isSaving ? "Procesando archivo..." : "Crear acta"}</button></div>
           </form>
         ) : null}

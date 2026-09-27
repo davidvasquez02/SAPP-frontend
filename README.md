@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — selector de archivos uniforme en actas
+
+- La carga de PDF del formulario **Nueva acta** ya no presenta el control nativo del navegador: reutiliza el mismo botón tipo píldora que las tarjetas documentales de solicitudes. El texto cambia entre **Seleccionar archivo** y **Reemplazar archivo**, y el nombre y tamaño quedan en una línea separada.
+- `FileSelectButton` centraliza el selector accesible, su foco visible y los estilos basados en `--surface`, `--outline` y `--primary`. `DocumentUploadCard` también consume este componente, evitando que actas y solicitudes vuelvan a divergir visualmente y conservando temas claro/oscuro.
+- No cambian la validación PDF/15 MB, el contenido base64, checksum, endpoint, DTO, permisos ni dependencias. Regresión: `tests/fileUploadStyleConsistency.test.ts`.
+- Verificación local: prueba dirigida 2/2, suite Node 107/107, ESLint focalizado, build de producción (317 módulos; CSS 273.55 kB; JS 740.34 kB) y `git diff --check` pasan. Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — alineación de asignaturas en homologación
 
 - En la creación estudiantil de homologaciones, **Asignatura del listado** y **Asignatura nueva** aparecen ahora sobre el rótulo **Materia origen**, como selector común del modo de captura.
