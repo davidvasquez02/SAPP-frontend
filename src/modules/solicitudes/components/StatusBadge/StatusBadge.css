@@ -18,10 +18,24 @@
   font-size: 0.8rem;
 }
 
-.status-badge.status-badge--enviada-organo {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--on-primary);
+.status-badge.status-badge--enviada-comite {
+  background: color-mix(in srgb, #2563c7, var(--surface) 86%);
+  border-color: color-mix(in srgb, #2563c7, var(--surface) 58%);
+  color: #2459a9;
+}
+
+.status-badge.status-badge--enviada-consejo {
+  background: color-mix(in srgb, #0891b2, var(--surface) 86%);
+  border-color: color-mix(in srgb, #0891b2, var(--surface) 58%);
+  color: #08738c;
+}
+
+body.dark .status-badge.status-badge--enviada-comite {
+  color: #93c5fd;
+}
+
+body.dark .status-badge.status-badge--enviada-consejo {
+  color: #67e8f9;
 }
 
 .status-badge.status-badge--en-revision,

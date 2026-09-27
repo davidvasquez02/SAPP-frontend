@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — estados de Comité y Consejo en azul
+
+- Los tags **ENVIADA A COMITE ASESOR DE POSGRADOS** y **ENVIADA A CONSEJO ACADEMICO** dejaron de usar el fondo primario sólido que los hacía parecer botones. Ahora siguen el patrón visual suave de los demás estados: fondo claro, borde discreto y texto con contraste.
+- Comité usa azul institucional y Consejo usa azul cian, de modo que ambos estados continúan relacionados visualmente pero se distinguen de inmediato. Hay variantes de texto específicas para `body.light` y `body.dark`.
+- La decisión vive en `StatusBadge`, por lo que cubre el listado de escritorio, las tarjetas móviles y el detalle común de solicitudes académicas, créditos condonables y proyectos de grado. No cambiaron estados, etiquetas, contratos HTTP, DTO, permisos, dependencias, variables, seeds ni datasets. Regresión: `tests/estadoSolicitud.test.ts`.
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Desarrollo: `npm run dev`; pruebas: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build` y `npm run preview`. No existen backend, credenciales ni seed local reproducible para las rutas protegidas.
+- Verificación local: regresión dirigida 7/7, suite Node 113/113, ESLint focalizado, build de producción (317 módulos; CSS 275.30 kB; JS 743.36 kB) y `git diff --check` pasan. Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB.
+
 ## Mejora 2026-09-27 — motivo obligatorio al rechazar solicitudes
 
 - El detalle común de solicitudes académicas, créditos condonables y proyectos de grado abre ahora un diálogo **Motivo de rechazo** al seleccionar **Rechazar**. El motivo es obligatorio, se recorta antes de enviarlo y admite hasta 1000 caracteres; cancelar no cambia el estado.
