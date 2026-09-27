@@ -38,6 +38,7 @@ export interface SolicitudAcademicaDto {
   fechaRegistro: string
   fechaResolucion: string | null
   observaciones: string | null
+  motivoRechazo?: string | null
   motivosCreditoCondonable?: string[] | null
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaDetalleDto[] | null
   tituloTrabajo?: string | null

@@ -571,7 +571,11 @@ const SolicitudDetallePage = () => {
               )}
               <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
                 <dt>{currentEstado === 'RECHAZADA' ? 'Motivo de rechazo' : 'Observaciones'}</dt>
-                <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
+                <dd>
+                  {currentEstado === 'RECHAZADA'
+                    ? solicitud.motivoRechazo?.trim() || 'Sin motivo de rechazo registrado.'
+                    : solicitud.observaciones?.trim() || 'Sin observaciones.'}
+                </dd>
               </div>
               {showMotivosCredito && (
                 <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">

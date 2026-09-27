@@ -1,3 +1,20 @@
+# Handoff 2026-09-27 — visualización del motivo de rechazo
+
+## Estado, contrato y salida esperada
+
+- `SolicitudDetallePage` es compartida por solicitudes generales, créditos condonables y proyectos de grado. Cuando el estado normalizado es `RECHAZADA`, muestra **Motivo de rechazo** con `solicitud.motivoRechazo`; para los demás estados mantiene **Observaciones** con `solicitud.observaciones`.
+- El contrato es asimétrico por decisión del backend: la transición continúa enviando `observaciones={motivo}` en `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}`, mientras `GET /sapp/solicitudesAcademicas/{id}` devuelve el texto persistido en `motivoRechazo`. `SolicitudAcademicaDto` declara el nuevo campo como anulable/opcional para tolerar respuestas históricas.
+- Salida esperada para `{ estadoSigla: "RECHAZADA", motivoRechazo: "pruebas de rechazo", observaciones: null }`: el detalle presenta **Motivo de rechazo — pruebas de rechazo**. Si el backend no entrega el campo, muestra **Sin motivo de rechazo registrado.** y nunca presenta las observaciones originales como si fueran la causa del rechazo.
+
+## Paths, entorno y continuidad
+
+- Implementación: `src/modules/solicitudes/api/types.ts` y `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; fixture: `src/modules/solicitudes/mock/solicitudesCoordinador.mock.ts`; regresión: `tests/solicitudRechazoMotivo.test.ts`. No cambian endpoints, query params, permisos, paquetes, variables, schemas, seeds ni datasets.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`.
+- Verificación local: regresiones dirigidas 13/13 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 283.17 kB; JS 749.50 kB). Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: comprobar con una sesión institucional un registro rechazado de cada familia de solicitud y confirmar que los endpoints de listado usados por estudiantes también incluyen `motivoRechazo` cuando el detalle se resuelve desde esa colección.
+
+---
+
 # Handoff 2026-09-27 — búsqueda manual de estudiantes por nombre
 
 ## Estado, decisión y contrato
@@ -97,7 +114,7 @@
 ## Estado actual, contrato y salida esperada
 
 - `SolicitudDetallePage` es la vista compartida por solicitudes generales, créditos condonables y proyectos de grado. Su acción **Rechazar** abre un diálogo, exige un motivo no vacío, limita la captura a 1000 caracteres y solo entonces ejecuta la transición. No duplicar formularios en los módulos: las tres rutas ya reciben este comportamiento desde el detalle común.
-- Contrato utilizado: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=RECHAZADA&observaciones={motivo}`, sin body y con el envelope existente `{ ok, message, data }`. `observaciones` se serializa con `URLSearchParams`. Al completar, el cliente vuelve a consultar el detalle; para `estadoSigla`/estado normalizado `RECHAZADA`, presenta `solicitud.observaciones` bajo **Motivo de rechazo**.
+- Contrato utilizado: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=RECHAZADA&observaciones={motivo}`, sin body y con el envelope existente `{ ok, message, data }`. `observaciones` se serializa con `URLSearchParams`. Al completar, el cliente vuelve a consultar el detalle; el contrato de lectura expone el texto en `solicitud.motivoRechazo`, que se presenta bajo **Motivo de rechazo**.
 - Salida esperada: pulsar **Rechazar** no realiza una petición inmediatamente; una confirmación vacía muestra **Debes indicar el motivo del rechazo.**; una confirmación válida cierra el diálogo, envía el texto recortado y recarga la solicitud. Cancelar o pulsar el fondo solo cierra el diálogo.
 
 ## Artefactos, pruebas, entorno y continuidad
@@ -105,7 +122,7 @@
 - Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`; contrato HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`; regresión: `tests/solicitudRechazoMotivo.test.ts`; documentación: `README.md` y este archivo. No se agregaron dependencias, variables, schemas, seeds ni datasets.
 - Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend usa Node/npm y no usa venv, Conda ni Poetry: no crear otro entorno o árbol npm.
 - Resultados locales: `node --test --test-isolation=none tests/solicitudRechazoMotivo.test.ts` PASS (2/2); ESLint focalizado PASS; `npm run build` PASS (317 módulos; CSS 274.94 kB; JS 743.36 kB); suite Node PASS (113/113); `git diff --check` PASS. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
-- Reto externo: confirmar con backend que `observaciones` queda persistido y vuelve en el DTO para cada tipo; revisar teclado, foco, móvil y temas claro/oscuro con sesiones institucionales. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y las rutas protegidas no tienen backend, credenciales o seed reproducible.
+- Reto externo: confirmar con backend que `motivoRechazo` vuelve en los endpoints de detalle/listado para cada tipo; revisar teclado, foco, móvil y temas claro/oscuro con sesiones institucionales. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y las rutas protegidas no tienen backend, credenciales o seed reproducible.
 
 ---
 
