@@ -7,12 +7,6 @@ export interface EstudiantesListSnapshot {
   estudiantes: EstudianteCoordinacion[]
   egresados?: EstudianteCoordinacion[]
   mostrarEgresados?: boolean
-  periodoFiltro?: string
-  busquedaFiltro?: string
-  estadoFiltro?: string
-  mostrarFiltrosAdicionales?: boolean
-  estudiantesPage?: number
-  egresadosPage?: number
 }
 
 let detailNavigationSnapshot: EstudiantesListSnapshot | null = null

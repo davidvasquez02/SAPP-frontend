@@ -14,7 +14,6 @@ import {
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
-import { paginateEstudiantes } from '../../modules/estudiantes/utils/estudiantesList'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
 
@@ -82,14 +81,10 @@ const EstudiantesCoordinacionPage = () => {
   const [egresadosRequest, setEgresadosRequest] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [errorEgresados, setErrorEgresados] = useState<string | null>(null)
-  const [periodoFiltro, setPeriodoFiltro] = useState(initialSnapshot?.periodoFiltro ?? '')
-  const [busquedaFiltro, setBusquedaFiltro] = useState(initialSnapshot?.busquedaFiltro ?? '')
-  const [estadoFiltro, setEstadoFiltro] = useState(initialSnapshot?.estadoFiltro ?? 'ACTIVO')
-  const [mostrarFiltrosAdicionales, setMostrarFiltrosAdicionales] = useState(
-    initialSnapshot?.mostrarFiltrosAdicionales ?? false,
-  )
-  const [estudiantesPage, setEstudiantesPage] = useState(initialSnapshot?.estudiantesPage ?? 1)
-  const [egresadosPage, setEgresadosPage] = useState(initialSnapshot?.egresadosPage ?? 1)
+  const [periodoFiltro, setPeriodoFiltro] = useState('')
+  const [busquedaFiltro, setBusquedaFiltro] = useState('')
+  const [estadoFiltro, setEstadoFiltro] = useState('ACTIVO')
+  const [mostrarFiltrosAdicionales, setMostrarFiltrosAdicionales] = useState(false)
 
   useEffect(() => {
     if (initialSnapshot) {
@@ -132,8 +127,6 @@ const EstudiantesCoordinacionPage = () => {
       setEstudiantes([])
       setEgresados([])
       setMostrarEgresados(false)
-      setEstudiantesPage(1)
-      setEgresadosPage(1)
       return () => {
         isCurrentRequest = false
       }
@@ -286,27 +279,6 @@ const EstudiantesCoordinacionPage = () => {
       .sort(compararEstudiantesPorSemestre)
   }, [busquedaFiltro, estadoFiltro, estudiantes, periodoFiltro])
 
-  const estudiantesPagination = useMemo(
-    () => paginateEstudiantes(estudiantesVisibles, estudiantesPage),
-    [estudiantesPage, estudiantesVisibles],
-  )
-  const egresadosPagination = useMemo(
-    () => paginateEstudiantes(egresados, egresadosPage),
-    [egresados, egresadosPage],
-  )
-
-  useEffect(() => {
-    if (estudiantesPage !== estudiantesPagination.page) {
-      setEstudiantesPage(estudiantesPagination.page)
-    }
-  }, [estudiantesPage, estudiantesPagination.page])
-
-  useEffect(() => {
-    if (egresadosPage !== egresadosPagination.page) {
-      setEgresadosPage(egresadosPagination.page)
-    }
-  }, [egresadosPage, egresadosPagination.page])
-
   const filtrosAdicionalesAplicados = Number(Boolean(periodoFiltro)) + Number(Boolean(estadoFiltro))
   const filtrosActivos = Boolean(periodoFiltro || busquedaFiltro.trim() || estadoFiltro !== 'ACTIVO')
 
@@ -314,7 +286,6 @@ const EstudiantesCoordinacionPage = () => {
     setPeriodoFiltro('')
     setBusquedaFiltro('')
     setEstadoFiltro('ACTIVO')
-    setEstudiantesPage(1)
   }
 
   const openStudentDetail = (estudiante: EstudianteCoordinacion) => {
@@ -324,12 +295,6 @@ const EstudiantesCoordinacionPage = () => {
       estudiantes,
       egresados,
       mostrarEgresados,
-      periodoFiltro,
-      busquedaFiltro,
-      estadoFiltro,
-      mostrarFiltrosAdicionales,
-      estudiantesPage: estudiantesPagination.page,
-      egresadosPage: egresadosPagination.page,
     })
     navigate(`/coordinacion/estudiantes/${estudiante.id}`, { state: { estudiante } })
   }
@@ -346,8 +311,6 @@ const EstudiantesCoordinacionPage = () => {
               setEgresados([])
               setMostrarEgresados(false)
               setErrorEgresados(null)
-              setEstudiantesPage(1)
-              setEgresadosPage(1)
               limpiarFiltros()
             }}
             disabled={isLoadingProgramas}
@@ -384,10 +347,7 @@ const EstudiantesCoordinacionPage = () => {
                 <input
                   type="search"
                   value={busquedaFiltro}
-                  onChange={(event) => {
-                    setBusquedaFiltro(event.target.value)
-                    setEstudiantesPage(1)
-                  }}
+                  onChange={(event) => setBusquedaFiltro(event.target.value)}
                   placeholder="Buscar por nombre o código UIS"
                 />
               </label>
@@ -411,13 +371,7 @@ const EstudiantesCoordinacionPage = () => {
               >
                 <label className="estudiantes-coordinacion__field">
                   <span>Período</span>
-                  <select
-                    value={periodoFiltro}
-                    onChange={(event) => {
-                      setPeriodoFiltro(event.target.value)
-                      setEstudiantesPage(1)
-                    }}
-                  >
+                  <select value={periodoFiltro} onChange={(event) => setPeriodoFiltro(event.target.value)}>
                     <option value="">Todos los períodos</option>
                     {periodosDisponibles.map((periodo) => (
                       <option key={periodo} value={periodo}>{periodo}</option>
@@ -426,13 +380,7 @@ const EstudiantesCoordinacionPage = () => {
                 </label>
                 <label className="estudiantes-coordinacion__field">
                   <span>Estado</span>
-                  <select
-                    value={estadoFiltro}
-                    onChange={(event) => {
-                      setEstadoFiltro(event.target.value)
-                      setEstudiantesPage(1)
-                    }}
-                  >
+                  <select value={estadoFiltro} onChange={(event) => setEstadoFiltro(event.target.value)}>
                     <option value="">Activos e inactivos</option>
                     <option value="ACTIVO">Activo</option>
                     <option value="INACTIVO">Inactivo</option>
@@ -459,14 +407,8 @@ const EstudiantesCoordinacionPage = () => {
 
         {!isLoadingEstudiantes && estudiantesVisibles.length > 0 ? (
           <StudentHorizontalBoard
-            estudiantes={estudiantesPagination.items}
+            estudiantes={estudiantesVisibles}
             onStudentClick={openStudentDetail}
-            page={estudiantesPagination.page}
-            pageCount={estudiantesPagination.pageCount}
-            start={estudiantesPagination.start}
-            end={estudiantesPagination.end}
-            total={estudiantesPagination.total}
-            onPageChange={setEstudiantesPage}
           />
         ) : null}
 
@@ -504,17 +446,10 @@ const EstudiantesCoordinacionPage = () => {
           ) : null}
           {mostrarEgresados && !isLoadingEgresados && !errorEgresados && egresados.length > 0 ? (
             <StudentHorizontalBoard
-              estudiantes={egresadosPagination.items}
+              estudiantes={egresados}
               onStudentClick={openStudentDetail}
-              page={egresadosPagination.page}
-              pageCount={egresadosPagination.pageCount}
-              start={egresadosPagination.start}
-              end={egresadosPagination.end}
-              total={egresadosPagination.total}
-              onPageChange={setEgresadosPage}
               title="Estudiantes egresados"
-              ariaLabel="Listado de estudiantes egresados"
-              paginationAriaLabel="Paginación de estudiantes egresados"
+              ariaLabel="Listado horizontal de estudiantes egresados"
             />
           ) : null}
         </section>
