@@ -48,18 +48,18 @@ test('el estudiante notifica solo después de una respuesta de carga obligatoria
   assert.match(studentPageSource, /cargaObligatoriaConfirmadaPorRespuesta = true/)
   assert.match(studentPageSource, /const documentosActualizados = await getDocumentosMatriculaAcademica\(/)
   assert.match(studentPageSource, /tieneDocumentosObligatoriosCargados\(documentosActualizados\)/)
-  assert.match(studentPageSource, /await notificarDocumentosCompletosMatricula\(/)
+  assert.match(studentPageSource, /await finalizarRevisionDocumentosMatricula\(/)
   assert.ok(
     studentPageSource.indexOf('const uploaded = await uploadDocument(') <
       studentPageSource.indexOf('const documentosActualizados = await getDocumentosMatriculaAcademica('),
   )
   assert.ok(
     studentPageSource.indexOf('const documentosActualizados = await getDocumentosMatriculaAcademica(') <
-      studentPageSource.indexOf('await notificarDocumentosCompletosMatricula('),
+      studentPageSource.indexOf('await finalizarRevisionDocumentosMatricula('),
   )
   assert.match(
     matriculaServiceSource,
-    /`\/sapp\/matriculaAcademica\/\$\{matriculaId\}\/notificarDocumentosCompletos`/,
+    /`\/sapp\/matriculaAcademica\/\$\{matriculaId\}\/finalizarRevisionDocumentos`/,
   )
 })
 
@@ -99,8 +99,8 @@ test('coordinación notifica cuando todos los obligatorios fueron aprobados o re
   )
 
   assert.match(coordinatorPageSource, /const updatedDocuments = await refreshDocumentsAfterDecision/)
-  assert.match(coordinatorPageSource, /await notifyCompletedRequiredReview\(updatedDocuments\)/)
-  assert.match(coordinatorPageSource, /await notificarDocumentosCompletosMatricula\(matricula\.id\)/)
+  assert.match(coordinatorPageSource, /await finalizeCompletedRequiredReview\(updatedDocuments\)/)
+  assert.match(coordinatorPageSource, /await finalizarRevisionDocumentosMatricula\(matricula\.id\)/)
   assert.match(coordinatorPageSource, /busyDocumentoId !== null/)
   assert.ok(
     coordinatorPageSource.indexOf('await aprobarRechazarDocumento({') <
@@ -108,6 +108,6 @@ test('coordinación notifica cuando todos los obligatorios fueron aprobados o re
   )
   assert.ok(
     coordinatorPageSource.indexOf('const updatedDocuments = await refreshDocumentsAfterDecision') <
-      coordinatorPageSource.indexOf('await notifyCompletedRequiredReview(updatedDocuments)'),
+      coordinatorPageSource.indexOf('await finalizeCompletedRequiredReview(updatedDocuments)'),
   )
 })

@@ -208,13 +208,13 @@ export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<vo
   }
 }
 
-export const notificarDocumentosCompletosMatricula = async (matriculaId: number): Promise<void> => {
+export const finalizarRevisionDocumentosMatricula = async (matriculaId: number): Promise<void> => {
   const response = await httpPost<ApiResponse<unknown> | undefined>(
-    `/sapp/matriculaAcademica/${matriculaId}/notificarDocumentosCompletos`,
+    `/sapp/matriculaAcademica/${matriculaId}/finalizarRevisionDocumentos`,
   )
 
   if (response && !response.ok) {
-    throw new Error(response.message || 'No fue posible notificar la revisión completa de los documentos.')
+    throw new Error(response.message || 'No fue posible finalizar la revisión de los documentos.')
   }
 }
 

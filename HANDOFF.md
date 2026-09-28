@@ -120,14 +120,14 @@
 
 ## Estado y salida esperada
 
-- La notificación `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` se usa tanto al terminar la revisión de coordinación como al terminar la carga o corrección documental del estudiante.
+- `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos` se usa tanto al terminar la revisión de coordinación como al terminar la carga o corrección documental del estudiante.
 - Coordinación espera el `PUT /sapp/document` exitoso, recarga el checklist y reconcilia localmente la última decisión confirmada para tolerar consistencia eventual. Cuando todos los obligatorios están cargados y en `APROBADO` o `RECHAZADO`, llama el POST una vez por matrícula durante el montaje. Una mezcla de aprobados y rechazados completa la revisión, pero solo todos aprobados permiten la aprobación automática de la matrícula. `busyDocumentoId` evita que esa aprobación compita con la notificación del último documento.
 - El estudiante espera cada `POST /sapp/document`, valida que la respuesta del guardado obligatorio incluya un `id` numérico y luego recarga el checklist. Si todos los obligatorios están cargados, llama el POST. La misma secuencia cubre la primera carga y el reemplazo de un documento rechazado; el estado cargado de la versión rechazada anterior no basta sin una respuesta exitosa de la operación actual.
 - Salida esperada en Network para estudiante: cargas, GET de documentos y POST de notificación. Para coordinación: PUT de la última decisión, GET de documentos, POST de notificación y, únicamente si todos fueron aprobados, PUT de aprobación de matrícula.
 
 ## Paths, pruebas y entorno
 
-- Implementación: `src/modules/matricula/utils/documentosMatricula.ts`, `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; regresión: `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Transporte existente: `notificarDocumentosCompletosMatricula` en `src/modules/matricula/services/matriculaAcademicaService.ts`. Sin cambios de contratos, schemas, datasets ni seeds.
+- Implementación: `src/modules/matricula/utils/documentosMatricula.ts`, `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; regresión: `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Transporte: `finalizarRevisionDocumentosMatricula` en `src/modules/matricula/services/matriculaAcademicaService.ts`. Sin cambios de schemas, datasets ni seeds.
 - Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno exacto: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
 - Resultado reciente: regresión focalizada PASS (3/3), suite Node PASS (161/161), ESLint focalizado PASS y build PASS (327 módulos, CSS 294.30 kB, JS 758.90 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación. No existe backend, seed ni credenciales locales para validar el correo o efecto institucional; confirmar en integración la idempotencia del endpoint entre sesiones.
 
@@ -6128,13 +6128,13 @@ npm run lint
 
 ## Estado actual y decisión
 - En `MatriculaDetalleCoordinacionPage`, después de aprobar o rechazar un documento se recarga la lista desde el backend. La pantalla filtra los documentos obligatorios y comprueba que todos estén cargados y en estado terminal `APROBADO` o `RECHAZADO`.
-- Cuando la comprobación se cumple, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` sin body. Un `useRef` evita repetir la notificación para la misma matrícula durante el montaje actual; solo se marca como notificada después de una respuesta exitosa, de modo que un fallo no quede registrado falsamente.
+- Cuando la comprobación se cumple, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos` sin body. Un `useRef` evita repetir la finalización para la misma matrícula durante el montaje actual; solo se marca como finalizada después de una respuesta exitosa, de modo que un fallo no quede registrado falsamente.
 - La regla anterior que aprueba automáticamente la matrícula cuando todos los documentos obligatorios están aprobados permanece intacta. La nueva notificación también cubre el caso en que uno o más documentos hayan sido rechazados.
 
 ## Paths, contrato y salida esperada
 - Orquestación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
 - Servicio HTTP: `src/modules/matricula/services/matriculaAcademicaService.ts`.
-- Contrato: `POST ${VITE_API_URL || '/api/sapp'}/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, sin body, autenticado, con respuesta esperada `ApiResponse<unknown>` (o HTTP 204 admitido por el transporte compartido).
+- Contrato: `POST ${VITE_API_URL || '/api/sapp'}/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos`, sin body, autenticado, con respuesta esperada `ApiResponse<unknown>` (o HTTP 204 admitido por el transporte compartido).
 - No se agregaron dependencias, variables, seeds ni datasets. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm.
 
 ## Retos y próximos pasos
@@ -6271,8 +6271,8 @@ npm run lint
 
 ## Paths, contratos y salida esperada
 - Orquestación actual: `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; las reglas puras compartidas viven en `src/modules/matricula/utils/documentosMatricula.ts`.
-- Transporte: `src/modules/matricula/services/matriculaAcademicaService.ts` (`notificarDocumentosCompletosMatricula`).
-- Entrada de decisión existente: `PUT /sapp/document` con `{ documentoId, aprobado, observaciones }`. Salida de finalización: `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, autenticado, sin body; admite envelope `ApiResponse<unknown>` o HTTP 204.
+- Transporte: `src/modules/matricula/services/matriculaAcademicaService.ts` (`finalizarRevisionDocumentosMatricula`).
+- Entrada de decisión existente: `PUT /sapp/document` con `{ documentoId, aprobado, observaciones }`. Salida de finalización: `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos`, autenticado, sin body; admite envelope `ApiResponse<unknown>` o HTTP 204.
 - Resultado esperado: Network muestra el POST de notificación solamente después de la respuesta exitosa de carga/decisión y del GET de documentos correspondiente. No hay cambios de schema, dependencias, variables, seeds ni datasets.
 
 ## Entorno, retos y verificación

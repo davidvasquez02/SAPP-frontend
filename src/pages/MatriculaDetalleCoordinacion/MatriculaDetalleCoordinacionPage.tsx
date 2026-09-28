@@ -11,7 +11,7 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
-  notificarDocumentosCompletosMatricula,
+  finalizarRevisionDocumentosMatricula,
   validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type {
@@ -137,7 +137,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
-  const completedReviewNotificationMatriculaIdRef = useRef<number | null>(null)
+  const completedReviewFinalizationMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
   const [toast, setToast] = useState<ToastFeedback | null>(null)
@@ -300,19 +300,19 @@ const MatriculaDetalleCoordinacionPage = () => {
     [loadDocumentos],
   )
 
-  const notifyCompletedRequiredReview = useCallback(
+  const finalizeCompletedRequiredReview = useCallback(
     async (updatedDocuments: DocumentoTramiteItemDto[]) => {
       if (
         !matricula ||
         !tieneDocumentosObligatoriosRevisados(updatedDocuments) ||
-        completedReviewNotificationMatriculaIdRef.current === matricula.id
+        completedReviewFinalizationMatriculaIdRef.current === matricula.id
       ) {
         return
       }
 
       try {
-        await notificarDocumentosCompletosMatricula(matricula.id)
-        completedReviewNotificationMatriculaIdRef.current = matricula.id
+        await finalizarRevisionDocumentosMatricula(matricula.id)
+        completedReviewFinalizationMatriculaIdRef.current = matricula.id
       } catch (requestError) {
         setToast({
           tone: 'error',
@@ -338,7 +338,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         observaciones: null,
       })
       const updatedDocuments = await refreshDocumentsAfterDecision(id, 'APROBADO', null)
-      await notifyCompletedRequiredReview(updatedDocuments)
+      await finalizeCompletedRequiredReview(updatedDocuments)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
@@ -388,7 +388,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
       const updatedDocuments = await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
-      await notifyCompletedRequiredReview(updatedDocuments)
+      await finalizeCompletedRequiredReview(updatedDocuments)
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {
