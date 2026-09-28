@@ -171,6 +171,9 @@ const MatriculaPage = () => {
   const [isReadOnlyMatriculaFinalizada, setIsReadOnlyMatriculaFinalizada] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStage, setSubmissionStage] = useState<
+    "VALIDATING" | "PREPARING_DOCUMENTS" | "CREATING" | "UPLOADING" | "FINALIZING" | null
+  >(null);
 
   const [isLoadingListado, setIsLoadingListado] = useState(false);
   const [errorListado, setErrorListado] = useState<string | null>(null);
@@ -524,6 +527,7 @@ const MatriculaPage = () => {
 
     try {
       setIsSubmitting(true);
+      setSubmissionStage("VALIDATING");
       setErrorForm(null);
 
       const latestValidation =
@@ -538,9 +542,11 @@ const MatriculaPage = () => {
         return;
       }
 
+      setSubmissionStage("PREPARING_DOCUMENTS");
       await loadDocumentosMatricula(latestValidation);
 
       if (latestValidation.status === "CAN_CREATE") {
+        setSubmissionStage("CREATING");
         await crearMatriculaAcademica({
           estudianteId,
           periodoId: latestValidation.periodoId,
@@ -567,6 +573,7 @@ const MatriculaPage = () => {
         return;
       }
 
+      setSubmissionStage("UPLOADING");
       for (const documento of documentosConCambios) {
         const file = documento.selectedFile;
         if (!file) {
@@ -630,6 +637,7 @@ const MatriculaPage = () => {
       }
 
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
+      setSubmissionStage("FINALIZING");
       await loadDocumentosMatricula(matriculaValidation);
 
     } catch (error) {
@@ -640,6 +648,7 @@ const MatriculaPage = () => {
       setErrorForm(message);
     } finally {
       setIsSubmitting(false);
+      setSubmissionStage(null);
     }
   };
 
@@ -1040,7 +1049,24 @@ const MatriculaPage = () => {
 
   return (
     <ModuleLayout title="Proceso de matrícula">
-      <div className="matricula-page">
+      <div className="matricula-page" aria-busy={isSubmitting}>
+        {isSubmitting ? (
+          <div className="matricula-page__progress" role="status" aria-live="assertive" aria-label="Procesando solicitud de matrícula">
+            <span className="matricula-page__spinner" aria-hidden="true" />
+            <strong>{
+              submissionStage === "PREPARING_DOCUMENTS"
+                ? "Preparando los documentos…"
+                : submissionStage === "CREATING"
+                  ? "Creando la matrícula…"
+                  : submissionStage === "UPLOADING"
+                    ? "Subiendo documentos…"
+                    : submissionStage === "FINALIZING"
+                      ? "Finalizando la solicitud…"
+                      : "Validando la solicitud…"
+            }</strong>
+            <span>Espere mientras finaliza el proceso. No cierre ni modifique la solicitud.</span>
+          </div>
+        ) : null}
         <header className="matricula-page__header">
           <h3>Proceso de matrícula</h3>
           {convocatoria?.periodoLabel ? (
@@ -1121,12 +1147,12 @@ const MatriculaPage = () => {
                       materias={materiasCatalogo}
                       selected={selectedMaterias}
                       onAdd={handleAddMateria}
-                      disabled={isReadOnlyMatriculaFinalizada || hasExistingMatricula}
+                      disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula}
                     />
                   ) : null}
                   <MateriasSelectedTable
                     selected={selectedMaterias}
-                    disabled={isReadOnlyMatriculaFinalizada || hasExistingMatricula}
+                    disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula}
                     readOnlyView={isReadOnlyMatriculaFinalizada}
                     hideActionColumn={hasExistingMatricula}
                     onRemove={(id) =>
@@ -1160,7 +1186,7 @@ const MatriculaPage = () => {
                 <DocumentosRequeridosTable
                   documentos={documentos}
                   showActions
-                  uploadDisabledOnly={isReadOnlyMatriculaFinalizada || isExistingMatriculaBlocked}
+                  uploadDisabledOnly={isSubmitting || isReadOnlyMatriculaFinalizada || isExistingMatriculaBlocked}
                   uploadBlockedReason={uploadBlockedReason}
                   onAction={(docId, action) => {
                     const documento = documentos.find((item) => item.id === docId);

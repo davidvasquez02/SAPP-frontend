@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Mejora 2026-09-27 — progreso bloqueante al crear matrícula
+
+- La creación o actualización de una matrícula presenta ahora una capa de progreso con spinner que bloquea toda interacción mientras valida, prepara documentos, crea la matrícula, carga archivos o finaliza el trámite.
+- El mensaje informa la etapa activa y pide no cerrar ni modificar la solicitud. Los selectores de materias, acciones documentales y confirmación también se deshabilitan durante la operación.
+- Archivos: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css` y `tests/matriculaCargaProgreso.test.ts`. Sin cambios de API, datos, permisos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 287.90 kB; JS 753.37 kB); Vite conserva el aviso no bloqueante de chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — períodos académicos y módulo de fechas
 
 - El formulario de período académico ya no solicita descripción. Para conservar el contrato del backend, crea y actualiza las fechas con `descripcion: ''`.

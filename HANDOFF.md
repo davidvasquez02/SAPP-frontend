@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — progreso al crear matrícula académica
+
+## Estado, salida esperada y decisión
+
+- Durante `handleConfirmMatricula`, la pantalla usa `isSubmitting` y `submissionStage` para mostrar un overlay fijo con spinner. Las etapas son `VALIDATING`, `PREPARING_DOCUMENTS`, `CREATING`, `UPLOADING` y `FINALIZING`.
+- El overlay se muestra con `role="status"`, `aria-live="assertive"` y el texto “No cierre ni modifique la solicitud.” Su posición fija cubre la interacción de toda la pantalla; además, los controles de materias y de carga documental reciben el bloqueo por `isSubmitting`.
+- Salida esperada: al confirmar, no se pueden añadir/eliminar materias, cambiar archivos ni volver a confirmar; se ve la fase correspondiente hasta que el proceso termina con éxito o error.
+
+## Paths, entorno, pruebas y continuidad
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `MatriculaPage.css`; regresión: `tests/matriculaCargaProgreso.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/matriculaCargaProgreso.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.37 kB). Pendiente externo: probar con archivos reales lentos que el overlay persiste durante todas las cargas y desaparece ante error. El aviso de Vite por chunk mayor de 500 kB no bloquea el build.
+
+---
+
+---
+
 # Handoff 2026-09-27 — ajustes de períodos académicos
 
 ## Estado, decisiones y salida esperada
