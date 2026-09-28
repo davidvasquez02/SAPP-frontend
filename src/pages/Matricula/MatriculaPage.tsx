@@ -190,6 +190,8 @@ const MatriculaPage = () => {
     useState<PeriodoAcademicoMatriculaVigenteDto | null>(null);
   const [isLoadingPeriodoVigente, setIsLoadingPeriodoVigente] = useState(false);
   const [isNotificandoApertura, setIsNotificandoApertura] = useState(false);
+  const [isNotificacionConfirmationOpen, setIsNotificacionConfirmationOpen] =
+    useState(false);
   const [notificacionAperturaError, setNotificacionAperturaError] = useState<string | null>(null);
   const [notificacionAperturaMessage, setNotificacionAperturaMessage] = useState<string | null>(null);
 
@@ -478,11 +480,7 @@ const MatriculaPage = () => {
       return;
     }
 
-    const periodoLabel = periodoMatriculaVigente.periodo.anioPeriodo;
-    if (!window.confirm(`¿Deseas enviar el correo de inicio de matrícula para el periodo ${periodoLabel}?`)) {
-      return;
-    }
-
+    setIsNotificacionConfirmationOpen(false);
     setIsNotificandoApertura(true);
     setNotificacionAperturaError(null);
     setNotificacionAperturaMessage(null);
@@ -849,7 +847,7 @@ const MatriculaPage = () => {
                 isNotificandoApertura ||
                 !periodoMatriculaVigente
               }
-              onClick={() => void handleNotificarAperturaMatricula()}
+              onClick={() => setIsNotificacionConfirmationOpen(true)}
             >
               {isNotificandoApertura ? "Enviando correo..." : "Enviar correo de inicio"}
             </button>
@@ -1050,6 +1048,55 @@ const MatriculaPage = () => {
             ) : null}
           </section>
         </div>
+        {isNotificacionConfirmationOpen && periodoMatriculaVigente ? (
+          <div
+            className="matricula-page__confirmation-modal"
+            role="presentation"
+            onMouseDown={() => {
+              if (!isNotificandoApertura) {
+                setIsNotificacionConfirmationOpen(false);
+              }
+            }}
+          >
+            <section
+              className="matricula-page__confirmation-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="matricula-notification-confirmation-title"
+              aria-describedby="matricula-notification-confirmation-description"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="matricula-page__confirmation-icon" aria-hidden="true">
+                ✉
+              </div>
+              <div>
+                <p className="matricula-page__confirmation-eyebrow">Notificación de matrícula</p>
+                <h2 id="matricula-notification-confirmation-title">Enviar correo de inicio</h2>
+                <p id="matricula-notification-confirmation-description">
+                  Se enviará la notificación de apertura de matrícula a los estudiantes del período {periodoMatriculaVigente.periodo.anioPeriodo}.
+                </p>
+              </div>
+              <div className="matricula-page__confirmation-actions">
+                <button
+                  type="button"
+                  className="matricula-page__confirmation-cancel"
+                  onClick={() => setIsNotificacionConfirmationOpen(false)}
+                  disabled={isNotificandoApertura}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="matricula-page__confirmation-submit"
+                  onClick={() => void handleNotificarAperturaMatricula()}
+                  disabled={isNotificandoApertura}
+                >
+                  {isNotificandoApertura ? "Enviando correo..." : "Enviar correo"}
+                </button>
+              </div>
+            </section>
+          </div>
+        ) : null}
       </ModuleLayout>
     );
   }

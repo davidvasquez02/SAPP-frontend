@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Mejora 2026-09-27 — confirmación institucional para correo de matrícula
+
+- El envío de correo de inicio de matrícula ya no utiliza `window.confirm`. Ahora se confirma con un modal propio del sistema, adaptado a tema claro/oscuro, con descripción del período, botones tipo pill y bloqueo de cierre mientras se realiza el envío.
+- Archivos: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css` y `tests/notificacionAperturaMatricula.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.43 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — documentos PDF en matrícula académica
 
 - Los selectores de archivos del proceso de matrícula académica solo muestran y aceptan PDF mediante `accept="application/pdf,.pdf"`.

@@ -2,6 +2,22 @@
 
 ---
 
+# Handoff 2026-09-27 — modal de confirmación para correo de matrícula
+
+## Estado y salida esperada
+
+- La tarjeta de notificación abre `matricula-page__confirmation-modal` antes de invocar el envío; no se usa `window.confirm`.
+- El modal muestra el período objetivo, permite cancelar o confirmar y no permite cerrarse mientras `isNotificandoApertura` está activo.
+- Salida esperada: el navegador no presenta el diálogo nativo; se muestra un modal institucional coherente con el tema del sistema y, al confirmar, conserva el flujo existente de mensaje temporal y refresco del período vigente.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/Matricula/MatriculaPage.css`; regresión: `tests/notificacionAperturaMatricula.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.43 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
 # Handoff 2026-09-27 — carga exclusiva de PDF en matrícula académica
 
 ## Estado y salida esperada
