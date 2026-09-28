@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — cierre y publicación de matrícula financiera
+
+## Estado, regla y salida esperada
+
+- La regla se separó en dos acciones: cerrar la recepción siempre está permitido cuando el proceso está `ABIERTO`; publicar solo está permitido sin `pendientes` ni `respondidas`.
+- `puedePublicarProceso(resumen)` reemplaza al nombre engañoso `puedeCerrarProceso`. Evalúa ambos contadores y protege tanto el estado visual del botón como el submit, por lo que no se puede publicar desde el navegador con una acción manual mientras persistan filas no finales.
+- Salida esperada: con una liquidada y una pendiente, **Cerrar recepción** está activo; después del cierre, **Publicar y notificar** aparece deshabilitado y muestra el requisito de finalizar las filas. Una vez no haya pendientes/respondidas, se habilita sujeto a fecha, confirmación y al menos una liquidada.
+
+## Paths, entorno, pruebas y continuidad
+
+- Lógica: `src/modules/matricula-financiera/flow.ts`; vista: `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`; regresión: `tests/matriculaFinancieraFlow.test.ts`. No se modifican endpoints, contratos, schemas, permisos, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaFinancieraFlow.test.ts` y `npm run build`.
+- Resultado reciente: prueba dirigida 13/13 PASS y build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.16 kB). Pendiente externo: validar contra el backend que `cerrar` acepta estados pendientes/respondidos, pues el frontend ya no los bloquea. El aviso de Vite por chunk mayor de 500 kB no bloquea el build.
+
+---
+
+---
+
 # Handoff 2026-09-27 — documentos faltantes de matrícula en informes
 
 ## Estado, contrato y salida esperada

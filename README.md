@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — cierre de recepción independiente de publicación
+
+- En el detalle de un proceso de matrícula financiera, **Cerrar recepción** ya no depende de que las liquidaciones estén en estado final; se permite con filas pendientes o respondidas.
+- **Publicar y notificar** sí queda deshabilitado mientras exista alguna fila pendiente o respondida, además de sus validaciones existentes de al menos una liquidada y confirmación. La interfaz explica que para publicar todas deben quedar como **Liquidada** o **No liquidar**.
+- Alcance: `src/modules/matricula-financiera/flow.ts`, `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` y `tests/matriculaFinancieraFlow.test.ts`. Sin cambios de API, DTO, permisos, datos, seeds ni dependencias. Verificación: regresión financiera 13/13 PASS y build PASS (323 módulos; CSS 287.20 kB; JS 753.16 kB); Vite conserva el aviso no bloqueante de chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — faltantes visibles en informes de matrícula
 
 - El normalizador de errores de informes reconoce ahora las dos variantes del backend: admisión entrega `aspirantesConDocumentosFaltantes` con `inscripcionId`; matrícula entrega `estudiantesConDocumentosFaltantes` con `matriculaId`. Ambas se transforman en una lista neutral para la misma interfaz de faltantes.

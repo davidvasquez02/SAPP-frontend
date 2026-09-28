@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { etiquetaResumen, GUIA_COORDINACION, GUIA_ESTUDIANTE, puedeCerrarProceso, puedeEjecutarAccion } from '../src/modules/matricula-financiera/flow.ts'
+import { etiquetaResumen, GUIA_COORDINACION, GUIA_ESTUDIANTE, puedeEjecutarAccion, puedePublicarProceso } from '../src/modules/matricula-financiera/flow.ts'
 
 test('la guía explica el proceso completo para ambos perfiles', () => {
   assert.equal(GUIA_COORDINACION.length, 4)
@@ -32,11 +32,11 @@ test('solo permite acciones compatibles con el estado del proceso', () => {
   assert.equal(puedeEjecutarAccion('PUBLICADO', 'recalcular'), false)
 })
 
-test('solo permite cerrar cuando todas las liquidaciones están en un estado final', () => {
-  assert.equal(puedeCerrarProceso({ pendientes: 0, respondidas: 0 }), true)
-  assert.equal(puedeCerrarProceso({ pendientes: 1, respondidas: 0 }), false)
-  assert.equal(puedeCerrarProceso({ pendientes: 0, respondidas: 1 }), false)
-  assert.equal(puedeCerrarProceso({ pendientes: 2, respondidas: 3 }), false)
+test('solo permite publicar cuando todas las liquidaciones están en un estado final', () => {
+  assert.equal(puedePublicarProceso({ pendientes: 0, respondidas: 0 }), true)
+  assert.equal(puedePublicarProceso({ pendientes: 1, respondidas: 0 }), false)
+  assert.equal(puedePublicarProceso({ pendientes: 0, respondidas: 1 }), false)
+  assert.equal(puedePublicarProceso({ pendientes: 2, respondidas: 3 }), false)
 })
 
 test('presenta las métricas con etiquetas de negocio legibles', () => {
@@ -123,10 +123,11 @@ test('aplica los textos y controles operativos del hallazgo de cierre', () => {
   assert.match(listSource, /etiquetaEstadoLiquidacion\(item\.estado\)/)
   assert.match(detailSource, /Motivo de exclusión del proceso de liquidación:/)
   assert.doesNotMatch(detailSource, /<p>Motivo de exclusión:/)
-  assert.match(processSource, /disabled={!cierrePermitido}/)
-  assert.match(processSource, /Liquidada o No liquidar/)
+  assert.doesNotMatch(processSource, /disabled={!cierrePermitido}/)
+  assert.match(processSource, /disabled={!proceso\.resumen\.liquidadas \|\| !publicacionPermitida \|\| !confirmado}/)
+  assert.match(processSource, /Para publicar, lleva todas las liquidaciones a un estado final: Liquidada o No liquidar\./)
   assert.match(processSource, /Fecha límite de pago de las liquidaciones en el sistema de la universidad/)
-  assert.match(processSource, /{proceso\.resumen\.liquidadas} liquidadas · {proceso\.resumen\.pendientes} pendientes\.<\/p>/)
+  assert.match(processSource, /{proceso\.resumen\.liquidadas} liquidadas · {proceso\.resumen\.pendientes} pendientes · {proceso\.resumen\.respondidas} respondidas\.<\/p>/)
   assert.doesNotMatch(processSource, /{proceso\.resumen\.conAlertas} con alertas\./)
 })
 
