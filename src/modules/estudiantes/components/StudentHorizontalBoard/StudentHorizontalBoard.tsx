@@ -34,6 +34,8 @@ const StudentHorizontalBoard = ({
   paginationAriaLabel = 'Paginación de estudiantes',
 }: StudentHorizontalBoardProps) => {
   const titleId = useId()
+  const visibleColumns = Math.max(1, Math.min(columns, estudiantes.length))
+  const maxGridWidthRem = visibleColumns * 19 + (visibleColumns - 1)
 
   return (
     <section className="student-horizontal-board" aria-labelledby={titleId}>
@@ -50,7 +52,10 @@ const StudentHorizontalBoard = ({
       <div
         className="student-horizontal-board__grid"
         aria-label={ariaLabel}
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${visibleColumns}, minmax(0, 1fr))`,
+          maxWidth: `${maxGridWidthRem}rem`,
+        }}
       >
         {estudiantes.map((estudiante) => (
           <EstudianteCard

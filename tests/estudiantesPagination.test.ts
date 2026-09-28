@@ -87,7 +87,10 @@ test('el tablero usa cuadrícula paginada y no captura gestos ni clics', () => {
     /onPointerDown|onPointerMove|onClickCapture|onWheel|scrollBy|setPointerCapture|ResizeObserver/,
   )
   assert.doesNotMatch(boardStyles, /overflow-x|scroll-snap|cursor:\s*grab/)
-  assert.match(boardSource, /gridTemplateColumns: `repeat\(\$\{columns\}, minmax\(0, 1fr\)\)`/)
+  assert.match(boardSource, /const visibleColumns = Math\.max\(1, Math\.min\(columns, estudiantes\.length\)\)/)
+  assert.match(boardSource, /gridTemplateColumns: `repeat\(\$\{visibleColumns\}, minmax\(0, 1fr\)\)`/)
+  assert.match(boardSource, /maxWidth: `\$\{maxGridWidthRem\}rem`/)
+  assert.match(boardStyles, /margin-inline:\s*auto/)
   assert.doesNotMatch(boardStyles, /grid-template-columns/)
 })
 

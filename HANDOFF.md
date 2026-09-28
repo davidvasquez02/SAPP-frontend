@@ -3,14 +3,14 @@
 ## Estado y salida esperada
 
 - `StudentHorizontalBoard` conserva su ruta por compatibilidad interna, pero ya no es horizontal: renderiza una cuadrícula adaptable de `EstudianteCard` y controles **Anterior / Siguiente**. No debe reintroducir `onPointerDown`, `onPointerMove`, `onClickCapture`, `onWheel`, `scrollBy`, captura de puntero, `ResizeObserver`, `overflow-x` ni scroll snap, porque esas interacciones podían cancelar el clic que abre el perfil.
-- `paginateEstudiantes` limita páginas inválidas y devuelve `items`, `page`, `pageCount`, `start`, `end` y `total`. El tamaño se obtiene con `getEstudiantesPageSize`: 4 tarjetas desde 1280 px, 3 desde 900 px, 2 desde 640 px y 1 por debajo. El grid recibe exactamente ese número de columnas, por lo que nunca crea una segunda fila; al redimensionar se conserva el primer perfil visible. `EstudiantesCoordinacionPage` mantiene `estudiantesPage` y `egresadosPage` por separado, reinicia la primera al cambiar filtros/programa y corrige ambas si cambia el total.
+- `paginateEstudiantes` limita páginas inválidas y devuelve `items`, `page`, `pageCount`, `start`, `end` y `total`. El tamaño se obtiene con `getEstudiantesPageSize`: 4 tarjetas desde 1280 px, 3 desde 900 px, 2 desde 640 px y 1 por debajo. El grid recibe exactamente el menor valor entre ese tamaño y los perfiles presentes, limita la fila a 19 rem por tarjeta y la centra; así nunca crea una segunda fila, no estira las tarjetas y tampoco reserva columnas vacías. Al redimensionar se conserva el primer perfil visible.
 - El snapshot de `estudiantesListCache` incluye filtros, panel adicional y ambas páginas. Volver desde `/coordinacion/estudiantes/:id` debe reconstruir el mismo listado y posición sin repetir la consulta inicial. La consulta y la cola de fotografías continúan trabajando sobre la colección completa; la paginación solo limita las tarjetas renderizadas.
 
 ## Paths, pruebas y continuidad
 
 - Implementación: `src/modules/estudiantes/components/StudentHorizontalBoard/`, `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css`, `src/modules/estudiantes/utils/estudiantesList.ts`, `src/modules/estudiantes/services/estudiantesListCache.ts` y `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`. Regresión: `tests/estudiantesPagination.test.ts`.
 - No cambiaron API, DTO, roles, rutas, dependencias, variables, schemas, seeds ni datasets. No hay backend, credenciales o seed local para revisar visualmente la ruta protegida; validar clic, regreso, filtros, ambas paginaciones y temas claro/oscuro con sesión institucional.
-- Resultado local: focalizadas PASS (4/4), suite Node PASS (165/165), ESLint focalizado PASS y build PASS (328 módulos; CSS 292.60 kB; JS 758.11 kB). Vite conserva el warning informativo por chunk mayor de 500 kB.
+- Resultado local: focalizadas PASS (4/4), suite Node PASS (165/165), ESLint focalizado PASS y build PASS (328 módulos; CSS 292.63 kB; JS 758.18 kB). Vite conserva el warning informativo por chunk mayor de 500 kB.
 - Entorno exacto: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos venv, Conda, Poetry ni otro árbol npm.
 
 ---
