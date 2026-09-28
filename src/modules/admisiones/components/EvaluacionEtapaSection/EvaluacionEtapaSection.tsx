@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evaluacionAdmisionTypes'
+import {
+  getPromedioPuntajeReglas,
+  getPromedioRangoLabel,
+} from '../../utils/promedioPuntajeGuide'
 import './EvaluacionEtapaSection.css'
 
 export type EvaluacionDraft = {
@@ -55,6 +59,23 @@ const Consideraciones = ({ value, contentId }: { value: string; contentId: strin
     }
 
     if (Array.isArray(parsed)) {
+      const promedioPuntajeReglas = getPromedioPuntajeReglas(parsed)
+      if (promedioPuntajeReglas) {
+        return (
+          <div className="evaluacion-etapa-section__score-guide">
+            <p className="evaluacion-etapa-section__score-guide-title">Promedio → puntos</p>
+            <ul aria-label="Puntaje según promedio de pregrado">
+              {promedioPuntajeReglas.map((regla) => (
+                <li key={`${regla.promedioMin}-${regla.promedioMax}-${regla.puntos}`}>
+                  <span>{getPromedioRangoLabel(regla)}</span>
+                  <strong>{regla.puntos} pts</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+
       return (
         <ol className="evaluacion-etapa-section__criteria-list">
           {parsed.map((entry, index) => <li key={index}>{renderValue(entry)}</li>)}

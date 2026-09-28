@@ -85,6 +85,12 @@
 .evaluacion-etapa-section__criteria-list div { display: grid; grid-template-columns: minmax(6rem, auto) 1fr; gap: .5rem; }
 .evaluacion-etapa-section__criteria-list dt { font-weight: 700; }
 .evaluacion-etapa-section__criteria-list dd { margin: 0; }
+.evaluacion-etapa-section__score-guide { padding: .55rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 68%); border-radius: 12px; background: color-mix(in srgb, var(--primary), var(--surface) 96%); }
+.evaluacion-etapa-section__score-guide-title { margin: 0 0 .4rem; color: var(--text-secondary); font-size: .75rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.evaluacion-etapa-section__score-guide ul { display: grid; grid-template-columns: repeat(4, minmax(4.8rem, 1fr)); gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.evaluacion-etapa-section__score-guide li { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: .08rem; padding: .32rem .25rem; border-radius: 8px; background: var(--surface); text-align: center; }
+.evaluacion-etapa-section__score-guide li span { color: var(--text-secondary); font-size: .76rem; line-height: 1.2; white-space: nowrap; }
+.evaluacion-etapa-section__score-guide li strong { color: var(--primary); font-size: .86rem; line-height: 1.2; }
 .evaluacion-etapa-section__mobile-label,
 .evaluacion-etapa-section__nota-field label { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
 .evaluacion-etapa-section__mobile-label { display: none; }
@@ -191,4 +197,8 @@
   .evaluacion-etapa-section__mobile-label { display: block; margin-bottom: .35rem; }
   .evaluacion-etapa-section__footer,
   .evaluacion-etapa-section__button { width: 100%; min-height: 44px; }
+}
+
+@container evaluacion (max-width: 520px) {
+  .evaluacion-etapa-section__score-guide ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

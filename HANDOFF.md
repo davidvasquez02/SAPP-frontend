@@ -1,5 +1,21 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — guía visual de promedio en hoja de vida
+
+### Estado, contrato y salida esperada
+
+- `getPromedioPuntajeReglas` reconoce exclusivamente arreglos no vacíos cuyos elementos contienen números finitos en `promedioMin`, `promedioMax` y `puntos`. No depende del nombre **PROMEDIO PONDERADO EN PREGRADO** y devuelve `null` para cualquier otra forma, preservando el render genérico de consideraciones.
+- `Consideraciones` representa las reglas válidas como una guía **Promedio → puntos**: valores iguales se muestran una vez (`3,5`) y los intervalos con raya (`3,51–3,7`), usando formato `es-CO`. Cada rango se acompaña de `{puntos} pts`.
+- La cuadrícula usa cuatro columnas en espacio normal y dos por debajo de 520 px del contenedor. Son ocho fichas compactas en dos filas en escritorio. Usa `--primary`, `--outline`, `--surface` y `--text-secondary`; funciona en temas claro/oscuro.
+- No cambian `EvaluacionAdmisionItem.consideraciones`, endpoints, payloads, notas ni persistencia. La transformación es exclusivamente de presentación.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/modules/admisiones/utils/promedioPuntajeGuide.ts`, `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.{tsx,css}` y `tests/promedioPuntajeGuide.test.ts`.
+- Resultado: pruebas focalizadas PASS (3/3), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (325 módulos; CSS 294.30 kB; JS 758.16 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: revisar con la respuesta real que el backend entregue un JSON parseable (arreglo delimitado por `[]`) y validar densidad/contraste junto al visor PDF en escritorio, móvil y ambos temas.
+
 ## Actualización 2026-09-28 — visibilidad de Admisiones según entrevistas asignadas
 
 ### Estado y contrato
