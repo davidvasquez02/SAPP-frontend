@@ -51,7 +51,7 @@ const ensureStudentSeed = (rows: SolicitudCoordinadorDto[]): SolicitudCoordinado
       fechaRegistro: '2026-03-31',
       fechaResolucion: null,
       observaciones: 'Ejemplo estudiante: solicitud registrada',
-      programaAcademico: '61412 - MISI',
+      programaAcademico: '302 - MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
       codigoEstudianteUis: '20260001',
       estudianteId: 2,
       estudiante: 'MARIO MENDOZA',

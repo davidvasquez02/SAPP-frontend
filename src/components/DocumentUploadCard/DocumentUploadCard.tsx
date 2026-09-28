@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { DocumentUploadItem } from '../../modules/documentos/types/documentUploadTypes'
 import { openBase64InNewTab } from '../../shared/files/base64FileUtils'
+import { FileSelectButton } from '../FileSelectButton/FileSelectButton'
 import './DocumentUploadCard.css'
 
 interface DocumentUploadCardProps {
@@ -13,6 +14,11 @@ interface DocumentUploadCardProps {
   disabled?: boolean
   fileAccept?: string
   previewAsImage?: boolean
+  multiple?: boolean
+  maxFiles?: number
+  selectedFiles?: File[]
+  onSelectFiles?: (id: number, files: File[]) => void
+  onRemoveSelectedFile?: (id: number, index: number) => void
 }
 
 const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
@@ -58,6 +64,11 @@ export const DocumentUploadCard = ({
   fileAccept,
   previewAsImage = false,
   showUploadButton = true,
+  multiple = false,
+  maxFiles,
+  selectedFiles = [],
+  onSelectFiles,
+  onRemoveSelectedFile,
 }: DocumentUploadCardProps) => {
   const [selectedPreviewDataUrl, setSelectedPreviewDataUrl] = useState<string | null>(null)
   const inputId = `document-upload-${item.id}`
@@ -84,8 +95,16 @@ export const DocumentUploadCard = ({
     : previewAsImage
       ? 'Seleccionar foto'
       : 'Seleccionar archivo'
+  const reachedFileLimit = multiple && maxFiles != null && selectedFiles.length >= maxFiles
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (multiple && onSelectFiles) {
+      const remainingSlots = maxFiles == null ? Number.POSITIVE_INFINITY : Math.max(maxFiles - selectedFiles.length, 0)
+      const files = Array.from(event.target.files ?? []).slice(0, remainingSlots)
+      if (files.length > 0) onSelectFiles(item.id, files)
+      event.target.value = ''
+      return
+    }
     const file = event.target.files?.[0] ?? null
     if (previewAsImage && file?.type.startsWith('image/')) {
       const reader = new FileReader()
@@ -141,16 +160,35 @@ export const DocumentUploadCard = ({
       </div>
 
       <div className="document-upload-card__actions">
-        <label className="document-upload-card__file">
-          <input
-            id={inputId}
-            type="file"
-            accept={fileAccept}
-            onChange={handleChange}
-            disabled={disabled}
-          />
-          <span>{selectButtonLabel}</span>
-        </label>
+        {multiple && maxFiles != null ? (
+          <p className="document-upload-card__file-limit" id={`${inputId}-limit`}>
+            Puedes adjuntar máximo {maxFiles} documentos. {selectedFiles.length} de {maxFiles} seleccionados.
+          </p>
+        ) : null}
+        <FileSelectButton
+          id={inputId}
+          accept={fileAccept}
+          multiple={multiple}
+          onChange={handleChange}
+          disabled={disabled || reachedFileLimit}
+          aria-describedby={multiple && maxFiles != null ? `${inputId}-limit` : undefined}
+        >
+          {reachedFileLimit ? 'Límite alcanzado' : multiple ? 'Seleccionar archivos' : selectButtonLabel}
+        </FileSelectButton>
+        {multiple && selectedFiles.length > 0 ? (
+          <ul className="document-upload-card__selected-files" aria-label="Archivos seleccionados">
+            {selectedFiles.map((file, index) => (
+              <li key={`${file.name}-${file.size}-${file.lastModified}-${index}`}>
+                <span>{file.name}</span>
+                {onRemoveSelectedFile ? (
+                  <button type="button" onClick={() => onRemoveSelectedFile(item.id, index)} disabled={disabled}>
+                    Quitar
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {item.selectedFile && onRemoveFile ? (
           <button
             type="button"

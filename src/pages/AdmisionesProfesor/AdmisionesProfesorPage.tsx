@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { hasAnyRole, isProfesor, ROLES } from '../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
 import { ModuleLayout } from '../../components'
 import { useAuth } from '../../context/Auth'
 import {
-  getConvocatoriasApi,
-  getInscripcionesByConvocatoria,
-} from '../../modules/admisionesProfesor/api/admisionesProfesorService'
-import type {
-  ConvocatoriaApiDto,
-  InscripcionApiDto,
-} from '../../modules/admisionesProfesor/api/types'
-import { getMockStudentPhotoUrl } from '../../modules/admisiones/utils/mockStudentPhoto'
+  getConvocatoriasAdmision,
+} from '../../modules/admisiones/api/convocatoriaAdmisionService'
+import type { ConvocatoriaAdmisionDto } from '../../modules/admisiones/api/convocatoriaAdmisionTypes'
+import { getInscripcionesByConvocatoria } from '../../modules/admisiones/api/inscripcionAdmisionService'
+import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
+import { getAspiranteFotoSrc } from '../../modules/admisiones/utils/aspiranteFoto'
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
 import './AdmisionesProfesorPage.css'
+import { getEntrevistasPorEvaluador } from '../../modules/admisiones/api/evaluacionAdmisionService'
+import {
+  ESTADO_ENTREVISTA_NO_INICIADA,
+  getOrdenEstadoEntrevista,
+} from '../../modules/admisiones/utils/estadoEntrevista'
 
-type InscripcionConConvocatoria = InscripcionApiDto & {
+type InscripcionConConvocatoria = InscripcionAdmisionDto & {
   convocatoriaId: number
   programaId: number
   programa: string
@@ -33,17 +36,43 @@ const isMisi = (row: InscripcionConConvocatoria) =>
 const isDcc = (row: InscripcionConConvocatoria) =>
   row.programaId === PROGRAMA_DCC || normalize(row.programa).includes('DCC')
 
+const AspirantePhoto = ({ fotoSrc, nombre }: { fotoSrc: string | null; nombre: string }) => {
+  const [failedPhotoSrc, setFailedPhotoSrc] = useState<string | null>(null)
+  const showFallback = !fotoSrc || failedPhotoSrc === fotoSrc
+
+  return (
+    <div className="admisiones-profesor__card-media">
+      {showFallback ? (
+        <div className="admisiones-profesor__card-photo-placeholder" aria-label="Sin foto">
+          Sin foto
+        </div>
+      ) : (
+        <img
+          className="admisiones-profesor__card-photo"
+          src={fotoSrc}
+          alt={`Foto de ${nombre}`}
+          loading="lazy"
+          onError={() => setFailedPhotoSrc(fotoSrc)}
+        />
+      )}
+    </div>
+  )
+}
+
 const AdmisionesProfesorPage = () => {
   const { session } = useAuth()
   const navigate = useNavigate()
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
+  const usuarioId = session?.user.id
+  const [estadosEntrevista, setEstadosEntrevista] = useState<Record<number, string>>({})
+  const [loadingEstadosEntrevista, setLoadingEstadosEntrevista] = useState(false)
+  const [errorEstadosEntrevista, setErrorEstadosEntrevista] = useState<string | null>(null)
 
-  const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaApiDto[]>([])
+  const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([])
   const [inscripcionesByConvocatoria, setInscripcionesByConvocatoria] = useState<
-    Record<number, InscripcionApiDto[]>
+    Record<number, InscripcionAdmisionDto[]>
   >({})
 
   const [loadingConvocatorias, setLoadingConvocatorias] = useState(false)
@@ -56,7 +85,7 @@ const AdmisionesProfesorPage = () => {
     setErrorConvocatorias(null)
 
     try {
-      const convocatorias = await getConvocatoriasApi()
+      const convocatorias = await getConvocatoriasAdmision()
       setActiveConvocatorias(convocatorias.filter((convocatoria) => convocatoria.vigente))
     } catch (error) {
       const message =
@@ -69,15 +98,15 @@ const AdmisionesProfesorPage = () => {
   }, [])
 
   useEffect(() => {
-    if (!isProfesorOnly) {
+    if (!isEvaluadorOnly) {
       return
     }
 
     loadConvocatorias()
-  }, [isProfesorOnly, loadConvocatorias])
+  }, [isEvaluadorOnly, loadConvocatorias])
 
   useEffect(() => {
-    if (!isProfesorOnly) {
+    if (!isEvaluadorOnly) {
       return
     }
 
@@ -104,7 +133,7 @@ const AdmisionesProfesorPage = () => {
           return
         }
 
-        const nextMap = rows.reduce<Record<number, InscripcionApiDto[]>>((acc, item) => {
+        const nextMap = rows.reduce<Record<number, InscripcionAdmisionDto[]>>((acc, item) => {
           acc[item.convocatoriaId] = item.inscripciones
           return acc
         }, {})
@@ -133,7 +162,7 @@ const AdmisionesProfesorPage = () => {
     return () => {
       isMounted = false
     }
-  }, [activeConvocatorias, isProfesorOnly])
+  }, [activeConvocatorias, isEvaluadorOnly])
 
   const periodosLabel = useMemo(() => {
     const periodos = Array.from(new Set(activeConvocatorias.map((item) => item.periodo).filter(Boolean)))
@@ -163,6 +192,45 @@ const AdmisionesProfesorPage = () => {
     [inscripcionesConConvocatoria]
   )
 
+  const loadEstadosEntrevista = useCallback(async () => {
+    if (!isEvaluadorOnly || usuarioId == null) return
+
+    setLoadingEstadosEntrevista(true)
+    setErrorEstadosEntrevista(null)
+    setEstadosEntrevista({})
+
+    try {
+      const entrevistas = await getEntrevistasPorEvaluador(usuarioId)
+      const nextEstados = entrevistas.reduce<Record<number, string>>((acc, entrevista) => {
+        acc[entrevista.inscripcionId] = entrevista.completa
+          ? 'Calificado'
+          : 'Pendiente de calificación'
+        return acc
+      }, {})
+      setEstadosEntrevista(nextEstados)
+    } catch (error) {
+      setErrorEstadosEntrevista(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible cargar el estado de las entrevistas.',
+      )
+    } finally {
+      setLoadingEstadosEntrevista(false)
+    }
+  }, [isEvaluadorOnly, usuarioId])
+
+  useEffect(() => {
+    void loadEstadosEntrevista()
+  }, [loadEstadosEntrevista])
+
+  const getEstadoEntrevistaListado = useCallback(
+    (inscripcionId: number) => {
+      if (loadingEstadosEntrevista) return 'Consultando calificación…'
+      return estadosEntrevista[inscripcionId] ?? ESTADO_ENTREVISTA_NO_INICIADA
+    },
+    [estadosEntrevista, loadingEstadosEntrevista],
+  )
+
   const dccInscripciones = useMemo(
     () => inscripcionesConConvocatoria.filter((inscripcion) => isDcc(inscripcion)),
     [inscripcionesConConvocatoria]
@@ -185,7 +253,14 @@ const AdmisionesProfesorPage = () => {
   )
 
   const renderProgramaSection = useCallback(
-    (title: string, rows: InscripcionConConvocatoria[]) => (
+    (title: string, rows: InscripcionConConvocatoria[]) => {
+      const rowsOrdenadas = [...rows].sort((a, b) => {
+        const estadoA = getEstadoEntrevistaListado(a.id)
+        const estadoB = getEstadoEntrevistaListado(b.id)
+        return getOrdenEstadoEntrevista(estadoA) - getOrdenEstadoEntrevista(estadoB)
+      })
+
+      return (
       <section className="admisiones-profesor__program">
         <h2 className="admisiones-profesor__program-title">{title}</h2>
 
@@ -199,10 +274,20 @@ const AdmisionesProfesorPage = () => {
 
         {!loadingInscripciones && rows.length > 0 ? (
           <div className="admisiones-profesor__cards-grid">
-            {rows.map((inscripcion) => {
+            {rowsOrdenadas.map((inscripcion) => {
               const documento = inscripcion.numeroDocumento || '—'
               const email = inscripcion.emailPersonal || '—'
               const telefono = inscripcion.telefono || '—'
+              const fotoSrc = getAspiranteFotoSrc(inscripcion.foto)
+              const estadoEntrevista = getEstadoEntrevistaListado(inscripcion.id)
+              const estadoEntrevistaTone =
+                estadoEntrevista === 'Pendiente de calificación'
+                  ? 'pending'
+                  : estadoEntrevista === 'Calificado'
+                    ? 'complete'
+                    : estadoEntrevista === ESTADO_ENTREVISTA_NO_INICIADA
+                      ? 'not-started'
+                      : 'loading'
 
               return (
                 <article
@@ -218,12 +303,7 @@ const AdmisionesProfesorPage = () => {
                     }
                   }}
                 >
-                  <img
-                    className="admisiones-profesor__card-photo"
-                    src={getMockStudentPhotoUrl(inscripcion.aspiranteId, inscripcion.nombreAspirante)}
-                    alt={`Foto de ${inscripcion.nombreAspirante}`}
-                    loading="lazy"
-                  />
+                  <AspirantePhoto fotoSrc={fotoSrc} nombre={inscripcion.nombreAspirante} />
 
                   <div className="admisiones-profesor__card-body">
                     <h3 className="admisiones-profesor__card-name">{inscripcion.nombreAspirante}</h3>
@@ -231,6 +311,15 @@ const AdmisionesProfesorPage = () => {
                     <span className="admisiones-profesor__card-pill">
                       {inscripcion.estado?.replaceAll('_', ' ') || 'Sin estado'}
                     </span>
+
+                    <dl
+                      className={`admisiones-profesor__interview-status admisiones-profesor__interview-status--${estadoEntrevistaTone}`}
+                    >
+                      <div>
+                        <dt>Tu entrevista</dt>
+                        <dd role="status">{estadoEntrevista}</dd>
+                      </div>
+                    </dl>
 
                     <dl className="admisiones-profesor__card-details">
                       <div>
@@ -262,11 +351,12 @@ const AdmisionesProfesorPage = () => {
           </div>
         ) : null}
       </section>
-    ),
-    [goToEntrevistas, loadingInscripciones]
+      )
+    },
+    [getEstadoEntrevistaListado, goToEntrevistas, loadingInscripciones]
   )
 
-  if (!isProfesorOnly) {
+  if (!isEvaluadorOnly) {
     return null
   }
 
@@ -274,7 +364,7 @@ const AdmisionesProfesorPage = () => {
     <ModuleLayout title="Admisiones">
       <section className="admisiones-profesor">
         <header className="admisiones-profesor__header">
-          <h1 className="admisiones-profesor__title">Admisiones — Mis entrevistas</h1>
+          <h1 className="admisiones-profesor__title">Mis entrevistas</h1>
           <p className="admisiones-profesor__subtitle">
             Convocatorias activas: {periodosLabel || 'Sin periodos activos'}
           </p>
@@ -302,6 +392,15 @@ const AdmisionesProfesorPage = () => {
             {errorInscripciones ? (
               <div className="admisiones-profesor__error">
                 <p>{errorInscripciones}</p>
+              </div>
+            ) : null}
+
+            {errorEstadosEntrevista ? (
+              <div className="admisiones-profesor__error">
+                <p>{errorEstadosEntrevista}</p>
+                <button type="button" onClick={loadEstadosEntrevista}>
+                  Reintentar
+                </button>
               </div>
             ) : null}
 

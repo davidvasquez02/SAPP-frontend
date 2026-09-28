@@ -6,7 +6,7 @@ import { uploadDocument } from '../../api/documentUploadService'
 import { useAuth } from '../../context/Auth'
 import { fileToBase64 } from '../../utils/fileToBase64'
 import { sha256Hex } from '../../utils/sha256'
-import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
+import { downloadBase64File, downloadBlobFile, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
   getDocumentById,
   getDocumentsByEstudiante,
@@ -14,6 +14,7 @@ import {
   type DocumentosEstudianteGrupoDto,
 } from '../../modules/documentos/api/documentosService'
 import {
+  downloadDocumentosEstudianteZip,
   getEstudianteById,
   updateEstadoEstudiante,
   type EstadoEstudiante,
@@ -22,6 +23,7 @@ import { clearEstudiantesListCache } from '../../modules/estudiantes/services/es
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
+import { getProgramaAcademico } from '../../shared/domain/programaAcademico'
 
 const EMPTY_VALUE = '—'
 const SIN_PERIODO_KEY = '__SIN_PERIODO__'
@@ -95,20 +97,7 @@ const getProgramaDisplay = (estudiante: EstudianteCoordinacion) => {
     return EMPTY_VALUE
   }
 
-  const codigoAfterDash = programa.split('-').at(-1)?.trim()
-  if (codigoAfterDash && /^[A-ZÁÉÍÓÚÑ]{2,8}$/.test(codigoAfterDash)) {
-    return codigoAfterDash
-  }
-
-  if (programa.toUpperCase().includes('DOCTORADO')) {
-    return 'DCC'
-  }
-
-  if (programa.toUpperCase().includes('MAESTR')) {
-    return 'MISI'
-  }
-
-  return programa
+  return getProgramaAcademico({ id: estudiante.programaId, nombre: programa })?.nombre ?? programa
 }
 
 const getFotoSrc = (estudiante: EstudianteCoordinacion) => {
@@ -281,29 +270,12 @@ const getDocumentoEstadoModifier = (estado: string) => {
   return 'is-neutral'
 }
 
-const formatFileSize = (bytes?: number | null) => {
-  if (!bytes || bytes <= 0) {
-    return EMPTY_VALUE
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB']
-  let value = bytes
-  let unitIndex = 0
-
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex += 1
-  }
-
-  return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
-}
-
 const getUploadDocumentKey = (documento: Pick<DocumentCardDocument, 'tramiteId' | 'tipoDocumentoTramiteId'>) => {
   return `${documento.tramiteId ?? 'sin-tramite'}-${documento.tipoDocumentoTramiteId ?? 'sin-tipo'}`
 }
 
 const canUploadDocument = (documento: DocumentCardDocument) => {
-  return !documento.id && Boolean(documento.tipoDocumentoTramiteId && documento.tramiteId)
+  return Boolean(documento.tipoDocumentoTramiteId && documento.tramiteId)
 }
 
 const resolveDocumentoKey = (documento: DocumentCardDocument, index: number) => {
@@ -362,10 +334,6 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
             <dt>Fecha de carga</dt>
             <dd>{formatDate(documento.fechaCarga)}</dd>
           </div>
-          <div>
-            <dt>Tamaño</dt>
-            <dd>{formatFileSize(documento.tamanoBytes)}</dd>
-          </div>
         </dl>
       </div>
 
@@ -379,9 +347,14 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               {isDownloading ? 'Descargando...' : 'Descargar'}
             </button>
           </>
-        ) : uploadEnabled ? (
+        ) : null}
+        {uploadEnabled ? (
           <label className={`estudiante-detalle__upload-button ${isUploading ? 'is-disabled' : ''}`}>
-            {isUploading ? `Cargando ${uploadingAction?.filename ?? 'archivo'}...` : 'Cargar documento'}
+            {isUploading
+              ? `${hasFile ? 'Actualizando' : 'Cargando'} ${uploadingAction?.filename ?? 'archivo'}...`
+              : hasFile
+                ? 'Actualizar documento'
+                : 'Cargar documento'}
             <input
               type="file"
               className="estudiante-detalle__upload-input"
@@ -390,9 +363,9 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               onChange={handleFileChange}
             />
           </label>
-        ) : (
+        ) : !hasFile ? (
           <span className="estudiante-detalle__document-no-actions">No hay trámite disponible para cargar este archivo</span>
-        )}
+        ) : null}
       </footer>
     </article>
   )
@@ -432,17 +405,23 @@ const DocumentGrid = ({ documentos, emptyMessage, activeAction, uploadingAction,
 
 interface StudentProfileHeaderProps {
   estudiante: EstudianteCoordinacion
+  isDownloadingZip: boolean
+  downloadZipError: string | null
   isUpdatingEstado: boolean
   estadoMessage: string | null
   estadoError: string | null
+  onDownloadZip: () => void
   onEstadoChange: (estado: EstadoEstudiante) => void
 }
 
 const StudentProfileHeader = ({
   estudiante,
+  isDownloadingZip,
+  downloadZipError,
   isUpdatingEstado,
   estadoMessage,
   estadoError,
+  onDownloadZip,
   onEstadoChange,
 }: StudentProfileHeaderProps) => {
   const fotoSrc = getFotoSrc(estudiante)
@@ -483,6 +462,20 @@ const StudentProfileHeader = ({
           </span>
         </div>
         <div className="estudiante-detalle__state-actions" aria-label="Acciones sobre el estado del estudiante">
+          <button
+            type="button"
+            className="estudiante-detalle__download-all-button"
+            disabled={isDownloadingZip}
+            aria-busy={isDownloadingZip}
+            onClick={onDownloadZip}
+          >
+            {isDownloadingZip ? (
+              <span className="estudiante-detalle__download-spinner" aria-hidden="true" />
+            ) : (
+              <span aria-hidden="true">↓</span>
+            )}
+            {isDownloadingZip ? 'Preparando descarga...' : 'Descargar información'}
+          </button>
           {estadoAlterno ? (
             <button
               type="button"
@@ -506,6 +499,7 @@ const StudentProfileHeader = ({
         </div>
         {estadoMessage ? <p className="estudiante-detalle__state-feedback" role="status">{estadoMessage}</p> : null}
         {estadoError ? <p className="estudiante-detalle__state-feedback estudiante-detalle__state-feedback--error" role="alert">{estadoError}</p> : null}
+        {downloadZipError ? <p className="estudiante-detalle__state-feedback estudiante-detalle__state-feedback--error" role="alert">{downloadZipError}</p> : null}
       </div>
 
       <dl className="estudiante-detalle__profile-meta">
@@ -520,6 +514,14 @@ const StudentProfileHeader = ({
         <div>
           <dt>Documento</dt>
           <dd>{formatDocumentoIdentidad(estudiante.tipoDocumento, estudiante.numeroDocumento, EMPTY_VALUE)}</dd>
+        </div>
+        <div>
+          <dt>Director de trabajo de grado</dt>
+          <dd>{estudiante.directorTg?.nombreCompleto ?? ''}</dd>
+        </div>
+        <div>
+          <dt>Correo del director</dt>
+          <dd>{estudiante.directorTg?.correo ?? ''}</dd>
         </div>
       </dl>
     </article>
@@ -599,6 +601,8 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [estadoMessage, setEstadoMessage] = useState<string | null>(null)
   const [estadoError, setEstadoError] = useState<string | null>(null)
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false)
+  const [downloadZipError, setDownloadZipError] = useState<string | null>(null)
   const loadedDocumentsCodeRef = useRef<string | null>(null)
 
   useEffect(() => () => {
@@ -816,6 +820,29 @@ const EstudianteDetalleCoordinacionPage = () => {
     }
   }, [estudiante, isUpdatingEstado])
 
+  const handleDownloadZip = useCallback(async () => {
+    if (!estudiante || isDownloadingZip) {
+      return
+    }
+
+    setIsDownloadingZip(true)
+    setDownloadZipError(null)
+
+    try {
+      const file = await downloadDocumentosEstudianteZip(estudiante.id)
+      const fallbackFilename = `${getCodigoEstudianteUis(estudiante) || `estudiante-${estudiante.id}`}-documentos.zip`
+      downloadBlobFile(file.blob, file.filename || fallbackFilename)
+    } catch (err) {
+      setDownloadZipError(
+        err instanceof Error
+          ? err.message
+          : 'No fue posible descargar la información del estudiante.',
+      )
+    } finally {
+      setIsDownloadingZip(false)
+    }
+  }, [estudiante, isDownloadingZip])
+
   const contenidoTab = useMemo(() => {
     const withActionError = (content: ReactNode) => (
       <>
@@ -907,9 +934,12 @@ const EstudianteDetalleCoordinacionPage = () => {
           <div className="estudiante-detalle__dashboard">
             <StudentProfileHeader
               estudiante={estudiante}
+              isDownloadingZip={isDownloadingZip}
+              downloadZipError={downloadZipError}
               isUpdatingEstado={isUpdatingEstado}
               estadoMessage={estadoMessage}
               estadoError={estadoError}
+              onDownloadZip={() => void handleDownloadZip()}
               onEstadoChange={(estado) => void handleEstadoChange(estado)}
             />
             <StudentAcademicStats estudiante={estudiante} />

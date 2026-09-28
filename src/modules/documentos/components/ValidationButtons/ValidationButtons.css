@@ -60,6 +60,11 @@
   color: var(--text-primary);
   resize: vertical;
 }
+@media (max-width: 640px) {
+  .validation-buttons__textarea { min-height: 96px; font-size: 16px; }
+  .validation-buttons__btn { min-height: 44px; }
+  .validation-buttons__reject-mode { padding: .65rem; border: 1px solid color-mix(in srgb, var(--outline), transparent 35%); border-radius: 12px; }
+}
 
 .validation-buttons__error {
   color: #b91c1c;

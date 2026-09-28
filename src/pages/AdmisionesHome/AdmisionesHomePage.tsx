@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { hasAnyRole, ROLES } from "../../auth/roleGuards";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { canManagePosgrados } from "../../auth/roleGuards";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
 import { useAuth } from "../../context/Auth";
@@ -8,18 +8,9 @@ import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convo
 import { getProgramaNombreLargo } from "../../modules/admisiones/utils/programNames";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import { CreateConvocatoriaModal } from "../../modules/admisiones/components/CreateConvocatoriaModal";
+import { CompactPeriodSelect } from "./CompactPeriodSelect";
 import "./AdmisionesHomePage.css";
-
-const PROGRAM_META = new Map<
-  number,
-  {
-    code: string;
-    icon: string;
-  }
->([
-  [1, { code: "61412 - MISI", icon: "▣" }],
-  [2, { code: "61204 - DCC", icon: "010\n101" }],
-]);
 
 const DATE_ONLY_FORMATTER = new Intl.DateTimeFormat("es-ES", {
   day: "numeric",
@@ -106,6 +97,24 @@ const getConvocatoriaDestacada = (
   return [...vigentes].sort(sortByPeriodoDesc)[0] ?? null;
 };
 
+const MOBILE_PROGRAM_QUERY = "(max-width: 900px)";
+
+const useMobileProgramLayout = (): boolean => {
+  const [isMobile, setIsMobile] = useState(() =>
+    window.matchMedia(MOBILE_PROGRAM_QUERY).matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_PROGRAM_QUERY);
+    const handleChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  return isMobile;
+};
+
 const AdmisionesHomePage = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -115,19 +124,25 @@ const AdmisionesHomePage = () => {
   const [selectedPrevious, setSelectedPrevious] = useState<
     Record<number, string>
   >({});
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [createForProgramaId, setCreateForProgramaId] = useState<number | null>(null);
+  const programTabRefs = useRef(new Map<number, HTMLButtonElement>());
+  const isMobileProgramLayout = useMobileProgramLayout();
   const canManageConvocatorias =
     session?.kind === "SAPP" &&
-    hasAnyRole(session.user.roles, [ROLES.ADMIN, ROLES.COORDINACION]);
+    canManagePosgrados(session.user.roles);
 
-  const loadConvocatorias = useCallback(async () => {
+  const loadConvocatorias = useCallback(async (): Promise<ConvocatoriaAdmisionDto[]> => {
     setIsLoading(true);
     setError(null);
 
     try {
       const data = await getConvocatoriasAdmision();
       setConvocatorias(data);
+      return data;
     } catch (err) {
       const message =
         err instanceof Error
@@ -135,6 +150,7 @@ const AdmisionesHomePage = () => {
           : "No fue posible cargar las convocatorias.";
       setError(message);
       setConvocatorias([]);
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -170,6 +186,41 @@ const AdmisionesHomePage = () => {
       (a, b) => a.programaId - b.programaId,
     );
   }, [convocatorias]);
+
+  const activeProgramId =
+    selectedProgramId !== null &&
+    programas.some(({ programaId }) => programaId === selectedProgramId)
+      ? selectedProgramId
+      : (programas[0]?.programaId ?? null);
+
+  const selectProgramAndFocus = useCallback((programaId: number) => {
+    setSelectedProgramId(programaId);
+    requestAnimationFrame(() => programTabRefs.current.get(programaId)?.focus());
+  }, []);
+
+  const handleProgramTabKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, programaId: number) => {
+      const currentIndex = programas.findIndex((programa) => programa.programaId === programaId);
+      if (currentIndex < 0) return;
+
+      let nextIndex: number | null = null;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        nextIndex = (currentIndex + 1) % programas.length;
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        nextIndex = (currentIndex - 1 + programas.length) % programas.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = programas.length - 1;
+      }
+
+      if (nextIndex !== null) {
+        event.preventDefault();
+        selectProgramAndFocus(programas[nextIndex].programaId);
+      }
+    },
+    [programas, selectProgramAndFocus],
+  );
 
   const handleNavigate = useCallback(
     (convocatoria: ConvocatoriaAdmisionDto, programaNombre: string) => {
@@ -215,12 +266,7 @@ const AdmisionesHomePage = () => {
   );
 
   return (
-    <ModuleLayout title="Admisiones">
-      {/* <section className="admisiones-page" aria-label="Admisiones">
-        <p className="admisiones-page__description">
-          Gestiona las convocatorias de maestría y doctorado.
-        </p> */}
-
+    <ModuleLayout title="Módulo de Admisiones" compactOnMobile>
       <section
         className="admisiones-section-card"
         aria-labelledby="admisiones-section-title"
@@ -280,7 +326,48 @@ const AdmisionesHomePage = () => {
         ) : null}
 
         {!isLoading && !error && convocatorias.length > 0 ? (
-          <div className="admisiones-program-grid">
+          <>
+            <div
+              className="admisiones-program-tabs"
+              role="tablist"
+              aria-label="Seleccione el programa académico"
+            >
+              {programas.map((programa) => {
+                const isSelected = programa.programaId === activeProgramId;
+                const programaNombre = getProgramaNombreLargo(
+                  programa.programaId,
+                  programa.programa,
+                );
+                const shortName = programaNombre.toLocaleLowerCase("es").includes("doctorado")
+                  ? "Doctorado"
+                  : programaNombre.toLocaleLowerCase("es").includes("maestría")
+                    ? "Maestría"
+                    : programa.programa;
+
+                return (
+                  <button
+                    key={programa.programaId}
+                    ref={(element) => {
+                      if (element) programTabRefs.current.set(programa.programaId, element);
+                      else programTabRefs.current.delete(programa.programaId);
+                    }}
+                    id={`program-tab-${programa.programaId}`}
+                    type="button"
+                    className="admisiones-program-tab"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`program-panel-${programa.programaId}`}
+                    tabIndex={isSelected ? 0 : -1}
+                    onClick={() => setSelectedProgramId(programa.programaId)}
+                    onKeyDown={(event) => handleProgramTabKeyDown(event, programa.programaId)}
+                  >
+                    {shortName}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="admisiones-program-grid">
             {programas.map((programa) => {
               const convocatoriaDestacada = getConvocatoriaDestacada(
                 programa.convocatorias,
@@ -310,27 +397,20 @@ const AdmisionesHomePage = () => {
                 programa.programaId,
                 programa.programa,
               );
-              const programaMeta = PROGRAM_META.get(programa.programaId);
-
               return (
                 <article
                   key={programa.programaId}
                   className="admisiones-program-card"
+                  id={`program-panel-${programa.programaId}`}
+                  role={isMobileProgramLayout ? "tabpanel" : undefined}
+                  aria-labelledby={isMobileProgramLayout ? `program-tab-${programa.programaId}` : undefined}
+                  hidden={isMobileProgramLayout && programa.programaId !== activeProgramId}
                 >
                   <header className="admisiones-program-card__header">
-                    {/* <span
-                      className="admisiones-program-card__icon"
-                      aria-hidden="true"
-                    >
-                      {programaMeta?.icon ?? "🎓"}
-                    </span> */}
                     <div>
                       <h3 className="admisiones-program-card__title">
                         {programaNombre}
                       </h3>
-                      <p className="admisiones-program-card__code">
-                        {programaMeta?.code ?? programa.programa}
-                      </p>
                     </div>
                   </header>
 
@@ -355,8 +435,10 @@ const AdmisionesHomePage = () => {
                           aria-hidden="true"
                         />
                         {convocatoriaEsDelPeriodoActual
-                          ? "Convocatoria del período actual"
-                          : "Convocatoria abierta"}
+                          ? "Convocatoria actual"
+                          : convocatoriaEstaAbierta
+                            ? "Convocatoria vigente"
+                            : "Convocatoria más reciente"}
                       </span>
                       <span
                         className={`admisiones-current-callout__badge ${convocatoriaEstaAbierta
@@ -427,17 +509,26 @@ const AdmisionesHomePage = () => {
 
                     <button
                       type="button"
-                      className={`admisiones-enter-button ${!convocatoriaEstaAbierta
+                      className={`admisiones-enter-button ${(!convocatoriaDestacada && canManageConvocatorias)
+                        ? ""
+                        : !convocatoriaEstaAbierta
                         ? "admisiones-enter-button--inactive"
                         : ""
                         }`}
-                      disabled={!convocatoriaDestacada}
-                      onClick={() =>
-                        convocatoriaDestacada &&
-                        handleNavigate(convocatoriaDestacada, programaNombre)
-                      }
+                      disabled={!convocatoriaDestacada && !canManageConvocatorias}
+                      onClick={() => {
+                        if (convocatoriaDestacada) {
+                          handleNavigate(convocatoriaDestacada, programaNombre);
+                        } else if (canManageConvocatorias) {
+                          setCreateForProgramaId(programa.programaId);
+                        }
+                      }}
                     >
-                      {convocatoriaEstaAbierta
+                      {!convocatoriaDestacada
+                        ? canManageConvocatorias
+                          ? "Crear convocatoria"
+                          : "No disponible"
+                        : convocatoriaEstaAbierta
                         ? "Entrar a la convocatoria"
                         : "Consultar convocatoria"}
                       <span aria-hidden="true">→</span>
@@ -457,35 +548,44 @@ const AdmisionesHomePage = () => {
                         No hay convocatorias anteriores.
                       </p>
                     ) : (
-                      <select
+                      <CompactPeriodSelect
                         id={`prev-${programa.programaId}`}
-                        className="admisiones-previous-select__control"
                         value={selectedPrevious[programa.programaId] ?? ""}
-                        onChange={(event) =>
+                        placeholder="Seleccione un período..."
+                        options={anterioresOrdenadas.map((convocatoria) => ({
+                          label: convocatoria.periodo,
+                          value: String(convocatoria.id),
+                        }))}
+                        onChange={(value) =>
                           handlePreviousChange(
                             programa.programaId,
                             programaNombre,
                             anterioresOrdenadas,
-                            event.target.value,
+                            value,
                           )
                         }
-                      >
-                        <option value="">Seleccione un período...</option>
-                        {anterioresOrdenadas.map((convocatoria) => (
-                          <option key={convocatoria.id} value={convocatoria.id}>
-                            {convocatoria.periodo}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     )}
                   </div>
                 </article>
               );
             })}
-          </div>
+            </div>
+          </>
         ) : null}
       </section>
-      {/* </section> */}
+      {feedback ? <p className="admisiones-feedback" role="status">{feedback}</p> : null}
+      <CreateConvocatoriaModal
+        open={createForProgramaId !== null}
+        convocatorias={convocatorias}
+        initialProgramaId={createForProgramaId}
+        onClose={() => setCreateForProgramaId(null)}
+        onRefreshConvocatorias={loadConvocatorias}
+        onSuccess={(message) => {
+          setFeedback(message);
+          setCreateForProgramaId(null);
+        }}
+      />
     </ModuleLayout>
   );
 };

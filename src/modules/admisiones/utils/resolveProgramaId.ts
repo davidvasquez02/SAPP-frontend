@@ -1,7 +1,5 @@
 import type { InscripcionAdmisionDto } from '../api/types'
-
-const normalizeProgramaLabel = (value: string | null | undefined): string =>
-  (value ?? '').toUpperCase()
+import { getProgramaAcademico } from '../../../shared/domain/programaAcademico'
 
 export const resolveProgramaIdFromInscripciones = (
   inscripciones: InscripcionAdmisionDto[]
@@ -12,15 +10,5 @@ export const resolveProgramaIdFromInscripciones = (
     return null
   }
 
-  const normalized = normalizeProgramaLabel(programaAcademico)
-
-  if (normalized.includes('DCC')) {
-    return 2
-  }
-
-  if (normalized.includes('MISI')) {
-    return 1
-  }
-
-  return null
+  return getProgramaAcademico(programaAcademico)?.id ?? null
 }

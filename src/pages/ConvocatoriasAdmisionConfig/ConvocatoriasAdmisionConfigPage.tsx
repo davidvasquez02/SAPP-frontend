@@ -7,6 +7,7 @@ import {
 } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { CreateConvocatoriaModal } from "../../modules/admisiones/components/CreateConvocatoriaModal";
+import CloseConvocatoriaDialog from "../../modules/admisiones/components/CloseConvocatoriaDialog";
 import { EditConvocatoriaFechasModal } from "../../modules/admisiones/components/EditConvocatoriaFechasModal";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import "./ConvocatoriasAdmisionConfigPage.css";
@@ -66,6 +67,9 @@ const ConvocatoriasAdmisionConfigPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingConvocatoria, setEditingConvocatoria] =
     useState<ConvocatoriaAdmisionDto | null>(null);
+  const [closingConvocatoria, setClosingConvocatoria] =
+    useState<ConvocatoriaAdmisionDto | null>(null);
+  const [isClosingConvocatoria, setIsClosingConvocatoria] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadConvocatorias = useCallback(
@@ -149,30 +153,35 @@ const ConvocatoriasAdmisionConfigPage = () => {
       .sort((a, b) => a.programaRaw.localeCompare(b.programaRaw, "es"));
   }, [filteredConvocatorias]);
 
-  const handleCloseConvocatoria = useCallback(
-    async (convocatoria: ConvocatoriaAdmisionDto) => {
-      const confirmed = window.confirm(
-        `¿Cerrar convocatoria ${convocatoria.periodo} - ${convocatoria.programa}?`,
-      );
+  const handleConfirmCloseConvocatoria = useCallback(
+    async () => {
+      if (!closingConvocatoria || isClosingConvocatoria) return;
 
-      if (!confirmed) {
-        return;
-      }
-
+      setIsClosingConvocatoria(true);
+      setError(null);
+      setFeedback(null);
       try {
-        await cerrarConvocatoriaAdmision(convocatoria.id);
+        await cerrarConvocatoriaAdmision(closingConvocatoria.id);
         await loadConvocatorias(true);
         setFeedback("Convocatoria cerrada correctamente.");
+        setClosingConvocatoria(null);
       } catch (requestError) {
         const message =
           requestError instanceof Error
             ? requestError.message
             : "No fue posible cerrar la convocatoria.";
         setError(message);
+        setClosingConvocatoria(null);
+      } finally {
+        setIsClosingConvocatoria(false);
       }
     },
-    [loadConvocatorias],
+    [closingConvocatoria, isClosingConvocatoria, loadConvocatorias],
   );
+
+  const handleCancelCloseConvocatoria = useCallback(() => {
+    if (!isClosingConvocatoria) setClosingConvocatoria(null);
+  }, [isClosingConvocatoria]);
 
   return (
     <ModuleLayout title="Configuración de convocatorias">
@@ -346,10 +355,8 @@ const ConvocatoriasAdmisionConfigPage = () => {
                                   <button
                                     type="button"
                                     className="convocatorias-config__action"
-                                    onClick={() =>
-                                      handleCloseConvocatoria(item)
-                                    }
-                                    disabled={isRefreshing}
+                                    onClick={() => setClosingConvocatoria(item)}
+                                    disabled={isRefreshing || isClosingConvocatoria}
                                   >
                                     Cerrar
                                   </button>
@@ -383,6 +390,12 @@ const ConvocatoriasAdmisionConfigPage = () => {
           await loadConvocatorias(true);
           setFeedback(message);
         }}
+      />
+      <CloseConvocatoriaDialog
+        convocatoria={closingConvocatoria}
+        busy={isClosingConvocatoria}
+        onCancel={handleCancelCloseConvocatoria}
+        onConfirm={() => void handleConfirmCloseConvocatoria()}
       />
     </ModuleLayout>
   );

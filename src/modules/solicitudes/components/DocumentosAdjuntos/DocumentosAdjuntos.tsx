@@ -57,13 +57,13 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
 
                 return (
                   <tr key={documento.idDocumento}>
-                    <td>
+                    <td data-label="Nombre archivo">
                       <p className="documentos-adjuntos__filename">{documento.nombreArchivo}</p>
                       {documento.descripcion && (
                         <p className="documentos-adjuntos__description">{documento.descripcion}</p>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Acciones">
                       <div className="documentos-adjuntos__actions">
                         <button
                           type="button"

@@ -1,0 +1,122 @@
+.recordatorios-candidatura {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 55%);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  box-shadow: 0 0.2rem 0.75rem color-mix(in srgb, var(--outline), transparent 82%);
+}
+
+.recordatorios-candidatura h3,
+.recordatorios-candidatura p {
+  margin: 0;
+}
+
+.recordatorios-candidatura h3 {
+  margin-bottom: 0.35rem;
+}
+
+.recordatorios-candidatura p {
+  color: var(--text-secondary);
+}
+
+.recordatorios-candidatura .recordatorios-candidatura__eyebrow {
+  margin-bottom: 0.25rem;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.recordatorios-candidatura button {
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  padding: 0.65rem 1.1rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recordatorios-candidatura button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 60%);
+  outline-offset: 2px;
+}
+
+.recordatorios-candidatura button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.recordatorios-candidatura .recordatorios-candidatura__feedback {
+  grid-column: 1 / -1;
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+}
+
+.recordatorios-candidatura .recordatorios-candidatura__feedback--error {
+  border: 1px solid color-mix(in srgb, var(--danger, #b3261e), transparent 55%);
+  color: var(--danger, #b3261e);
+}
+
+.recordatorios-candidatura__backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--outline), transparent 35%);
+}
+
+.recordatorios-candidatura__dialog {
+  width: min(100%, 32rem);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--outline), transparent 45%);
+}
+
+.recordatorios-candidatura__dialog h2 {
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.recordatorios-candidatura__dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.recordatorios-candidatura .recordatorios-candidatura__secondary {
+  border-color: var(--outline);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .recordatorios-candidatura {
+    grid-template-columns: 1fr;
+  }
+
+  .recordatorios-candidatura > button {
+    width: 100%;
+  }
+
+  .recordatorios-candidatura__dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .recordatorios-candidatura__dialog-actions button {
+    width: 100%;
+  }
+}

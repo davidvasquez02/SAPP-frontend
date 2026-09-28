@@ -1,0 +1,32 @@
+.ajustes-estudiante {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--outline);
+  border-radius: 1.5rem;
+  background: var(--surface-container-low);
+  box-shadow: 0 0.5rem 1.5rem color-mix(in srgb, var(--outline) 18%, transparent);
+}
+
+.ajustes-estudiante h3,
+.ajustes-estudiante h4,
+.ajustes-estudiante p { margin: 0; }
+.ajustes-estudiante__observations ul { margin: 0.75rem 0 0; padding-left: 1.25rem; }
+.ajustes-estudiante__observations li + li { margin-top: 0.75rem; }
+.ajustes-estudiante__upload { display: grid; gap: 0.75rem; }
+.ajustes-estudiante__upload label { display: grid; gap: 0.5rem; font-weight: 600; }
+.ajustes-estudiante__upload input { width: 100%; min-height: 44px; color: inherit; }
+.ajustes-estudiante__upload button {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0.65rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+}
+.ajustes-estudiante__upload button:disabled { opacity: 0.6; cursor: not-allowed; }
+.ajustes-estudiante__error { color: var(--error); }
+.ajustes-estudiante__success { color: var(--primary); font-weight: 600; }
+.ajustes-estudiante__status { color: var(--on-surface-variant); }

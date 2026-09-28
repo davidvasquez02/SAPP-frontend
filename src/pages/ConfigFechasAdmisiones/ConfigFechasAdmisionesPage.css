@@ -143,3 +143,42 @@
     grid-column: span 1;
   }
 }
+
+@media (max-width: 720px) {
+  .config-fechas-admisiones {
+    min-width: 0;
+  }
+
+  .config-fechas-admisiones__header,
+  .config-fechas-admisiones__form-card {
+    min-width: 0;
+    padding: 0.875rem;
+    border-radius: 16px;
+  }
+
+  .config-fechas-admisiones__header h1,
+  .config-fechas-admisiones__header p {
+    overflow-wrap: anywhere;
+  }
+
+  .config-fechas-admisiones__form-grid,
+  .config-fechas-admisiones__field,
+  .config-fechas-admisiones__field--full {
+    min-width: 0;
+  }
+
+  .config-fechas-admisiones__field input,
+  .config-fechas-admisiones__field select,
+  .config-fechas-admisiones__field textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .config-fechas-admisiones__actions button {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+  }
+}

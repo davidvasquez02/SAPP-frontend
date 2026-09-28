@@ -26,6 +26,7 @@ export interface InscripcionAdmisionDto {
   periodoAcademico: string
   programaAcademico: string
   numeroDocumento?: string | null
+  numeroInscripcion?: number | string | null
   cedula?: string | null
   emailPersonal?: string | null
   correo?: string | null

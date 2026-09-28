@@ -1,39 +1,68 @@
-import { hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
 
 export interface PrimaryNavigationItem {
   to: string
   label: string
   icon: string
+  children?: Array<{ to: string; label: string }>
 }
 
-export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationItem[] => {
-  const canSeeAdmisiones = hasAnyRole(roles, [
+export const getPrimaryNavigationItems = (
+  roles: string[],
+  hasAssignedAdmisiones = true,
+): PrimaryNavigationItem[] => {
+  const canAccessAdmisiones = hasAnyRole(roles, [
     ROLES.COORDINACION,
     ROLES.SECRETARIA,
     ROLES.ADMIN,
     ROLES.PROFESOR,
     ROLES.DOCENTE,
+    ROLES.DIRECTOR,
   ])
-  const canSeeGestionEstudiantes = hasAnyRole(roles, [
-    ROLES.COORDINACION,
-    ROLES.SECRETARIA,
-    ROLES.ADMIN,
-  ])
-  const canSeeGestionCoordinacion = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const isEvaluadorOnly =
+    hasAnyRole(roles, [ROLES.PROFESOR, ROLES.DOCENTE, ROLES.DIRECTOR]) &&
+    !canManagePosgrados(roles)
+  const canSeeAdmisiones =
+    canAccessAdmisiones && (!isEvaluadorOnly || hasAssignedAdmisiones)
+  const canSeeGestionEstudiantes = canManagePosgrados(roles)
+  const canSeeGestionCoordinacion = canManagePosgrados(roles)
   const isProfesorOnly =
     isProfesor(roles) &&
-    !hasAnyRole(roles, [ROLES.COORDINACION, ROLES.SECRETARIA, ROLES.ADMIN])
+    !canManagePosgrados(roles)
+  const isDirector = hasAnyRole(roles, [ROLES.DIRECTOR])
+  const canManageMatricula = canManagePosgrados(roles)
 
   return [
+    { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
+    {
+      to: '/matricula',
+      label: 'Matrícula',
+      icon: '🎓',
+      visible: !isProfesorOnly && !isDirector,
+      children: [
+        { to: '/matricula/academica', label: 'Matrícula académica' },
+        { to: '/matricula/financiera', label: canManageMatricula ? 'Matrícula financiera' : 'Liquidación' },
+      ],
+    },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
-    { to: '/matricula', label: 'Matrícula', icon: '🎓', visible: !isProfesorOnly },
+    {
+      to: '/trabajos-grado',
+      label: 'Proyectos de grado',
+      icon: '📘',
+      visible: !isProfesorOnly && !isDirector,
+    },
+    {
+      to: '/creditos-condonables',
+      label: 'Créditos condonables',
+      icon: '💳',
+      visible: canManagePosgrados(roles),
+    },
     {
       to: '/coordinacion/estudiantes',
       label: 'Estudiantes',
       icon: '👥',
       visible: canSeeGestionEstudiantes,
     },
-    { to: '/admisiones', label: 'Admisiones', icon: '🧑‍🎓', visible: canSeeAdmisiones },
     {
       to: '/coordinacion/reportes',
       label: 'Informes a dependencias',
@@ -42,7 +71,13 @@ export const getPrimaryNavigationItems = (roles: string[]): PrimaryNavigationIte
     },
     { to: '/actas', label: 'Actas', icon: '📜', visible: canSeeGestionCoordinacion },
     { to: '/fechas', label: 'Fechas', icon: '🗓️', visible: canSeeGestionCoordinacion },
+    {
+      to: '/coordinacion/profesores',
+      label: 'Gestión profesores',
+      icon: '🧑‍🏫',
+      visible: canSeeGestionCoordinacion,
+    },
   ]
     .filter(({ visible }) => visible)
-    .map(({ to, label, icon }) => ({ to, label, icon }))
+    .map(({ to, label, icon, children }) => ({ to, label, icon, children }))
 }

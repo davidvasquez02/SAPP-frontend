@@ -1,4 +1,9 @@
+import { useState } from 'react'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evaluacionAdmisionTypes'
+import {
+  getPromedioPuntajeReglas,
+  getPromedioRangoLabel,
+} from '../../utils/promedioPuntajeGuide'
 import './EvaluacionEtapaSection.css'
 
 export type EvaluacionDraft = {
@@ -17,9 +22,10 @@ interface EvaluacionEtapaSectionProps {
   onChangeDraft: (id: number, changes: EvaluacionDraft) => void
   onSaveBulk?: () => Promise<void>
   isReadOnly?: boolean
+  showObservations?: boolean
 }
 
-const parseConsideraciones = (value: string): string => {
+const parseConsideraciones = (value: string): unknown => {
   const trimmed = value.trim()
 
   if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) {
@@ -27,10 +33,85 @@ const parseConsideraciones = (value: string): string => {
   }
 
   try {
-    return JSON.stringify(JSON.parse(trimmed), null, 2)
+    return JSON.parse(trimmed)
   } catch {
     return value
   }
+}
+
+const Consideraciones = ({ value, contentId }: { value: string; contentId: string }) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const parsed = parseConsideraciones(value)
+
+  const content = (() => {
+    if (typeof parsed === 'string') {
+      return <p className="evaluacion-etapa-section__consideraciones">{parsed}</p>
+    }
+
+    const renderValue = (entry: unknown): string => {
+      if (entry === null) return 'null'
+      if (typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean') return String(entry)
+      try {
+        return JSON.stringify(entry) ?? String(entry)
+      } catch {
+        return String(entry)
+      }
+    }
+
+    if (Array.isArray(parsed)) {
+      const promedioPuntajeReglas = getPromedioPuntajeReglas(parsed)
+      if (promedioPuntajeReglas) {
+        return (
+          <div className="evaluacion-etapa-section__score-guide">
+            <p className="evaluacion-etapa-section__score-guide-title">Promedio → puntos</p>
+            <ul aria-label="Puntaje según promedio de pregrado">
+              {promedioPuntajeReglas.map((regla) => (
+                <li key={`${regla.promedioMin}-${regla.promedioMax}-${regla.puntos}`}>
+                  <span>{getPromedioRangoLabel(regla)}</span>
+                  <strong>{regla.puntos} pts</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+
+      return (
+        <ol className="evaluacion-etapa-section__criteria-list">
+          {parsed.map((entry, index) => <li key={index}>{renderValue(entry)}</li>)}
+        </ol>
+      )
+    }
+
+    if (parsed && typeof parsed === 'object') {
+      return (
+        <dl className="evaluacion-etapa-section__criteria-list">
+          {Object.entries(parsed).map(([key, entry]) => (
+            <div key={key}><dt>{key}</dt><dd>{renderValue(entry)}</dd></div>
+          ))}
+        </dl>
+      )
+    }
+
+    return <p className="evaluacion-etapa-section__consideraciones">{value}</p>
+  })()
+
+  return (
+    <div className={`evaluacion-etapa-section__criteria${isExpanded ? ' evaluacion-etapa-section__criteria--expanded' : ''}`}>
+      <button
+        type="button"
+        className="evaluacion-etapa-section__criteria-toggle"
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
+        onClick={() => setIsExpanded((current) => !current)}
+      >
+        {isExpanded ? 'Ocultar criterios' : 'Ver criterios'}
+      </button>
+      <div id={contentId} className="evaluacion-etapa-section__criteria-content">
+        {content}
+      </div>
+    </div>
+  )
 }
 
 const EvaluacionEtapaSection = ({
@@ -44,6 +125,7 @@ const EvaluacionEtapaSection = ({
   onChangeDraft,
   onSaveBulk,
   isReadOnly = false,
+  showObservations = true,
 }: EvaluacionEtapaSectionProps) => {
   const hasItems = items.length > 0
   const hasChanges = Object.values(modifiedByRow).some(Boolean)
@@ -68,40 +150,49 @@ const EvaluacionEtapaSection = ({
                 <th>Consideraciones</th>
                 <th className="evaluacion-etapa-section__th-max">Puntaje máx.</th>
                 <th className="evaluacion-etapa-section__th-nota">Nota</th>
-                <th>Observaciones</th>
+                {showObservations ? <th>Observaciones</th> : null}
               </tr>
             </thead>
             <tbody>
               {items.map((item) => {
                 const draft = drafts[item.id]
                 const errorMessage = errorsByRow[item.id]
-                const puntajeValue = draft?.puntajeAspirante ?? item.puntajeAspirante ?? ''
+                const hasDraftScore = draft && Object.prototype.hasOwnProperty.call(draft, 'puntajeAspirante')
+                const puntajeValue = hasDraftScore ? draft.puntajeAspirante ?? '' : item.puntajeAspirante ?? ''
                 const observacionesValue = draft?.observaciones ?? item.observaciones ?? ''
                 const isModified = Boolean(modifiedByRow[item.id])
+                const noteId = `${etapa}-${item.id}-nota`
+                const observationsId = `${etapa}-${item.id}-observaciones`
+                const errorId = `${noteId}-error`
+                const considerationsId = `${etapa}-${item.id}-consideraciones`
 
                 return (
                   <tr key={item.id} className={isModified ? 'evaluacion-etapa-section__row--modified' : ''}>
-                    <td>{item.aspecto}</td>
-                    <td>
+                    <td data-label="Aspecto" className="evaluacion-etapa-section__aspecto">{item.aspecto}</td>
+                    <td data-label="Consideraciones">
                       {item.consideraciones ? (
-                        <pre className="evaluacion-etapa-section__consideraciones">
-                          {parseConsideraciones(item.consideraciones)}
-                        </pre>
+                        <Consideraciones value={item.consideraciones} contentId={considerationsId} />
                       ) : (
                         <span className="evaluacion-etapa-section__text-muted">-</span>
                       )}
                     </td>
-                    <td className="evaluacion-etapa-section__cell-max">{item.puntajeMax}</td>
+                    <td data-label="Puntaje máximo" className="evaluacion-etapa-section__cell-max">{item.puntajeMax}</td>
                     <td className="evaluacion-etapa-section__cell-nota">
                       <div className="evaluacion-etapa-section__field evaluacion-etapa-section__nota-field">
+                        <label htmlFor={noteId}>Nota</label>
                         <input
+                          id={noteId}
                           className="evaluacion-etapa-section__input evaluacion-etapa-section__nota-input"
                           type="number"
                           min={0}
                           max={item.puntajeMax}
                           step="0.01"
+                          inputMode="decimal"
+                          aria-invalid={Boolean(errorMessage)}
+                          aria-describedby={errorMessage ? errorId : undefined}
                           value={puntajeValue}
                           disabled={isReadOnly}
+                          onWheel={(event) => event.currentTarget.blur()}
                           onChange={(event) => {
                             const value = event.target.value
                             const parsed = value === '' ? undefined : Number(value)
@@ -109,21 +200,25 @@ const EvaluacionEtapaSection = ({
                           }}
                         />
                         {errorMessage && (
-                          <span className="evaluacion-etapa-section__error">{errorMessage}</span>
+                          <span id={errorId} className="evaluacion-etapa-section__error">{errorMessage}</span>
                         )}
                       </div>
                     </td>
-                    <td>
-                      <textarea
-                        className="evaluacion-etapa-section__textarea"
-                        rows={2}
-                        value={observacionesValue}
-                        disabled={isReadOnly}
-                        onChange={(event) =>
-                          onChangeDraft(item.id, { observaciones: event.target.value })
-                        }
-                      />
-                    </td>
+                    {showObservations ? (
+                      <td data-label="Observaciones">
+                        <label className="evaluacion-etapa-section__mobile-label" htmlFor={observationsId}>Observaciones</label>
+                        <textarea
+                          id={observationsId}
+                          className="evaluacion-etapa-section__textarea"
+                          rows={2}
+                          value={observacionesValue}
+                          disabled={isReadOnly}
+                          onChange={(event) =>
+                            onChangeDraft(item.id, { observaciones: event.target.value })
+                          }
+                        />
+                      </td>
+                    ) : null}
                   </tr>
                 )
               })}

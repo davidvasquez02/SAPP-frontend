@@ -3,6 +3,7 @@ import { DocumentUploadCard } from '../../../../components'
 import { getDocumentosPorTipoTramite } from '../../../../api/tramiteDocumentService'
 import type { TramiteDocumentoDto } from '../../../../api/tramiteDocumentTypes'
 import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
+import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { getAsignaturasCatalogo, getAsignaturasExternasActivas } from '../../api/asignaturasService'
 import { getModalidadesContraprestacion } from '../../api/modalidadContraprestacionService'
 import type {
@@ -15,6 +16,18 @@ import type {
 import type { SolicitudDocumentoDraft, TipoSolicitudDto } from '../../types'
 import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
+import { getConfiguracionDatosTrabajo, getErrorTituloTrabajo } from '../../utils/datosTrabajoSolicitud'
+import {
+  limitarDocumentosSoporte,
+  MAX_DOCUMENTOS_SOPORTE_ADICIONAL,
+  permiteMultiplesArchivos,
+} from '../../utils/documentosSolicitud'
+import { DaneLocationSelector } from '../DaneLocationSelector/DaneLocationSelector'
+import {
+  DEFAULT_DEPARTMENT_CODE,
+  findMunicipality,
+  formatLocationName,
+} from '../DaneLocationSelector/daneLocations'
 import './SolicitudEstudianteForm.css'
 
 interface HomologacionAsignaturaFormItem {
@@ -28,6 +41,8 @@ interface HomologacionAsignaturaFormItem {
 
 export interface SolicitudEstudiantePayload {
   tipoSolicitudId: number
+  tituloTrabajo?: string
+  resumenTrabajo?: string
   observaciones: string
   modalidadId: number | null
   motivosCreditoCondonable: string[]
@@ -69,6 +84,7 @@ const mapDocumentoToDraft = (documento: TramiteDocumentoDto): SolicitudDocumento
   nombre: documento.nombre,
   obligatorio: documento.obligatorio,
   file: null,
+  additionalFiles: [],
   error: null,
 })
 
@@ -119,7 +135,7 @@ const getPreviewFileName = (documento: PreviewDocumento, index: number): string 
 }
 
 const RENOVACION_CREDITO_CONDONABLE_ID = 12
-
+const EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID = 2
 const SolicitudEstudianteForm = ({
   tipos,
   estudianteId,
@@ -133,6 +149,8 @@ const SolicitudEstudianteForm = ({
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
   const [documentosError, setDocumentosError] = useState<string | null>(null)
   const [observaciones, setObservaciones] = useState('')
+  const [tituloTrabajo, setTituloTrabajo] = useState('')
+  const [resumenTrabajo, setResumenTrabajo] = useState('')
   const [modalidades, setModalidades] = useState<ModalidadContraprestacionDto[]>([])
   const [modalidadId, setModalidadId] = useState<number | null>(null)
   const [loadingModalidades, setLoadingModalidades] = useState(false)
@@ -143,6 +161,7 @@ const SolicitudEstudianteForm = ({
   const [asignaturasError, setAsignaturasError] = useState<string | null>(null)
   const [homologaciones, setHomologaciones] = useState<HomologacionAsignaturaFormItem[]>([])
   const [motivosCredito, setMotivosCredito] = useState<string[]>([''])
+  const [departamentoExpedicionCodigo, setDepartamentoExpedicionCodigo] = useState(DEFAULT_DEPARTMENT_CODE)
   const [ciudadExpedicionDocumento, setCiudadExpedicionDocumento] = useState('')
   const [direccionEstudiante, setDireccionEstudiante] = useState('')
   const [periodoAcademicoInicioCreditoCon, setPeriodoAcademicoInicioCreditoCon] = useState('')
@@ -154,17 +173,27 @@ const SolicitudEstudianteForm = ({
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [homologacionesValidationAttempted, setHomologacionesValidationAttempted] = useState(false)
 
   const selectedTipo = useMemo(() => tipos.find((tipo) => tipo.id === tipoSolicitudId) ?? null, [tipoSolicitudId, tipos])
   const selectedTipoLabel = useMemo(
     () =>
-      formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.nombre?.trim() || selectedTipo?.codigoNombre || '',
+      selectedTipo?.nombre?.trim() || formatTipoSolicitudLabel(selectedTipo?.codigoNombre) || selectedTipo?.codigoNombre || '',
     [selectedTipo],
   )
   const isCreditoCondonable = useMemo(() => isCreditoCondonableTipo(selectedTipo), [selectedTipo])
   const isRenovacionCreditoCondonable = selectedTipo?.id === RENOVACION_CREDITO_CONDONABLE_ID
+  const isEdicionRevistasCientificas = modalidadId === EDICION_REVISTAS_CIENTIFICAS_MODALIDAD_ID
   const isHomologacion = useMemo(() => isHomologacionTipo(selectedTipo), [selectedTipo])
+  const configuracionDatosTrabajo = getConfiguracionDatosTrabajo(tipoSolicitudId)
+  const requiereTituloTrabajo = configuracionDatosTrabajo.requiereTitulo
+  const requiereResumenTrabajo = configuracionDatosTrabajo.requiereResumen
+  const tituloTrabajoLabel = configuracionDatosTrabajo.tituloLabel
   const motivosCreditoValidos = useMemo(() => motivosCredito.map((item) => item.trim()).filter(Boolean), [motivosCredito])
+  const municipioExpedicionSeleccionado = useMemo(
+    () => findMunicipality(departamentoExpedicionCodigo, ciudadExpedicionDocumento),
+    [departamentoExpedicionCodigo, ciudadExpedicionDocumento],
+  )
   const periodoRenovacionValido = /^\d{4}-[12]$/.test(periodoAcademicoInicioCreditoCon.trim())
   const camposRenovacionValidos =
     direccionEstudiante.trim().length > 0 &&
@@ -177,9 +206,10 @@ const SolicitudEstudianteForm = ({
     horasSemestre > 0
   const canPreviewCredito =
     isCreditoCondonable &&
+    !isEdicionRevistasCientificas &&
     modalidadId !== null &&
     motivosCreditoValidos.length > 0 &&
-    ciudadExpedicionDocumento.trim().length > 0 &&
+    municipioExpedicionSeleccionado !== undefined &&
     (!isRenovacionCreditoCondonable || camposRenovacionValidos)
 
   useEffect(() => () => previewDocumentos.forEach((documento) => URL.revokeObjectURL(documento.pdfUrl)), [previewDocumentos])
@@ -277,6 +307,7 @@ const SolicitudEstudianteForm = ({
       setAsignaturasCatalogo([])
       setAsignaturasExternas([])
       setHomologaciones([])
+      setHomologacionesValidationAttempted(false)
       setLoadingAsignaturas(false)
       setAsignaturasError(null)
       return
@@ -318,17 +349,49 @@ const SolicitudEstudianteForm = ({
   }, [isHomologacion])
 
   const handleFileChange = (documentoId: number, file: File | null) => {
+    const invalidFile = file !== null && !isPdfFile(file)
     setDocumentosDraft((current) =>
       current.map((documento) =>
         documento.id === documentoId
           ? {
               ...documento,
-              file,
-              error: documento.obligatorio && file === null ? 'Este documento es obligatorio.' : null,
+              file: invalidFile ? null : file,
+              error:
+                invalidFile
+                  ? 'Solo se permiten archivos PDF.'
+                  : documento.obligatorio && file === null
+                    ? 'Este documento es obligatorio.'
+                    : null,
             }
           : documento,
       ),
     )
+  }
+
+  const handleFilesChange = (documentoId: number, files: File[]) => {
+    setDocumentosDraft((current) => current.map((documento) => {
+      if (documento.id !== documentoId) return documento
+      const pdfFiles = files.filter(isPdfFile)
+      const selectedFiles = limitarDocumentosSoporte(
+        [documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null),
+        pdfFiles,
+      )
+      return {
+        ...documento,
+        file: selectedFiles[0] ?? null,
+        additionalFiles: selectedFiles.slice(1),
+        error: pdfFiles.length === files.length ? null : 'Solo se permiten archivos PDF.',
+      }
+    }))
+  }
+
+  const handleRemoveSelectedFile = (documentoId: number, index: number) => {
+    setDocumentosDraft((current) => current.map((documento) => {
+      if (documento.id !== documentoId) return documento
+      const files = [documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)
+      files.splice(index, 1)
+      return { ...documento, file: files[0] ?? null, additionalFiles: files.slice(1) }
+    }))
   }
 
   const validate = (): boolean => {
@@ -338,6 +401,15 @@ const SolicitudEstudianteForm = ({
     }
     if (documentosError) {
       setErrorMsg('No es posible registrar la solicitud hasta cargar correctamente el listado de documentos.')
+      return false
+    }
+    const tituloTrabajoError = getErrorTituloTrabajo(configuracionDatosTrabajo, tituloTrabajo)
+    if (tituloTrabajoError) {
+      setErrorMsg(tituloTrabajoError)
+      return false
+    }
+    if (requiereResumenTrabajo && !resumenTrabajo.trim()) {
+      setErrorMsg('Debes ingresar el resumen del trabajo de grado.')
       return false
     }
     if (isCreditoCondonable) {
@@ -350,7 +422,7 @@ const SolicitudEstudianteForm = ({
         return false
       }
       const motivosValidos = motivosCredito.map((item) => item.trim()).filter(Boolean)
-      if (motivosValidos.length === 0) {
+      if (!isEdicionRevistasCientificas && motivosValidos.length === 0) {
         setErrorMsg(
           isRenovacionCreditoCondonable
             ? 'Debes agregar al menos una actividad del crédito condonable.'
@@ -358,8 +430,13 @@ const SolicitudEstudianteForm = ({
         )
         return false
       }
+      if (!isEdicionRevistasCientificas && !municipioExpedicionSeleccionado) {
+        setErrorMsg('Selecciona un municipio válido del departamento de expedición.')
+        return false
+      }
     }
     if (isHomologacion) {
+      setHomologacionesValidationAttempted(true)
       if (asignaturasError) {
         setErrorMsg('No es posible registrar la solicitud hasta cargar asignaturas de homologación.')
         return false
@@ -370,10 +447,12 @@ const SolicitudEstudianteForm = ({
       }
       const missingPair = homologaciones.some((item) =>
         item.asignaturaDestinoId == null ||
-        (item.origenModo === 'catalogo' ? item.asignaturaOrigenId == null : item.nombreAsignaturaExterna.trim() === ''),
+        (item.origenModo === 'catalogo'
+          ? item.asignaturaOrigenId == null
+          : item.codigoAsignaturaExterna.trim() === '' || item.nombreAsignaturaExterna.trim() === ''),
       )
       if (missingPair) {
-        setErrorMsg('Cada homologación debe tener una materia de origen válida y una materia de destino.')
+        setErrorMsg('Cada homologación debe tener una materia de origen válida, con código y nombre, y una materia de destino.')
         return false
       }
     }
@@ -398,9 +477,13 @@ const SolicitudEstudianteForm = ({
     setTipoSolicitudId(null)
     setDocumentosDraft([])
     setObservaciones('')
+    setTituloTrabajo('')
+    setResumenTrabajo('')
     setModalidadId(null)
     setHomologaciones([])
+    setHomologacionesValidationAttempted(false)
     setMotivosCredito([''])
+    setDepartamentoExpedicionCodigo(DEFAULT_DEPARTMENT_CODE)
     setCiudadExpedicionDocumento('')
     setDireccionEstudiante('')
     setPeriodoAcademicoInicioCreditoCon('')
@@ -411,7 +494,7 @@ const SolicitudEstudianteForm = ({
   }
 
   const handlePreviewCredito = async () => {
-    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null) {
+    if (!canPreviewCredito || modalidadId === null || tipoSolicitudId === null || !municipioExpedicionSeleccionado) {
       return
     }
     setPreviewLoading(true)
@@ -432,7 +515,7 @@ const SolicitudEstudianteForm = ({
               horasSemestre: horasSemestre as number,
             }
           : { motivosCreditoCondonable: motivosCreditoValidos }),
-        ciudadExpedicionDocumento: ciudadExpedicionDocumento.trim(),
+        ciudadExpedicionDocumento: formatLocationName(municipioExpedicionSeleccionado.name),
       })
       const previews = await Promise.all(
         response.map(async (documento) => {
@@ -509,6 +592,8 @@ const SolicitudEstudianteForm = ({
 
     const payload: SolicitudEstudiantePayload = {
       tipoSolicitudId,
+      ...(requiereTituloTrabajo ? { tituloTrabajo: tituloTrabajo.trim() } : {}),
+      ...(requiereResumenTrabajo ? { resumenTrabajo: resumenTrabajo.trim() } : {}),
       observaciones,
       modalidadId,
       motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
@@ -518,15 +603,17 @@ const SolicitudEstudianteForm = ({
           ? { asignatura_origen_id: item.asignaturaOrigenId as number, asignatura_destino_id: item.asignaturaDestinoId as number }
           : {
               nombreAsignaturaExterna: item.nombreAsignaturaExterna.trim(),
-              ...(item.codigoAsignaturaExterna.trim() ? { codigoAsignaturaExterna: item.codigoAsignaturaExterna.trim() } : {}),
+              codigoAsignaturaExterna: item.codigoAsignaturaExterna.trim(),
               asignatura_destino_id: item.asignaturaDestinoId as number,
             }),
-      documentos: documentosDraft.map((documento) => ({
-        id: documento.id,
-        nombre: documento.nombre,
-        obligatorio: documento.obligatorio,
-        file: documento.file,
-      })),
+      documentos: documentosDraft.flatMap((documento) =>
+        [documento.file, ...documento.additionalFiles].map((file) => ({
+          id: documento.id,
+          nombre: documento.nombre,
+          obligatorio: documento.obligatorio,
+          file,
+        })),
+      ),
     }
 
     try {
@@ -563,6 +650,20 @@ const SolicitudEstudianteForm = ({
     changes: Partial<Omit<HomologacionAsignaturaFormItem, 'id'>>,
   ) => {
     setHomologaciones((current) => current.map((item) => (item.id === rowId ? { ...item, ...changes } : item)))
+  }
+
+  const getAsignaturaOrigenLabel = (item: HomologacionAsignaturaFormItem): string => {
+    if (item.origenModo === 'manual') {
+      return [item.codigoAsignaturaExterna.trim(), item.nombreAsignaturaExterna.trim()].filter(Boolean).join(' — ')
+    }
+
+    const asignatura = asignaturasExternas.find((candidate) => candidate.id === item.asignaturaOrigenId)
+    return asignatura ? [asignatura.codigo, asignatura.nombre].filter(Boolean).join(' — ') : ''
+  }
+
+  const getAsignaturaDestinoLabel = (item: HomologacionAsignaturaFormItem): string => {
+    const asignatura = asignaturasCatalogo.find((candidate) => candidate.id === item.asignaturaDestinoId)
+    return asignatura ? [asignatura.codigo, asignatura.nombre].filter(Boolean).join(' — ') : ''
   }
 
 
@@ -607,11 +708,38 @@ const SolicitudEstudianteForm = ({
           <option value="">Selecciona una opción</option>
           {tipos.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>
-              {formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.nombre || tipo.codigoNombre || `Tipo #${tipo.id}`}
+              {tipo.nombre?.trim() || formatTipoSolicitudLabel(tipo.codigoNombre) || tipo.codigoNombre || `Tipo #${tipo.id}`}
             </option>
           ))}
         </select>
       </div>
+
+      {requiereTituloTrabajo && (
+        <div className="solicitud-estudiante-form__section">
+          <h4>{configuracionDatosTrabajo.esExamenDoctoral ? 'Información del examen doctoral' : 'Información del trabajo de grado'}</h4>
+          <label htmlFor="tituloTrabajo">{tituloTrabajoLabel} *</label>
+          <input
+            id="tituloTrabajo"
+            value={tituloTrabajo}
+            onChange={(event) => setTituloTrabajo(event.target.value)}
+            placeholder="Ingresa el título completo del trabajo"
+            required
+          />
+          {requiereResumenTrabajo && (
+            <>
+              <label htmlFor="resumenTrabajo">Resumen del trabajo *</label>
+              <textarea
+                id="resumenTrabajo"
+                rows={6}
+                value={resumenTrabajo}
+                onChange={(event) => setResumenTrabajo(event.target.value)}
+                placeholder="Describe brevemente el propósito, alcance y metodología del trabajo"
+                required
+              />
+            </>
+          )}
+        </div>
+      )}
 
       {isCreditoCondonable && (
         <div className="solicitud-estudiante-form__section">
@@ -624,7 +752,11 @@ const SolicitudEstudianteForm = ({
             <select
               id="modalidadContraprestacion"
               value={modalidadId ?? ''}
-              onChange={(event) => setModalidadId(event.target.value ? Number(event.target.value) : null)}
+              onChange={(event) => {
+                setModalidadId(event.target.value ? Number(event.target.value) : null)
+                setPreviewDocumentos([])
+                setSelectedPreviewIndex(0)
+              }}
               required
             >
               <option value="">Selecciona una modalidad</option>
@@ -636,35 +768,43 @@ const SolicitudEstudianteForm = ({
             </select>
           )}
 
-          <div className="solicitud-estudiante-form__motivos">
-            <label>
-              {isRenovacionCreditoCondonable
-                ? 'Actividades del crédito condonable *'
-                : 'Motivos para la solicitud del crédito condonable *'}
-            </label>
-            {motivosCredito.map((motivo, index) => (
-              <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
-                <input
-                  value={motivo}
-                  onChange={(event) => updateMotivo(index, event.target.value)}
-                  placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
-                />
-                <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
-                  −
+          {isEdicionRevistasCientificas ? (
+            <p className="solicitud-estudiante-form__help">
+              Para esta modalidad adjunta directamente los archivos PDF requeridos en la sección Documentos.
+            </p>
+          ) : (
+            <>
+              <div className="solicitud-estudiante-form__motivos">
+                <label>
+                  {isRenovacionCreditoCondonable
+                    ? 'Actividades del crédito condonable *'
+                    : 'Motivos para la solicitud del crédito condonable *'}
+                </label>
+                {motivosCredito.map((motivo, index) => (
+                  <div key={`motivo-${index}`} className="solicitud-estudiante-form__motivo-row">
+                    <input
+                      value={motivo}
+                      onChange={(event) => updateMotivo(index, event.target.value)}
+                      placeholder={`${isRenovacionCreditoCondonable ? 'Actividad' : 'Motivo'} ${index + 1}`}
+                    />
+                    <button type="button" onClick={() => removeMotivo(index)} disabled={motivosCredito.length === 1}>
+                      −
+                    </button>
+                  </div>
+                ))}
+                <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
+                  + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
                 </button>
               </div>
-            ))}
-            <button type="button" className="solicitud-estudiante-form__add-inline" onClick={addMotivo}>
-              + Agregar {isRenovacionCreditoCondonable ? 'actividad' : 'motivo'}
-            </button>
-          </div>
-          <label htmlFor="ciudadExpedicionDocumento">Departamento/Ciudad de expedición del documento *</label>
-          <input
-            id="ciudadExpedicionDocumento"
-            value={ciudadExpedicionDocumento}
-            onChange={(event) => setCiudadExpedicionDocumento(event.target.value)}
-            placeholder="Ej: Bucaramanga"
-          />
+              <DaneLocationSelector
+                departmentCode={departamentoExpedicionCodigo}
+                municipality={ciudadExpedicionDocumento}
+                onDepartmentChange={(departmentCode) => {
+                  setDepartamentoExpedicionCodigo(departmentCode)
+                  setCiudadExpedicionDocumento('')
+                }}
+                onMunicipalityChange={setCiudadExpedicionDocumento}
+              />
           {isRenovacionCreditoCondonable && (
             <>
               <label htmlFor="direccionEstudiante">Dirección de residencia *</label>
@@ -711,9 +851,6 @@ const SolicitudEstudianteForm = ({
                   />
                 </div>
               </div>
-              <p className="solicitud-estudiante-form__help">
-                El teléfono y el correo institucional se tomarán automáticamente de la sesión.
-              </p>
               {(!telefonoEstudiante.trim() || !correoEstudiante.trim()) && (
                 <p className="solicitud-estudiante-form__doc-error">
                   La sesión no contiene teléfono y correo suficientes para generar la previsualización.
@@ -723,7 +860,7 @@ const SolicitudEstudianteForm = ({
           )}
           <button
             type="button"
-            className="solicitud-estudiante-form__add-inline"
+            className="solicitud-estudiante-form__add-inline solicitud-estudiante-form__preview-action"
             onClick={handlePreviewCredito}
             disabled={!canPreviewCredito || previewLoading}
           >
@@ -754,6 +891,8 @@ const SolicitudEstudianteForm = ({
               </button>
             </div>
           )}
+            </>
+          )}
         </div>
       )}
 
@@ -768,8 +907,8 @@ const SolicitudEstudianteForm = ({
           ) : asignaturasError ? (
             <p className="solicitud-estudiante-form__doc-error">{asignaturasError}</p>
           ) : homologaciones.length === 0 ? (
-            <button type="button" onClick={addHomologacionRow}>
-              Agregar par de homologación
+            <button type="button" className="solicitud-estudiante-form__add-homologacion" onClick={addHomologacionRow}>
+              Agregar asignaturas
             </button>
           ) : (
             <div className="solicitud-estudiante-form__homologaciones">
@@ -781,37 +920,45 @@ const SolicitudEstudianteForm = ({
                     Quitar
                     </button>
                   </div>
+                  <div className="solicitud-estudiante-form__source-toggle" aria-label={`Tipo de materia origen ${index + 1}`}>
+                    <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Asignatura del listado</button>
+                    <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>Asignatura nueva</button>
+                  </div>
                   <div className="solicitud-estudiante-form__homologacion-fields">
                     <fieldset className="solicitud-estudiante-form__origen">
                       <legend>Materia origen *</legend>
-                      <div className="solicitud-estudiante-form__source-toggle">
-                        <button type="button" className={item.origenModo === 'catalogo' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'catalogo', nombreAsignaturaExterna: '', codigoAsignaturaExterna: '' })}>Del listado</button>
-                        <button type="button" className={item.origenModo === 'manual' ? 'is-active' : ''} onClick={() => updateHomologacionRow(item.id, { origenModo: 'manual', asignaturaOrigenId: null })}>No la encuentro</button>
-                      </div>
                       {item.origenModo === 'catalogo' ? (
-                        <select aria-label={`Materia origen ${index + 1}`} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
+                        <select id={`homologacion-${item.id}-origen`} aria-label={`Materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.asignaturaOrigenId == null ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.asignaturaOrigenId == null} value={item.asignaturaOrigenId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaOrigenId: event.target.value ? Number(event.target.value) : null })}>
                           <option value="">Selecciona la materia cursada</option>
                           {asignaturasExternas.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
                         </select>
                       ) : (
                         <div className="solicitud-estudiante-form__manual-origin">
-                          <input aria-label={`Código materia origen ${index + 1}`} value={item.codigoAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { codigoAsignaturaExterna: event.target.value })} placeholder="Código (opcional)" />
-                          <input aria-label={`Nombre materia origen ${index + 1}`} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
+                          <input required aria-label={`Código materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.codigoAsignaturaExterna.trim() === '' ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.codigoAsignaturaExterna.trim() === ''} value={item.codigoAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { codigoAsignaturaExterna: event.target.value })} placeholder="Código de la materia *" />
+                          <input id={`homologacion-${item.id}-origen`} aria-label={`Nombre materia origen ${index + 1}`} aria-describedby={homologacionesValidationAttempted && item.nombreAsignaturaExterna.trim() === '' ? `homologacion-${item.id}-origen-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.nombreAsignaturaExterna.trim() === ''} value={item.nombreAsignaturaExterna} onChange={(event) => updateHomologacionRow(item.id, { nombreAsignaturaExterna: event.target.value })} placeholder="Nombre de la materia *" />
                         </div>
                       )}
+                      {getAsignaturaOrigenLabel(item) && <p className="solicitud-estudiante-form__selected-subject">{getAsignaturaOrigenLabel(item)}</p>}
+                      {homologacionesValidationAttempted && (item.origenModo === 'catalogo' ? item.asignaturaOrigenId == null : item.codigoAsignaturaExterna.trim() === '' || item.nombreAsignaturaExterna.trim() === '') && (
+                        <p id={`homologacion-${item.id}-origen-error`} className="solicitud-estudiante-form__field-error">Selecciona una materia o completa su código y nombre.</p>
+                      )}
                     </fieldset>
-                    <label className="solicitud-estudiante-form__destino">
-                      <span>Materia destino del programa *</span>
-                      <select value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
+                    <div className="solicitud-estudiante-form__destino">
+                      <label htmlFor={`homologacion-${item.id}-destino`}>Materia destino del programa *</label>
+                      <select id={`homologacion-${item.id}-destino`} aria-describedby={homologacionesValidationAttempted && item.asignaturaDestinoId == null ? `homologacion-${item.id}-destino-error` : undefined} aria-invalid={homologacionesValidationAttempted && item.asignaturaDestinoId == null} value={item.asignaturaDestinoId ?? ''} onChange={(event) => updateHomologacionRow(item.id, { asignaturaDestinoId: event.target.value ? Number(event.target.value) : null })}>
                         <option value="">Selecciona la materia a homologar</option>
                         {asignaturasCatalogo.map((asignatura) => <option key={asignatura.id} value={asignatura.id}>{asignatura.codigo ? `${asignatura.codigo} — ` : ''}{asignatura.nombre}</option>)}
                       </select>
-                    </label>
+                      {getAsignaturaDestinoLabel(item) && <p className="solicitud-estudiante-form__selected-subject">{getAsignaturaDestinoLabel(item)}</p>}
+                      {homologacionesValidationAttempted && item.asignaturaDestinoId == null && (
+                        <p id={`homologacion-${item.id}-destino-error`} className="solicitud-estudiante-form__field-error">Selecciona una materia de destino.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={addHomologacionRow}>
-                Agregar otro par
+              <button type="button" className="solicitud-estudiante-form__add-homologacion" onClick={addHomologacionRow}>
+                Agregar asignaturas
               </button>
             </div>
           )}
@@ -835,7 +982,13 @@ const SolicitudEstudianteForm = ({
                 key={documento.id}
                 item={mapDraftToCardItem(documento)}
                 onSelectFile={handleFileChange}
-                onRemoveFile={(documentoId) => handleFileChange(documentoId, null)}
+                onRemoveFile={permiteMultiplesArchivos(documento) ? undefined : (documentoId) => handleFileChange(documentoId, null)}
+                multiple={permiteMultiplesArchivos(documento)}
+                maxFiles={permiteMultiplesArchivos(documento) ? MAX_DOCUMENTOS_SOPORTE_ADICIONAL : undefined}
+                selectedFiles={[documento.file, ...documento.additionalFiles].filter((file): file is File => file !== null)}
+                onSelectFiles={handleFilesChange}
+                onRemoveSelectedFile={handleRemoveSelectedFile}
+                fileAccept={PDF_FILE_ACCEPT}
               />
             ))}
           </div>

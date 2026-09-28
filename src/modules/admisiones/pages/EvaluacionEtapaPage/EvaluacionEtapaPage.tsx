@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../../../components'
-import { hasAnyRole, isProfesor } from '../../../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
-import type { AuthUser } from '../../../../context/Auth/types'
+import { getEstadoEntrevista } from '../../utils/estadoEntrevista'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import { updateEvaluacionRegistroPuntaje } from '../../api/evaluacionAdmisionService'
 import EvaluacionEtapaSection, {
@@ -17,6 +17,7 @@ import { evaluacionCache, hojaVidaDocCache } from './evaluacionPrefetchCache'
 import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
 import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
 import { CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION } from '../../../documentos/constants'
+import { clearEvaluationDrafts, getEvaluationDrafts, setEvaluationDrafts } from '../../utils/evaluacionDraftStore'
 
 interface EvaluacionEtapaPageProps {
   title: string
@@ -28,6 +29,30 @@ interface HojaVidaPreviewDocument {
   base64: string
   mimeType: string
   filename: string
+}
+
+const ResponsiveInterviewGroup = ({ label, children }: { label: string; children: ReactNode }) => {
+  const [isExpanded, setIsExpanded] = useState(true)
+  const contentId = `entrevista-grupo-${useId()}`
+
+  return (
+    <section className={`evaluacion-etapa-page__group${isExpanded ? ' evaluacion-etapa-page__group--expanded' : ''}`}>
+      <h2 className="evaluacion-etapa-page__group-title">{label}</h2>
+      <button
+        type="button"
+        className="evaluacion-etapa-page__group-toggle"
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
+        onClick={() => setIsExpanded((current) => !current)}
+      >
+        <span>{label}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      <div id={contentId} className="evaluacion-etapa-page__group-content">
+        {children}
+      </div>
+    </section>
+  )
 }
 
 const buildValidationMessage = (
@@ -49,9 +74,6 @@ const buildValidationMessage = (
   return null
 }
 
-const normalizeWhitespaceUpper = (value: string | null | undefined): string =>
-  (value ?? '').trim().toUpperCase().replace(/\s+/g, ' ')
-
 const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapaPageProps) => {
   const { session } = useAuth()
   const { convocatoriaId, inscripcionId } = useParams()
@@ -63,7 +85,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const [modifiedByRow, setModifiedByRow] = useState<Record<number, boolean>>({})
   const [errorsByRow, setErrorsByRow] = useState<Record<number, string | null>>({})
   const [savingBulk, setSavingBulk] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
   const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [isPdfPreviewExpanded, setIsPdfPreviewExpanded] = useState(false)
   const [hojaVidaPreviewDoc, setHojaVidaPreviewDoc] = useState<HojaVidaPreviewDocument | null>(null)
   const [hojaVidaDocStatus, setHojaVidaDocStatus] = useState<'idle' | 'loading' | 'ready' | 'missing' | 'error'>('idle')
   const [hojaVidaDocMessage, setHojaVidaDocMessage] = useState<string | null>(null)
@@ -74,29 +98,23 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [inscripcionId],
   )
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
 
-  const nombreProfesor = useMemo(() => {
-    if (session?.kind !== 'SAPP') {
-      return ''
-    }
+  const usuarioId = session?.user.id
 
-    const { persona } = session.user as AuthUser
-    return [persona.nombre1, persona.nombre2, persona.apellido1, persona.apellido2]
-      .filter(Boolean)
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  }, [session])
+  const belongsToCurrentUser = useCallback(
+    (item: EvaluacionAdmisionItem) =>
+      usuarioId != null && item.evaluadorId === usuarioId,
+    [usuarioId],
+  )
 
   const shouldIncludeByProfesor = useCallback((item: EvaluacionAdmisionItem) => {
-    if (!isProfesorOnly || !isEntrevista) {
+    if (!isEvaluadorOnly || !isEntrevista) {
       return true
     }
 
-    return normalizeWhitespaceUpper(item.evaluador) === normalizeWhitespaceUpper(nombreProfesor)
-  }, [isEntrevista, isProfesorOnly, nombreProfesor])
+    return belongsToCurrentUser(item)
+  }, [belongsToCurrentUser, isEntrevista, isEvaluadorOnly])
 
   const loadEvaluacion = useCallback(async () => {
     if (!inscripcionId || Number.isNaN(inscripcionIdNumber)) {
@@ -106,12 +124,22 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     }
 
     const cacheKey = `${inscripcionIdNumber}-${etapa}`
+    const restoreDrafts = (loadedItems: EvaluacionAdmisionItem[]) => {
+      const savedDrafts = getEvaluationDrafts(inscripcionIdNumber, etapa)
+      setDrafts(savedDrafts)
+      setModifiedByRow(Object.fromEntries(loadedItems.map((item) => [item.id, Boolean(savedDrafts[item.id])])))
+      setErrorsByRow(Object.fromEntries(loadedItems.map((item) => {
+        const saved = savedDrafts[item.id]
+        return [item.id, saved && Object.prototype.hasOwnProperty.call(saved, 'puntajeAspirante')
+          ? buildValidationMessage(saved.puntajeAspirante, item.puntajeMax)
+          : null]
+      })))
+    }
     const cachedItems = evaluacionCache.get(cacheKey)
-    if (cachedItems) {
-      setItems(cachedItems.filter(shouldIncludeByProfesor))
-      setDrafts({})
-      setModifiedByRow({})
-      setErrorsByRow({})
+    if (cachedItems && !isEvaluadorOnly) {
+      const visibleItems = cachedItems.filter(shouldIncludeByProfesor)
+      setItems(visibleItems)
+      restoreDrafts(visibleItems)
       setLoading(false)
       return
     }
@@ -122,10 +150,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     try {
       const data = await getEvaluacionAdmisionInfo(inscripcionIdNumber, etapa)
       evaluacionCache.set(cacheKey, data)
-      setItems(data.filter(shouldIncludeByProfesor))
-      setDrafts({})
-      setModifiedByRow({})
-      setErrorsByRow({})
+      const visibleItems = data.filter(shouldIncludeByProfesor)
+      setItems(visibleItems)
+      restoreDrafts(visibleItems)
     } catch (errorResponse) {
       const message =
         errorResponse instanceof Error
@@ -135,7 +162,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     } finally {
       setLoading(false)
     }
-  }, [etapa, inscripcionId, inscripcionIdNumber, shouldIncludeByProfesor])
+  }, [etapa, inscripcionId, inscripcionIdNumber, shouldIncludeByProfesor, isEvaluadorOnly])
 
   useEffect(() => {
     void loadEvaluacion()
@@ -217,6 +244,18 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     return () => URL.revokeObjectURL(url)
   }, [hojaVidaPreviewDoc])
 
+  const hasUnsavedChanges = useMemo(
+    () => Object.values(modifiedByRow).some(Boolean),
+    [modifiedByRow],
+  )
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [hasUnsavedChanges])
+
   const normalizeObservaciones = (value: string | null | undefined): string | null => {
     if (!value) return null
     const trimmed = value.trim()
@@ -224,37 +263,43 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   }
 
   const isDraftModified = (item: EvaluacionAdmisionItem, draft: EvaluacionDraft): boolean => {
-    const puntajeFromDraft = draft.puntajeAspirante ?? item.puntajeAspirante
+    const hasDraftScore = Object.prototype.hasOwnProperty.call(draft, 'puntajeAspirante')
+    const puntajeFromDraft = hasDraftScore ? draft.puntajeAspirante : item.puntajeAspirante
     const observacionesFromDraft = draft.observaciones ?? item.observaciones ?? ''
     return (
       puntajeFromDraft !== item.puntajeAspirante ||
-      normalizeObservaciones(observacionesFromDraft) !== normalizeObservaciones(item.observaciones)
+      (!isHojaDeVida &&
+        normalizeObservaciones(observacionesFromDraft) !== normalizeObservaciones(item.observaciones))
     )
   }
 
   const handleChangeDraft = (id: number, changes: EvaluacionDraft) => {
     const item = items.find((current) => current.id === id)
-    if (!item) return
+    if (!item || (isEntrevista && !belongsToCurrentUser(item))) return
 
     setDrafts((prev) => {
       const nextDraft = {
         ...prev[id],
         ...changes,
       }
+      const modified = isDraftModified(item, nextDraft)
 
       setModifiedByRow((prevModified) => ({
         ...prevModified,
-        [id]: isDraftModified(item, nextDraft),
+        [id]: modified,
       }))
 
-      return {
+      const nextDrafts = {
         ...prev,
         [id]: nextDraft,
       }
+      if (!modified) delete nextDrafts[id]
+      setEvaluationDrafts(inscripcionIdNumber, etapa, nextDrafts)
+      return nextDrafts
     })
 
     if (Object.prototype.hasOwnProperty.call(changes, 'puntajeAspirante')) {
-      const puntajeForValidation = changes.puntajeAspirante ?? drafts[id]?.puntajeAspirante
+      const puntajeForValidation = changes.puntajeAspirante
       const validation = buildValidationMessage(puntajeForValidation, item.puntajeMax)
       setErrorsByRow((prev) => ({
         ...prev,
@@ -264,7 +309,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   }
 
   const handleSaveBulk = async () => {
-    const changedItems = items.filter((item) => modifiedByRow[item.id])
+    const changedItems = items.filter(
+      (item) => modifiedByRow[item.id] && (!isEntrevista || belongsToCurrentUser(item)),
+    )
     if (changedItems.length === 0) return
 
     const hasValidationErrors = changedItems.some((item) => Boolean(errorsByRow[item.id]))
@@ -278,20 +325,24 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       return {
         id: item.id,
         puntajeAspirante: draft?.puntajeAspirante ?? item.puntajeAspirante,
-        observaciones: normalizeObservaciones(draft?.observaciones ?? item.observaciones ?? ''),
+        observaciones: isHojaDeVida
+          ? null
+          : normalizeObservaciones(draft?.observaciones ?? item.observaciones ?? ''),
       }
     })
 
     setSavingBulk(true)
+    setSaveMessage(null)
     try {
       await updateEvaluacionRegistroPuntaje(payload)
+      clearEvaluationDrafts(inscripcionIdNumber, etapa)
       evaluacionCache.delete(`${inscripcionIdNumber}-${etapa}`)
-      window.alert('Calificación guardada')
       await loadEvaluacion()
+      setSaveMessage({ kind: 'success', text: 'Calificación guardada correctamente.' })
     } catch (errorResponse) {
       const message =
         errorResponse instanceof Error ? errorResponse.message : 'No fue posible actualizar.'
-      window.alert(message)
+      setSaveMessage({ kind: 'error', text: message })
     } finally {
       setSavingBulk(false)
     }
@@ -310,8 +361,10 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [entrevistaItems],
   )
   const gruposEntrevista = useMemo(
-    () => groupByEvaluador(itemsSinResumen),
-    [itemsSinResumen],
+    () => groupByEvaluador(itemsSinResumen).sort((a, b) =>
+      Number(b.items.every(belongsToCurrentUser)) - Number(a.items.every(belongsToCurrentUser)),
+    ),
+    [itemsSinResumen, belongsToCurrentUser],
   )
 
   const content = (
@@ -330,6 +383,13 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       ) : null}
 
       {loading && <p className="evaluacion-etapa-page__status">Cargando evaluación...</p>}
+      {!loading && !error && isEntrevista && isEvaluadorOnly && usuarioId != null && (
+        <p className="evaluacion-etapa-page__status" role="status">
+          <strong>Tu entrevista: {getEstadoEntrevista(items, usuarioId).label}</strong>
+          {' · '}{getEstadoEntrevista(items, usuarioId).completos} de {getEstadoEntrevista(items, usuarioId).total} registros calificados
+          {hasUnsavedChanges ? ' · Tienes cambios sin guardar.' : ''}
+        </p>
+      )}
       {!loading && error && (
         <p className="evaluacion-etapa-page__status evaluacion-etapa-page__status--error">
           {error}
@@ -343,6 +403,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
           }`}
         >
           <div className="evaluacion-etapa-page__main-panel">
+            {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
             <EvaluacionEtapaSection
               title={`Componentes de ${title.toLowerCase()}`}
               etapa={etapa}
@@ -354,6 +415,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               onChangeDraft={handleChangeDraft}
               onSaveBulk={handleSaveBulk}
               isReadOnly={isEstadoFinal}
+              showObservations={!isHojaDeVida}
             />
           </div>
           {isHojaDeVida && (
@@ -364,7 +426,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                   <button
                     type="button"
                     className="sapp-document-action evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
+                    disabled={!hojaVidaPreviewDoc}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       openBase64InNewTab(
@@ -374,12 +436,12 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                       )
                     }}
                   >
-                    Abrir
+                    Abrir PDF
                   </button>
                   <button
                     type="button"
                     className="sapp-document-action evaluacion-etapa-page__pdf-action"
-                    disabled={!hojaVidaPreviewDoc || isEstadoFinal}
+                    disabled={!hojaVidaPreviewDoc}
                     onClick={() => {
                       if (!hojaVidaPreviewDoc) return
                       downloadBase64File(
@@ -405,11 +467,20 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 </p>
               )}
               {hojaVidaDocStatus === 'ready' && pdfViewerUrl && (
-                <iframe
-                  src={pdfViewerUrl}
-                  title="Hoja de vida"
-                  className="evaluacion-etapa-page__pdf-viewer"
-                />
+                <div className={`evaluacion-etapa-page__pdf-preview${isPdfPreviewExpanded ? ' evaluacion-etapa-page__pdf-preview--expanded' : ''}`}>
+                  <button
+                    type="button"
+                    className="evaluacion-etapa-page__pdf-preview-toggle"
+                    aria-expanded={isPdfPreviewExpanded}
+                    aria-controls="hoja-vida-pdf-preview"
+                    onClick={() => setIsPdfPreviewExpanded((current) => !current)}
+                  >
+                    {isPdfPreviewExpanded ? 'Ocultar previsualización' : 'Mostrar previsualización'}
+                  </button>
+                  <div id="hoja-vida-pdf-preview" className="evaluacion-etapa-page__pdf-preview-content">
+                  <iframe src={pdfViewerUrl} title="Previsualización de hoja de vida" className="evaluacion-etapa-page__pdf-viewer" />
+                  </div>
+                </div>
               )}
             </aside>
           )}
@@ -417,7 +488,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length === 0 && (
         <p className="evaluacion-etapa-page__status">
-          {isProfesorOnly
+          {isEvaluadorOnly
             ? 'No tienes aspectos asignados para esta entrevista.'
             : 'No hay evaluaciones de entrevista.'}
         </p>
@@ -455,9 +526,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               </div>
             </section>
           )}
+          {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
           {gruposEntrevista.map((grupo) => (
-            <div key={grupo.evaluadorKey} className="evaluacion-etapa-page__group">
-              <h2 className="evaluacion-etapa-page__group-title">{grupo.evaluadorLabel}</h2>
+            <ResponsiveInterviewGroup key={grupo.evaluadorKey} label={grupo.evaluadorLabel}>
               <EvaluacionEtapaSection
                 title="Componentes evaluados"
                 etapa={etapa}
@@ -467,27 +538,11 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 modifiedByRow={modifiedByRow}
                 isSavingBulk={savingBulk}
                 onChangeDraft={handleChangeDraft}
+                onSaveBulk={grupo.items.every(belongsToCurrentUser) ? handleSaveBulk : undefined}
+                isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
               />
-            </div>
+            </ResponsiveInterviewGroup>
           ))}
-          <div className="evaluacion-etapa-page__interview-footer">
-            <button
-              type="button"
-              className="evaluacion-etapa-section__button"
-              disabled={
-                !Object.values(modifiedByRow).some(Boolean) ||
-                Object.entries(errorsByRow).some(
-                  ([id, errorMessage]) => modifiedByRow[Number(id)] && Boolean(errorMessage),
-                ) ||
-                savingBulk
-              }
-              onClick={() => {
-                void handleSaveBulk()
-              }}
-            >
-              {savingBulk ? 'Enviando calificaciones...' : 'Enviar calificaciones'}
-            </button>
-          </div>
         </div>
       )}
     </section>

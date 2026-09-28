@@ -32,5 +32,6 @@ export interface SolicitudDocumentoItem {
 
 export interface SolicitudDocumentoDraft extends SolicitudDocumentoItem {
   file: File | null
+  additionalFiles: File[]
   error?: string | null
 }

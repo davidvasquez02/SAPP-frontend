@@ -1,0 +1,102 @@
+.close-convocatoria-dialog__backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 48%);
+  backdrop-filter: blur(2px);
+}
+
+.close-convocatoria-dialog {
+  width: min(100%, 34rem);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+  border-radius: 1.4rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 62%);
+}
+
+.close-convocatoria-dialog__heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .9rem;
+  align-items: start;
+}
+
+.close-convocatoria-dialog__mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary), transparent 86%);
+  color: var(--primary);
+  font-weight: 850;
+}
+
+.close-convocatoria-dialog h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.close-convocatoria-dialog__heading p,
+.close-convocatoria-dialog__note {
+  margin: .55rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.close-convocatoria-dialog__note {
+  padding: .8rem 1rem;
+  border-radius: .9rem;
+  background: var(--surface-container-low);
+  font-size: .9rem;
+}
+
+.close-convocatoria-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .7rem;
+  margin-top: 1.35rem;
+}
+
+.close-convocatoria-dialog__button {
+  min-height: 2.7rem;
+  padding: .65rem 1.15rem;
+  border: 1px solid var(--primary);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.close-convocatoria-dialog__button--secondary {
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.close-convocatoria-dialog__button--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.close-convocatoria-dialog__button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary), transparent 62%);
+  outline-offset: 2px;
+}
+
+.close-convocatoria-dialog__button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+@media (max-width: 640px) {
+  .close-convocatoria-dialog__actions { flex-direction: column-reverse; }
+  .close-convocatoria-dialog__button { width: 100%; }
+}

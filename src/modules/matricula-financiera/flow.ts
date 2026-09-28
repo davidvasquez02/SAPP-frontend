@@ -1,0 +1,40 @@
+import type { EstadoProcesoLiquidacion, ResumenProceso } from './types'
+
+export type AccionProceso = 'convocar' | 'enviarSolicitudes' | 'enviarRecordatorio' | 'cerrar' | 'reabrir' | 'recalcular' | 'publicar'
+export interface PasoGuiaLiquidacion { titulo: string; descripcion: string }
+
+export const GUIA_COORDINACION: PasoGuiaLiquidacion[] = [
+  { titulo: 'Configura el periodo', descripcion: 'Crea el proceso con el SMMLV, los porcentajes reglamentarios y las fechas del periodo.' },
+  { titulo: 'Convoca y solicita', descripcion: 'Incorpora a los estudiantes, envía las preguntas y supervisa respuestas, pendientes y alertas.' },
+  { titulo: 'Revisa y liquida', descripcion: 'Valida cada caso, aplica los ajustes autorizados y recalcula antes de cerrar el proceso.' },
+  { titulo: 'Publica resultados', descripcion: 'Registra la liquidación realizada en PUTTY, define la fecha de pago y publica para notificar y cerrar las ediciones.' },
+]
+
+export const GUIA_ESTUDIANTE: PasoGuiaLiquidacion[] = [
+  { titulo: 'Revisa la solicitud', descripcion: 'Verifica los datos de tu liquidacion: el periodo academico, el programa academico, ten presente la fecha limite para llevar a cabo tu proceso.' },
+  { titulo: 'Responde la información', descripcion: 'Contesta todas las preguntas que apliquen a tu caso y guarda las respuestas dentro del plazo.' },
+  { titulo: 'Espera la liquidación', descripcion: 'La coordinación recibe la información y realiza el proceso de liquidación.' },
+  { titulo: 'Consulta el resultado', descripcion: 'Cuando coordinación confirme tu liquidación, podrás consultar el total liquidado para continuar con el pago.' },
+]
+
+const ACCIONES_POR_ESTADO: Record<EstadoProcesoLiquidacion, readonly AccionProceso[]> = {
+  BORRADOR: ['convocar', 'enviarSolicitudes', 'recalcular'],
+  ABIERTO: ['convocar', 'enviarSolicitudes', 'enviarRecordatorio', 'cerrar', 'recalcular'],
+  CERRADO: ['reabrir', 'recalcular', 'publicar'],
+  PUBLICADO: [],
+}
+
+export const puedeEjecutarAccion = (estado: EstadoProcesoLiquidacion | undefined, accion: AccionProceso): boolean =>
+  estado ? ACCIONES_POR_ESTADO[estado].includes(accion) : false
+
+export const puedePublicarProceso = (resumen: Pick<ResumenProceso, 'pendientes' | 'respondidas'>): boolean =>
+  resumen.pendientes === 0 && resumen.respondidas === 0
+
+export const etiquetaResumen = (clave: string): string => ({
+  convocados: 'Estudiantes registrados en el proceso de matrícula',
+  liquidadas: 'Matrículas registradas en el sistema financiero (PUTTY)',
+  noLiquidar: 'Estudiantes excluidos de liquidación',
+  pendientes: 'Estudiantes pendientes de responder',
+  respondidas: 'Estudiantes que registraron sus respuestas',
+  conAlertas: 'Con alertas',
+})[clave] ?? clave

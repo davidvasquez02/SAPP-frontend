@@ -1,6 +1,7 @@
 import type { ApiResponse } from '../../../api/types'
-import { httpGet, httpPut } from '../../../shared/http/httpClient'
+import { httpFile, httpGet, httpPut, type HttpFileResponse } from '../../../shared/http/httpClient'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
+import { getProgramaAcademico } from '../../../shared/domain/programaAcademico'
 
 const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
 const ESTUDIANTES_CONSULTA_ENDPOINT = '/sapp/estudiantes/consulta'
@@ -8,24 +9,15 @@ const ESTUDIANTES_ENDPOINT = '/sapp/estudiantes'
 
 export type EstadoEstudiante = 'ACTIVO' | 'INACTIVO' | 'EGRESADO'
 
-const PROGRAMAS_COORDINACION: Record<
-  string,
-  { codigo: string; nombre: ProgramaCoordinacion['nombre'] }
-> = {
-  MISI: {
-    codigo: 'MISI',
-    nombre: 'Maestría en Ingeniería de Sistemas e Informática',
-  },
-  DCC: {
-    codigo: 'DCC',
-    nombre: 'Doctorado en Ciencias de la Computación',
-  },
-}
-
 type ProgramaAcademicoBackend = {
   id: number
   nombre: string
-  codigoNombre: string
+  nivel?: string | null
+  codigoUis?: string | null
+  codigo_uis?: string | null
+  codigoIdp?: string | null
+  codigo_idp?: string | null
+  codigoNombre?: string | null
 }
 
 type EstudianteConsultaBackend = {
@@ -48,6 +40,10 @@ type EstudianteConsultaBackend = {
   numeroDocumento: string | null
   correoInstitucional: string | null
   correoPersonal: string | null
+  directorTg: {
+    nombreCompleto: string
+    correo: string
+  } | null
   persona: {
     id: number
     idpId: string | null
@@ -61,19 +57,12 @@ type EstudianteConsultaBackend = {
 }
 
 const toProgramaCoordinacion = (programa: ProgramaAcademicoBackend): ProgramaCoordinacion | null => {
-  const nombreCorto = programa.nombre.trim().toUpperCase()
-  const definicion = PROGRAMAS_COORDINACION[nombreCorto]
-
-  if (!definicion) {
-    return null
-  }
-
-  const codigoDesdeCatalogo = programa.codigoNombre.split('-')[1]?.trim().toUpperCase()
-  const codigo = codigoDesdeCatalogo || definicion.codigo
+  const definicion = getProgramaAcademico(programa)
+  if (!definicion) return null
 
   return {
     id: programa.id,
-    codigo,
+    codigo: programa.codigoUis ?? programa.codigo_uis ?? definicion.codigoUis,
     nombre: definicion.nombre,
   }
 }
@@ -138,6 +127,12 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     numeroDocumento: item.numeroDocumento?.trim() || item.persona.numeroDocumento?.trim() || 'N/A',
     correoInstitucional: resolveCorreoInstitucional(item),
     correoPersonal: resolveCorreoPersonal(item),
+    directorTg: item.directorTg
+      ? {
+          nombreCompleto: item.directorTg.nombreCompleto?.trim() ?? '',
+          correo: item.directorTg.correo?.trim() ?? '',
+        }
+      : null,
     personaId: item.persona.id ?? null,
     personaIdpId: item.persona.idpId?.trim() || null,
     estadoAcademico: normalizarEstadoAcademico(item.estudiante.estado),
@@ -209,5 +204,14 @@ export const updateEstadoEstudiante = async (
   await httpPut<unknown>(
     `${ESTUDIANTES_ENDPOINT}/${encodeURIComponent(estudianteId)}/estado`,
     { estado },
+  )
+}
+
+export const downloadDocumentosEstudianteZip = async (
+  estudianteId: number,
+): Promise<HttpFileResponse> => {
+  return httpFile(
+    `${ESTUDIANTES_ENDPOINT}/${encodeURIComponent(estudianteId)}/documentos/zip`,
+    { method: 'GET' },
   )
 }

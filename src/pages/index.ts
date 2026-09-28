@@ -5,8 +5,10 @@ export { AdmisionesPage } from "./AdmisionesPage";
 export { ConvocatoriaDetallePage } from "./ConvocatoriaDetalle";
 export { ConvocatoriasAdmisionConfigPage } from "./ConvocatoriasAdmisionConfig";
 export { CreditosPage } from "./Creditos";
+export { CreditosCondonablesCoordinacionPage } from "./CreditosCondonablesCoordinacion";
 export { EstudianteDetalleCoordinacionPage } from "./EstudianteDetalleCoordinacion";
 export { EstudiantesCoordinacionPage } from "./EstudiantesCoordinacion";
+export { GestionProfesoresPage } from "./GestionProfesores";
 export { HomePage } from "./Home";
 export { PerfilPage } from "./Perfil";
 export { ReportesPage } from "./Reportes";
@@ -16,9 +18,12 @@ export { InscripcionEntrevistasPage } from "./InscripcionEntrevistas";
 export { InscripcionExamenPage } from "./InscripcionExamen";
 export { InscripcionHojaVidaPage } from "./InscripcionHojaVida";
 export { MatriculaPage } from "./Matricula";
+export { MatriculaHomePage } from "./MatriculaHome";
+export { MatriculaFinancieraPage, ProcesoLiquidacionPage } from "./MatriculaFinanciera";
 export { MatriculaDetalleCoordinacionPage } from "./MatriculaDetalleCoordinacion";
 export { SolicitudesPage } from "./Solicitudes";
 export { SolicitudDetallePage } from "./SolicitudDetalle";
+export { TrabajosGradoPage } from "./TrabajosGrado";
 
 export { ConfigFechasAdmisionesPage } from "./ConfigFechasAdmisiones";
 

@@ -16,15 +16,18 @@ interface ApiErrorBody {
   message?: string
   error?: string
   errors?: unknown
+  data?: unknown
 }
 
 export class HttpError extends Error {
   readonly status: number
+  readonly data: unknown
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, data?: unknown) {
     super(message)
     this.name = 'HttpError'
     this.status = status
+    this.data = data
   }
 }
 
@@ -138,9 +141,11 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
 
   if (!response.ok) {
     let errorMessage = `Error HTTP ${response.status}`
+    let errorData: unknown
 
     try {
       const errorBody = (await response.json()) as ApiErrorBody
+      errorData = errorBody?.data
       const validationDetails = stringifyValidationErrors(errorBody?.errors)
       const serverMessage = errorBody?.message || errorBody?.error
       errorMessage = [serverMessage, validationDetails].filter(Boolean).join(': ') || errorMessage
@@ -148,7 +153,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
       // Ignore parse errors and keep the default message.
     }
 
-    throw new HttpError(response.status, errorMessage)
+    throw new HttpError(response.status, errorMessage, errorData)
   }
 
   if (response.status === 204) {
@@ -181,12 +186,14 @@ export async function httpFile(path: string, options: HttpOptions = {}): Promise
 
   if (!response.ok) {
     let errorMessage = `Error HTTP ${response.status}`
+    let errorData: unknown
 
     try {
       const responseText = await response.text()
       if (responseText) {
         try {
           const errorBody = JSON.parse(responseText) as ApiErrorBody
+          errorData = errorBody?.data
           const validationDetails = stringifyValidationErrors(errorBody?.errors)
           const serverMessage = errorBody?.message || errorBody?.error
           errorMessage = [serverMessage, validationDetails].filter(Boolean).join(': ') || errorMessage
@@ -198,7 +205,7 @@ export async function httpFile(path: string, options: HttpOptions = {}): Promise
       // Ignore parse errors and keep the default message.
     }
 
-    throw new HttpError(response.status, errorMessage)
+    throw new HttpError(response.status, errorMessage, errorData)
   }
 
   const contentType = response.headers.get('Content-Type') || 'application/octet-stream'

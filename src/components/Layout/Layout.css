@@ -20,5 +20,12 @@
 
   .app-shell__content {
     margin-left: 0;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 359px) {
+  .app-shell__content {
+    padding-inline: 12px;
   }
 }

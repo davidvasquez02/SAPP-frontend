@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../../context/Auth'
 import { BackButton } from '../../../../components'
@@ -16,7 +16,7 @@ import {
 } from '../../api/solicitudesAcademicasService'
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
-import type { SolicitudEstudianteRowDto, TipoSolicitudDto } from '../../types'
+import type { SolicitudEstudianteRowDto, SolicitudTableRow, TipoSolicitudDto } from '../../types'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
   getEstadosPresentesEnSolicitudes,
@@ -28,8 +28,25 @@ import { compareSolicitudesDesc } from '../../utils/ordenSolicitudes'
 import './SolicitudesEstudianteView.css'
 
 const PAGE_SIZE = 10
+const identityTipoSolicitud = (tipo: TipoSolicitudDto) => tipo
 
-const SolicitudesEstudianteView = () => {
+interface SolicitudesEstudianteViewProps {
+  includeTipoSolicitudIds?: readonly number[]
+  excludeTipoSolicitudIds?: ReadonlySet<number>
+  detailPath?: (solicitudId: number) => string
+  transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
+  filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
+  showAllEstadoOptions?: boolean
+}
+
+const SolicitudesEstudianteView = ({
+  includeTipoSolicitudIds,
+  excludeTipoSolicitudIds,
+  detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
+  transformTipoSolicitud = identityTipoSolicitud,
+  filterSolicitud,
+  showAllEstadoOptions = false,
+}: SolicitudesEstudianteViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { session } = useAuth()
@@ -57,10 +74,18 @@ const SolicitudesEstudianteView = () => {
   const correoEstudiante =
     session?.user.persona.emailInstitucional ?? session?.user.email ?? session?.user.persona.emailPersonal ?? ''
 
-  const loadSolicitudes = async (targetEstudianteId: number) => {
+  const loadSolicitudes = useCallback(async (targetEstudianteId: number) => {
     const solicitudes = await getSolicitudesAcademicasByEstudiante(targetEstudianteId)
-    setRows(solicitudes)
-  }
+    setRows(
+      solicitudes.filter((solicitud) => {
+        if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(solicitud.tipoSolicitudId)) {
+          return false
+        }
+        if (filterSolicitud && !filterSolicitud(solicitud)) return false
+        return !excludeTipoSolicitudIds?.has(solicitud.tipoSolicitudId)
+      }),
+    )
+  }, [excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds])
 
   useEffect(() => {
     let mounted = true
@@ -92,7 +117,7 @@ const SolicitudesEstudianteView = () => {
     return () => {
       mounted = false
     }
-  }, [estudianteId, location.key])
+  }, [estudianteId, loadSolicitudes, location.key])
 
   useEffect(() => {
     let mounted = true
@@ -103,7 +128,14 @@ const SolicitudesEstudianteView = () => {
           return
         }
 
-        setTiposSolicitud(tipos)
+        setTiposSolicitud(
+          tipos.filter((tipo) => {
+            if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(tipo.id)) {
+              return false
+            }
+            return !excludeTipoSolicitudIds?.has(tipo.id)
+          }).map(transformTipoSolicitud),
+        )
         if (estados.length > 0) {
           setEstadosCatalog(estados)
         }
@@ -117,7 +149,7 @@ const SolicitudesEstudianteView = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [excludeTipoSolicitudIds, includeTipoSolicitudIds, transformTipoSolicitud])
 
   useEffect(() => {
     if (viewMode !== 'FORM') {
@@ -131,7 +163,14 @@ const SolicitudesEstudianteView = () => {
     getTiposSolicitud()
       .then((tipos) => {
         if (mounted) {
-          setTiposSolicitud(tipos)
+          setTiposSolicitud(
+            tipos.filter((tipo) => {
+              if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(tipo.id)) {
+                return false
+              }
+              return !excludeTipoSolicitudIds?.has(tipo.id)
+            }).map(transformTipoSolicitud),
+          )
         }
       })
       .catch((fetchError) => {
@@ -148,7 +187,7 @@ const SolicitudesEstudianteView = () => {
     return () => {
       mounted = false
     }
-  }, [viewMode])
+  }, [excludeTipoSolicitudIds, includeTipoSolicitudIds, transformTipoSolicitud, viewMode])
 
   const handleRegisterSolicitud = async (payload: SolicitudEstudiantePayload) => {
     if (estudianteId === null || usuarioSappId === null) {
@@ -165,6 +204,8 @@ const SolicitudesEstudianteView = () => {
       const createdSolicitud = await createSolicitudAcademica({
         estudianteId,
         tipoSolicitudId: payload.tipoSolicitudId,
+        tituloTrabajo: payload.tituloTrabajo,
+        resumenTrabajo: payload.resumenTrabajo,
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
         modalidadId: payload.modalidadId ?? undefined,
@@ -177,7 +218,13 @@ const SolicitudesEstudianteView = () => {
       })
 
       const refreshedSolicitudes = await getSolicitudesAcademicasByEstudiante(estudianteId)
-      setRows(refreshedSolicitudes)
+      setRows(
+        refreshedSolicitudes.filter((solicitud) => {
+          if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(solicitud.tipoSolicitudId)) return false
+          if (filterSolicitud && !filterSolicitud(solicitud)) return false
+          return !excludeTipoSolicitudIds?.has(solicitud.tipoSolicitudId)
+        }),
+      )
       setCurrentPage(1)
 
       const inferredSolicitudId =
@@ -239,11 +286,13 @@ const SolicitudesEstudianteView = () => {
     () => rows.filter((row) => (tipoSolicitudId === null ? true : row.tipoSolicitudId === tipoSolicitudId)),
     [rows, tipoSolicitudId],
   )
-  const estadosPresentes = useMemo(
-    () => getEstadosPresentesEnSolicitudes(estadosCatalog, rowsDelTipoSeleccionado),
-    [estadosCatalog, rowsDelTipoSeleccionado],
+  const estadosDisponibles = useMemo(
+    () => showAllEstadoOptions
+      ? estadosCatalog
+      : getEstadosPresentesEnSolicitudes(estadosCatalog, rowsDelTipoSeleccionado),
+    [estadosCatalog, rowsDelTipoSeleccionado, showAllEstadoOptions],
   )
-  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
+  const estadoIdActivo = estadosDisponibles.some((estado) => estado.id === estadoId) ? estadoId : null
 
   const filteredRows = rows
     .filter((row) => {
@@ -297,7 +346,7 @@ const SolicitudesEstudianteView = () => {
           <SolicitudesFiltersBar
             estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosPresentes}
+            estadosCatalog={estadosDisponibles}
             tiposSolicitud={tiposSolicitud}
             disabled={loading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
@@ -311,7 +360,7 @@ const SolicitudesEstudianteView = () => {
             <p className="solicitudes-estudiante-view__status">No hay resultados con los filtros seleccionados.</p>
           ) : (
             <>
-              <SolicitudesTable mode="ESTUDIANTE" rows={paginatedRows} onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)} />
+              <SolicitudesTable mode="ESTUDIANTE" rows={paginatedRows} onRowClick={(solicitudId) => navigate(detailPath(solicitudId))} />
               <footer className="solicitudes-estudiante-view__pagination" aria-label="Paginación de solicitudes">
                 <button
                   type="button"

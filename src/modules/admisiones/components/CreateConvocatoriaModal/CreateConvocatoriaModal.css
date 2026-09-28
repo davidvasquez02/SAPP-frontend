@@ -54,8 +54,7 @@
 }
 
 .create-convocatoria-modal__field input,
-.create-convocatoria-modal__field select,
-.create-convocatoria-modal__field textarea {
+.create-convocatoria-modal__field select {
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--outline);
@@ -65,19 +64,12 @@
   padding: 0.62rem 0.75rem;
 }
 
-.create-convocatoria-modal__field textarea {
-  resize: vertical;
-}
-
 .create-convocatoria-modal__field--full {
   grid-column: 1 / -1;
 }
 
 .create-convocatoria-modal__profesor-picker {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.6rem;
-  align-items: center;
+  min-width: 0;
 }
 
 .create-convocatoria-modal__chips {
@@ -95,6 +87,33 @@
   background: var(--surface-container-low);
   border-radius: 999px;
   padding: 0.45rem 0.75rem;
+}
+
+.create-convocatoria-modal__chip--automatic {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  border-color: color-mix(in srgb, var(--primary), transparent 55%);
+  background: color-mix(in srgb, var(--primary), transparent 92%);
+}
+
+.create-convocatoria-modal__automatic-icon {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 800;
+}
+
+.create-convocatoria-modal__automatic-badge {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 60%);
+  border-radius: 999px;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 .create-convocatoria-modal__chip strong {
@@ -179,16 +198,71 @@
 }
 
 @media (max-width: 720px) {
-  .create-convocatoria-modal__form {
-    grid-template-columns: 1fr;
+  .create-convocatoria-modal {
+    align-items: stretch;
+    padding: 12px;
   }
 
-  .create-convocatoria-modal__profesor-picker {
+  .create-convocatoria-modal__dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 1rem;
+    border-radius: 16px;
+    overscroll-behavior: contain;
+  }
+
+  .create-convocatoria-modal__form {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
   }
 
   .create-convocatoria-modal__chip {
     border-radius: 16px;
+  }
+
+  .create-convocatoria-modal__chip--automatic {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .create-convocatoria-modal__automatic-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .create-convocatoria-modal__field,
+  .create-convocatoria-modal__field--full,
+  .create-convocatoria-modal__profesor-picker,
+  .create-convocatoria-modal__chips {
+    min-width: 0;
+  }
+
+  .create-convocatoria-modal__field input,
+  .create-convocatoria-modal__field select {
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .create-convocatoria-modal__actions {
+    bottom: -1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    padding-bottom: 0.4rem;
+  }
+
+  .create-convocatoria-modal__button,
+  .create-convocatoria-modal__chip button {
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 359px) {
+  .create-convocatoria-modal__actions {
+    grid-template-columns: 1fr;
   }
 }
 

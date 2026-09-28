@@ -12,6 +12,11 @@
 }
 
 .inscripcion-accordion-window__header {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -65,4 +70,11 @@
   padding: 1.25rem;
   background: var(--surface);
   overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .inscripcion-accordion-window { border-radius: 14px; box-shadow: none; }
+  .inscripcion-accordion-window__header { min-height: 52px; padding: .75rem .85rem; }
+  .inscripcion-accordion-window__body { padding: .65rem; }
+  .inscripcion-accordion-window__body { overflow-x: clip; }
 }

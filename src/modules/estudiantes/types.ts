@@ -4,6 +4,11 @@ export interface ProgramaCoordinacion {
   nombre: string
 }
 
+export interface DirectorTrabajoGrado {
+  nombreCompleto: string
+  correo: string
+}
+
 export interface EstudianteCoordinacion {
   id: number
   idAspirante: number | null
@@ -19,6 +24,7 @@ export interface EstudianteCoordinacion {
   numeroDocumento: string
   correoInstitucional: string
   correoPersonal: string
+  directorTg: DirectorTrabajoGrado | null
   personaId: number | null
   personaIdpId: string | null
   estadoAcademico: 'ACTIVO' | 'EN_TRABAJO_DE_GRADO' | 'EN_ESPERA_CANDIDATURA' | string

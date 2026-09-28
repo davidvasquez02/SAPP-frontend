@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
-import type { SolicitudCoordinadorDto, TipoSolicitudDto } from '../../types'
+import type { SolicitudCoordinadorDto, SolicitudTableRow, TipoSolicitudDto } from '../../types'
 import { getEstadosSolicitudCatalog } from '../../api/estadoSolicitudService'
 import {
   DEFAULT_ESTADOS_SOLICITUD_CATALOG,
@@ -16,20 +16,41 @@ import {
 import { getTiposSolicitud } from '../../api/tipoSolicitudService'
 import SolicitudesFiltersBar from '../SolicitudesFiltersBar/SolicitudesFiltersBar'
 import { sortSolicitudesDesc } from '../../utils/ordenSolicitudes'
+import {
+  isSolicitudCreditoCondonable,
+  isTipoSolicitudCreditoCondonable,
+} from '../../utils/creditoCondonable'
 import './SolicitudesCoordinadorView.css'
 
 const PAGE_SIZE = 10
+const identityTipoSolicitud = (tipo: TipoSolicitudDto) => tipo
 
 interface SolicitudesCoordinadorViewProps {
   usuarioSappId: number
   readOnly?: boolean
   assignedOnly?: boolean
+  hideAssignedList?: boolean
+  excludeCreditosCondonables?: boolean
+  includeTipoSolicitudIds?: readonly number[]
+  excludeTipoSolicitudIds?: ReadonlySet<number>
+  detailPath?: (solicitudId: number) => string
+  transformTipoSolicitud?: (tipo: TipoSolicitudDto) => TipoSolicitudDto
+  filterSolicitud?: (solicitud: SolicitudTableRow) => boolean
+  showAllEstadoOptions?: boolean
 }
 
 const SolicitudesCoordinadorView = ({
   usuarioSappId,
   readOnly = false,
   assignedOnly = false,
+  hideAssignedList = false,
+  excludeCreditosCondonables = false,
+  includeTipoSolicitudIds,
+  excludeTipoSolicitudIds,
+  detailPath = (solicitudId) => `/solicitudes/${solicitudId}`,
+  transformTipoSolicitud = identityTipoSolicitud,
+  filterSolicitud,
+  showAllEstadoOptions = false,
 }: SolicitudesCoordinadorViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -55,7 +76,11 @@ const SolicitudesCoordinadorView = ({
           return
         }
 
-        setTiposSolicitud(tipos)
+        setTiposSolicitud(tipos.filter((tipo) => {
+          if (excludeCreditosCondonables && isTipoSolicitudCreditoCondonable(tipo)) return false
+          if (includeTipoSolicitudIds && !includeTipoSolicitudIds.includes(tipo.id)) return false
+          return !excludeTipoSolicitudIds?.has(tipo.id)
+        }).map(transformTipoSolicitud))
         if (estados.length > 0) {
           setEstadosCatalog(estados)
         }
@@ -71,7 +96,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [])
+  }, [excludeCreditosCondonables, excludeTipoSolicitudIds, includeTipoSolicitudIds, transformTipoSolicitud])
 
   useEffect(() => {
     let mounted = true
@@ -80,7 +105,13 @@ const SolicitudesCoordinadorView = ({
       .then((solicitudes) => {
         if (mounted) {
           setAssignedError(null)
-          setAssignedRows(sortSolicitudesDesc(solicitudes))
+          let visibleSolicitudes = excludeCreditosCondonables
+            ? solicitudes.filter((solicitud) => !isSolicitudCreditoCondonable(solicitud))
+            : solicitudes
+          if (includeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => includeTipoSolicitudIds.includes(item.tipoSolicitudId))
+          if (excludeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => !excludeTipoSolicitudIds.has(item.tipoSolicitudId))
+          if (filterSolicitud) visibleSolicitudes = visibleSolicitudes.filter(filterSolicitud)
+          setAssignedRows(sortSolicitudesDesc(visibleSolicitudes))
         }
       })
       .catch((fetchError) => {
@@ -99,7 +130,7 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [usuarioSappId, location.key, location.state])
+  }, [excludeCreditosCondonables, excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds, usuarioSappId, location.key, location.state])
 
   useEffect(() => {
     if (assignedOnly) {
@@ -115,7 +146,13 @@ const SolicitudesCoordinadorView = ({
         if (!mounted) {
           return
         }
-        setRows(sortSolicitudesDesc(solicitudes))
+        let visibleSolicitudes = excludeCreditosCondonables
+          ? solicitudes.filter((solicitud) => !isSolicitudCreditoCondonable(solicitud))
+          : solicitudes
+        if (includeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => includeTipoSolicitudIds.includes(item.tipoSolicitudId))
+        if (excludeTipoSolicitudIds) visibleSolicitudes = visibleSolicitudes.filter((item) => !excludeTipoSolicitudIds.has(item.tipoSolicitudId))
+        if (filterSolicitud) visibleSolicitudes = visibleSolicitudes.filter(filterSolicitud)
+        setRows(sortSolicitudesDesc(visibleSolicitudes))
         setCurrentPage(1)
       })
       .catch((fetchError) => {
@@ -133,18 +170,20 @@ const SolicitudesCoordinadorView = ({
     return () => {
       mounted = false
     }
-  }, [assignedOnly, tipoSolicitudId, location.key, location.state])
+  }, [assignedOnly, excludeCreditosCondonables, excludeTipoSolicitudIds, filterSolicitud, includeTipoSolicitudIds, tipoSolicitudId, location.key, location.state])
 
   const availableRows = useMemo(() => {
     const assignedIds = new Set(assignedRows.map((solicitud) => solicitud.id))
     return rows.filter((solicitud) => !assignedIds.has(solicitud.id))
   }, [assignedRows, rows])
-  const estadosPresentes = useMemo(
-    () => getEstadosPresentesEnSolicitudes(estadosCatalog, availableRows),
-    [availableRows, estadosCatalog],
+  const estadosDisponibles = useMemo(
+    () => showAllEstadoOptions
+      ? estadosCatalog
+      : getEstadosPresentesEnSolicitudes(estadosCatalog, availableRows),
+    [availableRows, estadosCatalog, showAllEstadoOptions],
   )
-  const estadoIdActivo = estadosPresentes.some((estado) => estado.id === estadoId) ? estadoId : null
-  const estadoSiglaActiva = estadosPresentes.find((estado) => estado.id === estadoIdActivo)?.sigla
+  const estadoIdActivo = estadosDisponibles.some((estado) => estado.id === estadoId) ? estadoId : null
+  const estadoSiglaActiva = estadosDisponibles.find((estado) => estado.id === estadoIdActivo)?.sigla
   const filteredRows = availableRows.filter((solicitud) => {
     if (!estadoSiglaActiva) {
       return true
@@ -163,33 +202,34 @@ const SolicitudesCoordinadorView = ({
       {readOnly ? (
         <p />
       ) : null}
-      <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
-        <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
-        {assignedLoading ? (
-          <p className="solicitudes-coordinador-view__status">Cargando solicitudes asignadas...</p>
-        ) : assignedError ? (
-          <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">
-            {assignedError}
-          </p>
-        ) : assignedRows.length === 0 ? (
-          <p className="solicitudes-coordinador-view__status">No tienes solicitudes asignadas.</p>
-        ) : (
-          <SolicitudesTable
-            mode="COORDINADOR"
-            rows={assignedRows}
-            onRowClick={(solicitudId) =>
-              navigate(`/solicitudes/${solicitudId}`, { state: { fromAssigned: true } })
-            }
-          />
-        )}
-      </section>
+      {!hideAssignedList ? (
+        <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-asignadas-title">
+          <h3 id="solicitudes-asignadas-title">Solicitudes asignadas</h3>
+          {assignedLoading ? (
+            <p className="solicitudes-coordinador-view__status">Cargando solicitudes asignadas...</p>
+          ) : assignedError ? (
+            <p className="solicitudes-coordinador-view__status solicitudes-coordinador-view__status--error">
+              {assignedError}
+            </p>
+          ) : assignedRows.length === 0 ? (
+            <p className="solicitudes-coordinador-view__status">No tienes solicitudes asignadas.</p>
+          ) : (
+            <SolicitudesTable
+              mode="COORDINADOR"
+              rows={assignedRows}
+              onRowClick={(solicitudId) =>
+                navigate(detailPath(solicitudId), { state: { fromAssigned: true } })
+              }
+            />
+          )}
+        </section>
+      ) : null}
       {!assignedOnly ? (
-        <section className="solicitudes-coordinador-view__list" aria-labelledby="solicitudes-title">
-          <h3 id="solicitudes-title">Solicitudes</h3>
+        <section className="solicitudes-coordinador-view__list" aria-label="Listado de solicitudes">
           <SolicitudesFiltersBar
             estadoId={estadoIdActivo}
             tipoSolicitudId={tipoSolicitudId}
-            estadosCatalog={estadosPresentes}
+            estadosCatalog={estadosDisponibles}
             tiposSolicitud={tiposSolicitud}
             disabled={loading || assignedLoading}
             onChange={({ estadoId: nextEstadoId, tipoSolicitudId: nextTipoSolicitudId }) => {
@@ -216,7 +256,7 @@ const SolicitudesCoordinadorView = ({
               <SolicitudesTable
                 mode="COORDINADOR"
                 rows={paginatedRows}
-                onRowClick={(solicitudId) => navigate(`/solicitudes/${solicitudId}`)}
+                onRowClick={(solicitudId) => navigate(detailPath(solicitudId))}
               />
               <footer className="solicitudes-coordinador-view__pagination" aria-label="Paginación de solicitudes">
                 <button

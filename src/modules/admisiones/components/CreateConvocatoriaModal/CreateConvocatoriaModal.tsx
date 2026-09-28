@@ -12,6 +12,8 @@ import type { ApiResponse } from '../../../../api/types'
 import { httpGet } from '../../../../shared/http/httpClient'
 import { fetchProfesores } from '../../services/profesoresMockService'
 import './CreateConvocatoriaModal.css'
+import { formatProgramaAcademico } from '../../../../shared/domain/programaAcademico'
+import { getConvocatoriaCreateErrorMessage } from '../../utils/convocatoriaCreateError'
 
 type ProgramaOption = {
   programaId: number
@@ -26,6 +28,7 @@ type PendingAssignment = {
 type CreateConvocatoriaModalProps = {
   open: boolean
   convocatorias: ConvocatoriaAdmisionDto[]
+  initialProgramaId?: number | null
   onClose: () => void
   onRefreshConvocatorias: () => Promise<ConvocatoriaAdmisionDto[]>
   onSuccess: (message: string) => void
@@ -40,11 +43,12 @@ type FormState = {
   cupos: string
   fechaInicio: string
   fechaFin: string
-  observaciones: string
-  profesorUuid: string
 }
 
-type FormErrors = Partial<Record<keyof FormState, string>> & { general?: string; warning?: string }
+type FormErrors = Partial<Record<keyof FormState, string>> & {
+  general?: string
+  warning?: string
+}
 
 const nowYear = new Date().getFullYear()
 
@@ -55,7 +59,12 @@ const getDefaultDatesForSemester = (anio: number, semestre: 1 | 2) =>
 
 const initialDates = getDefaultDatesForSemester(nowYear, 1)
 
-const PRESELECTED_EXCLUDED_PROFESORES = ['Luis Carlos Gomez Florez', 'Fabio Martinez Carillo'] as const
+const AUTOMATIC_EVALUATORS = [
+  { id: 'coordinador-posgrados', label: 'Coordinador Posgrados' },
+  { id: 'director-escuela', label: 'Director de Escuela' },
+] as const
+
+const AUTOMATIC_EVALUATOR_PERSON_NAMES = ['Luis Carlos Gomez Florez', 'Fabio Martinez Carillo'] as const
 
 const normalizeName = (value: string): string =>
   value
@@ -65,30 +74,23 @@ const normalizeName = (value: string): string =>
     .replace(/\s+/g, ' ')
     .toLowerCase()
 
-const excludedProfesorNames = new Set(PRESELECTED_EXCLUDED_PROFESORES.map(normalizeName))
+const automaticEvaluatorPersonNames = new Set(AUTOMATIC_EVALUATOR_PERSON_NAMES.map(normalizeName))
 
 const PROGRAMAS_ENDPOINT = '/sapp/programaAcademico'
 
 type ProgramaAcademicoBackend = {
   id: number
   nombre: string
-  codigoNombre: string
+  nivel?: string | null
+  codigoUis?: string | null
+  codigo_uis?: string | null
+  codigoIdp?: string | null
+  codigo_idp?: string | null
+  codigoNombre?: string | null
 }
 
-const buildProgramaLabel = (programa: ProgramaAcademicoBackend): string => {
-  const normalizedName = programa.nombre.trim().toUpperCase()
-  const codigo = programa.codigoNombre.split('-')[1]?.trim().toUpperCase()
-
-  if (normalizedName === 'MISI') {
-    return `${codigo || 'MISI'} - Maestría en Ingeniería de Sistemas e Informática`
-  }
-
-  if (normalizedName === 'DCC') {
-    return `${codigo || 'DCC'} - Doctorado en Ciencias de la Computación`
-  }
-
-  return programa.codigoNombre.trim() || programa.nombre.trim()
-}
+const buildProgramaLabel = (programa: ProgramaAcademicoBackend): string =>
+  formatProgramaAcademico(programa)
 
 const getProgramasAdmision = async (): Promise<ProgramaOption[]> => {
   const response = await httpGet<ApiResponse<ProgramaAcademicoBackend[]>>(PROGRAMAS_ENDPOINT)
@@ -112,13 +114,12 @@ const initialFormState: FormState = {
   cupos: '1',
   fechaInicio: initialDates.inicio,
   fechaFin: initialDates.fin,
-  observaciones: '',
-  profesorUuid: '',
 }
 
 export const CreateConvocatoriaModal = ({
   open,
   convocatorias,
+  initialProgramaId,
   onClose,
   onRefreshConvocatorias,
   onSuccess,
@@ -163,23 +164,23 @@ export const CreateConvocatoriaModal = ({
         const nextYear = new Date().getFullYear()
         const defaultDates = getDefaultDatesForSemester(nextYear, 1)
 
-        const blockedProfesores = profesoresData.filter((profesor) =>
-          excludedProfesorNames.has(normalizeName(profesor.nombre))
-        )
         const selectableProfesores = profesoresData.filter(
-          (profesor) => !excludedProfesorNames.has(normalizeName(profesor.nombre))
+          (profesor) => !automaticEvaluatorPersonNames.has(normalizeName(profesor.nombre))
         )
 
         setProfesores(selectableProfesores)
         setProgramas(resolvedProgramas)
+        const initialPrograma = resolvedProgramas.find(
+          (programa) => programa.programaId === initialProgramaId
+        ) ?? resolvedProgramas[0]
         setFormState({
           ...initialFormState,
-          programaId: resolvedProgramas[0] ? String(resolvedProgramas[0].programaId) : '',
+          programaId: initialPrograma ? String(initialPrograma.programaId) : '',
           anio: String(nextYear),
           fechaInicio: defaultDates.inicio,
           fechaFin: defaultDates.fin,
         })
-        setSelectedProfesores(blockedProfesores)
+        setSelectedProfesores([])
         setPendingAssignment(null)
         setErrors({})
         setDatesTouched(false)
@@ -204,7 +205,7 @@ export const CreateConvocatoriaModal = ({
     return () => {
       active = false
     }
-  }, [convocatorias, open])
+  }, [convocatorias, initialProgramaId, open])
 
   useEffect(() => {
     if (!open) {
@@ -269,10 +270,6 @@ export const CreateConvocatoriaModal = ({
       nextErrors.fechaFin = 'La fecha de fin no puede ser menor a la fecha de inicio.'
     }
 
-    if (selectedProfesores.length === 0) {
-      nextErrors.profesorUuid = 'Debe seleccionar al menos un profesor.'
-    }
-
     return nextErrors
   }
 
@@ -286,8 +283,7 @@ export const CreateConvocatoriaModal = ({
     handleField(field, value)
   }
 
-  const handleAddProfesor = () => {
-    const selectedUuid = formState.profesorUuid
+  const handleAddProfesor = (selectedUuid: string) => {
     if (!selectedUuid) {
       return
     }
@@ -305,8 +301,6 @@ export const CreateConvocatoriaModal = ({
       return [...prev, profesor]
     })
 
-    setFormState((prev) => ({ ...prev, profesorUuid: '' }))
-    setErrors((prev) => ({ ...prev, profesorUuid: undefined }))
   }
 
   const handleRemoveProfesor = (profesorUuid: string) => {
@@ -408,14 +402,12 @@ export const CreateConvocatoriaModal = ({
         cupos: Number(formState.cupos),
         fechaInicio: formState.fechaInicio,
         fechaFin: formState.fechaFin,
-        observaciones: formState.observaciones.trim(),
+        observaciones: '',
       }
 
       const created = await createConvocatoriaAdmision(payload)
       const convocatoriaId = await resolveCreatedConvocatoriaId(payload, created)
-      const profesoresUuid = selectedProfesores
-        .filter((profesor) => !excludedProfesorNames.has(normalizeName(profesor.nombre)))
-        .map((profesor) => profesor.uuid)
+      const profesoresUuid = selectedProfesores.map((profesor) => profesor.uuid)
 
       if (profesoresUuid.length > 0) {
         try {
@@ -443,10 +435,7 @@ export const CreateConvocatoriaModal = ({
     } catch (error) {
       setSubmitStep('idle')
       setErrors({
-        general:
-          error instanceof Error
-            ? error.message
-            : 'No fue posible crear la convocatoria. Inténtelo nuevamente.',
+        general: getConvocatoriaCreateErrorMessage(error, periodoSeleccionado),
       })
     } finally {
       setIsSubmitting(false)
@@ -566,26 +555,15 @@ export const CreateConvocatoriaModal = ({
             ) : null}
           </label>
 
-          <label className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
-            Observaciones
-            <textarea
-              rows={3}
-              value={formState.observaciones}
-              onChange={(event) => handleField('observaciones', event.target.value)}
-              disabled={isSubmitting || Boolean(pendingAssignment)}
-              placeholder="Opcional"
-            />
-          </label>
-
           <div className="create-convocatoria-modal__field create-convocatoria-modal__field--full">
-            <span>Profesores</span>
+            <span>Evaluadores</span>
             <div className="create-convocatoria-modal__profesor-picker">
               <select
-                value={formState.profesorUuid}
-                onChange={(event) => handleField('profesorUuid', event.target.value)}
+                value=""
+                onChange={(event) => handleAddProfesor(event.target.value)}
                 disabled={isSubmitting || isLoadingOptions || Boolean(pendingAssignment)}
               >
-                <option value="">Seleccione profesor...</option>
+                <option value="">Seleccione un evaluador adicional...</option>
                 {availableProfesores.map((profesor) => (
                   <option key={profesor.uuid} value={profesor.uuid}>
                     {profesor.nombre}
@@ -593,19 +571,26 @@ export const CreateConvocatoriaModal = ({
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="create-convocatoria-modal__button create-convocatoria-modal__button--ghost"
-                onClick={handleAddProfesor}
-                disabled={!formState.profesorUuid || isSubmitting || Boolean(pendingAssignment)}
-              >
-                Agregar
-              </button>
             </div>
 
-            <div className="create-convocatoria-modal__chips">
+            <div className="create-convocatoria-modal__chips" aria-label="Evaluadores seleccionados">
+              {AUTOMATIC_EVALUATORS.map((evaluador) => (
+                <div
+                  key={evaluador.id}
+                  className="create-convocatoria-modal__chip create-convocatoria-modal__chip--automatic"
+                >
+                  <span className="create-convocatoria-modal__automatic-icon" aria-hidden="true">✓</span>
+                  <div>
+                    <strong>{evaluador.label}</strong>
+                    <small>Evaluador incluido automáticamente</small>
+                  </div>
+                  <span className="create-convocatoria-modal__automatic-badge">Incluido</span>
+                </div>
+              ))}
               {selectedProfesores.length === 0 ? (
-                <span className="create-convocatoria-modal__hint">Aún no se han agregado profesores.</span>
+                <span className="create-convocatoria-modal__hint">
+                  Puede agregar evaluadores adicionales desde el selector.
+                </span>
               ) : (
                 selectedProfesores.map((profesor) => (
                   <div key={profesor.uuid} className="create-convocatoria-modal__chip">
@@ -624,9 +609,6 @@ export const CreateConvocatoriaModal = ({
                 ))
               )}
             </div>
-            {errors.profesorUuid ? (
-              <span className="create-convocatoria-modal__error">{errors.profesorUuid}</span>
-            ) : null}
           </div>
 
           {isSubmitting ? (

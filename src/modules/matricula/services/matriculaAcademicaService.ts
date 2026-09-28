@@ -10,6 +10,7 @@ import type {
   MatriculaValidacionAsignaturasRequest,
   MatriculaVigenteValidationResult,
 } from '../types'
+import { selectStudentMatricula } from '../utils/matriculaPresentation'
 
 type ApiResponse<T> = {
   ok: boolean
@@ -22,7 +23,7 @@ type AsignaturaApiDto = {
   nombre: string
   codigoUis: string | null
   codigoExterno: string | null
-  nivel: number
+  nivel: number | null
   programaId: number
 }
 
@@ -35,6 +36,7 @@ export type PeriodoAcademicoMatriculaVigenteDto = {
   descripcion: string
   fechaFin: string
   fechaInicio: string
+  notificacionAperturaEnviada: boolean
   id: number
   periodo: {
     anio: number
@@ -42,7 +44,9 @@ export type PeriodoAcademicoMatriculaVigenteDto = {
     descripcion: string
     fechaFin: string
     fechaInicio: string
+    fechaNotificacionCandidatura: string | null
     id: number
+    notificacionCandidaturaEnviada: boolean
     periodo: number
   }
   tipoTramite: {
@@ -121,7 +125,7 @@ export const getMatriculaVigenteByEstudiante = async (estudianteId: number): Pro
     throw new Error(response.message || 'No fue posible consultar la matrícula vigente.')
   }
 
-  return response.data[0] ?? null
+  return selectStudentMatricula(response.data)
 }
 
 export const getMatriculaVigenteValidationByEstudiante = async (
@@ -142,7 +146,7 @@ export const getMatriculaVigenteValidationByEstudiante = async (
   }
 
   if (Array.isArray(response.data)) {
-    const matricula = response.data[0]
+    const matricula = selectStudentMatricula(response.data)
     if (!matricula) {
       throw new Error('La respuesta de matrícula vigente no contiene datos válidos.')
     }
@@ -210,7 +214,17 @@ export const notificarDocumentosCompletosMatricula = async (matriculaId: number)
   )
 
   if (response && !response.ok) {
-    throw new Error(response.message || 'No fue posible notificar la revisión completa de los documentos.')
+    throw new Error(response.message || 'No fue posible notificar la carga completa de los documentos.')
+  }
+}
+
+export const finalizarRevisionDocumentosMatricula = async (matriculaId: number): Promise<void> => {
+  const response = await httpPost<ApiResponse<unknown> | undefined>(
+    `/sapp/matriculaAcademica/${matriculaId}/finalizarRevisionDocumentos`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible finalizar la revisión de los documentos.')
   }
 }
 

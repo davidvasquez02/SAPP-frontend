@@ -6,6 +6,8 @@ import type {
   ConvocatoriaAdmisionDto,
   ConvocatoriaAdmisionListResponse,
   CreateConvocatoriaRequest,
+  EvaluadoresConvocatoriaResponse,
+  EvaluadorConvocatoriaDto,
   UpdateConvocatoriaFechasRequest,
 } from './convocatoriaAdmisionTypes'
 
@@ -58,4 +60,18 @@ export const cerrarConvocatoriaAdmision = async (convocatoriaId: number): Promis
   if (!response.ok) {
     throw new Error(response.message || 'Error al cerrar la convocatoria')
   }
+}
+
+export const getEvaluadoresConvocatoria = async (
+  convocatoriaId: number,
+): Promise<EvaluadorConvocatoriaDto[]> => {
+  const response = await httpGet<EvaluadoresConvocatoriaResponse>(
+    `/sapp/evaluadorConvocatoria/convocatoria/${convocatoriaId}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible consultar los evaluadores de la convocatoria')
+  }
+
+  return response.data ?? []
 }

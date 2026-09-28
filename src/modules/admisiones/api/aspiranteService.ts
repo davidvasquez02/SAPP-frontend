@@ -40,12 +40,6 @@ export const getAspiranteConsultaInfo = async (): Promise<AspiranteConsultaRespo
   return unwrapAspiranteResponse(response, 'No fue posible consultar la información del aspirante')
 }
 
-export const getNombreCompletoAspirante = (aspirante: AspiranteConsultaResponseDto): string =>
-  [aspirante.nombre1, aspirante.nombre2, aspirante.apellido1, aspirante.apellido2]
-    .map((parte) => parte?.trim())
-    .filter((parte): parte is string => Boolean(parte))
-    .join(' ')
-
 export const createAspirante = async (
   req: AspiranteCreateRequestDto
 ): Promise<AspiranteCreateResponseDto> => {

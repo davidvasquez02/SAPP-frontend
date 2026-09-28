@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import type { DocumentoRequerido } from '../../types'
 import './DocumentosRequeridosTable.css'
 
@@ -11,6 +12,7 @@ type DocumentosRequeridosTableProps = {
   disabledActions?: boolean
   showActions?: boolean
   uploadDisabledOnly?: boolean
+  uploadBlockedReason?: string | null
 }
 
 const statusClassByEstado: Record<DocumentoRequerido['estado'], string> = {
@@ -37,6 +39,7 @@ const DocumentosRequeridosTable = ({
   disabledActions = false,
   showActions = true,
   uploadDisabledOnly = false,
+  uploadBlockedReason = null,
 }: DocumentosRequeridosTableProps) => {
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
@@ -54,15 +57,17 @@ const DocumentosRequeridosTable = ({
         </thead>
         <tbody>
           {documentos.map((doc) => {
+            const hasUploadedFile = doc.uploadStatus === 'UPLOADED'
             const uploadBlocked =
               disabledActions ||
               uploadDisabledOnly ||
               doc.uploadStatus === 'UPLOADING' ||
-              doc.estado === 'APROBADO'
+              doc.estado === 'APROBADO' ||
+              (hasUploadedFile && doc.estado !== 'RECHAZADO')
 
             return (
             <tr key={doc.id}>
-              <td>
+              <td data-label="Documento">
                 <div className="documentos-requeridos-table__doc-cell">
                   <strong>{doc.nombre}</strong>
                   <span className={`documentos-requeridos-table__badge ${doc.obligatorio ? 'required' : 'optional'}`}>
@@ -74,27 +79,19 @@ const DocumentosRequeridosTable = ({
                   {doc.selectedFile ? (
                     <small className="documentos-requeridos-table__file-name">{doc.selectedFile.name}</small>
                   ) : null}
-                  {doc.uploadStatus && doc.uploadStatus !== 'NOT_SELECTED' ? (
-                    <small className="documentos-requeridos-table__file-name">
-                      Estado de carga: {doc.uploadStatus}
-                    </small>
-                  ) : null}
                   {doc.errorMessage ? (
                     <small className="documentos-requeridos-table__file-name">{doc.errorMessage}</small>
                   ) : null}
                 </div>
               </td>
-              <td>
+              <td data-label="Estado">
                 <span className={`documentos-requeridos-table__status ${statusClassByEstado[doc.estado]}`}>{doc.estado}</span>
               </td>
-              <td>{formatDateOnly(doc.fechaRevision)}</td>
-              <td>{doc.observaciones ?? '-'}</td>
+              <td data-label="Fecha de revisión">{formatDateOnly(doc.fechaRevision)}</td>
+              <td data-label="Observaciones">{doc.observaciones ?? '-'}</td>
               {showActions ? (
-                <td>
+                <td data-label="Acciones">
                   <div className="documentos-requeridos-table__actions">
-                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
-                      Ver
-                    </button>
                     <button
                       type="button"
                       disabled={uploadBlocked}
@@ -103,22 +100,35 @@ const DocumentosRequeridosTable = ({
                         fileInputRefs.current[doc.id]?.click()
                       }}
                     >
-                      Subir
+                      Cargar
                     </button>
-                    <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
-                      Descargar
-                    </button>
+                    {hasUploadedFile ? (
+                      <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'VER')}>
+                        Ver
+                      </button>
+                    ) : null}
+                    {hasUploadedFile ? (
+                      <button type="button" className="sapp-document-action" disabled={disabledActions} onClick={() => onAction?.(doc.id, 'DESCARGAR')}>
+                        Descargar
+                      </button>
+                    ) : null}
                     <input
                       ref={(element) => {
                         fileInputRefs.current[doc.id] = element
                       }}
                       className="documentos-requeridos-table__file-input"
                       type="file"
+                      accept={PDF_FILE_ACCEPT}
                       disabled={uploadBlocked}
                       onChange={(event) => {
                         onSelectFile?.(doc.id, event.target.files?.[0] ?? null)
                       }}
                     />
+                    {uploadBlocked && uploadBlockedReason ? (
+                      <small className="documentos-requeridos-table__blocked-reason">
+                        {uploadBlockedReason}
+                      </small>
+                    ) : null}
                   </div>
                 </td>
               ) : null}

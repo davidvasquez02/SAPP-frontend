@@ -11,6 +11,7 @@ import {
   FechasModulePage,
   EstudianteDetalleCoordinacionPage,
   EstudiantesCoordinacionPage,
+  GestionProfesoresPage,
   HomePage,
   PerfilPage,
   ReportesPage,
@@ -21,20 +22,22 @@ import {
   InscripcionHojaVidaPage,
 } from "../../pages";
 import RequireRoles from "../../routes/RequireRoles/RequireRoles";
-import { hasAnyRole, isProfesor, ROLES } from "../../auth/roleGuards";
+import { canManagePosgrados, isEvaluadorAdmision, ROLES, ROLES_GESTION_POSGRADOS } from "../../auth/roleGuards";
 import RequireEvaluacionEnabled from "../../modules/admisiones/routes/RequireEvaluacionEnabled";
 import { creditosRoutes } from "./creditosRoutes";
+import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
 import { solicitudesRoutes } from "./solicitudesRoutes";
+import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
 export const AppRoutes = () => {
   const { session } = useAuth();
   const sappRoles = session?.kind === "SAPP" ? session.user.roles : [];
-  const isProfesorOnly = isProfesor(sappRoles);
+  const isEvaluadorAdmisionOnly = isEvaluadorAdmision(sappRoles);
   const canManageAdmisiones =
     session?.kind === "SAPP" &&
-    hasAnyRole(sappRoles, [ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]);
+    canManagePosgrados(sappRoles);
 
   return (
     <Routes>
@@ -52,9 +55,10 @@ export const AppRoutes = () => {
                   ROLES.SECRETARIA,
                   ROLES.PROFESOR,
                   ROLES.DOCENTE,
+                  ROLES.DIRECTOR,
                 ]}
               >
-                {isProfesorOnly && !canManageAdmisiones ? (
+                {isEvaluadorAdmisionOnly && !canManageAdmisiones ? (
                   <AdmisionesProfesorPage />
                 ) : (
                   <AdmisionesHomePage />
@@ -65,7 +69,7 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatorias"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConvocatoriasAdmisionConfigPage />
               </RequireRoles>
             }
@@ -73,7 +77,7 @@ export const AppRoutes = () => {
           <Route
             path="/fechas/periodos"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConfigFechasAdmisionesPage />
               </RequireRoles>
             }
@@ -81,9 +85,7 @@ export const AppRoutes = () => {
           <Route
             path="/admisiones/convocatoria/:convocatoriaId"
             element={
-              <RequireRoles
-                allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION, ROLES.SECRETARIA]}
-              >
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ConvocatoriaDetallePage />
               </RequireRoles>
             }
@@ -98,6 +100,7 @@ export const AppRoutes = () => {
                   ROLES.ADMIN,
                   ROLES.PROFESOR,
                   ROLES.DOCENTE,
+                  ROLES.DIRECTOR,
                 ]}
               >
                 <InscripcionAdmisionDetallePage />
@@ -133,7 +136,7 @@ export const AppRoutes = () => {
           <Route
             path="/actas"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ActasPage />
               </RequireRoles>
             }
@@ -141,7 +144,7 @@ export const AppRoutes = () => {
           <Route
             path="/fechas"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <FechasModulePage />
               </RequireRoles>
             }
@@ -149,7 +152,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/reportes"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <ReportesPage />
               </RequireRoles>
             }
@@ -157,7 +160,7 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/estudiantes"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <EstudiantesCoordinacionPage />
               </RequireRoles>
             }
@@ -165,14 +168,24 @@ export const AppRoutes = () => {
           <Route
             path="/coordinacion/estudiantes/:estudianteId"
             element={
-              <RequireRoles allowedRoles={[ROLES.ADMIN, ROLES.COORDINACION]}>
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <EstudianteDetalleCoordinacionPage />
               </RequireRoles>
             }
           />
+          <Route
+            path="/coordinacion/profesores"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GestionProfesoresPage />
+              </RequireRoles>
+            }
+          />
           {solicitudesRoutes}
+          {trabajosGradoRoutes}
           {matriculaRoutes}
           {creditosRoutes}
+          {creditosCondonablesRoutes}
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

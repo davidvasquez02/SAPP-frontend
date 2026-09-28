@@ -166,6 +166,104 @@
     cursor: not-allowed;
 }
 
+.inscripcion-detalle__dialog-backdrop {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 48%);
+    backdrop-filter: blur(2px);
+}
+
+.inscripcion-detalle__dialog {
+    width: min(100%, 34rem);
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: clamp(1.25rem, 4vw, 1.75rem);
+    border: 1px solid color-mix(in srgb, var(--outline), transparent 20%);
+    border-radius: 1.4rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 62%);
+}
+
+.inscripcion-detalle__dialog-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .9rem;
+    align-items: start;
+}
+
+.inscripcion-detalle__dialog-mark {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary), transparent 86%);
+    color: var(--primary);
+    font-weight: 800;
+}
+
+.inscripcion-detalle__dialog h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.35rem;
+}
+
+.inscripcion-detalle__dialog-heading p,
+.inscripcion-detalle__dialog-note {
+    margin: .55rem 0 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.inscripcion-detalle__dialog-note {
+    padding: .8rem 1rem;
+    border-radius: .9rem;
+    background: var(--surface-container-low);
+    font-size: .9rem;
+}
+
+.inscripcion-detalle__dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .7rem;
+    margin-top: 1.35rem;
+}
+
+.inscripcion-detalle__dialog-button {
+    min-height: 2.7rem;
+    padding: .65rem 1.15rem;
+    border: 1px solid var(--primary);
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.inscripcion-detalle__dialog-button--secondary {
+    background: var(--surface);
+    color: var(--primary);
+}
+
+.inscripcion-detalle__dialog-button--primary {
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.inscripcion-detalle__dialog-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary), transparent 62%);
+    outline-offset: 2px;
+}
+
+.inscripcion-detalle__dialog-button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
 .inscripcion-detalle__profile-card {
     display: grid;
     grid-template-columns: auto minmax(220px, 1fr) minmax(320px, 1.25fr);
@@ -217,7 +315,6 @@
     line-height: 1.15;
     color: var(--text-primary);
 }
-
 .inscripcion-detalle__contact-grid {
     display: grid;
     gap: 0.45rem;
@@ -237,6 +334,8 @@
     padding-left: 1.25rem;
     border-left: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
 }
+.inscripcion-detalle__profile-meta-toggle { display: none; border: 0; padding: 0; background: transparent; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
+.inscripcion-detalle__profile-meta-content { display: grid; gap: .75rem; }
 
 .inscripcion-detalle__meta-row {
     display: grid;
@@ -269,7 +368,7 @@
 
 .inscripcion-detalle__summary-bar {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.9rem;
     padding: 0.9rem;
     border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
@@ -340,6 +439,8 @@
 }
 
 @media (max-width: 760px) {
+    .inscripcion-detalle { gap: .65rem; min-width: 0; }
+    .inscripcion-detalle__title { font-size: 1.4rem; }
     .inscripcion-detalle__profile-card,
     .inscripcion-detalle__summary-bar,
     .inscripcion-detalle__meta-row {
@@ -348,11 +449,26 @@
 
     .inscripcion-detalle__profile-card {
         justify-items: start;
-        padding: 1rem;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: .8rem;
+        padding: .8rem;
     }
 
     .inscripcion-detalle__profile-photo {
-        width: 92px;
-        height: 92px;
+        width: 76px;
+        height: 76px;
     }
+    .inscripcion-detalle__profile-heading { margin-bottom: .35rem; }
+    .inscripcion-detalle__profile-heading h2 { font-size: 1.2rem; overflow-wrap: anywhere; }
+    .inscripcion-detalle__profile-meta { grid-column: 1 / -1; width: 100%; padding: .3rem 0 0; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 55%); }
+    .inscripcion-detalle__profile-meta-toggle { display: flex; min-height: 44px; align-items: center; }
+    .inscripcion-detalle__profile-meta:not(.inscripcion-detalle__profile-meta--expanded) .inscripcion-detalle__profile-meta-content { display: none; }
+    .inscripcion-detalle__meta-row { gap: .5rem; padding-top: .4rem; }
+    .inscripcion-detalle__meta-item { padding: .55rem .65rem; }
+    .inscripcion-detalle__summary-bar { padding: .5rem; }
+    .inscripcion-detalle__windows { gap: .65rem; margin-top: 0; }
+    .inscripcion-detalle__start-eval-button,
+    .inscripcion-detalle__finalize-button { width: 100%; min-height: 44px; }
+    .inscripcion-detalle__dialog-actions { flex-direction: column-reverse; }
+    .inscripcion-detalle__dialog-button { width: 100%; }
 }

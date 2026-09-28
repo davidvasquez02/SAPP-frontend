@@ -111,7 +111,63 @@
 }
 
 @media (max-width: 560px) {
+  .edit-convocatoria-fechas-modal__backdrop {
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .edit-convocatoria-fechas-modal {
+    max-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 1rem;
+    overflow-y: auto;
+    border-radius: 16px;
+    overscroll-behavior: contain;
+  }
+
+  .edit-convocatoria-fechas-modal__header > div,
+  .edit-convocatoria-fechas-modal__header h2,
+  .edit-convocatoria-fechas-modal__header p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .edit-convocatoria-fechas-modal__header button {
+    flex: 0 0 44px;
+    width: 44px;
+    min-height: 44px;
+  }
+
   .edit-convocatoria-fechas-modal__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-convocatoria-fechas-modal__fields label,
+  .edit-convocatoria-fechas-modal__fields input {
+    min-width: 0;
+  }
+
+  .edit-convocatoria-fechas-modal__fields input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .edit-convocatoria-fechas-modal__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .edit-convocatoria-fechas-modal__actions button {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 0.7rem;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 359px) {
+  .edit-convocatoria-fechas-modal__actions {
     grid-template-columns: 1fr;
   }
 }

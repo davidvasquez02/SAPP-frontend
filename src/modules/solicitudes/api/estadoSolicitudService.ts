@@ -18,7 +18,7 @@ const toCatalogItem = (estado: EstadoSolicitudDto): EstadoSolicitudCatalogItem |
     return null
   }
 
-  const label = estado.nombre?.trim() || sigla
+  const label = estado.nombre?.trim().toLocaleUpperCase('es-CO') || sigla
   return {
     id: estado.id,
     sigla,

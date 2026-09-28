@@ -16,7 +16,10 @@ export interface AspiranteCreateRequestDto {
 export interface AspiranteCreateResponseDto {
   id: number
   inscripcionAdmisionId: number
-  nombre: string
+  nombre1: string
+  nombre2: string | null
+  apellido1: string
+  apellido2: string | null
   numeroDocumento: string
   numeroInscripcionUis: number | string
   emailPersonal: string
@@ -31,9 +34,8 @@ export interface AspiranteCreateResponseDto {
 /**
  * Contrato retornado por las consultas de aspirantes.
  *
- * El nombre de la persona llega desagregado desde el IDP. Este DTO se mantiene
- * separado de la respuesta de creación porque el cambio de contrato informado
- * aplica a los endpoints GET, no al POST.
+ * El nombre de la persona llega desagregado desde el IDP tanto en consultas
+ * como en la respuesta de creación.
  */
 export interface AspiranteConsultaResponseDto {
   id: number

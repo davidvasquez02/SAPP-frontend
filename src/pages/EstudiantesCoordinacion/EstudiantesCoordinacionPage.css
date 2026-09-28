@@ -35,10 +35,21 @@
   padding: 0.85rem 1rem;
 }
 
+.estudiantes-coordinacion__status--error button {
+  min-height: 2.75rem;
+  margin-left: 0.75rem;
+  padding-inline: 1rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 750;
+}
+
 .estudiantes-coordinacion__filters {
-  padding: clamp(1rem, 2vw, 1.4rem);
+  padding: clamp(0.9rem, 2vw, 1.2rem);
   border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--surface);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--outline), transparent 88%);
 }
@@ -48,7 +59,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .estudiantes-coordinacion__filters-heading h2,
@@ -71,7 +82,30 @@
 .estudiantes-coordinacion__filter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.8rem;
+}
+
+.estudiantes-coordinacion__additional-filters {
+  display: contents;
+}
+
+.estudiantes-coordinacion__filter-grid > .estudiantes-coordinacion__field {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.estudiantes-coordinacion__additional-filters > .estudiantes-coordinacion__field:first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.estudiantes-coordinacion__additional-filters > .estudiantes-coordinacion__field:last-child {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.estudiantes-coordinacion__filters-toggle {
+  display: none;
 }
 
 .estudiantes-coordinacion__field {
@@ -201,7 +235,7 @@
 
 @media (max-width: 640px) {
   .estudiantes-coordinacion {
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
   .estudiantes-coordinacion__header {
@@ -209,8 +243,86 @@
   }
 
   .estudiantes-coordinacion__filters-heading {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .estudiantes-coordinacion__filters-heading h2 {
+    font-size: 1rem !important;
+  }
+
+  .estudiantes-coordinacion__filters {
+    padding: 0.75rem;
+    border-radius: 14px;
+  }
+
+  .estudiantes-coordinacion__clear {
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+  }
+
+  .estudiantes-coordinacion__filter-grid {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.65rem;
+  }
+
+  .estudiantes-coordinacion__filter-grid > .estudiantes-coordinacion__field {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .estudiantes-coordinacion__field input,
+  .estudiantes-coordinacion__field select {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+
+  .estudiantes-coordinacion__filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-width: 6.25rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--primary);
+    background: var(--surface);
+    color: var(--primary);
+    cursor: pointer;
+  }
+
+  .estudiantes-coordinacion__filters-count {
+    display: grid;
+    place-items: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 0.75rem;
+  }
+
+  .estudiantes-coordinacion__additional-filters {
+    display: none;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+    padding-top: 0.15rem;
+  }
+
+
+  .estudiantes-coordinacion__additional-filters > .estudiantes-coordinacion__field:first-child,
+  .estudiantes-coordinacion__additional-filters > .estudiantes-coordinacion__field:last-child {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .estudiantes-coordinacion__additional-filters--open {
+    display: grid;
   }
 
   .estudiantes-coordinacion__graduates-heading {
@@ -218,7 +330,27 @@
     flex-direction: column;
   }
 
+  .estudiantes-coordinacion__graduates {
+    gap: 0.85rem;
+    padding-top: 0.85rem;
+  }
+
+  .estudiantes-coordinacion__graduates-heading {
+    gap: 0.75rem;
+  }
+
+  .estudiantes-coordinacion__graduates-toggle {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 359px) {
   .estudiantes-coordinacion__filter-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .estudiantes-coordinacion__filters-toggle {
+    width: 100%;
   }
 }

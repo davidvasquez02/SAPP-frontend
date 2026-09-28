@@ -1,0 +1,62 @@
+.trabajos-grado-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.trabajos-grado-page__levels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface-container-low);
+}
+
+.trabajos-grado-page__levels a {
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  color: var(--on-surface);
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.trabajos-grado-page__levels a.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.trabajos-grado-page__header {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--surface-container-low);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--outline) 14%, transparent);
+}
+
+.trabajos-grado-page__header h3,
+.trabajos-grado-page__header p {
+  margin: 0;
+}
+
+.trabajos-grado-page__header h3 {
+  margin-block: 0.25rem 0.5rem;
+}
+
+.trabajos-grado-page__eyebrow {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.trabajos-grado-page__status {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--surface-container-low);
+}
+
+@media (max-width: 640px) {
+  .trabajos-grado-page__levels {
+    grid-template-columns: 1fr;
+    border-radius: 1.25rem;
+  }
+}

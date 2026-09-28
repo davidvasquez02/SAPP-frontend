@@ -1,0 +1,376 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ModuleLayout } from '../../components'
+import {
+  asignarDirectorGrupoInvestigacion,
+  asignarRolDocentePosgrados,
+  eliminarDocenteGrupoInvestigacion,
+  eliminarRolDocentePosgrados,
+  getDocentes,
+  getDocentesGrupoInvestigacion,
+  getGruposInvestigacion,
+  registrarDocenteGrupoInvestigacion,
+} from '../../api/gruposInvestigacionService'
+import type {
+  DocenteDto,
+  GrupoInvestigacionDocenteDto,
+  GrupoInvestigacionDto,
+} from '../../api/gruposInvestigacionTypes'
+import './GestionProfesoresPage.css'
+
+type Vista = 'docentes' | 'grupos'
+type ConfirmationAction =
+  | { type: 'role'; docente: DocenteDto; assign: boolean }
+  | { type: 'group'; docente: GrupoInvestigacionDocenteDto }
+  | { type: 'director'; docente: GrupoInvestigacionDocenteDto }
+const PAGE_SIZE = 10
+
+const normalize = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim()
+    .toLocaleLowerCase('es')
+
+const GestionProfesoresPage = () => {
+  const [vista, setVista] = useState<Vista>('docentes')
+  const [docentes, setDocentes] = useState<DocenteDto[]>([])
+  const [grupos, setGrupos] = useState<GrupoInvestigacionDto[]>([])
+  const [docentesGrupo, setDocentesGrupo] = useState<GrupoInvestigacionDocenteDto[]>([])
+  const [grupoId, setGrupoId] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [busquedaGrupo, setBusquedaGrupo] = useState('')
+  const [paginaPosgrados, setPaginaPosgrados] = useState(1)
+  const [paginaEscuela, setPaginaEscuela] = useState(1)
+  const [paginaDisponibles, setPaginaDisponibles] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingGroup, setIsLoadingGroup] = useState(false)
+  const [savingUuid, setSavingUuid] = useState<string | null>(null)
+  const [changingRoleUuid, setChangingRoleUuid] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [changingDirectorId, setChangingDirectorId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [confirmation, setConfirmation] = useState<ConfirmationAction | null>(null)
+  const cancelConfirmationRef = useRef<HTMLButtonElement>(null)
+
+  const confirmationBusy = changingRoleUuid !== null || deletingId !== null || changingDirectorId !== null
+
+  useEffect(() => {
+    if (!confirmation) return
+    cancelConfirmationRef.current?.focus()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !confirmationBusy) setConfirmation(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [confirmation, confirmationBusy])
+
+  const loadDocentes = useCallback(async () => {
+    setDocentes(await getDocentes())
+  }, [])
+
+  useEffect(() => {
+    const loadCatalogs = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const [docentesData, gruposData] = await Promise.all([getDocentes(), getGruposInvestigacion()])
+        setDocentes(docentesData)
+        setGrupos(gruposData)
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'No fue posible cargar la información.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadCatalogs()
+  }, [])
+
+  useEffect(() => {
+    if (!grupoId) {
+      setDocentesGrupo([])
+      return
+    }
+    let isCurrentGroup = true
+    const selectedGroupId = Number(grupoId)
+    const loadGroup = async () => {
+      setIsLoadingGroup(true)
+      setError(null)
+      try {
+        const groupTeachers = await getDocentesGrupoInvestigacion(selectedGroupId)
+        if (isCurrentGroup) setDocentesGrupo(groupTeachers)
+      } catch (loadError) {
+        if (isCurrentGroup) {
+          setError(loadError instanceof Error ? loadError.message : 'No fue posible cargar el grupo.')
+        }
+      } finally {
+        if (isCurrentGroup) setIsLoadingGroup(false)
+      }
+    }
+    void loadGroup()
+    return () => {
+      isCurrentGroup = false
+    }
+  }, [grupoId])
+
+  const selectedGroup = grupos.find((grupo) => String(grupo.id) === grupoId)
+
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, current: Vista) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const next = event.key === 'Home'
+      ? 'docentes'
+      : event.key === 'End'
+        ? 'grupos'
+        : current === 'docentes' ? 'grupos' : 'docentes'
+    setVista(next)
+    document.getElementById(`gestion-profesores-tab-${next}`)?.focus()
+  }
+
+  const docentesFiltrados = useMemo(() => {
+    const term = normalize(busqueda)
+    return docentes.filter((docente) => {
+      const searchable = [docente.fullName, docente.email, docente.documentNumber].join(' ')
+      return !term || normalize(searchable).includes(term)
+    })
+  }, [busqueda, docentes])
+
+  const docentesPosgrados = docentesFiltrados.filter((docente) => docente.tieneRolDocentePosgrados)
+  const docentesEscuela = docentesFiltrados.filter((docente) => !docente.tieneRolDocentePosgrados)
+  const paginasPosgrados = Math.max(1, Math.ceil(docentesPosgrados.length / PAGE_SIZE))
+  const paginasEscuela = Math.max(1, Math.ceil(docentesEscuela.length / PAGE_SIZE))
+
+  useEffect(() => {
+    setPaginaPosgrados(1)
+    setPaginaEscuela(1)
+  }, [busqueda])
+
+  useEffect(() => {
+    setPaginaPosgrados((page) => Math.min(page, paginasPosgrados))
+    setPaginaEscuela((page) => Math.min(page, paginasEscuela))
+  }, [paginasEscuela, paginasPosgrados])
+
+  const docentesDisponibles = useMemo(() => {
+    const assignedUuids = new Set(docentesGrupo.map((item) => item.docenteUuid ?? item.uuid).filter(Boolean))
+    const assignedNames = new Set(docentesGrupo.map((item) => normalize(item.nombre)))
+    const term = normalize(busquedaGrupo)
+
+    return docentes.filter(
+      (docente) =>
+        docente.tieneRolDocentePosgrados &&
+        docente.uuid &&
+        !assignedUuids.has(docente.uuid) &&
+        !assignedNames.has(normalize(docente.fullName)) &&
+        (!term || normalize([docente.fullName, docente.email, docente.documentNumber].join(' ')).includes(term)),
+    )
+  }, [busquedaGrupo, docentes, docentesGrupo])
+
+  const paginasDisponibles = Math.max(1, Math.ceil(docentesDisponibles.length / PAGE_SIZE))
+
+  useEffect(() => {
+    setPaginaDisponibles(1)
+  }, [busquedaGrupo, grupoId])
+
+  useEffect(() => {
+    setPaginaDisponibles((page) => Math.min(page, paginasDisponibles))
+  }, [paginasDisponibles])
+
+  const changeRole = async (docente: DocenteDto, assign: boolean) => {
+    setChangingRoleUuid(docente.uuid)
+    setError(null)
+    setSuccess(null)
+    try {
+      if (assign) await asignarRolDocentePosgrados(docente.uuid)
+      else await eliminarRolDocentePosgrados(docente.uuid)
+      await loadDocentes()
+      setSuccess(assign ? 'El profesor fue agregado a posgrados.' : 'El profesor fue retirado de posgrados.')
+      setConfirmation(null)
+    } catch (roleError) {
+      setError(roleError instanceof Error ? roleError.message : 'No fue posible actualizar el rol del profesor.')
+    } finally {
+      setChangingRoleUuid(null)
+    }
+  }
+
+  const handleRegister = async (docente: DocenteDto) => {
+    if (!grupoId) return
+    setSavingUuid(docente.uuid)
+    setError(null)
+    setSuccess(null)
+    try {
+      await registrarDocenteGrupoInvestigacion({ grupoId: Number(grupoId), docenteUuid: docente.uuid })
+      setDocentesGrupo(await getDocentesGrupoInvestigacion(Number(grupoId)))
+      setSuccess(`${docente.fullName.trim()} fue agregado al grupo de investigación.`)
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'No fue posible registrar el docente.')
+    } finally {
+      setSavingUuid(null)
+    }
+  }
+
+  const handleDelete = async (docente: GrupoInvestigacionDocenteDto) => {
+    if (!grupoId) return
+    const docenteId = docente.docenteId ?? docente.id
+    setDeletingId(docenteId)
+    setError(null)
+    setSuccess(null)
+    try {
+      await eliminarDocenteGrupoInvestigacion(Number(grupoId), docenteId)
+      setDocentesGrupo((current) => current.filter((item) => (item.docenteId ?? item.id) !== docenteId))
+      setSuccess('El docente fue retirado del grupo de investigación.')
+      setConfirmation(null)
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'No fue posible retirar el docente.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleAssignDirector = async (docente: GrupoInvestigacionDocenteDto) => {
+    if (!grupoId) return
+    const docenteId = docente.docenteId ?? docente.id
+    setChangingDirectorId(docenteId)
+    setError(null)
+    setSuccess(null)
+    try {
+      await asignarDirectorGrupoInvestigacion(Number(grupoId), docenteId)
+      setDocentesGrupo(await getDocentesGrupoInvestigacion(Number(grupoId)))
+      setSuccess(`${docente.nombre.trim()} es ahora el director del grupo de investigación.`)
+      setConfirmation(null)
+    } catch (directorError) {
+      setError(directorError instanceof Error ? directorError.message : 'No fue posible asignar el director del grupo.')
+    } finally {
+      setChangingDirectorId(null)
+    }
+  }
+
+  const confirmationCopy = confirmation
+    ? confirmation.type === 'role'
+      ? {
+          title: confirmation.assign ? 'Agregar profesor a posgrados' : 'Retirar profesor de posgrados',
+          description: confirmation.assign
+            ? 'El profesor obtendrá acceso a las funcionalidades asignadas al rol de docente de posgrados.'
+            : 'El profesor dejará de tener acceso a las funcionalidades asignadas al rol de docente de posgrados.',
+          name: confirmation.docente.fullName.trim(),
+          label: confirmation.assign ? 'Sí, agregar a posgrados' : 'Sí, retirar de posgrados',
+          busyLabel: 'Actualizando...',
+          danger: !confirmation.assign,
+        }
+      : confirmation.type === 'group'
+        ? {
+            title: 'Retirar profesor del grupo',
+            description: `El profesor dejará de pertenecer a ${selectedGroup?.codigoNombre ?? 'este grupo de investigación'}.`,
+            name: confirmation.docente.nombre.trim(),
+            label: 'Sí, retirar del grupo',
+            busyLabel: 'Retirando...',
+            danger: true,
+          }
+        : {
+            title: 'Designar director del grupo',
+            description: `El profesor quedará registrado como director de ${selectedGroup?.codigoNombre ?? 'este grupo de investigación'}.`,
+            name: confirmation.docente.nombre.trim(),
+            label: 'Sí, designar director',
+            busyLabel: 'Asignando...',
+            danger: false,
+          }
+    : null
+
+  const confirmAction = () => {
+    if (!confirmation) return
+    if (confirmation.type === 'role') void changeRole(confirmation.docente, confirmation.assign)
+    else if (confirmation.type === 'group') void handleDelete(confirmation.docente)
+    else void handleAssignDirector(confirmation.docente)
+  }
+
+  const renderDocentesTable = (
+    items: DocenteDto[],
+    assign: boolean,
+    page: number,
+    pageCount: number,
+    setPage: (page: number) => void,
+  ) => (
+    <>
+    <div className="gestion-profesores__table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Documento</th><th>Correo institucional</th><th aria-label="Acciones" /></tr></thead>
+        <tbody>{items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((docente) => (
+          <tr key={docente.uuid}>
+            <td data-label="Nombre">{docente.fullName.trim()}</td><td data-label="Documento">{docente.documentNumber || '—'}</td><td data-label="Correo institucional">{docente.email || '—'}</td>
+            <td className="gestion-profesores__action-cell"><button className={assign ? 'gestion-profesores__assign' : 'gestion-profesores__delete'} type="button" disabled={changingRoleUuid !== null} onClick={() => setConfirmation({ type: 'role', docente, assign })}>{changingRoleUuid === docente.uuid ? 'Actualizando...' : assign ? 'Agregar a posgrados' : 'Retirar de posgrados'}</button></td>
+          </tr>
+        ))}</tbody>
+      </table>
+      {items.length === 0 ? <p className="gestion-profesores__empty">No se encontraron profesores.</p> : null}
+    </div>
+    {items.length > PAGE_SIZE ? <nav className="gestion-profesores__pagination" aria-label="Paginación de profesores"><button type="button" disabled={page === 1} onClick={() => setPage(page - 1)}>Anterior</button><span>Página {page} de {pageCount}</span><button type="button" disabled={page === pageCount} onClick={() => setPage(page + 1)}>Siguiente</button></nav> : null}
+    </>
+  )
+
+  return (
+    <ModuleLayout title="Gestión profesores">
+      <main className="gestion-profesores">
+        <header className="gestion-profesores__hero"><p>Administre el acceso de los profesores de la EISI al sistema de posgrados y su participación en grupos de investigación.</p></header>
+        <nav className="gestion-profesores__tabs" aria-label="Funcionalidades de gestión de profesores" role="tablist">
+          <button id="gestion-profesores-tab-docentes" type="button" role="tab" aria-selected={vista === 'docentes'} aria-controls="gestion-profesores-panel-docentes" tabIndex={vista === 'docentes' ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, 'docentes')} onClick={() => setVista('docentes')}>Profesores</button>
+          <button id="gestion-profesores-tab-grupos" type="button" role="tab" aria-selected={vista === 'grupos'} aria-controls="gestion-profesores-panel-grupos" tabIndex={vista === 'grupos' ? 0 : -1} onKeyDown={(event) => handleTabKeyDown(event, 'grupos')} onClick={() => setVista('grupos')}>Grupos de investigación</button>
+        </nav>
+        {error ? <p className="gestion-profesores__message gestion-profesores__message--error" role="alert">{error}</p> : null}
+        {success ? <p className="gestion-profesores__message gestion-profesores__message--success" role="status">{success}</p> : null}
+
+        {vista === 'docentes' ? (
+          <div id="gestion-profesores-panel-docentes" role="tabpanel" aria-labelledby="gestion-profesores-tab-docentes" className="gestion-profesores__panel">
+            <label className="gestion-profesores__search"><span>Buscar profesor</span><input type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Nombre, documento o correo institucional" /></label>
+            <section className="gestion-profesores__card" aria-labelledby="posgrados-title">
+              <div className="gestion-profesores__heading"><div><h2 id="posgrados-title">Profesores de posgrados</h2><p>Usuarios con el rol de docente de posgrados activo en SAPP.</p></div><span>{docentesPosgrados.length} profesores</span></div>
+              {isLoading ? <p className="gestion-profesores__empty">Cargando profesores...</p> : renderDocentesTable(docentesPosgrados, false, paginaPosgrados, paginasPosgrados, setPaginaPosgrados)}
+            </section>
+            <section className="gestion-profesores__card" aria-labelledby="escuela-title">
+              <div className="gestion-profesores__heading"><div><h2 id="escuela-title">Profesores de la EISI disponibles</h2><p>Profesores que todavía no tienen el rol de docente de posgrados en SAPP.</p></div><span>{docentesEscuela.length} profesores</span></div>
+              {isLoading ? <p className="gestion-profesores__empty">Cargando profesores...</p> : renderDocentesTable(docentesEscuela, true, paginaEscuela, paginasEscuela, setPaginaEscuela)}
+            </section>
+          </div>
+        ) : (
+          <section id="gestion-profesores-panel-grupos" role="tabpanel" aria-labelledby="gestion-profesores-tab-grupos" className="gestion-profesores__card">
+            <div className="gestion-profesores__heading"><div><h2 id="grupos-title">Docentes por grupo</h2><p>Seleccione un grupo para consultar sus integrantes y agregar profesores del listado de posgrados.</p></div></div>
+            <label className="gestion-profesores__group-select"><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => setGrupoId(event.target.value)}><option value="">Seleccione un grupo</option>{grupos.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
+            {selectedGroup ? <p className="gestion-profesores__selected-group"><strong>Grupo seleccionado:</strong> {selectedGroup.codigoNombre}</p> : null}
+            {!grupoId ? <p className="gestion-profesores__empty">Seleccione un grupo para consultar sus docentes.</p> : isLoadingGroup ? <p className="gestion-profesores__empty">Cargando docentes del grupo...</p> : (
+              <>
+                <section className="gestion-profesores__group-section" aria-labelledby="integrantes-title">
+                  <div className="gestion-profesores__subheading"><div><h3 id="integrantes-title">Profesores del grupo</h3><p>Integrantes registrados actualmente en el grupo de investigación.</p></div><span>{docentesGrupo.length} profesores</span></div>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Profesor</th><th>Rol en el grupo</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesGrupo.map((docente) => { const id = docente.docenteId ?? docente.id; const isMutating = deletingId !== null || savingUuid !== null || changingDirectorId !== null; return <tr key={id}><td data-label="Profesor">{docente.nombre.trim()}</td><td data-label="Rol en el grupo">{docente.esDirector ? <span className="gestion-profesores__director-badge">Director</span> : 'Integrante'}</td><td className="gestion-profesores__action-cell"><div className="gestion-profesores__row-actions">{!docente.esDirector ? <button className="gestion-profesores__director" type="button" disabled={isMutating} onClick={() => setConfirmation({ type: 'director', docente })}>{changingDirectorId === id ? 'Asignando...' : 'Hacer director'}</button> : null}<button className="gestion-profesores__delete" type="button" disabled={isMutating} onClick={() => setConfirmation({ type: 'group', docente })}>{deletingId === id ? 'Retirando...' : 'Retirar'}</button></div></td></tr> })}</tbody></table>{docentesGrupo.length === 0 ? <p className="gestion-profesores__empty">Este grupo todavía no tiene profesores registrados.</p> : null}</div>
+                </section>
+                <section className="gestion-profesores__group-section" aria-labelledby="disponibles-title">
+                  <div className="gestion-profesores__subheading"><div><h3 id="disponibles-title">Profesores de posgrados disponibles</h3><p>Agregue al grupo únicamente profesores que tienen activo el rol de posgrados.</p></div><span>{docentesDisponibles.length} profesores</span></div>
+                  <label className="gestion-profesores__search"><span>Buscar profesor disponible</span><input type="search" value={busquedaGrupo} onChange={(event) => setBusquedaGrupo(event.target.value)} placeholder="Nombre, documento o correo institucional" /></label>
+                  <div className="gestion-profesores__table-wrap"><table><thead><tr><th>Nombre</th><th>Documento</th><th>Correo institucional</th><th aria-label="Acciones" /></tr></thead><tbody>{docentesDisponibles.slice((paginaDisponibles - 1) * PAGE_SIZE, paginaDisponibles * PAGE_SIZE).map((docente) => <tr key={docente.uuid}><td data-label="Nombre">{docente.fullName.trim()}</td><td data-label="Documento">{docente.documentNumber || '—'}</td><td data-label="Correo institucional">{docente.email || '—'}</td><td className="gestion-profesores__action-cell"><button className="gestion-profesores__assign" type="button" disabled={savingUuid !== null || deletingId !== null || changingDirectorId !== null} onClick={() => void handleRegister(docente)}>{savingUuid === docente.uuid ? 'Agregando...' : 'Agregar al grupo'}</button></td></tr>)}</tbody></table>{docentesDisponibles.length === 0 ? <p className="gestion-profesores__empty">No hay profesores de posgrados disponibles para agregar.</p> : null}</div>
+                  {docentesDisponibles.length > PAGE_SIZE ? <nav className="gestion-profesores__pagination" aria-label="Paginación de profesores disponibles"><button type="button" disabled={paginaDisponibles === 1} onClick={() => setPaginaDisponibles(paginaDisponibles - 1)}>Anterior</button><span>Página {paginaDisponibles} de {paginasDisponibles}</span><button type="button" disabled={paginaDisponibles === paginasDisponibles} onClick={() => setPaginaDisponibles(paginaDisponibles + 1)}>Siguiente</button></nav> : null}
+                </section>
+              </>
+            )}
+          </section>
+        )}
+        {confirmation && confirmationCopy ? (
+          <div className="gestion-profesores__confirmation" role="dialog" aria-modal="true" aria-labelledby="gestion-profesores-confirmation-title" aria-describedby="gestion-profesores-confirmation-description">
+            <button className="gestion-profesores__confirmation-backdrop" type="button" aria-label="Cancelar acción" disabled={confirmationBusy} onClick={() => setConfirmation(null)} />
+            <section className="gestion-profesores__confirmation-dialog">
+              <button className="gestion-profesores__confirmation-close" type="button" aria-label="Cerrar" disabled={confirmationBusy} onClick={() => setConfirmation(null)}>×</button>
+              <div className={`gestion-profesores__confirmation-icon${confirmationCopy.danger ? ' gestion-profesores__confirmation-icon--danger' : ''}`} aria-hidden="true">!</div>
+              <div className="gestion-profesores__confirmation-content">
+                <h2 id="gestion-profesores-confirmation-title">{confirmationCopy.title}</h2>
+                <p id="gestion-profesores-confirmation-description">{confirmationCopy.description}</p>
+                <dl><div><dt>Profesor</dt><dd>{confirmationCopy.name}</dd></div></dl>
+              </div>
+              <div className="gestion-profesores__confirmation-actions">
+                <button ref={cancelConfirmationRef} type="button" className="gestion-profesores__confirmation-cancel" disabled={confirmationBusy} onClick={() => setConfirmation(null)}>Cancelar</button>
+                <button type="button" className={confirmationCopy.danger ? 'gestion-profesores__confirmation-confirm gestion-profesores__confirmation-confirm--danger' : 'gestion-profesores__confirmation-confirm'} disabled={confirmationBusy} onClick={confirmAction}>{confirmationBusy ? confirmationCopy.busyLabel : confirmationCopy.label}</button>
+              </div>
+            </section>
+          </div>
+        ) : null}
+      </main>
+    </ModuleLayout>
+  )
+}
+
+export default GestionProfesoresPage

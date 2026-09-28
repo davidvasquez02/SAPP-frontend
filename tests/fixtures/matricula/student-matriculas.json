@@ -1,0 +1,57 @@
+{
+  "ok": true,
+  "message": "Consulta exitosa",
+  "data": [
+    {
+      "id": 41,
+      "estudianteId": 7,
+      "estudianteNombreCompleto": "Estudiante de prueba",
+      "codigoEstudianteUis": "2200000",
+      "programaAcademico": "Maestría en Ingeniería de Sistemas e Informática",
+      "periodoId": 12,
+      "periodoAcademico": "2026-1",
+      "estado": "FINALIZADA",
+      "fechaSolicitud": "2026-03-04 09:15:00",
+      "fechaRevision": "2026-03-08 14:30:00",
+      "observaciones": "Revision manual",
+      "usuarioRevisionId": 99,
+      "usuarioRevisionUsername": "coordinacion",
+      "asignaturas": [
+        {
+          "id": 501,
+          "matriculaId": 41,
+          "asignaturaId": 101,
+          "asignaturaCodigo": "MISI-101",
+          "asignaturaNombre": "Arquitectura de software",
+          "estado": "MATRICULADA",
+          "grupo": null,
+          "observaciones": null
+        },
+        {
+          "id": 502,
+          "matriculaId": 41,
+          "asignaturaId": 102,
+          "asignaturaCodigo": "MISI-102",
+          "asignaturaNombre": "Seminario de investigación",
+          "estado": "NO_MATRICULADA",
+          "grupo": "A1",
+          "observaciones": "Requiere ajustar el prerrequisito"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "estudianteId": 7,
+      "estudianteNombreCompleto": "Estudiante de prueba",
+      "codigoEstudianteUis": "2200000",
+      "programaAcademico": "Maestría en Ingeniería de Sistemas e Informática",
+      "periodoId": 11,
+      "periodoAcademico": "2025-2",
+      "estado": "ESTADO_NUEVO",
+      "fechaSolicitud": "2025-09-01 10:00:00",
+      "fechaRevision": null,
+      "observaciones": null,
+      "asignaturas": []
+    }
+  ]
+}

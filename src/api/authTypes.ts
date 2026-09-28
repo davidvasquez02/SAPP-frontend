@@ -18,6 +18,11 @@ export interface EstudianteFotoDto {
   mimeType: string
 }
 
+export interface DirectorTrabajoGradoDto {
+  nombreCompleto: string
+  correo: string
+}
+
 export interface EstudianteDto {
   id: number
   codigoEstudianteUis: string
@@ -28,6 +33,7 @@ export interface EstudianteDto {
   programaCodigoNombre: string
   programaId: number
   foto?: EstudianteFotoDto | null
+  directorTg?: DirectorTrabajoGradoDto | null
   [key: string]: unknown
 }
 
@@ -74,7 +80,7 @@ export interface GatewayLoginResponseDto {
   fullName: string
   email: string
   attributes: Record<string, string[]>
-  roles: string[]
+  roles?: string[]
   clientRoles: string[]
   detalle: LoginDetalleDto
 }

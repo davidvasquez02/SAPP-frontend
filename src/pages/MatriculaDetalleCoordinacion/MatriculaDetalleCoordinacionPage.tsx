@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
@@ -11,7 +11,7 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
-  notificarDocumentosCompletosMatricula,
+  finalizarRevisionDocumentosMatricula,
   validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type {
@@ -20,6 +20,13 @@ import type {
   MatriculaAsignaturaValidacionPayload,
   MatriculaValidacionAsignaturasRequest,
 } from '../../modules/matricula/types'
+import {
+  formatBackendDateTime,
+  getAsignaturaEstadoLabel,
+  getMatriculaEstadoLabel,
+  getMatriculaEstadoModifier,
+} from '../../modules/matricula/utils/matriculaPresentation'
+import { tieneDocumentosObligatoriosRevisados } from '../../modules/matricula/utils/documentosMatricula'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './MatriculaDetalleCoordinacionPage.css'
 
@@ -33,25 +40,34 @@ type AsignaturaDecisionState = {
   observaciones: string
 }
 
-const formatDateTime = (value: string | null) => {
-  if (!value) {
-    return '—'
-  }
+type DocumentoDecision = 'APROBADO' | 'RECHAZADO'
 
-  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
-  const date = new Date(normalized)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toLocaleString('es-CO', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+type ToastFeedback = {
+  message: string
+  tone: 'success' | 'error'
 }
+
+const applyDocumentoDecision = (
+  documentos: DocumentoTramiteItemDto[],
+  documentoId: number,
+  estadoDocumento: DocumentoDecision,
+  observacionesDocumento: string | null,
+) =>
+  documentos.map((documento) => {
+    const uploaded = documento.documentoUploadedResponse
+    if (uploaded?.idDocumento !== documentoId) {
+      return documento
+    }
+
+    return {
+      ...documento,
+      documentoUploadedResponse: {
+        ...uploaded,
+        estadoDocumento,
+        observacionesDocumento,
+      },
+    }
+  })
 
 const getEstadoUi = (documento: DocumentoTramiteItemDto): DocumentoValidacionEstado => {
   if (!documento.documentoCargado) {
@@ -99,21 +115,7 @@ const getEstadoDocumentoClassName = (documento: DocumentoTramiteItemDto) => {
 
 
 const getEstadoBadgeClassName = (estado: string) => {
-  const normalizedEstado = estado.toUpperCase()
-
-  if (normalizedEstado === 'PENDIENTE_DOCUMENTOS') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--pendiente-documentos'
-  }
-
-  if (normalizedEstado === 'RADICADA') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--radicada'
-  }
-
-  if (normalizedEstado === 'FINALIZADA') {
-    return 'matricula-page__estado-badge matricula-page__estado-badge--finalizada'
-  }
-
-  return 'matricula-page__estado-badge matricula-page__estado-badge--default'
+  return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado)}`
 }
 
 const MatriculaDetalleCoordinacionPage = () => {
@@ -122,7 +124,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const parsedMatriculaId = useMemo(() => Number(matriculaId), [matriculaId])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const canManageMatriculas = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const canManageMatriculas = canManagePosgrados(roles)
 
   const [matricula, setMatricula] = useState<MatriculaAcademicaListadoDto | null>(null)
   const [documentos, setDocumentos] = useState<DocumentoTramiteItemDto[]>([])
@@ -135,15 +137,23 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
-  const notifiedDocumentsMatriculaIdRef = useRef<number | null>(null)
+  const completedReviewFinalizationMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
+  const [toast, setToast] = useState<ToastFeedback | null>(null)
 
   const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
   const isRadicada = normalizedMatriculaEstado === 'RADICADA'
   const isFinalizada = normalizedMatriculaEstado === 'FINALIZADA'
   const disableDocumentValidation = isRadicada || isFinalizada
   const disableAsignaturasValidation = isFinalizada
+
+  useEffect(() => {
+    if (!toast) return
+
+    const timeoutId = window.setTimeout(() => setToast(null), 5_000)
+    return () => window.clearTimeout(timeoutId)
+  }, [toast])
 
   const getActionState = useCallback(
     (id: number): DocumentoActionState =>
@@ -269,34 +279,50 @@ const MatriculaDetalleCoordinacionPage = () => {
     [getEstadoDocumento, requiredDocs],
   )
 
-  const notifyIfAllDocumentsReviewed = useCallback(
-    async (updatedDocuments: DocumentoTramiteItemDto[]) => {
-      if (notifiedDocumentsMatriculaIdRef.current === parsedMatriculaId) {
-        return
-      }
-
-      const documentsToReview = updatedDocuments.filter(
-        (documento) => documento.obligatorioTipoDocumentoTramite,
+  const refreshDocumentsAfterDecision = useCallback(
+    async (
+      documentoId: number,
+      estadoDocumento: DocumentoDecision,
+      observacionesDocumento: string | null,
+    ) => {
+      const reloadedDocuments = await loadDocumentos()
+      // The document decision request already succeeded. Apply it locally as well so an
+      // eventually-consistent checklist response cannot hide the last completed review.
+      const updatedDocuments = applyDocumentoDecision(
+        reloadedDocuments,
+        documentoId,
+        estadoDocumento,
+        observacionesDocumento,
       )
-      const allDocumentsReviewed =
-        documentsToReview.length > 0 &&
-        documentsToReview.every((documento) => {
-          if (!documento.documentoCargado || documento.documentoUploadedResponse == null) {
-            return false
-          }
+      setDocumentos(updatedDocuments)
+      return updatedDocuments
+    },
+    [loadDocumentos],
+  )
 
-          const estado = getEstadoDocumento(documento)
-          return estado === 'APROBADO' || estado === 'RECHAZADO'
-        })
-
-      if (!allDocumentsReviewed) {
+  const finalizeCompletedRequiredReview = useCallback(
+    async (updatedDocuments: DocumentoTramiteItemDto[]) => {
+      if (
+        !matricula ||
+        !tieneDocumentosObligatoriosRevisados(updatedDocuments) ||
+        completedReviewFinalizationMatriculaIdRef.current === matricula.id
+      ) {
         return
       }
 
-      await notificarDocumentosCompletosMatricula(parsedMatriculaId)
-      notifiedDocumentsMatriculaIdRef.current = parsedMatriculaId
+      try {
+        await finalizarRevisionDocumentosMatricula(matricula.id)
+        completedReviewFinalizationMatriculaIdRef.current = matricula.id
+      } catch (requestError) {
+        setToast({
+          tone: 'error',
+          message: `La decisión se guardó, pero no fue posible notificar que terminó la revisión documental. ${
+            requestError instanceof Error ? requestError.message : String(requestError)
+          }`,
+        })
+      }
     },
-    [getEstadoDocumento, parsedMatriculaId],
+    [matricula],
   )
 
   const handleApproveDoc = async (id: number, disabled: boolean) => {
@@ -311,12 +337,15 @@ const MatriculaDetalleCoordinacionPage = () => {
         aprobado: true,
         observaciones: null,
       })
-      const updatedDocuments = await loadDocumentos()
-      await notifyIfAllDocumentsReviewed(updatedDocuments)
+      const updatedDocuments = await refreshDocumentsAfterDecision(id, 'APROBADO', null)
+      await finalizeCompletedRequiredReview(updatedDocuments)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       setBusyDocumentoId(null)
     }
@@ -358,8 +387,8 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
-      const updatedDocuments = await loadDocumentos()
-      await notifyIfAllDocumentsReviewed(updatedDocuments)
+      const updatedDocuments = await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
+      await finalizeCompletedRequiredReview(updatedDocuments)
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {
@@ -460,6 +489,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       requiredDocs.length === 0 ||
       !allRequiredApproved ||
       disableDocumentValidation ||
+      busyDocumentoId !== null ||
       automaticApprovalMatriculaIdRef.current === matricula.id
     ) {
       return
@@ -471,18 +501,23 @@ const MatriculaDetalleCoordinacionPage = () => {
     void aprobarMatriculaAcademica(matricula.id)
       .then(async () => {
         await refreshMatriculaAfterApproval()
-        window.alert(
-          'Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.',
-        )
+        setToast({
+          tone: 'success',
+          message: 'Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.',
+        })
       })
       .catch((requestError: unknown) => {
-        window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+        setToast({
+          tone: 'error',
+          message: requestError instanceof Error ? requestError.message : String(requestError),
+        })
       })
       .finally(() => {
         setIsApprovingMatricula(false)
       })
   }, [
     allRequiredApproved,
+    busyDocumentoId,
     disableDocumentValidation,
     matricula,
     refreshMatriculaAfterApproval,
@@ -587,14 +622,18 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <strong>Periodo:</strong> {matricula.periodoAcademico}
                 </p>
                 <p>
-                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{matricula.estado}</span>
+                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{getMatriculaEstadoLabel(matricula.estado)}</span>
                 </p>
                 <p>
-                  <strong>Fecha solicitud:</strong> {formatDateTime(matricula.fechaSolicitud)}
+                  <strong>Fecha solicitud:</strong> {formatBackendDateTime(matricula.fechaSolicitud)}
                 </p>
                 <p>
-                  <strong>Fecha revisión:</strong> {formatDateTime(matricula.fechaRevision)}
+                  <strong>Fecha revisión:</strong> {formatBackendDateTime(matricula.fechaRevision)}
                 </p>
+              </div>
+              <div className="matricula-detalle__general-observations">
+                <strong>Observaciones de la matrícula</strong>
+                <p>{matricula.observaciones?.trim() || 'Sin observaciones registradas.'}</p>
               </div>
             </article>
 
@@ -680,7 +719,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                         </div>
 
                         <div className="matricula-detalle__review-date" data-label="Fecha de revisión">
-                          {formatDateTime(documentoResponse?.fechaRevisionDocumento ?? null)}
+                          {formatBackendDateTime(documentoResponse?.fechaRevisionDocumento ?? null)}
                         </div>
 
                         <div data-label="Observaciones">
@@ -795,10 +834,10 @@ const MatriculaDetalleCoordinacionPage = () => {
 
                       return (
                       <tr key={asignatura.id}>
-                        <td>{asignatura.asignaturaCodigo ?? '—'}</td>
-                        <td>{asignatura.asignaturaNombre}</td>
-                        <td>{asignatura.estado}</td>
-                        <td>
+                        <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
+                        <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
+                        <td data-label="Estado">{getAsignaturaEstadoLabel(asignatura.estado)}</td>
+                        <td data-label="Validación coordinación">
                           {isFinalizada ? (
                             <span className="matricula-detalle__obs-empty">—</span>
                           ) : (
@@ -836,7 +875,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                             </div>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Comentarios">
                           <textarea
                             className="matricula-detalle__asignatura-comments"
                             value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
@@ -880,6 +919,13 @@ const MatriculaDetalleCoordinacionPage = () => {
           <BackButton to="/matricula">Volver al listado</BackButton>
         ) : null}
       </section>
+      {toast ? (
+        <div className={`matricula-detalle__toast matricula-detalle__toast--${toast.tone}`} role="status" aria-live="polite">
+          <span className="matricula-detalle__toast-icon" aria-hidden="true">{toast.tone === 'success' ? '✓' : '!'}</span>
+          <p>{toast.message}</p>
+          <button type="button" aria-label="Cerrar notificación" onClick={() => setToast(null)}>×</button>
+        </div>
+      ) : null}
     </ModuleLayout>
   )
 }

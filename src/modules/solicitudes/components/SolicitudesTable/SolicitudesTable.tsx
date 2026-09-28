@@ -65,7 +65,11 @@ const SolicitudesTable = ({ rows, mode, onRowClick }: SolicitudesTableProps) => 
                   <span>{getCellText(row.tipoSolicitud, 'Sin descripción.')}</span>
                 </td>
                 <td data-label="Estado">
-                  <StatusBadge estado={row.estadoSigla || row.estado} size="sm" />
+                  <StatusBadge
+                    estado={row.estadoSigla || row.estado}
+                    programaAcademico={row.programaAcademico}
+                    size="sm"
+                  />
                 </td>
                 <td data-label="Fecha registro">{formatDate(row.fechaRegistro)}</td>
                 <td data-label="Fecha resolución">{formatDate(row.fechaResolucion)}</td>

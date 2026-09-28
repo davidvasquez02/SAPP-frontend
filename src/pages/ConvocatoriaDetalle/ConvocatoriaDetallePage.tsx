@@ -1,38 +1,52 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ScrollText, UsersRound } from "lucide-react";
 import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
-import { getConvocatoriasAdmision } from "../../modules/admisiones/api/convocatoriaAdmisionService";
-import type { ConvocatoriaAdmisionDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
+import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
+import { getConvocatoriasAdmision, getEvaluadoresConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import type { ConvocatoriaAdmisionDto, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
+import type { AspiranteCreateResponseDto } from "../../modules/admisiones/api/aspiranteCreateTypes";
 import { CreateAspiranteModal } from "../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal";
 import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
+import { EvaluadoresConvocatoriaDialog } from "../../modules/admisiones/components/EvaluadoresConvocatoriaDialog";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
+import { getNombreCompletoAspirante } from "../../modules/admisiones/utils/aspiranteNombre";
+import { getAspiranteFotoSrc } from "../../modules/admisiones/utils/aspiranteFoto";
+import {
+  filterAspirantes,
+  paginateAspirantes,
+} from "../../modules/admisiones/utils/aspirantesList";
 import { resolveProgramaIdFromInscripciones } from "../../modules/admisiones/utils/resolveProgramaId";
 import "./ConvocatoriaDetallePage.css";
 
-const BOARD_SCROLL_DISTANCE = 320;
-
 const normalizeEstado = (estado?: string | null) =>
   (estado ?? "").trim().toUpperCase().replaceAll(" ", "_");
+
+type ToastFeedback = {
+  message: string;
+  tone: "success" | "warning";
+};
 
 const ConvocatoriaDetallePage = () => {
   const { convocatoriaId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { session } = useAuth();
-  const boardRef = useRef<HTMLDivElement | null>(null);
 
   const [inscripciones, setInscripciones] = useState<InscripcionAdmisionDto[]>(
     [],
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastFeedback | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [aspirantesQuery, setAspirantesQuery] = useState("");
+  const [aspirantesPage, setAspirantesPage] = useState(1);
   const [selectedAspirante, setSelectedAspirante] =
     useState<InscripcionAdmisionDto | null>(null);
   const [createdAspiranteIds, setCreatedAspiranteIds] = useState<Set<number>>(
@@ -40,6 +54,10 @@ const ConvocatoriaDetallePage = () => {
   );
   const [convocatoria, setConvocatoria] =
     useState<ConvocatoriaAdmisionDto | null>(null);
+  const [isEvaluadoresOpen, setIsEvaluadoresOpen] = useState(false);
+  const [evaluadores, setEvaluadores] = useState<EvaluadorConvocatoriaDto[]>([]);
+  const [evaluadoresLoading, setEvaluadoresLoading] = useState(false);
+  const [evaluadoresError, setEvaluadoresError] = useState<string | null>(null);
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } =
     useMemo(() => {
@@ -69,6 +87,9 @@ const ConvocatoriaDetallePage = () => {
       ROLES.SECRETARIA,
       ROLES.ADMIN,
     ]);
+  const canViewEvaluadores =
+    session?.kind === "SAPP" &&
+    hasAnyRole(session.user.roles, [ROLES.COORDINACION]);
 
   const parsedConvocatoriaId = useMemo(() => {
     if (!convocatoriaId) {
@@ -90,6 +111,14 @@ const ConvocatoriaDetallePage = () => {
     inscripciones[0]?.programaAcademico ??
     convocatoria?.programa ??
     null;
+  const programaCatalogo = getProgramaAcademico({
+    id: resolvedProgramaId ?? undefined,
+    nombre: programaConvocatoria ?? "",
+  });
+  const programaNombrePresentacion =
+    programaCatalogo?.nombre ?? programaConvocatoria?.replace(/^\s*\d+\s*-\s*/, "") ?? null;
+  const programaCodigo =
+    programaCatalogo?.codigoUis ?? programaConvocatoria?.match(/^\s*(\d+)\s*-/)?.[1] ?? null;
 
   const cuposConvocatoria = typeof cupos === "number" ? cupos : null;
   const cuposExcedidos =
@@ -127,7 +156,7 @@ const ConvocatoriaDetallePage = () => {
       {
         label: "Aspirantes inscritos",
         value: inscripciones.length,
-        icon: "👥",
+        icon: "users",
         tone: "primary",
       },
       { label: "Admitidos", value: admitidos, icon: "✓", tone: "success" },
@@ -135,6 +164,14 @@ const ConvocatoriaDetallePage = () => {
       { label: "No admitidos", value: noAdmitidos, icon: "×", tone: "danger" },
     ];
   }, [inscripciones]);
+  const filteredInscripciones = useMemo(
+    () => filterAspirantes(inscripciones, aspirantesQuery),
+    [aspirantesQuery, inscripciones],
+  );
+  const aspirantesPagination = useMemo(
+    () => paginateAspirantes(filteredInscripciones, aspirantesPage),
+    [aspirantesPage, filteredInscripciones],
+  );
 
   const loadInscripciones = useCallback(async () => {
     if (!convocatoriaId) {
@@ -199,17 +236,12 @@ const ConvocatoriaDetallePage = () => {
     loadInscripciones();
   }, [convocatoriaId, loadInscripciones]);
 
-  const resolveAspirantePhoto = (
-    inscripcion: InscripcionAdmisionDto,
-  ): string | null => {
-    const contenidoBase64 = inscripcion.foto?.contenidoBase64?.trim();
-    if (!contenidoBase64) {
-      return null;
-    }
+  useEffect(() => {
+    if (!toast) return;
 
-    const mimeType = inscripcion.foto?.mimeType?.trim() || "image/jpeg";
-    return `data:${mimeType};base64,${contenidoBase64}`;
-  };
+    const timeoutId = window.setTimeout(() => setToast(null), 5_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
 
   const handleRowClick = (inscripcion: InscripcionAdmisionDto) => {
     if (!convocatoriaId) {
@@ -229,25 +261,24 @@ const ConvocatoriaDetallePage = () => {
     );
   };
 
-  const scrollBoard = (direction: "left" | "right") => {
-    boardRef.current?.scrollBy({
-      left:
-        direction === "right" ? BOARD_SCROLL_DISTANCE : -BOARD_SCROLL_DISTANCE,
-      behavior: "smooth",
-    });
-  };
-
   const handleCreated = useCallback(
-    (result: { uploadSummary: { failedItems: { id: number }[] } }) => {
+    (result: {
+      created: AspiranteCreateResponseDto;
+      uploadSummary: { failedItems: { id: number }[] };
+    }) => {
+      const aspiranteNombre = getNombreCompletoAspirante(result.created) || "nuevo aspirante";
       if (result.uploadSummary.failedItems.length > 0) {
-        setSuccessMessage(
-          `Aspirante creado. Falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
-        );
+        setToast({
+          tone: "warning",
+          message: `Se creó al aspirante ${aspiranteNombre}, pero falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
+        });
       } else {
-        setSuccessMessage(
-          "Aspirante creado y documentos cargados correctamente.",
-        );
+        setToast({
+          tone: "success",
+          message: `Se creó al aspirante ${aspiranteNombre} de manera correcta.`,
+        });
       }
+      setIsCreateModalOpen(false);
       loadInscripciones();
     },
     [loadInscripciones],
@@ -271,6 +302,34 @@ const ConvocatoriaDetallePage = () => {
     setIsCreateModalOpen(true);
   }, [convocatoria, convocatoriaCerrada, cuposConvocatoria, cuposExcedidos]);
 
+  const loadEvaluadores = useCallback(async () => {
+    if (!parsedConvocatoriaId) {
+      setEvaluadoresError("Convocatoria inválida.");
+      return;
+    }
+
+    setEvaluadoresLoading(true);
+    setEvaluadoresError(null);
+
+    try {
+      setEvaluadores(await getEvaluadoresConvocatoria(parsedConvocatoriaId));
+    } catch (err) {
+      setEvaluadores([]);
+      setEvaluadoresError(
+        err instanceof Error
+          ? err.message
+          : "No fue posible consultar los evaluadores de la convocatoria.",
+      );
+    } finally {
+      setEvaluadoresLoading(false);
+    }
+  }, [parsedConvocatoriaId]);
+
+  const handleOpenEvaluadores = useCallback(() => {
+    setIsEvaluadoresOpen(true);
+    void loadEvaluadores();
+  }, [loadEvaluadores]);
+
   return (
     <ModuleLayout title="Admisiones">
       <section className="admission-detail-page convocatoria-detalle">
@@ -278,39 +337,50 @@ const ConvocatoriaDetallePage = () => {
 
         <header className="admission-detail-header convocatoria-detalle__header">
           <div className="admission-detail-header__content">
-            <p className="admission-detail-header__eyebrow">▧ Convocatoria</p>
+            <p className="admission-detail-header__eyebrow">
+              Convocatoria de admisión
+            </p>
             <h1 className="admission-detail-header__title convocatoria-detalle__title">
               Aspirantes inscritos
             </h1>
 
-            <div
-              className="admission-context-chips"
-              aria-label="Contexto de la convocatoria"
-            >
-              {periodoConvocatoria ? (
-                <span className="admission-context-chip">
-                  <span aria-hidden="true">📅</span> Período:{" "}
-                  {periodoConvocatoria}
+            {programaNombrePresentacion ? (
+              <p className="convocatoria-detalle__program-name">
+                {programaNombrePresentacion}
+              </p>
+            ) : null}
+
+            <div className="convocatoria-detalle__metadata" aria-label="Datos de la convocatoria">
+              {programaCodigo ? (
+                <span className="convocatoria-detalle__metadata-item">
+                  <span>Código</span>
+                  <strong>{programaCodigo}</strong>
                 </span>
               ) : null}
-              {programaConvocatoria ? (
-                <span className="admission-context-chip">
-                  <span aria-hidden="true">🎓</span> Programa:{" "}
-                  {programaConvocatoria}
+              {periodoConvocatoria ? (
+                <span className="convocatoria-detalle__metadata-item">
+                  <span>Período académico</span>
+                  <strong>{periodoConvocatoria}</strong>
                 </span>
               ) : null}
             </div>
 
-            {successMessage ? (
-              <p className="convocatoria-detalle__status convocatoria-detalle__status--success">
-                {successMessage}
-              </p>
-            ) : null}
           </div>
 
-          {canCreateAspirante ? (
+          {convocatoriaCerrada || canCreateAspirante || canViewEvaluadores ? (
             <div className="convocatoria-detalle__actions">
-              <button
+              {convocatoriaCerrada ? (
+                <aside className="convocatoria-detalle__closed-notice">
+                  <ScrollText aria-hidden="true" />
+                  <div>
+                    <strong>Inscripciones cerradas</strong>
+                    <p>
+                      El registro de nuevos aspirantes no está disponible para
+                      esta convocatoria.
+                    </p>
+                  </div>
+                </aside>
+              ) : canCreateAspirante ? <button
                 type="button"
                 className="convocatoria-detalle__create-button"
                 onClick={handleOpenCreateAspirante}
@@ -318,32 +388,46 @@ const ConvocatoriaDetallePage = () => {
                   !resolvedProgramaId ||
                   !parsedConvocatoriaId ||
                   !convocatoria ||
-                  convocatoriaCerrada ||
                   isLoading ||
                   cuposExcedidos
                 }
               >
-                <span aria-hidden="true">＋</span> Crear aspirante
-              </button>
+                Crear aspirante
+              </button> : null}
+              {canViewEvaluadores ? (
+                <button
+                  type="button"
+                  className="convocatoria-detalle__evaluators-button"
+                  onClick={handleOpenEvaluadores}
+                  disabled={!parsedConvocatoriaId || evaluadoresLoading}
+                >
+                  Ver evaluadores
+                </button>
+              ) : null}
               {(!resolvedProgramaId || !parsedConvocatoriaId) &&
-              !isLoading &&
-              !error ? (
+                !isLoading &&
+                !error ? (
                 <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
                   No se pudo determinar el programa o el identificador de la
                   convocatoria.
                 </p>
               ) : null}
-              {cuposExcedidos ? (
-                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
-                  Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden
-                  registrar más aspirantes.
-                </p>
-              ) : null}
-              {convocatoriaCerrada ? (
-                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
-                  La convocatoria está cerrada. No se pueden crear nuevos
-                  aspirantes.
-                </p>
+              {cuposExcedidos && !convocatoriaCerrada ? (
+                <aside
+                  className="convocatoria-detalle__capacity-notice"
+                  aria-live="polite"
+                >
+                  <span className="convocatoria-detalle__capacity-icon" aria-hidden="true">
+                    !
+                  </span>
+                  <div>
+                    <strong>Cupo completo</strong>
+                    <p>
+                      Se registraron los {cuposConvocatoria} aspirantes
+                      disponibles para esta convocatoria.
+                    </p>
+                  </div>
+                </aside>
               ) : null}
             </div>
           ) : null}
@@ -354,20 +438,23 @@ const ConvocatoriaDetallePage = () => {
             className="admission-stats-grid"
             aria-label="Resumen de aspirantes"
           >
-            {summaryStats.map((stat) => (
+            {summaryStats.map((stat) => {
+              return (
               <article
                 key={stat.label}
                 className={`admission-stat-card admission-stat-card--${stat.tone}`}
               >
                 <span className="admission-stat-card__icon" aria-hidden="true">
-                  {stat.icon}
+                  {stat.icon === "users" ? (
+                    <UsersRound size={20} strokeWidth={2.4} />
+                  ) : stat.icon}
                 </span>
                 <div>
                   <strong>{stat.value}</strong>
                   <span>{stat.label}</span>
                 </div>
               </article>
-            ))}
+            )})}
           </div>
         ) : null}
 
@@ -381,7 +468,8 @@ const ConvocatoriaDetallePage = () => {
             {aspirantesAdmitidos.length === 0 ? (
               <p>No hay aspirantes con estado ADMITIDO en esta convocatoria.</p>
             ) : (
-              <div className="convocatoria-detalle__table-wrap">
+              <>
+                <div className="convocatoria-detalle__table-wrap">
                 <table className="convocatoria-detalle__table">
                   <thead><tr><th>Aspirante</th><th>Documento</th><th>Acción</th></tr></thead>
                   <tbody>
@@ -395,23 +483,48 @@ const ConvocatoriaDetallePage = () => {
                           <td>{aspirante.nombreAspirante}</td>
                           <td>{aspirante.numeroDocumento ?? aspirante.cedula ?? "—"}</td>
                           <td>
-                            <button
-                              type="button"
-                              className="convocatoria-detalle__student-button"
-                              onClick={() => setSelectedAspirante(aspirante)}
-                              disabled={cannotCreateEstudiante}
-                            >
-                              {cannotCreateEstudiante
-                                ? "Estudiante creado"
-                                : "Crear estudiante"}
-                            </button>
+                            {cannotCreateEstudiante ? (
+                              <span className="convocatoria-detalle__student-created">
+                                <span aria-hidden="true">✓</span> Estudiante creado
+                              </span>
+                            ) : (
+                              <button type="button" className="convocatoria-detalle__student-button" onClick={() => setSelectedAspirante(aspirante)}>
+                                Crear estudiante
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              </div>
+                </div>
+                <div className="convocatoria-detalle__admitted-cards">
+                {aspirantesAdmitidos.map((aspirante) => {
+                  const cannotCreateEstudiante =
+                    aspirante.idPersona != null ||
+                    createdAspiranteIds.has(aspirante.aspiranteId);
+                  return (
+                    <article className="convocatoria-detalle__admitted-card" key={aspirante.id}>
+                      <strong>{aspirante.nombreAspirante}</strong>
+                      <div>
+                        <span>Documento</span>
+                        <b>{aspirante.numeroDocumento ?? aspirante.cedula ?? "—"}</b>
+                      </div>
+                      {cannotCreateEstudiante ? (
+                        <span className="convocatoria-detalle__student-created">
+                          <span aria-hidden="true">✓</span> Estudiante creado
+                        </span>
+                      ) : (
+                        <button type="button" className="convocatoria-detalle__student-button" onClick={() => setSelectedAspirante(aspirante)}>
+                          Crear estudiante
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
+                </div>
+              </>
             )}
           </section>
         ) : null}
@@ -446,29 +559,22 @@ const ConvocatoriaDetallePage = () => {
             aria-labelledby="applicants-board-title"
           >
             <div className="applicants-board-header">
-              <div>
-                <h2 id="applicants-board-title">Listado de aspirantes</h2>
-                <p>Desliza horizontalmente para ver más aspirantes</p>
-              </div>
-              <div
-                className="applicants-board-header__controls"
-                aria-label="Controles de desplazamiento horizontal"
-              >
-                <button
-                  type="button"
-                  aria-label="Desplazar aspirantes a la izquierda"
-                  onClick={() => scrollBoard("left")}
-                >
-                  ←
-                </button>
-                <button
-                  type="button"
-                  aria-label="Desplazar aspirantes a la derecha"
-                  onClick={() => scrollBoard("right")}
-                >
-                  →
-                </button>
-              </div>
+              <h2 id="applicants-board-title">Listado de aspirantes</h2>
+              {inscripciones.length > 0 ? (
+                <label className="applicants-board-search">
+                  <span className="sr-only">Buscar aspirante por nombre o código de inscripción</span>
+                  <span className="applicants-board-search__icon" aria-hidden="true">⌕</span>
+                  <input
+                    type="search"
+                    value={aspirantesQuery}
+                    placeholder="Buscar por nombre o código de inscripción"
+                    onChange={(event) => {
+                      setAspirantesQuery(event.target.value);
+                      setAspirantesPage(1);
+                    }}
+                  />
+                </label>
+              ) : null}
             </div>
 
             {inscripciones.length === 0 ? (
@@ -476,26 +582,73 @@ const ConvocatoriaDetallePage = () => {
                 <span aria-hidden="true">👤</span>
                 <p>No hay aspirantes inscritos en esta convocatoria.</p>
               </div>
-            ) : (
-              <div
-                ref={boardRef}
-                className="applicants-horizontal-board convocatoria-detalle__grid"
-                tabIndex={0}
-                aria-label="Listado horizontal de aspirantes inscritos"
-              >
-                {inscripciones.map((inscripcion) => (
-                  <StudentCard
-                    key={inscripcion.id}
-                    inscripcion={inscripcion}
-                    photoUrl={resolveAspirantePhoto(inscripcion)}
-                    onClick={() => handleRowClick(inscripcion)}
-                  />
-                ))}
+            ) : filteredInscripciones.length === 0 ? (
+              <div className="convocatoria-detalle__empty">
+                <span aria-hidden="true">⌕</span>
+                <p>No hay aspirantes que coincidan con la búsqueda.</p>
               </div>
+            ) : (
+              <>
+                <p className="applicants-board-results" aria-live="polite">
+                  Mostrando {aspirantesPagination.start}–{aspirantesPagination.end} de{' '}
+                  {filteredInscripciones.length} aspirantes
+                </p>
+                <div
+                  className="convocatoria-detalle__grid"
+                  aria-label="Aspirantes inscritos"
+                >
+                  {aspirantesPagination.items.map((inscripcion) => (
+                    <StudentCard
+                      key={inscripcion.id}
+                      inscripcion={inscripcion}
+                      photoUrl={getAspiranteFotoSrc(inscripcion.foto)}
+                      onClick={() => handleRowClick(inscripcion)}
+                    />
+                  ))}
+                </div>
+                {aspirantesPagination.pageCount > 1 ? (
+                  <nav className="applicants-pagination" aria-label="Paginación de aspirantes">
+                    <button
+                      type="button"
+                      onClick={() => setAspirantesPage(aspirantesPagination.page - 1)}
+                      disabled={aspirantesPagination.page === 1}
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      Página <strong>{aspirantesPagination.page}</strong> de{' '}
+                      {aspirantesPagination.pageCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAspirantesPage(aspirantesPagination.page + 1)}
+                      disabled={aspirantesPagination.page === aspirantesPagination.pageCount}
+                    >
+                      Siguiente
+                    </button>
+                  </nav>
+                ) : null}
+              </>
             )}
           </section>
         ) : null}
       </section>
+
+      {toast ? (
+        <div
+          className={`convocatoria-detalle__toast convocatoria-detalle__toast--${toast.tone}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="convocatoria-detalle__toast-icon" aria-hidden="true">
+            {toast.tone === "success" ? "✓" : "!"}
+          </span>
+          <p>{toast.message}</p>
+          <button type="button" aria-label="Cerrar notificación" onClick={() => setToast(null)}>
+            ×
+          </button>
+        </div>
+      ) : null}
 
       <CreateAspiranteModal
         open={isCreateModalOpen && Boolean(convocatoria) && !convocatoriaCerrada}
@@ -509,8 +662,19 @@ const ConvocatoriaDetallePage = () => {
         onClose={() => setSelectedAspirante(null)}
         onCreated={(estudiante) => {
           setCreatedAspiranteIds((current) => new Set(current).add(estudiante.idAspirante));
-          setSuccessMessage(`Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`);
+          setToast({
+            tone: "success",
+            message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`,
+          });
         }}
+      />
+      <EvaluadoresConvocatoriaDialog
+        open={isEvaluadoresOpen}
+        evaluadores={evaluadores}
+        loading={evaluadoresLoading}
+        error={evaluadoresError}
+        onClose={() => setIsEvaluadoresOpen(false)}
+        onRetry={() => void loadEvaluadores()}
       />
     </ModuleLayout>
   );

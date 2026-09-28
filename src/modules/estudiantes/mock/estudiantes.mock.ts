@@ -1,9 +1,9 @@
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
 
 export const programasMock: ProgramaCoordinacion[] = [
-  { id: 1, codigo: 'MISI', nombre: 'Maestría en Ingeniería de Sistemas e Informática' },
+  { id: 1, codigo: '302', nombre: 'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA' },
   { id: 2, codigo: 'MDCC', nombre: 'Maestría en Ciencia de la Computación' },
-  { id: 3, codigo: 'DCC', nombre: 'Doctorado en Ciencias de la Computación' },
+  { id: 2, codigo: '347', nombre: 'DOCTORADO EN CIENCIAS DE LA COMPUTACION' },
 ]
 
 export const estudiantesMock: EstudianteCoordinacion[] = [
@@ -17,6 +17,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     numeroDocumento: '1098765432',
     correoInstitucional: 'valentina.rojas@correo.uis.edu.co',
     correoPersonal: 'valentina.rojas@correo.uis.edu.co',
+    directorTg: null,
     personaId: null,
     personaIdpId: null,
     estadoAcademico: 'ACTIVO',
@@ -25,7 +26,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     creditosAprobados: 18,
     creditosPendientes: 22,
     programaId: 1,
-    programaNombre: 'MISI',
+    programaNombre: 'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
     fechaIngreso: '2025-08-12',
   },
   {
@@ -38,6 +39,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     numeroDocumento: '1123456789',
     correoInstitucional: 'andres.pineda@correo.uis.edu.co',
     correoPersonal: 'andres.pineda@correo.uis.edu.co',
+    directorTg: null,
     personaId: null,
     personaIdpId: null,
     estadoAcademico: 'EN_TRABAJO_DE_GRADO',
@@ -46,7 +48,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     creditosAprobados: 34,
     creditosPendientes: 6,
     programaId: 1,
-    programaNombre: 'MISI',
+    programaNombre: 'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
     fechaIngreso: '2024-02-05',
   },
   {
@@ -59,6 +61,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     numeroDocumento: '1002456789',
     correoInstitucional: 'maria.gomez@correo.uis.edu.co',
     correoPersonal: 'maria.gomez@correo.uis.edu.co',
+    directorTg: null,
     personaId: null,
     personaIdpId: null,
     estadoAcademico: 'ACTIVO',
@@ -80,6 +83,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     numeroDocumento: '84556321',
     correoInstitucional: 'julian.cardenas@correo.uis.edu.co',
     correoPersonal: 'julian.cardenas@correo.uis.edu.co',
+    directorTg: null,
     personaId: null,
     personaIdpId: null,
     estadoAcademico: 'EN_ESPERA_CANDIDATURA',
@@ -101,6 +105,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     numeroDocumento: '63214589',
     correoInstitucional: 'natalia.blanco@correo.uis.edu.co',
     correoPersonal: 'natalia.blanco@correo.uis.edu.co',
+    directorTg: null,
     personaId: null,
     personaIdpId: null,
     estadoAcademico: 'EN_TRABAJO_DE_GRADO',
@@ -109,7 +114,7 @@ export const estudiantesMock: EstudianteCoordinacion[] = [
     creditosAprobados: 52,
     creditosPendientes: 8,
     programaId: 3,
-    programaNombre: 'DCC',
+    programaNombre: 'DOCTORADO EN CIENCIAS DE LA COMPUTACION',
     fechaIngreso: '2023-08-15',
   },
 ]

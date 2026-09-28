@@ -7,6 +7,17 @@ export type EstadoSolicitudSigla =
   | 'PFIR_DIR_TG'
   | 'PFIR_COOR_POS'
   | 'PFIR_CAR_CONT'
+  | 'ENVIADA_CONSEJO'
+  | 'JUR_POR_DESIG'
+  | 'JUR_INVITADO'
+  | 'EN_EVALUACION'
+  | 'CONCEPTOS_REC'
+  | 'EN_AJUSTES'
+  | 'SUST_PROGRAMADA'
+  | 'SUSTENTADA'
+  | 'APLAZADA'
+  | 'NO_APROBADA'
+  | 'AJUSTES_RECIB'
 
 export interface EstadoSolicitudCatalogItem {
   id: number
@@ -23,6 +34,17 @@ export const DEFAULT_ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
   { id: 6, sigla: 'PFIR_DIR_TG', label: 'POR FIRMA DIRECTOR DE TG' },
   { id: 7, sigla: 'PFIR_COOR_POS', label: 'POR FIRMA COORDINADOR DE POSGRADOS' },
   { id: 8, sigla: 'PFIR_CAR_CONT', label: 'POR FIRMA CARTA CONTRAPRESTACION' },
+  { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO ACADEMICO' },
+  { id: 12, sigla: 'JUR_POR_DESIG', label: 'JURADO POR DESIGNAR' },
+  { id: 13, sigla: 'JUR_INVITADO', label: 'JURADO INVITADO' },
+  { id: 14, sigla: 'EN_EVALUACION', label: 'EN EVALUACIÓN' },
+  { id: 15, sigla: 'CONCEPTOS_REC', label: 'CONCEPTOS RECIBIDOS' },
+  { id: 16, sigla: 'EN_AJUSTES', label: 'EN AJUSTES DEL ESTUDIANTE' },
+  { id: 17, sigla: 'SUST_PROGRAMADA', label: 'SUSTENTACIÓN PROGRAMADA' },
+  { id: 18, sigla: 'SUSTENTADA', label: 'SUSTENTADA' },
+  { id: 19, sigla: 'APLAZADA', label: 'APLAZADA' },
+  { id: 20, sigla: 'NO_APROBADA', label: 'NO APROBADA' },
+  { id: 21, sigla: 'AJUSTES_RECIB', label: 'AJUSTES RECIBIDOS' },
 ]
 
 let estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
@@ -42,8 +64,27 @@ const ESTADO_SIGLA_MAP: Record<string, EstadoSolicitudSigla> = {
   RECHAZADO: 'RECHAZADA',
   DEVUELTA: 'DEVUELTA',
   PFIR_DIR_TG: 'PFIR_DIR_TG',
+  'POR FIRMA DIRECTOR DE TG': 'PFIR_DIR_TG',
+  'POR FIRMA DIRECTOR DE TESIS': 'PFIR_DIR_TG',
+  'POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION': 'PFIR_DIR_TG',
+  'POR FIRMA DIRECTOR DE TRABAJO DE INVESTIGACION': 'PFIR_DIR_TG',
   PFIR_COOR_POS: 'PFIR_COOR_POS',
   PFIR_CAR_CONT: 'PFIR_CAR_CONT',
+  ENVIADA_CONSEJO: 'ENVIADA_CONSEJO',
+  'ENVIADA A CONSEJO': 'ENVIADA_CONSEJO',
+  'ENVIADA A CONSEJO ACADEMICO': 'ENVIADA_CONSEJO',
+  'ENVIADA A CONSEJO ACADÉMICO': 'ENVIADA_CONSEJO',
+  JUR_POR_DESIG: 'JUR_POR_DESIG',
+  JUR_INVITADO: 'JUR_INVITADO',
+  EN_EVALUACION: 'EN_EVALUACION',
+  CONCEPTOS_REC: 'CONCEPTOS_REC',
+  EN_AJUSTES: 'EN_AJUSTES',
+  SUST_PROGRAMADA: 'SUST_PROGRAMADA',
+  SUSTENTADA: 'SUSTENTADA',
+  APLAZADA: 'APLAZADA',
+  NO_APROBADA: 'NO_APROBADA',
+  AJUSTES_RECIB: 'AJUSTES_RECIB',
+  'AJUSTES RECIBIDOS': 'AJUSTES_RECIB',
 }
 
 export const ESTADOS_SOLICITUD_SIGLAS = Object.freeze(
@@ -54,7 +95,12 @@ export function setEstadoSolicitudCatalog(items: EstadoSolicitudCatalogItem[]): 
   if (items.length === 0) {
     estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
   } else {
-    estadosSolicitudCatalog = [...items].sort((left, right) => left.id - right.id)
+    estadosSolicitudCatalog = items
+      .map((estado) => ({
+        ...estado,
+        label: estado.label.trim().toLocaleUpperCase('es-CO') || estado.sigla,
+      }))
+      .sort((left, right) => left.id - right.id)
   }
 
   estadoBySigla = new Map(estadosSolicitudCatalog.map((estado) => [estado.sigla, estado]))
@@ -80,6 +126,32 @@ export function getEstadoSolicitudLabel(value: string | null | undefined): strin
   }
 
   return estadoBySigla.get(sigla)?.label ?? sigla
+}
+
+const normalizeProgramaAcademico = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+
+/** Ajusta el nombre visible del estado de firma al nivel del programa del estudiante. */
+export function getEstadoSolicitudLabelPorPrograma(
+  value: string | null | undefined,
+  programaAcademico?: string | null,
+): string {
+  if (normalizeEstadoSolicitud(value) !== 'PFIR_DIR_TG' || !programaAcademico) {
+    return getEstadoSolicitudLabel(value)
+  }
+
+  const programa = normalizeProgramaAcademico(programaAcademico)
+  if (programa.includes('DOCTORADO') || /\bDCC\b/.test(programa)) {
+    return 'POR FIRMA DIRECTOR DE TESIS'
+  }
+  if (programa.includes('MAESTRIA') || /\bMISI\b/.test(programa)) {
+    return 'POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION'
+  }
+
+  return getEstadoSolicitudLabel(value)
 }
 
 type SolicitudConEstado = {

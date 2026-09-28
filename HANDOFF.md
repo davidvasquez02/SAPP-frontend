@@ -1,3 +1,3142 @@
+# Handoff 2026-09-27 — evaluación adaptable y rueda en notas
+
+## Actualización 2026-09-28 — clic en tarjetas de estudiantes
+
+- Cambio limitado a `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.{tsx,css}`: eliminados handlers de arrastre, captura del puntero, supresión de clic y rueda. `overflow-x: hidden` y `touch-action: pan-y` impiden desplazamiento horizontal manual y permiten mantener el scroll vertical de la página. Las flechas conservan `scrollBy`, animación, estados de habilitación y soporte de teclado. Afecta matriculados y egresados, que comparten tablero.
+- Contrato y resultado esperado: `onStudentClick(estudiante)` recibe el estudiante al pulsar la tarjeta o su acción; las flechas desplazan el tablero. Sin cambios de API, datos, dependencias ni diseño de tarjetas. Ayuda de navegación ajustada a flechas.
+- Validación: ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y `npm run build` PASS (327 módulos). Primer build bloqueado por `spawn EPERM` dentro del sandbox; reejecución con permisos ampliados correcta. Persiste aviso de chunk >500 kB. Pendiente comprobación manual en sesión autenticada: clic en tarjeta y botón, flechas en ambos extremos y ausencia de desplazamiento horizontal por rueda/arrastre/táctil.
+- Se reutilizan `node_modules` y `package-lock.json` existentes; no se crearon entornos ni se cambiaron versiones, seeds o schemas.
+
+## Actualización 2026-09-28 — respuesta nullable al consultar entrevistas
+
+- `getEntrevistasPorEvaluador` consume ahora `ApiResponse<EntrevistaPorEvaluadorDto[] | null>` y pasa `response.data` por la utilidad pura `normalizeEntrevistasPorEvaluador`.
+- Salida esperada: `data: null`, `data: undefined` y `data: []` se convierten en `[]`; el `Sidebar` calcula `hasAssigned: false` y no muestra **Admisiones** a docente/director evaluador. Un arreglo no vacío conserva `hasAssigned: true`.
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/utils/normalizeEntrevistasPorEvaluador.ts`, `src/components/Sidebar/Sidebar.tsx`, `tests/admisionesNavigation.test.ts` y `tests/estadoEntrevista.test.ts`.
+- Sin cambios de endpoint, autorización, navegación administrativa, dependencias, schemas, seeds ni datasets. Prueba focalizada PASS (9/9), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (326 módulos; CSS 294.30 kB; JS 758.20 kB).
+- Reutilizar el `node_modules` y `package-lock.json` existentes; no crear venv, Conda, Poetry ni otro árbol npm. Pendiente institucional: validar con el usuario cuya API devuelve exactamente `data: null` que la opción permanezca oculta tras iniciar sesión.
+
+## Actualización 2026-09-28 — guía visual de promedio en hoja de vida
+
+### Estado, contrato y salida esperada
+
+- `getPromedioPuntajeReglas` reconoce exclusivamente arreglos no vacíos cuyos elementos contienen números finitos en `promedioMin`, `promedioMax` y `puntos`. No depende del nombre **PROMEDIO PONDERADO EN PREGRADO** y devuelve `null` para cualquier otra forma, preservando el render genérico de consideraciones.
+- `Consideraciones` representa las reglas válidas como una guía **Promedio → puntos**: valores iguales se muestran una vez (`3,5`) y los intervalos con raya (`3,51–3,7`), usando formato `es-CO`. Cada rango se acompaña de `{puntos} pts`.
+- La cuadrícula usa cuatro columnas en espacio normal y dos por debajo de 520 px del contenedor. Son ocho fichas compactas en dos filas en escritorio. Usa `--primary`, `--outline`, `--surface` y `--text-secondary`; funciona en temas claro/oscuro.
+- No cambian `EvaluacionAdmisionItem.consideraciones`, endpoints, payloads, notas ni persistencia. La transformación es exclusivamente de presentación.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/modules/admisiones/utils/promedioPuntajeGuide.ts`, `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.{tsx,css}` y `tests/promedioPuntajeGuide.test.ts`.
+- Resultado: pruebas focalizadas PASS (3/3), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (325 módulos; CSS 294.30 kB; JS 758.16 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: revisar con la respuesta real que el backend entregue un JSON parseable (arreglo delimitado por `[]`) y validar densidad/contraste junto al visor PDF en escritorio, móvil y ambos temas.
+
+## Actualización 2026-09-28 — visibilidad de Admisiones según entrevistas asignadas
+
+### Estado y contrato
+
+- `Sidebar` detecta evaluadores puros con `isEvaluadorAdmision(roles) && !canManagePosgrados(roles)` y, al montarse para esa sesión, ejecuta `getEntrevistasPorEvaluador(session.user.id)`.
+- Contrato reutilizado: `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}` devuelve `ApiResponse<Array<{ inscripcionId: number; completa: boolean }>>`. Para la visibilidad solo importa que `data.length > 0`; un arreglo vacío oculta **Admisiones**.
+- El estado de acceso se asocia con `userId` para no reutilizar el resultado de otra sesión. Mientras el resultado es `null`, la opción permanece oculta. La política preexistente ante error temporal se conserva: no retirar acceso potencial si el servidor no pudo responder. Coordinación, secretaría y administración no disparan esta comprobación.
+- La consulta anterior `getConvocatoriasAdmision()` fue retirada únicamente del menú. El listado y los detalles conservan sus propias consultas funcionales. Las rutas y la autorización del backend no cambian.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/components/Sidebar/Sidebar.tsx`, `src/app/navigationItems.ts`, `src/modules/admisiones/api/evaluacionAdmisionService.ts` y `tests/admisionesNavigation.test.ts`.
+- Resultado acumulado: pruebas focalizadas PASS (8/8), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.18 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: iniciar sesión con un evaluador cuya respuesta sea `data: []` y otro con registros, confirmando en Network una petición al arranque y la ausencia/presencia correspondiente del módulo en escritorio y móvil.
+
+## Actualización 2026-09-28 — avisos de matrícula y hoja de vida sin observaciones
+
+### Estado y salida esperada
+
+- `MatriculaDetalleCoordinacionPage.handleApproveDoc` presenta los errores de `PUT /sapp/document` mediante `setToast({ tone: 'error', message })`; ya no abre el diálogo nativo del navegador. El efecto existente lo cierra a los cinco segundos y permite cierre manual. Cuando todos los documentos obligatorios quedan aprobados, la aprobación automática continúa mostrando el toast institucional de éxito.
+- `EvaluacionEtapaSection` acepta `showObservations?: boolean`, con valor predeterminado `true`. La pantalla pasa `showObservations={!isHojaDeVida}`, por lo que solo `HOJA_DE_VIDA` omite encabezado, celda, etiqueta móvil y textarea de observaciones.
+- `handleSaveBulk` fuerza `observaciones: null` para cada fila de hoja de vida. La comparación de borradores ignora observaciones en esa etapa, evitando que valores históricos invisibles activen modificaciones. Las demás etapas conservan normalización y edición existentes.
+
+### Contratos, paths y verificación
+
+- Contratos sin cambios: aprobación/rechazo documental mantiene `{ documentoId, aprobado, observaciones }`; actualización de puntajes mantiene `{ id, puntajeAspirante, observaciones }[]`. No se modificaron endpoints, DTO externos, permisos, schemas, dependencias, seeds ni datasets.
+- Paths: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`, `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`, `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`, `tests/matriculaDetalleToast.test.ts` y `tests/hojaVidaSinObservaciones.test.ts`.
+- Resultado: pruebas focalizadas PASS (3/3), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.19 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: provocar con backend real el error por documentos pendientes y una aprobación completa para revisar ambos toasts; guardar una nota de hoja de vida y confirmar en Network que `observaciones` viaja como `null`.
+
+## Actualización 2026-09-28 — resumen de entrevistas por evaluador
+
+### Estado y contrato
+
+- `AdmisionesProfesorPage` ya no importa ni llama `getEvaluacionAdmisionInfo` al cargar el listado. Una única llamada a `getEntrevistasPorEvaluador(session.user.id)` consume `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}`.
+- DTO: `EntrevistaPorEvaluadorDto { inscripcionId: number; completa: boolean }`; envelope `ApiResponse<EntrevistaPorEvaluadorDto[]>`. La respuesta se reduce a un mapa indexado por `inscripcionId`, que se compara con `InscripcionAdmisionDto.id`.
+- Salida: `true → Calificado`, `false → Pendiente de calificación`, ID ausente → **Evaluación no iniciada**. Mientras carga se muestra **Consultando calificación…**. Un error HTTP produce un aviso global y botón **Reintentar**; no falsea los datos retornados.
+- El detalle conserva intacto `getEvaluacionAdmisionInfo`: `EvaluacionEtapaPage`, prefetch y validaciones continúan consultando la evaluación completa cuando corresponde.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`, `src/modules/admisiones/utils/estadoEntrevista.ts` y `tests/estadoEntrevista.test.ts`. Sin dependencias, variables, permisos, schemas, seeds ni datasets nuevos.
+- Resultado: prueba focalizada PASS (6/6), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.11 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: confirmar en Network una sola petición de resumen por carga, validar asociaciones para IDs presentes/ausentes y comprobar que al entrar al detalle todavía se solicita `/evaluacionAdmision/info`.
+
+## Actualización 2026-09-28 — prioridad y orden de entrevistas asignadas
+
+### Estado, reglas y salida esperada
+
+- `AdmisionesProfesorPage` muestra **Tu entrevista** fuera de la cuadrícula de datos personales, en un bloque destacado de ancho completo. Pendiente usa `--warning`, calificado usa `--primary` y no iniciado/cargando usa tokens neutros; no se introdujeron colores fijos para estos estados.
+- `getEstadoEntrevista` devuelve **Evaluación no iniciada** cuando el evaluador autenticado no tiene aspectos propios. La vista usa la misma etiqueta cuando la consulta de la etapa todavía no está disponible y ya no renderiza **No se pudo consultar**.
+- Orden por programa: `getOrdenEstadoEntrevista` asigna 0 a **Pendiente de calificación**, 1 a **Calificado**, 2 a **Evaluación no iniciada** y 3 a estados transitorios/desconocidos. El arreglo se copia antes de ordenar; no se mutan las inscripciones recibidas.
+
+### Contratos, paths, pruebas y continuidad
+
+- Se conserva `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa=ENTREVISTA`, la concurrencia máxima de cuatro y la navegación existente al detalle. Sin cambios de API, DTO, permisos, schemas, dependencias, seeds ni datasets.
+- Paths: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.{tsx,css}`, `src/modules/admisiones/utils/estadoEntrevista.ts` y `tests/estadoEntrevista.test.ts`.
+- Resultado: prueba focalizada PASS (5/5), ESLint focalizado PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 756.62 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Pendiente institucional: revisar el énfasis visual y el reordenamiento progresivo con sesión real de docente/director, en móvil y temas claro/oscuro.
+
+## Actualización 2026-09-28 — convocatorias: aviso de cupo completo y PDF
+
+### Estado actual
+
+- El detalle `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` sustituye el texto rojo suelto de capacidad agotada por `convocatoria-detalle__capacity-notice`: icono de aviso, título **Cupo completo** y explicación con el número de cupos. Se muestra solo cuando `inscripciones.length >= cupos` y la convocatoria sigue abierta; el botón **Crear aspirante** continúa deshabilitado y la guarda en `handleOpenCreateAspirante` sigue evitando aperturas directas.
+- En `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`, cada `DocumentUploadCard` recibe `fileAccept={PDF_FILE_ACCEPT}`. `handleSelectFile` también usa `isPdfFile` de `src/shared/files/pdfFile.ts`; por ello un `.docx`, imagen u otro archivo seleccionado/inyectado manualmente no se conserva y muestra **Solo se permiten archivos PDF.** Un PDF con MIME genérico pero extensión `.pdf` se acepta para tolerar navegadores que no informan MIME.
+
+### Contratos, artefactos y siguiente paso
+
+- No hubo cambios de API: los PDF válidos conservan el flujo `uploadDocument({ tipoDocumentoTramiteId, nombreArchivo, tramiteId, usuarioCargaId, aspiranteCargaId, contenidoBase64, mimeType, tamanoBytes, checksum })`. No hay endpoints, schemas, permisos, datos, datasets ni seeds nuevos.
+- Paths: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.{tsx,css}`, `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`, `src/shared/files/pdfFile.ts`, `tests/aspirantesList.test.ts`. Resultado esperado: tarjeta sobria, con borde/fondo semánticos, tanto en modo claro como oscuro; el explorador filtra a PDF y el mensaje de rechazo se presenta en la tarjeta documental.
+- Pruebas actuales: `node --test --test-isolation=none tests/aspirantesList.test.ts` PASS (9/9), ESLint focalizado PASS, `git diff --check` PASS y `npm run build` PASS (324 módulos; CSS 292.11 kB; JS 756.18 kB). El primer build dentro del sandbox falló por `spawn EPERM`/carga del binario SWC; el build autorizado fuera del sandbox pasó. Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB. Siguiente paso: con una sesión institucional, comprobar temas claro/oscuro, móvil y la selección/arrastre de un PDF, PNG y DOCX.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. No hay backend, seeds ni credenciales reproducibles para la pantalla protegida.
+
+## Actualización 2026-09-28 — retirar estado de evaluación sin contenido
+
+- `InscripcionAdmisionDetallePage` elimina solamente el ítem visual **Estado de evaluación** de la barra de resumen, disponible para cualquier rol. `evaluacionStatus` sigue controlando las etapas, alertas y acciones existentes.
+- Prueba: `node --test --test-isolation=none tests/inscripcionDetalleResumen.test.ts`; build: `npm run build`. Resultado reciente: regresión 1/1 PASS y build PASS (324 módulos, CSS 291.29 kB, JS 755.83 kB). Sin dependencias, contratos ni datos nuevos.
+
+## Actualización 2026-09-28 — estado personal de entrevistas
+
+- Verificación: pruebas de lógica 3/3 PASS y compilación de producción PASS; persiste aviso de tamaño de chunk. El detalle del evaluador consulta datos frescos en lugar de usar la caché indefinida.
+
+- `AdmisionesProfesorPage.tsx` consulta `getEvaluacionAdmisionInfo` por inscripción (máximo cuatro simultáneas), calcula el estado por usuario y muestra carga/error por tarjeta. Al remontar el listado se actualiza la información.
+- `EvaluacionEtapaPage.tsx` usa `evaluadorId` para pertenencia y muestra el estado persistido en el detalle. Guardar ya invalida la caché y consulta nuevamente. `utils/estadoEntrevista.ts` centraliza nota y fecha de todos los registros propios, excluyendo ENTREV; cero es válido.
+- DTO incorpora `evaluadorId: number | null` y fecha nullable. Pruebas: `node --test --test-isolation=none tests/estadoEntrevista.test.ts`; build: `npm run build`. Reutilizar node_modules y package-lock; no se incorporan dependencias ni entornos. Pendiente validación visual con sesión docente/director real.
+
+---
+
+# Handoff 2026-09-28 — notificación completa del ciclo documental de matrícula
+
+## Estado y salida esperada
+
+- Coordinación usa `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos`; el estudiante usa `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`. Ambos son POST autenticados sin body, pero representan momentos distintos del proceso.
+- Coordinación espera el `PUT /sapp/document` exitoso, recarga el checklist y reconcilia localmente la última decisión confirmada para tolerar consistencia eventual. Cuando todos los obligatorios están cargados y en `APROBADO` o `RECHAZADO`, llama el POST una vez por matrícula durante el montaje. Una mezcla de aprobados y rechazados completa la revisión, pero solo todos aprobados permiten la aprobación automática de la matrícula. `busyDocumentoId` evita que esa aprobación compita con la notificación del último documento.
+- El estudiante espera cada `POST /sapp/document`, valida que la respuesta del guardado obligatorio incluya un `id` numérico y luego recarga el checklist. Si todos los obligatorios están cargados, llama `notificarDocumentosCompletos`. La misma secuencia cubre la primera carga y el reemplazo de un documento rechazado; el estado cargado de la versión rechazada anterior no basta sin una respuesta exitosa de la operación actual.
+- Salida esperada en Network para estudiante: cargas, GET de documentos y POST `notificarDocumentosCompletos`. Para coordinación: PUT de la última decisión, GET de documentos, POST `finalizarRevisionDocumentos` y, únicamente si todos fueron aprobados, PUT de aprobación de matrícula.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/modules/matricula/utils/documentosMatricula.ts`, `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; regresión: `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Transportes: `notificarDocumentosCompletosMatricula` y `finalizarRevisionDocumentosMatricula` en `src/modules/matricula/services/matriculaAcademicaService.ts`. Sin cambios de schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno exacto: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Resultado reciente: regresión focalizada PASS (3/3), suite Node PASS (161/161), ESLint focalizado PASS y build PASS (327 módulos, CSS 294.30 kB, JS 759.08 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación. No existe backend, seed ni credenciales locales para validar el correo o efecto institucional; confirmar en integración la idempotencia de ambos endpoints entre sesiones.
+
+---
+
+# Handoff 2026-09-28 — título único del módulo de fechas
+
+## Estado y salida esperada
+
+- `FechasModulePage` usa `ModuleLayout title="Módulo de Fechas Académicas"` y ya no renderiza la tarjeta de encabezado interno con “Fechas académicas” ni su descripción.
+- Salida esperada: en `/fechas` la cabecera de la página muestra solo **Módulo de Fechas Académicas** antes del contenido de períodos y convocatorias.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/FechasModule/FechasModulePage.tsx`; regresión: `tests/configFechasPeriodos.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/configFechasPeriodos.test.ts` y `npm run build`.
+- Resultado reciente: regresión 2/2 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.40 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+# Handoff 2026-09-28 — visibilidad de recordatorios de candidatura
+
+## Estado y salida esperada
+
+- `RecordatoriosCandidatura` consulta al montarse `getPeriodoMatriculaVigente`, que consume `GET /sapp/periodoAcademicoFecha/vigente` y selecciona el trámite `MATRICULA` vigente.
+- Cuando el campo anidado `periodo.notificacionCandidaturaEnviada` es `true`, el componente retorna `null`; con `false`, muestra la sección y conserva el flujo de confirmación y envío existente. No usar `notificacionAperturaEnviada`: ese campo externo corresponde solo a la notificación de inicio de matrícula. Si la consulta falla, el recordatorio queda disponible para no bloquear la funcionalidad existente por un fallo de validación.
+- Salida esperada: los coordinadores no ven **Recordatorios por correo** de candidatura cuando el indicador del período vigente es `true`.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.tsx` y el DTO compartido de `src/modules/matricula/services/matriculaAcademicaService.ts`; regresión: `tests/recordatoriosCandidatura.test.ts`. Sin cambios de contratos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/recordatoriosCandidatura.test.ts` y `npm run build`.
+- Resultado reciente: regresión 4/4 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.62 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+# Handoff 2026-09-27 — modal de confirmación para correo de matrícula
+
+## Estado y salida esperada
+
+- La tarjeta de notificación abre `matricula-page__confirmation-modal` antes de invocar el envío; no se usa `window.confirm`.
+- El modal muestra el período objetivo, permite cancelar o confirmar y no permite cerrarse mientras `isNotificandoApertura` está activo.
+- Salida esperada: el navegador no presenta el diálogo nativo; se muestra un modal institucional coherente con el tema del sistema y, al confirmar, conserva el flujo existente de mensaje temporal y refresco del período vigente.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/Matricula/MatriculaPage.css`; regresión: `tests/notificacionAperturaMatricula.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.43 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+# Handoff 2026-09-27 — carga exclusiva de PDF en matrícula académica
+
+## Estado y salida esperada
+
+- `DocumentosRequeridosTable` usa la constante compartida `PDF_FILE_ACCEPT` en el input de archivos, filtrando el diálogo nativo a `application/pdf,.pdf`.
+- `MatriculaPage` valida el archivo con `isPdfFile` antes de guardarlo en estado. Un archivo inválido se descarta y se informa “Solo se permiten archivos PDF.” junto al documento.
+- Salida esperada: no se pueden seleccionar Word, Excel, imágenes u otros formatos para documentos de matrícula; un archivo forzado fuera del filtro tampoco será preparado para cargar.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`, `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaDocumentosPdf.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaDocumentosPdf.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 289.33 kB, JS 754.19 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — toast al aprobar matrícula en coordinación
+
+## Estado y salida esperada
+
+- Cuando la aprobación automática se activa después de validar todos los documentos obligatorios, el detalle de coordinación crea un `toast` de éxito en vez de `window.alert`.
+- El toast se ubica fijo abajo a la derecha, tiene icono, botón accesible para cerrarlo y se retira a los 5 segundos. Un fallo en la aprobación muestra el mismo componente con tono `error`.
+- Salida esperada: “Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.” aparece como toast institucional, no como popup nativo.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `MatriculaDetalleCoordinacionPage.css`; regresión: `tests/matriculaDetalleToast.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaDetalleToast.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 289.33 kB, JS 754.00 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — título único en matrícula del estudiante
+
+## Estado y salida esperada
+
+- `ModuleLayout` ya muestra **Proceso de matrícula**. El encabezado interno de `MatriculaPage` ahora contiene solo el período académico, eliminando el título repetido que aparecía en la tarjeta superior.
+- Salida esperada: la pantalla presenta una sola vez **Proceso de matrícula**, seguido por “Periodo académico: …”.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaProcesoTitle.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaProcesoTitle.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.41 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — actualización de matrícula del estudiante
+
+## Estado y salida esperada
+
+- `MatriculaPage` deriva `hasRejectedDocuments` de la colección de documentos mediante `estado === "RECHAZADO"`.
+- Para una matrícula existente, la confirmación devuelve esa condición y el contenedor del botón se renderiza solamente con `!hasExistingMatricula || hasRejectedDocuments`.
+- Salida esperada: con todos los archivos en `PENDIENTE`, `EN_REVISION` o `APROBADO`, no se muestra **Actualizar matrícula**. Si algún archivo llega `RECHAZADO`, aparece y permite cargar la corrección.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaActualizarRechazados.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaActualizarRechazados.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.47 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — títulos del tablero de matrículas académicas
+
+## Estado y salida esperada
+
+- La ruta de coordinación `/matricula/academica` usa `ModuleLayout title="Matrículas académicas"`.
+- Se retiró el encabezado superior del listado y se añadió `Listado de matrículas académicas` al inicio de la tarjeta de filtros, antes de Programa académico.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `MatriculaPage.css`; regresión: `tests/matriculaListadoTitle.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaListadoTitle.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.51 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — aviso temporal de apertura de matrícula
+
+## Estado y salida esperada
+
+- Al tener éxito `POST /sapp/matriculaAcademica/notificarAperturaMatricula`, se conserva el mensaje devuelto por el backend, por ejemplo “Notificación de apertura de matrícula enviada.”, durante 5000 ms.
+- Después del intervalo se limpia el mensaje y se invoca otra vez `getPeriodoMatriculaVigente()`, que consulta `GET /sapp/periodoAcademicoFecha/vigente`. Solo el resultado actualizado con `notificacionAperturaEnviada: true` oculta la tarjeta.
+- Si el backend todavía devuelve `false`, la tarjeta queda disponible; si la consulta falla, se muestra el error de actualización en lugar de ocultar el control sin confirmación.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/notificacionAperturaMatricula.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.61 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — visibilidad de notificación de apertura de matrícula
+
+## Estado, contrato y salida esperada
+
+- `GET /sapp/periodoAcademicoFecha/vigente` retorna ahora `notificacionAperturaEnviada` para el período cuyo `tipoTramite.nombre` es `MATRICULA`. El DTO `PeriodoAcademicoMatriculaVigenteDto` ya declara este booleano.
+- La tarjeta **Notificación de inicio de matrícula** solo se renderiza cuando ese campo no es `true`. Con la respuesta entregada por el usuario, la tarjeta no aparece.
+- Tras un `POST /sapp/matriculaAcademica/notificarAperturaMatricula` exitoso, el estado local cambia el booleano a `true`, por lo que desaparece el control y se evita un reenvío dentro de la sesión actual.
+
+## Paths, entorno y verificación
+
+- Implementación: `src/modules/matricula/services/matriculaAcademicaService.ts`, `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/notificacionAperturaMatricula.test.ts`. No cambian endpoint, payload, roles, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.46 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — progreso al crear matrícula académica
+
+## Estado, salida esperada y decisión
+
+- Durante `handleConfirmMatricula`, la pantalla usa `isSubmitting` y `submissionStage` para mostrar un overlay fijo con spinner. Las etapas son `VALIDATING`, `PREPARING_DOCUMENTS`, `CREATING`, `UPLOADING` y `FINALIZING`.
+- El overlay se muestra con `role="status"`, `aria-live="assertive"` y el texto “No cierre ni modifique la solicitud.” Su posición fija cubre la interacción de toda la pantalla; además, los controles de materias y de carga documental reciben el bloqueo por `isSubmitting`.
+- Salida esperada: al confirmar, no se pueden añadir/eliminar materias, cambiar archivos ni volver a confirmar; se ve la fase correspondiente hasta que el proceso termina con éxito o error.
+
+## Paths, entorno, pruebas y continuidad
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `MatriculaPage.css`; regresión: `tests/matriculaCargaProgreso.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/matriculaCargaProgreso.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.37 kB). Pendiente externo: probar con archivos reales lentos que el overlay persiste durante todas las cargas y desaparece ante error. El aviso de Vite por chunk mayor de 500 kB no bloquea el build.
+
+---
+
+---
+
+# Handoff 2026-09-27 — ajustes de períodos académicos
+
+## Estado, decisiones y salida esperada
+
+- Hallazgos extraídos de `D:\Users\david\Downloads\Documento sin título (8).docx`: retirar descripción del formulario de períodos; volver al listado tras crear/editar; ordenar la jerarquía del título del módulo de fechas.
+- `ConfigFechasAdmisionesPage` elimina `descripcion` del estado y del control visual. Tanto el create como el update conservan los campos requeridos por el backend enviando `descripcion: ''` en las fechas y, para actualización, también en el período.
+- Tras una operación exitosa navega a `/fechas`; no recarga el formulario. `FechasModulePage` usa `ModuleLayout title="Módulo"` y encabezado `Fechas académicas`.
+
+## Paths, pruebas, entorno y nota de revisión
+
+- Implementación: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`, `src/pages/FechasModule/FechasModulePage.tsx`; regresión: `tests/configFechasPeriodos.test.ts`. Sin cambios en contratos HTTP, permisos, schemas, seeds, datasets ni dependencias.
+- Entorno único: reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/configFechasPeriodos.test.ts` y `npm run build`.
+- Resultado reciente: prueba 2/2 PASS y build PASS (323 módulos, CSS 287.20 kB, JS 752.62 kB). La extracción del DOCX fue estructural; el render visual no pudo completarse porque el runtime no encuentra `soffice.exe`. No afecta el cambio de frontend. Vite mantiene el aviso no bloqueante por chunk mayor de 500 kB.
+
+---
+
+---
+
+# Handoff 2026-09-27 — contador de envíos de candidatura doctoral
+
+## Estado, contrato y salida esperada
+
+- El `POST /solicitudesAcademicas/recordatorio-candidatura` responde con el envelope `{ ok, message, data }`, donde `data` es un objeto que incluye `correosEnviados` (en la evidencia: 30), `estudiantesIdentificados` y `estudiantes`.
+- Antes `enviarRecordatoriosCandidatura` tipaba `data` como número e interpolaba el objeto en la tarjeta, provocando `[object Object]`. Ahora el contrato interno `ResultadoRecordatoriosCandidatura` lee exclusivamente `correosEnviados` y devuelve ese número al componente.
+- Salida esperada: para `{ data: { correosEnviados: 30 } }`, la pantalla muestra “Se enviaron 30 recordatorios de examen de candidatura doctoral.”
+
+## Paths, entorno, pruebas y continuidad
+
+- Implementación: `src/modules/trabajos-grado/evaluacion/api.ts`; regresión: `tests/recordatoriosCandidatura.test.ts`. No cambian endpoint, autorización, payload, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/recordatoriosCandidatura.test.ts` y `npm run build`.
+- Resultado reciente: regresión 3/3 PASS y build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.18 kB). El aviso de chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — cierre y publicación de matrícula financiera
+
+## Estado, regla y salida esperada
+
+- La regla se separó en dos acciones: cerrar la recepción siempre está permitido cuando el proceso está `ABIERTO`; publicar solo está permitido sin `pendientes` ni `respondidas`.
+- `puedePublicarProceso(resumen)` reemplaza al nombre engañoso `puedeCerrarProceso`. Evalúa ambos contadores y protege tanto el estado visual del botón como el submit, por lo que no se puede publicar desde el navegador con una acción manual mientras persistan filas no finales.
+- Salida esperada: con una liquidada y una pendiente, **Cerrar recepción** está activo; después del cierre, **Publicar y notificar** aparece deshabilitado y muestra el requisito de finalizar las filas. Una vez no haya pendientes/respondidas, se habilita sujeto a fecha, confirmación y al menos una liquidada.
+
+## Paths, entorno, pruebas y continuidad
+
+- Lógica: `src/modules/matricula-financiera/flow.ts`; vista: `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`; regresión: `tests/matriculaFinancieraFlow.test.ts`. No se modifican endpoints, contratos, schemas, permisos, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaFinancieraFlow.test.ts` y `npm run build`.
+- Resultado reciente: prueba dirigida 13/13 PASS y build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.16 kB). Pendiente externo: validar contra el backend que `cerrar` acepta estados pendientes/respondidos, pues el frontend ya no los bloquea. El aviso de Vite por chunk mayor de 500 kB no bloquea el build.
+
+---
+
+---
+
+# Handoff 2026-09-27 — documentos faltantes de matrícula en informes
+
+## Estado, contrato y salida esperada
+
+- La causa era una diferencia real de nombres en el contrato, no de estructura global: admisión retorna `data.faltantes.aspirantesConDocumentosFaltantes[].inscripcionId`, pero matrícula retorna `data.faltantes.estudiantesConDocumentosFaltantes[].matriculaId`.
+- `getFaltantesReporte` normaliza ambas colecciones a `personasConDocumentosFaltantes`, con `{ id, documento, nombreCompleto, documentosFaltantes }`. La página deja de asumir que todo registro es aspirante; conserva el texto contextual de aspirante o estudiante según el tipo de informe.
+- Con el payload de matrícula adjunto, la salida esperada es la tarjeta **Información pendiente para generar el informe**, contador de estudiantes y una tarjeta desplegable por estudiante con sus documentos faltantes.
+
+## Paths, pruebas, entorno y continuidad
+
+- Implementación: `src/modules/reportes/services/reporteError.ts`; presentación: `src/pages/Reportes/ReportesPage.tsx`; regresión: `tests/reportesFaltantes.test.mjs`. No cambian rutas, servicios HTTP, schemas, permisos, datasets ni seeds.
+- Entorno único: reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un árbol npm adicional. Versiones declaradas: React/React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.1. Comandos: `node --test --test-isolation=none tests/reportesFaltantes.test.mjs` y `npm run build`.
+- Resultado reciente: prueba dirigida PASS (1/1); build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.15 kB). Pendiente externo: verificar con sesión institucional los casos de matrícula y créditos condonables. El aviso de chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
+# Handoff 2026-09-27 — tooltip de Acta asociada en informes
+
+## Estado, decisión y salida esperada
+
+- Se corrigió el tooltip activado al pasar el cursor o enfocar el botón `?` de **Acta asociada** en **Informes a dependencias**. Antes combinaba las variables inversas y podía acabar con texto blanco sobre una superficie clara; ahora utiliza `background: var(--surface-container-low, var(--surface))` y `color: var(--text-primary)`, preservando contraste en los dos temas.
+- El botón de ayuda conserva 1.4rem circular, pero se define como flex centrado, con `line-height: 1` y tamaño fijo para centrar visualmente `?` frente al rótulo.
+- Salida esperada: el texto “Seleccione el acta del Comité Asesor…” se lee sin seleccionar texto al abrir el tooltip; el símbolo `?` queda centrado dentro de su círculo.
+
+## Paths, contratos, entorno y siguiente paso
+
+- Cambio exclusivo: `src/pages/Reportes/ReportesPage.css`. El marcado, el tooltip accesible (`role="tooltip"`), el endpoint, los DTO, schemas, datos y permisos permanecen intactos. No hay seeds ni credenciales locales para abrir esta ruta protegida.
+- Entorno a reutilizar: `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Verificación local: `npm run build` PASS (TypeScript y producción; 323 módulos, CSS 287.20 kB, JS 753.08 kB). Pendiente externo: comprobar visualmente la ayuda con los dos temas y navegación por teclado. El aviso conocido de Vite sobre chunk JavaScript mayor de 500 kB no bloquea el build.
+
+---
+
+- Actualización de entrevistas: `EvaluacionEtapaPage.tsx` prioriza los grupos con `items.every(belongsToCurrentUser)` mediante ordenación estable. Solo esos grupos reciben `onSaveBulk`; se retiró el botón global al final. El botón **Actualizar** de `EvaluacionEtapaSection` queda debajo del bloque propio y respeta el estado final, errores y guardado en curso. Se conserva la identificación existente por nombre normalizado y el payload existente. ESLint focalizado y build PASS (323 módulos). Pendiente validación visual con coordinación.
+
+- `src/modules/admisiones/components/EvaluacionEtapaSection/`: el CSS usa el contenedor `evaluacion` y tarjetas hasta 980 px de ancho disponible, con observaciones completas. El input numérico compartido retira el foco mediante `onWheel` para evitar incrementos accidentales conservando validación y desplazamiento de página.
+- `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.css`: paneles con `min-width: 0` y barra de herramientas del PDF flexible.
+- ESLint focalizado y `npm run build` PASS (323 módulos; CSS 287.03 kB; JS 753.32 kB); aviso conocido de chunk grande. No se realizó prueba visual interactiva: validar con sesión institucional notas enfocadas y scroll, observaciones completas junto al PDF y móvil. Reutilizar el entorno Node/npm y `node_modules` ya documentados; sin paquetes, variables ni contratos nuevos.
+
+---
+
+# Handoff 2026-09-27 — visibilidad de Admisiones según asignación docente
+
+## Estado, decisión y salida esperada
+
+- `Sidebar` identifica los perfiles exclusivamente evaluadores mediante `isEvaluadorAdmision(roles) && !canManagePosgrados(roles)`. Para esos usuarios consulta `getConvocatoriasAdmision()` y pasa el resultado a `getPrimaryNavigationItems`; una colección vacía elimina **Admisiones** del menú y una colección con elementos lo habilita.
+- El módulo permanece oculto mientras la consulta está pendiente, evitando un destello de acceso. El resultado se guarda junto al `session.user.id`, por lo que otro usuario no hereda la disponibilidad anterior. Si la consulta falla, el menú queda visible: un error de conectividad no se interpreta como ausencia confirmada de asignaciones.
+- Los roles de coordinación, secretaría y administración conservan **Admisiones** independientemente de esta verificación. La pantalla docente sigue consultando el mismo contrato, por lo que menú y contenido comparten la fuente de verdad entregada por el backend.
+
+## Paths y continuidad
+
+- Decisión del menú: `src/app/navigationItems.ts`; consulta y estado por sesión: `src/components/Sidebar/Sidebar.tsx`; regresión: `tests/admisionesNavigation.test.ts`. No se añadieron paquetes, endpoints, variables, schemas, seeds ni datasets.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación acumulada: pruebas dirigidas de admisiones 12/12 PASS, suite Node 133/133 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+- Pendiente externo: validar con dos sesiones institucionales de docente —una con asignaciones y otra sin ellas— que `GET /sapp/convocatoriaAdmision` continúe filtrando por el usuario autenticado, tal como ya presupone **Mis entrevistas**.
+
+---
+
+# Handoff 2026-09-27 — evaluadores informativos en el detalle de convocatoria
+
+## Estado, contrato y salida esperada
+
+- `ConvocatoriaDetallePage` presenta **Ver evaluadores** solo cuando la sesión SAPP contiene `COORDINADOR_POSGRADOS`. Secretaría, administración, docentes, dirección y demás perfiles no reciben esta acción. Abrir el diálogo dispara la consulta; cerrarlo no muta información.
+- `getEvaluadoresConvocatoria(convocatoriaId)` ejecuta `GET /sapp/evaluadorConvocatoria/convocatoria/{id}` y espera `{ ok, message, data: EvaluadorConvocatoriaDto[] }`, donde cada fila contiene `convocatoriaId`, `evaluador`, `evaluadorId`, `id` y `programa`. Una respuesta sin `data` se normaliza a `[]`; `ok: false` utiliza el mensaje del servidor.
+- Salida visual esperada: lista con nombre depurado mediante `trim()` y programa; los IDs no se presentan. El diálogo incluye carga, error con reintento, resultado vacío, cierre por botón, fondo o Escape y restauración de foco.
+
+## Paths, entorno y continuidad
+
+- Servicio/contrato: `src/modules/admisiones/api/convocatoriaAdmisionService.ts` y `convocatoriaAdmisionTypes.ts`; integración: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`; diálogo: `src/modules/admisiones/components/EvaluadoresConvocatoriaDialog/`; regresión: `tests/evaluadoresConvocatoriaDetalle.test.ts`.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. No hay seeds, backend ni credenciales locales para ejecutar la ruta protegida.
+- Verificación acumulada: pruebas dirigidas de admisiones 12/12 PASS, suite Node 133/133 PASS, ESLint focalizado PASS y build PASS (323 módulos; CSS 286.92 kB; JS 753.29 kB). Pendiente externo: validar con sesión institucional de coordinación un caso con evaluadores, otro vacío y la respuesta de autorización del endpoint.
+
+---
+
+# Handoff 2026-09-27 — reversión del tipo visible en matrícula financiera
+
+## Estado, decisión y salida esperada
+
+- Se revirtió el commit `436a87c` sin descartar los cambios posteriores. La convención vigente vuelve a ser literal: `VIGENTE` se presenta como **Vigente** y `NUEVO` como **Nuevo** en el selector de alta manual, el tablero y el detalle unitario.
+- Se eliminó `etiquetaTipoEstudiante` de `src/modules/matricula-financiera/rules.ts`; las vistas usan `row.tipoEstudiante` y `fila.tipoEstudiante`. El texto de ayuda restaurado indica que `VIGENTE` corresponde al ingreso a primer semestre y `NUEVO` a segundo semestre o uno posterior.
+- Salida esperada: una fila recibida como `{ tipoEstudiante: "VIGENTE" }` muestra `VIGENTE`; una recibida como `{ tipoEstudiante: "NUEVO" }` muestra `NUEVO`. El formulario envía el mismo valor que exhibe su opción, sin traducción cruzada.
+
+## Paths, continuidad y entorno
+
+- Archivos principales: `src/modules/matricula-financiera/rules.ts`, `src/pages/MatriculaFinanciera/AgregarEstudiante.tsx`, `ProcesoLiquidacionPage.tsx` y `LiquidacionDetallePage.tsx`. Regresión: `tests/matriculaFinancieraFlow.test.ts` y `tests/matriculaFinancieraRules.test.ts`.
+- Al resolver la reversión se conservaron los cambios posteriores: bloqueo del cierre con filas pendientes/respondidas, texto completo del motivo de exclusión, fecha límite de pago, consulta de períodos disponibles y búsqueda manual de estudiantes.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`. No hay seeds, backend ni credenciales locales para validar la ruta protegida.
+- Verificación local: regresiones financieras 35/35 PASS, suite Node 128/128 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 283.17 kB; JS 749.52 kB). Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+
+---
+
+# Handoff 2026-09-27 — visualización del motivo de rechazo
+
+## Estado, contrato y salida esperada
+
+- `SolicitudDetallePage` es compartida por solicitudes generales, créditos condonables y proyectos de grado. Cuando el estado normalizado es `RECHAZADA`, muestra **Motivo de rechazo** con `solicitud.motivoRechazo`; para los demás estados mantiene **Observaciones** con `solicitud.observaciones`.
+- El contrato es asimétrico por decisión del backend: la transición continúa enviando `observaciones={motivo}` en `PUT /sapp/solicitudesAcademicas/cambioEstado/{id}`, mientras `GET /sapp/solicitudesAcademicas/{id}` devuelve el texto persistido en `motivoRechazo`. `SolicitudAcademicaDto` declara el nuevo campo como anulable/opcional para tolerar respuestas históricas.
+- Salida esperada para `{ estadoSigla: "RECHAZADA", motivoRechazo: "pruebas de rechazo", observaciones: null }`: el detalle presenta **Motivo de rechazo — pruebas de rechazo**. Si el backend no entrega el campo, muestra **Sin motivo de rechazo registrado.** y nunca presenta las observaciones originales como si fueran la causa del rechazo.
+
+## Paths, entorno y continuidad
+
+- Implementación: `src/modules/solicitudes/api/types.ts` y `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; fixture: `src/modules/solicitudes/mock/solicitudesCoordinador.mock.ts`; regresión: `tests/solicitudRechazoMotivo.test.ts`. No cambian endpoints, query params, permisos, paquetes, variables, schemas, seeds ni datasets.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`.
+- Verificación local: regresiones dirigidas 13/13 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 283.17 kB; JS 749.50 kB). Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: comprobar con una sesión institucional un registro rechazado de cada familia de solicitud y confirmar que los endpoints de listado usados por estudiantes también incluyen `motivoRechazo` cuando el detalle se resuelve desde esa colección.
+
+---
+
+# Handoff 2026-09-27 — períodos disponibles para procesos financieros
+
+## Estado, contrato y salida esperada
+
+- `listarPeriodosDisponibles(signal)` usa el cliente del módulo financiero con la ruta `/procesos/periodosDisponibles`; con la base predeterminada produce `GET /api/sapp/liquidacionMatricula/procesos/periodosDisponibles` y espera el envelope habitual `{ ok, message, data: PeriodoFinanciera[] }`.
+- `ParametrosProcesoForm` recibe esa colección ya filtrada. Eliminó la prop `procesos`, el conjunto local `occupied`, las opciones deshabilitadas y el sufijo **(ya tiene proceso)**. El payload de `crearProceso` conserva `periodoId`, SMMLV, fuente, porcentajes, base de salud y fecha límite.
+- El selector **Periodo** del tablero no puede usar el nuevo catálogo porque este excluye los períodos que ya tienen proceso. Sus opciones se deduplican desde `listarProcesos()` mediante `periodoId` y `periodo`; filtrar procesos históricos y vigentes continúa funcionando aunque no sean elegibles para otra creación.
+
+## Paths, pruebas, entorno y continuidad
+
+- Transporte: `src/modules/matricula-financiera/api.ts`; orquestación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`; formulario: `ParametrosProcesoForm.tsx`; fixture: `tests/fixtures/matricula-financiera/preview.jsx`; regresión: `tests/periodosDisponiblesMatriculaFinanciera.test.ts`.
+- Verificación local: regresiones dirigidas 21/21 PASS, ESLint focalizado PASS, build PASS (320 módulos; CSS 283.17 kB; JS 749.56 kB) y `git diff --check` PASS. Vite conserva el aviso no bloqueante por el chunk mayor de 500 kB.
+- Entorno único: `node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y `npm run preview`.
+- Pendiente externo: validar con sesión institucional que el endpoint devuelva períodos previos o futuros solo cuando el backend los considere elegibles y que un período recién utilizado desaparezca del catálogo después de crear el proceso. No hay backend, credenciales ni seed local reproducible.
+
+---
+
+# Handoff 2026-09-27 — búsqueda manual de estudiantes por nombre
+
+## Estado, decisión y contrato
+
+- Se corrigió **Matrícula financiera > Seguimiento y cierre > Agregar estudiante
+  manualmente**. `buscarEstudiantes` consulta primero el catálogo existente
+  `GET /sapp/estudiantes?query={texto}`; si el texto no es exclusivamente numérico
+  y ese catálogo no responde coincidencias, consulta
+  `GET /sapp/estudiantes/consulta?egresados=false`.
+- La respuesta de respaldo esperada contiene elementos con
+  `{ estudiante: { id, codigoEstudianteUis }, nombreCompleto }`. El cliente
+  normaliza nombre y términos (minúsculas y sin diacríticos), exige que todos los
+  términos aparezcan y proyecta exclusivamente
+  `{ id, codigoNombre: "código · nombre" }` para el selector. La mutación posterior
+  sigue enviando `{ estudianteId, tipoEstudiante }`; no cambiaron roles, schemas,
+  endpoints de escritura, dependencias, variables, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Implementación HTTP: `src/modules/matricula-financiera/api.ts`; normalización y
+  proyección comprobable: `studentSearch.ts` en el mismo directorio; regresión:
+  `tests/matriculaFinancieraTransport.test.ts`. Salida esperada para
+  `jonnathan ramos`: una persona llamada `Jónnathan Alfredo Ramos Chaux` aparece
+  aunque el catálogo por código haya retornado vacío.
+- Reto abierto externo: comprobar con sesión institucional que la proyección de
+  consulta general está autorizada para coordinación sin `programaId` y que incluye
+  todos los estudiantes no egresados requeridos por el proceso. No hay backend,
+  credenciales ni seed local reproducible para esa validación.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`;
+  Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0,
+  TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda,
+  Poetry ni un segundo árbol npm. Comandos: `npm run dev`,
+  `node --test --test-isolation=none tests/*.test.ts`, `npm run build` y
+  `npm run preview`.
+- Verificación local: regresión dirigida 5/5 PASS, suite Node 119/119 PASS,
+  ESLint focalizado PASS, build PASS (320 módulos; CSS 277.74 kB; JS 746.49 kB)
+  y `git diff --check` PASS. El warning npm heredado `Unknown env config
+  "http-proxy"` y el aviso de Vite por el chunk JavaScript mayor de 500 kB no
+  bloquean la ejecución.
+
+---
+
+# Update 2026-09-27 — diálogo para finalizar evaluación de admisión
+
+- `InscripcionAdmisionDetallePage.tsx` sustituyó el `window.confirm` de `handleFinalizarInscripcion` por estado `isFinalizeDialogOpen` y un diálogo accesible. La acción primaria sigue llamando el flujo existente; el diálogo se cierra antes de iniciar y la pantalla muestra los errores o el éxito en el bloque de finalización.
+- El diálogo informa que calculará los puntajes y cerrará la evaluación para edición. Puede cancelarse con el botón secundario, Escape o el fondo; devuelve el foco al botón **Finalizar inscripción**. Durante la operación se mantiene el bloqueo existente mediante `finalizing`.
+- `InscripcionAdmisionDetallePage.css` agrega fondo, tarjeta, jerarquía, acciones pill y diseño móvil con variables `--surface`, `--primary`, `--on-primary`, `--outline` y tokens de texto; compatible con temas claro/oscuro.
+- Validación: ESLint focalizado PASS; `npm run build` PASS, 317 módulos (`index-DeRxdMR6.css` 281.57 kB, `index-BoDCFwqD.js` 747.13 kB). Sin dependencias, variables, schemas, seeds ni datasets nuevos. Persiste el warning conocido del chunk mayor de 500 kB.
+
+# Update 2026-09-27 — diálogo para cerrar convocatorias
+
+- Nuevo componente compartido `src/modules/admisiones/components/CloseConvocatoriaDialog/` con diálogo institucional accesible y estilos propios basados en tokens semánticos. Presenta período, programa, consecuencia del cierre y estado ocupado.
+- `ConvocatoriasAdmisionConfigPage.tsx` y `FechasModulePage.tsx` reemplazaron sus confirmaciones nativas. Ambas conservan `cerrarConvocatoriaAdmision`, refrescan los catálogos y mantienen los mensajes existentes de éxito/error.
+- El diálogo se cancela mediante botón, fondo o Escape cuando no está procesando; enfoca la acción primaria y restaura el foco al control de origen al cerrarse. En móvil apila las acciones.
+- Validación: no quedan usos de `window.confirm` para cerrar convocatorias; ESLint focalizado PASS y build PASS, 320 módulos (`index-Bv_VbPYd.css` 283.68 kB, `index-BMNnk2O2.js` 749.32 kB). Sin cambios de endpoints, payloads, contratos, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+---
+
+# Update 2026-09-27 — fotos en admisiones de docente y director
+
+- `AdmisionesProfesorPage.tsx` cambió el encabezado interno de **Admisiones — Mis entrevistas** a **Mis entrevistas**. `ModuleLayout` conserva el título global **Admisiones**.
+- La pantalla ya no consume el servicio duplicado de `modules/admisionesProfesor` ni `getMockStudentPhotoUrl`; reutiliza `getConvocatoriasAdmision`, `getInscripcionesByConvocatoria` y `InscripcionAdmisionDto`, igual que coordinación. El dato esperado continúa siendo `foto: { contenidoBase64, mimeType, ... }` dentro de cada inscripción.
+- `src/modules/admisiones/utils/aspiranteFoto.ts` convierte la foto a URL de datos, conserva valores que ya vengan con prefijo `data:` y retorna `null` sin contenido. `ConvocatoriaDetallePage.tsx` también usa este helper para evitar divergencias.
+- La tarjeta del docente/director muestra la foto real o el texto **Sin foto** cuando falta contenido o falla la carga. Estilos con variables semánticas en `AdmisionesProfesorPage.css`.
+- Validación: `tests/aspiranteFoto.test.ts` PASS (2/2), ESLint focalizado PASS, build PASS con 317 módulos (`index-CP78F7Vz.css` 279.48 kB, `index-B4MyKCRD.js` 745.49 kB) y `git diff --check` sin errores salvo el aviso informativo LF/CRLF. Sin dependencias ni entornos nuevos.
+
+---
+
+# Update 2026-09-27 — validación documental de aspirantes
+
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`: `disableValidation` incluye `validacionEstado === 'APROBADO'`, por lo que ambos botones de decisión quedan deshabilitados al aprobar; se eliminaron `getDocumentIcon` y el nodo visual de icono.
+- `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.css`: se retiró el estilo del icono; **Obligatorio** usa superficie neutra, borde de `--outline` y texto principal, claramente distinto del verde de **Aprobado**. Compatible con temas claro/oscuro y móvil mediante tokens existentes.
+- Contratos y entorno sin cambios. Verificación: ESLint focalizado PASS; `npm run build` PASS, 318 módulos (`index-DBe9D806.css` 279.22 kB, `index-DVhQOQ77.js` 746.12 kB). Continúan los avisos conocidos de configuración npm y chunk mayor de 500 kB.
+
+---
+
+# Handoff 2026-09-27 — tags azules diferenciados para Comité y Consejo
+
+## Estado actual, decisión y salida esperada
+
+- `StatusBadge` asigna `ENVIADA` a `status-badge--enviada-comite` y `ENVIADA_CONSEJO` a `status-badge--enviada-consejo`. Se reemplazó la superficie primaria sólida por fondos azules claros mezclados con `--surface`, bordes del mismo matiz y texto contrastante; Comité usa azul y Consejo azul cian.
+- La apariencia vuelve a ser la de un tag informativo y no la de un botón. Las variantes oscuras aclaran el texto bajo `body.dark`; el fondo y el borde se adaptan automáticamente a la superficie temática.
+- Como listados, tarjetas móviles y detalle reutilizan el componente, la salida cubre todos los tipos de solicitudes académicas, proyectos de grado y créditos condonables. Los dos órganos deben poder distinguirse sin perder su asociación cromática. No cambiaron etiquetas, normalización, API, DTO, permisos, paquetes, schemas, variables, seeds ni datasets.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `StatusBadge.css`. Regresión estructural: `tests/estadoSolicitud.test.ts`. No hay artefactos binarios ni datasets nuevos.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend no usa venv, Conda ni Poetry; reutilizar el árbol instalado y no crear otro entorno npm.
+- Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`.
+- Resultados recientes: regresión dirigida 7/7 PASS; suite Node 113/113 PASS; ESLint focalizado PASS; build PASS (317 módulos, CSS 275.30 kB, JS 743.36 kB); `git diff --check` PASS. Vite mantiene el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar visualmente ambos estados con una sesión y backend institucionales, en listado/detalle, móvil/escritorio y temas claro/oscuro. Las rutas protegidas no disponen de credenciales ni seed local reproducible.
+
+---
+
+# Handoff 2026-09-27 — motivo de rechazo para toda solicitud
+
+## Estado actual, contrato y salida esperada
+
+- `SolicitudDetallePage` es la vista compartida por solicitudes generales, créditos condonables y proyectos de grado. Su acción **Rechazar** abre un diálogo, exige un motivo no vacío, limita la captura a 1000 caracteres y solo entonces ejecuta la transición. No duplicar formularios en los módulos: las tres rutas ya reciben este comportamiento desde el detalle común.
+- Contrato utilizado: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=RECHAZADA&observaciones={motivo}`, sin body y con el envelope existente `{ ok, message, data }`. `observaciones` se serializa con `URLSearchParams`. Al completar, el cliente vuelve a consultar el detalle; el contrato de lectura expone el texto en `solicitud.motivoRechazo`, que se presenta bajo **Motivo de rechazo**.
+- Salida esperada: pulsar **Rechazar** no realiza una petición inmediatamente; una confirmación vacía muestra **Debes indicar el motivo del rechazo.**; una confirmación válida cierra el diálogo, envía el texto recortado y recarga la solicitud. Cancelar o pulsar el fondo solo cierra el diálogo.
+
+## Artefactos, pruebas, entorno y continuidad
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`; contrato HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`; regresión: `tests/solicitudRechazoMotivo.test.ts`; documentación: `README.md` y este archivo. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend usa Node/npm y no usa venv, Conda ni Poetry: no crear otro entorno o árbol npm.
+- Resultados locales: `node --test --test-isolation=none tests/solicitudRechazoMotivo.test.ts` PASS (2/2); ESLint focalizado PASS; `npm run build` PASS (317 módulos; CSS 274.94 kB; JS 743.36 kB); suite Node PASS (113/113); `git diff --check` PASS. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Reto externo: confirmar con backend que `motivoRechazo` vuelve en los endpoints de detalle/listado para cada tipo; revisar teclado, foco, móvil y temas claro/oscuro con sesiones institucionales. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y las rutas protegidas no tienen backend, credenciales o seed reproducible.
+
+---
+
+# Handoff 2026-09-27 — error de eliminación dentro del modal de actas
+
+## Estado actual, decisión y salida esperada
+
+- `ActasPage` mantiene `deleteError` separado del error general. Si `DELETE /sapp/actas/{id}` rechaza la operación —por ejemplo, porque solicitudes académicas todavía referencian el acta— conserva abierto el diálogo **Eliminar acta** y presenta exactamente el `Error.message` recibido debajo del nombre y código.
+- El mensaje usa `role="alert"` y `.actas-delete-modal__error`; su borde, superficie y texto derivan de `--danger`, y `overflow-wrap: anywhere` contiene respuestas extensas. Funciona con los temas claro y oscuro. Al pulsar **Eliminar** en una fila se limpia el error de un intento anterior; un éxito continúa cerrando el modal, retirando el acta y mostrando la confirmación global temporal.
+- No cambiaron el contrato, DTO, payload, rutas, autorización ni persistencia. Entrada: `DELETE /api/sapp/actas/{actaId}` sin body. Salida exitosa: se elimina la fila local; salida fallida: el modal queda abierto con el mensaje del backend y permite reintentar o cancelar.
+
+## Artefactos, entorno, pruebas y continuidad
+
+- Implementación: `src/pages/Actas/ActasPage.tsx` y `src/pages/Actas/ActasPage.css`. Regresión: `tests/actasDeleteModal.test.ts`. Documentación: `README.md` y este `HANDOFF.md`. No se agregaron paquetes, variables, schemas, seeds, datasets ni artefactos binarios.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Este frontend no usa venv, Conda ni Poetry: reutilizar el árbol existente y no crear otro entorno npm.
+- Comandos y resultados: `node --test --test-isolation=none tests/actasDeleteModal.test.ts` PASS (2/2); `npx eslint src/pages/Actas/ActasPage.tsx tests/actasDeleteModal.test.ts` PASS; `npm run build` PASS (317 módulos, CSS 274.77 kB, JS 741.67 kB); `node --test --test-isolation=none tests/*.test.ts` PASS (111/111); `git diff --check` PASS. Avisos no bloqueantes: npm informa la configuración heredada `http-proxy` y Vite advierte que el chunk JavaScript supera 500 kB.
+- Próximo paso externo: validar con backend y sesión institucionales un acta referenciada por una solicitud, el reintento/cancelación, teclado, móvil y ambos temas. No se obtuvo captura nueva: el contenedor no incluye Chromium, Chrome, Firefox ni credenciales/seed para la ruta protegida.
+
+---
+
+# Handoff 2026-09-27 — histórico unificado de solicitudes académicas
+
+## Estado, contrato y salida esperada
+
+- Se implementó `GET /solicitudesAcademicas/{id}/historial` para el detalle común de todas las solicitudes: normales, créditos condonables y proyectos de grado. El panel de evaluación de trabajos de grado dejó de consultar `GET /sapp/procesoEvaluacionTg/solicitud/{id}/historial` y usa también el contrato unificado.
+- Envelope esperado: `{ ok: boolean, message: string, data: SolicitudHistorialDto[] }`. Cada elemento contiene `estadoNuevoSigla: string`, `estadoNuevo: string`, `fecha: string`, `responsable: string | null` y `detalle: string | null`. No agregar campos de estado anterior, origen o minutos: no existen en el contrato informado.
+- La salida visual se titula **Histórico de cambios** y muestra estado, fecha, responsable y detalle. Incluye carga, resultado vacío y error. En coordinación de proyectos de grado se presenta dentro de `ProcesoEvaluacionPanel`; los demás detalles, incluidos los de estudiante y créditos, usan la sección común de `SolicitudDetallePage`.
+
+## Artefactos, entorno y continuidad
+
+- Servicio/DTO: `src/modules/solicitudes/api/solicitudesAcademicasService.ts` y `types.ts`. Adaptación de proyectos: `src/modules/trabajos-grado/evaluacion/api.ts`, `types.ts` y `ProcesoEvaluacionPanel.tsx`. Presentación común: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`. Regresión: `tests/historialSolicitudes.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. No existen seeds ni credenciales reproducibles para las rutas protegidas.
+- Resultados locales: regresión dirigida 2/2 PASS, suite Node 109/109 PASS, ESLint focalizado PASS y build PASS (317 módulos, CSS 274.49 kB y JS 741.54 kB). Avisos no bloqueantes: configuración heredada `http-proxy` de npm y chunk JavaScript mayor de 500 kB. Próximo paso externo: validar el contrato con backend y sesiones institucionales de estudiante/coordinación en solicitudes normales, créditos y trabajos de grado. No se obtuvo captura: el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere backend y sesión institucionales sin credenciales o seed local reproducible.
+
+---
+
+# Handoff 2026-09-27 — selector documental compartido para actas
+
+## Estado, decisión y salida esperada
+
+- La sección **Archivo del acta (PDF, máximo 15 MB)** de `ActasPage` usa `FileSelectButton`, igual que `DocumentUploadCard`, en lugar del `input[type=file]` nativo visible. Sin archivo presenta **Seleccionar archivo** y **Sin archivo seleccionado**; después de elegirlo presenta **Reemplazar archivo** y `{nombre} · {tamaño}`.
+- El componente común conserva un `input` accesible visualmente oculto, foco visible y estado deshabilitado. Sus colores provienen exclusivamente de tokens semánticos (`--surface`, `--outline`, `--primary`, `--text-primary`), por lo que funciona en temas claro y oscuro.
+- Se preservan `accept="application/pdf,.pdf"`, la validación PDF y máximo 15 MB en `handleFile`, y el payload `CrearActaRequest` con base64, MIME, tamaño y checksum. No hay cambios de API, DTO, permisos, schemas, seeds, datasets, variables o dependencias.
+
+## Artefactos, entorno y continuidad
+
+- Implementación compartida: `src/components/FileSelectButton/FileSelectButton.tsx` y `.css`; integración documental: `src/components/DocumentUploadCard/DocumentUploadCard.tsx`; integración de actas: `src/pages/Actas/ActasPage.tsx` y `.css`; regresión: `tests/fileUploadStyleConsistency.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Resultados locales: regresión dirigida 2/2 PASS; suite Node 107/107 PASS; ESLint focalizado PASS; build PASS (317 módulos, CSS 273.55 kB, JS 740.34 kB); `git diff --check` PASS. Avisos no bloqueantes: npm reporta la configuración heredada `http-proxy` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso externo: revisar el formulario autenticado de actas y las tarjetas de solicitudes en claro/oscuro, teclado y móvil/escritorio. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere backend y sesión institucionales, sin credenciales o seed local reproducible.
+
+---
+
+# Handoff 2026-09-26 — bloqueo de sustentación en ajustes y modal de retiro
+
+## Estado actual y decisiones
+
+- `puedeAgendarSustentacion` ya no considera agendable `EN_AJUSTES` (ni su variante descriptiva normalizada **EN AJUSTES**). Coordinación no ve la tarjeta **Conceptos completos** ni puede abrir el formulario de sustentación mientras el estudiante debe corregir; la acción reaparece para `AJUSTES_RECIB`/`AJUSTES RECIBIDOS`. `CONCEPTOS_REC` conserva el comportamiento anterior.
+- El retiro de jurados en `ProcesoEvaluacionPanel` ya no usa `window.confirm`. Se incorporó un diálogo accesible con nombre del jurado, explicación de la consecuencia, botones **Cancelar** y **Sí, retirar jurado**, cierre por Escape/fondo, foco inicial en la confirmación, devolución del foco al botón **Retirar** y bloqueo durante la mutación. La causa del fondo verde gigante era que el backdrop estaba implementado como `<button>` y heredaba la regla global `.evaluacion-tg button`; ahora el contenedor fijo es una capa neutra y la tarjeta consume `--surface`, `--outline`, `--danger` y tokens de texto/sombra para tema claro y oscuro.
+
+## Contratos, artefactos y salida esperada
+
+- Implementación: `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts`, `ProcesoEvaluacionPanel.tsx` y `ProcesoEvaluacionPanel.css`. Regresiones: `tests/estadoProcesoEvaluacion.test.ts` y `tests/retiroJuradoModal.test.ts`.
+- El retiro conserva `DELETE /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados/{juradoId}` y vuelve a consultar proceso/historial tras completarse. Programar conserva `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion`; solo cambió la elegibilidad visual previa. El backend continúa siendo autoridad y también debe rechazar intentos en `EN_AJUSTES`.
+- Salida esperada: en `EN_AJUSTES` no aparece **Programar sustentación**; en `AJUSTES_RECIB` sí aparece. Al pulsar **Retirar**, la página recibe únicamente una atenuación gris/transparente y muestra la tarjeta institucional centrada, sin la forma verde sobredimensionada; la petición solo se ejecuta al confirmar. No hay nuevos DTO, payloads, rutas, paquetes, variables, schemas, seeds ni datasets.
+
+## Entorno, pruebas y continuidad
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No usa venv, Conda ni Poetry; no crear otro árbol npm.
+- Comandos: desarrollo `npm run dev`; pruebas `node --test --test-isolation=none tests/*.test.ts`; build `npm run build`; preview `npm run preview`. Resultados del ajuste visual: regresiones dirigidas 6/6 PASS, ESLint focalizado PASS y build PASS (320 módulos; CSS 283.17 kB; JS 749.41 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Reto abierto: validar con backend y sesión institucionales los estados reales, la respuesta del DELETE, teclado, foco, móvil y temas claro/oscuro. No hay credenciales, backend ni seed reproducible para esta ruta protegida. No se obtuvo captura por esas limitaciones y porque el contenedor no incluye un navegador compatible.
+
+---
+
+# Update 2026-09-27 — alineación del formulario de homologación
+
+## Estado, contrato y salida esperada
+
+- En `SolicitudEstudianteForm.tsx`, el grupo **Asignatura del listado / Asignatura nueva** está fuera de la cuadrícula y antes de **Materia origen**. Después aparece la cuadrícula de dos columnas con **Materia origen** y **Materia destino del programa** alineadas desde sus rótulos.
+- `SolicitudEstudianteForm.css` da `width: 100%`, `min-width: 0` y `box-sizing: border-box` a ambos selectores y a los campos manuales. Se eliminó el espaciador artificial `solicitud-estudiante-form__homologacion-alignment`; en móvil la cuadrícula sigue pasando a una columna.
+- No se modifican estado, validación, DTO, payloads, endpoints, permisos, schemas, seeds, datasets ni dependencias. La salida funcional continúa enviando una materia de catálogo o el código/nombre manual de origen junto con `asignaturaDestinoId`.
+
+## Artefactos, entorno y continuidad
+
+- Paths: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`, su CSS contiguo y `tests/homologacionSolicitudForm.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. El frontend usa Node/npm y no incluye backend, credenciales o seed reproducible para la ruta estudiantil protegida.
+- Resultados locales: regresión dirigida PASS (2/2), suite Node PASS (105/105), ESLint focalizado PASS, build PASS (315 módulos; CSS 273.00 kB; JS 740.01 kB) y `git diff --check` PASS. `npm run lint` global sigue bloqueado por nueve errores y una advertencia preexistentes en servicios, admisiones, documentos y tipos de solicitudes; Vite avisa además que el chunk JavaScript supera 500 kB.
+- Próximo paso institucional: revisar la tarjeta con una sesión estudiantil real, materias de nombres largos, ambos temas y anchos de escritorio/móvil; confirmar visualmente que los selectores conserven el mismo tamaño.
+
+---
+
+## Handoff 2026-09-26 — responsive del proceso de evaluación de proyectos
+
+### Estado y decisión
+
+- Se corrigió la composición apretada observada en **Proceso de evaluación**. El problema era que los cortes responsive dependían del viewport (`@media`), aunque el panel puede quedar estrecho dentro del contenido junto a la barra lateral en una ventana de escritorio.
+- `ProcesoEvaluacionPanel.css` y `ProcesoEvaluacionEstudiante.css` establecen ahora contenedores inline y usan `@container` para reorganizar encabezados, estados, alerta de conceptos completos, acciones, formularios, directorio, nota final, sustentación y evaluación de jurados según el espacio realmente disponible. La acción posterior a **Conceptos completos** conserva un margen de 1 rem y ya no queda pegada a la alerta.
+- El contenedor de detalle de toda solicitud de trabajo de grado tiene `min-width: 0` y `box-sizing: border-box`, de modo que ambos paneles compartidos pueden contraerse sin desbordar. No se modificaron componentes React, lógica, permisos, API, DTO, estados, schemas, variables, dependencias, datasets ni seeds.
+
+### Artefactos, pruebas y continuidad
+
+- Estilos de coordinación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.css`; estilos del estudiante: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante.css`; contenedor común: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; regresión: `tests/procesoEvaluacionResponsive.test.ts`.
+- Salida esperada: en áreas de hasta 700 px, la cabecera y las cuadrículas dejan de competir horizontalmente, **Conceptos completos** coloca su botón en una fila completa y las acciones quedan separadas; hasta 430 px se compacta el padding sin eliminar el aire visual. Aplica a todos los tipos con proceso de evaluación (`PROP_MAESTRIA`, `PROP_DOCTORAL`, `TRAB_MAESTRIA`, `TESIS_DOCTORAL` y `CAND_DOCTORAL`) porque comparten los paneles.
+- Pruebas dirigidas 13/13 PASS; suite Node 105/105 PASS; ESLint focalizado PASS; build PASS (315 módulos, CSS 273.04 kB, JS 740.07 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante del chunk mayor de 500 kB. No se pudo tomar captura en el contenedor porque no incluye Chromium, Chrome ni Firefox y la ruta requiere sesión/backend institucionales.
+- Entorno único: `/workspace/SAPP-frontend`, Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Próximo paso externo: validar con sesiones reales de coordinación y estudiante, temas claro/oscuro y anchos de contenido de 360–700 px; confirmar especialmente estado largo, alerta de conceptos completos, formularios y tablas con varios jurados.
+
+---
+
+# Handoff 2026-09-26 — selección exclusiva de PDF en solicitudes y trabajos de grado
+
+## Estado actual, decisión y salida esperada
+
+- Se restringieron a PDF todos los selectores manuales del flujo de creación de solicitudes académicas y trabajos de grado, el editor/reemplazo documental y la recarga del documento evaluado durante ajustes. Cada `input[type="file"]` afectado usa exactamente `accept="application/pdf,.pdf"`, por lo que el diálogo del sistema debe filtrar a PDF.
+- La selección también se valida en TypeScript con `isPdfFile`: acepta MIME `application/pdf` o extensión `.pdf` sin distinguir mayúsculas, y rechaza imágenes, documentos ofimáticos y otros tipos aun si se inyectan fuera del selector normal. En adjuntos múltiples se preservan los PDF válidos y se informa si la tanda contenía archivos incompatibles.
+- Excepciones conservadas: fotos (selectores `image/png,image/jpeg`) y archivos producidos automáticamente por créditos condonables. El máximo de cinco soportes adicionales, la conversión automática HTML→PDF y los contratos de carga existentes no cambiaron.
+
+## Artefactos, contratos y retos abiertos
+
+- Regla compartida: `src/shared/files/pdfFile.ts`. Creación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Reemplazo: `src/modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor.tsx`. Ajustes de evaluación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`. Regresión: `tests/pdfDocumentSelection.test.ts`.
+- Se conserva `POST /sapp/document` y su payload actual (`tipoDocumentoTramiteId`, nombre, IDs de carga/trámite, base64, MIME, tamaño y checksum); no hay endpoints, DTO, schemas, variables, paquetes, seeds ni datasets nuevos.
+- Salida esperada: el selector solo ofrece PDF; un archivo no PDF forzado por el navegador no queda seleccionado ni se carga y muestra **Solo se permiten archivos PDF.** Las fotos siguen aceptando imágenes y los PDF generados de créditos continúan sin intervención.
+- Pendiente externo: validar los diálogos nativos y los mensajes con una sesión institucional en solicitudes generales y rutas de maestría/doctorado. La ruta protegida depende de autenticación y backend institucionales, sin credenciales ni seed local reproducible.
+
+## Entorno y resultados recientes
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No usa venv, Conda ni Poetry; reutilizar este árbol y no crear otro entorno npm.
+- Comandos: `npm run dev`; suite `node --test --test-isolation=none tests/*.test.ts`; build `npm run build`; preview `npm run preview`.
+- Verificación: regresiones dirigidas 5/5 PASS; suite Node 100/100 PASS; ESLint focalizado sin errores y con una advertencia preexistente de dependencia de hook en `SolicitudDocumentosEditor`; build PASS (315 módulos, CSS 268.18 kB, JS 738.49 kB); `git diff --check` PASS. Vite conserva el aviso informativo por el chunk JavaScript mayor de 500 kB.
+
+---
+
+# Handoff 2026-09-26 — confirmación de Consejo únicamente desde Comité
+
+## Estado actual, decisión y salida esperada
+
+- En `SolicitudDetallePage`, **Aprobar** una solicitud de tipo OTRA muestra **¿Requiere aprobación del Consejo Académico?** solo si el estado anterior corresponde al Comité Asesor de Posgrados. Una solicitud que ya contiene `CONSEJO` en `estadoSigla`/`estado` omite ese diálogo y abre directamente la selección obligatoria de un acta del Consejo.
+- `estabaEnComite` exige que el estado no sea de Consejo y luego reconoce la sigla normalizada `ENVIADA` o la descripción de Comité. `estabaEnInstanciaResolutiva` continúa admitiendo ambas instancias, por lo que la corrección no oculta los controles de aprobación/rechazo en Consejo.
+- El contrato HTTP no cambia: una decisión tomada desde Comité puede enviar `enviarConsejo=true|false`; desde Consejo se omite ese parámetro y la aprobación conserva el `actaId` seleccionado. No cambiaron endpoints, DTO, roles, estilos, paquetes, variables, schemas, seeds ni datasets.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regresión: `tests/solicitudDetalleAutorizacion.test.ts`. Salida esperada: estado Comité + tipo OTRA abre la pregunta; estado Consejo + tipo OTRA abre directamente el selector de acta filtrado a `tipoConsejo === true`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. El frontend no dispone de seed, backend ni credenciales institucionales locales para reproducir la ruta protegida.
+- Verificación local: regresión dirigida PASS (3/3), suite Node PASS (96/96), ESLint focalizado PASS, build PASS (314 módulos; CSS 267.78 kB; JS 738.26 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa la configuración heredada `http-proxy` y Vite advierte que el chunk JavaScript supera 500 kB.
+- Pendiente externo: validar con una sesión de gestión y solicitudes OTRA reales en Comité y Consejo, incluyendo selección de acta, aprobación, temas claro/oscuro y móvil. No se obtuvo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida tampoco cuenta con backend, credenciales o seed reproducible.
+
+---
+
+# Handoff 2026-09-26 — contraste de estados enviados a órganos académicos
+
+## Estado actual y decisión
+
+- `StatusBadge` asigna tanto `ENVIADA` (**ENVIADA A COMITE ASESOR DE POSGRADOS**) como `ENVIADA_CONSEJO` (**ENVIADA A CONSEJO ACADEMICO**) al modificador compartido `status-badge--enviada-organo`.
+- Ese modificador usa `background` y `border-color: var(--primary)` con `color: var(--on-primary)`. Se eligió una superficie primaria sólida para que el trámite se perciba activo, mantener contraste y respetar automáticamente los temas `body.light` y `body.dark` sin colores fijos.
+- La presentación está centralizada y alcanza los listados de escritorio, tarjetas móviles y detalle común que reutilizan `StatusBadge`, incluyendo solicitudes académicas, créditos condonables y proyectos de grado. No cambiaron etiquetas, normalización, endpoints, DTO, roles, schemas ni persistencia.
+
+## Artefactos, contrato y salida esperada
+
+- Implementación: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `StatusBadge.css`; regresión: `tests/estadoSolicitud.test.ts`.
+- Salida esperada: ambos estados enviados a órgano académico se presentan como pills con fondo primario sólido y texto `--on-primary`; los demás estados conservan su semántica visual existente.
+- No existen artefactos binarios, paquetes, variables, seeds o datasets nuevos. La ruta protegida continúa dependiendo de sesión y backend institucionales.
+
+## Entorno, pruebas y continuidad
+
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: regresión dirigida 7/7 PASS; suite Node 95/95 PASS; ESLint focalizado PASS; build PASS (314 módulos, CSS 267.78 kB, JS 738.24 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante por el chunk JavaScript mayor de 500 kB y npm informa la configuración antigua `http-proxy`.
+- Pendiente externo: revisar con una sesión institucional el resultado en listados y detalles, temas claro/oscuro y móvil/escritorio. El contenedor no incluye Chromium, Chrome ni Firefox y no hay credenciales o seed local para capturar la ruta autenticada.
+
+---
+
+# Handoff 2026-09-26 — autorización del detalle de solicitudes estudiantiles
+
+## Estado actual, decisión y salida esperada
+
+- `SolicitudDetallePage` trata como sesión estudiantil restringida a quien tenga `ESTUDIANTE`/`ESTUDIANTE_POSGRADOS` y no tenga permisos de gestión. Resuelve el ID desde `session.user.estudiante.id` con fallback a `session.user.detalle.estudiante.id`, consulta exclusivamente `getSolicitudesAcademicasByEstudiante(estudianteId)` y busca allí el `solicitudId` de la URL.
+- Si el ID no pertenece a la colección del estudiante autenticado, no se llama al endpoint global de detalle, no se montan documentos ni paneles derivados y se muestra **No tienes permiso para consultar esta solicitud.** Al iniciar cada validación se ejecuta `setSolicitud(null)`; cambiar de cuenta dispara de nuevo el efecto por sus dependencias de estudiante y permisos.
+- La regla está en el detalle compartido y por tanto aplica a cualquier tipo de solicitud mostrado por `/solicitudes/:solicitudId` y `/trabajos-grado/:nivel/solicitudes/:solicitudId`. Los gestores conservan `GET /sapp/solicitudesAcademicas/{id}`. La ruta de créditos condonables ya exige gestión en el router.
+
+## Contratos, artefactos y próximos pasos
+
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regresión: `tests/solicitudDetalleAutorizacion.test.ts`. Contrato usado: `GET /sapp/solicitudesAcademicas/estudiante?estudianteId={id}`, envelope `{ ok, message, data: SolicitudAcademicaDto[] }`; salida autorizada: detalle normal, salida no autorizada: mensaje genérico sin datos de la solicitud ajena.
+- No se agregaron paquetes, schemas, variables, seeds, datasets ni artefactos persistentes. Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv, Conda, Poetry ni otro árbol npm.
+- Verificación: regresión dirigida 2/2 PASS, suite Node 94/94 PASS, ESLint focalizado PASS y build PASS (314 módulos; CSS 267.87 kB; JS 738.22 kB). Avisos no bloqueantes: npm informa `http-proxy` obsoleto y Vite advierte por el chunk JS mayor de 500 kB.
+- Reto de seguridad pendiente: esta defensa del cliente no reemplaza control de acceso backend. Confirmar que `GET /sapp/solicitudesAcademicas/{id}`, el listado por estudiante y los endpoints de documentos verifican el sujeto autenticado e ignoran/rechazan IDs de otro estudiante con 403/404. Luego validar con dos cuentas institucionales: copiar la URL de A, cerrar sesión, entrar como B y confirmar que no aparecen datos ni se disparan consultas auxiliares. No hay credenciales ni seed local para reproducirlo aquí.
+
+---
+
+# Handoff 2026-09-26 — múltiples documentos de soporte adicional
+
+## Estado, decisión y salida esperada
+
+- Implementado en el formulario común de registro de solicitudes: cualquier requisito cuyo código o nombre represente **Documento soporte adicional** habilita selección múltiple con un máximo efectivo de cinco archivos. La tarjeta muestra el límite y un contador, recorta cualquier tanda que exceda los cupos restantes y deshabilita la selección al llegar a cinco. El usuario puede retirar un archivo para liberar un cupo; los requisitos restantes siguen siendo monodocumento.
+- `SolicitudDocumentoDraft` conserva el primer `file` por compatibilidad y almacena el resto en `additionalFiles`. Al enviar, el formulario aplana todos los archivos y `SolicitudesEstudianteView` ejecuta una llamada existente a `POST /sapp/document` por archivo, siempre con el mismo `tipoDocumentoTramiteId` del requisito. Salida esperada: N archivos elegidos producen N cargas independientes, sin endpoints ni contratos nuevos.
+- La regla común está en `src/modules/solicitudes/utils/documentosSolicitud.ts`; UI en `src/components/DocumentUploadCard/`; integración en `src/modules/solicitudes/components/SolicitudEstudianteForm/`; regresión en `tests/documentosSolicitudMultiples.test.ts`. No existen nuevos datasets, seeds, variables, paquetes ni migraciones.
+
+## Verificación, retos y continuidad
+
+- Prueba dirigida 3/3 PASS; suite Node 92/92 PASS; ESLint focalizado PASS; build PASS (314 módulos, CSS 267.87 kB, JS 737.90 kB). El build conserva únicamente el aviso no bloqueante por el chunk JavaScript superior a 500 kB y npm avisa sobre `http-proxy`.
+- Entorno único comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`. Pendiente externo: validar con sesión/backend institucional que el servidor acepta varias filas del mismo tipo documental para una solicitud y revisar el selector/listado en claro, oscuro y móvil. No hay credenciales ni seed local para esa ruta protegida y el contenedor no incluye navegador para captura autenticada.
+
+---
+
+# Handoff 2026-09-26 — formulario estudiantil de homologación
+
+## Estado y decisiones
+
+- `SolicitudEstudianteForm` alinea los selectores de materia origen y destino mediante una fila visual equivalente (`solicitud-estudiante-form__homologacion-alignment`). Esta reserva existe solo en escritorio; hasta 640 px desaparece porque los campos se presentan en una sola columna.
+- Los dos puntos de entrada para añadir una homologación muestran **Agregar asignaturas** y comparten el estilo compacto `solicitud-estudiante-form__add-homologacion`, centrado y de ancho natural.
+- En modo **Asignatura nueva**, `codigoAsignaturaExterna` y `nombreAsignaturaExterna` deben contener texto. El código tiene `required`, estado accesible de error y el placeholder **Código de la materia \***. Si falta cualquiera, el formulario no construye la solicitud y explica que deben completarse código y nombre.
+- La rama manual de `SolicitudHomologacionAsignaturaRequestDto` exige `codigoAsignaturaExterna: string`; el payload lo envía recortado y sin omisión condicional. La rama de asignatura existente conserva `{ asignatura_origen_id, asignatura_destino_id }`.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`, su CSS y `src/modules/solicitudes/api/types.ts`. Regresión: `tests/homologacionSolicitudForm.test.ts`.
+- Salida esperada: dos selectores alineados en escritorio, campos apilados sin separador vacío en móvil, botón pequeño **Agregar asignaturas** y bloqueo del envío cuando una asignatura nueva no tenga código.
+- Prueba dirigida 2/2 PASS; suite Node 89/89 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 267.21 kB, JS 734.59 kB). Vite conserva únicamente el aviso no bloqueante del chunk JavaScript mayor de 500 kB.
+- No hay endpoints, variables, schemas de base de datos, seeds, datasets ni paquetes nuevos. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+
+---
+
+# Historial de handoffs anteriores
+
+## Handoff 2026-09-26 — cabecera del detalle de convocatoria
+
+## Estado y decisión visual
+
+- `ConvocatoriaDetallePage` reorganiza la cabecera en esta jerarquía: eyebrow **Convocatoria de admisión**, H1 **Aspirantes inscritos**, nombre oficial del programa y una línea secundaria `Código {codigo} · Período académico {periodo}`. Se eliminaron los emoji de calendario/birrete y el símbolo `+` de la acción.
+- El nombre y código se resuelven con `getProgramaAcademico({ id: resolvedProgramaId, nombre: programaConvocatoria })`; si el programa no está en el catálogo común, se elimina únicamente el prefijo numérico del nombre recibido y se extrae ese código como fallback. Los IDs y valores originales siguen controlando la navegación y creación.
+- `.convocatoria-detalle__actions` ya no reserva una columna de 25 rem: usa ancho natural y alinea **Crear aspirante** a la derecha. Hasta 760 px, cabecera y acción pasan a columna y el botón ocupa el ancho disponible. Código/período también se apilan sin separador hasta 560 px.
+
+## Artefactos y verificación
+
+- Implementación: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`; regresión estructural: `tests/aspirantesList.test.ts`.
+- Salida esperada: una cabecera tipográfica, sin iconos decorativos, donde el nombre extenso del programa dispone de una línea propia y la acción no domina el ancho de la tarjeta.
+- Prueba dirigida 7/7 PASS; suite Node 87/87 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 266.79 kB, JS 734.14 kB); `git diff --check` PASS. Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambian endpoints, DTO, payloads, permisos, dependencias, variables, schemas, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5.
+
+---
+
+## Handoff 2026-09-26 — contrato real del nombre al crear aspirante
+
+## Estado, causa y corrección
+
+- El backend real de `POST /sapp/aspirante` retorna `data.nombre1`, `nombre2`, `apellido1` y `apellido2`; no retorna `data.nombre`. El toast reciente ejecutaba `result.created.nombre.trim()`, por lo que la creación y los uploads podían completarse, pero el callback lanzaba **Cannot read properties of undefined (reading 'trim')** antes de cerrar el modal.
+- `AspiranteCreateResponseDto` eliminó `nombre` e incorporó los cuatro campos desagregados con nulabilidad en los nombres opcionales. `ConvocatoriaDetallePage` tipa `created` con ese DTO y usa `getNombreCompletoAspirante(result.created)` antes de construir el toast.
+- `src/modules/admisiones/utils/aspiranteNombre.ts` es una utilidad pura: recorta cada parte de forma segura con acceso opcional, omite nulos/vacíos y conserva el orden nombre1, nombre2, apellido1, apellido2. El transporte HTTP no contiene lógica de presentación.
+
+## Artefactos, contrato y verificación
+
+- Contrato: `src/modules/admisiones/api/aspiranteCreateTypes.ts`; consumo: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx`; utilidad: `src/modules/admisiones/utils/aspiranteNombre.ts`.
+- Regresión: `tests/aspiranteCreateResponse.test.ts` reproduce IDs y nombres de la respuesta institucional aportada y cubre nombres opcionales nulos. El toast esperado para ese caso es **Se creó al aspirante davidxzz david vasquezzz vasquez de manera correcta.**
+- Pruebas dirigidas 8/8 PASS; suite Node 86/86 PASS; ESLint focalizado PASS; build PASS (311 módulos, CSS 266.39 kB, JS 733.84 kB). Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambian request, endpoints, persistencia, permisos, schemas, dependencias, variables, seeds ni datasets. Entorno único: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+
+---
+
+## Handoff 2026-09-26 — alta y listado de aspirantes
+
+## Estado y decisiones
+
+- `/admisiones` usa ahora `ModuleLayout title="Módulo de Admisiones"`. Se retiraron el mapa visual `PROGRAM_META` y `.admisiones-program-card__code`; el `programaId` continúa intacto para agrupación, selección, creación y navegación.
+- `CreateAspiranteModal` retiró Observaciones del estado y del formulario, pero envía `observaciones: null` para mantener `AspiranteCreateRequestDto`. Mientras `isSubmitting` es verdadero, la capa `role="status"` es hermana del diálogo y se posiciona sobre todo el viewport del modal; así cubre también las zonas no visibles del formulario desplazable. Fondo, `Escape` y acciones quedan bloqueados hasta finalizar.
+- En éxito, `handleCreated` compone el nombre desde `result.created.nombre1`, `nombre2`, `apellido1` y `apellido2`, cierra explícitamente el modal, conserva la ruta actual del detalle, recarga inscripciones y crea un toast fijo por cinco segundos con **Se creó al aspirante {nombre} de manera correcta.** El toast puede cerrarse manualmente. Un upload parcial usa tono de advertencia y conserva el flujo existente de documentos fallidos.
+- `ConvocatoriaDetallePage` reemplazó el tablero horizontal por una cuadrícula paginada de ocho tarjetas. Se eliminaron `ResizeObserver`, `scrollBy`, captura de puntero, arrastre y `suppressBoardClickRef`: esta última podía permanecer activa si el navegador no emitía el clic posterior al arrastre y cancelar el siguiente clic real en una inscripción.
+- El buscador único filtra `nombreAspirante` y `numeroInscripcion`, normaliza mayúsculas/tildes, reinicia en página 1 y muestra rango/total. La paginación ajusta páginas fuera de rango y ofrece **Anterior/Siguiente**; `StudentCard` conserva `onClick` y teclado sin un capturador ancestro que impida navegar.
+
+## Artefactos, contratos y salida esperada
+
+- Portada: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx` y `.css`.
+- Alta: `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx` y `.css`. `POST /sapp/aspirante` mantiene sus campos y recibe `observaciones: null`; la secuencia de uploads y sus checksums no cambia.
+- Listado: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`, más `src/modules/admisiones/components/StudentCard/StudentCard.css`.
+- Lógica pura: `src/modules/admisiones/utils/aspirantesList.ts`; regresión: `tests/aspirantesList.test.ts`. La salida esperada es una cuadrícula sin scroll horizontal, ocho resultados por página, búsqueda combinada nombre/código y apertura inmediata al hacer clic o pulsar Enter/Espacio.
+- No hay paquetes, variables, schemas, seeds ni datasets nuevos. La ruta protegida continúa dependiendo de sesión y backend institucionales.
+
+## Verificación y continuidad
+
+- Pruebas dirigidas 6/6 PASS; suite Node 84/84 PASS; ESLint focalizado PASS; build PASS (310 módulos, CSS 266.39 kB, JS 733.74 kB); `git diff --check` PASS. Vite conserva el aviso informativo del chunk JS mayor de 500 kB.
+- Entorno: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente externo: validar con sesión institucional el spinner durante archivos grandes, el resultado parcial de uploads y la apertura de tarjetas filtradas/paginadas en móvil y escritorio. No hay seed/credenciales locales para reproducir el backend autenticado.
+
+---
+
+## Handoff 2026-09-25 — evaluadores automáticos de convocatoria
+
+## Estado, decisión y salida esperada
+
+- En `CreateConvocatoriaModal`, el bloque se llama **Evaluadores** y siempre presenta primero dos filas confirmadas: **Coordinador Posgrados** y **Director de Escuela**. Cada una tiene icono de verificación, subtítulo **Evaluador incluido automáticamente** e insignia **Incluido**; no ofrece **Quitar**.
+- El selector se rotula implícitamente como adicional mediante el placeholder **Seleccione un evaluador adicional...**. Los docentes elegidos desde `GET /sapp/docentes` aparecen después con su acción **Quitar**. Si no se elige ninguno, se informa que es posible agregar evaluadores adicionales, pero el formulario no bloquea la creación: los dos cargos automáticos satisfacen la lectura visual de evaluadores ya asignados.
+- Los cargos automáticos son representación de una regla existente, no registros sintéticos: no tienen UUID ni se incluyen en `POST /sapp/evaluadorConvocatoria`. Si los nombres históricos asociados a esos cargos llegan en el catálogo, se filtran para evitar duplicarlos; solo los evaluadores adicionales seleccionados se envían con `{ evaluadorUuid, convocatoriaId }`.
+
+## Artefactos, verificación y continuidad
+
+- Implementación: `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx` y `.css`. Regresión visual/estructural: `tests/convocatoriaEvaluadores.test.ts`.
+- Verificación: pruebas dirigidas 3/3 PASS, suite Node 78/78 PASS, ESLint focalizado PASS y build PASS (309 módulos, CSS 264.36 kB, JS 733.98 kB). `git diff --check` PASS; Vite conserva el aviso no bloqueante del chunk mayor de 500 kB.
+- No cambiaron endpoints, DTO, payload de creación, schemas, dependencias, variables, seeds ni datasets. Entorno único: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5; reutilizar `node_modules` y `package-lock.json`.
+- Pendiente externo: confirmar con una sesión institucional que el backend efectivamente asocia esos dos cargos conforme a su regla existente y revisar el resultado visual en temas claro/oscuro y móvil/escritorio.
+
+---
+
+## Handoff 2026-09-25 — mensaje de convocatoria duplicada
+
+## Estado, contrato y salida esperada
+
+- `CreateConvocatoriaModal` transforma únicamente el error de unicidad de programa+período en un mensaje de negocio. Para el formulario con año `2026` y semestre `1`, la salida visible exacta es **Ya existe una convocatoria para el programa seleccionado en el período académico 2026-1.**
+- La detección vive en `src/modules/admisiones/utils/convocatoriaCreateError.ts`: reconoce `uq_convocatoria` y, como compatibilidad, un mensaje que contenga simultáneamente `duplicate key`, `programa_id` y `periodo_id`. No depende del status HTTP porque el backend observado envolvió el conflicto como error inesperado; los errores no coincidentes conservan su mensaje original.
+- El modal pasa `periodoSeleccionado` al normalizador desde su `catch`. No cambiaron `POST /sapp/convocatoriaAdmision`, su payload `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones: "" }`, la creación del período ni la asociación de profesores.
+
+## Artefactos, pruebas y continuidad
+
+- Implementación: `src/modules/admisiones/utils/convocatoriaCreateError.ts` y `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`. Regresión: `tests/convocatoriaCreateError.test.ts`, con casos de duplicado y error no relacionado.
+- Verificación: prueba dirigida 2/2 PASS; suite Node 77/77 PASS; ESLint focalizado PASS; build PASS (309 módulos, CSS 263.58 kB, JS 733.59 kB). Vite conserva únicamente el aviso del chunk mayor de 500 kB.
+- Entorno único: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. No hay nuevos seeds, datasets, variables o dependencias.
+- Pendiente externo: reproducir el conflicto con la sesión y backend institucionales para confirmar la presentación visual del mensaje; la prueba automatizada usa el texto técnico real aportado en la captura.
+
+---
+
+## Handoff 2026-09-25 — creación directa de convocatorias de admisión
+
+## Estado actual y decisiones
+
+- Implementados los tres ajustes solicitados en admisiones. En `/admisiones`, una tarjeta sin convocatoria destacada ofrece **Crear convocatoria** únicamente si `canManagePosgrados` autoriza la sesión; abre el modal compartido en la misma vista y preselecciona el `programaId` de la tarjeta. Para perfiles sin gestión, el control permanece deshabilitado como **No disponible**.
+- `CreateConvocatoriaModal` acepta ahora `initialProgramaId?: number | null`. El valor se resuelve contra el catálogo real de `GET /sapp/programaAcademico`; si no existe o no se entrega, conserva el fallback al primer programa disponible.
+- Se retiró por completo el campo visual **Observaciones**. El contrato vigente de creación aún exige `observaciones: string`, por lo que `POST /sapp/convocatoriaAdmision` recibe una cadena vacía sin pedir un dato sin uso al usuario.
+- El selector de profesores agrega inmediatamente la opción escogida, la elimina del conjunto disponible y vuelve a su placeholder. Se retiraron el estado temporal `profesorUuid` y el botón **Agregar**; **Quitar** y la validación de al menos un profesor siguen funcionando. Las asociaciones posteriores a la creación y su reintento parcial no cambiaron.
+
+## Artefactos, contratos y salida esperada
+
+- Pantalla y estilos: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx` y `.css`.
+- Modal y estilos: `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx` y `.css`.
+- Contrato conservado: `POST /sapp/convocatoriaAdmision` con `{ programaId, periodoId, cupos, fechaInicio, fechaFin, observaciones: "" }`. La creación/resolución del período y `POST /sapp/evaluadorConvocatoria` con `{ evaluadorUuid, convocatoriaId }` continúan sin cambios.
+- Salida esperada: en una tarjeta con insignia **NO DISPONIBLE**, un gestor pulsa **Crear convocatoria**, ve el programa correcto ya seleccionado, no ve Observaciones y cada cambio válido del selector de profesores crea de inmediato su chip con acción **Quitar**. Al guardar, la vista recarga las convocatorias y presenta el mensaje de éxito.
+- No hay artefactos binarios, datasets ni seeds nuevos. `dist/` es salida ignorada; la ruta protegida usa datos y sesión del backend institucional.
+
+## Verificación, retos y siguientes pasos
+
+- ESLint focalizado sobre los dos TSX modificados: PASS. Suite Node: 75/75 PASS. Build de producción: PASS, 308 módulos, CSS 263.58 kB y JS 733.25 kB. `git diff --check`: PASS.
+- `npm run lint` global sigue bloqueado por nueve errores y una advertencia preexistentes en `src/api/*`, `RequireEvaluacionEnabled.tsx`, `mockStudentPhoto.ts`, `validacionDocumentosService.ts`, `SolicitudDocumentosEditor.tsx` y `modules/solicitudes/types.ts`; no fueron introducidos ni modificados en este trabajo. Avisos no bloqueantes: npm reporta configuraciones antiguas `msvs_version`/`python` y Vite el chunk JS mayor de 500 kB.
+- Entorno exacto comprobado: Windows/PowerShell, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Comandos: `npm run dev`; `node --test --test-isolation=none tests/*.test.ts`; `npm run build`; `npm run preview`. Próximo paso externo: validar con sesión real de coordinación los dos programas, temas claro/oscuro y anchos móvil/escritorio, porque no existen credenciales o seed local que reproduzcan la ruta autenticada.
+
+---
+
+## Handoff 2026-09-25 — detalle de matrícula académica de coordinación
+
+## Estado actual y decisión
+
+- Corregido el retorno involuntario al listado al pulsar **Ver detalle** en `/matricula/academica`. La causa era el uso residual de `/matricula/{id}` después de separar el módulo en matrícula académica y financiera; la ruta heredada enviaba siempre a `/matricula/academica` y perdía el ID.
+- Tabla y tarjetas móviles usan ahora `getMatriculaAcademicaDetallePath(item.id)` y producen `/matricula/academica/:matriculaId`. La ruta heredada `/matricula/:matriculaId` usa `LegacyMatriculaDetailRedirect`, conserva el parámetro y lo lleva al mismo detalle canónico para no romper marcadores o enlaces antiguos.
+- El detalle existente no cambió: lee `matriculaId`, consulta `GET /sapp/matriculaAcademica`, selecciona `item.id === matriculaId` y consulta el checklist documental con el ID de la matrícula. No se modificaron contratos, API, DTO, estados, roles, schemas, dependencias, variables, seeds ni datasets.
+
+## Artefactos, contrato y salida esperada
+
+- Navegación del listado: `src/pages/Matricula/MatriculaPage.tsx`.
+- Rutas y compatibilidad: `src/app/routes/matriculaRoutes.tsx` y `src/app/routes/LegacyMatriculaDetailRedirect.tsx`.
+- Constructor canónico: `src/modules/matricula/utils/matriculaPresentation.ts`.
+- Regresión: `tests/matriculaPresentation.test.ts` comprueba que IDs numéricos y textuales generan `/matricula/academica/41`.
+- Salida esperada: al seleccionar la matrícula `41`, la URL termina en `/matricula/academica/41` y permanece en `MatriculaDetalleCoordinacionPage` mientras carga matrícula, asignaturas y documentos. Una URL antigua `/matricula/41` se reemplaza por esa misma URL canónica sin volver al listado.
+
+## Verificación, retos y siguientes pasos
+
+- ESLint focalizado PASS; regresión dirigida 5/5 PASS; suite Node 75/75 PASS; build PASS (308 módulos, CSS 263.63 kB, JS 733.41 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa configuraciones antiguas `msvs_version`/`python` y Vite reporta el chunk JavaScript mayor de 500 kB.
+- Entorno comprobado: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- No hay seed reproducible para la ruta protegida. El siguiente paso externo es validar con una sesión real de `COORDINACION` que un registro del listado abre su detalle, que una URL histórica también lo hace y que documentos/asignaturas corresponden al ID seleccionado. La imagen aportada documenta el listado, pero la validación autenticada depende del backend institucional.
+
+---
+
+## Update 2026-09-25 — calificación definitiva y uniformidad del detalle de proyectos
+
+### Estado, contrato y salida esperada
+
+- Implementado en `src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts`: `presentarNotaFinalCandidatura(notaFinal, tipoSolicitudCodigo)` retorna una nota localizada con dos decimales exclusivamente para `CAND_DOCTORAL`; retorna `null` para nota ausente/no finita o cualquier otro tipo.
+- `ProcesoEvaluacionPanel.tsx` muestra una tarjeta **Calificación definitiva** si el contrato real contiene, por ejemplo, `tipoSolicitudCodigo: "CAND_DOCTORAL"` y `notaFinal: 4.00`; la salida visible esperada es `4,00`. `ProcesoEvaluacionEstudiante.tsx` aplica la misma regla en su resumen. El endpoint continúa siendo `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` y no cambiaron DTO, payloads ni estados.
+- `SolicitudDetallePage.tsx` agrega el modificador visual `solicitud-detalle-page--trabajo-grado` solo a tipos con proceso de evaluación. Su CSS y `ProcesoEvaluacionPanel.css` unifican encabezado, superficies, bordes, radios, botones pill, foco y responsive a 760/440 px sin alterar callbacks, permisos, navegación o acciones.
+- Artefactos: los cinco archivos anteriores, `src/pages/SolicitudDetalle/SolicitudDetallePage.css` y la regresión `tests/candidaturaDoctoral.test.ts`. No hay datasets ni seeds nuevos; la ruta protegida depende de sesión y backend institucionales.
+
+### Pruebas, entorno y próximos pasos
+
+- ESLint focalizado PASS; regresiones dirigidas PASS (16/16); suite Node PASS (74/74); build PASS (309 módulos, CSS 263.63 kB, JS 734.86 kB); `git diff --check` PASS. El lint global conserva 9 errores preexistentes ajenos a este cambio. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite reporta el chunk JavaScript mayor de 500 kB.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Próximo paso: validar `/trabajos-grado/doctorado/solicitudes/:id` con el response institucional de candidatura ya sustentada, ambos roles, temas claro/oscuro, teclado y viewports móvil/escritorio. No se tomó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y no dispone de credenciales/backend reproducibles.
+
+---
+
+## Estado, decisiones, contrato y salida esperada
+- `SolicitudDetallePage` ofrece a coordinación **Ver historial de homologaciones** solamente para una solicitud `HOMOLOG` que aún no esté `APROBADA` ni `RECHAZADA`. El panel se carga bajo demanda, se puede ocultar y comunica estados de carga, vacío y error; su tabla muestra origen, destino, fecha, vigencia y acta. Es información de apoyo y no altera la decisión ni selecciona automáticamente una equivalencia.
+- Contrato nuevo de lectura: `GET /homologaciones/historial`, envelope `{ ok, message, data }`. Cada elemento contiene `id`, IDs/códigos/nombres de asignaturas de origen y destino, `fechaHomologacion`, `activa`, y `actaId`/`actaCodigo`/`actaNombre` anulables. Se preservan literalmente los `null` del API y se representan con **Sin código** o **Sin acta asociada**.
+- En todos los tipos de solicitud, la vista estudiante del detalle ya no muestra ni ejecuta edición. Se retiraron el botón **Editar solicitud**, el formulario local, la mutación mock y el editor documental de esa sección; documentos y datos continúan visibles. No cambiaron permisos de coordinación, resolución, firmas, creación, endpoints existentes ni schemas de backend.
+
+## Paths, pruebas, entorno y continuidad
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`; contrato/servicio: `src/modules/solicitudes/api/types.ts` y `solicitudesAcademicasService.ts`; regresión: `tests/historialHomologaciones.test.ts`. No se añadieron paquetes, variables, seeds, datasets ni artefactos persistentes; `dist/` es salida ignorada.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 67/67 PASS; build PASS (308 módulos; CSS 260.89 kB; JS 732.53 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Siguiente paso externo: validar el endpoint y la ruta protegida con sesiones reales de coordinación y estudiante, incluyendo vacío/error, temas claro/oscuro y ancho móvil. No se produjo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la vista depende de autenticación/backend institucionales.
+
+---
+
+# Handoff 2026-09-25 — advertencia antes de convocar estudiantes
+
+## Estado, decisión, contrato y salida esperada
+- `ProcesoLiquidacionPage` reemplaza el párrafo discreto de **Convocar estudiantes** por un aviso visual y accesible. La copia aclara que convocar lista a todos los estudiantes activos —vigentes y nuevos— y que coordinación debe revisar cada fila y excluir los casos incorrectos antes de enviar solicitudes para no habilitar el proceso ni remitir correo a quien no corresponda.
+- La salida esperada en `/matricula/financiera/procesos/:procesoId` es un bloque con acento institucional, icono `!`, título **Importante antes de convocar** y la consecuencia explícita antes del botón **Convocar**. Usa `role="note"`, `aria-label` y únicamente tokens semánticos compatibles con temas claro/oscuro.
+- Se preservan la acción `convocar`, el payload `{ incluirVigentes: true, incluirNuevos: true }`, estados, API, DTO, rutas, roles, schemas, paquetes, variables, seeds y datasets. La regresión textual comprueba alcance, momento de revisión, consecuencia y semántica accesible.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`; presentación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`; regresión: `tests/matriculaFinancieraFlow.test.ts`. La fixture en `tests/fixtures/matricula-financiera/` es aislada, no un seed, y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 6/6 PASS; suite Node 63/63 PASS; build PASS (314 módulos; CSS 261.26 kB; JS 740.96 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar la advertencia y el flujo completo con sesión institucional y backend real en escritorio/móvil y temas claro/oscuro. El contenedor no incluye Chromium, Chrome ni Firefox, y la ruta protegida requiere autenticación y datos remotos; por ello no se produjo una captura local.
+
+---
+
+# Handoff 2026-09-25 — copia inicial de Mi liquidación
+
+## Estado, decisión, contrato y salida esperada
+- `MatriculaFinancieraPage` omite el párrafo introductorio debajo de **Mi liquidación** para estudiantes. La copia **Prepara, revisa y publica las liquidaciones de cada periodo.** permanece visible únicamente en el encabezado de coordinación.
+- `GUIA_ESTUDIANTE[0]` conserva el título **Revisa la solicitud** y muestra la descripción solicitada: **Verifica los datos de tu liquidacion: el periodo academico, el programa academico, ten presente la fecha limite para llevar a cabo tu proceso.**
+- La salida esperada en `/matricula/financiera` para estudiante es el título seguido directamente por **Flujo de matrícula financiera**, con la nueva descripción en el paso 1. No cambian API, DTO, rutas, roles, estados, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` y `src/modules/matricula-financiera/flow.ts`; regresión textual: `tests/matriculaFinancieraFlow.test.ts`. La fixture en `tests/fixtures/matricula-financiera/` es una referencia aislada, no un seed, y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 5/5 PASS; suite Node 62/62 PASS; build PASS (314 módulos; CSS 260.58 kB; JS 740.46 kB); `git diff --check` PASS. npm informa `Unknown env config "http-proxy"` y Vite conserva el aviso informativo del chunk mayor de 500 kB.
+- Pendiente externo: comprobar la copia final en la ruta autenticada, en escritorio/móvil y temas claro/oscuro. No se produjo captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta real requiere sesión y backend institucionales.
+
+---
+
+# Handoff 2026-09-25 — texto del paso de espera de liquidación
+
+## Estado, decisión, contrato y salida esperada
+- `GUIA_ESTUDIANTE[2]`, consumida por **Flujo de matrícula financiera**, muestra el título **Espera la liquidación** y la descripción **La coordinación recibe la información y realiza el proceso de liquidación.**
+- Se retiraron **Espera la revisión**, la atribución de validación a coordinación y la indicación de atender novedades. La decisión refleja que coordinación recibe los datos y liquida, pero no valida lo ingresado ni solicita correcciones en este flujo.
+- La salida esperada cambia únicamente el contenido del paso 3 en `/matricula/financiera` para el rol estudiante. No cambian el arreglo de coordinación, estados, API, DTO, rutas, roles, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/matricula-financiera/flow.ts`; regresión textual: `tests/matriculaFinancieraFlow.test.ts`; render: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. La fixture aislada existente está en `tests/fixtures/matricula-financiera/`; no es un seed y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: regresión Node 61/61 PASS, ESLint focalizado PASS, build PASS (314 módulos; CSS 260.58 kB; JS 740.46 kB) y `git diff --check` PASS. El lint global continúa bloqueado por nueve errores preexistentes fuera de estos archivos y una advertencia; npm informa además `Unknown env config "http-proxy"` y Vite conserva el aviso del chunk mayor de 500 kB.
+- Pendiente externo: comprobar el texto en la ruta autenticada, tanto en escritorio como en móvil. Si se dispone de navegador y credenciales, capturar la vista final; el contenedor no incluye Chromium, Chrome ni Firefox.
+
+---
+
+# Handoff 2026-09-25 — estado del proceso omitido en la vista estudiantil
+
+## Estado, decisión, contrato y salida esperada
+- `MiLiquidacionCard`, en `MatriculaFinancieraPage.tsx`, ya no concatena `· Proceso {estado}` después de la fecha límite. La salida esperada en la tarjeta estudiantil es **Recepción de respuestas habilitada hasta el DD/MM/AAAA**, sin la leyenda **Proceso ABIERTO** señalada en la referencia visual.
+- La decisión es exclusivamente de presentación: la vista estudiantil recibe liquidaciones de procesos vigentes y repetir su estado no aporta información. `item.proceso.estado` permanece en el DTO y sigue controlando la edición del certificado; `item.puedeResponder` y `item.fueraDePlazo` conservan los avisos y permisos existentes.
+- No se modificaron filtros de consulta, endpoints, payloads, rutas, roles, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. Referencia aislada existente: `tests/fixtures/matricula-financiera/`; no es un seed y no reproduce la ruta autenticada completa. `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 260.16 kB; JS 740.39 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar `/matricula/financiera` con sesión estudiantil y backend institucional. No se produjo captura nueva porque el contenedor no incluye Chromium, Chrome ni Firefox; la imagen aportada documenta el texto anterior.
+
+---
+
+# Handoff 2026-09-25 — ayudas de campos en revisión de liquidación
+
+## Estado, decisiones y salida esperada
+- `LiquidacionDetallePage.tsx` muestra un botón circular `?` al lado de Tipo de estudiante, Origen de respuesta y las cuatro fechas operativas. Cada botón revela su explicación con hover o foco/pulsación y vincula el texto mediante `aria-describedby` y `role="tooltip"`.
+- Los mensajes aclaran la convención solicitada: VIGENTE corresponde al ingreso a primer semestre y NUEVO a segundo semestre o posterior; el origen distingue ESTUDIANTE/COORDINADOR; las fechas diferencian solicitud, recordatorio, registro de respuestas y marcación en PUTTY.
+- Salida esperada: los valores y su distribución permanecen iguales, con una ayuda contextual discreta al lado de cada etiqueta indicada. Los tooltips usan variables semánticas, admiten teclado/táctil y temas claro/oscuro. No cambian API, DTO, rutas, permisos, schemas, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`; presentación: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. La fixture aislada existente está en `tests/fixtures/matricula-financiera/`, pero no es un seed y no reproduce la ruta autenticada completa.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. La ruta real depende de sesión y backend institucionales.
+- Verificación local: ESLint focalizado PASS, suite Node 60/60 PASS, build PASS (314 módulos; CSS 260.16 kB; JS 740.42 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar con un caso real la nomenclatura VIGENTE/NUEVO y revisar la posición de las ayudas en escritorio/móvil y temas claro/oscuro. El contenedor no incluye Chromium, Chrome ni Firefox, por lo que no puede producir una captura local de la ruta protegida.
+
+---
+
+# Handoff 2026-09-25 — detalle simplificado del certificado de votación
+
+## Estado, decisión, contrato y salida esperada
+- `CertificadoVotacion` presenta solamente `nombreArchivoDocumento` en el detalle de un archivo cargado; ya no concatena `versionDocumento` ni `estadoDocumento`. El cambio aplica a las visuales estudiantil y de coordinación que comparten el componente.
+- El estado sigue formando parte del DTO y de la lógica: un documento `RECHAZADO` no cuenta como vigente y conserva el aviso con `observacionesDocumento`. También se mantienen sin cambios la consulta ANX-39, apertura, descarga, reemplazo y versionado en backend.
+- Salida esperada: donde antes aparecía `archivo.pdf · Versión 2 · POR_REVISAR`, ahora aparece `archivo.pdf`. No cambian endpoints, payloads, permisos, rutas, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx`. Vista aislada disponible en `tests/fixtures/matricula-financiera/`; no es un seed de backend. La ruta institucional requiere autenticación y servicios remotos.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. Verificación local: ESLint focalizado PASS, suite Node 60/60 PASS, build PASS (314 módulos; CSS 259.16 kB; JS 738.98 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar la ruta autenticada con el backend institucional en escritorio/móvil y temas claro/oscuro. No se produjo captura local porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta real requiere autenticación/datos remotos; la imagen reportada documenta el estado anterior.
+
+---
+
+# Handoff 2026-09-25 — guardado unificado de respuestas y certificado
+
+## Estado, decisión, contrato y salida esperada
+- La vista estudiantil de matrícula financiera presenta un único botón **Guardar respuestas**. `CertificadoVotacion` registra en `RespuestasForm` una operación de carga pendiente cuando el usuario selecciona un archivo; no muestra **Guardar certificado** en este flujo.
+- Al enviar, `RespuestasForm` ejecuta secuencialmente la carga ANX-39 y el guardado de respuestas. Una falla documental corta la secuencia. Sin archivo nuevo, un ANX-39 vigente permite guardar directamente las respuestas. La selección pendiente también satisface la habilitación del botón; un documento rechazado sin reemplazo no la satisface.
+- Coordinación mantiene el botón documental independiente y `Registrar respuestas`, pues su respaldo puede llegar por otros medios. Se preservan los servicios, payloads, roles y rutas existentes; no hay cambios de backend, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`, `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. El servicio documental sigue en `src/modules/matricula-financiera/api.ts`; no se generaron artefactos persistentes y `dist/` continúa siendo salida ignorada.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Ejecución: `npm run dev`; regresión: `node --test --test-isolation=none tests/*.test.ts`; producción: `npm run build`. No existen credenciales o seed reproducible para la ruta autenticada.
+- Pendiente externo: validar con backend institucional que una carga fallida no registre respuestas y que una exitosa genere primero el documento y después la respuesta; revisar además escritorio/móvil y temas claro/oscuro. El contenedor no dispone de Chromium, Chrome ni Firefox para producir una captura local.
+
+---
+
+# Handoff 2026-09-25 — certificado obligatorio al responder Sí
+
+## Estado, decisión, contrato y salida esperada
+- La visual estudiantil de matrícula financiera ya impide guardar respuestas cuando `certificadoVotacion === true` hasta confirmar que ANX-39 tiene un documento vigente. `CertificadoVotacion` comunica a `RespuestasForm` la validez derivada de la consulta documental; no se considera válido un documento con `estadoDocumento === 'RECHAZADO'`.
+- `respuestasListasParaGuardar` centraliza la regla: exige todas las respuestas aplicables y, solo para estudiante con respuesta afirmativa, un certificado válido. El botón usa esta regla y el `onSubmit` vuelve a comprobarla. Al pasar de **No** a **Sí** la validez se reinicia antes de consultar el archivo, evitando una habilitación transitoria con estado obsoleto.
+- Salida esperada: **No** permite guardar sin archivo; **Sí** muestra el cargue, el mensaje de requisito y **Guardar respuestas** deshabilitado; una carga exitosa seguida por la consulta actualizada habilita el botón. Coordinación conserva el registro manual y su derivación de `certificadoVotacionRecibido`, sin convertir ANX-39 en requisito del flujo administrativo.
+- Contratos sin cambios: listado/carga documental ANX-39 permanecen separados del envío de respuestas; no cambian endpoints, DTO, rutas, roles, schemas, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`, `src/pages/MatriculaFinanciera/CertificadoVotacion.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`. Regla pura: `src/modules/matricula-financiera/rules.ts`. Regresión: `tests/matriculaFinancieraRules.test.ts`. La adaptación de la firma del render prop en `LiquidacionDetallePage.tsx` preserva el flujo de coordinación.
+- Fixture/dataset: `tests/fixtures/matricula-financiera/` contiene una vista aislada, no un seed de backend. La ruta real requiere sesión y servicios institucionales; no hay credenciales o seed reproducible en el repositorio. `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 13/13 PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.76 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Reto externo/siguiente paso: validar con el backend real los estados documentales distintos de `RECHAZADO`, una carga fallida y una exitosa, además de escritorio/móvil y temas claro/oscuro. La implementación asume, de acuerdo con la visual existente, que cualquier documento actual no rechazado cuenta como cargado correctamente.
+
+---
+
+# Handoff 2026-09-25 — certificado de votación al final del formulario
+
+## Estado, decisión y salida esperada
+- `RespuestasForm` ordena las preguntas de la visual estudiantil mediante `ordenarPreguntasEstudiante`: conserva el orden relativo de todas las demás y mueve `certificadoVotacion` al final. El cargue condicional ya se renderizaba después del listado, por lo que al responder **Sí** queda pegado a **¿Tienes certificado de votación vigente?**.
+- La regla crea un arreglo nuevo y no muta el contrato recibido. Solo se aplica cuando `coordinacion` es falso; la vista de coordinación conserva el orden definido localmente. Se mantienen la selección de respuestas, obligatoriedad, carga/versionado independiente del documento y payloads existentes.
+- No se modificaron API, DTO, permisos, rutas, schemas, paquetes, variables, seeds ni datasets. La salida esperada para estudiante termina con la pregunta de votación y, si la respuesta es afirmativa, con la tarjeta **Certificado de votación** inmediatamente debajo.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/RespuestasForm.tsx`; regla pura: `src/modules/matricula-financiera/rules.ts`; regresión: `tests/matriculaFinancieraRules.test.ts`. Fixture visual disponible en `tests/fixtures/matricula-financiera/preview.html`; no existen credenciales ni seed institucional para la ruta real.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; regresión dirigida 12/12 PASS; suite Node 59/59 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.20 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar la vista estudiantil autenticada con backend real en escritorio/móvil y temas claro/oscuro. Si se usa la fixture para captura, actualizar sus datos/markup para reflejar el orden productivo; no confundirla con un seed de backend.
+
+---
+
+# Handoff 2026-09-25 — modo de consulta inicial para respuestas de coordinación
+
+## Estado, decisión y salida esperada
+- En `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, **Respuestas y respaldo de coordinación** inicia siempre en consulta. Si la matriz de negocio permite modificar la fila, **Editar respuestas** habilita radios, observaciones y carga/reemplazo de ANX-39; el aviso visible indica que coordinación está contestando en nombre del estudiante.
+- **Cancelar edición** descarta el estado local del formulario y vuelve a consulta. Un guardado exitoso también cierra la edición; si la petición falla, el formulario permanece abierto con el mensaje de error para permitir correcciones y reintento. En procesos publicados o filas no editables no aparece el botón de edición.
+- `CertificadoVotacion` también recibe el modo de edición, por lo que **Ver documento** y **Descargar** continúan disponibles en consulta, pero seleccionar o reemplazar archivos exige activar explícitamente la edición. No cambiaron endpoints, DTO, roles, permisos, rutas, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, contratos, entorno y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`; estilos responsivos y temáticos: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`; formulario y documento reutilizados sin alterar sus contratos: `RespuestasForm.tsx` y `CertificadoVotacion.tsx`. No se generaron datasets ni artefactos persistentes; `dist/` es salida ignorada del build.
+- Contratos preservados: las respuestas usan `actualizarLiquidacion(id, 'respuestas', RespuestasCoordinacionRequest)` y el certificado usa el catálogo documental ANX-39. Salida esperada inicial: valores textuales **Sí**, **No** o **Sin responder**, observaciones en consulta y respaldo descargable; los controles mutables aparecen solamente en edición.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 60/60 PASS; build PASS (314 módulos; CSS 259.16 kB; JS 739.05 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar el flujo con sesión de coordinación y backend institucional en escritorio/móvil y temas claro/oscuro. No se pudo producir captura local porque el contenedor no tiene Chromium, Chrome ni Firefox; la ruta protegida además depende de autenticación y datos remotos.
+
+---
+
+# Handoff 2026-09-25 — confirmaciones de Gestión profesores
+
+## Estado, decisión y salida esperada
+- `src/pages/GestionProfesores/GestionProfesoresPage.tsx` reemplaza los tres usos de `window.confirm`: cambio del rol de docente de posgrados, retiro de un grupo y designación de director. Un estado discriminado conserva la acción y el DTO objetivo hasta que el usuario confirma; los servicios y sus argumentos no cambiaron.
+- La salida esperada es un modal institucional centrado que muestra título, consecuencia, nombre del profesor, **Cancelar** y una acción explícita. Las acciones destructivas usan `--danger`; agregar el rol y designar director usan `--primary`. El modal consume exclusivamente tokens semánticos, responde a temas claro/oscuro y apila sus controles en móvil.
+- Accesibilidad y seguridad: `role="dialog"`, `aria-modal`, nombre y descripción enlazados, foco inicial en **Cancelar**, cierre mediante `Escape`, botón × o backdrop, y cierres/acciones bloqueados durante la petición. Si el servicio falla, el modal permanece abierto y aparece el mensaje ya existente; si finaliza bien, se cierra después de actualizar los datos.
+- No se modificaron API, DTO, permisos, rutas, schemas, paquetes, variables, seeds ni datasets. Contratos preservados: rol por UUID mediante `asignarRolDocentePosgrados`/`eliminarRolDocentePosgrados`; grupo por `grupoId` y `docenteId` mediante `eliminarDocenteGrupoInvestigacion`/`asignarDirectorGrupoInvestigacion`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; presentación: `src/pages/GestionProfesores/GestionProfesoresPage.css`; servicios sin cambios: `src/api/gruposInvestigacionService.ts`. No se generaron artefactos persistentes ni datasets; `dist/` es salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx` PASS; suite Node 58/58 PASS; build PASS (314 módulos; CSS 258.77 kB; JS 737.07 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar `/coordinacion/profesores` con sesión institucional y backend real en escritorio/móvil y temas claro/oscuro. No se produjo una captura local porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere autenticación/datos remotos.
+
+---
+
+# Handoff 2026-09-24 — botones de retorno de matrícula financiera
+
+## Estado, decisión y salida esperada
+- `LiquidacionDetallePage` y `TarifasMatriculaPage` dejaron de renderizar enlaces `mf-back` independientes y ahora consumen el `BackButton` compartido. `ProcesoLiquidacionPage` ya lo usaba, por lo que las tres pantallas internas de matrícula financiera quedan alineadas con el patrón global del sistema.
+- Se preservan textos y destinos: **Volver al proceso** navega a `/matricula/financiera/procesos/:procesoId`; **Volver a procesos** navega a `/matricula/financiera`. La salida esperada es el botón tipo píldora definido en `src/components/BackButton/BackButton.css`, compatible con tema claro/oscuro y foco por teclado.
+- No se modificaron contratos HTTP, payloads, rutas registradas, permisos, schemas, paquetes, variables, seeds ni datasets. Se eliminó únicamente la regla CSS local ya huérfana `.mf-back`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, `src/pages/MatriculaFinanciera/TarifasMatriculaPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Patrón reutilizado: `src/components/BackButton/BackButton.tsx` y `BackButton.css`. No se generaron datasets ni artefactos persistentes; `dist/` es solo salida ignorada del build.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS; suite Node 58/58 PASS; build PASS (314 módulos; CSS 255.36 kB; JS 734.21 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar visualmente ambas rutas con sesión institucional y backend real. No se produjo una captura local porque el contenedor no dispone de navegador y las vistas requieren autenticación/datos remotos; la imagen reportada sirve como referencia del estado anterior.
+
+---
+
+# Handoff 2026-09-24 — retorno desde una inscripción para profesores
+
+## Estado, decisión y salida esperada
+- `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` calcula el destino del botón superior según el perfil. Un usuario que es evaluador de admisión y no tiene permisos de gestión ve **Volver a inscripciones** y navega a `/admisiones`; allí `AdmisionesProfesorPage` recupera la pantalla de inscripciones desde la que abrió la entrevista.
+- Los perfiles con gestión de posgrados mantienen **Volver a convocatoria** y `/admisiones/convocatoria/:convocatoriaId`. Esto evita enviar al profesor a una ruta exclusiva de coordinación que `RequireRoles` rechazaba y que acababa redirigiéndolo al inicio.
+- No se modificaron rutas, guards, API, DTO, schemas, paquetes, variables, seeds ni datasets. Salida esperada: profesor → listado de inscripciones; coordinación/secretaría/administración → detalle de convocatoria.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`. Rutas relacionadas: `src/app/routes/index.tsx`; listado de origen: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`. No se generaron artefactos ni datasets.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS, build PASS (314 módulos; CSS 255.39 kB; JS 734.26 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente externo: validar el recorrido completo con una sesión institucional de profesor y el backend real. La ruta está protegida y el repositorio no contiene credenciales ni un seed reproducible. No se requiere captura porque el cambio corrige exclusivamente el destino y texto del control existente, sin alterar su presentación.
+
+---
+
+# Handoff 2026-09-24 — nombres de origen en homologación
+
+## Estado, decisión y salida esperada
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` presenta **Asignatura del listado** para elegir una materia recibida en el catálogo y **Asignatura nueva** para capturar manualmente código opcional y nombre obligatorio. Reemplazan únicamente los textos ambiguos **Del listado** y **No la encuentro**.
+- Los valores internos continúan siendo `catalogo` y `manual`. No cambian las validaciones ni el contrato: el primer modo envía `{ asignatura_origen_id, asignatura_destino_id }` y el segundo `{ nombreAsignaturaExterna, codigoAsignaturaExterna?, asignatura_destino_id }` dentro del payload existente de homologación.
+- No se añadieron schemas, paquetes, variables, seeds ni datasets. Pendiente externo: revisar la copia en `/solicitudes` con una sesión estudiantil y el backend institucional; el repositorio no contiene credenciales ni datos reproducibles para esa ruta protegida. No se pudo producir una captura local porque el contenedor no tiene Chromium, Chrome ni Firefox.
+
+## Entorno, paths y validación
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Implementación: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Documentación de continuidad: este encabezado y la entrada equivalente en `README.md`. No existen artefactos o datasets nuevos.
+- Verificación local: ESLint focalizado PASS, suite Node 58/58 PASS y build PASS (314 módulos; CSS 255.39 kB; JS 734.21 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+
+---
+
+# Handoff 2026-09-24 — filtro de solicitudes generales de coordinación
+
+## Estado, contrato y salida esperada
+- `src/modules/solicitudes/constants.ts` define los IDs autoritativos
+  `[1, 10, 11, 2]` para Readmisión, Ampliación de permanencia, Otra y
+  Homologación de asignaturas. `SolicitudesPage.tsx` entrega esa inclusión al
+  listado general de coordinación; se filtran tanto el selector como las filas.
+  Las vistas `assignedOnly` de profesor/director no se limitan.
+- Se conserva el envelope `{ ok, message, data }` de
+  `GET /sapp/tipoSolicitud`; cada elemento admite `{ id, nombre, tramiteId }` y
+  el normalizador mantiene `tipoTramiteId`. El selector esperado contiene
+  **Todos**, **READMISION**, **AMPLIACION DE PERMANENCIA**, **OTRA** y
+  **HOMOLOGACION DE ASIGNATURAS**, sin tipos de crédito o trabajo de grado.
+- Regresión: `tests/tiposSolicitudGeneral.test.ts`. No hay schemas, paquetes,
+  variables, seeds ni datasets nuevos. Pendiente: validar `/solicitudes` con
+  backend y sesión institucional; el repositorio no aporta credenciales.
+- Verificación local: regresión dirigida 1/1 PASS, suite Node 57/57 PASS,
+  ESLint focalizado PASS, build PASS (314 módulos; CSS 252.47 kB; JS 732.65
+  kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa la
+  configuración ambiental `http-proxy` y Vite advierte por el chunk mayor de
+  500 kB. No se capturó imagen porque no hay navegador instalado y la ruta
+  protegida requiere sesión/backend institucionales.
+
+## Entorno
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
+# Handoff 2026-09-24 — catálogo autoritativo de Proyectos de grado
+
+## Estado actual, contrato y salida esperada
+- Se corrigió la clasificación basada en el catálogo real de `GET /sapp/tiposSolicitud`. Maestría usa exactamente `[13, 9, 6, 7]`; doctorado usa exactamente `[13, 9, 8, 4, 5]`. El orden interno no afecta la etiqueta, que se toma del backend.
+- IDs autoritativos: `9` = **GRADO**, `8` = **EXAMEN DE CANDIDATURA DOCTORAL**, `10` = **AMPLIACION DE PERMANENCIA**. Por tanto, el ID 10 no debe aparecer en ninguno de los selectores de Proyectos de grado y el ID 9 debe aparecer en ambos. No conservar compatibilidad especulativa con IDs anteriores.
+- `esExamenCandidaturaDoctoral` reconoce el ID 8 o el código `CAND_DOCTORAL`, nunca el ID 9. La configuración de formulario también reserva el título sin resumen para candidatura ID 8, evitando tratar GRADO como examen.
+- No cambian endpoints, DTO, payloads, permisos, schemas, paquetes, variables, seeds ni datasets. Contratos consumidos: envelope `{ ok, message, data }` de `GET /sapp/tiposSolicitud` y registros de `GET /sapp/solicitudesAcademicas`.
+
+## Paths, entorno y continuidad
+- Regla central: `src/modules/trabajos-grado/constants.ts`; formulario: `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`; integración: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresiones: `tests/candidaturaDoctoral.test.ts` y `tests/datosTrabajoSolicitud.test.ts`.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con Node.js 24.15.0 y npm 11.4.2. React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol. No reinstalar dependencias ni crear venv, Conda, Poetry u otro árbol npm.
+- Verificación local: pruebas dirigidas 8/8 PASS, suite Node 56/56 PASS, ESLint focalizado PASS, build PASS (313 módulos; CSS 252.47 kB; JS 732.59 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm `Unknown env config "http-proxy"` y chunk JavaScript mayor de 500 kB.
+- No existen seeds ni datasets locales. Pendiente externo: validar ambos selectores y sus listados con una sesión institucional y el backend real; la ruta está protegida y no hay credenciales reproducibles en el repositorio.
+
+---
+
+# Handoff 2026-09-24 — filtro de estados de Proyectos de grado
+
+## Estado, decision y salida esperada
+
+- `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` dejo de solicitar el catalogo completo de estados en `SolicitudesEstudianteView` y `SolicitudesCoordinadorView`. Ambas vistas usan ahora su comportamiento predeterminado, compartido con creditos condonables: `getEstadosPresentesEnSolicitudes` cruza el catalogo de `GET /sapp/estadosSolicitud` con las solicitudes cargadas.
+- En `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`, el selector conserva **Todos** y muestra solo estados presentes en los registros del listado correspondiente. Si no hay registros en `PFIR_DIR_TG`, `PFIR_COOR_POS` o `PFIR_CAR_CONT`, esas opciones de firma no deben aparecer. La seleccion activa vuelve semanticamente a todos si su estado deja de estar disponible.
+- La vista de estudiante calcula las opciones después del tipo seleccionado; la de coordinacion las calcula sobre las filas disponibles no asignadas, tal como ya estaba implementado. No se alteraron estados, filas, endpoints, payloads, schemas, permisos, dependencias, variables, seeds ni datasets.
+
+## Entorno, pruebas y continuidad
+
+- Entorno unico: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otra instalacion ni crear venv, Conda, Poetry o un segundo arbol npm.
+- Implementacion principal: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. Helper y contrato esperado: `src/modules/solicitudes/utils/estadoSolicitud.ts`; vistas consumidoras: `src/modules/solicitudes/components/Solicitudes{Estudiante,Coordinador}View`.
+- Pendiente externo: validar ambos niveles con sesiones institucionales de estudiante y coordinacion y datos reales del backend. La ruta es protegida y el repositorio no contiene credenciales ni seed que reproduzca el listado de la captura.
+- Regresion: `tests/estadoSolicitud.test.ts` comprueba que el helper conserva estados presentes por ID/sigla y excluye las tres siglas `PFIR_*` cuando no existen registros. Validacion local: suite Node 58/58 PASS, ESLint focalizado PASS, build PASS (314 modulos; CSS 252.47 kB; JS 732.60 kB) y `git diff --check` PASS. `npm run lint` mantiene 9 errores y 1 warning preexistentes fuera del alcance; npm avisa por `http-proxy` y Vite por el chunk mayor de 500 kB.
+
+---
+
+# Handoff 2026-09-24 — botones de acciones y convocatoria
+
+## Update 2026-09-24 — alineación de la flecha del submenú Matrícula
+
+- `src/components/Sidebar/Sidebar.tsx` reemplaza el carácter tipográfico `⌄`
+  por un SVG de flecha; `Sidebar.css` dimensiona el icono a 18 px,
+  lo centra dentro del botón estable de 40 px y conserva la rotación al abrir.
+- Salida esperada: la flecha queda centrada vertical y horizontalmente junto a
+  **Matrícula**, tanto en escritorio como en el panel móvil, y apunta hacia
+  arriba cuando `aria-expanded="true"`. No cambian navegación, permisos,
+  contratos, variables, dependencias, seeds ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Entorno comprobado: Node.js
+  24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript
+  5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (56/56); build PASS
+  (313 módulos; CSS 252.47 kB y JS 732.60 kB); `git diff --check` PASS. El lint
+  global conserva 9 errores y 1 warning preexistentes fuera del alcance. npm
+  muestra el warning ambiental `Unknown env config "http-proxy"` y Vite avisa
+  por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: comprobar visualmente el menú con una sesión institucional
+  en escritorio/móvil y temas claro/oscuro. El contenedor no dispone de
+  Chromium, Chrome ni Firefox y la vista protegida depende del backend.
+
+---
+
+## Update 2026-09-24 — moneda visible en campos de corrección
+
+- `formatoMonedaEntrada`, en
+  `src/modules/matricula-financiera/rules.ts`, presenta ahora el prefijo `$`
+  junto con agrupación de miles colombiana. En el detalle de liquidación, los
+  campos de ajuste y total manual muestran, por ejemplo, `$ -100` y
+  `$ 30.000.000` durante la escritura. `normalizarMoneda` retira el formato y
+  el contrato de `PUT /liquidaciones/{id}/ajustes` continúa recibiendo números,
+  con hasta cuatro decimales, o `null` para retirar el total manual.
+- Regresión: `tests/matriculaFinancieraRules.test.ts` cubre montos negativos,
+  positivos, cero y vacío. No hay cambios de API, schemas, paquetes, variables,
+  seeds ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm
+  11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Pendiente externo: comprobar el cursor y la edición de montos con sesión y
+  backend institucionales, en escritorio/móvil y temas claro/oscuro.
+
+---
+
+## Estado, contratos y salida esperada
+- En `ProcesoLiquidacionPage.tsx`, la columna **Acciones** agrupa **Ver
+  detalle** y las mutaciones de `LiquidacionActions.tsx` como botones
+  secundarios compactos tipo pill. La presentación usa
+  `.mf-button--table`/`.mf-row-actions` y tokens semánticos existentes. El
+  enlace de detalle conserva su ruta y semántica; diálogos, estados
+  deshabilitados, permisos y payloads no cambiaron.
+- El botón que ejecuta `convocar` muestra **Convocar** en reposo y
+  **Convocando…** durante la operación. Todavía envía
+  `{ incluirVigentes: true, incluirNuevos: true }`; el texto explicativo deja
+  explícito el alcance. No hay nuevos endpoints, schemas, dependencias,
+  variables, seeds ni datasets.
+- Archivos: `src/pages/MatriculaFinanciera/{ProcesoLiquidacionPage,LiquidacionActions}.tsx`
+  y `MatriculaFinancieraPage.css`. Salida esperada: ninguna acción de tabla se
+  ve como enlace subrayado y todas conservan foco visible y estados disabled en
+  temas claro/oscuro.
+
+## Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm
+  ni venv, Conda o Poetry. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM
+  19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y
+  ESLint 9.39.2, fijado por `package-lock.json`.
+- Validación: `npm run lint` PASS; suite Node PASS (56/56); build PASS (313
+  módulos, CSS 252.50 kB y JS 732.52 kB); `git diff --check` PASS. Persisten el
+  warning ambiental npm `Unknown env config "http-proxy"` y el aviso
+  informativo por el chunk JS mayor de 500 kB.
+- Pendiente: validar la tabla protegida con backend y sesión institucional en
+  escritorio/móvil y temas claro/oscuro. El repositorio no incluye credenciales
+  ni un backend reproducible para esa comprobación.
+
+---
+
+# Update 2026-09-24 — texto de confirmación de liquidación
+
+## Estado y salida esperada
+- En `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, la tarjeta
+  **Estado de la liquidación** muestra únicamente “Confirma únicamente después
+  de registrar la liquidación en PUTTY.”; se retiró la frase adicional acerca
+  de las alertas por no aportar información relevante en este contexto.
+- No cambiaron las reglas: confirmar continúa sujeto a estado, total y cambios
+  guardados según `LiquidacionActions`. Tampoco cambiaron API, schemas, DTO,
+  permisos, dependencias, variables, seeds ni datasets.
+
+## Entorno y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. El proyecto usa Node.js/npm y las
+  versiones exactas se encuentran en `package-lock.json`.
+- Validación local: suite Node PASS (56/56), ESLint focalizado PASS, build PASS
+  (313 módulos; CSS 252.50 kB y JS 732.44 kB) y `git diff --check` PASS. Avisos
+  no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte
+  por el chunk mayor de 500 kB.
+- Pendiente integrado: comprobar el texto en el detalle con una sesión de
+  coordinación y backend institucional; la ruta protegida no tiene seed local.
+  No se capturó imagen porque el contenedor no dispone de Chromium, Chrome ni
+  Firefox.
+
+---
+
+# Handoff 2026-09-24 — filtro por nivel en matrícula académica
+
+## Estado actual y salida esperada
+- `src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx` presenta **Materia** y **Nivel** uno al lado del otro durante la creación estudiantil. Los niveles se derivan del catálogo, se ordenan numéricamente y el valor inicial **Todos** no restringe resultados.
+- `materiasFilter.ts` concentra la regla comprobable: un nivel elegido admite las materias de ese nivel y siempre las electivas (`nivel: null`); después combina la búsqueda por nombre/código y retira IDs ya seleccionados. La lista sigue señalando cada electiva y no cambia lo que se envía al registrar la matrícula.
+- Salida esperada: con nivel 2 deben verse materias de nivel 2 más todas las electivas; una búsqueda debe reducir ese conjunto; una materia agregada debe desaparecer. En anchos menores de 480 px los controles se apilan. Los temas claro/oscuro consumen tokens semánticos existentes.
+
+## Contratos, paths y continuidad
+- Contrato de catálogo sin cambios: `MateriaDto` conserva `{ id, nombre, codigo, nivel }`, donde `nivel` es `number | null` y `null` identifica una electiva. No cambiaron endpoints, payloads, schemas, rutas, permisos, dependencias, variables, seeds ni datasets.
+- Implementación: `src/modules/matricula/components/MateriasSelector/{MateriasSelector.tsx,MateriasSelector.css,materiasFilter.ts}`. Regresión: `tests/materiasFilter.test.ts`. Ruta protegida para validación: `/matricula/academica` con estudiante sin matrícula existente en el periodo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación 2026-09-24: ESLint focalizado PASS; suite Node PASS (56/56); build PASS (313 módulos, CSS 252.31 kB y JS 732.48 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar la ruta con sesión/backend institucionales en escritorio/móvil y claro/oscuro, especialmente catálogos con electivas. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la vista requiere sesión y backend no reproducibles.
+
+---
+
+# Handoff 2026-09-24 — evaluación de proyecto de grado visible al estudiante
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` ya consultaba `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` para estudiantes con solicitudes de trabajo de grado. Ahora, cuando existe un proceso, renderiza `ProcesoEvaluacionEstudiante` después del panel de ajustes y antes de la gestión exclusiva de coordinación.
+- La vista destaca `resultadoNombre`, `resultado` o `resultadoCodigo` (en ese orden), `notaFinal` si existe, `fechaResultado` y los datos de sustentación. Acepta el contrato plano mostrado por el backend y conserva compatibilidad con el objeto anidado `sustentacion`.
+- Solo se presentan jurados con `activo: true`, ordenados por `orden`; los reemplazados se omiten para no confundir al estudiante. Se muestran nombre e institución, pero deliberadamente no correo. Cada evaluación presenta momento, concepto/resultado/nota según `momentoCodigo` y observaciones, con placeholders explícitos para valores pendientes.
+
+## Paths, contratos y salida esperada
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante.{tsx,css}`, integración en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y ampliación de contrato en `src/modules/trabajos-grado/evaluacion/types.ts`.
+- Contrato principal: envelope `{ ok, message, data }` de `GET /sapp/procesoEvaluacionTg/solicitud/{id}`. Se consumen `resultado`, `resultadoCodigo`, `fechaResultado`, `notaFinal`, sustentación plana o anidada y `jurados[]`; de cada jurado, `activo`, `orden`, `nombre`, `institucion`, estado y `evaluaciones[]`; de cada evaluación, momento, concepto/resultado/nota y observaciones.
+- Para el ejemplo de solicitud 78, la salida esperada destaca **Aprobado**, la fecha de resultado y la sustentación presencial en sala 104 EISI; lista a fiona, rubi y michi con sus conceptos, resultados y observaciones, y omite a morgan porque fue reemplazado. El correo de ningún jurado debe aparecer.
+- No hay artifacts, schemas, seeds ni datasets nuevos. Ruta a validar con sesión estudiantil: `/trabajos-grado/:nivel/solicitudes/78` (o `/solicitudes/78`, según el punto de entrada).
+
+## Entorno, pruebas y próximos pasos
+- Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otra instalación ni crear venv, Conda o Poetry; no es un proyecto Python.
+- Verificación local: suite Node PASS (53/53); ESLint focalizado PASS; build PASS (312 módulos, CSS 251.67 kB, JS 731.57 kB); `git diff --check` PASS. El build conserva el aviso informativo del chunk JS mayor de 500 kB y npm el warning ambiental `Unknown env config "http-proxy"`.
+- Pendiente: validar con sesión/backend institucional el endpoint de la solicitud real y revisar claro/oscuro y móvil. No se generó captura en esta fase porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida requiere sesión institucional.
+
+---
+
+# Handoff 2026-09-24 — grado en el catálogo de maestría
+
+## Estado, contrato y salida esperada
+- `/trabajos-grado/maestria` usa los tipos `[13, 10, 6, 7]`: envío de tema,
+  grado, propuesta y defensa. Ya no incluye el ID legado `8` ni el ID vigente
+  `9` de candidatura, porque ambos son exclusivos de doctorado.
+- `/trabajos-grado/doctorado` usa `[13, 10, 8, 9, 4, 5]`; conserva las dos
+  variantes de candidatura por compatibilidad con catálogos institucionales y
+  añade **GRADO**. `esExamenCandidaturaDoctoral` reconoce IDs 8/9 y el código
+  `CAND_DOCTORAL`.
+- El contrato REST no cambia. `GET /sapp/tiposSolicitud` debe entregar el tipo
+  `{ id: 10, ...GRADO... }`; los listados siguen llegando desde
+  `GET /sapp/solicitudesAcademicas`. No hay schemas, payloads, dependencias,
+  variables, seeds ni datasets nuevos.
+
+## Paths, entorno y continuidad
+- Regla: `src/modules/trabajos-grado/constants.ts`; integración existente:
+  `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresión:
+  `tests/candidaturaDoctoral.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm
+  ni venv, Conda o Poetry. El frontend usa Node.js 24.15.0 y npm 11.4.2; las
+  versiones exactas de paquetes están fijadas en `package-lock.json`.
+- Verificación 2026-09-24: regresión dirigida 5/5 PASS, suite Node 51/51 PASS,
+  ESLint focalizado PASS, build PASS (309 módulos; CSS 247.18 kB; JS 725.07
+  kB) y `git diff --check` PASS. El lint global conserva 9 errores y 1 warning
+  preexistentes fuera de los archivos tocados; también persisten los avisos no
+  bloqueantes de npm por `http-proxy` y del chunk JavaScript mayor de 500 kB.
+- Pendiente integrado: confirmar que el catálogo institucional conserva el ID
+  10 para **GRADO** y revisar ambos niveles con sesión real. La ruta protegida
+  depende del backend y de credenciales institucionales.
+
+---
+
+# Handoff 2026-09-24 — títulos y filtros de gestión
+
+## Estado actual y decisiones
+- En `/coordinacion/profesores`, `ModuleLayout` es la única fuente del título **Gestión profesores**. La tarjeta ya no repite un `h1`; conserva la descripción, tabs y operaciones existentes.
+- La identificación anterior del tipo 8 como **GRADO** fue corregida por el handoff más reciente: 8 es candidatura doctoral legada y **GRADO** corresponde al tipo 10.
+- `normalizeEstadoSolicitud` traduce la sigla `PFIR_DIR_TG` y sus etiquetas descriptivas de director al mismo estado canónico. Salida esperada: una solicitud de crédito con `estado: "POR FIRMA DIRECTOR DE TG"` y sin depender de `estadoId` hace visible la opción de catálogo `{ id: 6, sigla: "PFIR_DIR_TG", label: "POR FIRMA DIRECTOR DE TG" }` en el filtro de pendientes.
+- No cambiaron endpoints, payloads, DTO, roles, schemas, migraciones, paquetes, variables, seeds ni datasets. Se reutilizan `GET /sapp/tiposSolicitud`, `GET /sapp/estadosSolicitud` y `GET /sapp/solicitudesAcademicas`.
+
+## Paths, pruebas y continuidad
+- Archivos funcionales: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`, `src/modules/trabajos-grado/constants.ts` y `src/modules/solicitudes/utils/estadoSolicitud.ts`. Regresiones: `tests/candidaturaDoctoral.test.ts` y `tests/estadoSolicitud.test.ts`.
+- Verificación 2026-09-24: pruebas dirigidas 10/10 PASS; suite Node 50/50 PASS; ESLint focalizado PASS; `npm run build` PASS (309 módulos, CSS 246.20 kB, JS 724.29 kB); `git diff --check` PASS. Avisos conocidos: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente externo: validar las tres rutas protegidas con backend y sesión institucional, en escritorio/móvil y claro/oscuro. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y el repositorio no aporta una sesión/backend reproducibles.
+- Entorno único: `/workspace/SAPP-frontend/node_modules` con Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. El lockfile fija versiones; no ejecutar otra instalación ni crear venv, Conda, Poetry o un segundo árbol npm.
+
+## Siguientes pasos
+1. Confirmar que el catálogo institucional mantiene el ID 8 para **GRADO**; si el backend migra a IDs no estables, clasificar por código canónico en un único helper.
+2. Verificar un crédito real con cada variante de estado del director y confirmar que seleccionar el filtro conserva únicamente las filas `PFIR_DIR_TG`.
+3. Revisar visualmente el espaciado de la descripción de Gestión de profesores tras retirar el encabezado duplicado.
+
+---
+
+# Handoff 2026-09-24 — ajustes de matrícula financiera
+
+## Estado actual y decisiones
+- `ProcesoLiquidacionPage.tsx` ya no conserva selección de filas. Convocar envía `{ incluirVigentes: true, incluirNuevos: true }`; solicitudes y recordatorios omiten cuerpo para que el backend opere sobre todo el conjunto elegible. Los filtros solo afectan la consulta visible. La matriz de `flow.ts` controla qué acciones se renderizan en cada estado; el `fieldset` las mantiene visibles y bloqueadas durante carga.
+- La tabla presenta ocho columnas: Nombre, Código, Programa académico, Tipo de estudiante, Estado, Semestre, Total y Acciones. Se mantienen programa, estado, texto, solo-alertas y paginación. El filtro de programa tiene mayor ancho y el wrapper contiene el scroll horizontal móvil. `AgregarEstudiante.tsx` conserva el selector VIGENTE/NUEVO.
+- `ParametrosProcesoForm.tsx` no muestra base ni proceso base. Todo guardado construye `baseSalud: 'SMMLV'`; la creación nunca agrega `procesoBaseId`. Una base histórica `MATRICULA` solo produce una advertencia: consultar no dispara PUT ni recálculo. Los porcentajes siguen editables.
+- `LiquidacionDetallePage.tsx` mueve programa, tipo y periodo a **Revisión del caso**, retira ingreso/permanencia, cohorte y promoción, filtra `PROMOCION_FALTANTE` y oculta el campo de promoción. Al guardar ajustes envía `initial.promocion`, preservando el reemplazo completo exigido por el backend. Tipos y datos históricos no se eliminaron, y Excel permanece intacto.
+
+## Contratos y salida esperada
+- `POST /liquidacionMatricula/procesos/{id}/convocar`: `{ incluirVigentes: true, incluirNuevos: true }`.
+- `POST .../enviarSolicitudes` y `POST .../enviarRecordatorio`: sin `liquidacionIds` y sin selección cliente.
+- `POST /liquidacionMatricula/procesos`: parámetros actuales + `periodoId` + `baseSalud: 'SMMLV'`, sin `procesoBaseId`. `PUT /procesos/{id}` usa SMMLV y conserva porcentajes.
+- `PUT /liquidaciones/{id}/ajustes`: reemplazo completo con semestre, promoción histórica no visible, ajuste, valor final y observaciones.
+- No hay endpoints, migraciones, schemas, dependencias ni seeds nuevos. Fixture visual: `tests/fixtures/matricula-financiera/preview.html` y `preview.jsx`; usa memoria local, no valida cálculos ni seguridad backend.
+
+## Entorno, resultados y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación local: ESLint focalizado sin errores (la fixture genera solo aviso de que ESLint la ignora), suite Node 48/48 PASS, build PASS (309 módulos; CSS 246.20 kB, JS 724.17 kB) y `git diff --check` PASS. Avisos ambientales: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente externo: recorrer BORRADOR/ABIERTO/CERRADO/PUBLICADO con backend y sesión institucional, inspeccionar payloads reales y revisar escritorio/móvil y claro/oscuro. No hay navegador instalado ni credenciales/backend reproducibles, por lo que no se pudo generar captura autenticada.
+
+---
+
+# Handoff 2026-09-24 — selector compacto de informes
+
+## Estado actual y salida esperada
+- `src/pages/Reportes/ReportesPage.tsx` conserva las tres opciones de proceso,
+  pero cada botón renderiza únicamente su nombre; se retiraron del modelo local
+  y de la interfaz las descripciones pequeñas redundantes.
+- `src/pages/Reportes/ReportesPage.css` reduce el padding de la franja
+  introductoria, elimina el margen residual de su párrafo y compacta los
+  botones. La opción activa conserva borde, fondo y `aria-pressed`; los estilos
+  siguen usando tokens semánticos y funcionan en temas claro/oscuro.
+- Salida esperada en `/coordinacion/reportes`: franja superior sensiblemente más
+  baja y una fila compacta con **Admisión**, **Matrícula** y **Créditos
+  condonables**, sin subtítulos. Formularios, generación y descarga de PDF no
+  cambian.
+
+## Contratos, entorno, pruebas y continuidad
+- No cambiaron API, payloads, DTO, schemas, permisos, rutas, dependencias,
+  variables, seeds ni datasets. Los catálogos y reportes continúan dependiendo
+  del backend institucional configurado mediante las variables Vite existentes.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni
+  venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; el lockfile fija el árbol exacto.
+- Verificación 2026-09-24: ESLint focalizado PASS; suite Node PASS (48/48);
+  build PASS (309 módulos, CSS 246.08 kB y JS 726.99 kB); `git diff --check`
+  PASS. El lint global continúa bloqueado por 9 errores y 1 warning
+  preexistentes. Persisten el warning ambiental npm `Unknown env config
+  "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar visualmente la ruta protegida con una sesión y el
+  backend institucionales en escritorio/móvil y temas claro/oscuro. No se pudo
+  generar captura porque el contenedor no incluye Chromium, Chrome ni Firefox.
+
+---
+
+# Handoff 2026-09-24 — matrícula académica, documentos y navegación estudiantil
+
+## Update 2026-09-24 — navegación y solicitudes del director
+
+### Estado actual y salida esperada
+- `src/app/navigationItems.ts` detecta explícitamente `DIRECTOR` mediante los
+  guards normalizados y excluye del sidebar **Matrícula** y **Proyectos de
+  grado**. El rol conserva **Admisiones** y **Solicitudes**. Los perfiles de
+  estudiante y gestión de posgrados mantienen sus menús anteriores.
+- `src/pages/Solicitudes/SolicitudesPage.tsx` entrega `assignedOnly` para el
+  director. Por ello `SolicitudesCoordinadorView` carga/presenta solamente
+  **Solicitudes asignadas** y omite el listado general y sus filtros. Se conserva
+  la corrección anterior que eliminó el segundo encabezado “Solicitudes”.
+- No cambiaron rutas protegidas, API, schemas, contratos, payloads, dependencias,
+  variables, seeds ni datasets. La restricción solicitada es de navegación y
+  presentación; el backend continúa siendo la autoridad de autorización.
+
+### Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni
+  venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación 2026-09-24: ESLint focalizado PASS; build PASS (309 módulos, CSS
+  246.09 kB, JS 727.22 kB); suite Node PASS (48/48); `git diff --check` PASS.
+  `npm run lint` continúa bloqueado por 9 errores y 1 warning preexistentes en
+  servicios placeholder, admisiones, documentos y tipos/editor de solicitudes.
+  Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el
+  aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente externo: validar `/solicitudes` y el sidebar con una sesión real de
+  director en escritorio/móvil y temas claro/oscuro. No se generó captura porque
+  el contenedor no incluye Chromium, Chrome ni Firefox y tampoco existe una
+  sesión institucional reproducible.
+
+---
+
+## Estado actual y decisiones
+- `src/pages/Matricula/MatriculaPage.tsx` pagina el resultado ya filtrado en grupos de 10. El contrato de UI esperado es **Anterior · Página N de M · Siguiente**; ambos botones están deshabilitados en los extremos, los filtros vuelven a la página 1 y escritorio/móvil muestran el mismo subconjunto. Los estilos en `MatriculaPage.css` replican Solicitudes con tokens semánticos y disposición móvil de dos botones.
+- `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` retiró **Tamaño** de cada tarjeta documental y eliminó su formateador huérfano. No cambió el DTO: `tamanoBytes` puede seguir llegando del backend; simplemente ya no se presenta en esta vista.
+- `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx` reinicia `suppressClickRef` al comenzar un nuevo gesto válido. Causa corregida: tras ciertos arrastres el navegador no emitía `click`, la bandera quedaba activa y consumía el siguiente clic legítimo sobre una tarjeta. Un arrastre actual todavía activa la bandera y su clic sintético continúa bloqueado.
+
+## Contratos, artefactos y salida esperada
+- No cambiaron endpoints, schemas, payloads, rutas, permisos ni persistencia. El listado conserva `MatriculaAcademicaListadoDto[]`; la paginación es exclusivamente cliente después de programa, periodo, estado, búsqueda y orden descendente por `fechaSolicitud`.
+- No hay seeds, datasets ni artifacts nuevos. Rutas principales para revisión autenticada: `/matricula`, `/coordinacion/estudiantes` y `/coordinacion/estudiantes/:id`.
+- Salida esperada: 73 matrículas producen 8 páginas (10 por página, 3 en la última); filtrar recalcula el total y vuelve a página 1. Un clic sencillo en una tarjeta abre el perfil al primer intento, mientras arrastrar horizontalmente no navega. Las tarjetas documentales muestran **Fecha de carga**, pero no **Tamaño**.
+
+## Entorno, pruebas y próximos pasos
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Versiones verificadas: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación local: ESLint focalizado PASS; build PASS (309 módulos, CSS 246.09 kB, JS 727.18 kB); suite Node PASS (48/48); `git diff --check` PASS. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite informa un chunk JS mayor de 500 kB.
+- Pendiente externo: validar las tres rutas con sesión/backend institucionales, en claro/oscuro, escritorio/móvil, incluyendo clic, arrastre y retorno al listado. No se generó captura: el contenedor no dispone de Chromium, Chrome ni Firefox y las vistas protegidas necesitan sesión y backend no incluidos.
+
+---
+
+# Update 2026-09-24 — paginación visual unificada en matrícula financiera
+
+## Estado actual y salida esperada
+- `Paginacion`, el componente compartido por los listados de matrícula financiera, usa ahora la clase dedicada `mf-pagination` en lugar de combinar `mf-actions` con los botones primarios/secundarios del flujo. Su presentación replica el patrón de Solicitudes: controles pill compactos, superficie y contorno semánticos, texto neutro y alineación derecha; se centra en tablet y muestra el indicador sobre dos botones del mismo ancho en móvil.
+- El contrato permanece `{ pagina: number, total: number, onChange(page): void }`. La salida accesible es un `nav` llamado **Paginación de matrícula financiera**, botones no submit y un indicador `aria-live="polite"`. Si `total` es cero, la etiqueta y la deshabilitación operan contra una página mínima. No cambiaron la obtención ni el tamaño de las páginas.
+- Implementación: `src/pages/MatriculaFinanciera/FinancieraUi.tsx`; estilos responsive y compatibles con tema claro/oscuro: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. No hay schemas, endpoints, payloads, dependencias, variables, seeds ni datasets nuevos.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no ejecutar otra instalación ni crear venv, Conda o Poetry. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-24: ESLint focalizado PASS; suite Node PASS (48/48); build PASS (309 módulos, CSS 245.36 kB y JS 726.81 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente externo: revisar con sesión institucional los listados de procesos y liquidaciones en temas claro/oscuro y anchos de escritorio/móvil. La fixture aislada disponible está en `tests/fixtures/matricula-financiera/preview.html` y usa datos ficticios en memoria. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox.
+
+---
+
+# Update 2026-09-24 — eliminación de textos redundantes en encabezados
+
+## Estado actual, decisión y salida esperada
+- `SolicitudesCoordinadorView` eliminó el `<h3>Solicitudes</h3>` del listado general porque la ruta `/solicitudes` ya presenta ese título mediante `ModuleLayout`. La región continúa identificada accesiblemente como **Listado de solicitudes** con `aria-label`; el encabezado independiente **Solicitudes asignadas** no cambió.
+- `TrabajosGradoPage` eliminó el texto “En esta primera etapa se agrupan las solicitudes académicas asociadas al desarrollo del proyecto.” de los encabezados de maestría y doctorado. Permanecen el eyebrow contextual y el título del nivel.
+- Salida esperada: una sola aparición visible del título **Solicitudes** en la página general y ningún texto introductorio provisional bajo **Trabajo de investigación de maestría** o **Tesis doctoral**. No cambiaron contratos, filtros, tablas, navegación, permisos ni servicios.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. No hay schemas, artifacts, dependencias, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); `npm run build` PASS (309 módulos, CSS 244.73 kB y JS 726.81 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+- Pendiente: validar visualmente las rutas protegidas `/solicitudes`, `/trabajos-grado/maestria` y `/trabajos-grado/doctorado` con una sesión institucional, en claro/oscuro y escritorio/móvil. El repositorio no incluye credenciales ni backend reproducible.
+
+---
+
+# Update 2026-09-24 — estado académico sin duplicar en tarjetas
+
+## Estado actual, decisión y salida esperada
+- `EstudianteCard` conserva la insignia visual que presenta `estadoAcademico` debajo de la fotografía y elimina la fila redundante **Estado académico** del bloque de detalles. Una tarjeta activa o inactiva debe mostrar ahora **Activo** o **Inactivo** exactamente una vez.
+- La cohorte continúa visible en todos los tamaños. Se retiró la regla móvil que ocultaba el último detalle porque, tras eliminar el estado duplicado, esa regla habría ocultado la cohorte. No cambiaron el mapper, el filtro por estado, la navegación, el contrato ni los servicios.
+- Contrato de entrada sin cambios: `EstudianteCoordinacion.estadoAcademico` sigue siendo una cadena normalizada por el servicio y la tarjeta mantiene las etiquetas para `ACTIVO`, `INACTIVO`, `EGRESADO`, `EN_TRABAJO_DE_GRADO` y `EN_ESPERA_CANDIDATURA`. La salida esperada contiene una insignia de estado, nombre, código UIS, cohorte y la acción **Ver perfil**.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` y `EstudianteCard.css`. No hay schemas, artifacts, dependencias, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: `npx eslint src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` PASS; `npm run build` PASS (309 módulos, CSS 244.73 kB y JS 727.00 kB); `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); `git diff --check` PASS. `npm run lint` sigue fallando por 9 errores y 1 warning preexistentes en otros archivos. Persisten además el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar visualmente el listado protegido con una sesión institucional en escritorio y móvil. No se generó captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere autenticación/backend institucionales.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+
+---
+
+# Update 2026-09-24 — directorio explícito del banco de evaluadores
+
+## Estado actual y decisiones
+- En `ProcesoEvaluacionPanel`, escribir nombre o correo ya no dispara búsquedas automáticas. Tanto al agregar como al reemplazar aparece **Buscar en el directorio**; abrirlo consulta `GET /sapp/procesoEvaluacionTg/jurados/banco` sin query y el formulario de filtro consulta la misma ruta con `?q={texto}` únicamente al pulsar **Buscar**.
+- El listado muestra todos los campos útiles del contrato. Seleccionar una fila copia `nombre`, `correo`, `institucion`, `externo` e `idioma` al `JuradoInput`, cierra el directorio y permite revisar/editar el formulario antes de la designación. Estados esperados: indicador de carga, resultado vacío, error recuperable y cantidad de resultados.
+- Contrato del banco: envelope `{ ok: boolean, message: string, data: BancoJurado[] }`; cada elemento admite `{ correo, nombre, institucion?, externo?, idioma?, participaciones, ultimaParticipacion? }`. Sin filtro la URL no debe contener `?q=`; con filtro se recortan espacios y se codifica el valor. El payload y la secuencia de designación/reemplazo no cambiaron.
+
+## Paths, pruebas y continuidad
+- Implementación: `src/modules/trabajos-grado/evaluacion/{ProcesoEvaluacionPanel.tsx,ProcesoEvaluacionPanel.css,api.ts,bancoJurados.ts}`. Regresión del constructor de URL: `tests/bancoJurados.test.ts`. No hay dependencias, schemas, variables, seeds ni datasets nuevos.
+- Verificación local 2026-09-24: `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); ESLint focalizado PASS; `npm run build` PASS (308 módulos, CSS 244.78 kB, JS 727.14 kB); `git diff --check` PASS. Avisos no bloqueantes: npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente: validación autenticada con backend institucional del listado sin filtro, filtro real y selección en agregar/reemplazar; revisar claro/oscuro y móvil. No se pudo capturar la vista porque este contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere sesión/backend.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
+
+---
+
+# Update 2026-09-24 — director de trabajo de grado en perfil y detalle estudiantil
+
+## Estado actual, contrato y salida esperada
+- `PerfilPage` presenta **Director de trabajo de grado** y **Correo del director** en la tarjeta académica del estudiante. `EstudianteDetalleCoordinacionPage` presenta esos mismos valores en los metadatos del perfil consultado.
+- `GET /inicio` admite `data.detalle.estudiante.directorTg: { nombreCompleto: string, correo: string } | null`. `GET /sapp/estudiantes/consulta` admite el mismo objeto `directorTg` en el nivel raíz de cada registro. Los tipos y el adaptador conservan estos contratos; el mapper de autenticación mantiene completa la proyección de `detalle.estudiante`.
+- Salida esperada: con director se muestran nombre y correo exactamente como llegan; con `directorTg: null` los dos `<dd>` quedan vacíos por decisión de producto. No se muestra “Sin información”, “Pendiente” ni otro placeholder para estos campos.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/api/authTypes.ts`, `src/modules/estudiantes/{types.ts,services/estudiantesMockService.ts}`, `src/pages/Perfil/PerfilPage.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`. Los mocks existentes declaran `directorTg: null`; no hay seeds ni datasets nuevos.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. No es un proyecto Python. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (44/44); `npm run build` PASS (307 módulos, CSS 243.32 kB y JS 724.89 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar visualmente con sesiones institucionales el perfil del estudiante y el detalle abierto por coordinación, tanto con director como con datos históricos nulos. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y las rutas requieren credenciales y backend institucionales no reproducibles en el repositorio.
+
+---
+
+# Update 2026-09-24 — ocultamiento de asignadas exclusivo para coordinación
+
+## Estado actual, decisión y salida esperada
+- `SolicitudesCoordinadorView` admite `hideAssignedList`. La vista continúa consultando las asignaciones para retirar sus IDs del listado general, pero no renderiza el bloque **Solicitudes asignadas** cuando la propiedad es `true`.
+- `SolicitudesPage` y `TrabajosGradoPage` activan esa propiedad únicamente si la sesión contiene el rol exacto `COORDINADOR_POSGRADOS`. No se usa `canManagePosgrados` para esta decisión porque esa guarda también incluye `ADMIN_POSGRADOS` y `SECRETARIA_POSGRADOS`, cuyos comportamientos deben permanecer sin cambios.
+- Salida esperada: coordinación no ve solicitudes que tenga asignadas en ninguno de los dos módulos; administración y secretaría conservan el bloque de asignadas y los docentes conservan su listado exclusivo. Estudiantes, dirección, filtros, paginación, navegación y detalle no cambian.
+- Los contratos siguen siendo `GET /sapp/solicitudesAcademicas` para el universo y `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}` para las asignadas. No se modificaron payloads, DTO, backend, esquema, dependencias, variables, seeds ni datasets.
+
+## Paths, entorno y continuidad
+- Implementación: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`, `src/pages/Solicitudes/SolicitudesPage.tsx` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni venv, Conda o Poetry. No es un proyecto Python. Entorno exacto verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol completo.
+- Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (44/44); `npm run build` PASS (307 módulos, CSS 243.32 kB y JS 724.18 kB); `git diff --check` PASS. Persisten el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente de validación institucional: iniciar sesión separadamente como coordinación, administración, secretaría y docente; comprobar ambos niveles de proyectos de grado; y simular una asignación/desasignación. El repositorio no incluye credenciales, backend reproducible ni seeds para este flujo.
+
+---
+
+# Implementación 2026-09-24 — continuación autorizada tras auditoría
+
+- El usuario pidió implementar los ajustes del análisis. Se completó la interfaz de las 24 operaciones y documentos; la entrada anterior «sin implementación» es histórica. Resumen y límites: `docs/matricula-financiera-implementacion-2026-09-24.md`.
+- Nuevas rutas protegidas: `/matricula/financiera/procesos/:procesoId/liquidaciones/:liquidacionId` y `/matricula/financiera/tarifas`. Código: `src/modules/matricula-financiera/` y `src/pages/MatriculaFinanciera/`. Formularios separados para parámetros, respuestas, certificados, alta y tarifas; transporte tipado y reglas probadas. Mantener los perfiles actuales de gestión y la base `/api/sapp`.
+- Contratos: ajustes reemplaza todos los campos; NUEVO envía solo votación/salud; documentos usan trámite 1018, ID de liquidación y tipo de documento ANX-39 del catálogo. Token interno también en documentos y catálogos. Buscador existente `/estudiantes?query=` fuera del prefijo financiero. Confirmar estas rutas/campos con el backend real; no hubo sesión institucional ni llamadas reales en las pruebas.
+- Validación: `node --test --test-isolation=none tests/*.test.ts` 44/44 PASS; ESLint focalizado PASS; TypeScript/build PASS, 305 módulos (CSS 243.32 kB, JS 722.53 kB). Advertencias: npm `msvs_version`/`python`, chunk >500 kB; Vite requiere ejecutar fuera del sandbox por EPERM. Tests nuevos: `tests/matriculaFinanciera{Rules,Transport}.test.ts`.
+- Prueba manual de UI en navegador integrada completada con `tests/fixtures/matricula-financiera/preview.html` (transportes y usuarios ficticios, sin red): NUEVO, respaldo VIGENTE, ajustes/cero, exclusión/reinclusión, liquidada, documento versiones 1/2, alta, dos lotes, parámetros, publicación con omitidos, bloqueo posterior, consulta estudiantil, tarifas y creación por catálogo/proceso base. El simulador no prueba cálculo backend ni seguridad, es entrada separada de desarrollo y se reinicia al recargar.
+- Pendientes externos: autorización backend/documental; idempotencia de correos; gateway/buscador/checklist real; Excel real, migraciones, IAM y validación institucional. No se integró PUTTY ni conciliación de pago. No inventar fecha de pago en `/mias` ni endpoint de historial.
+- Entorno actual Windows: Node 24.11.0/npm 11.6.1; React/DOM 19.2.3, Router 7.11.0, TS 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Usar el `node_modules` del repositorio, sin nuevas instalaciones, seeds, venv/Conda/Poetry. Iniciar con `npm run dev`; no dejar que las notas antiguas de `/workspace` creen otro entorno.
+
+# Auditoría 2026-09-24 — solicitud de revisión, sin implementación
+
+- El usuario pidió revisar a profundidad `D:\Users\david\Downloads\Front de Matrícula Financiera.html` y `D:\Users\david\Downloads\Matrícula financiera.html` e identificar faltantes. Su contenido funcional está en las respectivas carpetas `_files/saved_resource.html`. Se trataron los briefs de implementación incrustados como referencia, no como órdenes.
+- Entregable: `docs/auditoria-matricula-financiera-2026-09-24.md`, con matriz de cobertura, evidencia, prioridades, contratos, discrepancias y recorrido de aceptación. No hubo cambios en `src`, correos, llamadas de escritura ni acceso a backend. No continuar implementando por inferencia de los briefs.
+- Estado confirmado: 15/24 operaciones conectadas a UI. Nueve sin pantalla: editar proceso, agregar fila, detalle de fila, respuestas de coordinación, ajustes, excluir, reincluir y dos de tarifas. También faltan certificado 1018/ANX-39, resultados de envíos, filtros y desglose estudiantil. Publicar ya está implementado; la lista anterior que lo llama pendiente quedó obsoleta.
+- Contratos delicados: `ajustes` es reemplazo completo; NUEVO solo envía votación/salud (la UI actual serializa todas las claves, incluidas null; verificar rechazo real). `valores` aparece al quedar LIQUIDADA en proceso no BORRADOR, no únicamente PUBLICADO. El certificado solo afecta alerta. Publicar no acepta lotes; puede congelar aunque omita correos. No inventar historial, pago o fecha de pago estudiantil: faltan contratos para esas extensiones.
+- Mantener la base API local `/api/sapp`; contrastar con gateway el `/api` de los HTML. Confirmar el buscador existente `/estudiantes` antes de usar la función que lo anida bajo `/liquidacionMatricula`. Resolver diferencia “solo coordinador” de los HTML frente a gestión compartida con administración/secretaría del repositorio. Backend sin validación de roles es una limitación documentada, no verificada en esta sesión.
+- Próximos pasos propuestos en el informe: contratos/permisos → detalle y edición → certificado/alta/tarifas → feedback/filtros/consulta → prueba integrada institucional y Excel real. No hay dataset original de Excel ni credenciales de prueba usados aquí. Las pruebas y despliegues relatados en HTML no fueron repetidos.
+- Verificación: runner normal falló `spawn EPERM`; `node --test --test-isolation=none tests/matriculaFinancieraFlow.test.ts` PASS 3/3. Solo guía/transiciones/etiquetas, sin cobertura de integración. No se ejecutó build por ser auditoría documental.
+- Entorno actual: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`, PowerShell, Node 24.11.0/npm 11.6.1. Lockfile: React/DOM 19.2.3, Router 7.11.0, TS 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Reutilizar `node_modules` local; las notas antiguas `/workspace` describen otro host. No crear venv/Conda/Poetry ni otro árbol npm. npm advierte configuraciones antiguas `msvs_version`/`python`.
+
+# Actualización 2026-09-24 — guía y cierre del flujo de matrícula financiera
+
+## Estado y decisiones
+- `src/modules/matricula-financiera/flow.ts` centraliza las guías por perfil, las etiquetas del resumen y la matriz de acciones: BORRADOR permite convocar/enviar/recalcular; ABIERTO agrega recordatorio/cierre; CERRADO permite reabrir/recalcular/publicar; PUBLICADO es de consulta.
+- `MatriculaFinancieraPage.tsx` muestra el contexto inicial y todos los parámetros de creación. `ProcesoLiquidacionPage.tsx` completa el cierre mediante `POST /liquidacionMatricula/procesos/{id}/publicar` con `{ fechaLimitePago }`. El backend conserva la autoridad de las transiciones.
+- Prueba dirigida: `tests/matriculaFinancieraFlow.test.ts`. Pendiente validar con sesión institucional los cuatro estados, la fecha límite y los temas claro/oscuro. No existen seeds; usar datos del backend. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm.
+
+# Update 2026-09-24 — matrícula financiera
+
+## Estado actual y decisiones
+- Se implementó la navegación jerárquica solicitada: `/matricula` es una portada con dos opciones; el flujo anterior vive en `/matricula/academica`; el nuevo flujo vive en `/matricula/financiera`. El sidebar tiene un submenú desplegable, activo por ruta y operable en móvil.
+- Coordinación dispone de lista/creación de procesos y tablero `/matricula/financiera/procesos/:procesoId`, con resumen, filtros, acciones habilitadas por estado, tabla de alertas, marcar/desmarcar liquidada y Excel. El estudiante dispone de **Mi liquidación**, preguntas dinámicas (no hay textos hardcodeados), valores y estados ternarios mediante radios sin enviar `estudianteId`.
+- Seguridad deliberada: lista y tablero coordinador se muestran solo para perfiles `canManagePosgrados`; el detalle también usa `RequireRoles`. El backend aún no valida estos roles, por lo que esta barrera de interfaz no debe retirarse. Todas las llamadas usan `X-Internal-Token` con el JWT de `SAPP_AUTH_SESSION`.
+
+## Contrato, artefactos y pendientes
+- Contratos y cliente: `src/modules/matricula-financiera/{types,api}.ts`; interfaz: `src/pages/MatriculaHome` y `src/pages/MatriculaFinanciera`; rutas: `src/app/routes/matriculaRoutes.tsx`; navegación: `src/app/navigationItems.ts` y `src/components/Sidebar`. Base esperada: `/api/liquidacionMatricula`; envelope `{ ok, message, data }`; Excel es blob. Dinero llega calculado por backend y nunca se calcula/redondea aquí. Fecha-hora ISO sin zona ya representa Colombia y no debe convertirse desde UTC.
+- La primera entrega cubre el camino principal. Próximos pasos: completar edición de parámetros, publicación con fecha límite, formularios de respuestas/ajustes/exclusión/reinclusión, alta manual, tarifas y certificado ANX-39 (trámite 1018); mostrar el detalle de omitidos de los envíos masivos; agregar paginación cuando el backend la exponga; validar con coordinación las 24 operaciones en dev.
+- Prueba integrada sugerida: periodo libre → crear → convocar → excluir → enviar → responder como estudiante → ajustar → recordar → exportar → marcar liquidada → cerrar/publicar. No reutilizar 2026-2 si ya tiene proceso (unicidad por periodo). MailPit recibe todo el correo de dev. No hay credenciales, seeds ni dataset versionado en este repositorio.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`, Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No crear venv/Conda/Poetry ni ejecutar otro `npm install`; las versiones exactas están en `package-lock.json`.
+- Resultado local 2026-09-24: `npm run build` PASS (296 módulos, CSS 239.32 kB, JS 684.81 kB); permanece solo el aviso de chunk >500 kB y el warning ambiental npm `Unknown env config "http-proxy"`. La captura queda pendiente porque no hay navegador instalado ni sesión institucional reproducible.
+
+---
+
+# Update 2026-09-24 — clasificación doctoral en proyectos de grado
+
+## Estado actual, causa y salida esperada
+- Se confirmó la causa: `getNivelTrabajoGrado` solo buscaba la sigla histórica `DCC`, por lo que el nombre vigente `347 - DOCTORADO EN CIENCIAS DE LA COMPUTACION` caía en el fallback de maestría. La función ahora delega en el resolvedor canónico `resolveTipoPrograma`, que reconoce nombres oficiales, códigos UIS (`302`/`347`), tildes y siglas legadas.
+- `TrabajosGradoPage` usa este resultado para redirigir al estudiante y elegir el catálogo. Un estudiante doctoral navega a `/trabajos-grado/doctorado` y recibe `[13, 8, 9, 4, 5]`; maestría conserva `[13, 6, 7]`. Un valor ausente o desconocido mantiene por compatibilidad el fallback a maestría.
+- No se modificaron endpoints, DTO, payloads, permisos, schemas ni base de datos. El contrato de sesión sigue leyendo `session.user.estudiante?.programaCodigoNombre` con respaldo en `session.user.programa`.
+
+## Paths, entorno, pruebas y continuidad
+- Resolución compartida: `src/shared/domain/programaAcademico.ts`; integración: `src/modules/trabajos-grado/constants.ts` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`; regresión: `tests/candidaturaDoctoral.test.ts`.
+- Verificación local 2026-09-24: pruebas dirigidas PASS (7/7), suite Node completa PASS (29/29), ESLint focalizado PASS, `npm run build` PASS (287 módulos; CSS 233.01 kB y JS 670.15 kB) y `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JS mayor de 500 kB.
+- Pendiente: validar con backend y una sesión institucional doctoral que no aparezcan los tipos 6 y 7. Confirmar después si el ID legado 8 puede retirarse y reconsiderar el fallback si se incorpora un tercer nivel académico.
+- No hay seeds ni datasets para este flujo. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+---
+
+# Update 2026-09-24 — histórico y selección documental al designar jurados
+
+## Estado actual, causa y decisiones
+- `ProcesoEvaluacionPanel` muestra **Histórico de cambios** en vez de **Línea de tiempo**. El contrato de lectura no cambió: `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`, con envelope `{ ok, message, data }` y la lista `HistorialProcesoEvaluacion[]` descrita en la actualización anterior.
+- Se retiró del formulario de creación el checkbox **Enviar invitación al guardar**. Una designación nueva siempre manda `enviarInvitaciones: true`; el usuario no puede desactivarlo. Los reemplazos ya invitaban obligatoriamente y no cambiaron.
+- La selección visual usaba correctamente `SolicitudDocumentoAdjuntoDto.idDocumento`, pero la única escritura era el `documentoEvaluarId` incluido en la designación. Ante el caso observado (selección `1191`, asignación final `1192`), el flujo ahora llama primero a `PUT /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{documentoId}` y solo después a `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`. Ambas operaciones reciben exactamente el ID seleccionado; la primera impide que la creación/invitación dependa del fallback del backend al documento más reciente.
+- Salida esperada: al seleccionar el documento `1191`, la primera URL termina en `/documento-evaluar/1191`, el POST contiene `documentoEvaluarId: 1191` y `enviarInvitaciones: true`, y la recarga del proceso retorna `documentoEvaluarId: 1191` con su nombre correspondiente.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`; texto de error del histórico: `src/modules/trabajos-grado/evaluacion/api.ts`. No hay nuevos schemas, dependencias, seeds, fixtures ni datasets.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. No es un proyecto Python. Entorno comprobado: Node.js 24.15.0 y npm 11.4.2; React/React DOM, React Router DOM, TypeScript, Vite/Rolldown y ESLint se resuelven con las versiones exactas de `package-lock.json`.
+- Verificación local 2026-09-24: `npx eslint src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx src/modules/trabajos-grado/evaluacion/api.ts` PASS, `npm run build` PASS, `node --test tests/*.test.ts` PASS (28/28) y `git diff --check` PASS. El lint global continúa fallando por 9 errores preexistentes fuera de estos archivos. npm mantiene el warning ambiental conocido `Unknown env config "http-proxy"`; el build mantiene el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional el caso concreto `1191`/`1192`, inspeccionando en red que el PUT finalice antes del POST y comprobando el archivo recibido en el correo. También revisar el nuevo encabezado en claro/oscuro y móvil. La ruta protegida no dispone de credenciales ni backend reproducible dentro del repositorio.
+
+---
+
+# Update 2026-09-23 — historial real en la línea de tiempo de trabajos de grado
+
+## Estado actual, contrato y salida esperada
+- `ProcesoEvaluacionPanel` obtiene la línea de tiempo mediante `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/historial`, en paralelo con
+  el proceso y sus catálogos. Ya no usa `historial` del DTO general ni fabrica
+  una entrada a partir del estado actual. La consulta se repite después de
+  jurados, invitaciones, correcciones, recordatorios, sustentación o resultado.
+- El envelope esperado es `{ ok: true, message: string, data:
+  HistorialProcesoEvaluacion[] }`. Cada elemento contiene
+  `estadoAnteriorSigla`, `estadoAnterior`, `estadoNuevoSigla`, `estadoNuevo`,
+  `fecha`, `origen`, `responsable`, `detalle` y
+  `minutosEnEstadoAnterior`; los últimos tres valores de negocio pueden ser
+  `null`. La UI muestra estado nuevo, fecha en `America/Bogota`, origen y los
+  campos opcionales presentes. Para un arreglo vacío muestra **No hay cambios
+  de estado registrados.**
+- Implementación y contrato: `src/modules/trabajos-grado/evaluacion/{api.ts,types.ts,ProcesoEvaluacionPanel.tsx}`;
+  presentación: `ProcesoEvaluacionPanel.css`. No cambiaron endpoints de
+  escritura, permisos, schema, paquetes, variables, seeds ni datasets.
+
+## Entorno, resultados y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. No es un proyecto Python. Entorno: Node.js 24.15.0,
+  npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (286 módulos; CSS 233.01 kB y JS 670.02 kB); `git diff --check` PASS. Persisten
+  el warning ambiental npm `Unknown env config "http-proxy"` y el aviso
+  informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional la solicitud `67`, el
+  orden cronológico retornado por el backend y el refresco tras una transición.
+  También revisar la presentación en claro/oscuro y móvil. La ruta protegida no
+  cuenta con credenciales ni datos reproducibles dentro del repositorio.
+
+---
+
+# Update 2026-09-23 — contrato general de programas académicos
+
+## Estado actual, decisiones y salida esperada
+- Se auditó el frontend ante el cambio del catálogo: id `1` es ahora `{ nombre: "MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA", nivel: "MAESTRIA", codigo_uis: "302", codigo_idp: "302:MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA" }`; id `2` es `{ nombre: "DOCTORADO EN CIENCIAS DE LA COMPUTACION", nivel: "DOCTORADO", codigo_uis: "347", codigo_idp: "347:DOCTORADO EN CIENCIAS DE LA COMPUTACION" }`.
+- `src/shared/domain/programaAcademico.ts` es la fuente canónica para clasificar y mostrar programas. Reconoce id, nivel, código UIS, nombre y código IDP en camelCase/snake_case y conserva únicamente compatibilidad de lectura con `MISI`, `DCC`, `61412` y `61204`. La salida visible canónica es `302 - MAESTRÍA...` o `347 - DOCTORADO...`.
+- Se adaptaron el catálogo de reportes, creación de convocatorias, cards de admisiones, selector/listado/detalle de estudiantes y selector de matrícula. Los procesos siguen enviando IDs (`1`/`2`); no se sustituyeron siglas incluidas en códigos de dominio como `PROP_TESIS_DCC`, `DEF_TI_MISI` ni códigos de asignatura.
+- Contrato de entrada de `GET /sapp/programaAcademico`: arreglo dentro del envelope habitual `{ ok, message, data }`; cada elemento requiere `id` y `nombre`, y admite `nivel`, `codigoUis|codigo_uis`, `cantidadSemestres|cantidad_semestres`, `puntajeMinimoAdmision|puntaje_minimo_admision`, `codigoIdp|codigo_idp` y el legado opcional `codigoNombre`.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación central: `src/shared/domain/programaAcademico.ts`; regresión: `tests/programaAcademico.test.ts`. Consumidores principales: `src/modules/estudiantes/services/estudiantesMockService.ts`, `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx`, `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`, `src/pages/Reportes/ReportesPage.tsx`, `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni un segundo árbol npm. No hay seeds nuevos. Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; consultar `package-lock.json` para el árbol completo.
+- Verificación local 2026-09-23: `node --test tests/programaAcademico.test.ts` PASS (3/3), ESLint focalizado PASS y build PASS (286 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-Ckey4Lg-.js` 668.59 kB). Solo persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Reto abierto: verificar con backend real si Jackson publica exclusivamente camelCase o conserva snake_case; la interfaz acepta ambas. Validar visualmente todas las rutas protegidas con sesión institucional y confirmar que ningún payload usa el antiguo código UIS como identificador.
+- Próximos pasos: probar `GET /sapp/programaAcademico`, crear una convocatoria por cada programa, filtrar estudiantes/matrículas/reportes y revisar un detalle estudiantil. No hay credenciales ni backend reproducible en el repositorio.
+
+---
+
+# Update 2026-09-23 — firma ligada a la persona actualmente asignada
+
+## Estado actual, contrato y salida esperada
+- Se corrigió el caso real de la solicitud académica `72`: el crédito condonable devuelve `solicitudCreditoCondonable.personaAsignadaId: 65`, la sesión del director devuelve `detalle.persona.id: 65` y el estado es `PFIR_CAR_CONT`. El detalle muestra ahora **Firmar todos los documentos** porque compara esos identificadores de persona y no exige `DOCENTE_POSGRADOS` ni un rol de gestión específico.
+- La regla general es estado firmable **y** asignación vigente. Si `personaAsignadaId` está presente, prevalece sobre cualquier resultado anterior del listado: igualdad con `session.user.persona.id` habilita la acción y desigualdad la oculta. Si el detalle de otro trámite no expone responsable, el fallback es la pertenencia a `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarios_sapp.id}`.
+- Contrato incorporado al DTO: `solicitudCreditoCondonable` puede ser `null` o contener `{ id, modalidadId, modalidadNombre, personaAsignadaId, personaAsignadaNombre, solicitudAcademicaId }`. No cambió la firma: `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` sin body. Tras éxito se descarta la asignación anterior y se vuelven a consultar detalle y adjuntos; la salida esperada es que el botón desaparezca cuando el backend reasigna el trámite.
+
+## Paths, entorno, pruebas y continuidad
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; contrato: `src/modules/solicitudes/api/types.ts`; reglas puras: `src/modules/solicitudes/utils/firmaSolicitud.ts`; regresión: `tests/firmaSolicitud.test.ts`. No existen seeds ni datasets para este flujo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. No es un proyecto Python. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` conserva las versiones exactas.
+- Verificación local 2026-09-23: prueba dirigida PASS (7/7), ESLint focalizado PASS, build PASS (285 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-Crf2ogxd.js` 668.53 kB) y `git diff --check` PASS. Persisten solo el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional que el director `persona.id=65` firma la solicitud `72`, el backend cambia estado/asignación y la respuesta recargada oculta el botón. También validar un trámite no crédito cuyo detalle no incluya responsable para confirmar el fallback al listado asignado. La ruta protegida no dispone de sesión reproducible localmente.
+
+---
+
+# Update 2026-09-23 — agendamiento con conceptos o ajustes recibidos
+
+## Estado actual y contrato
+- El panel de coordinación habilita la tarjeta y el botón **Programar sustentación** cuando `estadoSolicitud` es `CONCEPTOS_REC` o `AJUSTES_RECIB`. La regla tolera además las formas descriptivas con espacios y conserva `EN_AJUSTES` por compatibilidad con el flujo anterior.
+- La regla está aislada en `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts` y la consume `ProcesoEvaluacionPanel.tsx`. Al abrir el formulario, la mutación continúa usando `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/sustentacion` con `fechaSustentacion`, `modalidadCodigo`, `lugar`, `enlace` y `notificarJurados`.
+- No cambiaron DTO, endpoint, permisos, esquema, dependencias, variables, seeds ni datasets. El backend continúa validando la transición académica.
+
+## Pruebas, entorno y continuidad
+- La regresión `tests/estadoProcesoEvaluacion.test.ts` verifica las siglas y nombres descriptivos de conceptos/ajustes recibidos, la compatibilidad con `EN_AJUSTES` y el bloqueo de estados no agendables.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Las versiones exactas permanecen registradas en `package-lock.json` y la aplicación se ejecuta con `npm run dev` sin seeds.
+- Verificación local 2026-09-23: prueba dirigida PASS (2/2), ESLint focalizado PASS, build PASS (285 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-D8oZUkhF.js` 668.32 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB. No se generó captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta protegida requiere una sesión institucional.
+- Pendiente: validar en una sesión real de coordinación una solicitud doctoral en `AJUSTES_RECIB` y otra en `CONCEPTOS_REC`, incluido el envío del formulario. La ruta es protegida y requiere backend y autenticación institucional.
+
+---
+
+# Update 2026-09-23 — cierre de la firma docente después de reasignar
+
+## Estado actual, causa y decisión
+- Se corrigió la regresión posterior a la habilitación de firma para `DOCENTE_POSGRADOS`: después de un `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` exitoso, el detalle recargaba el nuevo estado pero conservaba en memoria `isAssignedToCurrentUser=true`. Como el siguiente estado podía ser también firmable (por ejemplo, `PFIR_COOR_POS`), el botón seguía visible aunque el backend ya hubiera asignado el trámite a otra persona.
+- Una firma exitosa consume ahora inmediatamente la asignación local del docente antes de recargar el detalle y los adjuntos. Por tanto, aunque el siguiente estado admita firma para otro rol, `puedeFirmarDocumentosSolicitud` recibe `estaAsignadaAlUsuario=false` y oculta la acción. Gestión de posgrados conserva su regla previa.
+- No cambiaron endpoints ni DTO: firma mediante `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` sin body; detalle mediante `GET /sapp/solicitudesAcademicas/{id}`; documentos mediante la consulta existente por trámite. El backend sigue obligado a validar autorización/asignación.
+
+## Paths, pruebas y continuación
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Regla y regresión: `src/modules/solicitudes/utils/firmaSolicitud.ts` y `tests/firmaSolicitud.test.ts`.
+- Validación local 2026-09-23: prueba dirigida PASS (5/5), ESLint focalizado PASS, build PASS (284 módulos; `index-Ch9v6k1n.css` 231.65 kB e `index-Cl4WuzZh.js` 668.40 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JavaScript mayor de 500 kB.
+- Pendiente: validar con una sesión institucional `DOCENTE_POSGRADOS` que, tras firmar un crédito en `PFIR_CAR_CONT`, el backend lo mueve al responsable siguiente y el botón desaparece sin recargar manualmente la página.
+- No existen seeds o datasets para este flujo. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. El entorno permanece en Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
+# Update 2026-09-23 — acciones intuitivas en el proceso de evaluación
+
+## Estado actual y decisiones
+- En `ProcesoEvaluacionPanel`, la creación de jurados se inicia con **Agregar
+  evaluador**, ubicado en la cabecera de la tabla **Jurados evaluadores**. El
+  formulario conserva la selección obligatoria del documento y la fecha límite.
+- Se ocultó el selector independiente **Definir documento**; no se eliminó el
+  servicio API porque continúa siendo utilizado por la carga de correcciones del
+  estudiante. **Enviar a ajustes** ahora se muestra como **Enviar a
+  correcciones**, sin cambiar su mutación ni transición de backend.
+- Para `CONCEPTOS_REC` y `EN_AJUSTES`, una tarjeta semántica destacada comunica
+  **Conceptos completos**, explica que ya se puede programar la sustentación y
+  contiene el CTA correspondiente. Usa únicamente tokens del tema y reorganiza
+  el CTA a ancho completo en móvil.
+
+## Contratos, paths y próximos pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`
+  y `.css`. No cambiaron DTO, endpoints, schema, paquetes, variables, seeds ni
+  datasets. La designación conserva `documentoEvaluarId` dentro del payload de
+  `POST /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/jurados`; correcciones
+  conserva la operación `enviarAAjustes` existente.
+- Verificación 2026-09-23: ESLint focalizado PASS; build PASS (284 módulos,
+  `index-BAvKq9XY.css` 232.60 kB e `index-s05zH_eG.js` 668.02 kB), con el aviso
+  informativo conocido por chunk mayor de 500 kB; `git diff --check` PASS.
+- Pendiente validar con sesión institucional los estados `JUR_POR_DESIG`,
+  `CONCEPTOS_REC` y `EN_AJUSTES`, además de claro/oscuro y móvil. No se generó
+  captura porque el contenedor no tiene Chromium, Chrome ni Firefox y la ruta
+  protegida requiere backend, datos y autenticación institucionales.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+
+# Update 2026-09-23 — firma docente de créditos condonables asignados
+
+## Estado actual y causa corregida
+- La causa estaba en `SolicitudDetallePage`: `canSignAllDocuments` exigía `canManagePosgrados`, aunque `SolicitudesPage` sí permite que `DOCENTE_POSGRADOS` consulte sus trámites mediante el listado **Solicitudes asignadas**. Por ello el backend entregaba la asignación, pero la interfaz ocultaba el botón.
+- El detalle consulta ahora `GET /sapp/solicitudesAcademicas/asignadas?idUsuario={usuarioSappId}` para docentes y habilita **Firmar todos los documentos** solo si el ID abierto está incluido y el estado admite firma. `firmaSolicitud.ts` centraliza esta regla y reconoce `PFIR_DIR_TG`, `PFIR_COOR_POS`, `PFIR_CAR_CONT` y nombres que contienen `POR FIRMA`. Gestión de posgrados conserva el acceso previo.
+- La mutación no cambió: `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}`, respuesta esperada `{ ok, message, data? }`. Tras el éxito se vuelven a consultar el detalle y los adjuntos. El backend debe seguir comprobando autorización y asignación.
+
+## Paths, validación y próximos pasos
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `src/modules/solicitudes/utils/firmaSolicitud.ts`. Cobertura: `tests/firmaSolicitud.test.ts` (docente asignado, solicitud ajena, estado no firmable, sigla y gestión).
+- Validación local 2026-09-23: test dirigido PASS (4/4), ESLint focalizado PASS, build PASS (284 módulos; `index-Ch9v6k1n.css` 231.65 kB e `index-NzlJh6WO.js` 668.39 kB) y `git diff --check` PASS. Persiste el warning informativo del chunk mayor de 500 kB y el warning ambiental npm `Unknown env config "http-proxy"`.
+- Pendiente: validar con una sesión institucional `DOCENTE_POSGRADOS` un crédito asignado en `PFIR_CAR_CONT`, ejecutar la firma y confirmar el nuevo estado/documentos. No hubo captura: la corrección no puede representarse sin backend, datos y sesión institucional disponibles.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No existen seeds ni datasets para este flujo.
+
+---
+
+# Update 2026-09-23 — título y resumen visibles en el detalle de trabajo de grado
+
+## Estado actual y contrato
+- `SolicitudDetallePage` presenta **Título** y **Resumen** inmediatamente antes de
+  **Observaciones** para estudiantes y coordinación cuando alguno de esos datos
+  está disponible. Primero usa `SolicitudAcademicaDto.tituloTrabajo` y
+  `resumenTrabajo`; para los códigos con proceso de evaluación usa como respaldo
+  `ProcesoEvaluacionTg.titulo` y `resumen`.
+- El respaldo consume el endpoint autenticado existente `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`, cuya envoltura esperada es
+  `{ "ok": true, "message": string, "data": { "titulo": string,
+  "resumen": string | null, ... } }`. Un 404 previo a la creación del proceso
+  se ignora de forma deliberada y no reemplaza ni bloquea el detalle académico.
+- No cambiaron la creación (`tituloTrabajo`/`resumenTrabajo`), las transiciones,
+  los permisos, los endpoints, el schema, las dependencias, variables, seeds o
+  datasets. Queda pendiente validar con sesiones institucionales de ambos roles
+  un trámite que solo exponga esos valores mediante el DTO del proceso.
+
+## Paths, entorno y resultados
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+  Contratos reutilizados: `src/modules/solicitudes/api/types.ts` y
+  `src/modules/trabajos-grado/evaluacion/{api,types}.ts`.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (283 módulos, `index-Ch9v6k1n.css` 231.65 kB e `index-Bj4f55CP.js` 667.87
+  kB); `git diff --check` PASS. Persisten solo el warning ambiental npm
+  `Unknown env config "http-proxy"` y el aviso informativo del chunk mayor de
+  500 kB. Las pruebas Node dirigidas pasan (6/6). `npm run lint` conserva 9
+  errores y 1 warning preexistentes en servicios placeholder, admisiones,
+  validación documental y tipos/editor de solicitudes; el archivo modificado
+  pasa ESLint de forma aislada.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2. No existe seed para este flujo.
+
+---
+
+# Update 2026-09-23 — estados de proyectos de grado en solicitudes
+
+## Estado actual y decisiones
+
+- `src/modules/solicitudes/utils/estadoSolicitud.ts` reconoce los estados 12 a
+  20: `JUR_POR_DESIG`, `JUR_INVITADO`, `EN_EVALUACION`, `CONCEPTOS_REC`,
+  `EN_AJUSTES`, `SUST_PROGRAMADA`, `SUSTENTADA`, `APLAZADA` y `NO_APROBADA`.
+  El catálogo fallback conserva los IDs y nombres de negocio acordados.
+- El catálogo remoto de `GET /sapp/estadosSolicitud` deja de descartar esas
+  siglas. Todos sus nombres se recortan y convierten a mayúsculas en español;
+  por ello filtros, tarjetas, tablas y detalle comparten exactamente la misma
+  presentación. `StatusBadge` asigna las variantes visuales semánticas
+  existentes sin introducir colores nuevos.
+- El encabezado y la línea de tiempo de `ProcesoEvaluacionPanel` también
+  presentan el nombre del estado en mayúsculas, usando el código como fallback.
+  No cambiaron transiciones, permisos, endpoints, DTO, schemas, seeds,
+  datasets, paquetes ni variables de entorno.
+
+## Contrato, pruebas y próximos pasos
+
+- Contrato esperado de cada estado: `{ "id": 12..20, "nombre": string,
+  "sigla": string }` dentro de la envoltura usual de
+  `GET /sapp/estadosSolicitud`. La salida visible esperada incluye, por
+  ejemplo, `EN EVALUACIÓN`, `EN AJUSTES DEL ESTUDIANTE` y `SUSTENTACIÓN
+  PROGRAMADA` en mayúsculas.
+- Se agregó `tests/estadoSolicitud.test.ts`, que cubre los nueve IDs/siglas,
+  sus nombres fallback y la normalización del catálogo remoto. Verificaciones
+  del 2026-09-23: test dirigido PASS (2/2), lint dirigido PASS, build PASS (283
+  módulos; `index-CagCtW9j.css` 231.16 kB e `index-CXCuEgEZ.js` 665.87 kB) y
+  `git diff --check` PASS. El build conserva el aviso informativo del chunk
+  mayor de 500 kB; npm conserva el warning ambiental `Unknown env config
+  "http-proxy"`.
+- Pendiente validar con sesión institucional los filtros/listados y detalles de
+  estudiante y coordinación, además del proceso de evaluación en temas claro y
+  oscuro. No hubo captura local: las rutas requieren autenticación y datos del
+  backend, y el contenedor no dispone de Chromium, Chrome ni Firefox.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node
+  24.15.0 y npm 11.4.2; el resto de versiones exactas permanece fijado por
+  `package-lock.json` y resumido en `README.md`.
+
+---
+
+# Update 2026-09-23 — etiqueta contextual al aprobar proyectos de grado
+
+## Estado actual, contrato y salida esperada
+- `SolicitudDetallePage` calcula la etiqueta de su botón de aprobación mediante
+  `getAprobacionTrabajoGradoLabel`, definido en
+  `src/modules/trabajos-grado/constants.ts`. La regla se aplica únicamente a los
+  IDs incluidos en `TIPOS_TRABAJO_GRADO_IDS`.
+- Una solicitud de proyecto en estado enviado a Comité muestra **Aprobar y enviar
+  a consejo académico**; si el estado contiene Consejo muestra **Aprobar y
+  asignar jurados**. Otros trámites conservan **Aprobar**. La normalización admite
+  siglas y nombres descriptivos, con o sin tilde.
+- Solo cambió el texto visible. `handleApproveClick`, la selección obligatoria de
+  acta, el destino `APROBADA`, los parámetros y las llamadas HTTP no cambiaron.
+  El backend continúa siendo la autoridad de las transiciones.
+
+## Paths, pruebas y próximos pasos
+- Implementación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y
+  `src/modules/trabajos-grado/constants.ts`. Cobertura dirigida:
+  `tests/trabajoGradoApprovalLabel.test.ts`.
+- Pendiente verificar las dos etiquetas con una sesión real de coordinación y
+  datos en `ENVIADA_COMITE`/`ENVIADA` y `ENVIADA_CONSEJO`, además de confirmar el
+  resultado de cada transición contra el backend institucional.
+- Verificación local 2026-09-23: `node --test
+  tests/estadoSolicitud.test.ts tests/trabajoGradoApprovalLabel.test.ts` PASS
+  (6/6); ESLint focalizado PASS; `npm run build` PASS (283 módulos,
+  `index-Ch9v6k1n.css` 231.65 kB e `index-Cs3olfrj.js` 667.10 kB), con el aviso
+  informativo conocido por el chunk mayor de 500 kB; `git diff --check` PASS.
+  No se tomó captura: Chromium, Chrome y Firefox no están instalados y la ruta
+  protegida necesita backend y sesión institucional.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. El proyecto no tiene seeds ni datasets
+  para este flujo. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React
+  Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC
+  4.2.2 y ESLint 9.39.2.
+
+---
+
+# Update 2026-09-23 — títulos académicos y examen doctoral al crear solicitudes
+
+## Estado actual y contrato
+
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` separa los tipos de maestría 6/7 de los tipos doctorales 4/5. El control se presenta respectivamente como **Título del trabajo de investigación** y **Título de la tesis**; en ambos grupos el título y el resumen siguen siendo obligatorios.
+- El tipo 9 (**Examen doctoral**) presenta la sección **Información del examen doctoral** con un único control obligatorio, **Título del trabajo**. Su payload esperado es `{ "estudianteId": 10, "tipoSolicitudId": 9, "tituloTrabajo": "..." }` más los campos generales existentes; `resumenTrabajo` se omite incluso si quedó un valor local de una selección anterior.
+- La validación diferencia título y resumen, y el payload incluye cada propiedad solo cuando corresponde. No se cambiaron DTO, endpoints, dependencias, variables, seeds ni datasets.
+
+## Validación pendiente y entorno
+
+- Ejecutar una prueba autenticada de los tipos 4, 5, 6, 7 y 9 contra `POST /sapp/solicitudesAcademicas` y confirmar persistencia en el detalle. También falta validar visualmente los textos en claro/oscuro y móvil/escritorio porque el contenedor no dispone de navegador ni sesión/backend institucional.
+- Verificaciones locales del 2026-09-23: ESLint focalizado PASS; build PASS con 283 módulos, `index-CagCtW9j.css` (231.16 kB) e `index-B8Sy5Gag.js` (666.24 kB); `git diff --check` PASS. Persisten únicamente el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node 24.15.0 y npm 11.4.2; las versiones instaladas están fijadas por `package-lock.json`.
+
+---
+
+# Update 2026-09-23 — creación de solicitudes de proyectos de grado
+
+## Estado actual y decisiones
+
+- El formulario compartido `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` detecta los tipos 4, 5, 6 y 7 y muestra dos controles obligatorios: **Título del trabajo** y **Resumen del trabajo**. La validación impide enviar cualquiera vacío; el payload recorta espacios y los omite para los demás tipos.
+- `SolicitudesEstudianteView.tsx` reenvía ambos valores al contrato ya tipado `CreateSolicitudRequestDto`, de modo que `POST /sapp/solicitudesAcademicas` recibe `{ estudianteId, tipoSolicitudId, tituloTrabajo, resumenTrabajo, ... }`.
+- `TrabajosGradoPage.tsx` dejó de aplicar `contextualizarTipoTrabajoGrado`. El catálogo conserva ahora el `nombre` retornado por `GET /sapp/tipoSolicitud`; además, el selector prioriza explícitamente `nombre` sobre `codigoNombre`. Para el ID 13 la salida esperada es el nombre exacto del backend, por ejemplo `ENVIO DE TEMA DE TRABAJO DE INVESTIGACION/TESIS`, sin sustitución según maestría/doctorado.
+- Se mantienen la clasificación por programa del tipo 13, los tipos permitidos por nivel, documentos, rutas, permisos y resto del flujo. No se añadieron endpoints, paquetes, schemas, variables, seeds ni datasets.
+
+## Contrato y próximos pasos
+
+- Entrada relevante de catálogo: `{ "id": 13, "nombre": "ENVIO DE TEMA DE TRABAJO DE INVESTIGACION/TESIS", "tramiteId": 19 }`. `tipoSolicitudService` sigue normalizando `tramiteId` hacia `tipoTramiteId` solo para consultar documentos y no altera el nombre.
+- Payload esperado para 4/5/6/7: `{ "estudianteId": 10, "tipoSolicitudId": 5, "tituloTrabajo": "...", "resumenTrabajo": "..." }`, además de los campos generales existentes (`fechaResolucion`, `observaciones` y los opcionales aplicables).
+- Pendiente: prueba autenticada contra backend para cada uno de los cuatro IDs, verificación de persistencia en el detalle y captura en claro/oscuro y móvil/escritorio. El contenedor no tiene navegador ni sesión/backend institucional, por lo que no fue posible hacer la validación visual solicitada.
+
+## Entorno y resultados
+
+- Reutilizar únicamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0 y Lucide 0.468.0-local.
+- `npx eslint src/pages/TrabajosGrado/TrabajosGradoPage.tsx src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`: PASS; solo warning ambiental npm `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 281 módulos, `dist/assets/index-DhxWK-Ve.css` (230.07 kB) e `index-Ds21m2NR.js` (661.11 kB). Persiste el warning informativo del chunk mayor de 500 kB. `git diff --check`: PASS. No existe script automatizado `test`.
+
+---
+
+---
+
+# Update 2026-09-22 — proceso privado de evaluación de trabajos de grado
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` monta `ProcesoEvaluacionPanel` únicamente para coordinación, cuando el código es uno de los cinco trámites evaluables y la solicitud ya dejó Comité/Consejo. `TEMA_T` nunca monta el proceso. El botón Volver conserva ahora el nivel de `/trabajos-grado/:nivel`.
+- `src/modules/trabajos-grado/evaluacion/api.ts` contiene los 12 contratos privados bajo `/sapp/procesoEvaluacionTg`; `types.ts` declara proceso, jurados, evaluaciones, catálogos y payloads. Se usa el cliente compartido, que ya adjunta JWT Bearer y extrae `message` de errores JSON.
+- El panel implementa resumen, barra contextual, designación de un jurado por llamada (el endpoint permite sumar jurados), banco con debounce, historial activo/inactivo, reenvío/reemplazo/retiro, recordatorios, documento, ajustes, sustentación, resultado y línea de tiempo. Catálogos no están hardcodeados; `ES`/`EN` sí son el contrato de idioma.
+- `SolicitudAcademicaDto` y `CreateSolicitudRequestDto` admiten `tituloTrabajo` y `resumenTrabajo`. La elegibilidad por código está centralizada en `src/modules/trabajos-grado/constants.ts`; los IDs históricos siguen temporalmente para filtrar los listados existentes hasta que esos componentes migren por completo al código.
+
+## Contratos y salida esperada
+- Respuesta común: `{ ok: boolean, message: string, data: T }`. Mutaciones de jurados, documento, ajustes, sustentación y resultado deben devolver el proceso completo actualizado; el panel repinta directamente con `data`.
+- Se asumieron los nombres de campos documentados en el brief: `estadoInvitacion`, `evaluaciones`, `documentos`, `historial`, `sustentacion`, `resultadoCodigo` y `notaFinal`. Antes de integración real, contrastar `types.ts` con los ejemplos completos de Bruno y ajustar nombres/nulabilidad si el DTO backend difiere.
+- `VITE_API_URL=/api/sapp`; Vite dirige esa ruta a `VITE_DEV_PROXY_TARGET=http://localhost:8080`. No agregar `/sapp_public` a este repositorio. No hay cambios de schema, migraciones, seeds o datasets.
+
+## Retos y siguientes pasos
+1. Validar contra Bruno el GET del proceso en todos los estados y confirmar que el backend devuelve `documentos` e `historial`; el panel tiene fallback de línea de tiempo al estado actual.
+2. Confirmar con backend el cálculo oficial de plazos hábiles. Los defaults actuales son sugerencias de calendario (21/28/60 días), editables; no modelan festivos colombianos.
+3. Probar los 400 y todas las mutaciones en un ambiente no productivo, especialmente acta inexistente, correo duplicado, modalidad incompleta y restricciones desde `SUST_PROGRAMADA`.
+4. Hacer revisión visual autenticada a 320/375/402/440 px y escritorio, claro/oscuro. La modificación es perceptible, pero el contenedor no dispone de navegador ni backend/sesión, por lo que no hay captura.
+
+## Entorno y verificación
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- `npm run build`: PASS; 281 módulos, `index-DhxWK-Ve.css` (230.07 kB) e `index-DULI6bCU.js` (660.33 kB). Persiste el warning informativo por chunk mayor de 500 kB.
+- `npx eslint src/modules/trabajos-grado/evaluacion src/modules/trabajos-grado/constants.ts src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/types.ts`: PASS; solo warning ambiental conocido de npm por `http-proxy`.
+
+---
+
+# Update 2026-09-22 — módulo inicial de Proyectos de grado
+
+## Estado actual y alcance
+- Existe un nuevo acceso **Proyectos de grado** y las rutas `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`. Estudiantes ven solo el nivel inferido de `programaCodigoNombre`; coordinación puede alternar ambos.
+- La clasificación está centralizada en `src/modules/trabajos-grado/constants.ts`: maestría usa tipos 13, 6 y 7; doctorado usa 13, 8, 4 y 5. El tipo 13 conserva su ID y el nombre exacto entregado por el backend.
+- Las vistas reutilizables de solicitudes aceptan inclusión/exclusión de tipos, transformación de etiquetas y una ruta de detalle configurable. El módulo general excluye los seis tipos trasladados; no hubo cambios de API, payload, schema, seeds ni datasets.
+- El detalle sigue usando `SolicitudDetallePage` y los endpoints `/sapp/solicitudesAcademicas`. Las futuras funciones de expediente, informes, evaluadores, calificación y defensa no forman parte de este incremento.
+
+## Validación y siguientes pasos
+- `npm run build`: PASS; 278 módulos, con el aviso informativo habitual por el chunk mayor de 500 kB.
+- `npm run lint`: conserva errores preexistentes fuera del cambio. El lint focalizado de los archivos modificados pasa después de estabilizar la carga estudiantil con `useCallback`.
+- Pendiente validar con sesión real ambos roles, los seis tipos y programas cuyo nombre institucional identifique maestría o doctorado. Si el backend expone el nivel explícitamente, reemplazar la inferencia textual por ese campo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. El proyecto conserva las versiones documentadas en este archivo y `package-lock.json`.
+
+---
+
+# Update 2026-09-23 — asignación de la nueva versión del documento en evaluación
+
+## Estado actual y contrato
+- `AjustesEstudiantePanel` ya no se limita a cargar una nueva versión. Tras el
+  éxito de `POST /sapp/document`, toma exclusivamente
+  `DocumentUploadResponseDto.id` y ejecuta `PUT
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/documento-evaluar/{id}`
+  mediante el servicio existente `definirDocumentoEvaluar`.
+- La llamada de asignación es exclusiva de la corrección estudiantil solicitada
+  por observaciones: la UI de carga solo se muestra con `enAjustes === true` y
+  `handleUpload` vuelve a exigir esa condición antes de iniciar las dos
+  mutaciones. No afecta la carga inicial, otros estados ni las acciones de
+  coordinación.
+- Las operaciones son secuenciales: solo después de cargar y asignar se limpia
+  el archivo, se informa éxito y se refrescan en paralelo el proceso, la
+  solicitud, el checklist y los adjuntos. Si falla la segunda llamada, se
+  conserva el archivo seleccionado y se muestra el mensaje del backend; no se
+  afirma que el cambio quedó completo.
+- El ID no se infiere del checklist ni del proceso anterior. Debe ser el ID de
+  la respuesta de carga, pues representa el nuevo registro/versionado que los
+  jurados evaluarán. La respuesta esperada de la asignación mantiene
+  `{ ok: boolean, message: string, data: ProcesoEvaluacionTg }`.
+
+## Paths, retos y próximos pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`.
+  Servicios reutilizados: `src/api/documentUploadService.ts` y
+  `src/modules/trabajos-grado/evaluacion/api.ts`.
+- Probar con backend autenticado que una carga nueva retorna un `id`
+  distinto y que el `GET` posterior expone ese mismo valor en
+  `documentoEvaluarId`. También verificar el comportamiento si el documento se
+  guarda pero la asignación falla: hoy el usuario puede reintentar y generar
+  otra versión porque el backend no ofrece una transacción conjunta.
+- No se agregaron dependencias, variables, seeds ni datasets. Reutilizar
+  `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni un
+  segundo árbol npm. Las versiones exactas y comandos están en `README.md` y
+  `package-lock.json`.
+- Verificación 2026-09-23: `npx eslint
+  src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx` PASS;
+  `npm run build` PASS (283 módulos, `index-CagCtW9j.css` 231.16 kB e
+  `index-BSplSaVc.js` 665.92 kB), con el aviso informativo conocido por el chunk
+  JavaScript mayor de 500 kB; `git diff --check` PASS. La secuencia HTTP real
+  queda pendiente de sesión y backend institucionales.
+
+# Update 2026-09-23 — recarga estudiantil del documento en evaluación
+
+## Estado, contrato y decisiones
+- En el detalle, estudiantes con solicitudes tipo 4, 5, 6, 7 u 8 consultan
+  siempre `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}` mediante
+  `getProcesoEvaluacion`. La respuesta usa la envoltura `{ ok, message, data }`;
+  se consumen `documentoEvaluarId`, `documentoEvaluarNombre` y
+  `jurados[].evaluaciones[].observaciones`.
+- Si el DTO de la solicitud indica `estadoId: 16` o `estadoSigla: EN_AJUSTES`,
+  `AjustesEstudiantePanel` presenta los conceptos, pide un nuevo archivo con el
+  nombre retornado y relaciona `documentoEvaluarId` con el documento cargado del
+  checklist. La carga conserva el contrato existente de `POST /sapp/document`
+  (tipo documental, trámite, usuario, Base64, MIME, tamaño y SHA-256).
+- Después de una carga exitosa se vuelven a consultar proceso, solicitud,
+  checklist y adjuntos. Fuera de `EN_AJUSTES` la consulta se conserva, pero no
+  se expone el formulario. Coordinación mantiene su panel sin cambios.
+
+## Paths, resultados y siguientes pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/AjustesEstudiantePanel.tsx`
+  y `.css`; integración en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`;
+  contrato tolerante a aliases del backend en `evaluacion/types.ts`.
+- Pendiente probar con backend autenticado que el checklist contiene un
+  `documentoUploadedResponse.idDocumento` igual a `documentoEvaluarId` y que la
+  nueva versión hace avanzar el flujo. Si backend exige un endpoint específico
+  de reemplazo por ID de documento, debe acordarse y sustituirse solamente la
+  mutación; no inferir IDs.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm,
+  venv, Conda ni Poetry. No existen seeds para este flujo. Versiones exactas en
+  `package-lock.json` y resumen en `README.md`.
+- Verificación: `npm run build` PASS (283 módulos, CSS 231.17 kB y JS 664.76
+  kB; solo aviso conocido de chunk); ESLint focalizado PASS; `git diff
+  --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes en
+  servicios placeholder, admisiones, validación documental y tipos/editor de
+  solicitudes. No se tomó captura: no hay Chromium, Chrome ni Firefox en el
+  contenedor, y el flujo requiere backend y sesión estudiantil.
+
+---
+
+# Update 2026-09-21 — orden unificado de los módulos principales
+
+## Estado actual y decisión
+- `src/app/navigationItems.ts` es la fuente compartida por el sidebar y las
+  tarjetas de la pantalla de Inicio. Su orden es ahora: **Admisiones, Matrícula,
+  Solicitudes, Créditos condonables, Estudiantes, Informes a dependencias,
+  Actas, Fechas y Gestión profesores**.
+- El filtrado existente por roles se conserva. Si un usuario no puede ver un
+  módulo, este se omite y los restantes mantienen el orden relativo definido;
+  no se duplicó la configuración en `Sidebar.tsx` ni en `HomePage.tsx`.
+- No cambiaron rutas, iconos, etiquetas, permisos, contratos HTTP, estilos,
+  dependencias, variables de entorno, schemas, seeds ni datasets.
+
+## Salida esperada, entorno y siguientes pasos
+- Coordinación debe ver los nueve accesos en el orden indicado tanto en el menú
+  lateral como en Inicio. Otros roles deben ver solamente su subconjunto
+  autorizado, en ese mismo orden relativo.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry, entornos Python ni otro árbol npm. Este proyecto usa Node.js/npm y no
+  tiene script `test`. Las versiones exactas están en `package-lock.json` y
+  resumidas en `README.md`.
+- Pendiente: comprobación visual autenticada con los distintos roles en
+  escritorio y móvil. El contenedor no dispone de Chromium, Chrome ni Firefox y
+  las rutas requieren una sesión institucional, por lo que no se generó captura.
+- `npx eslint src/app/navigationItems.ts`: PASS (solo el warning ambiental de
+  npm por `http-proxy`). `npm run build`: PASS, 273 módulos y artefactos
+  `dist/assets/index-BAnVHByW.css` (224.30 kB) e `index-DaC1sGKb.js`
+  (638.83 kB); persiste el aviso informativo por el chunk superior a 500 kB.
+  `git diff --check`: PASS. `npm run lint`: FAIL por 9 errores y 1 warning
+  preexistentes fuera de `navigationItems.ts`.
+
+---
+# Update 2026-09-21 — seguimiento de matrícula del estudiante
+
+## Estado actual y decisiones
+- Rutas confirmadas en `src/app/routes/matriculaRoutes.tsx`: `/matricula` → `MatriculaPage` (estudiante o listado según rol), `/matricula/:matriculaId` → `MatriculaDetalleCoordinacionPage` (gestión). No se creó una ruta estudiantil nueva ni se reutilizó el endpoint autorizado a coordinación.
+- El estudiante consume `GET /sapp/matriculaAcademica/vigente/estudiante/{estudianteId}` y los documentos mediante `getDocumentosMatriculaAcademica(matricula.id)`. Estado general, fecha/observación general y asignaturas proceden del primer contrato; documento, obligatoriedad, revisión/observación y contenido proceden del segundo. Errores documentales se muestran aparte y no producen un contador `0/0`.
+- `selectStudentMatricula` evita `data[0]`: admite `periodoId` y, al no recibirlo, escoge de forma estable la fecha de solicitud más reciente y luego el mayor ID. Limitación pendiente: la pantalla hoy no recibe un período/ID desde URL; el endpoint denominado `vigente` es el único contexto estudiantil disponible. Confirmar con backend si puede devolver más de una vigente y si debe exponer explícitamente el período objetivo.
+- El resumen muestra etiqueta del estado del backend, número, programa si está en el DTO, período, solicitud, revisión neutral (`—`) y observación general. No muestra usuario revisor. Materias se relacionan por `asignaturaId` con catálogo y conservan aparte `matriculaAsignaturaId`; si el catálogo no contiene una materia, ya no se elimina: usa nombre/código del contrato y nivel neutral.
+- `FINALIZADA`, `RADICADA` y `PENDIENTE_DOCUMENTOS` son los únicos estados generales confirmados en el código. Las demás etiquetas son neutrales. Estados de materias confirmados: `MATRICULADA`, `APROBADA`, `NO_MATRICULADA`, `RECHAZADA`, `PENDIENTE`. La carga estudiantil solo permanece disponible en `PENDIENTE_DOCUMENTOS`; estados desconocidos se bloquean de forma conservadora. Coordinación mantiene aprobación/rechazo y guardado existentes, pero ahora comparte etiquetas y muestra **Observaciones de la matrícula**.
+
+## Paths, fixture, contrato y salida esperada
+- Render/estilos estudiante: `src/pages/Matricula/MatriculaPage.tsx` y `.css`; tabla responsive de materias: `src/modules/matricula/components/MateriasSelectedTable/`; documentos: `src/modules/matricula/components/DocumentosRequeridosTable/`. Coordinación: `src/pages/MatriculaDetalleCoordinacion/`.
+- Tipos/consulta: `src/modules/matricula/types.ts` y `services/matriculaAcademicaService.ts`. Presentación, fecha sin conversión de zona y selección: `src/modules/matricula/utils/matriculaPresentation.ts`.
+- Fixture y prueba: `tests/fixtures/matricula/student-matriculas.json`, `tests/matriculaPresentation.test.ts`. Es dato sintético no usado por producción y cubre dos matrículas, dos estados de materia, grupo nulo, observaciones, fecha ausente y estado desconocido. No hay seeds ni datasets adicionales.
+- Respuesta esperada: `data: MatriculaAcademicaVigenteDto[]`; cada registro conserva `id`, estudiante/programa/período, `estado`, `fechaSolicitud`, `fechaRevision`, `observaciones` y `asignaturas[{ id, matriculaId, asignaturaId, asignaturaCodigo, asignaturaNombre, estado, grupo, observaciones }]`. `id` de la fila y `asignaturaId` no se intercambian. Los documentos no forman parte de este JSON.
+
+## Verificación, retos y siguientes pasos
+- `node --experimental-strip-types --test tests/matriculaPresentation.test.ts`: PASS, 4/4. `npx eslint ...`: PASS (solo warning ambiental npm `Unknown env config "http-proxy"`). `npm run build`: PASS, 273 módulos; `index-DhFeTLOW.css` 224.43 kB e `index-DQeieq-z.js` 638.82 kB; warning no bloqueante por chunk >500 kB. `git diff --check`: PASS.
+- Pendiente en entorno no productivo: verificar respuestas vacías y múltiples del endpoint real, fallos independientes de ambas consultas, catálogo documental completo y asociación por matrícula; recorrer Cargar/Ver/Descargar y todas las restricciones sin subir archivos reales.
+- Pendiente visual: escritorio y 320/375/402/440 CSS px, ambos temas, textos largos, foco/teclado y `scrollWidth <= clientWidth`. No hay Chromium/Chrome/Firefox, backend ni sesión institucional en el contenedor, por lo que no hubo captura.
+- Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No crear venv, Conda, Poetry, entorno Python ni otro árbol npm.
+
+---
+# Update 2026-09-21 — consistencia de colores de estados en responsive
+
+## Estado actual y decisión
+
+- Se corrigió la diferencia mostrada en `/creditos-condonables`: la regla móvil de `CreditosCondonablesCoordinacionPage.css` sobrescribía `color`, `background` y `border-color` de cualquier `StatusBadge` con un único estilo verde. La regla responsive conserva ahora únicamente layout y tipografía, de modo que no compite con los modificadores semánticos compartidos.
+- `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` normaliza los ocho estados del contrato. `StatusBadge.css` sigue siendo la única fuente cromática: `ENVIADA` usa el tono institucional; `EN_REVISION`, `PFIR_DIR_TG`, `PFIR_COOR_POS` y `PFIR_CAR_CONT` usan ámbar; `APROBADA`, verde; `RECHAZADA`, rojo; `DEVUELTA` y `UNKNOWN`, neutral. Esto cubre solicitudes ordinarias y créditos condonables, tabla, tarjetas y detalle, sin cambiar labels ni datos.
+- Salida esperada: a más de 768 CSS px se conserva la tabla de escritorio; a 768 px o menos las tarjetas permiten badges multilínea, pero cada estado mantiene el mismo texto, fondo y borde que en escritorio. Debe funcionar en `body.light` y `body.dark` y el significado nunca depende solo del color porque la etiqueta completa permanece visible.
+
+## Paths, contratos y trabajo pendiente
+
+- Componente y paleta: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx` y `.css`. Corrección responsive: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`. La vista consume `SolicitudAcademicaDto.estadoSigla || estado`; el catálogo y aliases viven en `src/modules/solicitudes/utils/estadoSolicitud.ts`.
+- No cambiaron `GET /sapp/solicitudesAcademicas`, DTO, filtros, normalización, estados de dominio, endpoints, permisos, navegación, paquetes, variables, schemas, seeds ni datasets.
+- Pendiente con navegador/backend/sesión institucional: capturar y comparar los ocho estados a 320/375/402/440 px y escritorio en ambos temas, revisar contraste y textos largos. El contenedor no dispone de Chromium, Chrome ni Firefox, por lo que no fue posible producir la captura solicitada localmente.
+
+## Entorno y verificación
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0 y npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+- `npm run build`: PASS; 272 módulos, `index-CtLOhbNR.css` (222.36 kB) e `index-C7FRZ1pi.js` (635.45 kB), con el warning informativo conocido del chunk mayor de 500 kB. `git diff --check`: PASS. La comprobación Node del selector móvil: PASS; confirma que no declara `color`, `background` ni `border-color`.
+
+---
+
+# Update 2026-09-21 — creación y detalle responsive de homologaciones
+
+## Estado actual y decisiones
+
+- Se completó la adaptación móvil del tipo `HOMOLOG` tanto en `SolicitudEstudianteForm` como en `SolicitudDetallePage`, sin cambiar su presentación de escritorio. El formulario apila origen/destino hasta 640 CSS px y el detalle convierte cada fila en una tarjeta hasta 768 CSS px. Cada tarjeta conserva inequívocamente una pareja, el orden recibido y textos completos con ajuste de línea.
+- La creación ya tenía IDs `crypto.randomUUID()` por pareja y las mutaciones por `rowId`; se preservó este modelo. Eliminar la pareja intermedia filtra solo ese UUID y React no reutiliza estado posicional. Los controles recibieron IDs derivados del UUID, errores accesibles por pareja y un resumen móvil del nombre/código seleccionado. El estado React y los inputs de archivo son los mismos a cualquier ancho, por lo que no se desmontan al alternar móvil/escritorio.
+- No cambió la serialización: catálogo externo → `{ asignatura_origen_id, asignatura_destino_id }`; alta manual → `{ nombreAsignaturaExterna, codigoAsignaturaExterna? , asignatura_destino_id }`. Tampoco cambiaron validaciones de completitud/cantidad, endpoints, DTO, adjuntos, permisos o flujo de acta/aprobación. El estudiante continúa sin controles de aprobación; la guarda existente de rol/estado en el detalle permanece intacta.
+- `DocumentosAdjuntos` conserva su tabla en escritorio y usa tarjetas móviles con nombre/descripcion completos y botones Ver/Descargar de al menos 44 px. Todos los estilos nuevos consumen tokens semánticos (`--surface`, `--surface-container-low`, `--outline`, `--primary`, `--on-primary`, `--text-*`) y no bloquean overflow horizontal en `body`.
+
+## Paths, contratos y salida esperada
+
+- Creación y estado/payload: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`; responsive: su `.css` adyacente.
+- Detalle `HOMOLOG`: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `.css`. Adjuntos compartidos: `src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx` y `.css`.
+- Catálogos sin cambios: `GET /sapp/homologaciones/asignaturas-externas/activas` para origen y `GET /sapp/asignaturas?programaId=1` para destino. Envío sin cambios a `POST /sapp/solicitudesAcademicas` dentro de `solicitudHomologacionesAsignaturas`.
+- Detalle esperado: `solicitudHomologacionesAsignaturas: [{ id, asignaturaOrigenNombre, asignaturaOrigenCodigo, asignaturaDestinoNombre, asignaturaDestinoCodigo }]`. El bloque de acta sigue usando `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` cuando aplican.
+- Salida móvil esperada a 320/375/402/440 CSS px: margen/padding interior reducido, ninguna tabla de homologaciones/documentos provoca scroll horizontal, cada pareja se conserva unida, controles táctiles de 44 px y controles de texto a 16 px. A más de los breakpoints se conserva la tabla y grilla anteriores.
+
+## Verificación reciente, límites y próximos pasos
+
+- `npx eslint src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos.tsx`: PASS; solo warning ambiental de npm por `http-proxy`.
+- `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-r9VGzlr2.css` (222.51 kB) e `index-DHsrY2pe.js` (635.45 kB). Persiste el warning informativo de chunk mayor a 500 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de esta superficie (tres servicios API con `any`, guard y mock de admisiones, validación documental, editor y tipos de solicitudes); el lint focalizado anterior confirma que este cambio no añade hallazgos.
+- No existe script `test`. La estabilidad de UUID, el filtrado por ID y el mapeo del payload fueron revisados estáticamente; no se envió una solicitud real.
+- Pendiente validación manual autenticada con mocks/backend de pruebas: 1 y 3 parejas; borrar la intermedia; nombres/códigos largos; errores; móvil → escritorio → móvil; adjuntos; con/sin acta; roles estudiante/coordinación; estados editables/no editables; temas claro/oscuro y anchos 320/375/402/440. También comparar escritorio con el padre del commit de este cambio.
+- No se tomó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y las rutas protegidas necesitan backend, sesión y datos institucionales. No agregar dependencias únicamente para capturas.
+
+## Entorno exacto
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2, typescript-eslint 8.51.0 y Lucide 0.468.0-local. Sin paquetes, variables, schemas, seeds o datasets nuevos.
+
+---
+
+# Update 2026-09-21 — detalle de matrícula responsive (coordinación y estudiante)
+
+## Estado actual y decisiones por rol
+- **Coordinación:** `/matricula/:matriculaId` usa `MatriculaDetalleCoordinacionPage`. Escritorio permanece igual. En móvil, el resumen conserva matrícula, estudiante, código UIS, período, estado y ambas fechas; los documentos pasan de la grilla de seis columnas a tarjetas hasta 960 px y las asignaturas pasan de tabla a tarjetas hasta 768 px. Ver/Descargar y Aprobar/Rechazar quedan en grupos etiquetados distintos. El rechazo conserva motivo obligatorio y el estado local ante fallo; la validación documental sigue siendo inmediata y la de asignaturas sigue siendo conjunta.
+- **Estudiante:** su implementación real es la rama de rol de `MatriculaPage` en `/matricula`; no existe `/matricula/:id` estudiantil. Hasta 768 px, `DocumentosRequeridosTable` y `MateriasSelectedTable` convierten sus propias filas en tarjetas sin duplicar DOM/estado. Mantiene exactamente Cargar, Ver, Descargar, selección/eliminación de materias y Confirmar según `EXISTS`, `CAN_CREATE`, `NO_ACTIVE_PERIOD`, documento y `FINALIZADA`; no se añadieron controles de gestión.
+- Se conservaron IDs estables (`documento.id`/tipo e `asignatura.id`), estado de archivos seleccionados, decisiones y observaciones durante resize. Se quitaron los `min-width` efectivos solo dentro de breakpoints y se permitió ajuste de nombres/observaciones; no se aplicó `overflow-x: hidden` global.
+
+## Paths, contratos y salida esperada
+- Coordinación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `.css`. Servicios sin cambios: listado/detalle documental, aprobación o rechazo inmediato de documento, notificación al completar obligatorios, validación conjunta de asignaturas y aprobación automática vigente.
+- Estudiante: `src/pages/Matricula/MatriculaPage.tsx`; componentes responsive `src/modules/matricula/components/DocumentosRequeridosTable`, `MateriasSelectedTable` y `MateriasSelector`. El archivo se conserva en `DocumentoRequerido.selectedFile`; la carga sigue usando Base64 + checksum y el visor/descarga usan el contenido autenticado ya recuperado, sin token en URL.
+- Salida esperada: escritorio conserva columnas y acciones anteriores. En 320/375/402/440 px no debe existir overflow de página; etiquetas solo aparecen en tarjetas, textos largos ajustan línea, acciones tienen 44 px y las observaciones ocupan todo el ancho. Móvil → escritorio → móvil no remonta componentes ni borra borradores.
+
+## Verificación reciente, limitaciones y próximos pasos
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/pages/Matricula/MatriculaPage.tsx src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx`: PASS (solo warning ambiental de npm por `http-proxy`).
+- `npm run lint`: PASS para el repositorio completo (solo el mismo warning ambiental de npm).
+- `npm run build`: PASS; 272 módulos, `dist/assets/index-KHN1TpiC.css` (218.26 kB) e `index-CTXBbwem.js` (633.70 kB); warning informativo por chunk superior a 500 kB. `git diff --check`: PASS. No hay script `test`.
+- Pendiente: inspección autenticada en 320/375/402/440 px, tablet, landscape y escritorio, claro/oscuro; cubrir documentos ausentes/pendientes/aprobados/rechazados, nombres y observaciones extensos, varias asignaturas y resize con borradores. No ejecutar mutaciones sobre matrículas reales. No se obtuvo captura: el contenedor no incluye Chromium/Chrome/Firefox y no hay backend/sesión institucional.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds ni datasets nuevos.
+
+---
+
+# Update 2026-09-21 — selector móvil de programa en `/fechas`
+
+## Estado actual y decisiones
+- La tarjeta **Convocatorias de admisión** de `src/pages/FechasModule/FechasModulePage.tsx` muestra, exclusivamente hasta 780 CSS px, dos pestañas de igual ancho para **Maestría** y **Doctorado**. El selector está después del título y **Crear convocatoria**, antes de Período/Vigente. Se reutilizó el patrón accesible de Créditos condonables.
+- Las pestañas se derivan de los nombres/códigos institucionales y conservan el `programaId` real recibido por `GET /sapp/convocatoriaAdmision`; no dependen del orden del arreglo ni de IDs fijos. Maestría es la selección inicial si está disponible. La selección vive fuera del estado de viewport, por lo que se recupera tras móvil → escritorio → móvil.
+- Solo el panel móvil seleccionado participa en accesibilidad y foco (`hidden`, `tabpanel`, `aria-labelledby`). En escritorio no se renderiza el `tablist`, se retiran los roles condicionales y ambos paneles quedan visibles y accesibles. Cada panel conserva el nombre completo del programa.
+- Período y Vigente continúan compartidos y reinician las páginas como antes; `programPages` conserva una página por `programaId` al alternar. Los programas se catalogan antes de filtrar, así un programa con cero coincidencias conserva su panel y estado vacío sin seleccionar automáticamente el otro. No se añadieron fetches, efectos de carga ni desmontajes de modales por alternar/redimensionar.
+- La sección **Períodos académicos**, la acción/modal **Crear convocatoria**, edición, cierre, navegación a inscripciones y todos los contratos/permisos quedaron intactos.
+
+## Paths, contrato y salida esperada
+- Lógica, estado, semántica y paneles: `src/pages/FechasModule/FechasModulePage.tsx`. Estilos temáticos y breakpoint: `src/pages/FechasModule/FechasModulePage.css`.
+- Entrada sin cambios: `GET /sapp/convocatoriaAdmision` entrega convocatorias con al menos `{ id, programaId, programa, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }`. Los grupos y páginas se indexan por `programaId` real.
+- Móvil esperado: selector de 44 px mínimo, Maestría → Doctorado → Maestría por toque/clic y flechas/Home/End, una lista visible, filtros persistentes, vacío local y acciones correspondientes al programa. Escritorio esperado: selector ausente y ambos programas con la distribución vertical previa.
+- No hay paquetes, endpoints, variables, schemas, seeds o datasets nuevos. El entorno único es `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entorno Python ni otro árbol npm.
+
+## Verificación, retos y próximos pasos
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx`: PASS; solo warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-D56WF_LI.css` (212.97 kB) e `index-BTuBYlEL.js` (633.33 kB). Persiste el warning informativo del chunk superior a 500 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (`any` en servicios API, estado síncrono en el efecto del guard de evaluación, parámetros sin usar, tipos vacíos y una dependencia de hook). El ESLint focalizado del módulo sí pasa.
+- No existe script `test`. Queda pendiente probar con navegador, backend y sesión institucional: toque/clic/teclado, acciones de ambas listas, filtros, páginas independientes, programa sin coincidencias, móvil → escritorio → móvil y temas `body.light`/`body.dark`.
+- No se obtuvo captura: Chromium, Chrome y Firefox no están en `PATH`, y `/fechas` requiere datos/autenticación. No instalar dependencias ni crear mocks permanentes solo para esta revisión.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; reproducible por `package-lock.json`.
+
+---
+
+## Update 2026-09-21 — corrección del filtro de Comité Asesor en `/actas`
+
+### Estado actual y causa confirmada
+- El filtro **Tipo de acta → Comité Asesor de Posgrados** ahora incluye registros cuyo `tipoConsejo` sea `false` **o** `null`.
+- La causa era una inconsistencia local: la tabla usaba la condición truthy y mostraba `null` como Comité, mientras el predicado del filtro exigía estrictamente `tipoConsejo === false`. Los registros históricos con `null` se veían en **Todos**, pero desaparecían al seleccionar Comité.
+- `isActaConsejo` centraliza la interpretación. Solo `true` es Consejo Académico; cualquier valor admitido restante (`false | null`) es Comité Asesor. La tabla y el filtro consumen la misma función para evitar otra divergencia.
+
+### Paths, contrato y salida esperada
+- Lógica y presentación: `src/pages/Actas/ActasPage.tsx`; contrato sin cambios: `src/modules/actas/types.ts`.
+- Entrada: `GET /sapp/actas`, con `ActaDto.tipoConsejo: boolean | null`. Salida esperada: **Consejo Académico** selecciona únicamente `true`; **Comité Asesor de Posgrados** selecciona `false` y `null`; **Todos** no restringe el tipo.
+- No cambiaron endpoints, payloads, permisos, estilos, dependencias, variables, schemas, seeds ni datasets.
+
+### Retos, próximos pasos y entorno
+1. Validar con sesión/backend institucional un catálogo que combine `true`, `false` y `null`, además de combinaciones con año, texto y paginación.
+2. Si el backend migra los datos históricos, mantener esta normalización mientras el DTO continúe admitiendo `null`, o coordinar primero un cambio explícito del contrato.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y no tiene script `test`; las versiones exactas están fijadas en `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts` (2026-09-21): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-21): PASS; transformó 272 módulos y generó `dist/assets/index-Cc_JZsaX.css` e `index-Do082L2s.js`. Persiste solo el aviso informativo no bloqueante por el chunk JavaScript de 630.32 kB. `git diff --check`: PASS.
+- No se generó captura: la corrección no altera la presentación y la ruta protegida requiere backend, sesión institucional y registros con los tres valores del contrato para verificar el comportamiento real.
+
+---
+
+## Update 2026-09-20 — adaptación responsive completa de `/actas`
+
+### Estado actual y decisiones
+- `src/pages/Actas/ActasPage.tsx` mantiene una sola consulta, colección, orden, filtros, paginación y conjunto de filas. Escritorio conserva la tabla original. En `max-width: 720px`, CSS transforma esas mismas filas en tarjetas, sin duplicar consultas, IDs ni controles; nombre/código se priorizan y año/fecha forman dos columnas hasta 350 px.
+- La causa del desbordamiento era `.actas-table { min-width: 1040px; }`, amplificada por padding/bordes y elementos grid/flex sin contracción explícita. `src/pages/Actas/ActasPage.css` limita la corrección al módulo: usa `min-width: 0`, elimina el ancho mínimo solo en móvil y permite wrap, sin ocultar overflow en `body`.
+- Encabezado, filtros y formulario se apilan en móvil. Los controles miden al menos 44 px y usan 16 px; el nombre seleccionado y código generado ajustan líneas. Se conservan valores al redimensionar y ante errores, validación PDF/15 MB, SHA-256, clasificación COMITE/CONSEJO, fecha Colombia, payload y bloqueo `isSaving`.
+- Ver/Descargar comparten fila cuando caben; Eliminar ocupa otra y conserva estilo destructivo. Se mantienen `getDocumentoActa(acta.id)`, Blob URL autenticado/temporal, confirmación con nombre/código, bloqueo de operaciones y eliminación local solo tras éxito. Un fallo de consulta ya no se confunde con cero resultados.
+
+### Contratos, paths y salida esperada
+- Vista/lógica: `src/pages/Actas/ActasPage.tsx`; estilos: `src/pages/Actas/ActasPage.css`; API: `src/modules/actas/api.ts`; DTO/payload: `src/modules/actas/types.ts`; Blob/base64: `src/shared/files/base64FileUtils.ts`.
+- Sin cambios: `GET /sapp/actas`, `POST /sapp/actas`, `DELETE /sapp/actas/{id}` y `GET /sapp/actas/{id}`. `CrearActaRequest` conserva `nombre`, `codigo`, `fechaCreacion`, `observaciones`, `tipoConsejo`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum`.
+- Salida móvil esperada a 320/375/402/440 CSS px: márgenes de shell de 12–16 px, sin scroll horizontal del listado, filtros/tarjetas/formulario a una columna y todos los valores/acciones accesibles. Escritorio conserva tabla, filtros de tres columnas y formulario de dos columnas.
+
+### Entorno, resultados y trabajo pendiente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, Poetry, entorno Python ni segundo árbol npm. Node 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds/datasets nuevos ni script `test`.
+- `npx eslint src/pages/Actas/ActasPage.tsx`: PASS (solo warning ambiental `Unknown env config "http-proxy"`). `npm run build`: PASS, 272 módulos, `index-Cc_JZsaX.css` e `index-DU-XEZcO.js`; warning no bloqueante por chunk de 630.31 kB. `git diff --check`: PASS.
+- Pendiente con navegador, backend y sesión/mocks: comparar escritorio antes/después y recorrer 320/375/402/440, tablet, landscape, ambos temas y zoom; cubrir textos largos, filtros, vacío/error, paginación, PDF ausente/error/apertura/descarga, carga y eliminación sin tocar actas reales.
+- No hubo captura: Chromium, Chrome y Firefox no están en `PATH`; la ruta requiere autenticación/backend. No instalar dependencias solo para falsificar esta validación.
+
+---
+
+## Update 2026-09-20 — `/coordinacion/profesores` responsive
+
+### Estado, causa y decisiones
+- Las dos pestañas existentes siguen usando un solo estado React y conservan búsquedas, selección y páginas al alternar. Ahora tienen semántica `tablist`/`tab`/`tabpanel`, selección visible, foco roving y navegación con flechas, Home y End.
+- El recorte móvil era la combinación de ancho intrínseco de las tablas, celdas y acciones sin ajuste, contenedores flex sin `min-width: 0` y tabs con overflow. Hasta 800 CSS px las mismas filas se presentan como tarjetas CSS (sin montar una segunda lista ni duplicar solicitudes); a partir de 801 px la tabla y su distribución anterior permanecen intactas.
+- Los cuatro listados están cubiertos: rol de posgrados, EISI disponible, integrantes de grupo y posgrados disponibles para agregar. Las tarjetas preservan nombre, documento/correo o identificador/rol según corresponda y botones completos de 44 px. Correos/nombres usan wrap; paginación se reorganiza sin perder el total filtrado.
+- El selector de grupo es fluido y muestra el nombre completo seleccionado bajo el control en móvil. El efecto de integrantes invalida respuestas tardías cuando cambia `grupoId`, evitando pintar el grupo anterior. Se distingue explícitamente selección pendiente de grupo seleccionado sin integrantes.
+- No cambiaron endpoints, DTO, permisos, elegibilidad, confirmaciones, regla de director único, alcance de retirar, estados de mutación, paginación, ni las operaciones **Agregar/Retirar de posgrados**, **Agregar al grupo**, **Hacer director** y **Retirar**.
+
+### Paths, contratos y salida esperada
+- Implementación y estado: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`. Estilos aislados y breakpoint: `src/pages/GestionProfesores/GestionProfesoresPage.css` (800 CSS px; compactación adicional a 360 px).
+- Contratos sin cambios: `GET /sapp/docentes`, endpoints de rol bajo `/sapp/docentes/{uuid}`, `GET /sapp/gruposInvestigacion`, y GET/POST/PUT/DELETE de `/sapp/gruposInvestigacionDocentes`. Los detalles están en `src/api/gruposInvestigacionService.ts` y `src/api/gruposInvestigacionTypes.ts`.
+- Salida esperada: escritorio con tablas y todas sus columnas originales; móvil 320–440 px sin scroll horizontal, con una tarjeta por fila, texto completo y acciones a ancho disponible. El identificador de integrante continúa siendo `docenteId ?? id`, no documento ni código UIS.
+- No existen seeds/datasets ni fixtures nuevos. No crear venv, Conda o Poetry: es un frontend Node y debe reutilizar `/workspace/SAPP-frontend/node_modules`.
+
+### Verificación y próximos pasos
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS (solo warning ambiental de npm por `http-proxy`).
+- `npm run build`: PASS, 272 módulos; `dist/assets/index-DUxhBT2n.css` (202.04 kB) e `index-eaq7Vr05.js` (629.79 kB). Persiste el warning informativo del chunk mayor de 500 kB. `git diff --check`: PASS. No existe script `test`.
+- Pendiente: validar con navegador y sesión de pruebas a 320/375/402/440 px, tablet, horizontal y escritorio, `body.light`/`body.dark`; comprobar teclado, zoom, nombres/correos/grupos largos, vacíos/error, búsquedas, páginas y móvil → escritorio → móvil. No hay Chromium/Chrome/Firefox en el contenedor, por lo que no hubo captura.
+- Pendiente con mocks o ambiente no productivo: ejecutar asignación/retiro del rol, alta/baja del grupo y cambio de director, verificando refresh/contadores y fallos. No se modificaron usuarios reales.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; versiones reproducibles en `package-lock.json`.
+
+---
+
+## Update 2026-09-20 — corrección de detalles de convocatoria e inscripción
+
+### Estado actual y causa
+- En `/admisiones/convocatoria/:convocatoriaId`, el hueco móvil no provenía de datos ni del tablero: al pasar el encabezado a columna, `.convocatoria-detalle__actions` conservaba `flex: 0 1 25rem`, de modo que esos 25 rem se aplicaban al eje vertical. El breakpoint de 760 px fija `flex-basis: auto` y conserva el ancho completo de la acción.
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId`, **Programa** permanece dentro de **Datos de la inscripción** y se retiró de la barra inferior duplicada. La barra ahora distribuye sus dos estados en dos columnas de escritorio y una en móvil.
+- No se modificaron contratos, consultas, estado React, rutas, permisos ni reglas académicas. No hay paquetes, variables, schemas, seeds o datasets nuevos.
+
+### Paths, salida esperada y próximos pasos
+- Responsive de convocatoria: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.css`. Resumen de inscripción: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`.
+- A 760 CSS px o menos, cabecera, botón/aviso, indicadores y tablero deben fluir sin un hueco de 400 px. En inscripción debe aparecer el programa una sola vez, dentro del panel de metadatos; la barra conserva estado de inscripción y evaluación.
+- Pendiente: comprobación autenticada en 320/375/402/440 px y escritorio, temas claro/oscuro y convocatoria abierta/cerrada. El contenedor no dispone de Chromium, Chrome ni Firefox y estas rutas requieren backend/sesión institucional.
+
+### Entorno
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. No existe script `test`.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`: PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`. `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-Df4G69RN.css` e `index-xtNZzMOk.js`; persiste el aviso informativo por el chunk JS mayor de 500 kB. `git diff --check`: PASS.
+
+---
+
+# Update 2026-09-20 — Acta asociada en detalles de solicitudes
+
+## Estado actual y decisiones
+- `SolicitudDetallePage` es la vista compartida por solicitudes académicas normales y créditos condonables. Su DTO ahora declara `actaId`, `actaCodigo`, `actaNombre`, `actaFechaCreacion` y `actaTipoConsejo` como campos opcionales/anulables del `GET` de detalle.
+- Solo cuando el estado normalizado es `APROBADA` y existe `actaId`, se renderiza una única tarjeta **Acta asociada** después del resumen general. Contiene código, fecha `DD/MM/YYYY`, nombre e instancia; no se dispersaron los campos entre las tarjetas generales.
+- `actaTipoConsejo: true` significa **Consejo Académico**. Tanto `false` como `null` se muestran como **Comité Asesor de Posgrados**, consistente con el contrato ya usado al filtrar las actas disponibles durante la aprobación.
+- La tarjeta usa Lucide ya instalado y tokens `--primary`, `--on-primary`, `--outline`, `--surface-container-low` y texto semántico. Tiene dos columnas en escritorio y una en móvil, compatible con temas claro/oscuro. No cambió el flujo previo de selección de acta al aprobar.
+
+## Paths, contrato y salida esperada
+- DTO: `src/modules/solicitudes/api/types.ts`. Render: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`. Estilos: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`.
+- Consulta existente: `GET /sapp/solicitudesAcademicas/{solicitudId}` → `{ ok, message, data }`. En `data`, los campos nuevos son `{ actaId: number | null, actaCodigo: string | null, actaNombre: string | null, actaFechaCreacion: "YYYY-MM-DD" | null, actaTipoConsejo: boolean | null }`.
+- Salida esperada: `APROBADA` + `actaId` dibuja exactamente un bloque del acta en ambas familias de solicitudes; cualquier otro estado, o una aprobada sin asociación, no lo dibuja. Valores ausentes de código/nombre usan texto de respaldo y una fecha ausente usa `—`.
+- No se añadieron endpoints, paquetes, variables, schemas, seeds ni datasets. La respuesta de ejemplo usada para implementar tenía `id: 65`, `estadoSigla: "APROBADA"`, `actaId: 5`, `actaCodigo: "ACT-001-2026"`, `actaNombre: "ACTA DE PRUEBA DE DAVID"`, `actaFechaCreacion: "2026-08-28"` y `actaTipoConsejo: null`.
+
+## Retos y próximos pasos
+1. Validar con el gateway una solicitud normal aprobada y un crédito condonable aprobado, además de casos no aprobados y una respuesta aprobada sin acta.
+2. Confirmar con backend que `actaTipoConsejo: null` seguirá representando Comité. Si `null` pasa a significar “sin clasificar”, ajustar la etiqueta o presentar un fallback neutral.
+3. Revisar visualmente la tarjeta con nombres/códigos largos a 320–440 px y escritorio en `body.light`/`body.dark`. El contenedor no contiene Chromium, Chrome ni Firefox y la ruta requiere autenticación, por lo que no se generó captura.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2. Instalado: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test` ni seeds.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/api/types.ts`: PASS. `npm run build`: PASS; 272 módulos y artefactos `dist/assets/index-DNu7XGnK.css` (199.46 kB) e `index-B-Qm0z6W.js` (628.67 kB), con el aviso informativo conocido por tamaño del chunk. `git diff --check`: PASS.
+
+---
+# Update 2026-09-20 — Listado inicial de matrículas responsive
+
+## Estado actual y decisiones
+- La ruta protegida `/matricula` mantiene sin cambios visuales deliberados su presentación de escritorio: notificación, cuatro filtros, contador y tabla de seis columnas. El único ajuste de escritorio es técnico: el grid de filtros cambió `repeat(3, 33%)` por `repeat(3, minmax(0, 1fr))`, porque los tres porcentajes más los dos `gap` excedían el contenedor.
+- Hasta 768 CSS px, la tabla de `min-width: 760px` deja de participar en el layout y `filteredMatriculas` se representa también como una lista vertical de tarjetas. Cada tarjeta conserva nombre, código UIS (o el `—` existente), estado textual, programa, período, fecha/hora mediante `formatDateTime` y `/matricula/{id}`. La tabla y sus enlaces usan `display: none` en ese breakpoint, por lo que no quedan controles ocultos enfocables.
+- La cadena local de contenedores ahora puede contraerse con `min-width: 0`; no se aplicó `overflow-x: hidden` a `body`. Los textos usan wrap, el estado no depende solo del color y programa/período pasan de dos columnas a una bajo 360 px. Notificación y filtros se apilan, y botones/controles tienen al menos 44 px; inputs/selects usan 16 px para evitar zoom involuntario.
+- No cambiaron hooks, consultas, carga/error, opciones o valores de filtros, orden por fecha, contador, roles, confirmación ni protección de doble envío del correo. No se toca el detalle de matrícula. No hay paginación implementada actualmente.
+
+## Paths, contratos y salida esperada
+- Render y fuente compartida de datos: `src/pages/Matricula/MatriculaPage.tsx`; estilos exclusivamente del módulo: `src/pages/Matricula/MatriculaPage.css`.
+- Entrada del listado: `MatriculaAcademicaListadoDto[]` obtenido por el servicio existente. No cambió el DTO: `{ id, estudianteNombreCompleto, codigoEstudianteUis, programaAcademico, periodoAcademico, estado, fechaSolicitud, ... }`.
+- Resultado esperado: a 769 px o más se ve la tabla anterior; a 768 px o menos solo las tarjetas. Carga y error son excluyentes del listado; con cero coincidencias se conserva `Registros encontrados: 0` y en móvil aparece el mensaje explícito de ausencia. Redimensionar no modifica estado React ni filtros y no causa nuevas consultas ni correos.
+
+## Retos y próximos pasos
+1. Ejecutar una prueba autenticada con datos reales a 320, 375, 402 y 440 CSS px, tablet, landscape y el viewport de escritorio de referencia; confirmar `scrollWidth <= clientWidth`, temas claro/oscuro, foco y zoom.
+2. Probar nombres/programas/estados largos, múltiples filas, respuesta vacía y error del listado; recorrer los cuatro filtros y cada enlace **Ver detalle**, y redimensionar móvil → escritorio → móvil verificando que los filtros persisten.
+3. Verificar el botón de notificación con mocks o un entorno de pruebas. No enviar correos reales. Confirmar estados disabled/loading y pulsaciones repetidas; esta revisión no cambió el handler.
+
+## Entorno y verificación reciente
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay seeds ni script `test`.
+- `npm run build` PASS: 272 módulos; `dist/assets/index-BqffXqoX.css` (198.34 kB) e `index-BhTGTJV5.js` (627.47 kB). Persiste el warning informativo del chunk mayor a 500 kB. `npx eslint src/pages/Matricula/MatriculaPage.tsx` PASS. `git diff --check` PASS.
+- No se obtuvo captura ni se ejecutó E2E: Chromium, Chrome y Firefox no están instalados, y la ruta exige backend/sesión institucional. La validación responsive enumerada arriba permanece pendiente; no agregar una dependencia solo para capturarla.
+
+---
+
+# Update 2026-09-20 — Restauración del escritorio en detalle de inscripción
+
+## Estado actual, causa y decisión
+- Se comparó `a7f2dfd` con su padre (implementación previa al responsive). La regresión principal fue introducir elementos nativos `<details>` cerrados para cabecera, consideraciones y PDF: las reglas CSS de escritorio intentaban mostrar sus hijos, pero el estado cerrado del elemento seguía suprimiendo el contenido. Además se eliminaron del JSX los indicadores repetidos de estado/programa y se hizo visible la etiqueta **Nota** en cada fila de escritorio.
+- La cabecera recuperó exactamente las fuentes y formatos previos: fotografía, nombre, estado de inscripción, documento, correo, teléfono, programa, `numeroInscripcion` con su fallback histórico, período, fecha de inscripción y última actualización. También regresaron los indicadores de estado de inscripción, programa y estado de evaluación. El panel compacto móvil usa estado React, pero CSS fuerza todo el contenido en escritorio, incluso si se cerró antes en móvil.
+- Hoja de vida, Examen y Entrevistas reutilizan un único formulario y los mismos DTO/payloads. Las consideraciones siempre existen en el DOM y son visibles en escritorio; solo el breakpoint móvil puede ocultarlas. El formateador conserva texto y valores JSON, incluyendo fallback seguro para estructuras no serializables. Los grupos de entrevista siguen el mismo patrón para no convertir un control móvil en interacción de escritorio.
+- El visor autenticado de Hoja de vida se carga junto con los criterios y queda visible automáticamente en escritorio. Su expansión opcional solo se aplica hasta 768 px; cambiar móvil → escritorio no depende de un listener ni del tamaño inicial y no remonta formulario, iframe o datos.
+- **Regla permanente:** toda adaptación responsive debe preservar visual, campos e interacción de escritorio salvo solicitud explícita. Encapsular transformaciones dentro del breakpoint y comprobar escritorio → móvil → escritorio; nunca esconder contenido de escritorio mediante el estado persistente de un control móvil.
+
+## Paths, contratos y salida esperada
+- Cabecera e indicadores: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`. Acordeón y overflow de escritorio: `src/modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow.css`.
+- Criterios, etiquetas y formulario único: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx` y `.css`. PDF y grupos de entrevista: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` y `.css`.
+- Sin cambios contractuales: continúan los GET simultáneos de evaluación/documento, URL `blob:` local desde Base64 autenticado, PUT conjunto `{ id, puntajeAspirante, observaciones }`, permisos, cálculos, estados y rutas hijas. Documentos cargados conserva campos, versiones, acciones y reglas existentes.
+- Salida esperada en escritorio: resumen completo directo; tres indicadores; consideraciones completas; PDF inmediato junto a Hoja de vida; una sola etiqueta visual **Nota** por columna y nombre accesible por input. En 402/440 CSS px: controles compactos y expandibles con todos los campos. Los borradores viven en `evaluacionDraftStore.ts` y no se pierden al contraer, navegar o redimensionar.
+
+## Verificación, limitaciones y próximos pasos
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`: PASS (solo warning ambiental conocido de npm por `http-proxy`).
+- `npm run build`: PASS; 272 módulos, `dist/assets/index-Di7oIX-v.css` e `index-DRKnmGPY.js`; solo warning informativo del chunk JS de 626.08 kB. `git diff --check`: PASS.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de esta superficie (servicios API con `any`, guard de evaluación, mocks, validación documental y solicitudes); el lint focalizado confirma que esta corrección no añade hallazgos.
+- Validación visual y captura pendientes: no existe Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere backend, sesión y datos institucionales. Cuando estén disponibles, comparar contra el padre de `a7f2dfd` con idénticos datos/viewport; cubrir escritorio y 402/440 px, temas claro/oscuro, cerrar paneles en móvil y volver a escritorio, además de notas/observaciones sin guardar.
+- Entorno único: `/workspace/SAPP-frontend` con su `node_modules`; no crear otro árbol npm, venv, Conda ni Poetry. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No hay script `test`, seeds ni datasets nuevos.
+
+---
+
+# Update 2026-09-20 — Detalle responsive de convocatoria de admisiones
+
+## Estado actual y decisiones
+- Se completó el responsive de `/admisiones/convocatoria/:convocatoriaId` para convocatorias abiertas y cerradas. La cabecera usa contexto textual compacto y multilínea; si está cerrada presenta una sola nota semántica **Inscripciones cerradas** y no dibuja **Crear aspirante**, aunque el manejador y la prop `open` del modal conservan la protección contra apertura. El botón abierto conserva exactamente roles de gestión, resolución de programa/convocatoria, carga y cupos.
+- La sección **Crear estudiantes admitidos** mantiene su condición existente: convocatoria cerrada + rol autorizado, y elegibilidad `estado === ADMITIDO`. `idPersona` o el ID confirmado en la sesión muestran **Estudiante creado** como estado; los pendientes mantienen el mismo servicio, payload y bloqueo `isSubmitting`. Hay tabla en escritorio y tarjetas no enfocables duplicadas visualmente en móvil mediante `display: none`, sin IDs repetidos.
+- El tablero conserva fotografías grandes y navegación de cada tarjeta. `ResizeObserver` y el evento `scroll` recalculan overflow/extremos por datos y tamaño; sin overflow no hay flechas ni instrucción. En móvil, varias tarjetas usan ancho dependiente del viewport y una única tarjeta ocupa el contenedor. El scroll táctil sigue nativo; el arrastre de mouse conserva umbral de 8 px y cancela el clic posterior solo si hubo desplazamiento.
+- Las tarjetas conservan todos los campos y el significado de ausentes (`?? "—"` para puntaje/posición), pasan correo a fila completa, permiten ajuste de cadenas y usan `object-fit: contain`/posición superior para no recortar rostros.
+
+## Paths, contratos y salida esperada
+- Página, condiciones, overflow y variantes tabla/tarjeta: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` y `.css`. Tarjeta: `src/modules/admisiones/components/StudentCard/StudentCard.tsx` y `.css`. Modal de estudiante: `src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx` y `.css`.
+- Lecturas sin cambios: `GET /sapp/inscripcionesAdmision/convocatoria/{id}` (servicio vigente) y catálogo de convocatorias. Creación de estudiante sin cambios mediante `admitirAspiranteComoEstudiante({ idAspirante, codigoUIS, emailInstitucional })`; creación de aspirante y carga documental tampoco cambiaron.
+- Salida esperada: 2 indicadores por fila hasta 1100 px y 4 en escritorio; lista apilada de admitidos hasta 760 px; tablero adaptable hasta 320 px sin overflow de página; solo el tablero desplaza horizontalmente cuando sus hijos exceden el contenedor. Ambos temas consumen exclusivamente tokens semánticos/`color-mix`.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional convocatorias abierta/cerrada y cero/uno/varios aspirantes, fotos fallidas, textos largos y estados admitidos con/sin `idPersona`; inspeccionar Network sin crear registros reales.
+2. Revisar manualmente 320, 375, 402, 440 CSS px, tablet, escritorio y horizontal en `body.light`/`body.dark`; comprobar zoom, teclado virtual, scroll interno del modal, foco, flechas y toque/arrastre.
+3. Tomar capturas cuando exista navegador. Este contenedor no ofrece Chromium, Chrome ni Firefox y la ruta necesita backend/autenticación, por lo que no hubo revisión visual real ni captura.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes, variables, seeds, datasets ni schemas.
+- `npx eslint src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx src/modules/admisiones/components/StudentCard/StudentCard.tsx src/modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal.tsx`: PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos, `dist/assets/index-B1gestz2.css` e `index-BhpzgPd9.js`; warning no bloqueante por chunk JS de 621.22 kB. `git diff --check`: PASS. No existe script `test`.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes documentados en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el lint focalizado confirma que los archivos de este cambio no añaden hallazgos.
+
+---
+
+# Update 2026-09-20 — inicio responsive de Admisiones
+
+## Estado actual y decisiones
+- La ruta protegida `/admisiones` carga una sola vez `GET /sapp/convocatoriaAdmision`, agrupa exclusivamente por el `programaId` real y conserva ambos programas en columnas de escritorio. En viewports de hasta 900 CSS px aparece un `tablist`; solo el `tabpanel` seleccionado queda renderizado para tecnologías de asistencia y navegación por teclado, pero los paneles permanecen montados conceptualmente mediante el mismo estado de datos y cambiar el breakpoint no consulta de nuevo.
+- La selección móvil inicial sigue el orden vigente de programas y una selección del usuario se conserva al alternar Maestría → Doctorado → Maestría o cambiar de viewport. No se relacionan convocatorias por posición del array. Las flechas, `Home` y `End` cambian selección y foco; toque/clic cambian el contenido real.
+- La tarjeta móvil se aplanó para evitar bordes/padding anidados. Nombre completo y código permanecen visibles; el encabezado usa **Convocatoria actual**, **vigente** o **más reciente** y la insignia textual ABIERTA/CERRADA. La determinación continúa usando `getConvocatoriaDestacada` e `isConvocatoriaVigente`; no se introdujo lógica académica nueva. Las fechas usan el formateo existente y una cuadrícula autoajustable.
+- **Configurar fechas académicas** conserva el guard `canManagePosgrados` y navega directamente a `/fechas`. Convocatoria destacada y períodos anteriores navegan a `/admisiones/convocatoria/{id}` con el estado previo. La selección de anteriores continúa aislada por `programaId`; si no hay destacada, todas las convocatorias del programa quedan disponibles como anteriores.
+
+## Paths, contratos y salida esperada
+- Orquestación/estado/semántica: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`; estilos responsive temáticos: `src/pages/AdmisionesHome/AdmisionesHomePage.css`; selector existente: `src/pages/AdmisionesHome/CompactPeriodSelect.tsx`.
+- Datos: `GET /sapp/convocatoriaAdmision` → envelope con `data: Array<{ id, programaId, programa, periodoId, periodo, cupos, fechaInicio, fechaFin, observaciones, vigente }>`; no cambió el contrato. Los metadatos institucionales conocidos continúan asociados por ID (`1` MISI, `2` DCC), con fallback al nombre del API.
+- Salida móvil esperada en 320, 375, 402 y 440 CSS px: selector de programas en una fila, un solo programa visible, sin scroll horizontal, acción principal y selector a ancho completo, controles de al menos 44 px. Escritorio: ambos programas visibles en dos columnas y sin pestañas visibles. Los temas claro/oscuro consumen tokens semánticos existentes.
+
+## Verificación reciente, retos y próximos pasos
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx src/pages/AdmisionesHome/CompactPeriodSelect.tsx` (2026-09-20): PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-20): PASS; 271 módulos transformados, `dist/assets/index-Y5pbd70m.css` e `index-DnddbAO9.js`. Warning no bloqueante: chunk JS de 617.99 kB supera 500 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- `npm run lint` global (2026-09-20): FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (`no-explicit-any`, estado síncrono en un efecto, parámetros sin usar, tipos vacíos y una dependencia de hook). El lint focalizado de Admisiones sí pasa.
+- Pendiente con navegador/sesión institucional: validar visualmente 320/375/402/440, tablet, landscape, escritorio, ambos temas y texto ampliado; recorrer convocatorias abiertas/cerradas/anteriores de ambos programas y permisos de `/fechas`. No hubo captura porque el contenedor no dispone de Chromium, Chrome ni Firefox.
+- Entorno único: `/workspace/SAPP-frontend`, Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. Reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No hay seeds ni datasets nuevos.
+
+---
+
+# Update 2026-09-20 — Responsive de `/creditos-condonables`
+
+## Estado actual y decisiones
+- La pantalla de coordinación mantiene ambas secciones/tablas simultáneas en escritorio. Hasta 768 CSS px muestra una sola sección mediante pestañas accesibles Pendientes/Histórico; inicia en Pendientes y conserva pestaña activa, filtros y paginación independiente durante cambios de pestaña y ancho.
+- Los paneles móviles reutilizan las colecciones ya consultadas: no hay fetch asociado al breakpoint. Las pestañas admiten flechas izquierda/derecha, Home y End, tienen `tablist`/`tab`/`tabpanel`, foco roving y contadores con el total real de cada lista.
+- Las tarjetas móviles son locales al módulo para no alterar la transformación global de `SolicitudesTable`. Incluyen enlace explícito al mismo detalle `/creditos-condonables/:solicitudId`, observaciones expandibles sin interacción anidada, estado multilínea y layout de metadatos que pasa a una columna a 350 CSS px.
+- Se conservaron clasificación (`APROBADA`/`RECHAZADA` son histórico), orden, selección exacta por `estudianteId`, valores ausentes y contratos. Los estados vacío y sin coincidencias tienen textos distintos; un error no se representa como lista vacía y ofrece Reintentar.
+
+## Paths, contratos y salida esperada
+- Vista/lógica: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`.
+- Estilos aislados: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`; breakpoint principal 768 CSS px, referencia 402 × 874 CSS px y colapso adicional a una columna en 350 CSS px.
+- Entrada sin cambios: `GET /sapp/solicitudesAcademicas` y catálogo de estados existente. Salida esperada: escritorio con pendientes e histórico visibles; móvil con una pestaña visible, tarjetas de ancho completo, filtros/paginación propios y navegación al detalle sin acciones de aprobación/rechazo.
+- No se agregaron paquetes, endpoints, variables, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Ejecutar revisión autenticada con backend real en 320, 375, 402, 440 CSS px, tablet, horizontal y escritorio, tanto `body.light` como `body.dark`; cubrir nombres/estados/observaciones largos, fechas ausentes, vacíos y varias páginas.
+2. Confirmar mediante lector de pantalla y teclado real la locución de contadores y pestañas, y validar contraste con la paleta institucional desplegada.
+3. Tomar capturas a 402 × 874 cuando exista un navegador y sesión. El contenedor actual no incluye Chromium, Chrome ni Firefox, por lo cual la inspección visual y captura siguen pendientes.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`: PASS; solo warning ambiental `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos, `dist/assets/index-BKTs4nd7.css` e `index-DpUG42po.js`. Warning informativo no bloqueante por chunk JS de 616.27 kB.
+- `git diff --check`: PASS. No existe script `test` en `package.json`.
+- `npm run lint`: FAIL por 9 errores y 1 warning preexistentes fuera de los archivos modificados (servicios API con `any`, guarda/mock de admisiones, validación documental y tipos/editor de solicitudes); el archivo modificado pasa ESLint aislado.
+
+---
+# Update 2026-09-20 — Estudiantes responsive y filtro activo predeterminado
+
+## Estado actual y decisiones
+- `/coordinacion/estudiantes` inicia `estadoFiltro` en `ACTIVO`. Cambiar entre Maestría/Doctorado o limpiar devuelve ese valor predeterminado. El buscador y el contador de resultados quedan siempre visibles; en móvil período y estado empiezan contraídos, conservan sus valores al cerrar/redimensionar y se controlan con **Filtros**, `aria-expanded`, `aria-controls` y una insignia con el número de filtros adicionales aplicados. En escritorio ambos selects permanecen expandidos.
+- La variante `compactOnMobile` de `ModuleLayout` se activa únicamente en esta página: mantiene título, usuario, avatar y ambas marcas, pero reduce padding y reúne identidad/marcas en una fila cuando hay espacio. Otras pantallas no adoptan la variante.
+- El tablero conserva Pointer Events solo para mouse, umbral de 6 px, cancelación ante gesto vertical y supresión del clic posterior a drag. En móvil las tarjetas usan `calc(100% - 40px)` y gap de 12 px para anticipar 20–32 px de la siguiente según el ancho útil; el scroll táctil sigue nativo y el snap es suave. La ayuda táctil dice **Desliza para ver más**.
+- Las portadas siguen grandes: alto fluido `clamp(13.75rem, 56vw, 15rem)` (220–240 px), `object-fit: contain`, fondo semántico y fallback con iniciales. Se eliminó el `min-height` vacío del encabezado, los nombres ya no se truncan a dos líneas y la fila duplicada de estado se oculta solo en móvil; la insignia conserva Activo/Inactivo. **Ver perfil** mide al menos 44 px.
+- Egresados sigue cargándose bajo demanda. Los fallos muestran **No pudimos cargar los egresados.** y **Reintentar**; el error impide renderizar datos como si fueran un éxito o un vacío. El reintento repite la consulta existente sin cambiar el endpoint.
+
+## Paths, contratos y salida esperada
+- Vista/filtros/reintento: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` y `.css`; tablero: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.css`; tarjeta: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css`; variante de layout: `src/components/ModuleLayout/ModuleLayout.tsx` y `.css`.
+- Se conservan `getProgramasCoordinacion()`, `getEstudiantesByPrograma(programaId, egresados?)`, carga documental `ANX-4`, `EstudianteCoordinacion` y navegación `/coordinacion/estudiantes/{id}`. No cambiaron API, DTO, permisos, reglas, paquetes, variables, schemas, seeds o datasets.
+- Estados esperados: carga independiente; error distinto de vacío; lista sin coincidencias distinta de programa sin estudiantes; fotos individuales pueden fallar y dejan iniciales sin bloquear el tablero.
+
+## Retos y próximos pasos
+1. Hacer validación autenticada real en 440 × 956, 390 × 844, 320 px, landscape y escritorio; comprobar claro/oscuro, nombres largos, con/sin foto, filtros, vacío y error/reintento.
+2. Probar en dispositivo táctil scroll vertical iniciado sobre la foto, swipe horizontal y zoom; con mouse verificar clic normal frente a drag >6 px y flechas en ambos extremos.
+3. Confirmar con datos backend si algún registro activo usa el valor legado `1`; el filtro actual conserva el contrato visible `ACTIVO` usado por el selector.
+
+## Entorno y verificación reciente
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node 24.15.0, npm 11.4.2; React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test` ni seeds.
+- `npm run build` PASS: 271 módulos; `dist/assets/index-Ctxt-4n7.css` (182.56 kB) e `index-Bb609q7R.js` (612.22 kB). Persiste el warning informativo del chunk mayor a 500 kB.
+- `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de estos archivos (`any`, estado en efecto, parámetros sin uso, interfaces vacías y dependencia de hook); el cambio no añade hallazgos.
+- No hubo captura ni prueba E2E: no hay Chromium/Chrome, Playwright ni Puppeteer instalados y la ruta protegida requiere backend/sesión institucional. No agregar dependencias solo para la captura.
+
+---
+# Ajuste visual — Portadas grandes de estudiantes (2026-09-19)
+
+- La solicitud posterior del usuario reemplaza la decisión anterior de avatares de 64 px: ahora las fotos ocupan una portada de ancho completo y 15rem (240 px con fuente base de 16 px) de alto, como tarjetas con imagen de Trello.
+- Archivo de implementación: src/modules/estudiantes/components/EstudianteCard/EstudianteCard.css. Tarjetas de 17–19rem en escritorio y min(84vw, 19rem) en móvil. object-fit: contain muestra la fotografía completa sin deformación ni recorte; iniciales de 3.5rem cuando no existe foto. Estado debajo de la portada.
+- Se mantienen los tokens semánticos de tema. No se modificaron componentes React, contratos, filtros, permisos ni manejadores de clic/arrastre.
+- Validación: npm run build PASS (269 módulos); persiste advertencia de chunk JS superior a 500 kB. git diff --check PASS.
+- Pendiente: revisión visual autenticada en claro/oscuro, escritorio/móvil y comprobación manual de clic frente a arrastre. No se ejecutó navegador en esta revisión.
+- Entorno utilizado: proyecto local en Windows, Node 24.11.0, npm 11.6.1; node_modules existente, sin nuevas dependencias.
+
+---
+# Update 2026-09-20 — Inicio responsive y navegación móvil accesible
+
+## Estado actual y decisiones
+- La pantalla protegida de Inicio conserva los elementos devueltos por `getPrimaryNavigationItems(roles)`, por lo que las nueve opciones administrativas, su orden, sus rutas y la visibilidad por rol no cambiaron.
+- En viewports de hasta 900 CSS px, el sidebar permanente se reemplaza visualmente por una barra superior compacta. El drawer empieza cerrado, se abre desde un botón con `aria-expanded`/`aria-controls`, se cierra con su botón, backdrop o `Escape`, contiene el foco y lo devuelve al disparador. Mientras está cerrado, sus enlaces y logout tienen `tabIndex=-1`; mientras abre, bloquea solo el scroll del `body` y mantiene scroll interno.
+- El sidebar de escritorio sigue siendo deliberadamente un overlay temporal: ocupa 84 px contraído y se amplía a 260 px con hover/foco. El contenido reserva los 84 px persistentes; no se añadió un desplazamiento de layout al expandir para evitar saltos visuales.
+- Inicio muestra dos columnas iguales entre 341 y 900 px, incluida la referencia de iPhone 16 Pro Max (viewport CSS solicitado: 440 × 956 en orientación vertical). A 340 px o menos cae a una columna. Las tarjetas son fluidas, de mínimo 120 px, y admiten etiquetas multilínea. El encabezado, avatar y logos usan Grid/Flex sin posicionamiento absoluto.
+
+## Paths, contratos y salida esperada
+- Navegación/interacción: `src/components/Sidebar/Sidebar.tsx`; drawer/barra/sidebar: `src/components/Sidebar/Sidebar.css`; reserva y márgenes de shell: `src/components/Layout/Layout.css`.
+- Encabezado compartido responsive: `src/components/ModuleLayout/ModuleLayout.css`; cuadrícula exclusiva de Inicio: `src/pages/Home/HomePage.css`. La fuente de rutas y permisos permanece en `src/app/navigationItems.ts`.
+- `index.html` ya contiene `<meta name="viewport" content="width=device-width, initial-scale=1.0" />`; no se modificó. No hubo cambios de endpoints, payloads, datos, paquetes, seeds o schemas.
+
+## Retos y próximos pasos
+1. Ejecutar una revisión con sesión institucional real en 320, 375, 390, 430 y 440 CSS px, iPhone 16 Pro Max 440 × 956, landscape, tablet y escritorio. Confirmar visualmente nombres largos, zoom de texto y temas claro/oscuro.
+2. Validar el ciclo completo de foco y scroll con VoiceOver/TalkBack en un dispositivo real. La implementación cubre teclado/DOM, pero el contenedor no ofrece navegador ni emulador para una prueba asistiva o capturas.
+3. Revisar páginas internas en móvil porque `ModuleLayout` es compartido. Los cambios se limitaron a reorganizar su cabecera y padding bajo 768 px; no se tocaron contenidos ni lógica de módulos.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2. Instalado: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide 0.468.0-local, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/components/Sidebar/Sidebar.tsx src/components/Layout/Layout.tsx src/components/ModuleLayout/ModuleLayout.tsx src/pages/Home/HomePage.tsx` (2026-09-20): PASS. `git diff --check`: PASS. `npm run build`: PASS; 271 módulos transformados, artefactos `dist/assets/index-DRTAu577.css` e `index-DL4_coBh.js`; persiste solo el warning informativo por el chunk JS de 610.11 kB.
+- No existe script `test`. No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH` y la aplicación fuerza inicialización contra el gateway institucional; no falsificar una sesión ni disparar logout durante la validación.
+
+---
+# Update 2026-09-20 — Tablero compacto de estudiantes de coordinación
+
+## Estado actual y decisiones
+- `/coordinacion/estudiantes` conserva los dos tipos de programa, filtros por período/nombre o código/estado, contador, orden por cohorte, carga progresiva de fotografías, bloque diferido de egresados y navegación con snapshot. No se cambió ninguna consulta ni DTO.
+- `StudentHorizontalBoard` ahora permite arrastrar horizontalmente con el botón izquierdo. Solo inicia para mouse primario y fuera de controles interactivos; captura el puntero, exige 6 px, abandona el gesto cuando predomina el movimiento vertical y suprime en captura el clic generado tras un arrastre. `pointerup`, `pointercancel` y `lostpointercapture` limpian el estado. El scroll táctil, trackpad, rueda/barra y vertical permanecen nativos.
+- Las flechas se deshabilitan de acuerdo con la posición real y se recalculan en scroll/resize. El tablero enfocado admite `ArrowLeft` y `ArrowRight`, muestra foco y usa cursores `grab`/`grabbing`.
+- `EstudianteCard` reduce el retrato a 64 px, usa iniciales como fallback y prioriza nombre, código UIS, cohorte y estado. El estado se repite textual e icónicamente, y la tarjeta inactiva usa además borde lateral neutro e insignia discontinua. Se retiraron documento y correo del resumen para reducir ruido y exposición; siguen disponibles en el perfil. El botón **Ver perfil** mantiene el callback existente.
+- Los estilos usan exclusivamente tokens semánticos existentes y `color-mix`, con anchos fluidos para escritorio/tablet/móvil y soporte inherente para `body.light`/`body.dark`. No hay dependencias nuevas.
+
+## Paths, contratos y salida esperada
+- Tablero/interacción: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx` y `.css`.
+- Tarjeta: `src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx` y `.css`.
+- Ajuste responsive de filtros: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.css`.
+- Entrada sin cambios: `EstudianteCoordinacion` y los servicios existentes de `src/modules/estudiantes`; la salida esperada sigue navegando a `/coordinacion/estudiantes/{estudiante.id}` con `{ estudiante }` en `location.state`.
+- No cambiaron endpoints, schemas, roles, variables de entorno, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Ejecutar una prueba E2E autenticada: clic normal en **Ver perfil** navega una sola vez; arrastrar desde el cuerpo de una tarjeta más de 6 px desplaza y no navega; iniciar sobre el botón conserva el comportamiento del control.
+2. Revisar visualmente datos reales en tema claro/oscuro a 1440, 768 y 390 px, especialmente nombres/estados largos y fotos de encuadre heterogéneo.
+3. Confirmar en Safari que Pointer Events, `color-mix` y `ResizeObserver` satisfacen la matriz institucional; agregar fallback solo si esa matriz incluye navegadores antiguos.
+
+## Entorno y verificaciones recientes
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. `npm ci` reproduce el lockfile; no hay seeds ni script `test`.
+- `npx eslint src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx src/modules/estudiantes/components/EstudianteCard/EstudianteCard.tsx src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` (2026-09-20): PASS.
+- `npm run build` (2026-09-20): PASS; 271 módulos, `dist/assets/index-Bd4ooJs_.css` y `dist/assets/index-Clw57B_Z.js`. Solo persiste el aviso informativo por el chunk JS de 611.43 kB.
+- `npm run lint` (2026-09-20): FAIL por 9 errores y 1 warning preexistentes fuera de esta pantalla (servicios API con `any`, guard/mocks de admisiones, validación documental y tipos/efecto de Solicitudes). Los tres archivos TypeScript del cambio pasan aislados.
+- `git diff --check` (2026-09-20): PASS. No se generó captura ni prueba E2E: Chromium, Chrome y Firefox no están disponibles en el contenedor, y la ruta protegida requiere backend/sesión institucional.
+
+---
+
+# Update 2026-09-19 — Acta obligatoria al aprobar solicitudes
+
+## Estado actual y decisiones
+- En `/solicitudes/:solicitudId` y el detalle compartido de créditos, **Aprobar** ya no llama inmediatamente al cambio de estado: abre un diálogo, consulta `GET /sapp/actas` mediante el servicio existente y exige escoger un acta.
+- El listado se filtra por la instancia del estado previo. Si `estado` o `estadoSigla` contiene **CONSEJO**, se ofrecen únicamente actas con `tipoConsejo: true`; en el estado **ENVIADA A COMITE ASESOR DE POSGRADOS** se muestran exclusivamente las de `tipoConsejo: null`. El mismo detalle y asociación se reutiliza desde los listados de solicitudes generales y créditos condonables, evitando asociar un acta de una instancia diferente.
+- Los estados descriptivos que contienen **COMITE** o **CONSEJO** habilitan la resolución para los roles reconocidos por `canManagePosgrados`, además de la sigla histórica `ENVIADA`. **Rechazar** conserva el flujo sin acta.
+- El diálogo previo de solicitudes OTRA se conserva. Tras elegir si se remite al Consejo, se solicita el acta y el PUT incluye tanto el `actaId` seleccionado como `enviarConsejo=true` cuando se escogió esa alternativa. No hay IDs hardcodeados.
+
+## Paths, contratos y salida esperada
+- Vista/orquestación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; estilos temáticos: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; serialización: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`; catálogo reutilizado: `src/modules/actas/api.ts` y `src/modules/actas/types.ts`.
+- Catálogo: `GET /sapp/actas` → `{ ok, message, data: ActaDto[] }`, donde cada elemento incluye al menos `{ id, codigo, nombre, tipoConsejo }`; para este flujo se espera `tipoConsejo: true | null` (Consejo | Comité).
+- Aprobación: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&actaId={id}`, sin body. Para OTRA remitida al Consejo, también incluye `enviarConsejo=true`. Salida esperada: solo se ejecuta al elegir un acta válida y después se refresca el detalle con el GET existente.
+- No se añadieron paquetes, variables, seeds, datasets ni schemas. Se reutiliza el árbol npm actual.
+
+## Retos y próximos pasos
+1. Validar con solicitudes reales cuyos estados previos sean Comité y Consejo que el texto recibido contiene esas palabras y que el backend acepta el acta del tipo filtrado.
+2. Confirmar con producto si `enviarConsejo=true` debe asociar el acta del Comité que toma la decisión de remitir, como implementa el flujo actual, o si esa transición no debe considerarse todavía una aprobación definitiva.
+3. Probar vacío, error del catálogo y rechazo del PUT con sesión institucional; el diálogo bloquea la confirmación cuando no existen actas elegibles.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/actas/types.ts` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; 271 módulos transformados y artefactos `dist/assets/index-Chy-FRr7.css` e `index-rdW-fojp.js`. Persiste el warning informativo no bloqueante por el chunk JS de 607.12 kB. `git diff --check`: PASS. No existe script `test`.
+- `npm run lint` (2026-09-19): FAIL por 9 errores preexistentes fuera de los archivos modificados (`no-explicit-any`, `set-state-in-effect`, variables sin uso e interfaces vacías) y un warning de dependencia de hook; el lint focalizado anterior confirma que este cambio no agrega hallazgos.
+- No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la pantalla protegida necesita una sesión institucional, una solicitud resolutiva y actas reales para representar el nuevo diálogo.
+
+---
+
+# Update 2026-09-18 — Director de grupo de investigación
+
+## Estado actual y decisión
+- En `/coordinacion/profesores`, pestaña **Grupos de investigación**, el listado de integrantes consume el nuevo booleano `esDirector`. El único registro con valor `true` se distingue mediante la insignia **Director**; las demás filas se presentan como **Integrante** y habilitan **Hacer director**.
+- La designación solicita confirmación, bloquea simultáneamente altas, bajas y otras designaciones, ejecuta el nuevo PUT y vuelve a consultar los integrantes. La interfaz no modifica el arreglo local de forma optimista: muestra únicamente la condición de director confirmada por el GET posterior, sin recarga completa de la página.
+- Se conserva **Retirar** para todos los integrantes, incluido el director. Si la regla de negocio debe impedir retirar al director, el backend debe rechazarlo o producto debe definir la restricción antes de ocultar esa acción.
+
+## Paths, contratos y salida esperada
+- DTO: `src/api/gruposInvestigacionTypes.ts`; transporte: `src/api/gruposInvestigacionService.ts`; estado y orquestación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; insignia, botón y agrupación de acciones: `src/pages/GestionProfesores/GestionProfesoresPage.css`.
+- Consulta: `GET /sapp/gruposInvestigacionDocentes?grupoId={grupoId}` → `{ ok, message, data: Array<{ esDirector: boolean, existeEnSapp: boolean, id: number, nombre: string, uuid: string | null }> }`. Se espera un máximo de un elemento con `esDirector: true`.
+- Mutación: `PUT /sapp/gruposInvestigacionDocentes/director?grupoId={grupoId}&docenteId={docenteId}`, sin body. Se aceptan tanto un envelope exitoso como HTTP 204. Al completarse se repite el GET anterior; el nuevo director debe llegar con `esDirector: true` y el anterior con `false`.
+
+## Retos y próximos pasos
+1. Validar con el gateway real si el PUT responde con envelope o 204 y que el GET posterior actualice ambos indicadores de forma atómica.
+2. Confirmar la regla para retirar al director actual y el mensaje esperado si el grupo todavía no tiene reemplazo.
+3. Hacer una prueba visual autenticada en temas claro/oscuro y viewport móvil; este entorno no dispone de navegador ejecutable ni de una sesión institucional.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`; no se agregaron dependencias, seeds ni datasets.
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-CsH7l7Ht.css` e `index-COZE89ny.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 604.18 kB. `git diff --check`: PASS.
+- No existe script `test` en `package.json`. No se generó captura porque Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida necesita backend y sesión institucional para mostrar datos reales.
+
+---
+
+# Update 2026-09-18 — Firma desde el módulo de Créditos condonables
+
+## Estado actual y decisión
+- Corregido el detalle `/creditos-condonables/:solicitudId`: los perfiles habilitados por `canManagePosgrados` ven **Firmar todos los documentos** cuando `estado` o `estadoSigla`, normalizado a mayúsculas, contiene `POR FIRMA`.
+- La visibilidad ya no depende de `location.state.fromAssigned`. Ese estado transitorio solo se adjuntaba al navegar desde la tabla de solicitudes asignadas, por lo que faltaba al abrir un crédito desde el módulo dedicado o pegar su URL (caso reportado: solicitud 63, **POR FIRMA DIRECTOR DE TG**).
+- Se mantiene la protección por rol en la interfaz y en la ruta de Créditos condonables. No cambiaron el endpoint de firma, los contratos, estilos, paquetes, variables, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Lógica de visibilidad y operación: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; guard compartido: `src/auth/roleGuards.ts`; ruta protegida: `src/app/routes/creditosCondonablesRoutes.tsx`.
+- Entrada: detalle de solicitud con `estado` o `estadoSigla` que incluya `POR FIRMA`, y sesión `ADMIN_POSGRADOS`, `SECRETARIA_POSGRADOS` o `COORDINADOR_POSGRADOS`.
+- Salida: se presenta **Firmar todos los documentos** independientemente de si se llegó desde `/solicitudes`, `/creditos-condonables` o mediante URL directa. Al activarlo se conserva `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` y luego se recargan detalle y adjuntos.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional la solicitud 63 y confirmar en Network que la firma responde correctamente y que el refresco entrega el estado siguiente esperado.
+2. Verificar con backend que los tres perfiles de gestión autorizados por el frontend tienen permiso equivalente sobre el endpoint; la autorización definitiva sigue siendo responsabilidad del servidor.
+3. Confirmar casos adicionales de estados de firma para director, coordinación u otros responsables. La detección conserva la regla previa basada en el texto `POR FIRMA`.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados, con `dist/assets/index-CNYnAK7V.css` e `index-Bj-sDITf.js`. Persiste el warning informativo por el chunk JavaScript de 603.01 kB.
+- `npm run lint` global (2026-09-18): FAIL por los 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el archivo funcional modificado pasa el lint focalizado. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere una sesión institucional con una solicitud en estado de firma.
+
+---
+
+# Update 2026-09-18 — Asignación de profesores a grupos de investigación
+
+## Estado actual y decisiones
+- En `/coordinacion/profesores`, pestaña **Grupos de investigación**, el selector contiene únicamente el grupo. Después de seleccionarlo aparecen, en este orden, la tabla de profesores ya vinculados y una segunda tabla con profesores de posgrados disponibles para agregar.
+- La tabla disponible se deriva exclusivamente de `GET /sapp/docentes` con `tieneRolDocentePosgrados: true`, excluye los UUID ya asociados y, como compatibilidad con respuestas del grupo que no incluyan UUID, excluye también coincidencias de nombre normalizado. Incluye búsqueda por nombre, documento o correo y paginación local de 10 filas.
+- **Agregar al grupo** envía el UUID de la fila, bloquea temporalmente las demás mutaciones y vuelve a consultar los integrantes al finalizar. **Retirar** conserva el contrato y confirmación existentes. No se agregaron dependencias, variables, seeds ni datasets.
+
+## Paths, contratos y salida esperada
+- Vista/orquestación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; estilos temáticos: `src/pages/GestionProfesores/GestionProfesoresPage.css`; transporte existente: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`.
+- Catálogo elegible: `GET /sapp/docentes` → `data: Array<{ uuid, fullName, email, documentNumber, tieneRolDocentePosgrados }>`; solo son elegibles los elementos cuyo indicador sea `true`.
+- Alta: `POST /sapp/gruposInvestigacionDocentes` con `{ "grupoId": number, "docenteUuid": string }`. Baja: `DELETE /sapp/gruposInvestigacionDocentes?grupoId={grupoId}&docenteId={docenteId}`. Tras el alta se espera que `GET /sapp/gruposInvestigacionDocentes?grupoId={grupoId}` incluya al profesor y que este desaparezca de disponibles.
+
+## Retos, próximos pasos y entorno
+1. Validar con una sesión institucional y grupos reales que la respuesta de integrantes expone `docenteUuid`; la exclusión por nombre es solo una compatibilidad defensiva y no reemplaza un identificador estable.
+2. Confirmar respuestas de duplicado/conflicto y autorización del POST/DELETE con el gateway. El frontend muestra el mensaje del envelope cuando está disponible.
+3. Revisar ambos temas y viewport móvil con suficientes profesores para ejercitar búsqueda y paginación.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación reciente
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-rbGXm0ph.css` e `index-CEmt7pmW.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 601.60 kB.
+- `git diff --check` (2026-09-18): PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida requiere sesión/backend institucional para una representación útil.
+
+---
+
+# Update 2026-09-26 — parámetro explícito al aprobar directamente solicitudes OTRA
+
+## Estado actual
+
+- Se corrigió `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`: `cambiarEstadoSolicitud` serializa `enviarConsejo` siempre que la opción esté definida, tanto para `true` como para `false`.
+- En el flujo de `SolicitudDetallePage`, **Sí, enviar al Consejo** produce `enviarConsejo=true` y **No, aprobar directamente** produce `enviarConsejo=false`. Los demás tipos continúan omitiendo el parámetro porque llaman el servicio con `undefined`.
+
+## Contrato y salida esperada
+
+- Remisión a Consejo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true&actaId={id}`, sin body.
+- Aprobación directa de OTRA: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=false&actaId={id}`, sin body.
+- Aprobación de tipos diferentes de OTRA: se omite `enviarConsejo`. No cambiaron endpoints, DTOs, paquetes, variables, schemas, seeds ni datasets.
+
+## Entorno, validación y próximos pasos
+
+- Usar el entorno Node/npm existente del repositorio y `node_modules`; no crear venv, conda, Poetry ni una instalación paralela. Las versiones exactas siguen declaradas en `package.json` y fijadas en `package-lock.json`.
+- Validaciones de esta entrega: `npm run build` completó correctamente (con la advertencia existente por un chunk mayor a 500 kB) y `npx eslint src/modules/solicitudes/api/solicitudCambioEstadoService.ts` pasó. `npm run lint` continúa fallando por 9 errores y 1 advertencia preexistentes en archivos no modificados, entre ellos los `no-explicit-any` de `src/api/*Service.ts` y `react-hooks/set-state-in-effect` de `RequireEvaluacionEnabled.tsx`.
+- Próximo paso manual recomendado: inspeccionar en DevTools la solicitud PUT de ambas decisiones para confirmar los literales booleanos y validar la respuesta con el backend integrado.
+
+# Update 2026-09-18 — Consejo Académico al aprobar solicitudes OTRA
+
+## Estado actual y decisión
+- En el detalle de solicitudes, los roles habilitados por `canManagePosgrados` siguen compartiendo la acción **Aprobar**. Cuando la solicitud tiene `tipoSolicitudId === 11` (**OTRA**, asociada al trámite 15), esa acción abre un diálogo obligatorio antes de llamar al backend.
+- **Sí, enviar al Consejo** aprueba con `enviarConsejo=true`; **No, aprobar directamente** representa la decisión negativa. Desde la corrección del 2026-09-26 esta última se serializa explícitamente como `enviarConsejo=false`. **Cancelar** y el backdrop cierran el diálogo sin cambiar el estado. Rechazar y aprobar tipos distintos de OTRA no abren el diálogo.
+- El cliente acepta una opción `enviarConsejo?: boolean`. El comportamiento histórico descrito originalmente aquí fue reemplazado por el contrato documentado en la actualización del 2026-09-26.
+
+## Paths, contrato y salida esperada
+- Orquestación/diálogo: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`; apariencia temática y responsive: `src/pages/SolicitudDetalle/SolicitudDetallePage.css`; URL HTTP: `src/modules/solicitudes/api/solicitudCambioEstadoService.ts`.
+- Entrada discriminante: `SolicitudAcademicaDto.tipoSolicitudId === 11`. No depender del texto visible para evitar diferencias entre **OTRA**/**OTRO** o cambios de capitalización.
+- Contrato afirmativo: `PUT /sapp/solicitudesAcademicas/cambioEstado/{solicitudId}?siglaEstado=APROBADA&enviarConsejo=true`, sin body. Desde el 2026-09-26, el contrato negativo usa `enviarConsejo=false`; el resto de tipos omite el parámetro.
+- El `actaId=2` incluido en el ejemplo del requerimiento no se añadió: este flujo no dispone de selección de acta y el contrato anterior del frontend tampoco enviaba `actaId`. Confirmar con backend/producto si debe existir una fuente real y dinámica para ese valor; no hardcodear `2` sin esa definición.
+
+## Retos y próximos pasos
+1. Validar con sesiones reales de ADMIN, SECRETARIA y COORDINADOR que los tres perfiles ven el diálogo y que Network omite/incluye el parámetro según la decisión.
+2. Confirmar con backend si remitir al Consejo mantiene inmediatamente el estado `APROBADA` y cuál es la respuesta/estado posterior esperado.
+3. Validar visualmente el diálogo en temas claro/oscuro y viewport móvil. La ruta está protegida y necesita una solicitud OTRA real en estado `ENVIADA`.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se agregaron paquetes, variables, seeds ni datasets.
+- `npx eslint src/modules/solicitudes/api/solicitudCambioEstadoService.ts src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-BpcPKGuv.css` e `index-BX3WKUBT.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 597.06 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome, Firefox ni una herramienta de navegador, y la ruta protegida requiere sesión institucional y una solicitud OTRA real en estado `ENVIADA`.
+
+---
+
+# Update 2026-09-18 — Selector DANE para lugar de expedición en créditos condonables
+
+## Estado actual y decisiones
+- Los formularios de **Solicitud crédito condonable** y **Renovación crédito condonable** ya no aceptan libremente `Departamento/Ciudad`. Presentan un selector de departamento compacto y un combobox de municipio con desplegable propio, filtrable y consistente con el estilo visual del departamento.
+- Santander (código DANE `68`) queda seleccionado por defecto. Cambiar el departamento borra el municipio para impedir combinaciones inconsistentes; restablecer el formulario vuelve a Santander.
+- La previsualización solo se habilita cuando el texto coincide, ignorando mayúsculas y tildes, con un municipio del departamento. Al perder foco se restaura su presentación Camel Case. El payload conserva únicamente `ciudadExpedicionDocumento: string` con el nombre visible del municipio; no se envían departamento ni códigos DANE.
+- El combobox de municipio abre al recibir foco, filtra mientras se escribe, admite flechas, `Enter` y `Escape`, y se cierra al hacer clic fuera. El cambio es exclusivamente visual y de interacción; no agrega paquetes ni altera contratos.
+
+## Paths, artefactos y contrato esperado
+- Componente accesible y responsive: `src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx` y `.css`; búsqueda, normalización y valor por defecto: `daneLocations.ts`.
+- Integración y payload: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`.
+- Fuente entregada: `public/resources/Tabla-Códigos-Dane.pdf`. Dataset derivado localmente: `src/modules/solicitudes/data/daneLocations.json`, con 33 departamentos y 1.119 municipios/registros, sin dependencia o consulta de red.
+- Contrato sin cambios: la previsualización de crédito recibe `ciudadExpedicionDocumento`, por ejemplo `"Bucaramanga"`; nunca `"Santander/Bucaramanga"`, el código `001` ni un objeto. Aplica a ambos tipos de crédito detectados por el formulario.
+
+## Retos y próximos pasos
+1. Validar con sesión real ambos tipos de solicitud, el cambio de Santander a otro departamento y el payload en Network. La ruta protegida y los catálogos remotos de tipos/modalidades impiden una validación visual local representativa.
+2. Confirmar con producto si se desea una fuente DANE más reciente; esta implementación reproduce deliberadamente el PDF suministrado y no mezcla datos externos.
+3. Si el backend pasa a requerir código DANE, versionar explícitamente el contrato; no enviar códigos sin coordinación porque hoy espera solo el nombre del municipio.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se añadieron paquetes ni variables de entorno.
+- `npx eslint src/modules/solicitudes/components/DaneLocationSelector/DaneLocationSelector.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados y artefactos `dist/assets/index-C5_8d92w.css` e `index-DtocM0qY.js`. Persiste el warning informativo por el chunk JavaScript de 595.74 kB. No existe script `test`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores preexistentes fuera del selector (tipos `any`, variables no usadas, interfaces vacías y un `setState` en efecto) y 1 warning de dependencia de hook; el lint focalizado del archivo modificado sí pasa.
+- Captura pendiente por limitación ambiental: no hay Chromium, Chrome ni Firefox en `PATH`, y la pantalla necesita sesión institucional y respuestas del backend.
+
+---
+
+# Update 2026-09-18 — Paridad de gestión ADMIN/SECRETARIA/COORDINADOR
+
+## Estado actual y decisión
+- Los roles canónicos `ADMIN_POSGRADOS`, `SECRETARIA_POSGRADOS` y `COORDINADOR_POSGRADOS` siguen siendo valores distintos, pero por decisión funcional tienen ahora exactamente la misma capacidad operativa en el frontend.
+- `src/auth/roleGuards.ts` es la fuente única de esta política: `ROLES_GESTION_POSGRADOS` enumera los tres perfiles y `canManagePosgrados(roles)` resuelve la pertenencia mediante la normalización existente. No convertir un rol en otro ni modificar `normalizeRole`: la separación debe preservarse para cambios futuros.
+- La revisión cubrió menú, guardas de rutas y autorizaciones internas. Los tres perfiles pueden usar Créditos condonables, Informes a dependencias, Actas, Fechas, Gestión profesores y estudiantes; además comparten creación/configuración/finalización de Admisiones, validación documental, gestión de Matrícula, resolución de Solicitudes y la variante administrativa de Perfil.
+
+## Paths, contratos y salida esperada
+- Política: `src/auth/roleGuards.ts`; compatibilidad readonly: `src/modules/auth/roles/roleUtils.ts` y `src/routes/RequireRoles/RequireRoles.tsx`.
+- Navegación/rutas: `src/app/navigationItems.ts`, `src/app/routes/index.tsx` y `src/app/routes/creditosCondonablesRoutes.tsx`.
+- Acciones de página auditadas: `src/pages/{AdmisionesHome,InscripcionAdmisionDetalle,InscripcionDocumentos,Matricula,MatriculaDetalleCoordinacion,Perfil,Solicitudes,SolicitudDetalle}`.
+- Contrato de entrada sin cambios: `GET /api/sapp/inicio` entrega los roles funcionales en `clientRoles`; los nombres legacy todavía se normalizan. Salida esperada: al iniciar por separado con cualquiera de los tres roles, aparecen los mismos accesos y las mismas acciones administrativas, aunque el encabezado sigue mostrando la identidad real (`ADMIN`, `SECRETARIA` o `COORDINADOR`).
+- No se agregaron ni cambiaron endpoints, payloads, variables, dependencias, schemas, seeds o datasets.
+
+## Retos y próximos pasos
+1. Ejecutar una matriz E2E con tres cuentas institucionales, una por rol, y comparar rutas visibles, accesos directos por URL y botones de acción; la seguridad definitiva debe estar alineada también en el backend.
+2. Si producto diferencia permisos en el futuro, editar primero `ROLES_GESTION_POSGRADOS` o crear una política con nombre funcional más específico; no dispersar nuevamente arreglos de roles por las páginas.
+3. Validar especialmente respuestas 403 del backend en Créditos condonables, cierre de Admisiones, validación documental y cambios de estado de Solicitudes/Matrícula, porque este repositorio solo controla autorización de interfaz.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0 y npm 11.4.2.
+- Paquetes instalados: React/React DOM 19.2.3, React Router DOM 7.11.0, Lucide React 0.468.0-local, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0; `package-lock.json` fija el árbol exacto.
+- `npm run build` (2026-09-18): PASS; 267 módulos transformados, artefactos `dist/assets/index-BKgrn9UU.css` e `index-BCj8u8EB.js`; solo persiste el warning informativo del chunk JS de 553.12 kB.
+- ESLint focalizado sobre los 16 archivos TypeScript/TSX intervenidos (2026-09-18): PASS; npm solo mostró el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores y 1 warning preexistentes en tres servicios API, el guard de evaluación, mocks/fachadas de documentos y tipos/componentes de Solicitudes; ningún hallazgo pertenece a las líneas cambiadas para esta política.
+- `git diff --check` (2026-09-18): PASS. No existe script `test` en `package.json`. No se requiere captura porque no hubo cambio visual: se habilitaron superficies existentes según rol y su representación depende de sesiones reales del gateway.
+
+---
+# Update 2026-09-18 — Recordatorio global de firma pendiente
+
+## Estado actual y decisión
+- Después de inicializar una sesión válida, el layout protegido consulta una vez `GET /sapp/firmaUsuario/{usuarioId}` usando `user.id`, que corresponde al ID de `UsuarioSapp`; el `63` del requerimiento era un ejemplo y no quedó hardcodeado.
+- Si la respuesta no contiene firma, se muestra un toast global **Firma pendiente** con el enlace **Ingresa aquí para anexarla.** hacia `/perfil`. El aviso puede cerrarse y también se oculta al seguir el enlace. Si existe firma no se renderiza; si la consulta falla por red, contrato o autorización tampoco se presenta, para no afirmar incorrectamente que falta.
+- El formulario de perfil y su carga de PNG/JPG permanecen sin cambios. El toast usa tokens semánticos, foco visible, `role="status"` y adaptación móvil para temas claro/oscuro.
+
+## Paths, contrato y salida esperada
+- Orquestación: `src/components/SignatureReminder/SignatureReminder.tsx`; estilos: `src/components/SignatureReminder/SignatureReminder.css`; montaje global: `src/components/Layout/Layout.tsx`; servicio reutilizado: `src/modules/perfil/services/firmaPerfilService.ts`.
+- Entrada: `GET /sapp/firmaUsuario/{usuarioId}` autenticado. El servicio admite `ApiResponse<{ titulo, contenidoFirma } | null>` o el DTO directo. `contenidoFirma` no vacío significa que la firma existe; `data: null` o contenido vacío significa que debe mostrarse el recordatorio.
+- Salida esperada: una sola consulta por montaje/entrada autenticada y por usuario. El enlace navega a la ruta protegida existente `/perfil`, donde se guarda mediante `POST /sapp/firmaUsuario/{usuarioId}`. No se añadieron variables, paquetes, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con sesiones reales las respuestas de firma presente y ausente, especialmente el status/envelope exacto que entrega backend cuando todavía no existe registro.
+2. Confirmar en Network que el despliegue productivo realiza una consulta por entrada autenticada. El punto de entrada actual no usa `StrictMode`; si se habilita posteriormente, considerar un caché de promesa compartido para evitar la doble ejecución de efectos propia del modo de desarrollo.
+3. Probar visualmente escritorio/móvil y temas claro/oscuro con backend y sesión institucional. La captura local depende de poder completar el login del gateway.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El proyecto usa Node.js/npm y las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npm run build` (2026-09-18): PASS; 267 módulos transformados, con `dist/assets/index-CzzkD3ef.css` e `index-DWDmkdnp.js`. Persiste el warning informativo por el chunk JavaScript de 553.77 kB.
+- `npx eslint src/components/SignatureReminder/SignatureReminder.tsx src/components/Layout/Layout.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint` global (2026-09-18): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; ningún hallazgo corresponde a los archivos de este ajuste. `git diff --check`: PASS. No existe script `test`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y el estado visible requiere una sesión institucional cuya respuesta de firma sea vacía.
+
+---
+
+# Update 2026-09-16 — Descarga ZIP integral del estudiante
+
+## Estado actual y decisión
+- El detalle `/coordinacion/estudiantes/:estudianteId` muestra **Descargar información** junto a las acciones académicas. Al pulsarlo, el control queda deshabilitado, presenta un spinner y el texto **Preparando descarga...** durante toda la generación remota, y dispara la descarga automáticamente cuando llega el archivo.
+- La operación es independiente de la carga de los documentos por pestañas y de los cambios de estado. Un fallo restaura el botón y se informa como alerta en la cabecera; los clics repetidos quedan bloqueados mientras existe una solicitud activa.
+- El nombre se toma primero de `Content-Disposition` (incluido `filename*=UTF-8''...`) y cae a `{codigoUIS}-documentos.zip`. El `Blob` se descarga mediante una URL temporal que se revoca después del clic.
+
+## Paths, contrato y salida esperada
+- Servicio: `src/modules/estudiantes/services/estudiantesMockService.ts`; vista/orquestación: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; estilos temáticos y spinner: CSS homónimo. Se reutiliza el transporte binario `httpFile` de `src/shared/http/httpClient.ts`.
+- Contrato: `GET /sapp/estudiantes/{estudianteId}/documentos/zip` sin body → contenido binario `application/zip`; encabezado esperado `Content-Disposition: attachment; filename="...zip"; filename*=UTF-8''...zip`. No parsear como JSON ni como Base64.
+- Salida esperada: un único ZIP descargado automáticamente, con el nombre provisto por backend y la estructura documental interna que este genere. El frontend no inspecciona ni modifica sus carpetas o archivos.
+
+## Retos y próximos pasos
+1. Validar en integración con un estudiante que tenga un ZIP grande, el nombre con tildes/espacios y una sesión real de coordinación; confirmar además que CORS exponga `Content-Disposition` si frontend y API usan orígenes distintos.
+2. Validar respuesta 404/409/500 y expiración de sesión, además de los temas claro/oscuro y viewport móvil.
+3. La descarga espera el `Blob` completo porque Fetch no expone progreso portable de construcción del ZIP; el loader indica trabajo indeterminado, no porcentaje.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No se agregaron paquetes, variables, seeds ni datasets.
+- `npx eslint src/modules/estudiantes/services/estudiantesMockService.ts src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-V1VYF5Kd.css` e `index-CwvfwWV8.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 547.43 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; los dos archivos TypeScript intervenidos pasan el lint focalizado. No existe script `test`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida necesita backend, sesión institucional y un estudiante real para representar la generación del ZIP.
+
+---
+# Update 2026-09-16 — Código real y datos de contacto en el detalle de inscripción
+
+## Estado actual y decisión
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId`, **Código de inscripción** prioriza `numeroInscripcion` de la respuesta del backend. El fallback `INS-{id}` se conserva para respuestas antiguas que no incluyan el nuevo campo.
+- Las filas Documento, Correo y Teléfono mantienen sus etiquetas y valores, pero ya no muestran emojis.
+
+## Paths, contrato y salida esperada
+- DTO: `src/modules/admisiones/api/types.ts`; render y fallback: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`.
+- Entrada: el elemento de `data` del detalle de inscripción puede incluir `numeroInscripcion: number | string | null`. Para `{ id: 83, numeroInscripcion: 1104843491 }`, la pantalla debe mostrar `1104843491`, no `INS-83`.
+- No se agregaron dependencias, variables de entorno, seeds ni datasets. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry ni otro árbol npm.
+
+## Pendiente
+- Validar la ruta protegida con una sesión institucional y una respuesta real del backend. El repositorio no dispone de datos locales para reproducir esa vista de forma autónoma.
+- `npx eslint src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/api/types.ts` (2026-09-16): PASS; npm mostró solamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; se transformaron 259 módulos y se generaron `dist/assets/index-V1VYF5Kd.css` e `index-BEf7u2_z.js`. Persiste el warning informativo por el chunk JavaScript mayor a 500 kB. `git diff --check`: PASS.
+- No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH`, y la ruta requiere sesión institucional y datos del backend.
+
+---
+# Update 2026-09-16 — Identidad única y fotografía robusta en el perfil
+
+## Estado actual y decisión
+- `/perfil` ya no duplica el nombre, rol y fotografía entre el encabezado global y el contenido. En esta ruta, `ModuleLayout` oculta únicamente su resumen de usuario mediante la prop opcional `showUserSummary={false}` y conserva **Mi perfil** y ambos logos institucionales; las demás páginas mantienen el comportamiento predeterminado.
+- El perfil usa una cabecera amplia con una sola fotografía circular, nombre y roles. La imagen consume los tokens del tema y se adapta a móvil; si falta o falla, presenta la inicial del usuario sin mostrar una imagen rota.
+- La normalización compartida de fotografías admite Base64 puro o un data URI ya construido. Evita anteponer dos veces `data:...;base64,`, respeta el `mimeType` del contrato y elimina espacios de la carga Base64.
+
+## Paths, contratos y salida esperada
+- Cabecera y fallback visual: `src/pages/Perfil/PerfilPage.tsx` y `src/pages/Perfil/PerfilPage.css`; resumen opcional del layout: `src/components/ModuleLayout/ModuleLayout.tsx`; normalizador: `src/shared/files/base64FileUtils.ts`.
+- Entrada conservada: `useAuth().user.estudiante.foto = { documentoId, nombreArchivo, contenidoBase64, mimeType }`. No cambian `/inicio`, firma, payloads, schemas, variables, dependencias, seeds ni datasets.
+- Salida esperada: una única identidad visible en `/perfil`, imagen centrada con `object-fit: cover` y fallback inicial. Fuera de `/perfil`, nombre/rol/avatar continúan junto a las marcas UIS/EISI.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesiones reales cuya foto llegue en ambas variantes (Base64 y data URI), y comprobar escritorio/móvil y temas claro/oscuro.
+2. Confirmar que las fotos con orientación EXIF no requieren una transformación en backend; el frontend no rota ni recomprime el documento.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+
+## Verificación reciente
+- `npx eslint src/shared/files/base64FileUtils.ts src/components/ModuleLayout/ModuleLayout.tsx src/pages/Perfil/PerfilPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index--hq8ewXo.css` e `index-PMgQNOqJ.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 546.27 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; los tres archivos TypeScript intervenidos pasan el lint focalizado. No existe script `test`.
+- No se generó captura: el contenedor no incluye Chromium, Chrome ni Firefox en `PATH`, y `/perfil` requiere una sesión institucional con fotografía para una validación representativa.
+
+---
+# Update 2026-09-16 — Perfil de coordinación simplificado
+
+## Estado actual y decisión
+- En `/perfil`, las sesiones con rol `COORDINACION` o `ADMIN` ya no ven **Tipo de documento**, **Número de documento** ni **Último ingreso**. Los perfiles no administrativos conservan tipo y número de documento; no cambió el contrato de autenticación ni se eliminaron propiedades del modelo de sesión.
+- **Programa a cargo** ignora deliberadamente `user.programa` para coordinación y presenta dos valores fijos: **MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA** y **347:DOCTORADO EN CIENCIAS DE LA COMPUTACION**. Se usa una lista semántica compacta, compatible con los temas claro y oscuro.
+
+## Paths, contratos y salida esperada
+- Renderizado y valores fijos: `src/pages/Perfil/PerfilPage.tsx`; composición de la lista: `src/pages/Perfil/PerfilPage.css`.
+- Entrada conservada: `useAuth().user`, incluidos `roles`, `persona`, `activo` y los demás datos utilizados por perfiles de estudiante. No se agregaron endpoints, payloads, schemas, variables de entorno, dependencias, seeds ni datasets.
+- Salida esperada para coordinación: información personal sin identificadores documentales; tarjeta de coordinación con ambos programas, unidad académica y estado de cuenta, sin el placeholder **Pendiente de integración** de último ingreso.
+
+## Retos, próximos pasos y entorno
+1. Validar la ruta protegida con cuentas reales de coordinación y administración, en escritorio/móvil y temas claro/oscuro.
+2. Confirmar con producto si la maestría también debe mostrar un código numérico; no se inventó uno porque el requerimiento solo suministró explícitamente `347` para doctorado.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+
+## Verificación reciente
+- `npx eslint src/pages/Perfil/PerfilPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-CtvKtV-G.css` e `index-CfPO9zmy.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.65 kB.
+- `git diff --check` (2026-09-16): PASS. No se generó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta requiere una sesión institucional.
+
+---
+# Update 2026-09-16 — Orden y presentación de materias en matrícula estudiantil
+
+## Estado actual y decisión
+- En el selector de materias de `/matricula`, las asignaturas cuyo `nivel` es numérico aparecen antes que aquellas cuyo `nivel` es `null`. El orden relativo recibido del API se conserva dentro de ambos grupos mediante el ordenamiento estable de JavaScript.
+- Un nivel nulo se presenta como **Electiva**, nunca como `Nivel null`. La misma etiqueta se usa en la tabla después de seleccionar la materia.
+- Cada opción del desplegable dispone el nombre y la línea `código · nivel/Electiva` en vertical y alineados a la izquierda. Los estilos usan los tokens temáticos existentes y funcionan en modo claro/oscuro.
+
+## Paths, contrato y salida esperada
+- Selector y orden: `src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx`; presentación: `MateriasSelector.css`; tabla seleccionada: `src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx`.
+- Contrato tipado: `MateriaDto.nivel` y `AsignaturaApiDto.nivel` son `number | null` en `src/modules/matricula/types.ts` y `src/modules/matricula/services/matriculaAcademicaService.ts`.
+- Entrada conservada: `GET /sapp/asignaturas?programaId={programaId}`. No cambian endpoint, envelope, payload de creación, dependencias, variables de entorno, seeds ni datasets.
+- Salida esperada: materias con nivel primero; electivas después; cada opción totalmente alineada a la izquierda. La búsqueda y la exclusión de materias ya elegidas continúan aplicándose antes del ordenamiento.
+
+## Retos, próximos pasos y entorno
+1. Validar visualmente con una sesión real `ESTUDIANTE`, un catálogo mixto y ambos temas; la ruta protegida depende del backend institucional.
+2. Si producto requiere un orden secundario por número de nivel o nombre, acordarlo antes de modificarlo: actualmente se conserva deliberadamente el orden del API dentro de materias regulares y electivas.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación reciente
+- `npx eslint src/modules/matricula/types.ts src/modules/matricula/services/matriculaAcademicaService.ts src/modules/matricula/components/MateriasSelector/MateriasSelector.tsx src/modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-WwBwsYZB.css` e `index-BJQm_THy.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.47 kB.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes; el lint focalizado de todos los archivos TypeScript modificados sí pasa.
+- `git diff --check` (2026-09-16): PASS. No existe script `test` en `package.json`.
+- No se generó captura: no hay Chromium, Chrome ni Firefox disponible en el contenedor, y la ruta protegida requiere sesión y datos del backend institucional.
+
+---
+# Update 2026-09-16 — Una consulta de entrevista para evaluadores de Admisiones
+
+## Estado actual y decisión
+- Al abrir el detalle de una admisión, una sesión que sea exclusivamente evaluadora (`PROFESOR`, `DOCENTE` o `DIRECTOR`, sin `ADMIN`, `COORDINADOR` ni `SECRETARIA`) hace una sola consulta de datos de evaluación, limitada a `ENTREVISTA`.
+- La promesa se conserva por `inscripcionId` durante el montaje para que la doble ejecución de efectos de React en desarrollo no duplique la solicitud. Su respuesta queda en `evaluacionCache`; por ello `EvaluacionEtapaPage` llena las notas desde caché sin otra llamada.
+- `RequireEvaluacionEnabled` espera el estado resuelto por el detalle para estos roles y no consulta el endpoint general mientras el padre está cargando. La rama administrativa no fue modificada: continúa consultando estado general y precargando documentos y las tres etapas.
+
+## Paths, contrato y salida esperada
+- Orquestación y caché: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `src/modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache.ts`.
+- Guardia anidada: `src/modules/admisiones/routes/RequireEvaluacionEnabled.tsx`; consumidor de notas: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`.
+- Único contrato de evaluación para evaluador: `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa=ENTREVISTA` → `ApiResponse<EvaluacionAdmisionItem[]>`. Salida esperada: solo los ítems cuyo evaluador coincide con la sesión aparecen editables; no deben aparecer solicitudes equivalentes para `HOJA_DE_VIDA`, `EXAMEN_DE_CONOCIMIENTOS` ni `/info?inscripcionId={id}` sin etapa.
+- La consulta separada del resumen de inscripción se conserva porque suministra identidad y metadatos del aspirante. No se agregaron dependencias, variables, schemas, seeds o datasets.
+
+## Retos y próximos pasos
+1. Validar la pestaña Network con cuentas reales exclusivas de `DOCENTE` y `DIRECTOR`, incluyendo React en modo desarrollo: debe existir exactamente un GET de evaluación con `etapa=ENTREVISTA` por inscripción.
+2. Confirmar con backend el mensaje/envelope que retorna el endpoint por etapa cuando una evaluación todavía no está iniciada; actualmente se presenta como error de carga, igual que cualquier respuesta no exitosa del servicio de etapa.
+3. No trasladar esta optimización a coordinación: su precarga de todas las secciones, validación y finalización dependen del flujo administrativo existente.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npm run build` (2026-09-16): PASS; 259 módulos transformados y artefactos `dist/assets/index-Bf5vqx-I.css` e `index-BERUP9NS.js`. Persiste el warning informativo por el chunk JavaScript de 545.38 kB.
+- `git diff --check` (2026-09-16): PASS.
+- El lint focalizado conserva el error preexistente `react-hooks/set-state-in-effect` en `RequireEvaluacionEnabled.tsx:30`; no corresponde a la nueva rama y no se cambió para evitar alterar la lógica administrativa. No existe script `test`.
+- No se tomó captura: el cambio no modifica la presentación y la verificación de solicitudes requiere backend y sesión institucional.
+
+---
+# Update 2026-09-16 — Contrato real y ubicación de Gestión profesores
+
+## Estado actual y decisiones
+- **Gestión profesores** es el último acceso visible del sidebar para `COORDINACION` y `ADMIN`; la ruta protegida continúa siendo `/coordinacion/profesores`.
+- Se corrigió el fallo `n.filter is not a function`: `GET /sapp/docentes` no retorna un arreglo directamente en el primer `data`, sino una página en `response.data.data`. El servicio extrae y valida explícitamente esa colección antes de actualizar el estado React.
+- La tabla del catálogo usa los campos reales: nombre completo (con fallback a `firstName + lastName` y finalmente `username`), correo institucional, programas académicos y UUID. La búsqueda cubre nombre, correo y usuario. No se muestran atributos sensibles como teléfono, documento o correo personal.
+
+## Paths, contrato y salida esperada
+- Adaptación HTTP: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`; vista: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`; orden del menú: `src/app/navigationItems.ts`.
+- Contrato confirmado: `GET /sapp/docentes` → `{ ok, message, data: { data: Array<{ uuid, firstName: string | null, lastName: string | null, username, fullName, email, attributes: Record<string, string[]> }>, meta: { skip, limit, countInPage: number | null } } }`. La salida interna de `getDocentes()` sigue siendo `Promise<DocenteDto[]>` para aislar a la vista del envelope.
+- Si `data.data` no es un arreglo, se lanza un error de contrato legible y la página muestra su alerta en vez de fallar durante `.filter`. Un registro sin nombre visible utiliza el usuario institucional.
+- No se modificaron endpoints de grupos: `GET/POST/DELETE /sapp/gruposInvestigacionDocentes` conservan los contratos documentados en la entrada anterior.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional la carga completa y confirmar si el backend pagina realmente el catálogo: el ejemplo reporta `limit: 20` y `countInPage: null`, pero contiene más de 20 registros. Si hay páginas posteriores, definir con backend los query params y el total.
+2. Confirmar ejemplos reales de grupos e integrantes y la semántica de `id`/`docenteId` antes de validar la baja en producción.
+3. Validar escritorio/móvil y temas claro/oscuro. La ruta protegida requiere sesión y backend para una captura representativa.
+
+## Entorno y verificación reciente
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. El proyecto usa Node.js/npm; no se agregaron paquetes, variables, schemas, seeds o datasets.
+- Versiones: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/app/navigationItems.ts src/pages/GestionProfesores/GestionProfesoresPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-Bf5vqx-I.css` e `index-B8zvzBAw.js`. Persiste el warning informativo por el chunk JavaScript de 544.94 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes fuera de los archivos de este ajuste; el lint focalizado sí pasa. No existe script `test`.
+- No se generó captura: no hay Chromium, Chrome ni Firefox en `PATH`, y la ruta protegida requiere sesión institucional y backend.
+
+---
+# Update 2026-09-16 — Borrador de Gestión profesores
+
+## Estado actual y decisiones
+- Se incorporó **Gestión profesores** al menú y a la ruta protegida `/coordinacion/profesores`, disponible exclusivamente para `COORDINACION` y `ADMIN`.
+- La pestaña **Docentes en Minerva** consume el catálogo real, permite buscar por nombre y muestra `id`, `nombre` y `uuid`. **Inscribir docente** se presenta deshabilitado porque todavía no se suministró un endpoint ni payload de creación; no debe conectarse a una operación inventada.
+- La pestaña **Grupos de investigación** carga el catálogo de grupos y los docentes asociados al grupo seleccionado, permite asociar uno de los docentes mediante su UUID y retirarlo tras confirmación. El selector excluye docentes ya asignados cuando el contrato de integrantes informa `uuid` o `docenteUuid`.
+
+## Paths, contratos y salida esperada
+- Vista y estilos: `src/pages/GestionProfesores/GestionProfesoresPage.{tsx,css}`; barrel: `src/pages/GestionProfesores/index.ts` y `src/pages/index.ts`; ruta: `src/app/routes/index.tsx`; menú/icono: `src/app/navigationItems.ts` y `src/components/Sidebar/SidebarModuleIcon.tsx`.
+- Servicio: `src/api/gruposInvestigacionService.ts`; DTOs: `src/api/gruposInvestigacionTypes.ts`. Con `VITE_API_URL=/api/sapp`, la normalización convierte los paths `/sapp/...` en `/api/sapp/...` sin duplicar el segmento.
+- Contratos usados: `GET /sapp/docentes` → `ApiResponse<Array<{ id: number, nombre: string, uuid: string }>>`; `GET /sapp/gruposInvestigacion` → `ApiResponse<Array<{ id: number, codigoNombre: string }>>`; `GET /sapp/gruposInvestigacionDocentes?grupoId={id}` → integrantes; `POST /sapp/gruposInvestigacionDocentes` con `{ grupoId: number, docenteUuid: string }`; `DELETE /sapp/gruposInvestigacionDocentes?grupoId={id}&docenteId={id}`.
+- El borrador tolera en cada integrante `docenteId` o, como respaldo, `id` para el parámetro de borrado. Confirmar con backend si el `id` retornado representa al docente o a la asociación antes de validar producción.
+
+## Retos y próximos pasos
+1. Obtener el contrato de creación de docentes para habilitar **Inscribir docente** y definir validaciones del formulario.
+2. Confirmar ejemplos reales de respuesta de grupos e integrantes, en particular el nombre visible del grupo, el UUID del integrante y la semántica de `id`/`docenteId`.
+3. Validar alta y baja con sesión institucional, además de temas claro/oscuro y viewport móvil. La captura queda pendiente: la ruta protegida necesita backend/sesión y el contenedor no incluye navegador compatible.
+
+## Entorno y verificación reciente
+- Reutilizar únicamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se añadieron dependencias, variables, seeds o datasets. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/app/navigationItems.ts src/app/routes/index.tsx src/components/Sidebar/SidebarModuleIcon.tsx src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run lint`: PASS; no se reportaron errores ni advertencias de ESLint.
+- `npm run build`: PASS; 259 módulos transformados y artefactos `dist/assets/index-Bf5vqx-I.css` e `index-KKfbsN5N.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 544.55 kB. `git diff --check`: PASS. No existe script `test`.
+
+---
+# Update 2026-09-16 — DIRECTOR como evaluador de Admisiones
+
+## Estado actual y decisión
+- `DIRECTOR` comparte exclusivamente dentro de Admisiones los permisos operativos de `PROFESOR`/`DOCENTE`. El helper `isEvaluadorAdmision` centraliza los tres roles sin ampliar `isProfesor`, porque este último también condiciona módulos como Matrícula y Solicitudes.
+- Una sesión que solo tenga `DIRECTOR` ve **Admisiones** en el menú, accede a `/admisiones` mediante la vista **Mis entrevistas** y puede abrir `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas`.
+- El detalle restringe al director a la sección de entrevistas y la evaluación filtra los ítems por coincidencia normalizada entre `item.evaluador` y el nombre completo de la persona autenticada. Por ello solo puede modificar y enviar su nota/observaciones; los roles administrativos `ADMIN`, `COORDINADOR` o `SECRETARIA` siguen prevaleciendo cuando coexisten en la sesión.
+
+## Paths, contratos y salida esperada
+- Roles: `src/auth/roleGuards.ts`; navegación: `src/app/navigationItems.ts`; protección y selección de vista: `src/app/routes/index.tsx`.
+- Bandeja: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`; detalle: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx`; propiedad y edición de notas: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`.
+- No cambiaron endpoints ni payloads. Se conservan las consultas de convocatorias/inscripciones y el guardado de evaluación existente; el backend debe entregar el rol literal `DIRECTOR` y asignar como `evaluador` el nombre completo que corresponde a la persona de la sesión.
+- Salida esperada: el director entra a **Admisiones — Mis entrevistas**, elige un aspirante y encuentra editables solo los componentes de entrevista asignados a su propio nombre. Si no existen componentes coincidentes, ve **No tienes aspectos asignados para esta entrevista**.
+
+## Entorno, retos y próximos pasos
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se añadieron paquetes, variables, schemas, seeds o datasets.
+- Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2 y ESLint 9.39.2. Las versiones exactas restantes están fijadas por `package-lock.json` y detalladas en `README.md`.
+- Pendiente validar en integración con una cuenta real que posea solo `DIRECTOR`: el backend también debe autorizar sus GET/PUT de evaluación y devolver asignaciones cuyo nombre de evaluador coincida con la persona autenticada. Esta modificación cubre la autorización y restricciones de UI, no la seguridad del backend.
+
+## Verificación reciente
+- `npx eslint src/auth/roleGuards.ts src/app/navigationItems.ts src/app/routes/index.tsx src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 255 módulos y generaron `dist/assets/index-Cp9gSOCw.css` e `index-srN2J68x.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 536.81 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-16): FAIL por 9 errores y 1 warning preexistentes en servicios API, el guard de evaluación, mocks, documentos y solicitudes. Ningún hallazgo corresponde a los archivos modificados para habilitar `DIRECTOR`. No existe script `test` en `package.json`.
+- No se generó captura: el ajuste no altera el diseño visual y la ruta protegida requiere backend, sesión institucional y asignaciones reales.
+
+---
+# Update 2026-09-10 — Selector compacto de períodos en Admisiones
+
+## Estado actual y decisión
+- Los dos combos **Convocatorias anteriores** de `/admisiones` usan `CompactPeriodSelect` en lugar del `<select>` nativo. El cambio evita que una lista extensa de períodos cubra casi todo el viewport: el panel tiene `max-height: 12rem`, `overflow-y: auto` y se superpone a la tarjeta sin alterar su layout.
+- El disparador conserva el texto **Seleccione un período...** y las opciones se construyen con el ID y período de cada convocatoria anterior. Seleccionar mantiene exactamente el flujo existente de `handlePreviousChange`; el panel también se cierra con clic externo o `Escape` y devuelve el foco al disparador con este último.
+- Fondo, texto, borde, foco, hover, selección, sombra y scrollbar consumen tokens semánticos, por lo que el control funciona en temas claro y oscuro. No se cambiaron endpoints, contratos, schemas, paquetes, variables, seeds ni datasets.
+
+## Paths, contrato y salida esperada
+- Componente: `src/pages/AdmisionesHome/CompactPeriodSelect.tsx`; integración: `src/pages/AdmisionesHome/AdmisionesHomePage.tsx`; presentación: `src/pages/AdmisionesHome/AdmisionesHomePage.css`.
+- Entrada local: `{ id, value, placeholder, options: Array<{ label, value }>, onChange }`. Los valores enviados por cada opción siguen siendo `String(convocatoria.id)` y su etiqueta sigue siendo `convocatoria.periodo`.
+- Salida esperada: al abrir cualquier combo se ven aproximadamente cinco períodos dentro de un panel compacto; si hay más, el usuario los recorre mediante scroll. Al elegir uno se navega a la convocatoria correspondiente igual que antes.
+
+## Entorno, retos y verificaciones
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2. No existe script `test`.
+- Pendiente validar visualmente ambos programas con una sesión institucional y suficientes convocatorias, incluyendo scroll por ratón/trackpad, teclado y temas claro/oscuro. No se pudo generar captura local porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida requiere sesión/backend.
+- `npx eslint src/pages/AdmisionesHome/AdmisionesHomePage.tsx src/pages/AdmisionesHome/CompactPeriodSelect.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 255 módulos transformados y artefactos `dist/assets/index-Cp9gSOCw.css` e `index-6ZqY9b-z.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 536.54 kB. `git diff --check`: PASS.
+
+---
 # Update 2026-09-10 — Acciones documentales de matrícula en dos columnas
 
 ## Estado actual y decisión
@@ -15,6 +3154,32 @@
 - Validar con una sesión institucional de coordinación una matrícula con documentos cargados, estados aprobados/rechazados y modo de captura de motivo. Revisar escritorio, ancho de 960 px o inferior, y temas claro/oscuro.
 - No hay script `test` configurado. `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`: PASS. `npm run build`: PASS (253 módulos; `dist/assets/index-BomhlJcI.css` e `index-CXu4yT4j.js`; solo persiste el warning informativo del chunk de 533.23 kB). `git diff --check`: PASS.
 - `npm run lint`: FAIL por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; el archivo TypeScript intervenido pasa el lint focalizado. No se tomó captura porque el contenedor no tiene Chromium, Chrome ni Firefox en `PATH`, y la ruta requiere sesión institucional y datos reales del backend.
+
+---
+# Update 2026-09-10 — Detalle de documentos faltantes en informes
+
+## Estado actual y decisión
+- `/coordinacion/reportes` sigue mostrando el mensaje del backend cuando falla la generación. Además, si la respuesta contiene `data.faltantes`, presenta una tarjeta de requisitos pendientes aplicable a **Admisión**, **Matrícula** y **Créditos condonables**.
+- Las categorías institucionales aparecen en una lista propia. Cada aspirante aparece en un bloque desplegable con nombre, documento, ID de inscripción, contador y lista de documentos faltantes; la composición es responsive y consume tokens del tema claro/oscuro.
+- `HttpError` conserva ahora `data: unknown` tanto para solicitudes JSON como para archivos. El parser de reportes valida ese valor antes de exponerlo a la vista; una forma inesperada o vacía cae de manera segura al mensaje de error existente.
+
+## Paths, contrato y salida esperada
+- Transporte compartido: `src/shared/http/httpClient.ts`.
+- Parser y tipos: `src/modules/reportes/services/reporteError.ts`.
+- Orquestación/presentación: `src/pages/Reportes/ReportesPage.tsx` y `src/pages/Reportes/ReportesPage.css`.
+- Contrato reconocido: `{ ok: false, message: string, data: { faltantes: { categoriasInstitucionalesFaltantes: string[], aspirantesConDocumentosFaltantes: Array<{ inscripcionId: number, documento: string, nombreCompleto: string, documentosFaltantes: string[] }> } } }`. Se espera especialmente en HTTP 409, pero la extracción no depende del código de estado para poder reutilizar el manejo en todos los tipos de informe.
+- No cambiaron los endpoints ni los parámetros de generación y no se agregaron dependencias, variables, seeds o datasets.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesión real los tres endpoints de informes y confirmar si matrícula/créditos usan exactamente la misma forma de `data.faltantes`.
+2. Probar categorías institucionales no vacías, pues el ejemplo recibido únicamente incluye aspirantes.
+3. Raíz única `/workspace/SAPP-frontend`; usar Node.js 24.15.0, npm 11.4.2 y reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Versiones exactas: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5 y ESLint 9.39.2.
+
+## Verificación reciente
+- `npx eslint src/shared/http/httpClient.ts src/modules/reportes/services/reporteError.ts src/pages/Reportes/ReportesPage.tsx` (2026-09-10): PASS; únicamente apareció el warning ambiental conocido de npm `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y Vite transformaron 254 módulos y generaron `dist/assets/index-C-YVwHkl.css` e `index-CVFNWjzG.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 535.59 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-10): FAIL por los 9 errores y 1 warning preexistentes ya documentados (`no-explicit-any`, estado síncrono en efecto, variables sin uso, interfaces vacías y dependencia de hook). El lint dirigido de los tres archivos TypeScript modificados sí pasa. No existe script `test` en `package.json`.
+- La captura local queda limitada porque el contenedor no incluye Chromium, Chrome ni Firefox; además, el estado 409 real requiere backend y sesión institucional.
 
 ---
 # Update 2026-09-10 — Filtros de estudiantes y listado diferido de egresados
@@ -1340,7 +4505,7 @@
 ## Contrato y salida esperada
 - Request: `POST ${VITE_API_URL || '/api/sapp'}/aspirante` con JSON `{ nombre1: string, nombre2: string | null, apellido1: string, apellido2: string | null, tipoDocumentoIdentificacionId, numeroDocumento, emailPersonal, numeroInscripcionUis, telefono, observaciones, programaId, convocatoriaAdmisionId }`.
 - `nombre1` y `apellido1` deben contener texto no vacío. Los dos campos opcionales se recortan y se envían como `null` si el usuario no los diligencia.
-- La respuesta no fue modificada por esta tanda: la UI continúa esperando el envelope exitoso con `data.id` y `data.inscripcionAdmisionId` para asociar los documentos. `AspiranteCreateResponseDto.nombre` se conserva mientras el backend aún lo entregue como nombre de presentación.
+- **Supersedido por el contrato verificado el 2026-09-26:** el envelope exitoso conserva `data.id` y `data.inscripcionAdmisionId` para asociar documentos, pero el nombre llega desagregado en `nombre1`, `nombre2`, `apellido1` y `apellido2`; no existe `AspiranteCreateResponseDto.nombre`.
 - El backend también informó el mismo cambio para `PUT /aspirante`; no existe en esta UI un formulario general de edición de datos personales. `src/api/aspiranteService.ts` contiene un PUT limitado a grupo/director de investigación y no se amplió sin un contrato completo de esa operación.
 
 ## Paths, artefactos y próximos pasos
@@ -2970,13 +6135,13 @@ npm run lint
 
 ## Estado actual y decisión
 - En `MatriculaDetalleCoordinacionPage`, después de aprobar o rechazar un documento se recarga la lista desde el backend. La pantalla filtra los documentos obligatorios y comprueba que todos estén cargados y en estado terminal `APROBADO` o `RECHAZADO`.
-- Cuando la comprobación se cumple, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` sin body. Un `useRef` evita repetir la notificación para la misma matrícula durante el montaje actual; solo se marca como notificada después de una respuesta exitosa, de modo que un fallo no quede registrado falsamente.
+- Cuando la comprobación se cumple, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos` sin body. Un `useRef` evita repetir la finalización para la misma matrícula durante el montaje actual; solo se marca como finalizada después de una respuesta exitosa, de modo que un fallo no quede registrado falsamente.
 - La regla anterior que aprueba automáticamente la matrícula cuando todos los documentos obligatorios están aprobados permanece intacta. La nueva notificación también cubre el caso en que uno o más documentos hayan sido rechazados.
 
 ## Paths, contrato y salida esperada
 - Orquestación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
 - Servicio HTTP: `src/modules/matricula/services/matriculaAcademicaService.ts`.
-- Contrato: `POST ${VITE_API_URL || '/api/sapp'}/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, sin body, autenticado, con respuesta esperada `ApiResponse<unknown>` (o HTTP 204 admitido por el transporte compartido).
+- Contrato: `POST ${VITE_API_URL || '/api/sapp'}/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos`, sin body, autenticado, con respuesta esperada `ApiResponse<unknown>` (o HTTP 204 admitido por el transporte compartido).
 - No se agregaron dependencias, variables, seeds ni datasets. Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm.
 
 ## Retos y próximos pasos
@@ -3032,5 +6197,1184 @@ npm run lint
 ## Entorno y verificación
 - Usar exclusivamente `/workspace/SAPP-frontend` con Node/npm y el `node_modules` existente; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`; no se agregaron paquetes ni variables de entorno.
 - Verificaciones del 2026-09-10: `npx eslint src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx` pasó (solo apareció el warning ambiental de npm `Unknown env config "http-proxy"`); `npm run build` pasó con 253 módulos y el warning no bloqueante del chunk mayor a 500 kB; `git diff --check` pasó. El repositorio no define un script `test`.
+
+---
+# Update 2026-09-10 — Edición de entrevista limitada al evaluador en sesión
+
+## Estado actual y decisión
+- En `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId/entrevistas`, cada grupo continúa visible para permitir consultar las calificaciones, pero `EvaluacionEtapaSection` recibe `isReadOnly` para todos los grupos que no pertenecen al usuario autenticado. Una sesión de coordinación, por tanto, solo puede editar el grupo asignado a su propio nombre.
+- La pertenencia se determina comparando `EvaluacionAdmisionItem.evaluador` con el nombre completo de `session.user.persona` después de eliminar espacios extremos, compactar espacios internos y normalizar a mayúsculas. Se reutiliza la misma regla que ya restringía las entrevistas del perfil exclusivamente profesor.
+- Además del bloqueo de los controles, `handleChangeDraft` ignora cambios ajenos y el guardado masivo filtra las filas por el evaluador de la sesión. Esto es defensa de interfaz; el backend debe seguir autorizando que cada usuario actualice únicamente sus propias calificaciones.
+
+## Paths, contrato y salida esperada
+- Orquestación: `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`; componente presentacional reutilizado: `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`.
+- Entrada existente: `GET /sapp/evaluacionAdmision/info/{inscripcionId}?etapaEvaluacion=ENTREVISTA`; cada elemento requiere `id`, `evaluador`, `puntajeAspirante`, `puntajeMax`, `observaciones` y los demás campos de `EvaluacionAdmisionItem`.
+- Salida esperada: el evaluador de la sesión tiene habilitados nota y observaciones solo en su grupo; los grupos restantes muestran sus valores con controles deshabilitados. `ENTREV` continúa como resumen no editable. El `PUT` masivo existente recibe exclusivamente las filas modificadas que pertenecen al usuario actual.
+
+## Retos, próximos pasos y entorno
+1. Validar con sesiones institucionales de coordinación y de profesor que el texto de `evaluador` retornado por el backend coincide con el nombre compuesto de `personas_idp`; si el backend dispone del `usuarios_sapp.id`/UUID del evaluador, se recomienda incorporarlo al DTO y reemplazar a futuro la comparación por nombre.
+2. Confirmar en backend la autorización por evaluador del endpoint de actualización; deshabilitar controles en React no reemplaza ese control de acceso.
+3. Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, variables, schemas, seeds ni datasets.
+
+## Verificaciones
+- `npx eslint src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx` (2026-09-10): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-10): PASS; TypeScript y rolldown-vite transformaron 255 módulos y generaron `dist/assets/index-Cp9gSOCw.css` e `index-z4oLB2J3.js`. Persiste el warning informativo por el chunk JavaScript de 536.67 kB.
+- `npm run lint` (2026-09-10): FAIL por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; el lint focalizado del archivo funcional modificado sí pasa.
+- `git diff --check` (2026-09-10): PASS. No se tomó captura: no hay Chromium, Chrome ni Firefox instalado y la ruta requiere una sesión institucional con datos reales del backend.
+
+---
+
+# Update 2026-09-16 — Carga documental durante la creación de matrícula
+
+## Estado actual y decisiones
+- En `/matricula`, una sesión `ESTUDIANTE` puede seleccionar cada archivo desde el checklist aun cuando la validación responda `CAN_CREATE` y todavía no exista `matricula.id`. Al confirmar, el flujo existente crea la matrícula, vuelve a consultar el registro vigente y carga los archivos seleccionados usando el ID obtenido.
+- Las acciones por documento aparecen en el orden **Cargar**, **Ver**, **Descargar**. **Ver** y **Descargar** no se renderizan mientras `uploadStatus` sea distinto de `UPLOADED`, evitando acciones sin archivo.
+- En una matrícula existente, **Cargar** se habilita para documentos faltantes y para documentos `RECHAZADO` que requieren corrección. Se deshabilita para archivos ya cargados que están en revisión, documentos `APROBADO`, cargas en curso y cualquier matrícula `FINALIZADA`.
+
+## Paths, contratos y salida esperada
+- Tabla y reglas por documento: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`.
+- Integración del estado del trámite: `src/pages/Matricula/MatriculaPage.tsx`.
+- El contrato HTTP no cambió: `POST /sapp/matriculaAcademica` crea primero el trámite y la carga documental existente recibe después `tramiteId: matricula.id`. No hay schemas, dependencias, variables, seeds ni datasets nuevos.
+- Salida esperada en creación: **Cargar** activo y sin **Ver/Descargar** antes de seleccionar/cargar. Salida esperada después de cargar: las tres acciones visibles, pero **Cargar** bloqueado durante revisión o aprobación y nuevamente habilitado ante rechazo.
+
+## Entorno, retos y próximos pasos
+- Usar exclusivamente `/workspace/SAPP-frontend` y reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Entorno observado: Node.js 24.15.0, npm 11.4.2; versiones exactas en `README.md` y `package-lock.json`.
+- Validar con backend y sesión institucional la secuencia `CAN_CREATE → EXISTS → upload`, un documento rechazado y uno aprobado. No existe script `test` en `package.json`.
+- `npx eslint src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx src/pages/Matricula/MatriculaPage.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-WwBwsYZB.css` e `index-BWVDWyce.js`. Persiste el warning informativo por el chunk JavaScript de 545.52 kB.
+- `git diff --check` (2026-09-16): PASS. No se pudo tomar captura local porque el contenedor no tiene Chromium, Chrome, Firefox, Playwright ni Puppeteer; además, la ruta requiere sesión institucional y backend.
+
+---
+# Update 2026-09-16 — Legibilidad de estados documentales en matrícula estudiantil
+
+## Estado actual y decisión
+- En la tabla **Cargue de documentos** de `/matricula`, las insignias **Obligatorio** y **EN_REVISION** tienen ahora mayor contraste y jerarquía: peso `800` para obligatoriedad, relleno más amplio y combinaciones de fondo, texto y borde derivadas de `--primary`. El cambio sigue el patrón del módulo de documentos de admisión y funciona con los temas claro y oscuro.
+- Se retiró por completo la línea técnica `Estado de carga: {uploadStatus}` de cada fila porque duplicaba información interna sin aportar al estudiante. Se mantienen el nombre del archivo cargado o seleccionado, la columna **Estado**, las observaciones y cualquier mensaje de error.
+- No cambiaron lógica de carga, bloqueos, acciones, tipos, endpoints ni contratos HTTP.
+
+## Paths, contratos y salida esperada
+- Renderizado: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`.
+- Presentación: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.css`.
+- El componente sigue recibiendo `DocumentoRequerido[]`; `uploadStatus` continúa determinando si hay archivo y si **Cargar**, **Ver** o **Descargar** están disponibles, aunque ya no se imprime su valor literal.
+- Salida esperada: **Obligatorio** y **EN_REVISION** se distinguen claramente usando el color primario del tema, y debajo del archivo no aparece ningún texto `Estado de carga: UPLOADED` (ni otro estado técnico).
+
+## Entorno, retos y próximos pasos
+- Raíz única: `/workspace/SAPP-frontend`. Reutilizar su `node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. No se añadieron paquetes, variables, schemas, seeds o datasets.
+- Entorno verificado: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. Las demás versiones exactas están fijadas en `package-lock.json`.
+- Pendiente validar la ruta protegida con una sesión real de estudiante y documentos en revisión, tanto en modo claro como oscuro. No se generó captura local porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer; la ruta requiere además sesión y datos del backend.
+
+## Verificación reciente
+- `npx eslint src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-77ECpyQ7.css` e `index-Pi6Gxfw2.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.35 kB.
+- No existe script `test` en `package.json`.
+
+---
+
+# Update 2026-09-16 — Notificación fiable al terminar la revisión documental de matrícula (restablecido y ampliado el 2026-09-28)
+
+## Estado actual y decisión
+- La decisión vigente desde el 2026-09-28 cubre ambos perfiles con endpoints separados: coordinación invoca `finalizarRevisionDocumentos` al terminar de aprobar/rechazar todos los obligatorios y el estudiante invoca `notificarDocumentosCompletos` al completar la carga inicial o reemplazar rechazados.
+- En ambos casos se espera la respuesta de la última mutación y se contrasta con el checklist recargado. El flujo independiente que avanza automáticamente la matrícula cuando todos los obligatorios están aprobados se mantiene y espera al intento de notificación.
+
+## Paths, contratos y salida esperada
+- Orquestación actual: `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; las reglas puras compartidas viven en `src/modules/matricula/utils/documentosMatricula.ts`.
+- Transporte: `src/modules/matricula/services/matriculaAcademicaService.ts` (`finalizarRevisionDocumentosMatricula` para coordinación y `notificarDocumentosCompletosMatricula` para estudiante).
+- Entrada de decisión existente: `PUT /sapp/document` con `{ documentoId, aprobado, observaciones }`. Coordinación finaliza con `POST /sapp/matriculaAcademica/{matriculaId}/finalizarRevisionDocumentos`; el estudiante notifica su carga con `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`. Ambos son autenticados, sin body, y admiten envelope `ApiResponse<unknown>` o HTTP 204.
+- Resultado esperado: Network muestra el POST de notificación solamente después de la respuesta exitosa de carga/decisión y del GET de documentos correspondiente. No hay cambios de schema, dependencias, variables, seeds ni datasets.
+
+## Entorno, retos y verificación
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Entorno observado: Node.js 24.15.0 y npm 11.4.2; versiones exactas del frontend en `README.md` y `package-lock.json`.
+- Pendiente validar con una sesión institucional una matrícula cuyo último obligatorio se apruebe y otra cuyo último obligatorio se rechace. Confirmar además la idempotencia del endpoint entre recargas/sesiones; la protección del frontend solo cubre el montaje actual.
+- El repositorio no define script `test`.
+- `npx eslint src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx src/modules/matricula/services/matriculaAcademicaService.ts` (2026-09-16): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-16): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-77ECpyQ7.css` e `index-CrnH0L8m.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 545.62 kB.
+- `git diff --check` (2026-09-16): PASS.
+
+---
+# Update 2026-09-18 — Migración de roles de posgrados desde `clientRoles`
+
+## Estado actual y decisiones
+- `GET /api/sapp/inicio` entrega el rol funcional en `data.clientRoles`. El mapper normaliza ese arreglo (mayúsculas/espacios, aliases y duplicados) y lo usa de forma autoritativa. Solo cuando llega vacío usa el `roles` heredado como compatibilidad temporal; no mezcla ambos arreglos para evitar que un claim obsoleto amplíe permisos. Los nombres canónicos quedan en `session.user.roles` y los claims específicos normalizados en `session.user.clientRoles`.
+- Los nombres canónicos son `ADMIN_POSGRADOS`, `COORDINADOR_POSGRADOS`, `SECRETARIA_POSGRADOS`, `ESTUDIANTE_POSGRADOS` y `DOCENTE_POSGRADOS`. La capa central de roles traduce además `ADMIN_SAPP`/`ADMIN`, `COORDINADOR`, `SECRETARIA`, `ESTUDIANTE`, `PROFESOR` y `DOCENTE`; esto mantiene operativas las comparaciones antiguas que todavía existen en páginas y evita una migración fragmentada. El identificador heredado correcto usa guion bajo (`ADMIN_SAPP`), no guion medio.
+- `ROLES` ya expone los valores nuevos. `PROFESOR` y `DOCENTE` son alias semánticos de `DOCENTE_POSGRADOS`, mientras `DIRECTOR` permanece sin cambio porque no fue incluido en la migración solicitada.
+- La presentación está desacoplada de autorización: la cabecera compartida y `/perfil` usan `formatRoleLabel`, que elimina `_POSGRADOS` y convierte guiones bajos restantes en espacios. El rol genérico `DEFAULT-ROLES-EISI` sigue oculto. El usuario ve, por ejemplo, `COORDINADOR`, no `COORDINADOR_POSGRADOS`.
+
+## Paths, contrato y salida esperada
+- Normalización, aliases, comparación y etiqueta: `src/modules/auth/roles/roleUtils.ts`.
+- Constantes funcionales: `src/auth/roleGuards.ts`.
+- Contrato y mapper de inicio: `src/api/authTypes.ts` y `src/api/authMappers.ts`.
+- Superficies visibles: `src/components/ModuleLayout/ModuleLayout.tsx` y `src/pages/Perfil/PerfilPage.tsx`.
+- Entrada principal esperada: `{ "ok": true, "data": { ..., "clientRoles": ["COORDINADOR_POSGRADOS"] } }`. Dentro del mapper se recibe el objeto `data`; `roles` puede no existir. Resultado esperado: `session.user.roles` contiene `COORDINADOR_POSGRADOS`, las guardas de coordinación autorizan las mismas rutas/acciones de antes y la UI imprime `COORDINADOR`.
+- No cambiaron endpoints, navegación, schemas de base de datos, dependencias, variables de entorno, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar contra el gateway institucional una sesión por cada uno de los cinco roles nuevos y confirmar sidebar, rutas protegidas y acciones de cada módulo.
+2. Confirmar si `DIRECTOR` y roles genéricos tendrán una nomenclatura nueva. Hasta recibir ese contrato se conservan literalmente y no se les concede acceso adicional.
+3. Cuando todos los ambientes de gateway hayan retirado `roles`, se puede eliminar su fallback del mapper y los aliases heredados; hacerlo antes rompería ambientes en transición.
+4. El repositorio no cuenta con Vitest. Conviene añadir pruebas unitarias para normalización, equivalencia heredada, deduplicación y etiquetas cuando se incorpore un runner.
+
+## Entorno y verificaciones
+- Raíz única `/workspace/SAPP-frontend`; reutilizar Node.js/npm y `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm.
+- Entorno observado: Node.js 24.15.0 y npm 11.4.2. Lockfile: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/modules/auth/roles/roleUtils.ts src/auth/roleGuards.ts src/api/authMappers.ts src/api/authTypes.ts src/components/ModuleLayout/ModuleLayout.tsx src/pages/Perfil/PerfilPage.tsx` (2026-09-18): PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; TypeScript y rolldown-vite transformaron 259 módulos y generaron `dist/assets/index-V1VYF5Kd.css` e `index-CZ50IDvu.js`. Persiste el warning informativo por el chunk JavaScript de 547.66 kB.
+- `git diff --check` (2026-09-18): PASS. `npm run lint` global sigue fallando por 9 errores y 1 warning preexistentes en servicios API, rutas/mocks de admisiones, documentos y solicitudes; ninguno está en los archivos de esta migración. No existe script `test` en `package.json`.
+- No se generó captura: el contenedor no tiene Chromium, Chrome ni Firefox, y las superficies de rol requieren además una sesión institucional.
+- Corrección 2026-09-18: el alias heredado de administración se rectificó de `ADMIN-SAPP` a `ADMIN_SAPP`. `npx eslint src/modules/auth/roles/roleUtils.ts`, `npm run build`, `git diff --check` y la comprobación de ausencia global de `ADMIN-SAPP` pasaron; el build generó `dist/assets/index-BOMLGh01.js` y mantuvo únicamente el warning informativo de tamaño de chunk.
+
+---
+# Update 2026-09-18 — Módulo de coordinación para créditos condonables
+
+## Estado actual y decisiones
+- Se agregó `/creditos-condonables`, visible y accesible exclusivamente para `COORDINADOR_POSGRADOS`. La parte superior lista trámites pendientes y filtra por estado; la inferior contiene solo `APROBADA`/`RECHAZADA` y filtra por estado y por nombre/código UIS del estudiante. Ambos listados tienen paginación de 10 filas.
+- Los códigos funcionales son `CRED_COND` y `RENOV_CRED_COND`. La detección quedó centralizada y esos registros, incluidos los asignados, se ocultan de `/solicitudes` solo para coordinación. Estudiante, docente, director y administración conservan el comportamiento previo.
+- El detalle se reutiliza en `/creditos-condonables/:solicitudId`, incluidas carga documental y aprobación/rechazo; el botón de regreso reconoce el módulo de origen. Las dos rutas están protegidas por `RequireRoles` y no se añadieron permisos al resto de perfiles.
+
+## Paths, contratos y salida esperada
+- Página/estilos: `src/pages/CreditosCondonablesCoordinacion/`; rutas: `src/app/routes/creditosCondonablesRoutes.tsx`; navegación: `src/app/navigationItems.ts`.
+- Clasificación compartida: `src/modules/solicitudes/utils/creditoCondonable.ts`; exclusión del listado general: `SolicitudesCoordinadorView.tsx`; detalle reutilizado: `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- Contratos sin cambios: `GET /sapp/solicitudesAcademicas`, `GET /sapp/estadosSolicitud` y `GET /sapp/solicitudesAcademicas/{id}`. Se espera el DTO `SolicitudAcademicaDto`, en especial `tipoSolicitudCodigo`, `estadoId`/`estadoSigla`, `estudiante` y `codigoEstudianteUis`. No hay schemas, datasets, seeds, variables ni paquetes nuevos.
+
+## Retos y próximos pasos
+1. Validar con una sesión institucional de coordinación que ambos códigos reales llegan exactamente como `CRED_COND`/`RENOV_CRED_COND` y que no aparecen en el módulo general.
+2. Confirmar con producto si `DEVUELTA` debe seguir en pendientes (decisión actual: todo estado distinto de `APROBADA`/`RECHAZADA` es pendiente).
+3. Verificar visualmente temas claro/oscuro y responsive con datos reales. No hubo captura local: el contenedor no tiene Chromium, Chrome ni Firefox y la ruta requiere sesión/backend.
+
+## Entorno y verificación
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node observado 24.15.0 y npm 11.4.2; versiones completas en `README.md`/`package-lock.json`.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx src/pages/Solicitudes/SolicitudesPage.tsx src/pages/SolicitudDetalle/SolicitudDetallePage.tsx src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/utils/creditoCondonable.ts src/app/routes/creditosCondonablesRoutes.tsx src/app/navigationItems.ts` (2026-09-18): PASS; solo apareció el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; 264 módulos, `dist/assets/index-h-NvBuld.css` e `index-BgNGRrEM.js`. Persiste únicamente el warning informativo del chunk de 552.72 kB. El repositorio no define script `test`.
+
+---
+# Update 2026-09-18 — Gestión del rol de profesores de posgrados
+
+## Estado actual y decisiones
+- El catálogo autoritativo es `GET /sapp/docentes`; se dejó de consumir `/docentes/estado?skip=0` y de interpretar la respuesta paginada anterior. Su `data` es un arreglo plano.
+- La creación de convocatorias solo ofrece elementos con `tieneRolDocentePosgrados: true`. La asignación de docentes a grupos aplica el mismo criterio.
+- `/gestion-profesores` presenta primero profesores de posgrados y luego profesores EISI disponibles. Ambos listados comparten filtro por nombre, documento o correo, tienen paginación local de 10 filas y se actualizan desde el servidor después de asignar o retirar el rol.
+- Las mutaciones solicitan confirmación, bloquean acciones concurrentes, muestran el resultado y ejecutan una nueva consulta completa; no se mueve un registro de forma optimista.
+
+## Paths, contratos y salida esperada
+- Transporte y DTO: `src/api/gruposInvestigacionService.ts` y `src/api/gruposInvestigacionTypes.ts`.
+- Adaptador de convocatoria: `src/modules/admisiones/services/profesoresMockService.ts` (el nombre es heredado; ya consume el API real).
+- Página y estilos: `src/pages/GestionProfesores/GestionProfesoresPage.tsx` y `.css`.
+- Respuesta esperada de `GET /sapp/docentes`: `{ ok, message, data: [{ documentNumber, email, fullName, tieneRolDocentePosgrados, uuid }] }`.
+- Asignar: `POST /sapp/docentes/{uuid}/asignarRolDocentePosgrados`, sin body. Retirar: `DELETE /sapp/docentes/{uuid}/rolDocentePosgrados`, sin body. Ambos admiten envelope normal o HTTP 204.
+- Resultado esperado: tras una asignación el profesor aparece en el listado superior y desaparece del inferior; al retirarlo ocurre lo contrario. Una convocatoria nunca ofrece un profesor cuyo indicador sea `false`.
+
+## Retos y próximos pasos
+1. Validar los tres endpoints con el gateway institucional y confirmar si las mutaciones responden envelope JSON o 204 (el cliente soporta ambos).
+2. Validar visualmente la ruta protegida en escritorio/móvil y temas claro/oscuro con suficientes registros para recorrer la paginación.
+3. Confirmar si retirar el rol debe impedirse cuando el profesor tiene evaluaciones o grupos activos; esa regla corresponde al backend y todavía no fue especificada.
+
+## Entorno y verificación
+- Reutilizar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. No se agregaron dependencias, variables, schemas, seeds o datasets.
+- Entorno observado: Node.js 24.15.0 y npm 11.4.2. Lockfile: React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/api/gruposInvestigacionService.ts src/api/gruposInvestigacionTypes.ts src/modules/admisiones/services/profesoresMockService.ts src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS; npm mostró solo el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; 271 módulos y assets `index-gLMwS9CI.css`/`index-Dk9dYf_G.js`; permanece el warning informativo de chunk mayor de 500 kB.
+- No existe script `test`. No se generó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional.
+
+---
+# Update 2026-09-18 — Actas de comité y de consejo
+
+## Estado actual y decisiones
+- El formulario de `/actas` ahora exige seleccionar **Comité Asesor de Posgrados** o **Consejo Académico**. Comité es el valor inicial para conservar el comportamiento anterior.
+- La creación incluye el nuevo booleano `tipoConsejo`: `false` representa comité y `true` representa consejo. El listado también expone esa clasificación con su nombre institucional.
+- La nomenclatura generada conserva el consecutivo y año del flujo existente, pero incorpora el tipo: `ACTA_COMITE_XXX-AAAA` o `ACTA_CONSEJO_XXX-AAAA`. Al cambiar el selector, la vista previa del código se actualiza antes de enviar.
+
+## Paths, contratos y salida esperada
+- Formulario, payload, nomenclatura y tabla: `src/pages/Actas/ActasPage.tsx`; ajuste responsive del prefijo: `src/pages/Actas/ActasPage.css`; DTOs: `src/modules/actas/types.ts`.
+- `POST /sapp/actas` conserva `nombre`, `codigo`, `fechaCreacion`, `observaciones`, `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum`, y añade obligatoriamente `tipoConsejo: boolean`. Ejemplo de comité: `{ "codigo": "ACTA_COMITE_001-2026", "tipoConsejo": false, ... }`; para consejo: `{ "codigo": "ACTA_CONSEJO_001-2026", "tipoConsejo": true, ... }`.
+- `GET /sapp/actas` debe devolver `tipoConsejo` en cada `ActaDto`; la UI interpreta `true` como **Consejo Académico** y `false` como **Comité Asesor de Posgrados**. No cambiaron endpoints, variables, dependencias, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar ambas creaciones contra el backend institucional y confirmar que persiste/devuelve el booleano.
+2. Confirmar con producto si el año debe continuar después de `XXX`; se mantuvo porque el pedido indicó conservar el funcionamiento actual y solo agregar `COMITE` o `CONSEJO`.
+3. Revisar visualmente escritorio/móvil y modos claro/oscuro con sesión real. No se tomó captura: el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer, y la ruta protegida requiere backend/sesión.
+
+## Entorno y verificación
+- Usar exclusivamente `/workspace/SAPP-frontend` y reutilizar `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/Actas/ActasPage.tsx src/modules/actas/types.ts`: PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build`: PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-Cw0ZFhzY.js`. Persiste solo el warning informativo por el chunk JavaScript de 602.16 kB. No existe script `test`.
+- `git diff --check`: PASS.
+# Update 2026-09-18 — Estado de firma por programa y modalidad editorial
+
+## Estado actual y decisiones
+- El texto visible de `PFIR_DIR_TG` ahora depende de `programaAcademico`: los valores que contienen **MAESTRIA** o la sigla **MISI** muestran **POR FIRMA DIRECTOR DE TRABAJO INVESTIGACION**; los que contienen **DOCTORADO** o **DCC** muestran **POR FIRMA DIRECTOR DE TESIS**. La comparación ignora tildes y mayúsculas. Un programa ausente/desconocido conserva **POR FIRMA DIRECTOR DE TG** para no inferir un nivel incorrecto.
+- `StatusBadge` recibe opcionalmente `programaAcademico`; tabla, tarjetas y detalle ya lo entregan. La sigla, los filtros y el estado recibido del backend no cambian: el ajuste es exclusivamente de presentación.
+- En solicitudes `CRED_COND` y `RENOV_CRED_COND`, seleccionar la modalidad del catálogo con `id: 2` (**EDICIÓN DE REVISTAS CIENTIFICAS**) oculta motivos/actividades, ubicación, campos adicionales de renovación y toda previsualización. El estudiante pasa directamente a Documentos; el selector del sistema operativo acepta PDF y una validación defensiva rechaza otro formato.
+- El submit sigue creando la solicitud con `modalidadId: 2`. Como no se capturan motivos, `SolicitudesEstudianteView` omite `motivosCreditoCondonable` del request. Los documentos se cargan después con el flujo existente. No se añadieron dependencias, variables, seeds, datasets ni cambios de backend.
+
+## Paths y contratos
+- Etiqueta por programa: `src/modules/solicitudes/utils/estadoSolicitud.ts`; consumo visual: `src/modules/solicitudes/components/StatusBadge/StatusBadge.tsx`, `SolicitudesTable/SolicitudesTable.tsx`, `SolicitudCard/SolicitudCard.tsx` y `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`.
+- Flujo especial: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx`. Discriminante deliberado: `modalidadId === 2`, proveniente de `GET /sapp/modalidadContraprestacion`; no depender del texto susceptible a tildes o cambios editoriales.
+- Salida esperada para modalidad 2: creación mediante el contrato existente con `estudianteId`, `tipoSolicitudId`, `fechaResolucion`, `observaciones` y `modalidadId: 2`; sin llamada a previsualización y sin datos de prediligenciamiento. Luego cada PDF seleccionado usa el endpoint documental existente. Los documentos obligatorios continúan validándose.
+
+## Retos y próximos pasos
+1. Validar con respuestas reales los valores exactos de `programaAcademico` para maestría y doctorado, tanto en listado como detalle.
+2. Confirmar con backend/producto que modalidad 2 nunca necesita `motivosCreditoCondonable`, incluso para renovación, y que sus requisitos documentales retornados por tipo de trámite son los PDF correctos.
+3. Realizar prueba E2E autenticada de ambos tipos de crédito: modalidad 2 no debe llamar al endpoint de previsualización, debe rechazar un archivo no PDF y debe registrar/cargar los PDF seleccionados.
+4. Captura visual pendiente: el contenedor no cuenta con Chromium/Chrome/Firefox y la pantalla protegida necesita sesión y catálogos institucionales.
+
+## Entorno y verificación
+- Usar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. `npm ci` reproduce `package-lock.json`; no hay seeds ni script `test`.
+- `npm run build` (2026-09-18): PASS; 271 módulos transformados, artefactos `dist/assets/index-CNYnAK7V.css` e `index-BWeMOHZP.js`. Solo apareció el warning ambiental `Unknown env config "http-proxy"` y el aviso informativo por el chunk JS de 603.04 kB.
+
+---
+
+---
+# Update 2026-09-18 — Actualización de archivos desde el detalle del estudiante
+
+## Estado actual y decisiones
+- Las tarjetas documentales de **Admisión** y **Matrículas** en `/coordinacion/estudiantes/:estudianteId` ahora muestran **Actualizar documento** junto a **Ver** y **Descargar** cuando ya existe un archivo.
+- Los requisitos pendientes conservan **Cargar documento**. Ambas acciones comparten selección de formatos, cálculo SHA-256, conversión Base64, estado de progreso por tarjeta y refresco posterior de la consulta agregada.
+- La actualización reutiliza el contrato vigente de carga; no se añadió un endpoint de reemplazo ni se envía el `documentoId`. El backend identifica el requisito por `tramiteId` + `tipoDocumentoTramiteId` y administra `version`, mientras que el frontend vuelve a consultar la metadata autoritativa.
+
+## Paths, contratos y salida esperada
+- Vista: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`; estilos existentes: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`; transporte compartido: `src/api/documentUploadService.ts`.
+- Entrada de metadata: `GET /sapp/document/by-estudiante/{codigoEstudianteUis}`. Cada documento actualizable necesita `tramiteId` en su grupo y `tipoDocumentoTramiteId` en su metadata.
+- Escritura: `POST /sapp/document` con `{ tipoDocumentoTramiteId, nombreArchivo, tramiteId, usuarioCargaId, aspiranteCargaId: null, contenidoBase64, mimeType, tamanoBytes, checksum }`.
+- Salida esperada: tras un POST exitoso se repite el GET agregado; la tarjeta conserva **Ver**, **Descargar** y **Actualizar documento**, y presenta nombre, fecha, tamaño, estado y versión retornados por el servidor. No cambiaron schemas, variables, dependencias, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con el backend institucional que un segundo `POST` para el mismo `tramiteId` + `tipoDocumentoTramiteId` genera/reemplaza la versión vigente y no produce un documento duplicado visible.
+2. Confirmar en Network que el refresco agregado devuelve el nuevo `id`, `nombreArchivo`, `fechaCarga` y `version` después de actualizar.
+3. Probar formatos PDF, DOC/DOCX, PNG y JPEG, además de temas claro/oscuro y responsive, con una sesión real de gestión.
+
+## Entorno y verificación
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js 24.15.0 y npm 11.4.2; las versiones exactas del lockfile están documentadas en `README.md`.
+- `npx eslint src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx` (2026-09-18): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-18): PASS; transformó 271 módulos y generó `dist/assets/index-CNYnAK7V.css` e `index-alOfGVtp.js`. Persiste solo el aviso informativo por el chunk JavaScript de 603.07 kB.
+- `npm run lint` (2026-09-18): continúa fallando por 9 errores y 1 warning preexistentes en servicios API, guardas/mocks de admisiones y módulos de documentos/solicitudes; el archivo modificado pasa al validarlo de forma aislada.
+- `git diff --check` (2026-09-18): PASS. No hay script `test` en `package.json` ni navegador Chrome/Chromium/Firefox disponible para una captura autenticada.
+# Update 2026-09-19 — Filtro por tipo en Gestión de actas
+
+## Estado actual y decisión
+- El listado de `/actas` incorpora el filtro **Tipo de acta** con tres opciones: **Todos**, **Comité Asesor de Posgrados** y **Consejo Académico**.
+- El filtrado ocurre en cliente sobre el catálogo ya cargado, se combina con búsqueda por nombre/código y año, y reinicia la paginación en la página 1 al cambiar. No se agregó una consulta HTTP ni se alteraron contratos.
+
+## Paths, contrato y salida esperada
+- Vista y lógica: `src/pages/Actas/ActasPage.tsx`. Los estilos existentes de `sapp-filters-panel` y `sapp-filter-field` se reutilizan sin una hoja nueva.
+- Entrada: `GET /sapp/actas`, donde cada `ActaDto` expone `tipoConsejo: boolean`; `true` corresponde a Consejo Académico y `false` a Comité Asesor de Posgrados.
+- Salida: **Todos** no restringe el catálogo; **Consejo Académico** conserva registros con `tipoConsejo === true`; **Comité Asesor de Posgrados** conserva registros con `tipoConsejo === false`. Los estados vacío, carga y paginación operan sobre el resultado combinado.
+- No se agregaron paquetes, variables, schemas, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar visualmente con una sesión institucional y datos de ambos tipos que las combinaciones tipo+año+texto producen los resultados esperados.
+2. Si el catálogo crece y el backend pagina `GET /sapp/actas`, trasladar los filtros al contrato HTTP antes de asumir que el cliente tiene el conjunto completo.
+
+## Entorno y verificación reciente
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. El proyecto usa Node.js/npm; las versiones exactas están fijadas por `package-lock.json` y resumidas en `README.md`.
+- `npx eslint src/pages/Actas/ActasPage.tsx` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; TypeScript y rolldown-vite transformaron 271 módulos y generaron `dist/assets/index-Chy-FRr7.css` e `index-CwxD0sSI.js`. Persiste el warning informativo no bloqueante por el chunk JavaScript de 607.10 kB. `git diff --check`: PASS. No existe script `test` en `package.json`.
+- No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida requiere backend y sesión institucional para mostrar actas reales.
+
+---
+# Update 2026-09-19 (Créditos condonables: combo de estudiante en histórico)
+
+## Estado actual
+
+- El filtro **Estudiante** de `/creditos-condonables`, dentro de **Histórico de solicitudes**, dejó de ser una búsqueda de texto y ahora es un `<select>`.
+- Las opciones se deduplican por `estudianteId` a partir de las solicitudes históricas (`APROBADA`/`RECHAZADA`) recibidas en la consulta vigente, se ordenan por nombre en español y muestran `nombre — código UIS` cuando existe código.
+- La opción **Todos** conserva el histórico completo. La selección filtra por igualdad exacta de `estudianteId` y reinicia la paginación; **Limpiar filtros** restablece tanto estado como estudiante.
+
+## Contrato y archivos
+
+- Implementación: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`.
+- Fuente: `GET /sapp/solicitudesAcademicas`; se reutilizan `SolicitudAcademicaDto.estudianteId`, `estudiante` y `codigoEstudianteUis`. No hay endpoints, schemas, seeds, datasets, variables de entorno ni dependencias nuevas.
+- Entorno existente: Node/npm con las versiones fijadas en `package.json`/`package-lock.json`; usar el `node_modules` actual y no crear venv, conda, Poetry ni una segunda instalación de dependencias.
+
+## Próximos pasos y validación
+
+- Validar con el backend autenticado que dos solicitudes históricas del mismo estudiante produzcan una sola opción y que estudiantes con nombres iguales se distingan por código UIS.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx` (2026-09-19): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-19): PASS; 271 módulos transformados, con artefactos `dist/assets/index-C4041SpY.css` y `dist/assets/index-CaQSr3LZ.js`. Vite mostró el warning no bloqueante conocido por el chunk JS mayor a 500 kB.
+- `git diff --check` (2026-09-19): PASS.
+- No se generó captura: Chromium, Chrome y Firefox no están disponibles en `PATH`, y la ruta protegida necesita backend y sesión institucional para mostrar las solicitudes reales.
+
+# Update 2026-09-20 — Corrección de pestañas móviles en Créditos condonables
+
+## Estado actual y causa confirmada
+- En `/creditos-condonables`, **Pendientes** continúa siendo la pestaña móvil inicial. Clic, toque o navegación de teclado actualizan el único estado `activeListing`, que ahora controla efectivamente cuál `tabpanel` queda visible.
+- La causa no estaba en los eventos ni en el estado React: el atributo `hidden` cambiaba correctamente, pero `.creditos-condonables__section { display: grid; }` era una regla CSS de autor y prevalecía sobre el estilo de agente de usuario `[hidden] { display: none; }`. Por eso cambiaba el color del tab mientras ambos paneles seguían visibles.
+- Se añadió `.creditos-condonables__section[hidden] { display: none; }`. El panel inactivo queda oculto y fuera de navegación/lectores de pantalla; no se desmonta, así que conserva filtro y página. En escritorio `isMobile` hace que ninguno tenga `hidden`, por lo cual se muestran ambos como antes.
+- Ambos tabs declaran `type="button"`; conservan `tablist`, `tab`, `tabpanel`, `aria-selected`, `aria-controls`, `aria-labelledby`, roving `tabIndex`, flechas, `Home` y `End`, y ahora tienen foco visible explícito. El cambio funciona independientemente de que los resultados estén cargando, vacíos o en error porque la selección envuelve el panel completo.
+
+## Paths, contratos y salida esperada
+- Lógica/estado/semántica: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx`. Visibilidad y foco: `src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.css`.
+- Contrato HTTP sin cambios: una carga compartida de solicitudes y estados; alternar pestañas o breakpoints no ejecuta otra consulta. Tampoco cambian permisos, clasificación, contadores ni la ruta `Ver solicitud`.
+- Salida móvil esperada: Pendientes → Histórico → Pendientes muestra exactamente un panel, preservando por separado `estadoPendienteId`/`pendingPage` y `estadoHistoricoId`/`estudianteId`/`historyPage`. Salida de escritorio esperada: ambos paneles visibles. Al regresar a móvil se respeta la última pestaña activa.
+
+## Entorno, verificaciones y pendientes
+- Raíz única `/workspace/SAPP-frontend`; reutilizar `node_modules`. No crear venv, conda, poetry, entornos Python ni otro árbol npm. Node.js/npm y todas las versiones de paquetes siguen siendo las documentadas en `README.md`; no se agregaron dependencias, variables, seeds ni datasets.
+- El proyecto no tiene script ni infraestructura de pruebas de componentes (`package.json` solo expone dev/build/lint/preview), por lo que no se agregó una prueba automatizada artificial.
+- `npx eslint src/pages/CreditosCondonablesCoordinacion/CreditosCondonablesCoordinacionPage.tsx` (2026-09-20): PASS; npm mostró únicamente el warning ambiental conocido `Unknown env config "http-proxy"`.
+- `npm run build` (2026-09-20): PASS; 271 módulos transformados y artefactos `dist/assets/index-BitnsXae.css` e `index-DZRe2v1A.js`. Persiste el warning informativo no bloqueante por el chunk JS de 616.30 kB. `git diff --check`: PASS.
+- `npm run lint` global (2026-09-20): FAIL por los mismos 9 errores y 1 warning preexistentes fuera de los archivos funcionales modificados (`no-explicit-any`, `set-state-in-effect`, variables sin uso, interfaces vacías y una dependencia de hook). El lint focalizado anterior confirma que la corrección no agrega hallazgos.
+- Pendiente: prueba manual autenticada en navegador real con datos suficientes para paginar y filtrar ambos listados, cubriendo vacío/carga/error y el cambio móvil → escritorio → móvil. El contenedor no incluye Chromium, Chrome ni Firefox y la ruta necesita sesión/backend institucional; no afirmar que esa interacción se ejecutó aquí.
+
+---
+# Update 2026-09-20 — Detalle responsive de inscripción de admisión
+
+## Estado actual y decisiones
+- La ruta protegida `/admisiones/convocatoria/:convocatoriaId/inscripcion/:inscripcionId` y sus hijas `documentos`, `hoja-vida`, `examen` y `entrevistas` ya tienen representación móvil real (tarjetas/bloques), no scroll horizontal como sustituto. El resumen no repite programa ni estado de inscripción; distingue explícitamente el estado de evaluación y muestra `numeroInscripcion` con el fallback histórico existente.
+- Los acordeones son controles `<button>` asociados a regiones por `aria-controls`/`aria-labelledby`. La URL continúa determinando la sección abierta, por lo que enlaces directos, recarga y historial conservan el contrato de rutas. Los borradores de nota/observación se guardan en memoria por inscripción y etapa en `evaluacionDraftStore.ts`, sobreviven al desmontaje causado por el cambio de ruta/acordeón y se eliminan después de un PUT exitoso. Cambiar de sección pide confirmación únicamente si hay borradores; cerrar/recargar usa `beforeunload`.
+- `EvaluacionEtapaSection` mantiene un único formulario/estado y cambia solo mediante CSS de tabla en escritorio a bloques en móvil. Distingue vacío de cero, no corrige valores silenciosamente y conserva máximo/decimales/validaciones/payload. JSON válido se presenta como lista o pares clave/valor conservando orden y contenido; texto o estructuras anidadas desconocidas no se interpretan y se serializan.
+- Hoja de vida sigue obteniendo base64 por el servicio autenticado y crea una URL `blob:` local; no expone token ni URL pública. Abrir y descargar están antes de criterios en móvil, incluso en estado final (son consulta, no edición), y el iframe es opcional. Entrevistas conserva el resumen y el cálculo backend, permisos por evaluador y operación conjunta; los grupos `<details>` no desmontan campos al contraerse. Documentos conserva permisos, condición de continuación y operaciones por documento; muestra resultados inline y previene doble envío con el bloqueo existente.
+
+## Paths, contratos y salida esperada
+- Shell/resumen/rutas: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `.css`; acordeón: `src/modules/admisiones/components/InscripcionAccordionWindow/`.
+- Documentos: `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx` y `.css`; validación compartida: `src/modules/documentos/components/ValidationButtons/`. No cambió `aprobarRechazarDocumento` ni la evaluación de obligatorios.
+- Evaluaciones/PDF/entrevistas: `src/modules/admisiones/pages/EvaluacionEtapaPage/`; formulario responsive: `src/modules/admisiones/components/EvaluacionEtapaSection/`; borradores transitorios: `src/modules/admisiones/utils/evaluacionDraftStore.ts`.
+- Contratos intactos: `GET` de evaluación/documentos, PUT conjunto de `{ id, puntajeAspirante, observaciones }`, inicio/finalización y aprobación/rechazo documental. No cambiaron roles, fórmulas, ponderaciones, rutas, schemas, variables, paquetes, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Probar con sesión institucional en 320, 375, 402 y 440 CSS px, landscape, tablet y escritorio, temas claro/oscuro y zoom de texto. Incluir nombres/correos/archivos largos, JSON extenso/anidado, varios evaluadores, cero, vacío, decimales y rechazo del servidor.
+2. Validar Atrás/Adelante, apertura/retorno de PDF y teclado virtual en dispositivo real. Los borradores se conservan en memoria durante navegación SPA, no tras una recarga aceptada expresamente por el usuario.
+3. Confirmar con lector de pantalla el anuncio de regiones, errores y mensajes de estado. No fue posible capturar ni inspeccionar visualmente: no hay Chromium/Chrome/Firefox en `PATH`, y no se falsificó sesión ni se alteraron evaluaciones reales.
+
+## Entorno y verificación reciente
+- Usar solo `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0. No existe script `test`.
+- `npx eslint` focalizado sobre los cinco TSX funcionales y el store: PASS. `npm run build`: PASS, 272 módulos, `dist/assets/index-CV-fTsMB.css` e `index-Dlh1BoHO.js`; solo aparece el warning informativo de chunk JS de 623.85 kB.
+- `npm run lint`: FAIL por los 9 errores y 1 warning preexistentes fuera de los archivos modificados (tres servicios con `any`, guard de evaluación, mocks, validación documental y tipos/efecto de Solicitudes). El lint focalizado confirma que este cambio no añade hallazgos.
+
+---
+# Update 2026-09-21 — Adaptación responsive integral de `/fechas`
+
+## Estado actual y decisiones
+- `/fechas` conserva su representación de escritorio. En `max-width: 780px`, períodos y convocatorias reutilizan el mismo `<table>` y las mismas filas/datos, pero CSS los presenta como tarjetas sin ancho mínimo ni scroll horizontal. A 359 px o menos las parejas de fechas pasan a una columna; entre 360 y 780 px usan dos columnas.
+- Períodos distingue **Período académico · Inicio/Fin** de **Matrículas · Inicio/Fin**, conserva `—`, orden, cuatro registros por página y edición. Convocatorias conserva filtros, nombres completos de programa, cuatro registros por página para cada programa, observaciones sin elipsis y todas las acciones. Cerrar queda separado visualmente, mantiene `window.confirm`, bloquea solicitudes duplicadas y espera servidor/refresco antes del éxito.
+- La fuente de verdad de estado es `ConvocatoriaAdmisionDto.vigente`. `isConvocatoriaVigente` ya no compara fechas con el reloj del navegador; sus consumidores existentes reciben la misma decisión autoritativa del backend.
+- Los formularios asociados mantienen contratos, campos y validaciones. Sus cambios son CSS móvil: una columna, `min-width: 0`, inputs/selects de 16 px y controles de 44 px; ambos modales caben en `100dvh` y tienen scroll interno. No se añadieron dependencias ni se cambiaron rutas, permisos, payloads o fechas sin hora.
+
+## Paths, contratos y salida esperada
+- Listado/estado/paginación: `src/pages/FechasModule/FechasModulePage.tsx`; presentación: `src/pages/FechasModule/FechasModulePage.css`; estado backend: `src/modules/admisiones/utils/convocatoriaEstado.ts`.
+- Formulario de período: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx` y `.css`. Creación: `src/modules/admisiones/components/CreateConvocatoriaModal/`. Edición: `src/modules/admisiones/components/EditConvocatoriaFechasModal/`.
+- Entradas: `GET /sapp/periodoAcademico/withFechas`, `GET /sapp/convocatoriaAdmision` y catálogos existentes. Escrituras sin cambios: servicios de período, `POST /sapp/convocatoriaAdmision`, `PUT /sapp/convocatoriaAdmision/fechas/{id}` y `PUT /sapp/convocatoriaAdmision/cerrar/{id}`.
+- Salida esperada: escritorio idéntico; móvil sin scroll horizontal local, con tarjetas completas, filtros a ancho completo y paginadores independientes. Cambiar viewport no desmonta listados, filtros ni formularios.
+
+## Verificación reciente y limitaciones
+- `npx eslint src/pages/FechasModule/FechasModulePage.tsx src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx src/modules/admisiones/components/EditConvocatoriaFechasModal/EditConvocatoriaFechasModal.tsx src/modules/admisiones/utils/convocatoriaEstado.ts` (2026-09-21): PASS; solo warning ambiental conocido de npm por `http-proxy`.
+- `npm run build` (2026-09-21): PASS; 272 módulos, `dist/assets/index-Bu7Uk1uf.css` y `dist/assets/index-D6zrhrGt.js`; aviso informativo por chunk JS de 631.44 kB.
+- `git diff --check` (2026-09-21): PASS antes de actualizar documentación.
+- No hay Chromium, Chrome ni Firefox en `PATH`; por ello no se pudo tomar captura, medir en navegador 320/375/402/440 px, probar Safari/iOS real, teclado virtual, temas con renderizado, transición móvil→escritorio→móvil ni flujos autenticados contra backend. Estas validaciones manuales siguen pendientes y no deben presentarse como ejecutadas.
+
+## Retos y próximos pasos
+1. Con sesión institucional y mocks/backend de pruebas, validar 320, 375, 402 y 440 CSS px, landscape, tablet y escritorio; cubrir temas claro/oscuro, zoom, nombres y observaciones extensos, ausentes, carga, error y listas vacías.
+2. Probar creación/edición/cierre sin alterar calendarios reales: rechazo del servidor debe conservar valores; abrir y guardar una fecha sin cambios no debe desplazar el día; doble toque en Cerrar debe producir una sola solicitud.
+3. Comparar captura de escritorio antes/después con los mismos datos y verificar foco/restauración de foco de modales y controles con lector de pantalla en un navegador real.
+
+## Entorno
+- Reutilizar exclusivamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, conda, Poetry, entornos Python ni otra instalación npm. No hay seeds ni script `test`.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, rolldown-vite 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+# Update 2026-09-21 — búsqueda de profesores sin diacríticos
+
+## Estado actual y decisión
+- Se corrigió el filtro local de `/coordinacion/profesores`: antes solo convertía
+  a minúsculas, por lo que `andres leo` no era substring de `ANDRÉS LEONARDO`.
+  `normalize` ahora aplica normalización Unicode NFD y elimina marcas diacríticas
+  antes de comparar nombre, documento y correo.
+- La misma función ya alimentaba el buscador general, el buscador de profesores
+  disponibles y las comparaciones para excluir integrantes de un grupo; por eso
+  todos esos puntos quedan consistentes. No cambiaron UI, API, permisos ni DTO.
+
+## Paths, contratos y salida esperada
+- Implementación: `src/pages/GestionProfesores/GestionProfesoresPage.tsx`.
+- Entrada vigente: `getDocentes()` entrega `DocenteDto` y se buscan localmente
+  `fullName`, `email` y `documentNumber`. No se añadieron endpoints, schemas,
+  variables, seeds, datasets ni dependencias.
+- Resultado esperado: `andres leo`, `ANDRÉS LEO` y otras variantes de mayúsculas
+  o tildes encuentran `ANDRÉS LEONARDO GONZÁLEZ GÓMEZ`; documento y correo siguen
+  siendo buscables como antes.
+
+## Retos y próximos pasos
+1. Validar con sesión institucional búsquedas con y sin tildes en las pestañas
+   **Profesores** y **Grupos de investigación**, incluidos vacíos y paginación.
+2. Si se incorpora una suite, extraer la normalización a una utilidad y cubrir
+   tildes, espacios y caracteres Unicode con pruebas unitarias.
+3. No duplicar ambientes: reutilizar `/workspace/SAPP-frontend/node_modules`.
+   No crear venv, Conda, Poetry, entornos Python ni otro árbol npm.
+
+## Entorno y verificación
+- Entorno único: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router
+  DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2,
+  ESLint 9.39.2 y typescript-eslint 8.51.0.
+- `npx eslint src/pages/GestionProfesores/GestionProfesoresPage.tsx`: PASS.
+- `npm run build`: PASS (272 módulos; persiste únicamente el warning informativo
+  del chunk JS mayor a 500 kB). `git diff --check`: PASS.
+- `npm run lint`: conserva 9 errores y 1 warning preexistentes fuera del archivo
+  modificado (servicios con `any`, guard de evaluación, mocks, documentos y
+  solicitudes). El proyecto no define script `test`.
+
+---
+## Actualización 2026-09-21 — consulta de archivos en detalle de inscripción
+
+### Estado actual
+
+- En `src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx`, las acciones **Ver** y **Descargar** se muestran para usuarios gestores aun si la inscripción alcanzó un estado final.
+- El listado `GET /sapp/document?codigoTipoTramite=...&tramiteId=...` puede entregar únicamente metadatos. Si no incluye Base64, cada acción obtiene el archivo con `getDocumentById(documentoId)`, que consume `GET /sapp/document/{documentoId}`; conserva compatibilidad con respuestas del listado que sí incluyan contenido.
+- **Ver** reserva la pestaña en el mismo gesto del clic antes de esperar la consulta autenticada, evitando que el bloqueador de ventanas emergentes descarte la previsualización asíncrona; la utilidad compartida acepta esa ventana como destino.
+- La celda **Archivo cargado** ya no muestra el icono decorativo; conserva nombre y versión.
+
+### Contrato y salida esperada
+
+- `GET /sapp/document/{documentoId}` debe responder `ApiResponse<DocumentoCompletoDto>` con `data.contenidoBase64`; `mimeType` y `nombreArchivo` pueden ser nulos y el frontend usa los metadatos/fallback PDF.
+- Un documento marcado como cargado y con `idDocumento` habilita ambas acciones. Mientras se consulta o procesa, ambos botones quedan deshabilitados y muestran el estado de progreso correspondiente.
+- Las acciones de aprobación/rechazo y **Continuar evaluación** permanecen bloqueadas en estados finales; solo la lectura/descarga continúa disponible.
+
+### Próximos pasos / retos abiertos
+
+1. Verificar contra backend real un documento cuyo endpoint de listado omita el Base64 y confirmar permisos del endpoint individual para los roles de posgrados.
+2. Agregar una prueba de componente cuando exista infraestructura de tests, cubriendo el fallback al endpoint individual y una inscripción finalizada.
+
+### Entorno y pruebas
+
+- Reutilizar la instalación npm del repositorio (`node_modules`); no crear entornos venv/conda/poetry para este frontend.
+- Versiones exactas y comandos continúan documentados en `package.json`/`package-lock.json` y README.
+- `npx eslint src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx src/shared/files/base64FileUtils.ts`: PASS. `npm run build`: PASS (273 módulos; warning informativo conocido por chunk principal mayor de 500 kB). `git diff --check`: PASS. El lint global continúa fallando por 9 errores y 1 warning preexistentes en archivos no relacionados (`creditosService`, `matriculaService`, `solicitudesService`, `RequireEvaluacionEnabled`, mocks/validación y tipos/componentes de solicitudes).
+
+---
+# Update 2026-09-22 — clasificación de solicitudes de tema por programa
+
+## Estado actual y decisión
+- El tipo compartido `tipoSolicitudId: 13` / `tipoSolicitudCodigo: TEMA_T` ya no aparece simultáneamente en maestría y doctorado. `correspondeSolicitudANivel` lo clasifica por el valor ya disponible en `programaAcademico`: si contiene `DCC`, corresponde solo a **Tesis doctoral**; en caso contrario corresponde solo a **Trabajo de investigación de maestría**.
+- El filtro se aplica a los resultados asignados y generales de coordinación y al listado/refresco posterior a creación del estudiante. Los tipos no compartidos siguen determinados por `TIPOS_TRABAJO_GRADO_POR_NIVEL`.
+- `getNivelTrabajoGrado` reconoce la sigla `DCC`; esto evita redirigir a un estudiante de `61204 - DCC` al apartado de maestría. Todo valor que no contenga esa sigla se clasifica como maestría conforme a la regla acordada.
+
+## Paths, contrato y salida esperada
+- Regla de dominio de presentación: `src/modules/trabajos-grado/constants.ts`.
+- Integración del módulo: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`.
+- Punto extensible de filtrado de filas: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
+- El contrato REST no cambia. El listado debe seguir entregando `tipoSolicitudId`, `tipoSolicitudCodigo` y `programaAcademico`; ejemplo relevante: `{ "tipoSolicitudId": 13, "tipoSolicitudCodigo": "TEMA_T", "programaAcademico": "61204 - DCC" }` se ve solo en `/trabajos-grado/doctorado`. El mismo tipo con un programa que no contiene `DCC` se ve solo en `/trabajos-grado/maestria`.
+- No se agregaron endpoints, schemas, paquetes, variables, seeds ni datasets.
+
+## Retos y próximos pasos
+1. Validar con backend y sesión institucional los listados **Solicitudes asignadas** y **Solicitudes** en ambas pestañas, incluida la solicitud 51 del ejemplo, y confirmar que cada ID aparece exactamente una vez.
+2. Confirmar los valores reales de `programaAcademico`; la regla solicitada trata un valor ausente o sin `DCC` como maestría. Si backend incorpora otra sigla doctoral, acordar primero el contrato antes de ampliar la inferencia.
+3. Cuando exista infraestructura de pruebas, cubrir la clasificación `DCC`/no `DCC` y los tres flujos de filtrado. No hay script `test` actualmente.
+
+## Entorno
+- Reutilizar únicamente `/workspace/SAPP-frontend` y su `node_modules`; no crear venv, Conda, Poetry, entornos Python ni otra instalación npm. No hay seeds para este flujo.
+- Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y typescript-eslint 8.51.0.
+
+## Verificación de esta corrección
+- `npx eslint src/modules/trabajos-grado/constants.ts src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx src/pages/TrabajosGrado/TrabajosGradoPage.tsx`: PASS.
+- `npm run build`: PASS; 278 módulos, `dist/assets/index-BBLqYFql.css` e `index-CwDe3c1W.js`; persiste solo el aviso informativo conocido por el chunk JS de 642.58 kB.
+- La comprobación visual autenticada queda pendiente: el contenedor no ofrece navegador ni backend/sesión institucional. El cambio no añade estilos ni elementos visuales; modifica qué filas existentes recibe cada apartado.
+# Update 2026-09-23 — catálogo completo de estados en proyectos de grado
+
+## Corrección 2026-09-23 — estado enviado a consejo
+
+- Se identificó que el DTO real entrega `estadoId: 10`, `estadoSigla: "ENVIADA_CONSEJO"` y `estado: "ENVIADA A CONSEJO"`, pero la unión tipada, el catálogo local y el mapa de normalización no incluían esa sigla. Como el listado y el detalle pasan preferentemente `estadoSigla` al `StatusBadge`, la normalización devolvía `UNKNOWN` y la UI mostraba **DESCONOCIDO**.
+- `src/modules/solicitudes/utils/estadoSolicitud.ts` incorpora el estado 10, su etiqueta **ENVIADA A CONSEJO ACADEMICO** y aliases descriptivos con/sin tilde. `StatusBadge.tsx` reutiliza la variante visual `enviada`. La prueba dirigida cubre la sigla, el nombre devuelto por el backend y el registro por id.
+- No cambian endpoints ni schemas. Entrada esperada: el contrato anterior; salida visual esperada: **ENVIADA A CONSEJO ACADEMICO** tanto en el listado como en el detalle de proyectos de grado. Reutilizar `node_modules`; no crear venv, Conda, Poetry ni otro entorno.
+- Verificación local: `node --test tests/estadoSolicitud.test.ts` PASS (3/3), ESLint focalizado PASS, `npm run build` PASS (283 módulos; CSS 231.65 kB y JS 666.70 kB) y `git diff --check` PASS. El build conserva el aviso informativo conocido por el chunk JavaScript mayor de 500 kB.
+
+
+## Estado actual y decisión
+
+- `TrabajosGradoPage` activa `showAllEstadoOptions` en las vistas compartidas de estudiante y coordinación. Por ello, los filtros de ambos niveles (maestría y doctorado) ofrecen todo el catálogo recibido desde `GET /sapp/estadosSolicitud`, no solamente los estados actualmente representados por solicitudes del listado ni únicamente los estados propios de evaluación del proyecto.
+- Las vistas compartidas mantienen por defecto el filtrado histórico mediante `getEstadosPresentesEnSolicitudes`; el nuevo comportamiento es opt-in y, por ahora, exclusivo de Proyectos de grado. Elegir un estado sin coincidencias muestra el vacío normal del listado.
+- El cambio solo amplía las opciones del filtro. No autoriza transiciones en frontend ni modifica el proceso privado de evaluación, contratos, endpoints, DTO, roles, dependencias, variables, schemas, seeds o datasets. Las transiciones válidas siguen bajo control del backend.
+
+## Paths, validación pendiente y entorno
+
+- Integración: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. Props y selección de catálogo: `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx` y `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx`.
+- Pendiente verificar con sesión institucional que el selector muestre los estados generales y los de evaluación, y que cada opción filtre correctamente para estudiante y coordinación en ambos niveles. No crear otro entorno: reutilizar `/workspace/SAPP-frontend/node_modules`; el proyecto no usa venv, Conda ni Poetry. Node.js 24.15.0 y npm 11.4.2; versiones exactas restantes en `package-lock.json` y `README.md`.
+- Verificación local del 2026-09-23: prueba Node dirigida PASS (2/2), ESLint focalizado PASS, build PASS (283 módulos; `index-CagCtW9j.css` 231.16 kB e `index-DhEovsif.js` 666.35 kB) y `git diff --check` PASS. Persisten únicamente el warning ambiental de npm por `http-proxy` y el aviso informativo del chunk JavaScript mayor de 500 kB.
+
+---
+
+---
+
+# Update 2026-09-23 — sincronización y detalle de evaluaciones de jurados
+
+## Estado actual y decisiones
+- `ProcesoEvaluacionPanel` recibe `onUpdated` desde `SolicitudDetallePage`. Después
+  de cualquier mutación exitosa (designar, reemplazar, retirar o reinvitar un
+  jurado; definir documento; enviar a ajustes; programar sustentación; registrar
+  resultado) espera en paralelo el GET canónico del proceso y la recarga de la
+  solicitud/adjuntos. Los recordatorios aplican la misma recarga. La UI ya no
+  depende del DTO devuelto por la mutación para quedar sincronizada.
+- La columna Evaluaciones dejó de concatenar códigos. Cada registro muestra su
+  momento y, según `momentoCodigo`, el concepto de `CONCEPTO_DOCUMENTO` o el
+  resultado de `SUSTENTACION`; las observaciones se muestran solo si contienen
+  texto. El contrato admite los aliases reales `momento`, `concepto` y
+  `resultado`, además de `*Nombre` y `*Codigo`.
+
+## Paths, contrato y salida esperada
+- Coordinación visual/recarga: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`
+  y `.css`; callback padre en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`;
+  aliases DTO en `src/modules/trabajos-grado/evaluacion/types.ts`.
+- Después de una acción exitosa se esperan `GET
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`, `GET` de la solicitud y la
+  consulta de adjuntos del trámite. Si una recarga falla, la acción no se anuncia
+  como sincronizada y se muestra el error; el usuario puede reintentar.
+- Ejemplo de presentación: `CONCEPTO_DOCUMENTO` → «Concepto del documento»,
+  «Concepto: Favorable» y observaciones opcionales; `SUSTENTACION` →
+  «Sustentación», «Resultado: Aprobado» y observaciones opcionales.
+
+## Entorno y próximos pasos
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear
+  venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5, plugin React SWC 4.2.2, ESLint 9.39.2 y
+  typescript-eslint 8.51.0. No hay seeds ni datasets para este flujo.
+- Pendiente validar con backend y sesión de coordinación las recargas después de
+  cada estado y la presentación con observaciones extensas. El contenedor no
+  dispone de navegador instalado; documentar cualquier captura realizada desde
+  un entorno autenticado externo.
+- Verificación 2026-09-23: ESLint focalizado de los tres archivos TS/TSX
+  modificados PASS; `npm run build` PASS (283 módulos, CSS 231.65 kB y JS
+  667.25 kB), con el aviso informativo conocido por chunk >500 kB;
+  `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning
+  preexistentes fuera de este cambio. No se tomó captura porque
+  `command -v chromium || command -v chromium-browser || command -v
+  google-chrome || command -v firefox` no encontró navegador y el flujo requiere
+  sesión/backend institucionales.
+
+---
+
+# Update 2026-09-23 — depuración visual de acciones del proceso de evaluación
+
+## Estado actual y decisiones
+- `ProcesoEvaluacionPanel` eliminó las cuatro tarjetas redundantes de estudiante,
+  programa, fecha límite y documento. El encabezado del proceso, mensajes,
+  formularios, jurados, sustentación y línea de tiempo se conservan.
+- Las seis acciones superiores se renderizan solo cuando su regla de negocio las
+  habilita para el estado actual. `busy` no retira controles durante una petición:
+  deshabilita temporalmente las acciones previamente disponibles para impedir
+  duplicados y evitar saltos de layout.
+- La columna **Acciones** de jurados existe solo si `canManageJurors` es verdadero
+  y hay al menos un jurado activo. Una fila inactiva no presenta botones; si no
+  existe ninguna operación posible, tampoco se renderiza el `th` de la columna.
+- No se modificaron contratos HTTP, DTO, estados, permisos, estilos, schemas,
+  dependencias, variables, seeds ni datasets.
+
+## Paths, verificación y siguientes pasos
+- Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`.
+  Salida esperada para un proceso cerrado como `SUSTENTADA`: sin tarjetas de
+  resumen, sin barra vacía de acciones y sin columna de acciones de jurados.
+- `npx eslint src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`:
+  PASS; solo aparece el warning ambiental conocido de npm por `http-proxy`.
+- `npm run build`: PASS; 283 módulos, `index-Ch9v6k1n.css` (231.65 kB) e
+  `index-6ruUdfsX.js` (666.44 kB). Persiste el aviso informativo por el chunk JS
+  mayor de 500 kB. `git diff --check`: PASS.
+- Pendiente: comprobación autenticada de cada estado y captura en claro/oscuro.
+  El contenedor no dispone de Chromium, Chrome ni Firefox y la ruta protegida
+  requiere backend y sesión institucional, por lo que no se generó captura.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry, entorno Python ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+
+---
+# Update 2026-09-23 — estado AJUSTES_RECIB en proyectos de grado
+
+## Estado actual y contrato
+
+- El catálogo compartido de solicitudes reconoce ahora `estadoSolicitud: "AJUSTES_RECIB"` y el nombre descriptivo `"AJUSTES RECIBIDOS"`; ambos se normalizan a la misma sigla y se presentan como **AJUSTES RECIBIDOS**, no como **DESCONOCIDO**.
+- La corrección vive en `src/modules/solicitudes/utils/estadoSolicitud.ts` y `StatusBadge.tsx`, por lo que cubre las tablas/tarjetas y el detalle individual compartidos por estudiante y coordinación. El estado usa la variante visual `en-revision`.
+- El catálogo local registra el estado con id 21. No cambian endpoints, payloads, DTO, transiciones, permisos, schemas, variables, seeds ni datasets. Entrada relevante del proceso: `{ "estadoSolicitud": "AJUSTES_RECIB", "estadoSolicitudNombre": "AJUSTES RECIBIDOS" }`; salida visual esperada: **AJUSTES RECIBIDOS**.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otra instalación npm. Las versiones exactas están en `package-lock.json`; el proyecto se ejecuta con `npm run dev` y no requiere seeds.
+- La regresión dirigida está en `tests/estadoSolicitud.test.ts` y cubre la sigla, el nombre descriptivo, la etiqueta y el registro de catálogo. Pendiente únicamente la comprobación autenticada contra backend real para ambos roles; el contenedor no dispone de esa sesión institucional.
+- Verificación local del 2026-09-23: `node --test tests/estadoSolicitud.test.ts` PASS (4/4), ESLint focalizado PASS, `npm run build` PASS (284 módulos; `index-BAvKq9XY.css` 232.60 kB e `index-_pxWkai9.js` 668.17 kB) y `git diff --check` PASS. El build conserva el aviso informativo conocido por el chunk JavaScript mayor de 500 kB; npm conserva el warning ambiental conocido por `http-proxy`.
+
+---
+
+# Update 2026-09-23 — resultado condicionado a evaluaciones de sustentación
+
+## Estado actual, regla y salida esperada
+- `ProcesoEvaluacionPanel` ya no habilita **Registrar resultado** solamente por
+  el estado `SUST_PROGRAMADA`: exige además que todos los jurados activos tengan
+  al menos una evaluación de momento `SUSTENTACION`. Un jurado activo que solo
+  tenga `CONCEPTO_DOCUMENTO` mantiene oculta la acción.
+- Los jurados con `activo: false` representan reemplazos/retiros y no participan
+  en la condición. Una lista vacía o sin jurados activos tampoco habilita el
+  botón. Se reconocen `momentoCodigo`, `momento` y `momentoNombre`, incluidas las
+  formas `SUSTENTACION` y `Sustentación`.
+- La misma condición protege el render del formulario ya abierto. No cambió el
+  contrato de escritura: `registrarResultado` conserva el payload
+  `{ resultadoCodigo, notaFinal, actaId }`; no hay cambios de endpoint, DTO,
+  schema, permisos, dependencias, variables, seeds ni datasets.
+
+## Paths, pruebas, entorno y próximos pasos
+- Regla pura: `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts`;
+  integración: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`;
+  regresión: `tests/estadoProcesoEvaluacion.test.ts`.
+- Verificación local 2026-09-23: `node --test
+  tests/estadoProcesoEvaluacion.test.ts` PASS (4/4); ESLint focalizado PASS;
+  `npm run build` PASS (286 módulos; CSS 232.60 kB y JS 668.84 kB). Persiste
+  únicamente el aviso informativo del chunk JS mayor de 500 kB y el warning
+  ambiental npm `Unknown env config "http-proxy"`.
+- Pendiente comprobar con una sesión institucional un proceso con dos jurados:
+  con un solo concepto de sustentación el botón debe estar oculto y, tras la
+  evaluación del segundo jurado, debe aparecer. La ruta requiere backend y
+  autenticación reales.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM
+  19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y
+  ESLint 9.39.2; el proyecto no usa seeds.
+
+---
+
+# Update 2026-09-23 — rueda y tarjeta interactiva en estudiantes
+
+## Estado actual y salida esperada
+- `StudentHorizontalBoard` convierte el movimiento dominante de la rueda
+  (`deltaY` o `deltaX`) en desplazamiento horizontal y contempla los tres
+  `deltaMode`. Solo cancela el scroll de la página cuando el tablero realmente
+  puede avanzar en la dirección solicitada; los extremos liberan la rueda.
+- `EstudianteCard` funciona completa como acceso al perfil mediante clic,
+  `Enter` o espacio, con foco visible y semántica de enlace. La acción visual
+  **Ver perfil** permanece integrada en la tarjeta sin crear controles
+  interactivos anidados. La supresión de clic posterior a un arrastre permanece en el
+  contenedor, por lo que arrastrar una tarjeta no abre el detalle.
+- Salida esperada: rueda sobre cualquier tablero con desbordamiento mueve sus
+  tarjetas; clic en foto, estado, nombre o datos abre exactamente el mismo
+  detalle que el botón. No hay cambios de API, schema, DTO ni permisos.
+
+## Paths, entorno, validación y continuidad
+- Implementación: `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.tsx`
+  y `src/modules/estudiantes/components/EstudianteCard/{EstudianteCard.tsx,EstudianteCard.css}`.
+  Consumidor: `src/pages/EstudiantesCoordinacion/EstudiantesCoordinacionPage.tsx`.
+- Verificación local 2026-09-23: ESLint focalizado PASS; `npm run build` PASS
+  (286 módulos; CSS 232.73 kB y JS 669.38 kB); `git diff --check` PASS. El build
+  conserva el aviso informativo por el chunk JS mayor de 500 kB y npm el warning
+  ambiental `Unknown env config "http-proxy"`.
+- Pendiente: comprobar con backend y sesión institucional la rueda en ratón
+  físico, clic/teclado y temas claro/oscuro. No se pudo capturar la ruta
+  protegida porque el contenedor no incluye Chromium, Chrome ni Firefox y no
+  dispone de una sesión institucional reproducible.
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni otro árbol npm. No hay seeds ni datasets. Entorno: Node.js 24.15.0,
+  npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+
+---
+# Update 2026-09-23 — evaluación del examen de candidatura doctoral
+
+## Estado actual y decisiones
+- El tipo de solicitud `9` quedó incluido en
+  `TIPOS_TRABAJO_GRADO_POR_NIVEL.doctorado`; el código `CAND_DOCTORAL` ya estaba
+  habilitado en `CODIGOS_PROCESO_EVALUACION_TG`. Por ello el examen aparece en
+  el listado doctoral y usa el mismo `ProcesoEvaluacionPanel` de propuestas y
+  defensas, incluidas designación de jurados, correcciones, programación de
+  sustentación, cierre e historial. Se conserva temporalmente el ID `8` del
+  catálogo anterior para compatibilidad con datos existentes.
+- `SolicitudDetallePage` muestra solo `tituloTrabajo` (o el respaldo `titulo`
+  del proceso) para candidatura y nunca renderiza el resumen. También habilita
+  el panel estudiantil de ajustes para el ID `9` bajo las mismas reglas actuales.
+- En la lista de jurados, las evaluaciones `SUSTENTACION` de candidatura usan
+  `nota` y la etiqueta **Nota**; propuesta y defensa siguen usando el resultado
+  nominal. La regla está aislada en
+  `src/modules/trabajos-grado/evaluacion/presentacionEvaluacion.ts`.
+
+## Contratos, paths y salida esperada
+- Se reutiliza `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`. Para cada
+  jurado se espera `evaluaciones[]` con `{ id, momentoCodigo, nota, ... }`; si
+  `tipoSolicitudCodigo === "CAND_DOCTORAL"` y
+  `momentoCodigo === "SUSTENTACION"`, la UI produce `Nota: <nota>` aunque la
+  respuesta también contenga un `resultadoNombre`.
+- Archivos centrales: `src/modules/trabajos-grado/constants.ts`,
+  `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`,
+  `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` y
+  `presentacionEvaluacion.ts`. Regresión: `tests/candidaturaDoctoral.test.ts`.
+- Pendiente: validar con backend y sesión institucional la presencia del tipo 9
+  en el catálogo, el ciclo completo de correcciones/sustentación y una nota real
+  (incluidos `0` y decimales). Confirmar después con backend si el ID legado `8`
+  puede retirarse. La autoridad de permisos y transiciones continúa en backend.
+
+## Entorno y resultados
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda,
+  Poetry ni un segundo árbol npm. No existen seeds/datasets para este flujo.
+  Entorno: Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM
+  7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación 2026-09-23: pruebas dirigidas PASS (7/7), ESLint focalizado PASS,
+  build PASS (287 módulos; CSS 233.01 kB, JS 670.38 kB) y `git diff --check`
+  PASS. `npm run lint` sigue bloqueado por 9 errores y 1 warning preexistentes
+  en servicios placeholder, admisiones, documentos y tipos/editor de
+  solicitudes. Persisten además el warning ambiental `Unknown env config
+  "http-proxy"` y el aviso informativo por el chunk mayor de 500 kB.
+
+---
+# Update 2026-09-24 — base API corregida en matrícula financiera
+
+## Estado actual, contrato y salida esperada
+- `src/modules/matricula-financiera/api.ts` ya no retira `/sapp` de `API_URL`. La base del módulo se forma eliminando solo las barras finales y anexando `/liquidacionMatricula`.
+- Con `VITE_API_URL=https://sapp.eisi.online/api/sapp`, todos los endpoints del módulo deben producir `https://sapp.eisi.online/api/sapp/liquidacionMatricula/...`; por ejemplo, el listado de procesos usa `GET https://sapp.eisi.online/api/sapp/liquidacionMatricula/procesos`.
+- Se conservan los contratos, payloads, cabecera `X-Internal-Token`, descarga Excel y manejo de errores existentes. No cambiaron dependencias, variables de entorno, seeds, datasets ni schema.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Este frontend se ejecuta con Node.js/npm y las versiones exactas están fijadas en `package-lock.json`.
+- Pendiente de validación integrada: abrir matrícula financiera con una sesión institucional y confirmar en la pestaña Network que procesos, liquidaciones, tarifas, vista estudiantil y exportación conservan `/api/sapp/liquidacionMatricula`.
+
+---
+# Update 2026-09-24 — presentación de matrícula para estudiantes
+
+## Estado actual y decisiones
+- La experiencia se adapta con `canManagePosgrados`: para estudiantes, `/matricula` muestra **Liquidación** y los textos solicitados en sus dos tarjetas; `/matricula/financiera` usa **Liquidación** como título y no renderiza **Actualizar**. Coordinación, secretaría y administración conservan **Matrícula financiera**, sus descripciones operativas y el refresco manual.
+- `getPrimaryNavigationItems(roles)` también entrega **Liquidación** como etiqueta del submenú para perfiles sin capacidad administrativa. Las rutas no cambiaron: ambas variantes siguen navegando a `/matricula/financiera`.
+- El desfase del botón Matrícula provenía de dos niveles de padding: `.sidebar__link` y `.sidebar__parent-link`. La regla más específica `.sidebar__link.sidebar__link--parent { padding: 0; }` deja el icono alineado con los demás módulos sin alterar el pill activo ni el submenú.
+
+## Paths, contratos y salida esperada
+- Archivos: `src/pages/MatriculaHome/MatriculaHomePage.tsx`, `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`, `src/app/navigationItems.ts` y `src/components/Sidebar/Sidebar.css`.
+- No cambiaron API, schemas, DTO, permisos, rutas, dependencias, variables, seeds ni datasets. La carga inicial de `GET /liquidacionMatricula/mias` y el refresco posterior a `responderMiLiquidacion` permanecen intactos aunque el estudiante ya no tenga botón manual.
+- Salida estudiantil esperada: tarjetas “Matrícula académica — Registra asignaturas y documentos requeridos para el proceso de matrícula.” y “Liquidación — Información para proceso de liquidación.”; sidebar y título de página dicen “Liquidación”; no aparece “Actualizar”.
+
+## Entorno, validación y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2 y versiones exactas fijadas en `package-lock.json`.
+- Validación 2026-09-24: `npm run build` PASS (297 módulos; CSS 240.95 kB, JS 689.62 kB), `npm run lint` PASS, ESLint focalizado PASS, prueba dirigida de matrícula financiera PASS y `git diff --check` PASS. Persisten únicamente el warning ambiental de npm `Unknown env config "http-proxy"` y el aviso informativo por el chunk JS mayor de 500 kB.
+- Pendiente: validar visualmente con sesiones institucionales de estudiante y coordinación, en sidebar contraído/expandido y viewport móvil. No hay datos locales para seed; el flujo depende del backend configurado.
+
+---
+# Update 2026-09-24 — título obligatorio en solicitudes de proyecto de grado
+
+## Estado, contrato y salida esperada
+- `SolicitudEstudianteForm` obtiene la regla desde `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`: los tipos 4, 5, 6, 7 y 9 presentan título y no permiten registrar un valor vacío o compuesto solo por espacios. El input conserva `required` y la validación de aplicación produce `Debes ingresar el <nombre académico del título>.`.
+- Tipos 4/5: etiqueta **Título de la tesis**; tipos 6/7: **Título del trabajo de investigación**; tipo 9: **Título del trabajo**. Los tipos 4–7 también exigen `resumenTrabajo`; el 9 no lo presenta ni lo envía. Un tipo sin control de título (por ejemplo, 13) no exige ni envía esos datos.
+- El contrato HTTP no cambia: `POST /sapp/solicitudesAcademicas` recibe `tituloTrabajo` recortado para los tipos anteriores, junto con `estudianteId`, `tipoSolicitudId` y los campos generales. El backend debe conservar su propia validación; esta corrección cubre el cliente.
+- Artefactos: utilidad `src/modules/solicitudes/utils/datosTrabajoSolicitud.ts`, integración `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` y regresión `tests/datosTrabajoSolicitud.test.ts`. No existen seeds o datasets para este flujo.
+
+## Entorno, pruebas y continuidad
+- Reutilizar `/workspace/SAPP-frontend/node_modules`; no crear otro árbol npm ni venv, Conda o Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol exacto.
+- PASS: `node --test --test-isolation=none tests/*.test.ts` (47/47), ESLint focalizado, `npm run build` (308 módulos) y `git diff --check`. `npm run lint` continúa con 9 errores y 1 warning preexistentes en servicios placeholder, admisiones, documentos y tipos/editor de solicitudes.
+- Pendiente integrado: confirmar con el backend y una sesión institucional que los cinco tipos del catálogo mantienen esos IDs y que un título válido se persiste. Si el catálogo deja de garantizar IDs estables, migrar la configuración a códigos de solicitud sin duplicar la regla en el componente.
+
+---
+# Handoff actual — ajustes de matrícula financiera (2026-09-24)
+
+## Estado, contratos y salida esperada
+
+- Se completaron los ocho ajustes de UX en `src/pages/MatriculaFinanciera` y la validación reutilizable en `src/modules/matricula-financiera/rules.ts`.
+- El payload de coordinación conserva `RespuestasCoordinacionRequest`: las respuestas aplicables son booleanas, `certificadoVotacionRecibido` se deriva de `certificadoVotacion === true` y `observaciones` es `string | null`. La carga ANX-39 continúa como operación documental separada y opcional.
+- El certificado solo se renderiza cuando la respuesta de votación es Sí. Sus acciones de ver, descargar, cargar y reemplazar no envían accidentalmente el formulario padre. El botón de respuestas requiere 2 respuestas para `NUEVO` y 4 para `VIGENTE`, respetando preguntas dinámicas con `aplica`.
+- No se modificaron API, schemas, variables, seeds ni datasets. El simulador disponible sigue en `tests/fixtures/matricula-financiera/preview.html`.
+
+## Entorno, pruebas y próximos pasos
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no ejecutar otro `npm install` ni crear venv, Conda o Poetry. Es un proyecto Node: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, Router 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2; `package-lock.json` fija el árbol.
+- Verificación de esta entrega: ESLint focalizado PASS; pruebas Node PASS (51/51); build PASS (309 módulos, CSS 247.18 kB y JS 725.06 kB); `git diff --check` PASS. Avisos no bloqueantes: configuración ambiental npm `Unknown env config "http-proxy"` y chunk JS mayor de 500 kB.
+- Pendiente: validar con backend y sesión institucional los modos claro/oscuro y móvil, los cuatro estados de liquidación, la derivación de recepción y el reemplazo documental. Si hay navegador disponible, capturar las rutas protegidas; este repositorio no aporta credenciales ni backend reproducible.
+
+---
+
+---
+
+# Update 2026-09-24 — acciones, correcciones y privacidad de liquidación
+
+## Estado actual y decisiones
+- `LiquidacionActions.tsx` centraliza confirmación, exclusión, desmarcado y reinclusión para tabla/detalle. Sus diálogos identifican estudiante, código y periodo; la confirmación PUTTY incluye total y checkbox exacto. Exclusión conserva el total y envía `{ motivo: string }` recortado. `useOperacion` evita dobles envíos. `PUBLICADO` no permite mutaciones; una fila `LIQUIDADA` debe desmarcarse antes de excluirse.
+- Confirmar requiere `RESPONDIDA` y `totalFinal != null` (incluye `0`); alertas no bloquean. En detalle también se bloquea si el formulario de respuestas o las correcciones tienen cambios locales. Tras una mutación se refrescan fila, tabla y resumen desde el backend.
+- El editor **Corregir cálculo** vive dentro de **Cálculo recibido del sistema** y no desmonta su estado al cerrarse. Los campos monetarios aceptan formato colombiano, ajuste negativo y máximo cuatro decimales. El payload continúa numérico; `valorFinalManual: null` retira la sustitución y `0` se conserva.
+- El filtro `conAlertas` y la columna semestre se retiraron del listado. Las insignias tienen texto y tokens/mezclas compatibles con tema. El botón de flecha del sidebar ahora centra un área estable de 40 px y rota al expandir.
+- Estudiantes solo ven `valores.totalFinal`; jamás se renderiza `valores.desglose`, aunque el DTO se mantiene sin cambios. Coordinación conserva el desglose completo.
+
+## Contratos, paths y salida esperada
+- Sin endpoints ni schemas nuevos: `PUT /liquidaciones/{id}/liquidada` con `{ liquidada: boolean }`, `/excluir` con `{ motivo }`, `/reincluir` sin cuerpo, `/ajustes` con reemplazo completo y `/respuestas` con respuestas aplicables. Base HTTP existente: `/api/sapp`.
+- Paths principales: `src/pages/MatriculaFinanciera/{LiquidacionActions,LiquidacionDetallePage,ProcesoLiquidacionPage,MatriculaFinancieraPage,RespuestasForm}.tsx`, CSS compartido en `MatriculaFinancieraPage.css`, reglas en `src/modules/matricula-financiera/rules.ts` y regresiones en `tests/matriculaFinancieraRules.test.ts`.
+- Salida esperada: cero puede confirmarse; total ausente, estado no respondido o cambios locales deshabilitan confirmación; cancelar un diálogo no muta; motivo vacío/espacios no se envía; fallos del servidor mantienen el diálogo y muestran error. Publicado solo consulta.
+
+## Entorno, resultados y siguientes pasos
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. `package-lock.json` fija el árbol.
+- Validación local: suite Node PASS (53/53), ESLint focalizado PASS, build PASS (310 módulos; CSS 248.52 kB; JS 728.06 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de este alcance (servicios placeholder, admisiones, documentos y solicitudes). npm muestra el warning ambiental `Unknown env config "http-proxy"`; Vite advierte por el chunk >500 kB.
+- Pendiente institucional: probar errores reales de cada mutación, actualización de resumen, permisos y proceso publicado con backend/sesión; revisar teclado, foco, claro/oscuro y escritorio/móvil. No se tomó captura porque el contenedor no dispone de Chromium, Chrome ni Firefox; la ruta real requiere autenticación/backend.
+# Update 2026-09-24 — botón Volver del tablero financiero
+
+## Estado, contrato y salida esperada
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` reemplaza el enlace de texto local `mf-back` por el `BackButton` compartido, manteniendo la etiqueta **Volver a procesos** y el destino `/matricula/financiera`.
+- La salida esperada es el mismo control pill utilizado en el resto del sistema, con flecha gestionada por el componente, tokens semánticos, foco visible y hover compatible con temas claro/oscuro. No cambiaron API, schemas, DTO, permisos, rutas, dependencias, seeds ni datasets.
+
+## Entorno y continuidad
+- Proyecto Node.js/npm: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
+- Verificación local: suite Node PASS (56/56), ESLint focalizado PASS, build PASS (313 módulos; CSS 252.50 kB y JS 732.50 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes fuera de este ajuste. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente integrado: revisar el control con una sesión institucional en escritorio/móvil y ambos temas. No se capturó imagen porque el contenedor no dispone de Chromium, Chrome ni Firefox; el flujo depende además del backend autenticado y no tiene seed local.
+
+---
+
+# Update 2026-09-24 — modal de eliminación de actas
+
+## Estado actual y decisiones
+
+- En `src/pages/Actas/ActasPage.tsx`, el botón **Eliminar** ya no usa `window.confirm`: abre un diálogo propio con título **Eliminar acta**, advertencia irreversible, nombre y código del registro, cierre explícito y acciones **Cancelar** / **Sí, eliminar acta**.
+- La opción segura recibe el foco al abrir. `Escape`, la `×` y el backdrop cancelan antes de ejecutar; durante la petición todos esos cierres y ambas acciones se deshabilitan. Si `DELETE /actas/{id}` falla, el diálogo permanece abierto y el error general permite reintentar. Si termina bien, el registro sale del estado local, el modal se cierra y se muestra el mensaje temporal existente.
+- `src/pages/Actas/ActasPage.css` sigue el patrón de los modales de SolicitudDetalle y Matrícula Financiera: overlay, tarjeta redondeada, sombra suave, botones pill, tokens semánticos y disposición móvil. Funciona con temas claro/oscuro sin colores fijos salvo las mezclas derivadas de `--danger`.
+
+## Contratos, salida esperada y continuidad
+
+- Contrato intacto: `DELETE /actas/{id}`, sin body y respuesta exitosa sin contenido. No cambiaron API, tipos, rutas, roles, dependencias, variables, schemas, seeds ni datasets. Las actas reales continúan llegando del backend; este repositorio no aporta un seed reproducible ni credenciales institucionales.
+- Salida esperada: al pulsar **Eliminar**, el navegador no debe mostrar su cuadro nativo. Debe aparecer el modal SAPP con el acta seleccionada; cancelar no muta datos, confirmar una vez bloquea dobles envíos, un error conserva la fila y un éxito la elimina.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear otro árbol npm, venv, Conda ni Poetry. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: `npx eslint src/pages/Actas/ActasPage.tsx` PASS; suite Node PASS (58/58); `npm run build` PASS (314 módulos; CSS 255.39 kB, JS 734.30 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk mayor de 500 kB.
+- Pendiente integrado: validar la eliminación exitosa y fallida con backend/sesión institucional, temas claro/oscuro, teclado y viewport móvil. No se pudo capturar una imagen en el contenedor porque no hay Chromium, Chrome, Firefox, Playwright ni Puppeteer instalados.
+
+---
+
+# Update 2026-09-24 — tabla de profesores por grupo y sidebar
+
+## Estado actual, decisiones y salida esperada
+
+- `src/pages/GestionProfesores/GestionProfesoresPage.tsx` retiró exclusivamente la cabecera y la celda visible **Identificador** de la tabla **Profesores del grupo**. `docente.docenteId ?? docente.id` sigue calculándose y utilizándose como `key`, para identificar las mutaciones de director y retiro; no se cambió el DTO ni se ocultaron las columnas de documento pertenecientes a las otras tablas de profesores.
+- `src/components/Sidebar/Sidebar.css` amplió `--sidebar-expanded-width` de 260 px a 284 px. Al hacer hover o foco en escritorio, **Informes a dependencias** debe verse completo en una sola línea; el ancho contraído permanece en 84 px y el drawer móvil continúa usando `min(84vw, 320px)`.
+- No cambiaron endpoints, payloads, schemas, permisos, rutas, dependencias, variables, seeds ni datasets. El resultado esperado en grupos contiene **Profesor**, **Rol en el grupo** y **Acciones**, mientras que las operaciones siguen enviando el identificador requerido por los servicios existentes.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no ejecutar otro `npm install` ni crear venv, Conda, Poetry u otro árbol npm. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (58/58); `npm run build` PASS (314 módulos; CSS 255.39 kB y JS 734.20 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JS mayor de 500 kB.
+- Pendiente integrado: revisar la tabla con grupos vacíos y poblados, y el sidebar en temas claro/oscuro, hover, foco y viewport móvil usando una sesión institucional. No se tomó captura porque el contenedor no dispone de Chromium, Chrome, Firefox, Playwright ni Puppeteer y la ruta real requiere autenticación/backend; no existe un seed local reproducible.
+
+---
+
+# Update 2026-09-25 — semestre sin origen técnico en liquidaciones
+
+## Estado, contrato y salida esperada
+
+- `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx` ahora renderiza en
+  **Revisión del caso > Semestre** exclusivamente `fila.semestre`, con el fallback
+  **Sin calcular**. Ya no concatena `fila.semestreOrigen`, por lo que un registro
+  `{ semestre: 3, semestreOrigen: 'CALCULADO' }` debe verse como **3** y no como
+  **3 · CALCULADO**. La misma regla oculta también `MANUAL` y **Sin origen**.
+- El contrato permanece intacto: `LiquidacionMatricula.semestre` sigue siendo
+  `number | null` y `semestreOrigen` sigue siendo `'CALCULADO' | 'MANUAL'` opcional.
+  No cambiaron rutas, endpoints, payloads, permisos, reglas de cálculo, schemas,
+  dependencias, variables, seeds ni datasets. La ruta objetivo es
+  `/matricula/financiera/procesos/:procesoId/liquidaciones/:liquidacionId`.
+
+## Entorno, resultados y continuidad
+
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y
+  `package-lock.json`; no crear otro árbol npm, venv, Conda ni Poetry. Entorno
+  comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM
+  7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (60/60); `npm run
+  build` PASS (314 módulos; CSS 259.16 kB y JS 738.94 kB); `git diff --check`
+  PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y
+  Vite advierte por el chunk JS mayor de 500 kB.
+- Pendiente institucional: comprobar visualmente el detalle con semestre
+  calculado, manual y ausente usando una sesión real. No se generó captura local
+  porque el contenedor no incluye Chromium, Chrome ni Firefox y esta ruta
+  protegida no dispone de credenciales o seed reproducible.
+
+---
+
+---
+
+# Update 2026-09-25 — fecha límite visible bajo el programa de liquidación
+
+## Estado, decisión y salida esperada
+
+- En la tarjeta estudiantil de `/matricula/financiera`, `MiLiquidacionCard` renderiza **Recepción de respuestas habilitada hasta el {fecha}** inmediatamente debajo de `item.programa`; el código UIS y el período aparecen después. La fecha está en negrita dentro de un aviso `mf-response-deadline` con borde lateral, borde sutil y fondo derivados del token `--primary`.
+- La salida esperada para el ejemplo reportado es: título **DOCTORADO EN CIENCIAS DE LA COMPUTACION**, debajo el aviso destacado **Recepción de respuestas habilitada hasta el 26/09/2026**, y luego **2127132 · Periodo 2026 - 2**. El diseño debe conservar contraste y jerarquía en temas claro/oscuro y adaptarse sin desbordar en móvil.
+- Contrato intacto: `MiLiquidacion.proceso.fechaLimiteRespuesta` continúa siendo la fuente y `fechaColombia` produce `dd/mm/aaaa`. No cambiaron API, DTO, lógica de plazo, rutas, roles, dependencias, variables, schemas, seeds ni datasets.
+
+## Paths, entorno, pruebas y continuidad
+
+- Artefactos: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Fixture de referencia: `tests/fixtures/matricula-financiera/`; la ruta real necesita backend y sesión institucional y no tiene seed local reproducible.
+- Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Validación local: ESLint focalizado PASS; suite Node PASS (60/60); build PASS (314 módulos; CSS 260.58 kB y JS 740.48 kB); `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso: validar visualmente con una sesión estudiantil real la fecha vigente, temas claro/oscuro y viewport móvil. No se generó captura local porque el contenedor no incluye Chromium, Chrome ni Firefox y la ruta protegida depende de credenciales/backend institucionales.
+
+---
+
+# Update 2026-09-25 — simplificación del resumen de matrícula financiera
+
+## Estado actual y salida esperada
+
+- `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx` retiró los conteos visibles **convocados** y **pendientes** de cada tarjeta de proceso. En `/matricula/financiera`, coordinación debe ver estado, periodo y fecha de recepción; al seleccionar la tarjeta entra al detalle con las métricas operativas.
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` retiró por completo la línea **Pago hasta ...** del encabezado y filtra `conAlertas` al construir el resumen. La salida esperada contiene cinco tarjetas: **Convocados**, **Liquidadas**, **No liquidar**, **Pendientes** y **Respondidas**. `MatriculaFinancieraPage.css` usa cinco columnas en escritorio y conserva dos en viewports de hasta 800 px.
+- Los estilos huérfanos de `.mf-stats` se eliminaron. No hay cambios de comportamiento en filtros, navegación, tabla, publicación o acciones de liquidación.
+
+## Contratos, artefactos y entorno exacto
+
+- El contrato no se modificó: `ResumenProceso` conserva `convocados`, `pendientes`, `respondidas`, `noLiquidar`, `liquidadas` y `conAlertas`; el proceso conserva `fechaLimitePago`. Esos valores siguen disponibles para la publicación y la lógica existente aunque ya no todos se muestren en los dos lugares ajustados. No cambiaron API, DTO, endpoints, payloads, roles, rutas, schemas, variables, seeds ni datasets.
+- Paths principales: `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.tsx`, `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` y `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css`. Fixture disponible: `tests/fixtures/matricula-financiera/`; no es un seed del backend ni reproduce la sesión institucional.
+- Entorno comprobado en Windows/PowerShell: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar el `node_modules` y `package-lock.json` del repositorio; no ejecutar una instalación paralela ni crear venv, Conda o Poetry.
+
+## Pruebas, logs y siguientes pasos
+
+- ESLint focalizado sobre ambas páginas: PASS. `node --test --test-isolation=none tests/*.test.ts`: PASS, 63/63. `npm run build`: PASS, 312 módulos; `dist/assets/index-CcDkOfjD.css` 261.02 kB y `dist/assets/index-CCTiD07k.js` 739.16 kB. `git diff --check`: PASS.
+- Avisos no bloqueantes observados: npm marca las configuraciones heredadas `msvs_version` y `python` como futuras incompatibilidades, y Vite advierte que el chunk JavaScript supera 500 kB.
+- Siguiente paso institucional: abrir `/matricula/financiera` y `/matricula/financiera/procesos/2` con backend y sesión de coordinación para validar temas claro/oscuro y escritorio/móvil. Confirmar que no aparezcan los dos conteos en tarjetas, ninguna línea **Pago hasta**, ni la tarjeta **Con alertas**, y que las cinco métricas restantes ocupen el ancho disponible. No hay credenciales ni seed local reproducible para esa comprobación.
+
+---
+
+# Update 2026-09-25 — etiquetas explicativas del resumen financiero
+
+## Estado y contrato esperado
+
+- `src/modules/matricula-financiera/flow.ts` conserva las claves de `ResumenProceso`, pero `etiquetaResumen` presenta: `convocados` → **Estudiantes registrados en el proceso de matrícula**; `liquidadas` → **Matrículas registradas en el sistema financiero (PUTTY)**; `noLiquidar` → **Estudiantes excluidos de liquidación**; `pendientes` → **Estudiantes pendientes de responder**; `respondidas` → **Estudiantes que registraron sus respuestas**.
+- `conAlertas` mantiene su etiqueta interna por compatibilidad, aunque la tarjeta continúa oculta en el tablero por la decisión anterior. No cambiaron cifras, filtros, estados, DTO, API, endpoints, payloads, permisos, rutas, schemas, variables, seeds ni datasets.
+- `src/pages/MatriculaFinanciera/MatriculaFinancieraPage.css` retiró la capitalización automática, alinea el contenido largo al inicio y agrega interlineado para que las descripciones se envuelvan sin perder legibilidad. El resumen conserva cinco columnas en escritorio y dos hasta 800 px.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` cubre literalmente las cinco etiquetas y mantiene los casos de compatibilidad. ESLint focalizado PASS; suite Node PASS (63/63); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-C2HUxB3H.js` 739.33 kB).
+- Reutilizar el `node_modules` y `package-lock.json` actuales; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Avisos no bloqueantes: configuraciones npm heredadas `msvs_version`/`python` y chunk JavaScript mayor de 500 kB.
+- Pendiente institucional: verificar las cinco descripciones con datos reales en escritorio y móvil, temas claro/oscuro y zoom alto. La ruta requiere backend y sesión de coordinación; no existe un seed local reproducible.
+
+---
+
+# Update 2026-09-25 — parámetros del tablero financiero
+
+## Estado, contrato y salida esperada
+
+- En `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`, **Parámetros y fechas del proceso** presenta, en orden: **Fuente SMMLV**, **SMMLV**, **Votación / salud**, **Primer envío** y **Fecha límite recepción respuestas**. Ya no renderiza los elementos `<dt>` **Cierre** y **Publicación**.
+- `SMMLV` presenta `money(proceso.valorSmmlv)` y la nueva fecha presenta `fechaColombia(proceso.fechaLimiteRespuesta)`. `fechaCierre` y `fechaPublicacion` no se eliminaron del DTO ni de los tipos: pueden seguir siendo utilizados por el flujo y el backend, pero no deben reaparecer en este acordeón sin una nueva decisión de producto.
+- No cambiaron API, endpoints, payloads, estados, permisos, rutas, schemas, variables, dependencias, seeds ni datasets. La ruta objetivo sigue siendo `/matricula/financiera/procesos/:procesoId`.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica las dos nuevas parejas `<dt>/<dd>` y la ausencia de **Cierre** y **Publicación**. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; `dist/assets/index-c9DCvmRh.css` 261.03 kB y `dist/assets/index-DzFjpMER.js` 739.35 kB).
+- Entorno sin cambios: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: validar el acordeón abierto con valores presentes y ausentes, temas claro/oscuro y móvil. El repositorio no incluye backend, credenciales ni seed reproducible para la ruta protegida.
+
+---
+
+# Update 2026-09-25 — porcentajes separados y edición contextual
+
+## Estado y salida esperada
+
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` reemplazó el elemento combinado **Votación / salud** por dos pares de definición: **Porcentaje de votación** con `proceso.porcentajeVotacion` y **Porcentaje de salud** con `proceso.porcentajeSalud`. Ambos muestran `%` y conservan exactamente los valores del DTO.
+- **Editar parámetros** se renderiza ahora dentro del `<details>` **Parámetros y fechas del proceso**, después de la lista de valores. Sigue oculto cuando `proceso.estado === 'PUBLICADO'`, incluye `type="button"` y queda deshabilitado con `blocked`. El formulario que activa conserva su posición y contrato. **Agregar estudiante** permanece fuera del acordeón y solo aparece cuando `allowed('convocar')`.
+- No cambiaron endpoints, payloads, DTO, validaciones, cálculos, estados, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica las dos etiquetas y valores separados, la ausencia del elemento combinado, la ubicación de **Editar parámetros** dentro de `<details>` y la permanencia de **Agregar estudiante** fuera. ESLint focalizado PASS; suite Node PASS (64/64); build PASS (312 módulos; CSS 261.03 kB y JS 739.54 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: comprobar el acordeón, el botón y el formulario con procesos BORRADOR/ABIERTO/CERRADO/PUBLICADO, temas claro/oscuro, teclado y móvil. No existe backend, credenciales ni seed local reproducible para la ruta protegida.
+
+---
+
+# Update 2026-09-25 — claridad del primer envío y advertencia de edición
+
+## Estado y salida esperada
+
+- `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx` etiqueta `fechaEnvioSolicitudes` como **Fecha del primer envío de solicitudes**; ya no debe aparecer el rótulo ambiguo **Primer envío**.
+- Cuando `ParametrosProcesoForm` edita un proceso existente, presenta un bloque `role="note"` con `aria-label="Consecuencias de guardar los parámetros"`, icono `!`, título **Consecuencias de guardar cambios** y el texto: **Guardar recalcula las filas sin valor final manual. Revisa los valores antes de exportar nuevamente.** La creación de un proceso conserva su texto introductorio simple.
+- `MatriculaFinancieraPage.css` define `mf-parameter-warning` con `--error`, `--error-container`, `--on-error` y `--on-error-container`, incluyendo fallbacks. No se hardcodearon colores de superficie o texto fuera de los fallbacks semánticos. No cambiaron comportamiento, DTO, API, payloads, reglas de recálculo, permisos, rutas, estados, dependencias, schemas, variables, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` verifica la nueva etiqueta, la ausencia del rótulo anterior y la estructura/contenido de la advertencia. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; `dist/assets/index-CnU3E77y.css` 261.83 kB y `dist/assets/index-chOILRqA.js` 739.91 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: validar la advertencia en temas claro/oscuro, zoom alto y móvil, y confirmar visualmente su jerarquía frente al formulario. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — agregar estudiante dentro de seguimiento y cierre
+
+## Estado y salida esperada
+
+- En `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`, el botón **Agregar estudiante** ya no ocupa un bloque independiente debajo de los parámetros. Se renderiza como la primera acción de **Seguimiento y cierre**, inmediatamente antes de enviar solicitudes, recordatorios, recalcular o cerrar/reabrir la recepción.
+- Al activarlo, `AgregarEstudiante` se monta dentro de la misma tarjeta **Seguimiento y cierre**, después de la fila de acciones y antes de los mensajes de cierre. La tabla y sus filtros continúan a continuación, por lo que alta manual y listado quedan en el mismo contexto visual.
+- La condición permanece `allowed('convocar')`; los estados y permisos no cambiaron. Se reutilizan `buscarEstudiantes`, `agregarLiquidacion`, el payload `{ estudianteId, tipoEstudiante }`, el bloqueo `blocked` y el refresco existente. No hay cambios de API, DTO, validaciones, rutas, dependencias, variables, schemas, seeds ni datasets.
+
+## Pruebas y continuidad
+
+- `tests/matriculaFinancieraFlow.test.ts` comprueba que tanto el botón como `<AgregarEstudiante>` estén dentro de la sección **Seguimiento y cierre**. ESLint focalizado PASS; suite Node PASS (65/65); build PASS (312 módulos; CSS 261.83 kB y JS 739.86 kB).
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: probar apertura/cierre, búsqueda, alta exitosa/fallida y refresco de tabla en BORRADOR/ABIERTO, escritorio/móvil y temas claro/oscuro. La ruta protegida no dispone de backend, credenciales ni seed local reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — feedback temporal y acción única de evaluadores
+
+## Estado, contrato y salida esperada
+
+- `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` elimina automáticamente cada mensaje exitoso cinco segundos después de mostrarlo y limpia el temporizador al reemplazar el mensaje o desmontar el panel. Los errores permanecen visibles para permitir diagnóstico y reintento.
+- Cuando `formulario === 'designar'`, la cabecera de **Jurados evaluadores** oculta **Agregar evaluador**. El título y los controles del formulario abierto siguen indicando si se agrega o reemplaza un jurado; al cancelar o completar la operación, la acción reaparece cuando el estado admite designaciones.
+- No cambiaron endpoints, DTO, payloads, estados, permisos, rutas, estilos, schemas, variables, dependencias, seeds ni datasets. La salida esperada en `/trabajos-grado/doctorado/solicitudes/:id` es un solo rótulo **Agregar evaluador** durante la captura y la desaparición del aviso exitoso después de 5 s.
+
+## Pruebas, entorno y continuidad
+
+- La regresión está en `tests/procesoEvaluacionFeedback.test.ts`; valida el intervalo, la limpieza del temporizador y la condición que evita la acción duplicada. Prueba focalizada PASS (2/2), suite Node PASS (69/69), ESLint focalizado PASS, build PASS (308 módulos; CSS 260.89 kB y JS 732.68 kB) y `git diff --check` PASS. `npm run lint` global sigue fallando por 9 errores y 1 aviso preexistentes en servicios, admisiones, documentos y solicitudes ajenos a este cambio.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. Este frontend usa Node/npm y obtiene datos del backend institucional; no hay seed, dataset o credenciales reproducibles para la ruta protegida.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Pendiente institucional: validar el alta, reemplazo, reenvío, retiro, recordatorios, correcciones y resultado con sesión/backend reales, además del temporizador, teclado, móvil y temas claro/oscuro. No se obtuvo captura porque el contenedor no tiene Chromium, Chrome ni Firefox, y la ruta protegida carece de credenciales y backend reproducible.
+
+---
+
+# Update 2026-09-25 — visualización de la sustentación programada
+
+## Estado, contrato y salida esperada
+
+- Estudiante y coordinación muestran la información ya retornada por `GET /sapp/procesoEvaluacionTg/solicitud/{solicitudId}`: fecha/hora, modalidad y lugar. Para modalidad `VIRTUAL`, si existe `enlaceSustentacion`, se presenta **Ingresar a la sustentación** como enlace en una pestaña nueva; un enlace no se muestra para una modalidad presencial.
+- `src/modules/trabajos-grado/evaluacion/sustentacion.ts` normaliza tanto el contrato plano real (`fechaSustentacion`, `modalidadSustentacion`, `modalidadSustentacionCodigo`, `lugarSustentacion`, `enlaceSustentacion`) como el objeto legado `sustentacion`. `ProcesoEvaluacionEstudiante.tsx` y `ProcesoEvaluacionPanel.tsx` consumen la misma normalización para evitar divergencias.
+- Para el response de referencia en estado `SUST_PROGRAMADA`, la salida esperada es **25 de septiembre de 2026, 3:03 p. m.**, **Presencial** y **uis**. No debe aparecer un enlace porque `enlaceSustentacion` es `null` y la modalidad es presencial.
+- No cambiaron API, endpoints, payloads, DTO del backend, rutas, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Paths principales: `src/modules/trabajos-grado/evaluacion/sustentacion.ts`, `ProcesoEvaluacionEstudiante.tsx`, `ProcesoEvaluacionPanel.tsx` y sus CSS. Regresión: `tests/sustentacionDetalle.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Resultados locales: regresión focalizada PASS (3/3), suite Node PASS (72/72), ESLint focalizado PASS y build PASS (309 módulos; CSS 261.13 kB y JS 733.39 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso institucional: validar con sesiones reales de estudiante y coordinación los casos presencial/virtual, temas claro/oscuro, móvil, teclado y apertura del enlace. La ruta protegida no tiene credenciales, backend ni seed reproducible en este entorno.
+
+---
+
+# Update 2026-09-25 — nota definitiva de candidatura doctoral
+
+## Estado actual, contrato y salida esperada
+
+- `ProcesoEvaluacionPanel` distingue `CAND_DOCTORAL` mediante
+  `esExamenCandidaturaDoctoral`. En ese único tipo reemplaza **Resultado** por un
+  `input[type=number]` **Nota final**, con rango 0–5 y paso 0.01. La persona de
+  coordinación puede editar el valor antes de enviarlo.
+- Al abrir **Registrar resultado**, `promedioNotasSustentacion` calcula el
+  promedio de las notas de evaluaciones `SUSTENTACION` pertenecientes a jurados
+  activos, lo redondea a dos decimales y lo precarga. Ignora conceptos de
+  documento, notas ausentes/no numéricas y jurados inactivos.
+- Endpoint sin cambios: `POST
+  /sapp/procesoEvaluacionTg/solicitud/{solicitudId}/resultado`. Contrato para
+  candidatura: `{ "resultadoCodigo": "", "notaFinal": 4.00, "actaId": 5 }`.
+  El botón queda deshabilitado sin una nota válida. Para los demás tipos sigue
+  enviándose `{ resultadoCodigo: <selección>, notaFinal: null, actaId }`.
+- Paths: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx`,
+  `src/modules/trabajos-grado/evaluacion/estadoProcesoEvaluacion.ts` y
+  `tests/estadoProcesoEvaluacion.test.ts`. No hay datasets ni seeds nuevos.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no
+  crear venv, Conda, Poetry ni otro árbol npm. Node.js 24.15.0, npm 11.4.2,
+  React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3,
+  Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Verificación focalizada 2026-09-25: prueba de estado/promedio PASS (5/5),
+  ESLint focalizado PASS y build PASS (309 módulos; CSS 261.13 kB y JS 734.12
+  kB). Avisos no bloqueantes: configuración npm heredada `http-proxy` y chunk
+  JavaScript mayor de 500 kB.
+- Pendiente: comprobar con backend y sesión institucional que el acta real se
+  asocie, que la API acepte el resultado vacío y que el promedio/edición sean
+  correctos con varios jurados, temas claro/oscuro y móvil. La ruta protegida no
+  dispone de credenciales ni seed reproducible en el contenedor.
+
+# Update 2026-09-26 — claridad visual de previsualización y alcance de firma
+
+## Estado, contratos y salida esperada
+
+- `SolicitudEstudianteForm` agrega la clase específica `solicitud-estudiante-form__preview-action`: habilitada usa `--primary`/`--on-primary`; deshabilitada usa `--surface-container-low`, texto atenuado, borde semántico y cursor `not-allowed`. No se alteran las demás acciones inline ni la condición `!canPreviewCredito || previewLoading`.
+- En `SolicitudDetallePage`, la acción visible cambió de **Firmar todos los documentos** a **Firmar documentos**. Tras un `POST /sapp/firmasDocumento/solicitudesAcademicas/{solicitudId}` exitoso y la recarga del detalle/documentos, se presenta **Se firmaron únicamente los documentos que requieren tu firma y la información fue actualizada correctamente.**
+- No cambiaron endpoints, payloads, DTO, reglas de asignación/firma, permisos, dependencias, variables, schemas, seeds ni datasets. Paths principales: `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.{tsx,css}`, `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y `tests/firmaSolicitud.test.ts`.
+
+## Entorno, pruebas y continuidad
+
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. El proyecto usa Node/npm y no dispone de seed, dataset, backend o credenciales reproducibles para la ruta protegida.
+- Entorno comprobado: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Resultados locales: regresión focalizada PASS (9/9), suite Node PASS (98/98), ESLint focalizado PASS y build PASS (314 módulos; CSS 268.18 kB; JS 738.31 kB). Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite advierte por el chunk JavaScript mayor de 500 kB.
+- Próximo paso institucional: validar el contraste habilitado/deshabilitado y el mensaje posterior a la firma con una solicitud real, en escritorio/móvil, teclado y temas claro/oscuro.
+
+---
+
+# Update 2026-09-26 — textos de créditos condonables y aprobación directa
+
+## Estado, decisiones y salida esperada
+
+- `src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx` dejó de renderizar el texto **El teléfono y el correo institucional se tomarán automáticamente de la sesión.** encima de la previsualización del crédito condonable. Se conserva el error condicional por datos faltantes y la condición existente que deshabilita el botón; no se alteró el uso interno de teléfono o correo para generar el documento.
+- `getAprobacionTrabajoGradoLabel` en `src/modules/trabajos-grado/constants.ts` devuelve **Aprobar** para **Envío de tema** (`TIPO_TEMA_TRABAJO_GRADO_ID = 13`) y **Grado** (`TIPO_SOLICITUD_GRADO_ID = 9`), independientemente del rótulo de estado enviado/comité. Esos dos trámites se aprueban directamente y no pasan al Consejo.
+- El alcance es deliberadamente específico: otros tipos de trabajo de grado conservan **Aprobar y enviar a consejo académico** cuando están en Comité y **Aprobar y asignar jurados** cuando están en Consejo. No cambiaron endpoints, payloads, DTO, transiciones del backend, permisos, dependencias, variables, schemas, seeds ni datasets.
+
+## Artefactos, pruebas, entorno y continuidad
+
+- Regresiones: `tests/firmaSolicitud.test.ts` comprueba que el texto retirado no reaparezca; `tests/trabajoGradoApprovalLabel.test.ts` cubre los IDs 13 y 9 y preserva los rótulos de los demás tipos.
+- Resultados: suite Node PASS (101/101), ESLint focalizado PASS, build PASS (315 módulos; CSS 268.18 kB; JS 738.35 kB) y `git diff --check` PASS. Avisos no bloqueantes: npm informa `Unknown env config "http-proxy"` y Vite conserva el warning por el chunk JavaScript mayor de 500 kB.
+- Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; este frontend no usa venv, Conda ni Poetry y no debe crearse otro árbol npm.
+- No existe seed, dataset, backend ni credenciales reproducibles para estas rutas protegidas. Próximo paso institucional: validar con solicitudes reales de ambos tipos que el botón diga **Aprobar**, que el backend las deje aprobadas directamente y que otros tipos conserven su flujo; revisar también la creación/previsualización del crédito en escritorio y móvil.
+
+---
+# Update 2026-09-27 — recordatorios masivos de candidatura doctoral
+
+## Estado, decisión y contrato
+
+- `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` monta `RecordatoriosCandidatura` únicamente cuando la sesión incluye el rol `ROLES.COORDINACION` (`COORDINADOR_POSGRADOS`) y el nivel activo es `doctorado`. La acción está antes del listado doctoral porque candidatura pertenece a Proyectos de grado y opera sobre el conjunto completo de estudiantes elegibles, no sobre las filas o filtros visibles. No debe volver a ubicarse en Solicitudes generales.
+- `src/modules/trabajos-grado/components/RecordatoriosCandidatura/` contiene la tarjeta adaptable y su confirmación accesible. Al confirmar llama `enviarRecordatoriosCandidatura()` de `src/modules/trabajos-grado/evaluacion/api.ts`: `POST /solicitudesAcademicas/recordatorio-candidatura`, sin body, con respuesta esperada `{ ok: boolean, message?: string, data: number }`. `data` es la cantidad de correos enviados. El recordatorio masivo no requiere ni debe fabricar un ID de solicitud; el método `enviarRecordatorios(solicitudId)` se conserva aparte para los recordatorios de jurados dentro de un proceso individual.
+- La selección final de destinatarios es responsabilidad del backend. La UI no envía correos, estudiantes ni filtros, evita una ejecución accidental mediante el diálogo, bloquea doble envío y muestra éxito/error. No se añadieron rutas, variables, dependencias, schemas, seeds ni datasets.
+
+## Artefactos, entorno y continuidad
+
+- Paths: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.{tsx,css}`, `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` y `tests/recordatoriosCandidatura.test.ts`.
+- Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Entorno: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+- Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run lint`, `npm run build` y `npm run preview`. No hay seed, backend ni credenciales reproducibles para la ruta protegida.
+- Resultados locales tras ajustar el endpoint: regresión focalizada PASS (3/3), suite Node PASS (126/126), build PASS (322 módulos; CSS 283.68 kB; JS 750.99 kB) y `git diff --check` PASS. `npm run lint` conserva 9 errores y 1 warning preexistentes en archivos ajenos. No se tomó una nueva captura porque este ajuste solo modifica el transporte HTTP y la ruta protegida no dispone de backend o credenciales locales; Vite mantiene el aviso informativo del chunk mayor de 500 kB.
+- Próximo paso institucional: confirmar que `data` representa los estudiantes notificados, que el servidor aplica autorización de coordinación e idempotencia, y validar el correo real, teclado, móvil y temas claro/oscuro con una sesión institucional.
+
+---
+
+# Update 2026-09-27 — entrada monetaria en correcciones unitarias
+
+## Estado actual y decisión
+
+- Se corrigió el formulario **Corregir cálculo** de `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`, que es el flujo de matrícula financiera unitaria. Los dos campos afectados usan la misma función `normalizarMoneda`: **Valor a sumar o restar al cálculo (COP)** la invoca con negativos habilitados y **Total autorizado manualmente (COP, opcional)** con negativos deshabilitados.
+- `src/modules/matricula-financiera/rules.ts` interpreta ahora la entrada visible según `es-CO`: `.` es siempre agrupador de miles y `,` es el único separador decimal, con máximo cuatro cifras. Esto elimina la ambigüedad creada por el formato controlado: escribir `1234` muestra `$ 1.234`; añadir `5` normaliza `12345` y muestra `$ 12.345`. `$ 12.345,6789` se normaliza como `12345.6789`.
+- El contrato de guardado no cambió: `PATCH /sapp/...` continúa recibiendo `ajusteManual: Number(...)` y `valorFinalManual: Number(...) | null` a través de `actualizarLiquidacion(fila.id, 'ajustes', body)`. Cero se conserva y vacío retira el total manual. El backend sigue calculando el resultado definitivo.
+- El texto anterior sobre el servidor fue reemplazado por **Ingresa las correcciones necesarias y revisa los valores antes de guardar. Si cierras esta sección, tus cambios se conservarán.** No hubo cambios visuales, de tokens, permisos, rutas, endpoints, DTO, dependencias, schemas, seeds o datasets.
+
+## Paths, pruebas y salida esperada
+
+- Implementación: `src/modules/matricula-financiera/rules.ts` y `src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx`.
+- Regresiones: `tests/matriculaFinancieraRules.test.ts` reproduce la secuencia real del cuarto al quinto dígito para ambos modos (con y sin signo) y comprueba cuatro decimales con coma; `tests/matriculaFinancieraFlow.test.ts` protege el nuevo mensaje del detalle unitario.
+- Resultado después de integrar `origin/main` el 2026-09-27: suite `node --test --test-isolation=none tests/*.test.ts` PASS (121/121), ESLint focalizado PASS y `npm run build` PASS (318 módulos; `dist/assets/index-Bjsd1pjT.css` 277.74 kB y `dist/assets/index-DMrsiMnx.js` 744.90 kB). Se conservaron las regresiones remotas del tipo de estudiante y las regresiones monetarias; los únicos conflictos eran adiciones concurrentes en este documento y `tests/matriculaFinancieraFlow.test.ts`, resueltas manteniendo ambos bloques. Avisos no bloqueantes: npm reporta las configuraciones heredadas `msvs_version`/`python` y Vite advierte por el chunk JavaScript mayor de 500 kB. No se guardó un log separado; la salida fue la de terminal. `dist/` es salida generada e ignorada.
+
+## Entorno y continuidad
+
+- Workspace: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`. Reutilizar su `node_modules` y `package-lock.json`; no crear otro árbol npm ni entornos venv, Conda o Poetry.
+- Versiones comprobadas: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, `@vitejs/plugin-react-swc` 4.2.2 y ESLint 9.39.2.
+- Comandos: `npm run dev`; pruebas `node --test --test-isolation=none tests/*.test.ts`; lint focalizado `npx eslint src/modules/matricula-financiera/rules.ts src/pages/MatriculaFinanciera/LiquidacionDetallePage.tsx tests/matriculaFinancieraRules.test.ts tests/matriculaFinancieraFlow.test.ts`; producción `npm run build` y `npm run preview`.
+- Próximo paso institucional: con sesión y backend reales, validar ambos inputs mediante teclado y pegado, incluyendo `12.345`, `-12.345`, `12.345,6789`, cero y vacío, en escritorio/móvil y temas claro/oscuro. No hay seed, dataset, backend ni credenciales reproducibles para esa ruta protegida; la fixture aislada está en `tests/fixtures/matricula-financiera/preview.html`.
+
+---
+
+# Update 2026-09-27 — estados finales y cierre de matrícula financiera
+
+## Estado actual y salida esperada
+
+- `etiquetaEstadoLiquidacion('NO_LIQUIDAR')` devuelve **No liquidar**. La tabla y el detalle consumen esa función; el filtro ya usaba la misma denominación. La acción sigue llamándose **Excluir del proceso** porque describe la operación, no el estado resultante.
+- En `LiquidacionDetallePage.tsx`, cuando existe `motivoExclusion`, la salida es **Motivo de exclusión del proceso de liquidación: {motivo}**.
+- Las tarjetas de `MatriculaFinancieraPage.tsx` presentan `p.resumen.respondidas` con **Estudiantes que registraron sus respuestas**. El detalle del proceso conserva sus cinco métricas y sigue excluyendo `conAlertas` del resumen visual.
+- En **Publicar resultados**, el resumen visible contiene solo liquidaciones y pendientes; se retiró **con alertas**. El campo de fecha se etiqueta **Fecha límite de pago de las liquidaciones en el sistema de la universidad**. El payload `publicarProceso(id, fechaPago)` permanece intacto.
+- `puedeCerrarProceso` en `src/modules/matricula-financiera/flow.ts` permite el cierre únicamente cuando `pendientes === 0` y `respondidas === 0`. En procesos abiertos, **Cerrar recepción** queda deshabilitado si alguna fila no está en estado final, el `onClick` repite la guarda y se muestra la instrucción de llevarlas a **Liquidada** o **No liquidar**.
+
+## Contratos, paths y verificación
+
+- No cambiaron `EstadoLiquidacion`, `ResumenProceso`, endpoints ni cuerpos HTTP. Se reutilizan `ProcesoLiquidacion.resumen.respondidas`, `.pendientes`, `.liquidadas` y `.conAlertas`; esta última clave permanece en el DTO para compatibilidad aunque ya no se muestre al publicar.
+- Paths: `src/modules/matricula-financiera/{flow,rules}.ts`; `src/pages/MatriculaFinanciera/{MatriculaFinancieraPage,ProcesoLiquidacionPage,LiquidacionDetallePage}.tsx`; estilos en `MatriculaFinancieraPage.css`; regresiones en `tests/matriculaFinanciera{Flow,Rules}.test.ts`.
+- Resultado local 2026-09-27: pruebas focalizadas PASS (27/27), suite `node --test --test-isolation=none tests/*.test.ts` PASS (123/123), ESLint focalizado PASS y `npm run build` PASS (318 módulos; `dist/assets/index-BBFGJfoW.css` 277.90 kB y `dist/assets/index-DW94RMNd.js` 745.35 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. No se agregaron seeds, datasets ni artefactos persistentes. La fixture aislada continúa en `tests/fixtures/matricula-financiera/preview.html`.
+
+## Continuidad
+
+- Validar con backend y sesión institucional la tarjeta de período, los textos del detalle y publicación, y el botón de cierre en escritorio/móvil y temas claro/oscuro.
+- La protección implementada pertenece al frontend. El backend también debe rechazar `POST /procesos/{id}/cerrar` cuando existan filas `PENDIENTE_RESPUESTA` o `RESPONDIDA`, para garantizar la regla ante clientes externos o peticiones directas.
+
+---
+
+# Update 2026-09-27 — informes a dependencias
+
+- Fuente: Documento sin título (6).docx. El usuario confirmó que matrícula y admisión devuelven el mismo JSON de faltantes; no implementar campos alternativos de estudiantes ni cambiar el contrato.
+- `src/pages/Reportes/ReportesPage.tsx`: convocatorias descendentes por período con comparación numérica; ayuda del acta con botón accesible y tooltip; etiquetas de estudiantes para informes distintos de admisión; no presentar inscripción como identificador de matrícula; controles deshabilitados durante la solicitud para evitar mezclar contextos.
+- Estilos en `ReportesPage.css` con tokens semánticos. Se conserva el parser y el panel compartido, que ya estaban conectados a ambos endpoints. La captura del listado ausente no se reprodujo usando el contrato confirmado; queda pendiente verificar respuesta real y versión desplegada si persiste.
+- `tests/reportesFaltantes.test.mjs` utiliza Vite SSR y fetch simulado con HTTP 409, ejecuta ambos servicios reales y el parser real, comprueba listas institucionales/personales e igualdad entre endpoints. No realiza solicitudes remotas.
+- Validación: `node --test --test-isolation=none tests/reportesFaltantes.test.mjs` PASS (1/1); `npx eslint src/pages/Reportes/ReportesPage.tsx tests/reportesFaltantes.test.mjs` PASS; `npm run build` PASS (318 módulos). La ejecución de Node con aislamiento por proceso dio spawn EPERM; usar el comando documentado sin aislamiento. Sin validación visual en sesión autenticada.
+- Node 24.11.0; React/React DOM 19.2.3; TypeScript 5.9.3; rolldown-vite 7.2.5. Reutilizar node_modules/package-lock.json. Sin instalaciones ni entornos adicionales. Avisos existentes de npm y tamaño de chunk mayor de 500 kB.
+
+# Update 2026-09-27 — fecha límite de pago para coordinación y estudiante
+
+## Estado y contrato
+
+- `ProcesoLiquidacionPage.tsx` agrega a **Parámetros y fechas del proceso** el par **Fecha límite de pago en el sistema de la universidad** / `fechaColombia(proceso.fechaLimitePago)`. Si el proceso todavía no tiene fecha publicada, el formateador presenta **Sin registro**.
+- `MatriculaFinancieraPage.tsx` muestra la fecha dentro de `MiLiquidacionCard` únicamente en el bloque donde ya existe `item.valores`, inmediatamente después de **Total liquidado**. La salida usa `fechaColombia(item.proceso.fechaLimitePago)` y el texto **Fecha límite de pago en el sistema de la universidad**.
+- `MiLiquidacion.proceso` amplió su `Pick<ProcesoLiquidacion, ...>` con `fechaLimitePago`. El campo ya era opcional en `ProcesoLiquidacion`; no se inventó una propiedad ni cambiaron respuestas, endpoints o payloads. El backend de `/mias` debe incluir este valor para que el estudiante vea la fecha real.
+- El bloque `.mf-payment-deadline` usa tokens semánticos y se apila por debajo de 520 px. No usa colores fijos para fondo, texto o borde.
+
+## Paths y verificación
+
+- Implementación: `src/modules/matricula-financiera/types.ts`; `src/pages/MatriculaFinanciera/{MatriculaFinancieraPage,ProcesoLiquidacionPage}.tsx`; estilos compartidos en `MatriculaFinancieraPage.css`. Regresión en `tests/matriculaFinancieraFlow.test.ts`.
+- Resultado acumulado 2026-09-27: focalizadas PASS (28/28), suite Node PASS (124/124), ESLint focalizado PASS y build PASS (318 módulos; `dist/assets/index-Di8aYI7f.css` 278.48 kB y `dist/assets/index-xBXjKdZ6.js` 745.72 kB). Avisos no bloqueantes: configuraciones npm heredadas y chunk JavaScript mayor de 500 kB.
+- No se agregaron dependencias, variables, schemas, seeds ni datasets. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+- Pendiente institucional: verificar que `/mias` incluya `proceso.fechaLimitePago` después de publicar y validar el bloque destacado y el acordeón con sesión real, temas claro/oscuro y móvil.
 
 ---

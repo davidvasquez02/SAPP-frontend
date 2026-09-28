@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
-import { hasAnyRole, isProfesor } from '../../auth/roleGuards'
+import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import InscripcionAccordionWindow from '../../modules/admisiones/components/InscripcionAccordionWindow/InscripcionAccordionWindow'
 import { cambiarEstadoInscripcionVal } from '../../modules/admisiones/api/inscripcionCambioEstadoService'
@@ -22,6 +22,7 @@ import {
 } from '../../modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache'
 import { validateEvaluacionCompleta } from '../../modules/admisiones/utils/validateEvaluacionCompleta'
 import { prefetchInscripcionDocumentos } from '../InscripcionDocumentos/documentosPrefetchCache'
+import { hasEvaluationDrafts } from '../../modules/admisiones/utils/evaluacionDraftStore'
 import './InscripcionAdmisionDetallePage.css'
 
 const INSCRIPCION_SECTIONS = [
@@ -51,6 +52,7 @@ type InscripcionSectionKey = (typeof INSCRIPCION_SECTIONS)[number]['key']
 type ActiveWindow = 'DOCUMENTOS' | 'HOJA_VIDA' | 'EXAMEN' | 'ENTREVISTAS' | null
 export interface InscripcionDetalleOutletContext {
   isEstadoFinal: boolean
+  isEvaluadorOnly: boolean
   evaluacionStatus: 'LOADING' | 'NOT_STARTED' | 'STARTED' | 'ERROR'
   onEvaluacionStarted: () => Promise<void>
 }
@@ -86,22 +88,6 @@ const getFotoSrc = (inscripcion?: InscripcionAdmisionDto | null) => {
   return `data:${foto.mimeType ?? 'image/jpeg'};base64,${foto.contenidoBase64}`
 }
 
-const getEvaluacionLabel = (status: InscripcionDetalleOutletContext['evaluacionStatus']) => {
-  if (status === 'STARTED') {
-    return 'Iniciada'
-  }
-
-  if (status === 'NOT_STARTED') {
-    return 'No iniciada'
-  }
-
-  if (status === 'LOADING') {
-    return 'Consultando...'
-  }
-
-  return 'Con novedad'
-}
-
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 const EVALUACION_RETRY_ATTEMPTS = 5
 const EVALUACION_RETRY_DELAY_MS = 500
@@ -125,6 +111,7 @@ const InscripcionAdmisionDetallePage = () => {
   const [evaluacionMsg, setEvaluacionMsg] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [finalizing, setFinalizing] = useState(false)
+  const [isFinalizeDialogOpen, setIsFinalizeDialogOpen] = useState(false)
   const [finalizeError, setFinalizeError] = useState<string[] | null>(null)
   const [finalizeSuccess, setFinalizeSuccess] = useState<string | null>(null)
   const [componentReloadVersion, setComponentReloadVersion] = useState(0)
@@ -150,7 +137,12 @@ const InscripcionAdmisionDetallePage = () => {
   const [isUpdatingInscripcionEstado, setIsUpdatingInscripcionEstado] = useState(false)
   const [inscripcionEstadoWarning, setInscripcionEstadoWarning] = useState<string | null>(null)
   const didCambioEstadoValRef = useRef<Record<number, boolean>>({})
+  const evaluadorEntrevistaRequestRef = useRef<{
+    inscripcionId: number
+    promise: Promise<void>
+  } | null>(null)
   const prevActiveRef = useRef<ActiveWindow>(null)
+  const finalizeButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const nombreAspirante = inscripcionDetalle?.nombreAspirante ?? routeState?.nombreAspirante ?? 'Aspirante'
   const pageTitle = 'Inscripción'
@@ -184,9 +176,8 @@ const InscripcionAdmisionDetallePage = () => {
   }, [activeKey])
 
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isProfesorOnly =
-    isProfesor(roles) && !hasAnyRole(roles, ['ADMIN', 'COORDINADOR', 'SECRETARIA'])
-  const canFinalizeInscripcion = hasAnyRole(roles, ['ADMIN', 'COORDINADOR'])
+  const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
+  const canFinalizeInscripcion = canManagePosgrados(roles)
   const estadoNormalizado = normalizeEstado(inscripcionEstado)
   const isEstadoFinal = estadoNormalizado === 'ADMITIDO' || estadoNormalizado === 'RECHAZADO'
   const canShowFinalizeSection = canFinalizeInscripcion && !isEstadoFinal
@@ -194,15 +185,19 @@ const InscripcionAdmisionDetallePage = () => {
   const documentoAspirante = inscripcionDetalle?.numeroDocumento ?? inscripcionDetalle?.cedula ?? '—'
   const correoAspirante = inscripcionDetalle?.emailPersonal ?? inscripcionDetalle?.correo ?? '—'
   const telefonoAspirante = inscripcionDetalle?.telefono ?? '—'
-  const codigoInscripcion = inscripcionDetalle?.id ? `INS-${inscripcionDetalle.id}` : inscripcionId ? `INS-${inscripcionId}` : '—'
+  const codigoInscripcion =
+    inscripcionDetalle?.numeroInscripcion ??
+    (inscripcionDetalle?.id
+      ? `INS-${inscripcionDetalle.id}`
+      : inscripcionId
+        ? `INS-${inscripcionId}`
+        : '—')
   const periodoAcademico = inscripcionDetalle?.periodoAcademico ?? '—'
   const fechaInscripcion = formatDisplayDate(inscripcionDetalle?.fechaInscripcion)
   const ultimaActualizacion = formatDisplayDate(inscripcionDetalle?.fechaResultado, {
     hour: '2-digit',
     minute: '2-digit',
   })
-  const evaluacionLabel = getEvaluacionLabel(evaluacionStatus)
-
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
       !convocatoriaId ||
@@ -314,6 +309,22 @@ const InscripcionAdmisionDetallePage = () => {
     setSectionErrors(errors)
   }, [parsedInscripcionId])
 
+  const loadEntrevistaForEvaluador = useCallback(async () => {
+    setEvaluacionStatus('LOADING')
+    setEvaluacionMsg(null)
+
+    try {
+      await prefetchEvaluacionEtapa(parsedInscripcionId, 'ENTREVISTA')
+      setSectionErrors({})
+      setEvaluacionStatus('STARTED')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setSectionErrors({ entrevistas: message })
+      setEvaluacionStatus('ERROR')
+      setEvaluacionMsg(message)
+    }
+  }, [parsedInscripcionId])
+
   const handleEvaluacionStarted = useCallback(async () => {
     setEvaluacionStatus('STARTED')
     setEvaluacionMsg(null)
@@ -329,14 +340,37 @@ const InscripcionAdmisionDetallePage = () => {
 
     void (async () => {
       setIsInitialLoading(true)
-      await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
-      await prefetchAllSections()
+      if (isEvaluadorOnly) {
+        // DOCENTE/PROFESOR/DIRECTOR solo necesitan la entrevista. Esta consulta
+        // también alimenta el caché que consume EvaluacionEtapaPage, evitando
+        // consultar las otras etapas y el endpoint general de evaluación.
+        if (evaluadorEntrevistaRequestRef.current?.inscripcionId !== parsedInscripcionId) {
+          evaluadorEntrevistaRequestRef.current = {
+            inscripcionId: parsedInscripcionId,
+            promise: Promise.all([
+              loadEntrevistaForEvaluador(),
+              reloadInscripcionDetalle(),
+            ]).then(() => undefined),
+          }
+        }
+        await evaluadorEntrevistaRequestRef.current.promise
+      } else {
+        await Promise.all([loadEvaluacionEstado(), reloadInscripcionDetalle()])
+        await prefetchAllSections()
+      }
       setIsInitialLoading(false)
     })()
-  }, [loadEvaluacionEstado, parsedInscripcionId, prefetchAllSections, reloadInscripcionDetalle])
+  }, [
+    isEvaluadorOnly,
+    loadEntrevistaForEvaluador,
+    loadEvaluacionEstado,
+    parsedInscripcionId,
+    prefetchAllSections,
+    reloadInscripcionDetalle,
+  ])
 
   useEffect(() => {
-    if (!isProfesorOnly || !basePath) {
+    if (!isEvaluadorOnly || !basePath) {
       return
     }
 
@@ -347,7 +381,7 @@ const InscripcionAdmisionDetallePage = () => {
     if (activeKey !== 'entrevistas') {
       navigate(`${basePath}/entrevistas`, { replace: true })
     }
-  }, [activeKey, basePath, evaluacionStatus, isProfesorOnly, navigate])
+  }, [activeKey, basePath, evaluacionStatus, isEvaluadorOnly, navigate])
 
   useEffect(() => {
     const previousActiveWindow = prevActiveRef.current
@@ -464,13 +498,7 @@ const InscripcionAdmisionDetallePage = () => {
       return
     }
 
-    const shouldContinue = window.confirm(
-      '¿Deseas calcular puntajes y finalizar esta inscripción? Esta acción bloqueará/confirmará el proceso.',
-    )
-    if (!shouldContinue) {
-      return
-    }
-
+    setIsFinalizeDialogOpen(false)
     setFinalizing(true)
     setFinalizeError(null)
     setFinalizeSuccess(null)
@@ -500,6 +528,30 @@ const InscripcionAdmisionDetallePage = () => {
     reloadInscripcionDetalle,
   ])
 
+  const closeFinalizeDialog = useCallback(() => {
+    if (finalizing) {
+      return
+    }
+
+    setIsFinalizeDialogOpen(false)
+    window.requestAnimationFrame(() => finalizeButtonRef.current?.focus())
+  }, [finalizing])
+
+  useEffect(() => {
+    if (!isFinalizeDialogOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeFinalizeDialog()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [closeFinalizeDialog, isFinalizeDialogOpen])
+
   const sectionAvailability = useMemo<Record<InscripcionSectionKey, boolean>>(
     () => ({
       documentos: true,
@@ -520,6 +572,14 @@ const InscripcionAdmisionDetallePage = () => {
         return
       }
 
+      if (
+        !Number.isNaN(parsedInscripcionId) &&
+        hasEvaluationDrafts(parsedInscripcionId) &&
+        !window.confirm('Hay calificaciones sin guardar. Puedes cambiar de sección sin perderlas. ¿Deseas continuar?')
+      ) {
+        return
+      }
+
       if (activeKey === sectionKey) {
         navigate(basePath)
         return
@@ -532,27 +592,32 @@ const InscripcionAdmisionDetallePage = () => {
 
       navigate(`${basePath}/${section.pathSuffix}`)
     },
-    [activeKey, basePath, navigate, sectionAvailability],
+    [activeKey, basePath, navigate, parsedInscripcionId, sectionAvailability],
   )
 
   const outlet = (
     <Outlet
       context={{
         isEstadoFinal,
+        isEvaluadorOnly,
         evaluacionStatus,
         onEvaluacionStarted: handleEvaluacionStarted,
       } satisfies InscripcionDetalleOutletContext}
     />
   )
-  const sectionsToRender = isProfesorOnly
+  const sectionsToRender = isEvaluadorOnly
     ? INSCRIPCION_SECTIONS.filter((section) => section.key === 'entrevistas')
     : INSCRIPCION_SECTIONS
+  const backDestination = isEvaluadorOnly
+    ? '/admisiones'
+    : `/admisiones/convocatoria/${convocatoriaId}`
+  const [isProfileMetaExpanded, setIsProfileMetaExpanded] = useState(false)
 
   return (
     <ModuleLayout title="Admisiones">
       <section className="inscripcion-detalle">
-        <BackButton to={`/admisiones/convocatoria/${convocatoriaId}`}>
-          Volver a convocatoria
+        <BackButton to={backDestination}>
+          {isEvaluadorOnly ? 'Volver a inscripciones' : 'Volver a convocatoria'}
         </BackButton>
 
         <h1 className="inscripcion-detalle__title">{pageTitle}</h1>
@@ -576,22 +641,32 @@ const InscripcionAdmisionDetallePage = () => {
               ) : null}
             </div>
             <div className="inscripcion-detalle__contact-grid">
-              <span>🪪 Documento: <strong>{documentoAspirante}</strong></span>
-              <span>✉️ Correo: <strong>{correoAspirante}</strong></span>
-              <span>☎️ Teléfono: <strong>{telefonoAspirante}</strong></span>
+              <span>Documento: <strong>{documentoAspirante}</strong></span>
+              <span>Correo: <strong>{correoAspirante}</strong></span>
+              <span>Teléfono: <strong>{telefonoAspirante}</strong></span>
             </div>
           </div>
 
-          <div className="inscripcion-detalle__profile-meta">
-            <div className="inscripcion-detalle__meta-item">
-              <span>Programa</span>
-              <strong>{programaAcademico ?? '—'}</strong>
-            </div>
-            <div className="inscripcion-detalle__meta-item">
-              <span>Código de inscripción</span>
-              <strong>{codigoInscripcion}</strong>
-            </div>
-            <div className="inscripcion-detalle__meta-row">
+          <div className={`inscripcion-detalle__profile-meta${isProfileMetaExpanded ? ' inscripcion-detalle__profile-meta--expanded' : ''}`}>
+            <button
+              type="button"
+              className="inscripcion-detalle__profile-meta-toggle"
+              aria-expanded={isProfileMetaExpanded}
+              aria-controls="inscripcion-profile-meta-content"
+              onClick={() => setIsProfileMetaExpanded((current) => !current)}
+            >
+              Datos de la inscripción
+            </button>
+            <div id="inscripcion-profile-meta-content" className="inscripcion-detalle__profile-meta-content">
+              <div className="inscripcion-detalle__meta-item">
+                <span>Programa</span>
+                <strong>{programaAcademico ?? '—'}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-item">
+                <span>Código de inscripción</span>
+                <strong>{codigoInscripcion}</strong>
+              </div>
+              <div className="inscripcion-detalle__meta-row">
               <div className="inscripcion-detalle__meta-item">
                 <span>Período</span>
                 <strong>{periodoAcademico}</strong>
@@ -604,6 +679,7 @@ const InscripcionAdmisionDetallePage = () => {
                 <span>Última actualización</span>
                 <strong>{ultimaActualizacion}</strong>
               </div>
+              </div>
             </div>
           </div>
         </section>
@@ -614,20 +690,6 @@ const InscripcionAdmisionDetallePage = () => {
             <div>
               <span>Estado de inscripción</span>
               <strong>{inscripcionEstado ? inscripcionEstado.replaceAll('_', ' ') : '—'}</strong>
-            </div>
-          </div>
-          <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">🎓</span>
-            <div>
-              <span>Programa</span>
-              <strong>{programaAcademico ?? '—'}</strong>
-            </div>
-          </div>
-          <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
-            <div>
-              <span>Estado de evaluación</span>
-              <strong>{evaluacionLabel}</strong>
             </div>
           </div>
         </section>
@@ -710,9 +772,10 @@ const InscripcionAdmisionDetallePage = () => {
               Finaliza la evaluación y calcula puntajes finales.
             </p>
             <button
+              ref={finalizeButtonRef}
               type="button"
               className="inscripcion-detalle__finalize-button"
-              onClick={() => void handleFinalizarInscripcion()}
+              onClick={() => setIsFinalizeDialogOpen(true)}
               disabled={finalizing || evaluacionStatus !== 'STARTED'}
               title={
                 evaluacionStatus !== 'STARTED'
@@ -740,6 +803,58 @@ const InscripcionAdmisionDetallePage = () => {
               </p>
             ) : null}
           </section>
+        ) : null}
+
+        {isFinalizeDialogOpen ? (
+          <div
+            className="inscripcion-detalle__dialog-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeFinalizeDialog()
+              }
+            }}
+          >
+            <section
+              className="inscripcion-detalle__dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="finalize-dialog-title"
+              aria-describedby="finalize-dialog-description"
+            >
+              <div className="inscripcion-detalle__dialog-heading">
+                <span className="inscripcion-detalle__dialog-mark" aria-hidden="true">✓</span>
+                <div>
+                  <h2 id="finalize-dialog-title">Finalizar evaluación</h2>
+                  <p id="finalize-dialog-description">
+                    Se calcularán los puntajes finales de {nombreAspirante} y la evaluación quedará cerrada para edición.
+                  </p>
+                </div>
+              </div>
+              <p className="inscripcion-detalle__dialog-note">
+                Confirma únicamente cuando todas las calificaciones y observaciones estén completas.
+              </p>
+              <div className="inscripcion-detalle__dialog-actions">
+                <button
+                  type="button"
+                  className="inscripcion-detalle__dialog-button inscripcion-detalle__dialog-button--secondary"
+                  disabled={finalizing}
+                  onClick={closeFinalizeDialog}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="inscripcion-detalle__dialog-button inscripcion-detalle__dialog-button--primary"
+                  disabled={finalizing}
+                  autoFocus
+                  onClick={() => void handleFinalizarInscripcion()}
+                >
+                  {finalizing ? 'Finalizando…' : 'Calcular y finalizar'}
+                </button>
+              </div>
+            </section>
+          </div>
         ) : null}
       </section>
     </ModuleLayout>

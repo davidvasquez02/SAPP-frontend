@@ -4,7 +4,7 @@ import { useAuth } from '../../context/Auth'
 import { hasAnyRole } from '../../auth/roleGuards'
 
 type RequireRolesProps = {
-  allowedRoles: string[]
+  allowedRoles: readonly string[]
   children: ReactNode
 }
 

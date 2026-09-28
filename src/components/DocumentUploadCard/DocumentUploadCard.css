@@ -111,21 +111,40 @@
   align-items: center;
 }
 
-.document-upload-card__file {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  border: 1px dashed var(--outline);
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--surface), var(--outline) 10%);
-  cursor: pointer;
+.document-upload-card__file-limit {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
-.document-upload-card__file input {
-  display: none;
+.document-upload-card__selected-files {
+  flex-basis: 100%;
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.document-upload-card__selected-files li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.document-upload-card__selected-files button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .document-upload-card__button {

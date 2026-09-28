@@ -19,6 +19,11 @@ export interface EstadoSolicitudDto {
 
 export interface SolicitudAcademicaDto {
   id: number
+  actaId?: number | null
+  actaCodigo?: string | null
+  actaNombre?: string | null
+  actaFechaCreacion?: string | null
+  actaTipoConsejo?: boolean | null
   estudianteId: number
   estudiante: string
   codigoEstudianteUis: string
@@ -33,8 +38,21 @@ export interface SolicitudAcademicaDto {
   fechaRegistro: string
   fechaResolucion: string | null
   observaciones: string | null
+  motivoRechazo?: string | null
   motivosCreditoCondonable?: string[] | null
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaDetalleDto[] | null
+  tituloTrabajo?: string | null
+  resumenTrabajo?: string | null
+  solicitudCreditoCondonable?: SolicitudCreditoCondonableDetalleDto | null
+}
+
+export interface SolicitudCreditoCondonableDetalleDto {
+  id: number
+  modalidadId: number
+  modalidadNombre: string
+  personaAsignadaId: number | null
+  personaAsignadaNombre: string | null
+  solicitudAcademicaId: number
 }
 
 export interface SolicitudHomologacionAsignaturaDetalleDto {
@@ -47,6 +65,22 @@ export interface SolicitudHomologacionAsignaturaDetalleDto {
   asignaturaDestinoNombre: string
 }
 
+export interface HomologacionHistorialDto extends SolicitudHomologacionAsignaturaDetalleDto {
+  fechaHomologacion: string
+  activa: boolean
+  actaId: number | null
+  actaCodigo: string | null
+  actaNombre: string | null
+}
+
+export interface SolicitudHistorialDto {
+  estadoNuevoSigla: string
+  estadoNuevo: string
+  fecha: string
+  responsable: string | null
+  detalle: string | null
+}
+
 export interface CreateSolicitudRequestDto {
   estudianteId: number
   tipoSolicitudId: number
@@ -55,6 +89,8 @@ export interface CreateSolicitudRequestDto {
   modalidadId?: number
   motivosCreditoCondonable?: string[]
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
+  tituloTrabajo?: string
+  resumenTrabajo?: string
 }
 
 export interface CreateSolicitudResponseDto {
@@ -95,7 +131,7 @@ export type SolicitudHomologacionAsignaturaRequestDto =
     }
   | {
       nombreAsignaturaExterna: string
-      codigoAsignaturaExterna?: string
+      codigoAsignaturaExterna: string
       asignatura_destino_id: number
     }
 

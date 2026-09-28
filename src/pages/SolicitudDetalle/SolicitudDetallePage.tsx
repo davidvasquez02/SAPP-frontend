@@ -1,28 +1,44 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
+import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
-import { hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { updateSolicitudEstudiante } from '../../modules/solicitudes/services/solicitudesMockService'
 import {
   firmarDocumentosSolicitudAcademica,
+  getHistorialHomologaciones,
+  getHistorialSolicitudAcademica,
   getSolicitudAcademicaById,
+  getSolicitudesAcademicasByEstudiante,
+  getSolicitudesAcademicasAsignadas,
 } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import {
   cambiarEstadoSolicitud,
   type SolicitudEstadoTarget,
 } from '../../modules/solicitudes/api/solicitudCambioEstadoService'
-import { getTiposSolicitud } from '../../modules/solicitudes/api/tipoSolicitudService'
 import { getSolicitudDocumentosAdjuntos } from '../../modules/solicitudes/api/solicitudDocumentosService'
+import { getActas } from '../../modules/actas/api'
+import type { ActaDto } from '../../modules/actas/types'
 import DocumentosAdjuntos from '../../modules/solicitudes/components/DocumentosAdjuntos/DocumentosAdjuntos'
 import StatusBadge from '../../modules/solicitudes/components/StatusBadge/StatusBadge'
-import SolicitudDocumentosEditor, {
-  type SolicitudDocumentosEditorHandle,
-} from '../../modules/solicitudes/components/SolicitudDocumentosEditor/SolicitudDocumentosEditor'
-import type { SolicitudAcademicaDto } from '../../modules/solicitudes/api/types'
-import type { TipoSolicitudDto } from '../../modules/solicitudes/types'
+import type { HomologacionHistorialDto, SolicitudAcademicaDto, SolicitudHistorialDto } from '../../modules/solicitudes/api/types'
 import type { SolicitudDocumentoAdjuntoDto } from '../../modules/solicitudes/types/documentosAdjuntos'
 import { normalizeEstadoSolicitud } from '../../modules/solicitudes/utils/estadoSolicitud'
+import { isTipoCreditoCondonable } from '../../modules/solicitudes/utils/creditoCondonable'
+import {
+  estaAsignadaSolicitudAlUsuario,
+  puedeFirmarDocumentosSolicitud,
+} from '../../modules/solicitudes/utils/firmaSolicitud'
+import {
+  esExamenCandidaturaDoctoral,
+  getAprobacionTrabajoGradoLabel,
+  tieneProcesoEvaluacionTg,
+} from '../../modules/trabajos-grado/constants'
+import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
+import ProcesoEvaluacionEstudiante from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante'
+import AjustesEstudiantePanel from '../../modules/trabajos-grado/evaluacion/AjustesEstudiantePanel'
+import { getProcesoEvaluacion } from '../../modules/trabajos-grado/evaluacion/api'
+import type { ProcesoEvaluacionTg } from '../../modules/trabajos-grado/evaluacion/types'
 import './SolicitudDetallePage.css'
 
 const getErrorMessage = (error: unknown, fallback: string) =>
@@ -37,46 +53,59 @@ const formatDate = (value: string | null) => {
   return `${day}/${month}/${year}`
 }
 
-const CREDIT_TYPE_CODES = new Set(['CRED_COND', 'RENOV_CRED_COND'])
-
-const isCreditoCondonable = (codigo: string | null | undefined) =>
-  CREDIT_TYPE_CODES.has(codigo?.trim().toLocaleUpperCase() ?? '')
-
-const getTipoSolicitudCode = (tipo: TipoSolicitudDto | undefined) =>
-  tipo?.codigoNombre?.split(' - ', 1)[0]?.trim().toLocaleUpperCase() ?? ''
+const formatHistoryDate = (value: string) => {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return value
+  const [, year, month, day, hour, minute, second] = match
+  return `${day}/${month}/${year}, ${hour}:${minute}${second ? `:${second}` : ''}`
+}
 
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
-  const isCoordinador = hasAnyRole(roles, ['COORDINADOR'])
+  const isCoordinador = canManagePosgrados(roles)
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
+  const estudianteId = session?.kind === 'SAPP'
+    ? (session.user.estudiante?.id ?? session.user.detalle.estudiante?.id ?? null)
+    : null
+  const debeValidarPropiedadEstudiante = isEstudiante && !isCoordinador
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
-  const documentosEditorRef = useRef<SolicitudDocumentosEditorHandle | null>(null)
+  const processActasRequestedRef = useRef(false)
 
   const [solicitud, setSolicitud] = useState<SolicitudAcademicaDto | null>(null)
-  const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
-  const [editMode, setEditMode] = useState(false)
-  const [draftTipoSolicitudId, setDraftTipoSolicitudId] = useState<number | null>(null)
-  const [draftObservaciones, setDraftObservaciones] = useState('')
-  const [draftMotivosCredito, setDraftMotivosCredito] = useState<string[]>([''])
-  const [formError, setFormError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [historialHomologaciones, setHistorialHomologaciones] = useState<HomologacionHistorialDto[]>([])
+  const [showHistorialHomologaciones, setShowHistorialHomologaciones] = useState(false)
+  const [historialLoading, setHistorialLoading] = useState(false)
+  const [historialError, setHistorialError] = useState<string | null>(null)
+  const [historialSolicitud, setHistorialSolicitud] = useState<SolicitudHistorialDto[]>([])
+  const [historialSolicitudLoading, setHistorialSolicitudLoading] = useState(false)
+  const [historialSolicitudError, setHistorialSolicitudError] = useState<string | null>(null)
   const [documentos, setDocumentos] = useState<SolicitudDocumentoAdjuntoDto[]>([])
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
+  const [showConsejoConfirmation, setShowConsejoConfirmation] = useState(false)
+  const [showActaSelection, setShowActaSelection] = useState(false)
+  const [actas, setActas] = useState<ActaDto[]>([])
+  const [selectedActaId, setSelectedActaId] = useState('')
+  const [actasLoading, setActasLoading] = useState(false)
+  const [actasError, setActasError] = useState<string | null>(null)
+  const [pendingEnviarConsejo, setPendingEnviarConsejo] = useState<boolean | undefined>()
+  const [showRejectionDialog, setShowRejectionDialog] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionReasonError, setRejectionReasonError] = useState<string | null>(null)
   const [isSigning, setIsSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
   const [signSuccess, setSignSuccess] = useState<string | null>(null)
-
-  const fromAssigned = Boolean((location.state as { fromAssigned?: boolean } | null)?.fromAssigned)
+  const [isAssignedToCurrentUser, setIsAssignedToCurrentUser] = useState(false)
+  const [isSignedAssignmentConsumed, setIsSignedAssignmentConsumed] = useState(false)
+  const [procesoEvaluacion, setProcesoEvaluacion] = useState<ProcesoEvaluacionTg | null>(null)
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
@@ -89,58 +118,106 @@ const SolicitudDetallePage = () => {
     let mounted = true
     setLoading(true)
     setError(null)
+    setSolicitud(null)
+    setHistorialHomologaciones([])
+    setShowHistorialHomologaciones(false)
+    setHistorialError(null)
+    setHistorialSolicitud([])
+    setHistorialSolicitudLoading(true)
+    setHistorialSolicitudError(null)
 
-    getSolicitudAcademicaById(parsedId)
+    const solicitudRequest = debeValidarPropiedadEstudiante
+      ? estudianteId == null
+        ? Promise.reject(new Error('No fue posible validar el estudiante de la sesión.'))
+        : getSolicitudesAcademicasByEstudiante(estudianteId).then((solicitudes) => {
+            const solicitudPropia = solicitudes.find((item) => item.id === parsedId)
+
+            if (!solicitudPropia) {
+              throw new Error('No tienes permiso para consultar esta solicitud.')
+            }
+
+            return solicitudPropia
+          })
+      : getSolicitudAcademicaById(parsedId)
+
+    solicitudRequest
       .then((response) => {
-        if (!mounted) {
-          return
-        }
+        if (!mounted) return
         setSolicitud(response)
-        setDraftTipoSolicitudId(response.tipoSolicitudId)
-        setDraftObservaciones(response.observaciones ?? '')
-        setDraftMotivosCredito(response.motivosCreditoCondonable?.length ? response.motivosCreditoCondonable : [''])
-        setEditMode(false)
+        setIsSignedAssignmentConsumed(false)
+        setLoading(false)
+        getHistorialSolicitudAcademica(response.id)
+          .then((history) => {
+            if (mounted) setHistorialSolicitud(history)
+          })
+          .catch((historyError) => {
+            if (mounted) {
+              setHistorialSolicitudError(getErrorMessage(historyError, 'No fue posible cargar el histórico de cambios.'))
+            }
+          })
+          .finally(() => {
+            if (mounted) setHistorialSolicitudLoading(false)
+          })
       })
       .catch((fetchError) => {
-        if (!mounted) {
-          return
-        }
-        setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar la solicitud.')
-      })
-      .finally(() => {
         if (mounted) {
+          setError(fetchError instanceof Error ? fetchError.message : 'No fue posible cargar la solicitud.')
           setLoading(false)
+          setHistorialSolicitudLoading(false)
         }
       })
 
     return () => {
       mounted = false
     }
-  }, [solicitudId])
+  }, [debeValidarPropiedadEstudiante, estudianteId, solicitudId])
 
   useEffect(() => {
-    if (!isEstudiante) {
-      setTiposSolicitud([])
+    const parsedId = Number(solicitudId ?? '')
+    if (usuarioSappId == null || !Number.isInteger(parsedId)) {
+      setIsAssignedToCurrentUser(false)
       return
     }
 
     let mounted = true
-    getTiposSolicitud()
-      .then((tipos) => {
-        if (mounted) {
-          setTiposSolicitud(tipos)
-        }
+    getSolicitudesAcademicasAsignadas(usuarioSappId)
+      .then((asignadas) => {
+        if (mounted) setIsAssignedToCurrentUser(asignadas.some((item) => item.id === parsedId))
       })
       .catch(() => {
-        if (mounted) {
-          setTiposSolicitud([])
-        }
+        if (mounted) setIsAssignedToCurrentUser(false)
       })
 
     return () => {
       mounted = false
     }
-  }, [isEstudiante])
+  }, [solicitudId, usuarioSappId])
+
+  useEffect(() => {
+    if (
+      solicitud == null ||
+      (!isCoordinador && !isEstudiante) ||
+      !tieneProcesoEvaluacionTg(solicitud.tipoSolicitudCodigo)
+    ) {
+      setProcesoEvaluacion(null)
+      return
+    }
+
+    let mounted = true
+    getProcesoEvaluacion(solicitud.id)
+      .then((proceso) => {
+        if (mounted) setProcesoEvaluacion(proceso)
+      })
+      .catch(() => {
+        // El proceso puede no existir antes de la aprobación. En ese caso se
+        // conservan los datos que entregue el detalle de la solicitud.
+        if (mounted) setProcesoEvaluacion(null)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [isCoordinador, isEstudiante, solicitud])
 
   const loadDocumentos = useCallback(async (tramiteId: number, codigoTipoTramite: string) => {
     setDocsLoading(true)
@@ -179,89 +256,95 @@ const SolicitudDetallePage = () => {
     void loadDocumentos(solicitudTramiteId, codigoTipoTramite)
   }, [codigoTipoTramite, loadDocumentos, solicitudTramiteId])
 
-  const editableSolicitud =
-    isEstudiante &&
-    ['ENVIADA', 'EN_REVISION', 'DEVUELTA', 'RECHAZADA'].includes(
-      normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado),
-    )
-
-  const handleGuardarEdicion = async () => {
-    if (!solicitud || draftTipoSolicitudId == null) {
-      setFormError('Debes seleccionar un tipo de solicitud.')
-      return
-    }
-
-    setSaving(true)
-    setError(null)
-    setFormError(null)
-    setSuccessMessage(null)
-
-    try {
-      const updated = await updateSolicitudEstudiante(solicitud.id, {
-        tipoSolicitudId: draftTipoSolicitudId,
-        observaciones: draftObservaciones.trim(),
-        motivosCreditoCondonable: showDraftMotivosCredito
-          ? draftMotivosCredito.map((item) => item.trim()).filter(Boolean)
-          : [],
-      })
-
-      if (documentosEditorRef.current) {
-        await documentosEditorRef.current.commitChanges()
-      }
-
-      setSolicitud(updated)
-      setDraftTipoSolicitudId(updated.tipoSolicitudId)
-      setDraftObservaciones(updated.observaciones ?? '')
-      setDraftMotivosCredito(updated.motivosCreditoCondonable?.length ? updated.motivosCreditoCondonable : [''])
-      setEditMode(false)
-      setSuccessMessage('Cambios guardados (mock)')
-      const codigoTipoTramite = updated.tipoTramiteCodigo?.trim()
-      if (codigoTipoTramite) {
-        await loadDocumentos(updated.id, codigoTipoTramite)
-      }
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'No fue posible guardar los cambios.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleCancelarEdicion = () => {
-    if (!solicitud) {
-      return
-    }
-    setDraftTipoSolicitudId(solicitud.tipoSolicitudId)
-    setDraftObservaciones(solicitud.observaciones ?? '')
-    setDraftMotivosCredito(solicitud.motivosCreditoCondonable?.length ? solicitud.motivosCreditoCondonable : [''])
-    setFormError(null)
-    setEditMode(false)
-  }
-
-
-  const updateDraftMotivo = (index: number, value: string) => {
-    setDraftMotivosCredito((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)))
-  }
-
-  const addDraftMotivo = () => {
-    setDraftMotivosCredito((current) => [...current, ''])
-  }
-
-  const removeDraftMotivo = (index: number) => {
-    setDraftMotivosCredito((current) => (current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current))
-  }
-
   const currentEstado = normalizeEstadoSolicitud(solicitud?.estadoSigla || solicitud?.estado)
-  const showMotivosCredito = isCreditoCondonable(solicitud?.tipoSolicitudCodigo)
-  const draftTipoSolicitud = tiposSolicitud.find((tipo) => tipo.id === draftTipoSolicitudId)
-  const showDraftMotivosCredito = draftTipoSolicitud
-    ? isCreditoCondonable(getTipoSolicitudCode(draftTipoSolicitud))
-    : draftTipoSolicitudId === solicitud?.tipoSolicitudId && showMotivosCredito
-  const canResolveSolicitud = isCoordinador && currentEstado === 'ENVIADA'
-  const estadoPermiteFirma = [solicitud?.estado, solicitud?.estadoSigla].some((estado) =>
-    estado?.trim().toLocaleUpperCase().includes('POR FIRMA'),
+  const estadoAntesDeResolver = `${solicitud?.estadoSigla ?? ''} ${solicitud?.estado ?? ''}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+  const estabaEnConsejo = estadoAntesDeResolver.includes('CONSEJO')
+  const estabaEnComite =
+    !estabaEnConsejo && (currentEstado === 'ENVIADA' || estadoAntesDeResolver.includes('COMITE'))
+  const estabaEnInstanciaResolutiva = estabaEnComite || estabaEnConsejo
+  const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
+  const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
+  const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
+    solicitud?.tipoSolicitudId,
+    solicitud?.estadoSigla,
+    solicitud?.estado,
   )
-  const canSignAllDocuments =
-    fromAssigned && estadoPermiteFirma
+  const personaAsignadaId = solicitud?.solicitudCreditoCondonable?.personaAsignadaId
+  const estaAsignadaAlUsuario = estaAsignadaSolicitudAlUsuario({
+    personaAsignadaId,
+    personaSesionId: session?.user.persona.id,
+    incluidaEnSolicitudesAsignadas: isAssignedToCurrentUser,
+  })
+  const canSignAllDocuments = puedeFirmarDocumentosSolicitud({
+    estaAsignadaAlUsuario: !isSignedAssignmentConsumed && estaAsignadaAlUsuario,
+    estado: solicitud?.estado,
+    estadoSigla: solicitud?.estadoSigla,
+  })
+  const showActaAsociada = currentEstado === 'APROBADA' && solicitud?.actaId != null
+  const showProcesoEvaluacion =
+    isCoordinador &&
+    tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo) &&
+    !['ENVIADA', 'EN_REVISION', 'ENVIADA_COMITE', 'ENVIADA_CONSEJO', 'RECHAZADA'].includes(
+      solicitud?.estadoSigla?.trim().toLocaleUpperCase() ?? '',
+    )
+  const showAjustesEstudiante =
+    isEstudiante &&
+    solicitud != null &&
+    [4, 5, 6, 7, 8, 9].includes(solicitud.tipoSolicitudId)
+  const solicitudEnAjustes =
+    solicitud?.estadoId === 16 || solicitud?.estadoSigla?.trim().toLocaleUpperCase() === 'EN_AJUSTES'
+  const tituloTrabajo = solicitud?.tituloTrabajo?.trim() || procesoEvaluacion?.titulo?.trim() || ''
+  const resumenTrabajo = solicitud?.resumenTrabajo?.trim() || procesoEvaluacion?.resumen?.trim() || ''
+  const esCandidaturaDoctoral = esExamenCandidaturaDoctoral(
+    solicitud?.tipoSolicitudId,
+    solicitud?.tipoSolicitudCodigo,
+  )
+  const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
+  const esSolicitudTrabajoGrado = tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo)
+  const isHomologacion = solicitud?.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG'
+  const showHistorialAction = isCoordinador && isHomologacion && !['APROBADA', 'RECHAZADA'].includes(currentEstado)
+
+  const handleToggleHistorial = async () => {
+    if (showHistorialHomologaciones) {
+      setShowHistorialHomologaciones(false)
+      return
+    }
+
+    setShowHistorialHomologaciones(true)
+    if (historialHomologaciones.length > 0 || historialLoading) return
+
+    setHistorialLoading(true)
+    setHistorialError(null)
+    try {
+      setHistorialHomologaciones(await getHistorialHomologaciones())
+    } catch (historyError) {
+      setHistorialError(getErrorMessage(historyError, 'No fue posible cargar el historial de homologaciones.'))
+    } finally {
+      setHistorialLoading(false)
+    }
+  }
+
+  const refreshSolicitud = useCallback(async () => {
+    if (!solicitud) return
+    const refreshed = await getSolicitudAcademicaById(solicitud.id)
+    setSolicitud(refreshed)
+    setHistorialSolicitud(await getHistorialSolicitudAcademica(refreshed.id))
+    const codigo = refreshed.tipoTramiteCodigo?.trim()
+    if (codigo) await loadDocumentos(refreshed.id, codigo)
+  }, [loadDocumentos, solicitud])
+
+  useEffect(() => {
+    if (!showProcesoEvaluacion || actas.length > 0 || actasLoading || processActasRequestedRef.current) return
+    processActasRequestedRef.current = true
+    setActasLoading(true)
+    getActas()
+      .then(setActas)
+      .catch(() => setActas([]))
+      .finally(() => setActasLoading(false))
+  }, [actas.length, actasLoading, showProcesoEvaluacion])
 
   const handleFirmarDocumentos = async () => {
     if (!solicitud) {
@@ -276,6 +359,10 @@ const SolicitudDetallePage = () => {
     try {
       await firmarDocumentosSolicitudAcademica(solicitud.id)
       firmaCompletada = true
+      // Una firma exitosa consume la asignación actual. El detalle actualizado
+      // confirmará después quién es el siguiente responsable del trámite.
+      setIsAssignedToCurrentUser(false)
+      setIsSignedAssignmentConsumed(true)
       setDocsLoading(true)
       setDocsError(null)
 
@@ -292,15 +379,18 @@ const SolicitudDetallePage = () => {
       })
 
       setSolicitud(solicitudActualizada)
+      setIsSignedAssignmentConsumed(false)
       setDocumentos(documentosActualizados)
-      setSignSuccess('Todos los documentos fueron firmados y la información fue actualizada correctamente.')
+      setSignSuccess(
+        'Se firmaron únicamente los documentos que requieren tu firma y la información fue actualizada correctamente.',
+      )
     } catch (signingError) {
       setSignError(
         firmaCompletada
           ? getErrorMessage(
-              signingError,
-              'Los documentos fueron firmados, pero no fue posible actualizar la información en pantalla.',
-            )
+            signingError,
+            'Los documentos fueron firmados, pero no fue posible actualizar la información en pantalla.',
+          )
           : getErrorMessage(signingError, 'No fue posible firmar los documentos de la solicitud.'),
       )
     } finally {
@@ -309,7 +399,14 @@ const SolicitudDetallePage = () => {
     }
   }
 
-  const handleResolverSolicitud = async (target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>) => {
+  const isSolicitudOtra = solicitud?.tipoSolicitudId === 11
+
+  const handleResolverSolicitud = async (
+    target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>,
+    enviarConsejo?: boolean,
+    actaId?: number,
+    observaciones?: string,
+  ) => {
     if (!solicitud || !canResolveSolicitud) {
       return
     }
@@ -319,7 +416,7 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, target)
+      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo, actaId, observaciones })
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -335,10 +432,87 @@ const SolicitudDetallePage = () => {
     }
   }
 
+  const openActaSelection = async (enviarConsejo?: boolean) => {
+    setPendingEnviarConsejo(enviarConsejo)
+    setSelectedActaId('')
+    setActas([])
+    setActasError(null)
+    setShowActaSelection(true)
+    setActasLoading(true)
+
+    try {
+      const response = await getActas()
+      setActas(
+        response.filter((acta) =>
+          estabaEnConsejo ? acta.tipoConsejo === true : (acta.tipoConsejo === null || acta.tipoConsejo === false),
+        ),
+      )
+    } catch (actasFetchError) {
+      setActasError(getErrorMessage(actasFetchError, 'No fue posible consultar las actas disponibles.'))
+    } finally {
+      setActasLoading(false)
+    }
+  }
+
+  const handleApproveClick = () => {
+    if (isSolicitudOtra && estabaEnComite) {
+      setShowConsejoConfirmation(true)
+      return
+    }
+
+    void openActaSelection()
+  }
+
+  const handleConsejoDecision = (enviarConsejo: boolean) => {
+    setShowConsejoConfirmation(false)
+    void openActaSelection(enviarConsejo)
+  }
+
+  const handleConfirmApproval = () => {
+    const actaId = Number(selectedActaId)
+    if (!Number.isInteger(actaId) || actaId <= 0) {
+      setActasError('Debes seleccionar el acta asociada a la aprobación.')
+      return
+    }
+
+    setShowActaSelection(false)
+    void handleResolverSolicitud('APROBADA', pendingEnviarConsejo, actaId)
+  }
+
+  const handleRejectClick = () => {
+    setRejectionReason('')
+    setRejectionReasonError(null)
+    setShowRejectionDialog(true)
+  }
+
+  const handleConfirmRejection = () => {
+    const motivo = rejectionReason.trim()
+    if (!motivo) {
+      setRejectionReasonError('Debes indicar el motivo del rechazo.')
+      return
+    }
+
+    setShowRejectionDialog(false)
+    void handleResolverSolicitud('RECHAZADA', undefined, undefined, motivo)
+  }
+
   return (
     <ModuleLayout title="Detalle de solicitud">
-      <section className="solicitud-detalle-page">
-        <BackButton to="/solicitudes" state={{ refreshAt: Date.now() }}>Volver a solicitudes</BackButton>
+      <section className={`solicitud-detalle-page${esSolicitudTrabajoGrado ? ' solicitud-detalle-page--trabajo-grado' : ''}`}>
+        <BackButton
+          to={location.pathname.startsWith('/creditos-condonables')
+            ? '/creditos-condonables'
+            : location.pathname.startsWith('/trabajos-grado')
+              ? location.pathname.split('/solicitudes/')[0]
+              : '/solicitudes'}
+          state={{ refreshAt: Date.now() }}
+        >
+          Volver a {location.pathname.startsWith('/creditos-condonables')
+            ? 'créditos condonables'
+            : location.pathname.startsWith('/trabajos-grado')
+              ? 'proyectos de grado'
+              : 'solicitudes'}
+        </BackButton>
 
         {loading ? (
           <p className="solicitud-detalle-page__status">Cargando solicitud...</p>
@@ -349,9 +523,8 @@ const SolicitudDetallePage = () => {
         ) : (
           <>
             <header className="solicitud-detalle-page__header">
-              <h2>
-                Solicitud {solicitud.id} — {solicitud.tipoSolicitud}
-              </h2>
+              {esSolicitudTrabajoGrado && <p>Proyecto de grado · Solicitud {solicitud.id}</p>}
+              <h2>{esSolicitudTrabajoGrado ? solicitud.tipoSolicitud : `Solicitud ${solicitud.id} — ${solicitud.tipoSolicitud}`}</h2>
             </header>
 
             <dl className="solicitud-detalle-page__grid">
@@ -368,7 +541,10 @@ const SolicitudDetallePage = () => {
               <div className="solicitud-detalle-page__item">
                 <dt>Estado</dt>
                 <dd>
-                  <StatusBadge estado={solicitud.estadoSigla || solicitud.estado} />
+                  <StatusBadge
+                    estado={solicitud.estadoSigla || solicitud.estado}
+                    programaAcademico={solicitud.programaAcademico}
+                  />
                 </dd>
               </div>
               <div className="solicitud-detalle-page__item">
@@ -379,9 +555,27 @@ const SolicitudDetallePage = () => {
                 <dt>Fecha resolución</dt>
                 <dd>{formatDate(solicitud.fechaResolucion)}</dd>
               </div>
+              {showDatosTrabajo && (
+                <>
+                  <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                    <dt>Título</dt>
+                    <dd>{tituloTrabajo || 'Sin título registrado.'}</dd>
+                  </div>
+                  {!esCandidaturaDoctoral && (
+                    <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
+                      <dt>Resumen</dt>
+                      <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
+                    </div>
+                  )}
+                </>
+              )}
               <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                <dt>Observaciones</dt>
-                <dd>{solicitud.observaciones || 'Sin observaciones.'}</dd>
+                <dt>{currentEstado === 'RECHAZADA' ? 'Motivo de rechazo' : 'Observaciones'}</dt>
+                <dd>
+                  {currentEstado === 'RECHAZADA'
+                    ? solicitud.motivoRechazo?.trim() || 'Sin motivo de rechazo registrado.'
+                    : solicitud.observaciones?.trim() || 'Sin observaciones.'}
+                </dd>
               </div>
               {showMotivosCredito && (
                 <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
@@ -401,9 +595,54 @@ const SolicitudDetallePage = () => {
               )}
             </dl>
 
+            {showActaAsociada && (
+              <section className="solicitud-detalle-page__acta" aria-labelledby="acta-asociada-title">
+                <div className="solicitud-detalle-page__acta-heading">
+                  <span className="solicitud-detalle-page__acta-icon" aria-hidden="true">
+                    <ScrollText size={22} strokeWidth={1.8} />
+                  </span>
+                  <div>
+                    <h3 id="acta-asociada-title">Acta asociada</h3>
+                    <p>Documento en el que quedó registrada la aprobación de esta solicitud.</p>
+                  </div>
+                </div>
+                <dl className="solicitud-detalle-page__acta-details">
+                  <div>
+                    <dt>Código</dt>
+                    <dd>{solicitud.actaCodigo || 'Sin código'}</dd>
+                  </div>
+                  <div>
+                    <dt>Fecha del acta</dt>
+                    <dd>{formatDate(solicitud.actaFechaCreacion ?? null)}</dd>
+                  </div>
+                  <div>
+                    <dt>Nombre</dt>
+                    <dd>{solicitud.actaNombre || 'Sin nombre'}</dd>
+                  </div>
+                  <div>
+                    <dt>Instancia</dt>
+                    <dd>{solicitud.actaTipoConsejo === true ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}</dd>
+                  </div>
+                </dl>
+              </section>
+            )}
+
             {solicitud.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG' && (
               <section className="solicitud-detalle-page__homologaciones" aria-labelledby="homologaciones-title">
-                <h3 id="homologaciones-title">Materias solicitadas para homologación</h3>
+                <div className="solicitud-detalle-page__section-heading">
+                  <h3 id="homologaciones-title">Materias solicitadas para homologación</h3>
+                  {showHistorialAction && (
+                    <button
+                      className="solicitud-detalle-page__history-button"
+                      type="button"
+                      aria-expanded={showHistorialHomologaciones}
+                      aria-controls="historial-homologaciones"
+                      onClick={() => void handleToggleHistorial()}
+                    >
+                      {showHistorialHomologaciones ? 'Ocultar historial' : 'Ver historial de homologaciones'}
+                    </button>
+                  )}
+                </div>
                 {solicitud.solicitudHomologacionesAsignaturas?.length ? (
                   <div className="solicitud-detalle-page__table-wrapper">
                     <table>
@@ -416,11 +655,11 @@ const SolicitudDetallePage = () => {
                       <tbody>
                         {solicitud.solicitudHomologacionesAsignaturas.map((homologacion) => (
                           <tr key={homologacion.id}>
-                            <td>
+                            <td data-label="Materia de origen">
                               <strong>{homologacion.asignaturaOrigenNombre}</strong>
                               <span>{homologacion.asignaturaOrigenCodigo || 'Sin código'}</span>
                             </td>
-                            <td>
+                            <td data-label="Materia de destino">
                               <strong>{homologacion.asignaturaDestinoNombre}</strong>
                               <span>{homologacion.asignaturaDestinoCodigo || 'Sin código'}</span>
                             </td>
@@ -431,6 +670,77 @@ const SolicitudDetallePage = () => {
                   </div>
                 ) : (
                   <p>No hay materias de homologación registradas.</p>
+                )}
+                {showHistorialAction && showHistorialHomologaciones && (
+                  <div id="historial-homologaciones" className="solicitud-detalle-page__history" aria-live="polite">
+                    <div>
+                      <h4>Homologaciones anteriores</h4>
+                      <p>Consulta estos antecedentes como apoyo informativo antes de tomar una decisión.</p>
+                    </div>
+                    {historialLoading ? (
+                      <p>Cargando historial...</p>
+                    ) : historialError ? (
+                      <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                        {historialError}
+                      </p>
+                    ) : historialHomologaciones.length === 0 ? (
+                      <p>No se encontraron homologaciones anteriores.</p>
+                    ) : (
+                      <div className="solicitud-detalle-page__table-wrapper">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th scope="col">Materia de origen</th>
+                              <th scope="col">Materia homologada</th>
+                              <th scope="col">Fecha</th>
+                              <th scope="col">Estado</th>
+                              <th scope="col">Acta</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {historialHomologaciones.map((homologacion) => (
+                              <tr key={homologacion.id}>
+                                <td><strong>{homologacion.asignaturaOrigenNombre}</strong><span>{homologacion.asignaturaOrigenCodigo || 'Sin código'}</span></td>
+                                <td><strong>{homologacion.asignaturaDestinoNombre}</strong><span>{homologacion.asignaturaDestinoCodigo || 'Sin código'}</span></td>
+                                <td>{formatDate(homologacion.fechaHomologacion)}</td>
+                                <td>{homologacion.activa ? 'Activa' : 'Inactiva'}</td>
+                                <td><strong>{homologacion.actaCodigo || 'Sin acta asociada'}</strong>{homologacion.actaNombre && <span>{homologacion.actaNombre}</span>}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {!showProcesoEvaluacion && (
+              <section className="solicitud-detalle-page__change-history" aria-labelledby="historial-solicitud-title">
+                <h3 id="historial-solicitud-title">Histórico de cambios</h3>
+                {historialSolicitudLoading ? (
+                  <p role="status">Cargando histórico...</p>
+                ) : historialSolicitudError ? (
+                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                    {historialSolicitudError}
+                  </p>
+                ) : historialSolicitud.length === 0 ? (
+                  <p>No hay cambios de estado registrados.</p>
+                ) : (
+                  <ol>
+                    {historialSolicitud.map((item, index) => (
+                      <li key={`${item.estadoNuevoSigla}-${item.fecha}-${index}`}>
+                        <span aria-hidden="true" />
+                        <div>
+                          <strong>{item.estadoNuevo || item.estadoNuevoSigla}</strong>
+                          <small>{formatHistoryDate(item.fecha)}</small>
+                          {item.responsable && <p><b>Responsable:</b> {item.responsable}</p>}
+                          {item.detalle && <p>{item.detalle}</p>}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
                 )}
               </section>
             )}
@@ -444,7 +754,7 @@ const SolicitudDetallePage = () => {
                     onClick={handleFirmarDocumentos}
                     disabled={isSigning}
                   >
-                    {isSigning ? 'Firmando documentos...' : 'Firmar todos los documentos'}
+                    {isSigning ? 'Firmando documentos...' : 'Firmar documentos'}
                   </button>
                 )}
                 {signError && (
@@ -453,99 +763,6 @@ const SolicitudDetallePage = () => {
                   </p>
                 )}
                 {signSuccess && <p className="solicitud-detalle-page__success">{signSuccess}</p>}
-              </section>
-            )}
-
-            {isEstudiante && (
-              <section className="solicitud-detalle-page__estado-editor">
-                {!editMode ? (
-                  <>
-                    {editableSolicitud && (
-                      <button
-                        className="solicitud-detalle-page__save"
-                        type="button"
-                        onClick={() => {
-                          setEditMode(true)
-                          setSuccessMessage(null)
-                          setFormError(null)
-                        }}
-                      >
-                        Editar solicitud
-                      </button>
-                    )}
-
-                  </>
-                ) : (
-                  <div className="solicitud-detalle-page__student-editor">
-                    <h3>Editar solicitud</h3>
-                    <label className="solicitud-detalle-page__field">
-                      <span>Tipo de solicitud</span>
-                      <select
-                        value={draftTipoSolicitudId ?? ''}
-                        onChange={(event) => {
-                          setDraftTipoSolicitudId(Number(event.target.value))
-                          setFormError(null)
-                        }}
-                      >
-                        <option value="" disabled>
-                          Selecciona un tipo
-                        </option>
-                        {tiposSolicitud.map((tipo) => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.codigoNombre}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="solicitud-detalle-page__field">
-                      <span>Observaciones</span>
-                      <textarea
-                        rows={4}
-                        value={draftObservaciones}
-                        onChange={(event) => setDraftObservaciones(event.target.value)}
-                      />
-                    </label>
-                    {showDraftMotivosCredito && <div className="solicitud-detalle-page__field">
-                      <span>Motivos para la solicitud del crédito condonable</span>
-                      {draftMotivosCredito.map((motivo, index) => (
-                        <div key={`edit-motivo-${index}`} className="solicitud-detalle-page__motivo-row">
-                          <input value={motivo} onChange={(event) => updateDraftMotivo(index, event.target.value)} />
-                          <button type="button" className="solicitud-detalle-page__back" onClick={() => removeDraftMotivo(index)} disabled={draftMotivosCredito.length === 1}>−</button>
-                        </div>
-                      ))}
-                      <button type="button" className="solicitud-detalle-page__back" onClick={addDraftMotivo}>+ Agregar motivo</button>
-                    </div>}
-
-                    {draftTipoSolicitudId && (
-                      <SolicitudDocumentosEditor
-                        ref={documentosEditorRef}
-                        solicitudId={solicitud.id}
-                        codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
-                        usuarioCargaId={usuarioSappId}
-                        editable={editableSolicitud}
-                        showSaveButton={false}
-                        onDocsCommitted={() => {
-                          const codigoTipoTramite = solicitud.tipoTramiteCodigo?.trim()
-                          if (codigoTipoTramite) {
-                            void loadDocumentos(solicitud.id, codigoTipoTramite)
-                          }
-                        }}
-                      />
-                    )}
-
-                    {formError && <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{formError}</p>}
-
-                    <div className="solicitud-detalle-page__estado-controls">
-                      <button className="solicitud-detalle-page__save" type="button" onClick={handleGuardarEdicion} disabled={saving}>
-                        {saving ? 'Guardando...' : 'Guardar cambios'}
-                      </button>
-                      <button className="solicitud-detalle-page__back" type="button" onClick={handleCancelarEdicion} disabled={saving}>
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {successMessage && <p className="solicitud-detalle-page__success">{successMessage}</p>}
               </section>
             )}
 
@@ -559,15 +776,15 @@ const SolicitudDetallePage = () => {
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
                           type="button"
-                          onClick={() => void handleResolverSolicitud('APROBADA')}
+                          onClick={handleApproveClick}
                           disabled={isUpdatingEstado}
                         >
-                          {isUpdatingEstado ? 'Procesando...' : 'Aprobar'}
+                          {isUpdatingEstado ? 'Procesando...' : approvalButtonLabel}
                         </button>
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
                           type="button"
-                          onClick={() => void handleResolverSolicitud('RECHAZADA')}
+                          onClick={handleRejectClick}
                           disabled={isUpdatingEstado}
                         >
                           {isUpdatingEstado ? 'Procesando...' : 'Rechazar'}
@@ -595,6 +812,209 @@ const SolicitudDetallePage = () => {
                 }
               }}
             />
+
+            {showAjustesEstudiante && (
+              <AjustesEstudiantePanel
+                solicitudId={solicitud.id}
+                codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
+                usuarioCargaId={usuarioSappId}
+                enAjustes={solicitudEnAjustes}
+                onUploaded={refreshSolicitud}
+              />
+            )}
+
+            {isEstudiante && procesoEvaluacion && (
+              <ProcesoEvaluacionEstudiante proceso={procesoEvaluacion} />
+            )}
+
+            {showProcesoEvaluacion && (
+              <ProcesoEvaluacionPanel
+                solicitudId={solicitud.id}
+                documentos={documentos}
+                actas={actas}
+                onUpdated={refreshSolicitud}
+              />
+            )}
+
+            {showConsejoConfirmation && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="consejo-confirmation-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar aprobación"
+                  onClick={() => setShowConsejoConfirmation(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="consejo-confirmation-title">¿Requiere aprobación del Consejo Académico?</h3>
+                  <p>
+                    Indica si esta solicitud de tipo OTRA debe enviarse al Consejo Académico antes de continuar.
+                  </p>
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                      type="button"
+                      onClick={() => handleConsejoDecision(true)}
+                    >
+                      Sí, enviar al Consejo
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__save"
+                      type="button"
+                      onClick={() => handleConsejoDecision(false)}
+                    >
+                      No, aprobar directamente
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowConsejoConfirmation(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showActaSelection && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="acta-selection-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar aprobación"
+                  onClick={() => setShowActaSelection(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="acta-selection-title">Seleccionar acta asociada</h3>
+                  <p>
+                    La solicitud estaba en {estabaEnConsejo ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}.
+                    Selecciona un acta de esa instancia para registrar la aprobación.
+                  </p>
+
+                  {actasLoading ? (
+                    <p role="status">Consultando actas...</p>
+                  ) : (
+                    <label className="solicitud-detalle-page__field">
+                      <span>Acta *</span>
+                      <select
+                        value={selectedActaId}
+                        onChange={(event) => {
+                          setSelectedActaId(event.target.value)
+                          setActasError(null)
+                        }}
+                        disabled={actas.length === 0}
+                      >
+                        <option value="">Selecciona un acta</option>
+                        {actas.map((acta) => (
+                          <option key={acta.id} value={acta.id}>
+                            {acta.codigo} — {acta.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
+                  {!actasLoading && actas.length === 0 && !actasError && (
+                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                      No hay actas disponibles para esta instancia.
+                    </p>
+                  )}
+                  {actasError && (
+                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                      {actasError}
+                    </p>
+                  )}
+
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                      type="button"
+                      onClick={handleConfirmApproval}
+                      disabled={actasLoading || !selectedActaId}
+                    >
+                      Aprobar con acta
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowActaSelection(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showRejectionDialog && (
+              <div
+                className="solicitud-detalle-page__modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="rejection-title"
+              >
+                <button
+                  className="solicitud-detalle-page__modal-backdrop"
+                  type="button"
+                  aria-label="Cancelar rechazo"
+                  onClick={() => setShowRejectionDialog(false)}
+                />
+                <div className="solicitud-detalle-page__modal-dialog">
+                  <h3 id="rejection-title">Motivo de rechazo</h3>
+                  <p>Explica por qué se rechaza la solicitud. El motivo será visible en su detalle.</p>
+                  <label className="solicitud-detalle-page__field">
+                    <span>Motivo *</span>
+                    <textarea
+                      value={rejectionReason}
+                      rows={4}
+                      maxLength={1000}
+                      autoFocus
+                      onChange={(event) => {
+                        setRejectionReason(event.target.value)
+                        setRejectionReasonError(null)
+                      }}
+                      aria-invalid={Boolean(rejectionReasonError)}
+                      aria-describedby={rejectionReasonError ? 'rejection-reason-error' : undefined}
+                    />
+                  </label>
+                  {rejectionReasonError && (
+                    <p
+                      id="rejection-reason-error"
+                      className="solicitud-detalle-page__status solicitud-detalle-page__status--error"
+                      role="alert"
+                    >
+                      {rejectionReasonError}
+                    </p>
+                  )}
+                  <div className="solicitud-detalle-page__modal-actions">
+                    <button
+                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
+                      type="button"
+                      onClick={handleConfirmRejection}
+                    >
+                      Confirmar rechazo
+                    </button>
+                    <button
+                      className="solicitud-detalle-page__back"
+                      type="button"
+                      onClick={() => setShowRejectionDialog(false)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </section>

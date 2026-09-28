@@ -1,0 +1,1 @@
+export { MatriculaHomePage } from './MatriculaHomePage'

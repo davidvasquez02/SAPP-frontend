@@ -1,0 +1,96 @@
+.gestion-profesores { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.gestion-profesores__panel { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.gestion-profesores__hero, .gestion-profesores__card { padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 20px; background: var(--surface-container-low); box-shadow: var(--shadow-xs); }
+.gestion-profesores__hero, .gestion-profesores__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.gestion-profesores h1, .gestion-profesores h2, .gestion-profesores p { margin: 0; }
+.gestion-profesores__hero p { color: var(--text-secondary); }
+.gestion-profesores__heading p { margin-top: .35rem; color: var(--text-secondary); }
+.gestion-profesores__hero button, .gestion-profesores__form button, .gestion-profesores__assign { border: 0; border-radius: 999px; padding: .65rem 1.15rem; background: var(--primary); color: var(--on-primary); font-weight: 700; white-space: nowrap; cursor: pointer; }
+.gestion-profesores button:disabled { opacity: .55; cursor: not-allowed; }
+.gestion-profesores__tabs { display: flex; gap: .5rem; padding: .35rem; align-self: flex-start; border: 1px solid var(--outline); border-radius: 999px; background: var(--surface); }
+.gestion-profesores__tabs button { min-height: 2.25rem; padding: .35rem 1rem; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; }
+.gestion-profesores__tabs button[aria-selected='true'] { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.gestion-profesores__tabs button:focus-visible, .gestion-profesores button:focus-visible, .gestion-profesores input:focus-visible, .gestion-profesores select:focus-visible { outline: 3px solid var(--inverse-primary); outline-offset: 2px; }
+.gestion-profesores__card { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.gestion-profesores__heading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; }
+.gestion-profesores__search { display: flex; flex-direction: column; gap: .35rem; max-width: 26rem; color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__group-select { display: flex; flex-direction: column; gap: .35rem; width: min(100%, 34rem); color: var(--text-secondary); font-weight: 600; }
+.gestion-profesores__selected-group { display: none; color: var(--text-secondary); overflow-wrap: anywhere; }
+.gestion-profesores__group-section { display: flex; flex-direction: column; gap: 1rem; padding-top: 1.25rem; border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%); }
+.gestion-profesores__subheading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.gestion-profesores__subheading h3, .gestion-profesores__subheading p { margin: 0; }
+.gestion-profesores__subheading p { margin-top: .25rem; color: var(--text-secondary); }
+.gestion-profesores__subheading > span { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-weight: 700; white-space: nowrap; }
+.gestion-profesores__table-wrap { overflow-x: auto; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface); }
+.gestion-profesores table { width: 100%; border-collapse: collapse; }
+.gestion-profesores th, .gestion-profesores td { padding: .8rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 35%); text-align: left; }
+.gestion-profesores th { color: var(--text-secondary); font-size: var(--font-size-small); }
+.gestion-profesores tbody tr:last-child td { border-bottom: 0; }
+.gestion-profesores code { color: var(--text-secondary); font-size: .85rem; }
+.gestion-profesores__delete { border: 1px solid var(--danger); border-radius: 999px; padding: .35rem .8rem; background: transparent; color: var(--danger); cursor: pointer; white-space: nowrap; }
+.gestion-profesores__row-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; }
+.gestion-profesores__director { border: 1px solid var(--primary); border-radius: 999px; padding: .35rem .8rem; background: transparent; color: var(--primary); font-weight: 700; cursor: pointer; white-space: nowrap; }
+.gestion-profesores__director-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .3rem .7rem; background: color-mix(in srgb, var(--primary), transparent 86%); color: var(--primary); font-weight: 700; }
+.gestion-profesores__assign { padding: .4rem .85rem; }
+.gestion-profesores__pagination { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; color: var(--text-secondary); }
+.gestion-profesores__pagination button { border: 1px solid var(--outline); border-radius: 999px; padding: .4rem .8rem; background: var(--surface); color: var(--primary); cursor: pointer; }
+.gestion-profesores__message, .gestion-profesores__empty { padding: .8rem 1rem; border-radius: 12px; }
+.gestion-profesores__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
+.gestion-profesores__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
+.gestion-profesores__empty { text-align: center; color: var(--text-secondary); }
+.gestion-profesores__confirmation { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; }
+.gestion-profesores__confirmation-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 55%); cursor: default; }
+.gestion-profesores__confirmation-dialog { position: relative; display: grid; width: min(100%, 32rem); grid-template-columns: auto minmax(0, 1fr); gap: 1rem; box-sizing: border-box; border: 1px solid var(--outline); border-radius: 20px; padding: 1.5rem; background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-soft, 0 1.25rem 3rem color-mix(in srgb, var(--outline), transparent 45%)); }
+.gestion-profesores__confirmation-icon { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--primary), transparent 88%); color: var(--primary); font-size: 1.4rem; font-weight: 800; }
+.gestion-profesores__confirmation-icon--danger { background: color-mix(in srgb, var(--danger), transparent 88%); color: var(--danger); }
+.gestion-profesores__confirmation-content h2, .gestion-profesores__confirmation-content p, .gestion-profesores__confirmation-content dl { margin: 0; }
+.gestion-profesores__confirmation-content h2 { padding-right: 2rem; font-size: 1.35rem; }
+.gestion-profesores__confirmation-content > p { margin-top: .45rem; color: var(--text-secondary); line-height: 1.5; }
+.gestion-profesores__confirmation-content dl { margin-top: 1.15rem; border-radius: 14px; padding: .9rem 1rem; background: var(--surface-container-low); }
+.gestion-profesores__confirmation-content dl div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .75rem; }
+.gestion-profesores__confirmation-content dt { color: var(--text-secondary); font-size: .85rem; font-weight: 700; }
+.gestion-profesores__confirmation-content dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.gestion-profesores__confirmation-close { position: absolute; top: 1rem; right: 1rem; display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-secondary); font-size: 1.55rem; line-height: 1; cursor: pointer; }
+.gestion-profesores__confirmation-close:hover:not(:disabled), .gestion-profesores__confirmation-close:focus-visible { background: var(--surface-container-low); color: var(--text-primary); }
+.gestion-profesores__confirmation-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: .75rem; margin-top: .25rem; }
+.gestion-profesores__confirmation-actions button { min-height: 44px; border-radius: 999px; padding: .65rem 1.15rem; font-weight: 700; cursor: pointer; }
+.gestion-profesores__confirmation-cancel { border: 1px solid var(--outline); background: var(--surface); color: var(--text-primary); }
+.gestion-profesores__confirmation-confirm { border: 1px solid var(--primary); background: var(--primary); color: var(--on-primary); }
+.gestion-profesores__confirmation-confirm--danger { border-color: var(--danger); background: var(--danger); color: var(--on-danger, var(--surface)); }
+.gestion-profesores__confirmation-actions button:disabled, .gestion-profesores__confirmation-close:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 800px) {
+  .gestion-profesores { gap: 1rem; width: 100%; }
+  .gestion-profesores__hero, .gestion-profesores__heading, .gestion-profesores__subheading { flex-direction: column; }
+  .gestion-profesores__hero, .gestion-profesores__card { padding: 1rem; border-radius: 16px; }
+  .gestion-profesores__tabs { box-sizing: border-box; width: 100%; align-self: stretch; border-radius: 16px; }
+  .gestion-profesores__tabs button { flex: 1 1 0; min-width: 0; min-height: 44px; padding: .5rem; line-height: 1.25; white-space: normal; }
+  .gestion-profesores__search, .gestion-profesores__group-select { width: 100%; max-width: none; min-width: 0; }
+  .gestion-profesores__search input, .gestion-profesores__group-select select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; font-size: 16px; }
+  .gestion-profesores__selected-group { display: block; margin: -.25rem 0 .25rem; }
+  .gestion-profesores__heading > span, .gestion-profesores__subheading > span { white-space: normal; }
+  .gestion-profesores__table-wrap { overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .gestion-profesores table, .gestion-profesores tbody { display: block; width: 100%; }
+  .gestion-profesores thead { display: none; }
+  .gestion-profesores tr { display: flex; flex-direction: column; gap: .75rem; box-sizing: border-box; width: 100%; margin-bottom: .75rem; padding: 1rem; border: 1px solid var(--outline); border-radius: 14px; background: var(--surface); }
+  .gestion-profesores tbody tr:last-child { margin-bottom: 0; }
+  .gestion-profesores td { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .gestion-profesores td[data-label]::before { display: block; margin-bottom: .2rem; color: var(--text-secondary); content: attr(data-label); font-size: var(--font-size-small); font-weight: 700; }
+  .gestion-profesores td:first-child { font-weight: 700; }
+  .gestion-profesores td:first-child::before { font-weight: 600; }
+  .gestion-profesores__action-cell { padding-top: .25rem !important; }
+  .gestion-profesores__action-cell > button, .gestion-profesores__row-actions button { box-sizing: border-box; width: 100%; min-height: 44px; white-space: normal; }
+  .gestion-profesores__row-actions { flex-direction: column; align-items: stretch; width: 100%; }
+  .gestion-profesores__pagination { flex-wrap: wrap; justify-content: center; text-align: center; }
+  .gestion-profesores__pagination button { min-height: 44px; }
+  .gestion-profesores__pagination span { flex: 1 0 100%; order: -1; }
+  .gestion-profesores__confirmation-dialog { grid-template-columns: minmax(0, 1fr); gap: .85rem; padding: 1.25rem; }
+  .gestion-profesores__confirmation-icon { width: 2.75rem; height: 2.75rem; }
+  .gestion-profesores__confirmation-actions { display: grid; }
+  .gestion-profesores__confirmation-actions button { width: 100%; }
+  .gestion-profesores__confirmation-confirm { order: -1; }
+}
+
+@media (max-width: 360px) {
+  .gestion-profesores__hero, .gestion-profesores__card { padding: .75rem; }
+  .gestion-profesores tr { padding: .875rem; }
+}

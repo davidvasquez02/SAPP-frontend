@@ -10,6 +10,8 @@
 
 .create-student-modal__dialog {
   width: min(34rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
   padding: 1.6rem;
   border: 1px solid color-mix(in srgb, var(--outline), transparent 35%);
   border-radius: 24px;
@@ -31,13 +33,13 @@
 }
 
 .create-student-modal__header p { color: var(--primary); font-weight: 800; }
-.create-student-modal__header h2 { margin-top: 0.25rem; }
-.create-student-modal__header button { border: 0; background: transparent; color: var(--text-secondary); font-size: 1.8rem; cursor: pointer; }
+.create-student-modal__header h2 { margin-top: 0.25rem; overflow-wrap: anywhere; }
+.create-student-modal__header button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--text-secondary); font-size: 1.8rem; cursor: pointer; }
 .create-student-modal__description { margin-top: 1rem; color: var(--text-secondary); }
 .create-student-modal__form { display: grid; gap: 1rem; margin-top: 1.4rem; }
 .create-student-modal__form label { display: grid; gap: 0.4rem; font-weight: 700; }
 .create-student-modal__form label span { color: var(--primary); }
-.create-student-modal__form input { padding: 0.8rem 0.9rem; border: 1px solid var(--outline); border-radius: 12px; background: var(--surface-container-low); color: var(--text-primary); font: inherit; }
+.create-student-modal__form input { min-width: 0; width: 100%; padding: 0.8rem 0.9rem; border: 1px solid var(--outline); border-radius: 12px; background: var(--surface-container-low); color: var(--text-primary); font: inherit; font-size: max(1rem, 16px); overflow-wrap: anywhere; }
 .create-student-modal__form input:focus { outline: 3px solid color-mix(in srgb, var(--primary), transparent 65%); border-color: var(--primary); }
 .create-student-modal__error { margin: 0; color: var(--error, #b91c1c); font-weight: 700; }
 .create-student-modal__actions { display: flex; justify-content: flex-end; gap: 0.7rem; margin-top: 0.4rem; }
@@ -45,3 +47,12 @@
 .create-student-modal__cancel { border: 1px solid var(--outline); background: var(--surface); color: var(--text-primary); }
 .create-student-modal__submit { border: 0; background: var(--primary); color: var(--on-primary); }
 .create-student-modal__actions button:disabled { opacity: 0.6; cursor: wait; }
+
+@media (max-width: 560px) {
+  .create-student-modal { align-items: end; padding: .5rem; }
+  .create-student-modal__dialog { width: 100%; max-height: calc(100dvh - 1rem); padding: 1rem; border-radius: 20px; }
+  .create-student-modal__description { line-height: 1.45; }
+  .create-student-modal__form { grid-template-columns: minmax(0, 1fr); margin-top: 1rem; }
+  .create-student-modal__actions { position: sticky; bottom: -1rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .2rem -1rem -1rem; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom)); border-top: 1px solid color-mix(in srgb, var(--outline), transparent 35%); background: var(--surface); }
+  .create-student-modal__actions button { min-height: 44px; padding-inline: .65rem; }
+}

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
-import { ROLES, hasAnyRole } from '../../auth/roleGuards'
+import { canManagePosgrados, ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
+import { imageDataUrl } from '../../shared/files/base64FileUtils'
+import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
 import {
   guardarFirmaUsuario,
   obtenerFirmaUsuario,
@@ -11,6 +13,10 @@ import {
 import './PerfilPage.css'
 
 const MAX_SIGNATURE_SIZE = 2 * 1024 * 1024
+const COORDINATION_PROGRAMS = [
+  'MAESTRÍA EN INGENIERÍA DE SISTEMAS E INFORMÁTICA',
+  'DOCTORADO EN CIENCIAS DE LA COMPUTACION',
+] as const
 
 const readFile = (file: File): Promise<FirmaPerfil> =>
   new Promise((resolve, reject) => {
@@ -54,8 +60,9 @@ const PerfilPage = () => {
   const [isSavingSignature, setIsSavingSignature] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [photoFailed, setPhotoFailed] = useState(false)
   const roles = user?.roles ?? []
-  const isCoordination = hasAnyRole(roles, [ROLES.COORDINACION, ROLES.ADMIN])
+  const isCoordination = canManagePosgrados(roles)
   const hasStudentRole = hasAnyRole(roles, [ROLES.ESTUDIANTE])
   const isStudent = hasStudentRole || Boolean(user?.estudiante)
   const personalEmail = user?.persona.emailPersonal ?? firstAttribute(user?.attributes, 'personalEmail')
@@ -66,6 +73,10 @@ const PerfilPage = () => {
   const signatureSrc = signature
     ? `data:${signature.mimeType};base64,${signature.contenidoBase64}`
     : null
+  const profilePhotoSrc = imageDataUrl(
+    user?.estudiante?.foto?.contenidoBase64,
+    user?.estudiante?.foto?.mimeType,
+  )
 
   useEffect(() => {
     if (!user) return
@@ -153,18 +164,40 @@ const PerfilPage = () => {
   if (!user) return null
 
   return (
-    <ModuleLayout title="Mi perfil">
+    <ModuleLayout title="Mi perfil" showUserSummary={false}>
       <div className="profile-page">
-        <section className="profile-page__intro">
-          <span className="profile-page__icon" aria-hidden="true">{fullName.charAt(0).toUpperCase()}</span>
-          <div><h1>{fullName}</h1><p>{roles.filter((role) => role !== 'DEFAULT-ROLES-EISI').join(' · ') || 'Usuario Minerva'}</p></div>
+        <section className="profile-page__hero" aria-label="Resumen del perfil">
+          <div className="profile-page__photo-shell">
+            {profilePhotoSrc && !photoFailed ? (
+              <img
+                className="profile-page__photo"
+                src={profilePhotoSrc}
+                alt={`Foto de perfil de ${fullName}`}
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <span className="profile-page__initials" aria-hidden="true">
+                {fullName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="profile-page__hero-copy">
+            <span className="profile-page__eyebrow">Cuenta institucional</span>
+            <h1>{fullName}</h1>
+            <p>
+              {roles
+                .filter((role) => role.toUpperCase() !== 'DEFAULT-ROLES-EISI')
+                .map(formatRoleLabel)
+                .join(' · ') || 'Usuario Minerva'}
+            </p>
+          </div>
         </section>
 
         <section className="profile-page__card" aria-labelledby="personal-title">
           <div className="profile-page__heading"><div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div></div>
           <dl className="profile-page__data-grid">
-            <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>
-            <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>
+            {!isCoordination && <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>}
+            {!isCoordination && <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>}
             <div><dt>Correo institucional</dt><dd>{user.persona.emailInstitucional ?? user.email ?? 'No registrado'}</dd></div>
             {/* <div><dt>Usuario</dt><dd>{user.username}</dd></div> */}
             <div><dt>Correo personal</dt><dd>{personalEmail ?? 'No registrado'}</dd></div>
@@ -175,10 +208,16 @@ const PerfilPage = () => {
         {isCoordination && <section className="profile-page__card" aria-labelledby="coord-title">
           <div className="profile-page__heading"><div><h2 id="coord-title">Información de coordinación</h2><p>Contexto académico disponible para tu rol.</p></div></div>
           <dl className="profile-page__data-grid">
-            <div><dt>Programa a cargo</dt><dd>{user.programa ?? 'Posgrados EISI (dato provisional)'}</dd></div>
+            <div>
+              <dt>Programa a cargo</dt>
+              <dd>
+                <ul className="profile-page__program-list">
+                  {COORDINATION_PROGRAMS.map((program) => <li key={program}>{program}</li>)}
+                </ul>
+              </dd>
+            </div>
             <div><dt>Unidad académica</dt><dd>Escuela de Ingeniería de Sistemas e Informática</dd></div>
             <div><dt>Estado de la cuenta</dt><dd>{user.activo ? 'Activa' : 'Inactiva'}</dd></div>
-            <div><dt>Último ingreso</dt><dd>{user.lastLogin ?? 'Pendiente de integración'}</dd></div>
           </dl>
         </section>}
 
@@ -190,6 +229,8 @@ const PerfilPage = () => {
             <div><dt>Cohorte</dt><dd>{valueOrPending(user.estudiante?.cohorte)}</dd></div>
             <div><dt>Estado académico</dt><dd>{valueOrPending(user.estudiante?.estado)}</dd></div>
             <div><dt>Fecha de ingreso</dt><dd>{formatDateInColombia(user.estudiante?.fechaIngreso)}</dd></div>
+            <div><dt>Director de trabajo de grado</dt><dd>{user.estudiante?.directorTg?.nombreCompleto ?? ''}</dd></div>
+            <div><dt>Correo del director</dt><dd>{user.estudiante?.directorTg?.correo ?? ''}</dd></div>
             {/* <div><dt>ID de estudiante</dt><dd>{valueOrPending(user.estudiante?.id)}</dd></div> */}
           </dl>
         </section>}

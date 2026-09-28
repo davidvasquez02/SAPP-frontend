@@ -11,6 +11,7 @@ import {
   getProgramasAcademicos,
   type ProgramaAcademicoDto,
 } from '../../modules/reportes/api/programaAcademicoService'
+import { formatProgramaAcademico } from '../../shared/domain/programaAcademico'
 import {
   generarReporteAdmision,
   type ReporteAdmisionGenerado,
@@ -19,15 +20,19 @@ import {
   generarReportePeriodo,
   type ReportePeriodoGenerado,
 } from '../../modules/reportes/services/reportePeriodoService'
+import {
+  getFaltantesReporte,
+  type FaltantesReporte,
+} from '../../modules/reportes/services/reporteError'
 import { downloadBlobFile, openBlobInNewTab } from '../../shared/files/base64FileUtils'
 import './ReportesPage.css'
 
 type TipoInforme = 'ADMISION' | 'MATRICULA' | 'CREDITOS_CONDONABLES'
 
-const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string; description: string }> = [
-  { id: 'ADMISION', label: 'Admisión', description: 'Informe de una convocatoria de admisión.' },
-  { id: 'MATRICULA', label: 'Matrícula', description: 'Informe de matrícula por período y programa.' },
-  { id: 'CREDITOS_CONDONABLES', label: 'Créditos condonables', description: 'Informe de créditos por período y programa.' },
+const PROCESS_OPTIONS: Array<{ id: TipoInforme; label: string }> = [
+  { id: 'ADMISION', label: 'Admisión' },
+  { id: 'MATRICULA', label: 'Matrícula' },
+  { id: 'CREDITOS_CONDONABLES', label: 'Créditos condonables' },
 ]
 
 const findCurrentPeriodoId = (periodos: PeriodoAcademicoDto[]): string => {
@@ -60,6 +65,7 @@ const ReportesPage = () => {
   const [generating, setGenerating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [faltantes, setFaltantes] = useState<FaltantesReporte | null>(null)
   const [generatedPdf, setGeneratedPdf] = useState<ReporteAdmisionGenerado | ReportePeriodoGenerado | null>(null)
 
   useEffect(() => {
@@ -72,8 +78,12 @@ const ReportesPage = () => {
     ])
       .then(([programasData, convocatoriasData, periodosData, actasData]) => {
         if (cancelled) return
-        setProgramas([...programasData].sort((a, b) => a.codigoNombre.localeCompare(b.codigoNombre, 'es')))
-        setConvocatorias(convocatoriasData)
+        setProgramas([...programasData].sort((a, b) =>
+          formatProgramaAcademico(a).localeCompare(formatProgramaAcademico(b), 'es'),
+        ))
+        setConvocatorias([...convocatoriasData].sort((a, b) =>
+          b.periodo.localeCompare(a.periodo, 'es', { numeric: true }),
+        ))
         setPeriodos([...periodosData].sort((a, b) => b.anio - a.anio || b.periodo - a.periodo))
         setActas([...actasData].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion)))
         setPeriodoId(findCurrentPeriodoId(periodosData))
@@ -106,6 +116,7 @@ const ReportesPage = () => {
     setActaId('')
     setMessage(null)
     setError(null)
+    setFaltantes(null)
     setGeneratedPdf(null)
   }
 
@@ -113,6 +124,7 @@ const ReportesPage = () => {
     event.preventDefault()
     setMessage(null)
     setError(null)
+    setFaltantes(null)
     setGeneratedPdf(null)
     if (!programaId || !actaId || (tipo === 'ADMISION' ? !convocatoriaId : !periodoId)) {
       setError('Complete todos los parámetros requeridos para generar el informe.')
@@ -142,6 +154,7 @@ const ReportesPage = () => {
           : 'El informe de créditos condonables fue generado correctamente.',
       )
     } catch (submitError) {
+      setFaltantes(getFaltantesReporte(submitError))
       setError(submitError instanceof Error ? submitError.message : 'No fue posible generar el informe.')
     } finally {
       setGenerating(false)
@@ -159,8 +172,8 @@ const ReportesPage = () => {
 
         <div className="reports__processes" aria-label="Tipo de proceso">
           {PROCESS_OPTIONS.map((option) => (
-            <button key={option.id} type="button" className={tipo === option.id ? 'reports__process reports__process--active' : 'reports__process'} onClick={() => selectTipo(option.id)} aria-pressed={tipo === option.id}>
-              <strong>{option.label}</strong><span>{option.description}</span>
+            <button key={option.id} type="button" disabled={generating} className={tipo === option.id ? 'reports__process reports__process--active' : 'reports__process'} onClick={() => selectTipo(option.id)} aria-pressed={tipo === option.id}>
+              <strong>{option.label}</strong>
             </button>
           ))}
         </div>
@@ -169,11 +182,11 @@ const ReportesPage = () => {
           <div className="reports__form-heading"><h2>Parámetros del informe</h2><span>Todos los campos son obligatorios</span></div>
           {loading ? <p role="status">Cargando programas, períodos, convocatorias y actas...</p> : null}
           {!loading ? (
-            <div className="reports__fields">
+            <fieldset className="reports__fields" disabled={generating}>
               <label>Programa académico
                 <select value={programaId} onChange={(event) => { setProgramaId(event.target.value); setConvocatoriaId(''); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un programa</option>
-                  {programas.map((programa) => <option key={programa.id} value={programa.id}>{programa.codigoNombre || programa.nombre}</option>)}
+                  {programas.map((programa) => <option key={programa.id} value={programa.id}>{formatProgramaAcademico(programa)}</option>)}
                 </select>
               </label>
               {tipo === 'ADMISION' ? (
@@ -191,15 +204,50 @@ const ReportesPage = () => {
                   </select>
                 </label>
               )}
-              <label>Acta asociada
-                <select value={actaId} onChange={(event) => { setActaId(event.target.value); setGeneratedPdf(null) }} required>
+              <div className="reports__acta-field">
+                <div className="reports__acta-heading">
+                  <label htmlFor="reports-acta">Acta asociada</label>
+                  <span className="reports__help">
+                    <button type="button" aria-label="Ayuda sobre Acta asociada" aria-describedby="reports-acta-help">?</button>
+                    <span id="reports-acta-help" role="tooltip">Seleccione el acta del Comité Asesor o del Consejo de Escuela donde se registraron las decisiones relacionadas con el proceso de admisión, matrícula o créditos condonables.</span>
+                  </span>
+                </div>
+                <select id="reports-acta" value={actaId} onChange={(event) => { setActaId(event.target.value); setGeneratedPdf(null) }} required>
                   <option value="">Seleccione un acta</option>
                   {actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} · {acta.nombre}</option>)}
                 </select>
-              </label>
-            </div>
+              </div>
+            </fieldset>
           ) : null}
           {error ? <p className="reports__feedback reports__feedback--error" role="alert">{error}</p> : null}
+          {faltantes ? (
+            <section className="reports__missing" aria-labelledby="reports-missing-title">
+              <div className="reports__missing-heading">
+                <div>
+                  <h3 id="reports-missing-title">Información pendiente para generar el informe</h3>
+                  <p>Complete los siguientes requisitos y vuelva a intentar.</p>
+                </div>
+                <span>{faltantes.personasConDocumentosFaltantes.length} {tipo === 'ADMISION' ? 'aspirante' : 'estudiante'}{faltantes.personasConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
+              </div>
+              {faltantes.categoriasInstitucionalesFaltantes.length > 0 ? (
+                <div className="reports__missing-institutional">
+                  <strong>Documentos institucionales pendientes</strong>
+                  <ul>{faltantes.categoriasInstitucionalesFaltantes.map((categoria) => <li key={categoria}>{categoria}</li>)}</ul>
+                </div>
+              ) : null}
+              <div className="reports__missing-people">
+                {faltantes.personasConDocumentosFaltantes.map((persona) => (
+                  <details key={persona.id} className="reports__missing-person">
+                    <summary>
+                      <span><strong>{persona.nombreCompleto}</strong><small>Documento {persona.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${persona.id}` : ''}</small></span>
+                      <span className="reports__missing-count">{persona.documentosFaltantes.length} pendiente{persona.documentosFaltantes.length === 1 ? '' : 's'}</span>
+                    </summary>
+                    <ul>{persona.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {message ? <p className="reports__feedback reports__feedback--success" role="status">{message}</p> : null}
           <div className="reports__actions"><button type="submit" disabled={loading || generating}>{generating ? 'Generando...' : 'Generar informe'}</button></div>
         </form>
