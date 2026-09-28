@@ -3,7 +3,7 @@ import { useOutletContext, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../../../components'
 import { canManagePosgrados, isEvaluadorAdmision } from '../../../../auth/roleGuards'
 import { useAuth } from '../../../../context/Auth'
-import type { AuthUser } from '../../../../context/Auth/types'
+import { getEstadoEntrevista } from '../../utils/estadoEntrevista'
 import { base64ToBlob, downloadBase64File, openBase64InNewTab } from '../../../../shared/files/base64FileUtils'
 import { updateEvaluacionRegistroPuntaje } from '../../api/evaluacionAdmisionService'
 import EvaluacionEtapaSection, {
@@ -74,9 +74,6 @@ const buildValidationMessage = (
   return null
 }
 
-const normalizeWhitespaceUpper = (value: string | null | undefined): string =>
-  (value ?? '').trim().toUpperCase().replace(/\s+/g, ' ')
-
 const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapaPageProps) => {
   const { session } = useAuth()
   const { convocatoriaId, inscripcionId } = useParams()
@@ -103,28 +100,12 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
 
-  const nombreUsuarioSesion = useMemo(() => {
-    if (session?.kind !== 'SAPP') {
-      return ''
-    }
-
-    const { persona } = session.user as AuthUser
-    return [persona.nombre1, persona.nombre2, persona.apellido1, persona.apellido2]
-      .filter(Boolean)
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  }, [session])
-  const nombreUsuarioNormalizado = useMemo(
-    () => normalizeWhitespaceUpper(nombreUsuarioSesion),
-    [nombreUsuarioSesion],
-  )
+  const usuarioId = session?.user.id
 
   const belongsToCurrentUser = useCallback(
     (item: EvaluacionAdmisionItem) =>
-      nombreUsuarioNormalizado.length > 0 &&
-      normalizeWhitespaceUpper(item.evaluador) === nombreUsuarioNormalizado,
-    [nombreUsuarioNormalizado],
+      usuarioId != null && item.evaluadorId === usuarioId,
+    [usuarioId],
   )
 
   const shouldIncludeByProfesor = useCallback((item: EvaluacionAdmisionItem) => {
@@ -155,7 +136,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       })))
     }
     const cachedItems = evaluacionCache.get(cacheKey)
-    if (cachedItems) {
+    if (cachedItems && !isEvaluadorOnly) {
       const visibleItems = cachedItems.filter(shouldIncludeByProfesor)
       setItems(visibleItems)
       restoreDrafts(visibleItems)
@@ -181,7 +162,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     } finally {
       setLoading(false)
     }
-  }, [etapa, inscripcionId, inscripcionIdNumber, shouldIncludeByProfesor])
+  }, [etapa, inscripcionId, inscripcionIdNumber, shouldIncludeByProfesor, isEvaluadorOnly])
 
   useEffect(() => {
     void loadEvaluacion()
@@ -399,6 +380,13 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       ) : null}
 
       {loading && <p className="evaluacion-etapa-page__status">Cargando evaluación...</p>}
+      {!loading && !error && isEntrevista && isEvaluadorOnly && usuarioId != null && (
+        <p className="evaluacion-etapa-page__status" role="status">
+          <strong>Tu entrevista: {getEstadoEntrevista(items, usuarioId).label}</strong>
+          {' · '}{getEstadoEntrevista(items, usuarioId).completos} de {getEstadoEntrevista(items, usuarioId).total} registros calificados
+          {hasUnsavedChanges ? ' · Tienes cambios sin guardar.' : ''}
+        </p>
+      )}
       {!loading && error && (
         <p className="evaluacion-etapa-page__status evaluacion-etapa-page__status--error">
           {error}

@@ -12,6 +12,8 @@ import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { getAspiranteFotoSrc } from '../../modules/admisiones/utils/aspiranteFoto'
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
 import './AdmisionesProfesorPage.css'
+import { getEvaluacionAdmisionInfo } from '../../modules/admisiones/api/evaluacionAdmisionService'
+import { getEstadoEntrevista } from '../../modules/admisiones/utils/estadoEntrevista'
 
 type InscripcionConConvocatoria = InscripcionAdmisionDto & {
   convocatoriaId: number
@@ -60,6 +62,8 @@ const AdmisionesProfesorPage = () => {
 
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
   const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
+  const usuarioId = session?.user.id
+  const [estadosEntrevista, setEstadosEntrevista] = useState<Record<string, string>>({})
 
   const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([])
   const [inscripcionesByConvocatoria, setInscripcionesByConvocatoria] = useState<
@@ -183,6 +187,29 @@ const AdmisionesProfesorPage = () => {
     [inscripcionesConConvocatoria]
   )
 
+  useEffect(() => {
+    if (!isEvaluadorOnly || usuarioId == null) return
+    let cancelled = false
+    let cursor = 0
+    const ids = [...new Set(inscripcionesConConvocatoria.map((item) => item.id))]
+    setEstadosEntrevista({})
+    const worker = async () => {
+      while (!cancelled && cursor < ids.length) {
+        const id = ids[cursor++]
+        let label: string
+        try {
+          const items = await getEvaluacionAdmisionInfo(id, 'ENTREVISTA')
+          label = getEstadoEntrevista(items, usuarioId).label
+        } catch {
+          label = 'No se pudo consultar'
+        }
+        if (!cancelled) setEstadosEntrevista((current) => ({ ...current, [`${usuarioId}-${id}`]: label }))
+      }
+    }
+    void Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker))
+    return () => { cancelled = true }
+  }, [inscripcionesConConvocatoria, isEvaluadorOnly, usuarioId])
+
   const dccInscripciones = useMemo(
     () => inscripcionesConConvocatoria.filter((inscripcion) => isDcc(inscripcion)),
     [inscripcionesConConvocatoria]
@@ -250,6 +277,10 @@ const AdmisionesProfesorPage = () => {
 
                     <dl className="admisiones-profesor__card-details">
                       <div>
+                        <dt>Tu entrevista</dt>
+                        <dd role="status">{estadosEntrevista[`${usuarioId}-${inscripcion.id}`] ?? 'Consultando calificación…'}</dd>
+                      </div>
+                      <div>
                         <dt>Documento</dt>
                         <dd>{documento}</dd>
                       </div>
@@ -279,7 +310,7 @@ const AdmisionesProfesorPage = () => {
         ) : null}
       </section>
     ),
-    [goToEntrevistas, loadingInscripciones]
+    [goToEntrevistas, loadingInscripciones, estadosEntrevista, usuarioId]
   )
 
   if (!isEvaluadorOnly) {

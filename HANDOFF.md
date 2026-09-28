@@ -1,5 +1,13 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — estado personal de entrevistas
+
+- Verificación: pruebas de lógica 3/3 PASS y compilación de producción PASS; persiste aviso de tamaño de chunk. El detalle del evaluador consulta datos frescos en lugar de usar la caché indefinida.
+
+- `AdmisionesProfesorPage.tsx` consulta `getEvaluacionAdmisionInfo` por inscripción (máximo cuatro simultáneas), calcula el estado por usuario y muestra carga/error por tarjeta. Al remontar el listado se actualiza la información.
+- `EvaluacionEtapaPage.tsx` usa `evaluadorId` para pertenencia y muestra el estado persistido en el detalle. Guardar ya invalida la caché y consulta nuevamente. `utils/estadoEntrevista.ts` centraliza nota y fecha de todos los registros propios, excluyendo ENTREV; cero es válido.
+- DTO incorpora `evaluadorId: number | null` y fecha nullable. Pruebas: `node --test --test-isolation=none tests/estadoEntrevista.test.ts`; build: `npm run build`. Reutilizar node_modules y package-lock; no se incorporan dependencias ni entornos. Pendiente validación visual con sesión docente/director real.
+
 ---
 
 # Handoff 2026-09-28 — notificación después de la carga documental de matrícula

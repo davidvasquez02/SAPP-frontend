@@ -8,7 +8,8 @@ export interface EvaluacionAdmisionItem {
   codigo: string
   consideraciones: string | null
   evaluador: string | null
-  fechaRegistro: string
+  evaluadorId: number | null
+  fechaRegistro: string | null
   observaciones: string | null
   ponderacionId: number
   puntajeAspirante: number | null

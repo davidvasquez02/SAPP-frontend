@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — estado personal de entrevistas
+
+- Listado docente/director y detalle muestran el estado personal usando `evaluadorId === session.user.id`. Todos los registros propios deben tener nota (incluido cero) y fecha; se excluye el resumen `ENTREV`. Los borradores no cuentan como guardados.
+- El listado consulta la etapa ENTREVISTA por inscripción, con cuatro solicitudes simultáneas como máximo y errores independientes. Al regresar al listado consulta nuevamente. Sin dependencias nuevas.
+
 ## Corrección 2026-09-28 — notificación tras carga completa de documentos de matrícula
 
 - `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` ya no se ejecuta al validar documentos desde coordinación. Ahora se invoca en la vista del estudiante, después de que todas las cargas seleccionadas terminan y una nueva consulta confirma que todos los documentos obligatorios están registrados.
