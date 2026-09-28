@@ -23,7 +23,7 @@ import {
   getMatriculasAcademicas,
   getPeriodoMatriculaVigente,
   notificarAperturaMatricula,
-  finalizarRevisionDocumentosMatricula,
+  notificarDocumentosCompletosMatricula,
 } from "../../modules/matricula/services/matriculaAcademicaService";
 import type { PeriodoAcademicoMatriculaVigenteDto } from "../../modules/matricula/services/matriculaAcademicaService";
 import { uploadDocument } from "../../api/documentUploadService";
@@ -679,7 +679,7 @@ const MatriculaPage = () => {
         cargaObligatoriaConfirmadaPorRespuesta &&
         tieneDocumentosObligatoriosCargados(documentosActualizados)
       ) {
-        await finalizarRevisionDocumentosMatricula(
+        await notificarDocumentosCompletosMatricula(
           matriculaValidation.matricula.id,
         );
       }

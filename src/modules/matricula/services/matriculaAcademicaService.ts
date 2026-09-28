@@ -208,6 +208,16 @@ export const aprobarMatriculaAcademica = async (matriculaId: number): Promise<vo
   }
 }
 
+export const notificarDocumentosCompletosMatricula = async (matriculaId: number): Promise<void> => {
+  const response = await httpPost<ApiResponse<unknown> | undefined>(
+    `/sapp/matriculaAcademica/${matriculaId}/notificarDocumentosCompletos`,
+  )
+
+  if (response && !response.ok) {
+    throw new Error(response.message || 'No fue posible notificar la carga completa de los documentos.')
+  }
+}
+
 export const finalizarRevisionDocumentosMatricula = async (matriculaId: number): Promise<void> => {
   const response = await httpPost<ApiResponse<unknown> | undefined>(
     `/sapp/matriculaAcademica/${matriculaId}/finalizarRevisionDocumentos`,

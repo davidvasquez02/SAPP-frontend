@@ -48,19 +48,20 @@ test('el estudiante notifica solo después de una respuesta de carga obligatoria
   assert.match(studentPageSource, /cargaObligatoriaConfirmadaPorRespuesta = true/)
   assert.match(studentPageSource, /const documentosActualizados = await getDocumentosMatriculaAcademica\(/)
   assert.match(studentPageSource, /tieneDocumentosObligatoriosCargados\(documentosActualizados\)/)
-  assert.match(studentPageSource, /await finalizarRevisionDocumentosMatricula\(/)
+  assert.match(studentPageSource, /await notificarDocumentosCompletosMatricula\(/)
   assert.ok(
     studentPageSource.indexOf('const uploaded = await uploadDocument(') <
       studentPageSource.indexOf('const documentosActualizados = await getDocumentosMatriculaAcademica('),
   )
   assert.ok(
     studentPageSource.indexOf('const documentosActualizados = await getDocumentosMatriculaAcademica(') <
-      studentPageSource.indexOf('await finalizarRevisionDocumentosMatricula('),
+      studentPageSource.indexOf('await notificarDocumentosCompletosMatricula('),
   )
   assert.match(
     matriculaServiceSource,
-    /`\/sapp\/matriculaAcademica\/\$\{matriculaId\}\/finalizarRevisionDocumentos`/,
+    /`\/sapp\/matriculaAcademica\/\$\{matriculaId\}\/notificarDocumentosCompletos`/,
   )
+  assert.doesNotMatch(studentPageSource, /finalizarRevisionDocumentosMatricula/)
 })
 
 test('la carga completa exige todos los obligatorios y permite opcionales ausentes', () => {
@@ -101,6 +102,11 @@ test('coordinación notifica cuando todos los obligatorios fueron aprobados o re
   assert.match(coordinatorPageSource, /const updatedDocuments = await refreshDocumentsAfterDecision/)
   assert.match(coordinatorPageSource, /await finalizeCompletedRequiredReview\(updatedDocuments\)/)
   assert.match(coordinatorPageSource, /await finalizarRevisionDocumentosMatricula\(matricula\.id\)/)
+  assert.doesNotMatch(coordinatorPageSource, /notificarDocumentosCompletosMatricula/)
+  assert.match(
+    matriculaServiceSource,
+    /`\/sapp\/matriculaAcademica\/\$\{matriculaId\}\/finalizarRevisionDocumentos`/,
+  )
   assert.match(coordinatorPageSource, /busyDocumentoId !== null/)
   assert.ok(
     coordinatorPageSource.indexOf('await aprobarRechazarDocumento({') <
