@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — confirmación temporal de notificación de matrícula
+
+- Tras enviar correctamente la notificación de apertura, el mensaje del backend permanece visible cinco segundos. Luego se limpia y se vuelve a consultar `GET /sapp/periodoAcademicoFecha/vigente`.
+- La tarjeta de notificación se oculta únicamente cuando la respuesta nueva confirma `notificacionAperturaEnviada: true`.
+- Archivos: `src/pages/Matricula/MatriculaPage.tsx` y `tests/notificacionAperturaMatricula.test.ts`. Sin cambios de endpoint, payload, roles, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 287.90 kB; JS 753.61 kB); continúa el aviso no bloqueante de Vite por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — notificación de apertura de matrícula
 
 - El contrato del período de matrícula vigente incorpora `notificacionAperturaEnviada`. Cuando el backend entrega `true`, el tablero de coordinación oculta por completo la tarjeta y el botón de notificación de inicio.

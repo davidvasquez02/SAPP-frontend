@@ -491,9 +491,24 @@ const MatriculaPage = () => {
         periodoMatriculaVigente.periodo.id,
       );
       setNotificacionAperturaMessage(message);
-      setPeriodoMatriculaVigente((current) =>
-        current ? { ...current, notificacionAperturaEnviada: true } : current,
-      );
+      window.setTimeout(() => {
+        setNotificacionAperturaMessage(null);
+        setIsLoadingPeriodoVigente(true);
+        void getPeriodoMatriculaVigente()
+          .then((periodoVigente) => {
+            setPeriodoMatriculaVigente(periodoVigente);
+          })
+          .catch((refreshError: unknown) => {
+            setNotificacionAperturaError(
+              refreshError instanceof Error
+                ? refreshError.message
+                : "No fue posible actualizar el estado de la notificación de apertura.",
+            );
+          })
+          .finally(() => {
+            setIsLoadingPeriodoVigente(false);
+          });
+      }, 5000);
     } catch (error) {
       setNotificacionAperturaError(
         error instanceof Error

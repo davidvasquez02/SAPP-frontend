@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — aviso temporal de apertura de matrícula
+
+## Estado y salida esperada
+
+- Al tener éxito `POST /sapp/matriculaAcademica/notificarAperturaMatricula`, se conserva el mensaje devuelto por el backend, por ejemplo “Notificación de apertura de matrícula enviada.”, durante 5000 ms.
+- Después del intervalo se limpia el mensaje y se invoca otra vez `getPeriodoMatriculaVigente()`, que consulta `GET /sapp/periodoAcademicoFecha/vigente`. Solo el resultado actualizado con `notificacionAperturaEnviada: true` oculta la tarjeta.
+- Si el backend todavía devuelve `false`, la tarjeta queda disponible; si la consulta falla, se muestra el error de actualización en lugar de ocultar el control sin confirmación.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/notificacionAperturaMatricula.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.61 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — visibilidad de notificación de apertura de matrícula
 
 ## Estado, contrato y salida esperada
