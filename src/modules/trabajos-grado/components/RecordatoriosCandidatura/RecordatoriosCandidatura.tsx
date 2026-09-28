@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getPeriodoMatriculaVigente } from '../../../matricula/services/matriculaAcademicaService'
 import { enviarRecordatoriosCandidatura } from '../../evaluacion/api'
 import './RecordatoriosCandidatura.css'
 
@@ -7,6 +8,28 @@ const RecordatoriosCandidatura = () => {
   const [enviando, setEnviando] = useState(false)
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mostrarRecordatorios, setMostrarRecordatorios] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    void getPeriodoMatriculaVigente()
+      .then((periodoVigente) => {
+        if (!cancelled) {
+          setMostrarRecordatorios(periodoVigente?.notificacionAperturaEnviada !== true)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          // Si no es posible validar el período, se conserva la acción disponible.
+          setMostrarRecordatorios(true)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const cerrarConfirmacion = () => {
     if (!enviando) setConfirmando(false)
@@ -34,6 +57,10 @@ const RecordatoriosCandidatura = () => {
     } finally {
       setEnviando(false)
     }
+  }
+
+  if (mostrarRecordatorios !== true) {
+    return null
   }
 
   return (
