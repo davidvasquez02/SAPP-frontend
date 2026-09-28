@@ -1,5 +1,10 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — retirar estado de evaluación sin contenido
+
+- `InscripcionAdmisionDetallePage` elimina solamente el ítem visual **Estado de evaluación** de la barra de resumen, disponible para cualquier rol. `evaluacionStatus` sigue controlando las etapas, alertas y acciones existentes.
+- Prueba: `node --test --test-isolation=none tests/inscripcionDetalleResumen.test.ts`; build: `npm run build`. Resultado reciente: regresión 1/1 PASS y build PASS (324 módulos, CSS 291.29 kB, JS 755.83 kB). Sin dependencias, contratos ni datos nuevos.
+
 ## Actualización 2026-09-28 — estado personal de entrevistas
 
 - Verificación: pruebas de lógica 3/3 PASS y compilación de producción PASS; persiste aviso de tamaño de chunk. El detalle del evaluador consulta datos frescos en lugar de usar la caché indefinida.

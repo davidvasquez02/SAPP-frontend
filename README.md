@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — resumen de detalle de admisión
+
+- El detalle de inscripción de admisión ya no muestra el campo **Estado de evaluación** en su resumen. La lógica interna de disponibilidad, alertas y navegación de las etapas se conserva.
+- Alcance: `src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx` y `tests/inscripcionDetalleResumen.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (324 módulos; CSS 291.29 kB; JS 755.83 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-28 — estado personal de entrevistas
 
 - Listado docente/director y detalle muestran el estado personal usando `evaluadorId === session.user.id`. Todos los registros propios deben tener nota (incluido cero) y fecha; se excluye el resumen `ENTREV`. Los borradores no cuentan como guardados.

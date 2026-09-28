@@ -88,22 +88,6 @@ const getFotoSrc = (inscripcion?: InscripcionAdmisionDto | null) => {
   return `data:${foto.mimeType ?? 'image/jpeg'};base64,${foto.contenidoBase64}`
 }
 
-const getEvaluacionLabel = (status: InscripcionDetalleOutletContext['evaluacionStatus']) => {
-  if (status === 'STARTED') {
-    return 'Iniciada'
-  }
-
-  if (status === 'NOT_STARTED') {
-    return 'No iniciada'
-  }
-
-  if (status === 'LOADING') {
-    return 'Consultando...'
-  }
-
-  return 'Con novedad'
-}
-
 const DISABLED_MESSAGE = 'Disponible cuando se inicie la evaluación.'
 const EVALUACION_RETRY_ATTEMPTS = 5
 const EVALUACION_RETRY_DELAY_MS = 500
@@ -214,8 +198,6 @@ const InscripcionAdmisionDetallePage = () => {
     hour: '2-digit',
     minute: '2-digit',
   })
-  const evaluacionLabel = getEvaluacionLabel(evaluacionStatus)
-
   const reloadInscripcionDetalle = useCallback(async () => {
     if (
       !convocatoriaId ||
@@ -708,13 +690,6 @@ const InscripcionAdmisionDetallePage = () => {
             <div>
               <span>Estado de inscripción</span>
               <strong>{inscripcionEstado ? inscripcionEstado.replaceAll('_', ' ') : '—'}</strong>
-            </div>
-          </div>
-          <div className="inscripcion-detalle__summary-item">
-            <span className="inscripcion-detalle__summary-icon" aria-hidden="true">📄</span>
-            <div>
-              <span>Estado de evaluación</span>
-              <strong>{evaluacionLabel}</strong>
             </div>
           </div>
         </section>
