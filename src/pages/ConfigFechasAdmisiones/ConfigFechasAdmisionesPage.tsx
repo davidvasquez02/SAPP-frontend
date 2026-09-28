@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
 import {
   createPeriodoAcademico,
@@ -17,7 +17,6 @@ type FormState = {
   fechaFin: string
   fechaInicioMatricula: string
   fechaFinMatricula: string
-  descripcion: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -28,10 +27,10 @@ const EMPTY_FORM: FormState = {
   fechaFin: '',
   fechaInicioMatricula: '',
   fechaFinMatricula: '',
-  descripcion: '',
 }
 
 const ConfigFechasAdmisionesPage = () => {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const requestedPeriodoId = Number(searchParams.get('periodoId'))
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
@@ -58,7 +57,6 @@ const ConfigFechasAdmisionesPage = () => {
           fechaFin: item.periodo.fechaFin ?? '',
           fechaInicioMatricula: fechaMatricula?.fechaInicio ?? '',
           fechaFinMatricula: fechaMatricula?.fechaFin ?? '',
-          descripcion: fechaMatricula?.descripcion ?? item.periodo.descripcion ?? '',
         })
       } else {
         setForm(EMPTY_FORM)
@@ -111,29 +109,26 @@ const ConfigFechasAdmisionesPage = () => {
               tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
               fechaInicio: form.fechaInicioMatricula,
               fechaFin: form.fechaFinMatricula,
-              descripcion: form.descripcion.trim() || `Fechas matrículas ${form.anio}-${form.periodo}`,
+              descripcion: '',
             },
           ],
         })
-        setFeedback('Periodo académico creado correctamente.')
       } else {
         await updatePeriodoAcademico(form.periodoId, {
           fechaInicio: form.fechaInicio,
           fechaFin: form.fechaFin,
-          descripcion: `Periodo ${form.anio}-${form.periodo}`,
+          descripcion: '',
           fechas: [
             {
               tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
               fechaInicio: form.fechaInicioMatricula,
               fechaFin: form.fechaFinMatricula,
-              descripcion: form.descripcion.trim() || `Fechas matrículas ${form.anio}-${form.periodo}`,
+              descripcion: '',
             },
           ],
         })
-        setFeedback('Periodo académico actualizado correctamente.')
       }
-
-      await loadData()
+      navigate('/fechas')
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No fue posible guardar el periodo.')
     } finally {
@@ -205,10 +200,6 @@ const ConfigFechasAdmisionesPage = () => {
               />
             </label>
 
-            <label className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
-              Descripción
-              <textarea rows={3} value={form.descripcion} onChange={(event) => setForm((c) => ({ ...c, descripcion: event.target.value }))} />
-            </label>
           </div>
 
           <div className="config-fechas-admisiones__actions">

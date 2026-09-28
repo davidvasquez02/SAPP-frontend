@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — ajustes de períodos académicos
+
+## Estado, decisiones y salida esperada
+
+- Hallazgos extraídos de `D:\Users\david\Downloads\Documento sin título (8).docx`: retirar descripción del formulario de períodos; volver al listado tras crear/editar; ordenar la jerarquía del título del módulo de fechas.
+- `ConfigFechasAdmisionesPage` elimina `descripcion` del estado y del control visual. Tanto el create como el update conservan los campos requeridos por el backend enviando `descripcion: ''` en las fechas y, para actualización, también en el período.
+- Tras una operación exitosa navega a `/fechas`; no recarga el formulario. `FechasModulePage` usa `ModuleLayout title="Módulo"` y encabezado `Fechas académicas`.
+
+## Paths, pruebas, entorno y nota de revisión
+
+- Implementación: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`, `src/pages/FechasModule/FechasModulePage.tsx`; regresión: `tests/configFechasPeriodos.test.ts`. Sin cambios en contratos HTTP, permisos, schemas, seeds, datasets ni dependencias.
+- Entorno único: reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/configFechasPeriodos.test.ts` y `npm run build`.
+- Resultado reciente: prueba 2/2 PASS y build PASS (323 módulos, CSS 287.20 kB, JS 752.62 kB). La extracción del DOCX fue estructural; el render visual no pudo completarse porque el runtime no encuentra `soffice.exe`. No afecta el cambio de frontend. Vite mantiene el aviso no bloqueante por chunk mayor de 500 kB.
+
+---
+
+---
+
 # Handoff 2026-09-27 — contador de envíos de candidatura doctoral
 
 ## Estado, contrato y salida esperada

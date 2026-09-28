@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — períodos académicos y módulo de fechas
+
+- El formulario de período académico ya no solicita descripción. Para conservar el contrato del backend, crea y actualiza las fechas con `descripcion: ''`.
+- Tras crear o actualizar, la persona vuelve al listado `/fechas`, evitando que permanezca en el formulario. La cabecera quedó jerarquizada como **Módulo** y **Fechas académicas**, sin repetir “Módulo”.
+- Archivos: `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`, `src/pages/FechasModule/FechasModulePage.tsx` y `tests/configFechasPeriodos.test.ts`. Sin cambios de endpoints, roles, datos, seeds o dependencias. Verificación: regresión 2/2 PASS y build PASS (323 módulos; CSS 287.20 kB; JS 752.62 kB); sigue el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — contador de recordatorios de candidatura
 
 - El endpoint de recordatorios de candidatura doctoral devuelve un objeto en `data`, no un número. La interfaz ahora toma `data.correosEnviados`, evitando el texto `[object Object]` y mostrando, por ejemplo, “Se enviaron 30 recordatorios de examen de candidatura doctoral.”
