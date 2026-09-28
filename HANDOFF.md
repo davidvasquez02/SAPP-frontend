@@ -1,5 +1,13 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — respuesta nullable al consultar entrevistas
+
+- `getEntrevistasPorEvaluador` consume ahora `ApiResponse<EntrevistaPorEvaluadorDto[] | null>` y pasa `response.data` por la utilidad pura `normalizeEntrevistasPorEvaluador`.
+- Salida esperada: `data: null`, `data: undefined` y `data: []` se convierten en `[]`; el `Sidebar` calcula `hasAssigned: false` y no muestra **Admisiones** a docente/director evaluador. Un arreglo no vacío conserva `hasAssigned: true`.
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/utils/normalizeEntrevistasPorEvaluador.ts`, `src/components/Sidebar/Sidebar.tsx`, `tests/admisionesNavigation.test.ts` y `tests/estadoEntrevista.test.ts`.
+- Sin cambios de endpoint, autorización, navegación administrativa, dependencias, schemas, seeds ni datasets. Prueba focalizada PASS (9/9), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (326 módulos; CSS 294.30 kB; JS 758.20 kB).
+- Reutilizar el `node_modules` y `package-lock.json` existentes; no crear venv, Conda, Poetry ni otro árbol npm. Pendiente institucional: validar con el usuario cuya API devuelve exactamente `data: null` que la opción permanezca oculta tras iniciar sesión.
+
 ## Actualización 2026-09-28 — guía visual de promedio en hoja de vida
 
 ### Estado, contrato y salida esperada

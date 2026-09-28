@@ -1,5 +1,6 @@
 import { httpGet, httpPut } from '../../../shared/http/httpClient'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../types/evaluacionAdmisionTypes'
+import { normalizeEntrevistasPorEvaluador } from '../utils/normalizeEntrevistasPorEvaluador'
 import type { ApiResponse } from './types'
 
 export const getEvaluacionAdmisionInfo = async (
@@ -25,7 +26,7 @@ export interface EntrevistaPorEvaluadorDto {
 export const getEntrevistasPorEvaluador = async (
   evaluadorId: number,
 ): Promise<EntrevistaPorEvaluadorDto[]> => {
-  const response = await httpGet<ApiResponse<EntrevistaPorEvaluadorDto[]>>(
+  const response = await httpGet<ApiResponse<EntrevistaPorEvaluadorDto[] | null>>(
     `/sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId=${encodeURIComponent(evaluadorId)}`,
   )
 
@@ -33,7 +34,7 @@ export const getEntrevistasPorEvaluador = async (
     throw new Error(response.message || 'Error al obtener las entrevistas del evaluador')
   }
 
-  return response.data ?? []
+  return normalizeEntrevistasPorEvaluador(response.data)
 }
 
 export interface RegistroPuntajeUpdateItem {

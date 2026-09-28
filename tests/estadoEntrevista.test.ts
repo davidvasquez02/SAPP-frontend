@@ -7,6 +7,7 @@ import {
   getOrdenEstadoEntrevista,
 } from '../src/modules/admisiones/utils/estadoEntrevista.ts'
 import type { EvaluacionAdmisionItem } from '../src/modules/admisiones/types/evaluacionAdmisionTypes.ts'
+import { normalizeEntrevistasPorEvaluador } from '../src/modules/admisiones/utils/normalizeEntrevistasPorEvaluador.ts'
 
 const admisionesProfesorPath = new URL(
   '../src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx',
@@ -70,4 +71,9 @@ test('el listado consulta una sola vez las entrevistas del evaluador y las asoci
   assert.match(pageSource, /getEntrevistasPorEvaluador\(usuarioId\)/)
   assert.match(pageSource, /acc\[entrevista\.inscripcionId\] = entrevista\.completa/)
   assert.doesNotMatch(pageSource, /getEvaluacionAdmisionInfo/)
+})
+
+test('normaliza data null como una lista vacía de entrevistas', () => {
+  assert.deepEqual(normalizeEntrevistasPorEvaluador(null), [])
+  assert.deepEqual(normalizeEntrevistasPorEvaluador(undefined), [])
 })

@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-28 — ocultar Admisiones cuando entrevistas es null
+
+- El contrato de `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}` ahora declara explícitamente `data: EntrevistaPorEvaluadorDto[] | null`.
+- `normalizeEntrevistasPorEvaluador` convierte `null` o `undefined` en `[]`. En consecuencia, una respuesta `{ ok: true, message: "Consulta exitosa", data: null }` produce `entrevistas.length === 0` y mantiene oculta la opción **Admisiones** para docente/director sin perfil administrativo.
+- Los arreglos con entrevistas continúan habilitando el módulo. Coordinación, secretaría y administración no dependen de esta comprobación. No cambian endpoint, rutas, permisos, schemas, seeds, datasets ni dependencias.
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/modules/admisiones/utils/normalizeEntrevistasPorEvaluador.ts`, `tests/admisionesNavigation.test.ts` y `tests/estadoEntrevista.test.ts`.
+- Verificación: pruebas focalizadas PASS (9/9), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (326 módulos; CSS 294.30 kB; JS 758.20 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+
 ## Ajuste 2026-09-28 — guía visual de promedio en hoja de vida
 
 - Las consideraciones de hoja de vida que llegan como un arreglo JSON completo de `{ promedioMin, promedioMax, puntos }` se presentan como una guía compacta **Promedio → puntos**, en lugar de mostrar los objetos JSON en una lista numerada.
