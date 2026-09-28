@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — actualización de matrícula del estudiante
+
+## Estado y salida esperada
+
+- `MatriculaPage` deriva `hasRejectedDocuments` de la colección de documentos mediante `estado === "RECHAZADO"`.
+- Para una matrícula existente, la confirmación devuelve esa condición y el contenedor del botón se renderiza solamente con `!hasExistingMatricula || hasRejectedDocuments`.
+- Salida esperada: con todos los archivos en `PENDIENTE`, `EN_REVISION` o `APROBADO`, no se muestra **Actualizar matrícula**. Si algún archivo llega `RECHAZADO`, aparece y permite cargar la corrección.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaActualizarRechazados.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaActualizarRechazados.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.47 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — títulos del tablero de matrículas académicas
 
 ## Estado y salida esperada

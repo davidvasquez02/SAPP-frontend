@@ -761,18 +761,10 @@ const MatriculaPage = () => {
     setListadoPage(1);
   }, [estadoFilter, periodoFilter, programaFilter, searchText]);
 
-  const hasAllDocumentsUploadedAndNoRejected = useMemo(() => {
-    if (!hasExistingMatricula) {
-      return false;
-    }
-
-    const hasRejectedDocuments = documentos.some((item) => item.estado === "RECHAZADO");
-    if (hasRejectedDocuments) {
-      return false;
-    }
-
-    return documentos.every((item) => item.uploadStatus === "UPLOADED");
-  }, [documentos, hasExistingMatricula]);
+  const hasRejectedDocuments = useMemo(
+    () => documentos.some((item) => item.estado === "RECHAZADO"),
+    [documentos],
+  );
 
   const requiredDocumentsSummary = useMemo(() => {
     if (errorDocumentos || documentos.length === 0) return null;
@@ -800,13 +792,13 @@ const MatriculaPage = () => {
     }
 
     if (hasExistingMatricula) {
-      return !hasAllDocumentsUploadedAndNoRejected;
+      return hasRejectedDocuments;
     }
 
     return false;
   }, [
     canCreateMatricula,
-    hasAllDocumentsUploadedAndNoRejected,
+    hasRejectedDocuments,
     hasExistingMatricula,
     isReadOnlyMatriculaFinalizada,
     isExistingMatriculaBlocked,
@@ -1263,7 +1255,7 @@ const MatriculaPage = () => {
               ) : null}
             </section>
 
-            {!isReadOnlyMatriculaFinalizada ? (
+            {!isReadOnlyMatriculaFinalizada && (!hasExistingMatricula || hasRejectedDocuments) ? (
               <div className="matricula-page__actions">
                 <button
                   type="button"
