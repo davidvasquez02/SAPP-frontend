@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { getEstadoEntrevista } from '../src/modules/admisiones/utils/estadoEntrevista.ts'
+import {
+  ESTADO_ENTREVISTA_NO_INICIADA,
+  getEstadoEntrevista,
+  getOrdenEstadoEntrevista,
+} from '../src/modules/admisiones/utils/estadoEntrevista.ts'
 import type { EvaluacionAdmisionItem } from '../src/modules/admisiones/types/evaluacionAdmisionTypes.ts'
+
+const admisionesProfesorPath = new URL(
+  '../src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx',
+  import.meta.url,
+)
 
 const fila = (changes: Partial<EvaluacionAdmisionItem> = {}): EvaluacionAdmisionItem => ({
   id: 1, inscripcionId: 74, etapaEvaluacion: 'ENTREVISTA', aspecto: 'Aspecto',
@@ -23,6 +33,25 @@ test('requiere nota y fecha en todos los registros propios', () => {
   }
 })
 
-test('no confunde ausencia de asignación con calificación completa', () => {
-  assert.equal(getEstadoEntrevista([fila()], 65).label, 'Sin aspectos asignados')
+test('presenta la evaluación como no iniciada cuando no hay aspectos propios', () => {
+  assert.equal(getEstadoEntrevista([fila()], 65).label, ESTADO_ENTREVISTA_NO_INICIADA)
+})
+
+test('ordena primero pendientes, luego calificados y al final no iniciados', () => {
+  const estados = [ESTADO_ENTREVISTA_NO_INICIADA, 'Calificado', 'Pendiente de calificación']
+
+  assert.deepEqual(estados.sort((a, b) => getOrdenEstadoEntrevista(a) - getOrdenEstadoEntrevista(b)), [
+    'Pendiente de calificación',
+    'Calificado',
+    ESTADO_ENTREVISTA_NO_INICIADA,
+  ])
+})
+
+test('el listado destaca la entrevista y no presenta la etapa no iniciada como error', async () => {
+  const source = await readFile(admisionesProfesorPath, 'utf8')
+
+  assert.match(source, /admisiones-profesor__interview-status/)
+  assert.match(source, /getOrdenEstadoEntrevista\(estadoA\) - getOrdenEstadoEntrevista\(estadoB\)/)
+  assert.match(source, /label = ESTADO_ENTREVISTA_NO_INICIADA/)
+  assert.doesNotMatch(source, /No se pudo consultar/)
 })

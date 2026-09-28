@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — prioridad y orden de entrevistas asignadas
+
+- En **Admisiones > Mis entrevistas**, disponible para director de escuela y docentes evaluadores asignados sin perfil administrativo, **Tu entrevista** se presenta como un bloque principal de la tarjeta. Sus variantes pendiente, calificada y no iniciada usan superficies y colores semánticos compatibles con temas claro/oscuro.
+- La ausencia de la etapa o de aspectos propios se comunica como **Evaluación no iniciada**; se retiró **No se pudo consultar** de esta vista. Dentro de cada programa las tarjetas se ordenan: **Pendiente de calificación**, **Calificado** y **Evaluación no iniciada**. Los estados aún en consulta quedan después de esos grupos hasta resolverse.
+- No cambiaron endpoints, DTO, rutas, permisos ni payloads. Se conserva `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa=ENTREVISTA`, con máximo cuatro consultas simultáneas. Paths: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.{tsx,css}`, `src/modules/admisiones/utils/estadoEntrevista.ts` y `tests/estadoEntrevista.test.ts`.
+- Verificación: pruebas focalizadas PASS (5/5), ESLint focalizado PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 756.62 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/estadoEntrevista.test.ts`, `npm run build` y `npm run preview`. No hay seed, backend ni credenciales locales para reproducir la ruta protegida.
+
 ## Ajuste 2026-09-28 — convocatorias: cupo completo y documentos PDF
 
 - Propósito y alcance: SAPP centraliza los trámites de posgrado de la EISI–UIS. En el detalle de una convocatoria, al alcanzar los cupos, el registro de aspirantes se mantiene bloqueado y ahora se informa mediante una tarjeta institucional compacta, no como texto de error aislado.

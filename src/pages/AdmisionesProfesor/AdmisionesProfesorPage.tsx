@@ -13,7 +13,11 @@ import { getAspiranteFotoSrc } from '../../modules/admisiones/utils/aspiranteFot
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
 import './AdmisionesProfesorPage.css'
 import { getEvaluacionAdmisionInfo } from '../../modules/admisiones/api/evaluacionAdmisionService'
-import { getEstadoEntrevista } from '../../modules/admisiones/utils/estadoEntrevista'
+import {
+  ESTADO_ENTREVISTA_NO_INICIADA,
+  getEstadoEntrevista,
+  getOrdenEstadoEntrevista,
+} from '../../modules/admisiones/utils/estadoEntrevista'
 
 type InscripcionConConvocatoria = InscripcionAdmisionDto & {
   convocatoriaId: number
@@ -201,7 +205,7 @@ const AdmisionesProfesorPage = () => {
           const items = await getEvaluacionAdmisionInfo(id, 'ENTREVISTA')
           label = getEstadoEntrevista(items, usuarioId).label
         } catch {
-          label = 'No se pudo consultar'
+          label = ESTADO_ENTREVISTA_NO_INICIADA
         }
         if (!cancelled) setEstadosEntrevista((current) => ({ ...current, [`${usuarioId}-${id}`]: label }))
       }
@@ -232,7 +236,14 @@ const AdmisionesProfesorPage = () => {
   )
 
   const renderProgramaSection = useCallback(
-    (title: string, rows: InscripcionConConvocatoria[]) => (
+    (title: string, rows: InscripcionConConvocatoria[]) => {
+      const rowsOrdenadas = [...rows].sort((a, b) => {
+        const estadoA = estadosEntrevista[`${usuarioId}-${a.id}`]
+        const estadoB = estadosEntrevista[`${usuarioId}-${b.id}`]
+        return getOrdenEstadoEntrevista(estadoA) - getOrdenEstadoEntrevista(estadoB)
+      })
+
+      return (
       <section className="admisiones-profesor__program">
         <h2 className="admisiones-profesor__program-title">{title}</h2>
 
@@ -246,11 +257,22 @@ const AdmisionesProfesorPage = () => {
 
         {!loadingInscripciones && rows.length > 0 ? (
           <div className="admisiones-profesor__cards-grid">
-            {rows.map((inscripcion) => {
+            {rowsOrdenadas.map((inscripcion) => {
               const documento = inscripcion.numeroDocumento || '—'
               const email = inscripcion.emailPersonal || '—'
               const telefono = inscripcion.telefono || '—'
               const fotoSrc = getAspiranteFotoSrc(inscripcion.foto)
+              const estadoEntrevista =
+                estadosEntrevista[`${usuarioId}-${inscripcion.id}`] ??
+                'Consultando calificación…'
+              const estadoEntrevistaTone =
+                estadoEntrevista === 'Pendiente de calificación'
+                  ? 'pending'
+                  : estadoEntrevista === 'Calificado'
+                    ? 'complete'
+                    : estadoEntrevista === ESTADO_ENTREVISTA_NO_INICIADA
+                      ? 'not-started'
+                      : 'loading'
 
               return (
                 <article
@@ -275,11 +297,16 @@ const AdmisionesProfesorPage = () => {
                       {inscripcion.estado?.replaceAll('_', ' ') || 'Sin estado'}
                     </span>
 
-                    <dl className="admisiones-profesor__card-details">
+                    <dl
+                      className={`admisiones-profesor__interview-status admisiones-profesor__interview-status--${estadoEntrevistaTone}`}
+                    >
                       <div>
                         <dt>Tu entrevista</dt>
-                        <dd role="status">{estadosEntrevista[`${usuarioId}-${inscripcion.id}`] ?? 'Consultando calificación…'}</dd>
+                        <dd role="status">{estadoEntrevista}</dd>
                       </div>
+                    </dl>
+
+                    <dl className="admisiones-profesor__card-details">
                       <div>
                         <dt>Documento</dt>
                         <dd>{documento}</dd>
@@ -309,7 +336,8 @@ const AdmisionesProfesorPage = () => {
           </div>
         ) : null}
       </section>
-    ),
+      )
+    },
     [goToEntrevistas, loadingInscripciones, estadosEntrevista, usuarioId]
   )
 

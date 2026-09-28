@@ -1,5 +1,20 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — prioridad y orden de entrevistas asignadas
+
+### Estado, reglas y salida esperada
+
+- `AdmisionesProfesorPage` muestra **Tu entrevista** fuera de la cuadrícula de datos personales, en un bloque destacado de ancho completo. Pendiente usa `--warning`, calificado usa `--primary` y no iniciado/cargando usa tokens neutros; no se introdujeron colores fijos para estos estados.
+- `getEstadoEntrevista` devuelve **Evaluación no iniciada** cuando el evaluador autenticado no tiene aspectos propios. La vista usa la misma etiqueta cuando la consulta de la etapa todavía no está disponible y ya no renderiza **No se pudo consultar**.
+- Orden por programa: `getOrdenEstadoEntrevista` asigna 0 a **Pendiente de calificación**, 1 a **Calificado**, 2 a **Evaluación no iniciada** y 3 a estados transitorios/desconocidos. El arreglo se copia antes de ordenar; no se mutan las inscripciones recibidas.
+
+### Contratos, paths, pruebas y continuidad
+
+- Se conserva `GET /sapp/evaluacionAdmision/info?inscripcionId={id}&etapa=ENTREVISTA`, la concurrencia máxima de cuatro y la navegación existente al detalle. Sin cambios de API, DTO, permisos, schemas, dependencias, seeds ni datasets.
+- Paths: `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.{tsx,css}`, `src/modules/admisiones/utils/estadoEntrevista.ts` y `tests/estadoEntrevista.test.ts`.
+- Resultado: prueba focalizada PASS (5/5), ESLint focalizado PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 756.62 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Pendiente institucional: revisar el énfasis visual y el reordenamiento progresivo con sesión real de docente/director, en móvil y temas claro/oscuro.
+
 ## Actualización 2026-09-28 — convocatorias: aviso de cupo completo y PDF
 
 ### Estado actual
