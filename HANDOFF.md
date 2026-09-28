@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — contador de envíos de candidatura doctoral
+
+## Estado, contrato y salida esperada
+
+- El `POST /solicitudesAcademicas/recordatorio-candidatura` responde con el envelope `{ ok, message, data }`, donde `data` es un objeto que incluye `correosEnviados` (en la evidencia: 30), `estudiantesIdentificados` y `estudiantes`.
+- Antes `enviarRecordatoriosCandidatura` tipaba `data` como número e interpolaba el objeto en la tarjeta, provocando `[object Object]`. Ahora el contrato interno `ResultadoRecordatoriosCandidatura` lee exclusivamente `correosEnviados` y devuelve ese número al componente.
+- Salida esperada: para `{ data: { correosEnviados: 30 } }`, la pantalla muestra “Se enviaron 30 recordatorios de examen de candidatura doctoral.”
+
+## Paths, entorno, pruebas y continuidad
+
+- Implementación: `src/modules/trabajos-grado/evaluacion/api.ts`; regresión: `tests/recordatoriosCandidatura.test.ts`. No cambian endpoint, autorización, payload, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/recordatoriosCandidatura.test.ts` y `npm run build`.
+- Resultado reciente: regresión 3/3 PASS y build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.18 kB). El aviso de chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — cierre y publicación de matrícula financiera
 
 ## Estado, regla y salida esperada

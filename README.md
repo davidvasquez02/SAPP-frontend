@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — contador de recordatorios de candidatura
+
+- El endpoint de recordatorios de candidatura doctoral devuelve un objeto en `data`, no un número. La interfaz ahora toma `data.correosEnviados`, evitando el texto `[object Object]` y mostrando, por ejemplo, “Se enviaron 30 recordatorios de examen de candidatura doctoral.”
+- Alcance: `src/modules/trabajos-grado/evaluacion/api.ts` y `tests/recordatoriosCandidatura.test.ts`. No cambian endpoint, permisos, payload, datos, seeds ni dependencias. Verificación: regresión dirigida 3/3 PASS y build PASS (323 módulos; CSS 287.20 kB; JS 753.18 kB); permanece el aviso no bloqueante de Vite por chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — cierre de recepción independiente de publicación
 
 - En el detalle de un proceso de matrícula financiera, **Cerrar recepción** ya no depende de que las liquidaciones estén en estado final; se permite con filas pendientes o respondidas.

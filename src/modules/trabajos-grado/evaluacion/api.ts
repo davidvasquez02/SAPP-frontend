@@ -73,11 +73,17 @@ export const enviarRecordatorios = async (solicitudId: number): Promise<number> 
     'No fue posible enviar los recordatorios.',
   )
 
-export const enviarRecordatoriosCandidatura = async (): Promise<number> =>
-  unwrap(
-    await httpPost<ApiResponse<number>>('/solicitudesAcademicas/recordatorio-candidatura'),
+interface ResultadoRecordatoriosCandidatura {
+  correosEnviados: number
+}
+
+export const enviarRecordatoriosCandidatura = async (): Promise<number> => {
+  const resultado = unwrap(
+    await httpPost<ApiResponse<ResultadoRecordatoriosCandidatura>>('/solicitudesAcademicas/recordatorio-candidatura'),
     'No fue posible enviar los recordatorios de candidatura doctoral.',
   )
+  return resultado.correosEnviados
+}
 
 export const definirDocumentoEvaluar = async (solicitudId: number, documentoId: number) =>
   unwrap(

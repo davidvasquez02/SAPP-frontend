@@ -20,7 +20,8 @@ test('solicita confirmación antes de invocar el endpoint de recordatorios', () 
   assert.match(componentSource, /Confirmar envío de recordatorios/)
   assert.match(componentSource, /enviarRecordatoriosCandidatura\(\)/)
   assert.doesNotMatch(componentSource, /SOLICITUD_RECORDATORIOS_CANDIDATURA_ID/)
-  assert.match(apiSource, /httpPost<ApiResponse<number>>\('\/solicitudesAcademicas\/recordatorio-candidatura'\)/)
+  assert.match(apiSource, /httpPost<ApiResponse<ResultadoRecordatoriosCandidatura>>\('\/solicitudesAcademicas\/recordatorio-candidatura'\)/)
+  assert.match(apiSource, /return resultado\.correosEnviados/)
 })
 
 test('explica que el backend selecciona a todos los estudiantes elegibles', () => {
