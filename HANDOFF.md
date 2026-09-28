@@ -1,5 +1,23 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+---
+
+# Handoff 2026-09-27 — tooltip de Acta asociada en informes
+
+## Estado, decisión y salida esperada
+
+- Se corrigió el tooltip activado al pasar el cursor o enfocar el botón `?` de **Acta asociada** en **Informes a dependencias**. Antes combinaba las variables inversas y podía acabar con texto blanco sobre una superficie clara; ahora utiliza `background: var(--surface-container-low, var(--surface))` y `color: var(--text-primary)`, preservando contraste en los dos temas.
+- El botón de ayuda conserva 1.4rem circular, pero se define como flex centrado, con `line-height: 1` y tamaño fijo para centrar visualmente `?` frente al rótulo.
+- Salida esperada: el texto “Seleccione el acta del Comité Asesor…” se lee sin seleccionar texto al abrir el tooltip; el símbolo `?` queda centrado dentro de su círculo.
+
+## Paths, contratos, entorno y siguiente paso
+
+- Cambio exclusivo: `src/pages/Reportes/ReportesPage.css`. El marcado, el tooltip accesible (`role="tooltip"`), el endpoint, los DTO, schemas, datos y permisos permanecen intactos. No hay seeds ni credenciales locales para abrir esta ruta protegida.
+- Entorno a reutilizar: `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/*.test.ts`, `npm run build`, `npm run preview`.
+- Verificación local: `npm run build` PASS (TypeScript y producción; 323 módulos, CSS 287.20 kB, JS 753.08 kB). Pendiente externo: comprobar visualmente la ayuda con los dos temas y navegación por teclado. El aviso conocido de Vite sobre chunk JavaScript mayor de 500 kB no bloquea el build.
+
+---
+
 - Actualización de entrevistas: `EvaluacionEtapaPage.tsx` prioriza los grupos con `items.every(belongsToCurrentUser)` mediante ordenación estable. Solo esos grupos reciben `onSaveBulk`; se retiró el botón global al final. El botón **Actualizar** de `EvaluacionEtapaSection` queda debajo del bloque propio y respeta el estado final, errores y guardado en curso. Se conserva la identificación existente por nombre normalizado y el payload existente. ESLint focalizado y build PASS (323 módulos). Pendiente validación visual con coordinación.
 
 - `src/modules/admisiones/components/EvaluacionEtapaSection/`: el CSS usa el contenedor `evaluacion` y tarjetas hasta 980 px de ancho disponible, con observaciones completas. El input numérico compartido retira el foco mediante `onWheel` para evitar incrementos accidentales conservando validación y desplazamiento de página.

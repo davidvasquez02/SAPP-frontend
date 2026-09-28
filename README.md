@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — ayuda legible en informes a dependencias
+
+- En **Informes a dependencias**, el contenido emergente de **Acta asociada** usa ahora una superficie y texto semánticos (`--surface-container-low` y `--text-primary`). Esto evita texto blanco sobre fondo claro tanto en `body.light` como en `body.dark`.
+- El ícono `?` se convirtió en un contenedor flex de tamaño fijo, con altura de línea controlada, para que el carácter quede centrado vertical y horizontalmente.
+- Alcance: únicamente `src/pages/Reportes/ReportesPage.css`; no cambian rutas, API, DTO, permisos, datos, seeds ni dependencias. Verificación local: `npm run build` PASS (323 módulos; CSS 287.20 kB; JS 753.08 kB). Permanece el aviso no bloqueante de Vite por el chunk JavaScript mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — calificaciones propias primero en entrevistas
 
 - En entrevistas, el bloque del usuario autenticado aparece antes de los demás evaluadores. Su botón **Actualizar** se ubica inmediatamente debajo de sus componentes, reutilizando el guardado y las validaciones de la sección. Los demás bloques permanecen de consulta.
