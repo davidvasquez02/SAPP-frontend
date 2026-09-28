@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Mejora 2026-09-27 — toast de aprobación de matrícula
+
+- La aprobación automática de una matrícula desde coordinación ya no abre un `window.alert`. Muestra un toast institucional con icono, cierre manual, contraste temático y cierre automático a los cinco segundos.
+- El error de esa aprobación usa la variante de error del mismo toast, sin interrumpir el flujo con un popup nativo.
+- Archivos: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`, `MatriculaDetalleCoordinacionPage.css` y `tests/matriculaDetalleToast.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 289.33 kB; JS 754.00 kB); Vite mantiene el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — título duplicado en matrícula estudiantil
 
 - En el detalle de matrícula del estudiante se retiró el encabezado interno **Proceso de matrícula**, ya que duplicaba el título proporcionado por la vista principal. Se conserva el período académico como contexto.

@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — toast al aprobar matrícula en coordinación
+
+## Estado y salida esperada
+
+- Cuando la aprobación automática se activa después de validar todos los documentos obligatorios, el detalle de coordinación crea un `toast` de éxito en vez de `window.alert`.
+- El toast se ubica fijo abajo a la derecha, tiene icono, botón accesible para cerrarlo y se retira a los 5 segundos. Un fallo en la aprobación muestra el mismo componente con tono `error`.
+- Salida esperada: “Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.” aparece como toast institucional, no como popup nativo.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `MatriculaDetalleCoordinacionPage.css`; regresión: `tests/matriculaDetalleToast.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaDetalleToast.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 289.33 kB, JS 754.00 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — título único en matrícula del estudiante
 
 ## Estado y salida esperada

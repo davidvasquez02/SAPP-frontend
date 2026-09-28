@@ -41,6 +41,11 @@ type AsignaturaDecisionState = {
 
 type DocumentoDecision = 'APROBADO' | 'RECHAZADO'
 
+type ToastFeedback = {
+  message: string
+  tone: 'success' | 'error'
+}
+
 const applyDocumentoDecision = (
   documentos: DocumentoTramiteItemDto[],
   documentoId: number,
@@ -134,12 +139,20 @@ const MatriculaDetalleCoordinacionPage = () => {
   const notifiedDocumentsMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
+  const [toast, setToast] = useState<ToastFeedback | null>(null)
 
   const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
   const isRadicada = normalizedMatriculaEstado === 'RADICADA'
   const isFinalizada = normalizedMatriculaEstado === 'FINALIZADA'
   const disableDocumentValidation = isRadicada || isFinalizada
   const disableAsignaturasValidation = isFinalizada
+
+  useEffect(() => {
+    if (!toast) return
+
+    const timeoutId = window.setTimeout(() => setToast(null), 5_000)
+    return () => window.clearTimeout(timeoutId)
+  }, [toast])
 
   const getActionState = useCallback(
     (id: number): DocumentoActionState =>
@@ -486,12 +499,16 @@ const MatriculaDetalleCoordinacionPage = () => {
     void aprobarMatriculaAcademica(matricula.id)
       .then(async () => {
         await refreshMatriculaAfterApproval()
-        window.alert(
-          'Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.',
-        )
+        setToast({
+          tone: 'success',
+          message: 'Todos los documentos obligatorios fueron aprobados. La matrícula avanzó correctamente.',
+        })
       })
       .catch((requestError: unknown) => {
-        window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+        setToast({
+          tone: 'error',
+          message: requestError instanceof Error ? requestError.message : String(requestError),
+        })
       })
       .finally(() => {
         setIsApprovingMatricula(false)
@@ -899,6 +916,13 @@ const MatriculaDetalleCoordinacionPage = () => {
           <BackButton to="/matricula">Volver al listado</BackButton>
         ) : null}
       </section>
+      {toast ? (
+        <div className={`matricula-detalle__toast matricula-detalle__toast--${toast.tone}`} role="status" aria-live="polite">
+          <span className="matricula-detalle__toast-icon" aria-hidden="true">{toast.tone === 'success' ? '✓' : '!'}</span>
+          <p>{toast.message}</p>
+          <button type="button" aria-label="Cerrar notificación" onClick={() => setToast(null)}>×</button>
+        </div>
+      ) : null}
     </ModuleLayout>
   )
 }
