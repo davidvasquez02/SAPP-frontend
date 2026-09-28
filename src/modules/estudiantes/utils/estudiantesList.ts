@@ -1,6 +1,13 @@
 import type { EstudianteCoordinacion } from '../types'
 
-export const ESTUDIANTES_PAGE_SIZE = 8
+export const ESTUDIANTES_PAGE_SIZE = 4
+
+export const getEstudiantesPageSize = (viewportWidth: number) => {
+  if (viewportWidth >= 1280) return 4
+  if (viewportWidth >= 900) return 3
+  if (viewportWidth >= 640) return 2
+  return 1
+}
 
 export const paginateEstudiantes = (
   estudiantes: EstudianteCoordinacion[],
