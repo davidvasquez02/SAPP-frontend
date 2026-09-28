@@ -2,8 +2,8 @@
 
 ## Ajuste 2026-09-28 — visibilidad de recordatorios de candidatura
 
-- La sección de recordatorios de examen de candidatura doctoral consulta `GET /sapp/periodoAcademicoFecha/vigente`, reutilizando el servicio de matrícula. Si el período de matrícula vigente informa `notificacionAperturaEnviada: true`, la sección se oculta; con `false`, permanece disponible.
-- Alcance: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.tsx` y `tests/recordatoriosCandidatura.test.ts`. Sin cambios de endpoint, payload, permisos, datos, seeds ni dependencias. Verificación: regresión 4/4 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.61 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+- La sección de recordatorios de examen de candidatura doctoral consulta `GET /sapp/periodoAcademicoFecha/vigente`, reutilizando el servicio de matrícula. La condición usa el campo real anidado `periodo.notificacionCandidaturaEnviada`: con `true` se oculta y con `false` permanece disponible. `notificacionAperturaEnviada` solo corresponde al aviso de inicio de matrícula.
+- Alcance: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.tsx`, `src/modules/matricula/services/matriculaAcademicaService.ts` y `tests/recordatoriosCandidatura.test.ts`. Sin cambios de endpoint, payload, permisos, datos, seeds ni dependencias. Verificación: regresión 4/4 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.62 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
 
 ## Mejora 2026-09-27 — confirmación institucional para correo de matrícula
 

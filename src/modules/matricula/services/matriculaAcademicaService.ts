@@ -44,7 +44,9 @@ export type PeriodoAcademicoMatriculaVigenteDto = {
     descripcion: string
     fechaFin: string
     fechaInicio: string
+    fechaNotificacionCandidatura: string | null
     id: number
+    notificacionCandidaturaEnviada: boolean
     periodo: number
   }
   tipoTramite: {

@@ -7,14 +7,14 @@
 ## Estado y salida esperada
 
 - `RecordatoriosCandidatura` consulta al montarse `getPeriodoMatriculaVigente`, que consume `GET /sapp/periodoAcademicoFecha/vigente` y selecciona el trámite `MATRICULA` vigente.
-- Cuando `notificacionAperturaEnviada` es `true`, el componente retorna `null`; con `false`, muestra la sección y conserva el flujo de confirmación y envío existente. Si la consulta falla, el recordatorio queda disponible para no bloquear la funcionalidad existente por un fallo de validación.
+- Cuando el campo anidado `periodo.notificacionCandidaturaEnviada` es `true`, el componente retorna `null`; con `false`, muestra la sección y conserva el flujo de confirmación y envío existente. No usar `notificacionAperturaEnviada`: ese campo externo corresponde solo a la notificación de inicio de matrícula. Si la consulta falla, el recordatorio queda disponible para no bloquear la funcionalidad existente por un fallo de validación.
 - Salida esperada: los coordinadores no ven **Recordatorios por correo** de candidatura cuando el indicador del período vigente es `true`.
 
 ## Paths, pruebas y entorno
 
-- Implementación: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.tsx`; regresión: `tests/recordatoriosCandidatura.test.ts`. Sin cambios de contratos, schemas, datasets ni seeds.
+- Implementación: `src/modules/trabajos-grado/components/RecordatoriosCandidatura/RecordatoriosCandidatura.tsx` y el DTO compartido de `src/modules/matricula/services/matriculaAcademicaService.ts`; regresión: `tests/recordatoriosCandidatura.test.ts`. Sin cambios de contratos, schemas, datasets ni seeds.
 - Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/recordatoriosCandidatura.test.ts` y `npm run build`.
-- Resultado reciente: regresión 4/4 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.61 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+- Resultado reciente: regresión 4/4 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.62 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
 
 ---
 

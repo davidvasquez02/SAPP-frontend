@@ -16,10 +16,10 @@ test('la acción masiva solo se presenta al coordinador en proyectos de grado do
   assert.doesNotMatch(componentSource, /SolicitudesTable/)
 })
 
-test('oculta los recordatorios cuando el período vigente ya notificó la apertura', () => {
+test('oculta los recordatorios cuando el período vigente ya notificó la candidatura', () => {
   assert.match(componentSource, /import \{ getPeriodoMatriculaVigente \} from '\.\.\/\.\.\/\.\.\/matricula\/services\/matriculaAcademicaService'/)
   assert.match(componentSource, /getPeriodoMatriculaVigente\(\)/)
-  assert.match(componentSource, /periodoVigente\?\.notificacionAperturaEnviada !== true/)
+  assert.match(componentSource, /periodoVigente\?\.periodo\.notificacionCandidaturaEnviada !== true/)
   assert.match(componentSource, /if \(mostrarRecordatorios !== true\) \{\s*return null/)
 })
 

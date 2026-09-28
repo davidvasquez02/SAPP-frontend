@@ -16,7 +16,7 @@ const RecordatoriosCandidatura = () => {
     void getPeriodoMatriculaVigente()
       .then((periodoVigente) => {
         if (!cancelled) {
-          setMostrarRecordatorios(periodoVigente?.notificacionAperturaEnviada !== true)
+          setMostrarRecordatorios(periodoVigente?.periodo.notificacionCandidaturaEnviada !== true)
         }
       })
       .catch(() => {
