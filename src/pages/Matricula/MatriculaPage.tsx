@@ -44,6 +44,7 @@ import {
   getMatriculaEstadoLabel,
   getMatriculaEstadoModifier,
 } from "../../modules/matricula/utils/matriculaPresentation";
+import { tieneDocumentosObligatoriosCargados } from "../../modules/matricula/utils/documentosMatricula";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import "./MatriculaPage.css";
 import { formatProgramaAcademico, getProgramaAcademico } from "../../shared/domain/programaAcademico";
@@ -115,22 +116,6 @@ const mapEstadoDocumento = (
   }
 
   return documento.documentoCargado ? "EN_REVISION" : "PENDIENTE";
-};
-
-const tieneDocumentosObligatoriosCargados = (
-  documentos: DocumentoTramiteItemDto[],
-) => {
-  const obligatorios = documentos.filter(
-    (documento) => documento.obligatorioTipoDocumentoTramite,
-  );
-
-  return (
-    obligatorios.length > 0 &&
-    obligatorios.every(
-      (documento) =>
-        documento.documentoCargado && documento.documentoUploadedResponse !== null,
-    )
-  );
 };
 
 const mapDocumentoCargadoToRequerido = (
@@ -608,6 +593,7 @@ const MatriculaPage = () => {
       }
 
       setSubmissionStage("UPLOADING");
+      let cargaObligatoriaConfirmadaPorRespuesta = false;
       for (const documento of documentosConCambios) {
         const file = documento.selectedFile;
         if (!file) {
@@ -638,6 +624,18 @@ const MatriculaPage = () => {
             tamanoBytes: file.size,
             checksum,
           });
+
+          if (!uploaded || !Number.isFinite(uploaded.id)) {
+            throw new Error(
+              `El servidor no confirmó el guardado del documento "${documento.nombre}".`,
+            );
+          }
+
+          if (documento.obligatorio) {
+            // uploadDocument only resolves after receiving an ok response with the saved document.
+            // Keep this evidence so a previous rejected version cannot trigger the notification.
+            cargaObligatoriaConfirmadaPorRespuesta = true;
+          }
 
           setDocumentos((current) =>
             current.map((item) =>
@@ -678,7 +676,7 @@ const MatriculaPage = () => {
       setDocumentos(documentosActualizados.map(mapDocumentoCargadoToRequerido));
 
       if (
-        documentosConCambios.some((documento) => documento.obligatorio) &&
+        cargaObligatoriaConfirmadaPorRespuesta &&
         tieneDocumentosObligatoriosCargados(documentosActualizados)
       ) {
         await notificarDocumentosCompletosMatricula(

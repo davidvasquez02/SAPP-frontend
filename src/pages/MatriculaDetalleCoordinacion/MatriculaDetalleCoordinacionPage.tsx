@@ -11,6 +11,7 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
+  notificarDocumentosCompletosMatricula,
   validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type {
@@ -25,6 +26,7 @@ import {
   getMatriculaEstadoLabel,
   getMatriculaEstadoModifier,
 } from '../../modules/matricula/utils/matriculaPresentation'
+import { tieneDocumentosObligatoriosRevisados } from '../../modules/matricula/utils/documentosMatricula'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import './MatriculaDetalleCoordinacionPage.css'
 
@@ -135,6 +137,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
+  const completedReviewNotificationMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
   const [toast, setToast] = useState<ToastFeedback | null>(null)
@@ -292,8 +295,34 @@ const MatriculaDetalleCoordinacionPage = () => {
         observacionesDocumento,
       )
       setDocumentos(updatedDocuments)
+      return updatedDocuments
     },
     [loadDocumentos],
+  )
+
+  const notifyCompletedRequiredReview = useCallback(
+    async (updatedDocuments: DocumentoTramiteItemDto[]) => {
+      if (
+        !matricula ||
+        !tieneDocumentosObligatoriosRevisados(updatedDocuments) ||
+        completedReviewNotificationMatriculaIdRef.current === matricula.id
+      ) {
+        return
+      }
+
+      try {
+        await notificarDocumentosCompletosMatricula(matricula.id)
+        completedReviewNotificationMatriculaIdRef.current = matricula.id
+      } catch (requestError) {
+        setToast({
+          tone: 'error',
+          message: `La decisión se guardó, pero no fue posible notificar que terminó la revisión documental. ${
+            requestError instanceof Error ? requestError.message : String(requestError)
+          }`,
+        })
+      }
+    },
+    [matricula],
   )
 
   const handleApproveDoc = async (id: number, disabled: boolean) => {
@@ -308,7 +337,8 @@ const MatriculaDetalleCoordinacionPage = () => {
         aprobado: true,
         observaciones: null,
       })
-      await refreshDocumentsAfterDecision(id, 'APROBADO', null)
+      const updatedDocuments = await refreshDocumentsAfterDecision(id, 'APROBADO', null)
+      await notifyCompletedRequiredReview(updatedDocuments)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
@@ -357,7 +387,8 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectNotes((prev) => ({ ...prev, [id]: trimmed }))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setRejectingDocId(null)
-      await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
+      const updatedDocuments = await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
+      await notifyCompletedRequiredReview(updatedDocuments)
     } catch (requestError) {
       window.alert(requestError instanceof Error ? requestError.message : String(requestError))
     } finally {
@@ -458,6 +489,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       requiredDocs.length === 0 ||
       !allRequiredApproved ||
       disableDocumentValidation ||
+      busyDocumentoId !== null ||
       automaticApprovalMatriculaIdRef.current === matricula.id
     ) {
       return
@@ -485,6 +517,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       })
   }, [
     allRequiredApproved,
+    busyDocumentoId,
     disableDocumentValidation,
     matricula,
     refreshMatriculaAfterApproval,

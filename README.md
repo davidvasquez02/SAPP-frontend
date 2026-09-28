@@ -72,10 +72,13 @@
 - Listado docente/director y detalle muestran el estado personal usando `evaluadorId === session.user.id`. Todos los registros propios deben tener nota (incluido cero) y fecha; se excluye el resumen `ENTREV`. Los borradores no cuentan como guardados.
 - El listado consulta la etapa ENTREVISTA por inscripción, con cuatro solicitudes simultáneas como máximo y errores independientes. Al regresar al listado consulta nuevamente. Sin dependencias nuevas.
 
-## Corrección 2026-09-28 — notificación tras carga completa de documentos de matrícula
+## Corrección 2026-09-28 — notificación fiable del ciclo documental de matrícula
 
-- `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` ya no se ejecuta al validar documentos desde coordinación. Ahora se invoca en la vista del estudiante, después de que todas las cargas seleccionadas terminan y una nueva consulta confirma que todos los documentos obligatorios están registrados.
-- Alcance: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Sin cambios de endpoint, payload, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.31 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+- `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` se ejecuta en los dos momentos del ciclo que requieren avisar al backend. En coordinación se llama después de guardar la última decisión cuando todos los documentos obligatorios quedaron en `APROBADO` o `RECHAZADO`; los opcionales no bloquean. Si todos quedaron aprobados, la aprobación automática de la matrícula espera a que termine ese intento de notificación.
+- En la vista del estudiante se llama después de cargar por primera vez todos los obligatorios y también al reemplazar los rechazados. La operación actual debe incluir la respuesta exitosa de guardado de al menos un obligatorio, con un `id` de documento válido, y el GET posterior debe confirmar que todos los obligatorios están cargados. Así, una versión rechazada que ya figuraba en el checklist no produce por sí sola una notificación prematura.
+- La comprobación compartida está en `src/modules/matricula/utils/documentosMatricula.ts`; la orquestación permanece en `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`. El endpoint continúa autenticado, sin body, y usa el ID real de la matrícula (por ejemplo, `88`). No cambiaron payloads, permisos, schemas, datos, seeds, datasets ni dependencias.
+- Verificación: regresión focalizada PASS (3/3), suite Node PASS (161/161), ESLint focalizado PASS y build PASS (327 módulos; CSS 294.30 kB; JS 758.90 kB). Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
 
 ## Ajuste 2026-09-28 — título único del módulo de fechas
 
