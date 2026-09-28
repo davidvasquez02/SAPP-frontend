@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — avisos de matrícula y hoja de vida sin observaciones
+
+- En la validación de documentos de matrícula desde coordinación, el error retornado al intentar aprobar un documento —incluido el caso de documentos pendientes— dejó de usar el popup nativo `window.alert`. Ahora usa el toast institucional existente con variante de error, cierre manual y cierre automático. La aprobación automática completa conserva el mismo toast en variante de éxito.
+- En la etapa `HOJA_DE_VIDA`, la tabla de calificación ya no muestra la columna ni los campos **Observaciones**. `EvaluacionEtapaSection` incorpora `showObservations`, habilitado por defecto para no cambiar examen, entrevista u otras etapas.
+- El contrato de actualización permanece: `PUT /sapp/evaluacionAdmision/registroPuntaje` sigue recibiendo cada registro con `id`, `puntajeAspirante` y `observaciones`; para hoja de vida se envía explícitamente `observaciones: null`.
+- Paths: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`, `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`, `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`, `tests/matriculaDetalleToast.test.ts` y `tests/hojaVidaSinObservaciones.test.ts`. Sin cambios de endpoints, permisos, schemas, seeds, datasets ni dependencias.
+- Verificación: pruebas focalizadas PASS (3/3), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.19 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+
 ## Ajuste 2026-09-28 — resumen de entrevistas por evaluador
 
 - El listado de admisiones para director/docente dejó de ejecutar `GET /sapp/evaluacionAdmision/info?...` por cada inscripción. Ahora realiza una única consulta `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={usuarioId}` al cargar la vista.

@@ -312,7 +312,10 @@ const MatriculaDetalleCoordinacionPage = () => {
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       setBusyDocumentoId(null)
     }

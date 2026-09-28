@@ -18,6 +18,7 @@ interface EvaluacionEtapaSectionProps {
   onChangeDraft: (id: number, changes: EvaluacionDraft) => void
   onSaveBulk?: () => Promise<void>
   isReadOnly?: boolean
+  showObservations?: boolean
 }
 
 const parseConsideraciones = (value: string): unknown => {
@@ -103,6 +104,7 @@ const EvaluacionEtapaSection = ({
   onChangeDraft,
   onSaveBulk,
   isReadOnly = false,
+  showObservations = true,
 }: EvaluacionEtapaSectionProps) => {
   const hasItems = items.length > 0
   const hasChanges = Object.values(modifiedByRow).some(Boolean)
@@ -127,7 +129,7 @@ const EvaluacionEtapaSection = ({
                 <th>Consideraciones</th>
                 <th className="evaluacion-etapa-section__th-max">Puntaje máx.</th>
                 <th className="evaluacion-etapa-section__th-nota">Nota</th>
-                <th>Observaciones</th>
+                {showObservations ? <th>Observaciones</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -181,19 +183,21 @@ const EvaluacionEtapaSection = ({
                         )}
                       </div>
                     </td>
-                    <td data-label="Observaciones">
-                      <label className="evaluacion-etapa-section__mobile-label" htmlFor={observationsId}>Observaciones</label>
-                      <textarea
-                        id={observationsId}
-                        className="evaluacion-etapa-section__textarea"
-                        rows={2}
-                        value={observacionesValue}
-                        disabled={isReadOnly}
-                        onChange={(event) =>
-                          onChangeDraft(item.id, { observaciones: event.target.value })
-                        }
-                      />
-                    </td>
+                    {showObservations ? (
+                      <td data-label="Observaciones">
+                        <label className="evaluacion-etapa-section__mobile-label" htmlFor={observationsId}>Observaciones</label>
+                        <textarea
+                          id={observationsId}
+                          className="evaluacion-etapa-section__textarea"
+                          rows={2}
+                          value={observacionesValue}
+                          disabled={isReadOnly}
+                          onChange={(event) =>
+                            onChangeDraft(item.id, { observaciones: event.target.value })
+                          }
+                        />
+                      </td>
+                    ) : null}
                   </tr>
                 )
               })}

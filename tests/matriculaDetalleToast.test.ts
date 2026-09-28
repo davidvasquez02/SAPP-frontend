@@ -13,3 +13,12 @@ test('muestra en un toast el resultado de la aprobación automática de matrícu
   assert.doesNotMatch(pageSource, /window\.alert\(\s*'Todos los documentos obligatorios fueron aprobados/)
   assert.match(stylesSource, /\.matricula-detalle__toast \{\s*position: fixed;/)
 })
+
+test('presenta con el toast institucional los errores al aprobar documentos', () => {
+  const approveHandler = pageSource.match(
+    /const handleApproveDoc = async[\s\S]*?const handleRejectStart/,
+  )?.[0] ?? ''
+
+  assert.match(approveHandler, /setToast\(\{\s*tone: 'error'/)
+  assert.doesNotMatch(approveHandler, /window\.alert/)
+})

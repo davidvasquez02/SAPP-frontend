@@ -268,7 +268,8 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     const observacionesFromDraft = draft.observaciones ?? item.observaciones ?? ''
     return (
       puntajeFromDraft !== item.puntajeAspirante ||
-      normalizeObservaciones(observacionesFromDraft) !== normalizeObservaciones(item.observaciones)
+      (!isHojaDeVida &&
+        normalizeObservaciones(observacionesFromDraft) !== normalizeObservaciones(item.observaciones))
     )
   }
 
@@ -324,7 +325,9 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       return {
         id: item.id,
         puntajeAspirante: draft?.puntajeAspirante ?? item.puntajeAspirante,
-        observaciones: normalizeObservaciones(draft?.observaciones ?? item.observaciones ?? ''),
+        observaciones: isHojaDeVida
+          ? null
+          : normalizeObservaciones(draft?.observaciones ?? item.observaciones ?? ''),
       }
     })
 
@@ -412,6 +415,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               onChangeDraft={handleChangeDraft}
               onSaveBulk={handleSaveBulk}
               isReadOnly={isEstadoFinal}
+              showObservations={!isHojaDeVida}
             />
           </div>
           {isHojaDeVida && (

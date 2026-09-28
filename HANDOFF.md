@@ -1,5 +1,21 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — avisos de matrícula y hoja de vida sin observaciones
+
+### Estado y salida esperada
+
+- `MatriculaDetalleCoordinacionPage.handleApproveDoc` presenta los errores de `PUT /sapp/document` mediante `setToast({ tone: 'error', message })`; ya no abre el diálogo nativo del navegador. El efecto existente lo cierra a los cinco segundos y permite cierre manual. Cuando todos los documentos obligatorios quedan aprobados, la aprobación automática continúa mostrando el toast institucional de éxito.
+- `EvaluacionEtapaSection` acepta `showObservations?: boolean`, con valor predeterminado `true`. La pantalla pasa `showObservations={!isHojaDeVida}`, por lo que solo `HOJA_DE_VIDA` omite encabezado, celda, etiqueta móvil y textarea de observaciones.
+- `handleSaveBulk` fuerza `observaciones: null` para cada fila de hoja de vida. La comparación de borradores ignora observaciones en esa etapa, evitando que valores históricos invisibles activen modificaciones. Las demás etapas conservan normalización y edición existentes.
+
+### Contratos, paths y verificación
+
+- Contratos sin cambios: aprobación/rechazo documental mantiene `{ documentoId, aprobado, observaciones }`; actualización de puntajes mantiene `{ id, puntajeAspirante, observaciones }[]`. No se modificaron endpoints, DTO externos, permisos, schemas, dependencias, seeds ni datasets.
+- Paths: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`, `src/modules/admisiones/components/EvaluacionEtapaSection/EvaluacionEtapaSection.tsx`, `src/modules/admisiones/pages/EvaluacionEtapaPage/EvaluacionEtapaPage.tsx`, `tests/matriculaDetalleToast.test.ts` y `tests/hojaVidaSinObservaciones.test.ts`.
+- Resultado: pruebas focalizadas PASS (3/3), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.19 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: provocar con backend real el error por documentos pendientes y una aprobación completa para revisar ambos toasts; guardar una nota de hoja de vida y confirmar en Network que `observaciones` viaja como `null`.
+
 ## Actualización 2026-09-28 — resumen de entrevistas por evaluador
 
 ### Estado y contrato
