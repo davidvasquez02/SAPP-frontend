@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — convocatorias: cupo completo y documentos PDF
+
+- Propósito y alcance: SAPP centraliza los trámites de posgrado de la EISI–UIS. En el detalle de una convocatoria, al alcanzar los cupos, el registro de aspirantes se mantiene bloqueado y ahora se informa mediante una tarjeta institucional compacta, no como texto de error aislado.
+- Arquitectura: SPA React organizada en `src/pages`, `src/modules`, `src/shared` y `src/components`; consume la API Spring Boot/PostgreSQL sin acoplarse al esquema de datos. Este ajuste no modifica rutas, DTO, endpoints, permisos, migraciones, seeds ni datasets.
+- Decisión de documentos: `CreateAspiranteModal` muestra únicamente PDF en el selector (`application/pdf,.pdf`) y valida cada selección con `isPdfFile`. Archivos no-PDF no quedan adjuntos y muestran **Solo se permiten archivos PDF.** La carga conserva el contrato de `uploadDocument` para los PDF válidos.
+- Paths: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.{tsx,css}`, `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`, `src/shared/files/pdfFile.ts` y `tests/aspirantesList.test.ts`.
+- Stack exacto: Node.js 24.11.0, npm 11.6.1, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `npm run dev`, `node --test --test-isolation=none tests/aspirantesList.test.ts`, `npm run lint`, `npm run build` y `npm run preview`. No hay seeds, backend ni credenciales locales para reproducir la ruta protegida.
+- Changelog-lite: regresión focalizada PASS (9/9), ESLint focalizado PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 292.11 kB; JS 756.18 kB). Vite advierte por el chunk JavaScript mayor de 500 kB sin bloquear el build.
+
 ## Ajuste 2026-09-28 — resumen de detalle de admisión
 
 - El detalle de inscripción de admisión ya no muestra el campo **Estado de evaluación** en su resumen. La lógica interna de disponibilidad, alertas y navegación de las etapas se conserva.

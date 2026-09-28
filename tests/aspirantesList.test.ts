@@ -101,6 +101,23 @@ test('al completar la creación muestra un toast con el nombre del aspirante', a
   assert.match(source, /setIsCreateModalOpen\(false\)/)
 })
 
+test('la creación de aspirantes solo permite documentos PDF', async () => {
+  const source = await readFile(createAspirantePath, 'utf8')
+
+  assert.match(source, /import \{ isPdfFile, PDF_FILE_ACCEPT \} from '.*shared\/files\/pdfFile'/)
+  assert.match(source, /fileAccept=\{PDF_FILE_ACCEPT\}/)
+  assert.match(source, /if \(!isPdfFile\(file\)\)/)
+  assert.match(source, /Solo se permiten archivos PDF\./)
+})
+
+test('el cupo completo se comunica con un aviso institucional', async () => {
+  const source = await readFile(convocatoriaDetallePath, 'utf8')
+
+  assert.match(source, /convocatoria-detalle__capacity-notice/)
+  assert.match(source, /<strong>Cupo completo<\/strong>/)
+  assert.match(source, /Se registraron los \{cuposConvocatoria\} aspirantes/)
+})
+
 test('presenta una cabecera jerárquica de convocatoria sin iconos decorativos', async () => {
   const source = await readFile(convocatoriaDetallePath, 'utf8')
 

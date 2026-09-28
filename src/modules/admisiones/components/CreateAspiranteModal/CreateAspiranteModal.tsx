@@ -6,6 +6,7 @@ import type { TipoDocumentoIdentificacionDto } from '../../../../api/tipoDocumen
 import { DocumentUploadCard } from '../../../../components'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
+import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { createAspirante } from '../../api/aspiranteService'
 import type {
   AspiranteCreateRequestDto,
@@ -292,6 +293,15 @@ export const CreateAspiranteModal = ({
             selectedFile: null,
             status: item.uploadedFileName ? 'UPLOADED' : 'NOT_SELECTED',
             errorMessage: undefined,
+          }
+        }
+
+        if (!isPdfFile(file)) {
+          return {
+            ...item,
+            selectedFile: null,
+            status: item.uploadedFileName ? 'UPLOADED' : 'NOT_SELECTED',
+            errorMessage: 'Solo se permiten archivos PDF.',
           }
         }
 
@@ -719,7 +729,7 @@ export const CreateAspiranteModal = ({
           <div className="create-aspirante-modal__field create-aspirante-modal__field--full">
             <h3 className="create-aspirante-modal__section-title">Documentos</h3>
             <p className="create-aspirante-modal__helper">
-              Adjunte los requisitos antes de enviar. Los obligatorios deben estar cargados.
+              Adjunte los requisitos en formato PDF antes de enviar. Los obligatorios deben estar cargados.
             </p>
             <div className="create-aspirante-modal__documents">
               {isLoadingDocs ? (
@@ -748,6 +758,7 @@ export const CreateAspiranteModal = ({
                     onSelectFile={handleSelectFile}
                     onRemoveFile={handleRemoveFile}
                     disabled={isSubmitting}
+                    fileAccept={PDF_FILE_ACCEPT}
                   />
                 ))
               )}

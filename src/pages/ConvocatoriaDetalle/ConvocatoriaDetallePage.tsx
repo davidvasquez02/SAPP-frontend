@@ -413,10 +413,21 @@ const ConvocatoriaDetallePage = () => {
                 </p>
               ) : null}
               {cuposExcedidos && !convocatoriaCerrada ? (
-                <p className="convocatoria-detalle__status convocatoria-detalle__status--error">
-                  Cupo máximo alcanzado ({cuposConvocatoria}). No se pueden
-                  registrar más aspirantes.
-                </p>
+                <aside
+                  className="convocatoria-detalle__capacity-notice"
+                  aria-live="polite"
+                >
+                  <span className="convocatoria-detalle__capacity-icon" aria-hidden="true">
+                    !
+                  </span>
+                  <div>
+                    <strong>Cupo completo</strong>
+                    <p>
+                      Se registraron los {cuposConvocatoria} aspirantes
+                      disponibles para esta convocatoria.
+                    </p>
+                  </div>
+                </aside>
               ) : null}
             </div>
           ) : null}

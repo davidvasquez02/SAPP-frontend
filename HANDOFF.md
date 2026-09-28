@@ -1,5 +1,19 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — convocatorias: aviso de cupo completo y PDF
+
+### Estado actual
+
+- El detalle `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx` sustituye el texto rojo suelto de capacidad agotada por `convocatoria-detalle__capacity-notice`: icono de aviso, título **Cupo completo** y explicación con el número de cupos. Se muestra solo cuando `inscripciones.length >= cupos` y la convocatoria sigue abierta; el botón **Crear aspirante** continúa deshabilitado y la guarda en `handleOpenCreateAspirante` sigue evitando aperturas directas.
+- En `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`, cada `DocumentUploadCard` recibe `fileAccept={PDF_FILE_ACCEPT}`. `handleSelectFile` también usa `isPdfFile` de `src/shared/files/pdfFile.ts`; por ello un `.docx`, imagen u otro archivo seleccionado/inyectado manualmente no se conserva y muestra **Solo se permiten archivos PDF.** Un PDF con MIME genérico pero extensión `.pdf` se acepta para tolerar navegadores que no informan MIME.
+
+### Contratos, artefactos y siguiente paso
+
+- No hubo cambios de API: los PDF válidos conservan el flujo `uploadDocument({ tipoDocumentoTramiteId, nombreArchivo, tramiteId, usuarioCargaId, aspiranteCargaId, contenidoBase64, mimeType, tamanoBytes, checksum })`. No hay endpoints, schemas, permisos, datos, datasets ni seeds nuevos.
+- Paths: `src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.{tsx,css}`, `src/modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal.tsx`, `src/shared/files/pdfFile.ts`, `tests/aspirantesList.test.ts`. Resultado esperado: tarjeta sobria, con borde/fondo semánticos, tanto en modo claro como oscuro; el explorador filtra a PDF y el mensaje de rechazo se presenta en la tarjeta documental.
+- Pruebas actuales: `node --test --test-isolation=none tests/aspirantesList.test.ts` PASS (9/9), ESLint focalizado PASS, `git diff --check` PASS y `npm run build` PASS (324 módulos; CSS 292.11 kB; JS 756.18 kB). El primer build dentro del sandbox falló por `spawn EPERM`/carga del binario SWC; el build autorizado fuera del sandbox pasó. Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB. Siguiente paso: con una sesión institucional, comprobar temas claro/oscuro, móvil y la selección/arrastre de un PDF, PNG y DOCX.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`, Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm. No hay backend, seeds ni credenciales reproducibles para la pantalla protegida.
+
 ## Actualización 2026-09-28 — retirar estado de evaluación sin contenido
 
 - `InscripcionAdmisionDetallePage` elimina solamente el ítem visual **Estado de evaluación** de la barra de resumen, disponible para cualquier rol. `evaluacionStatus` sigue controlando las etapas, alertas y acciones existentes.
