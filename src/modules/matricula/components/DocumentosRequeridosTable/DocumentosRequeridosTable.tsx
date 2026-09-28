@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import type { DocumentoRequerido } from '../../types'
 import './DocumentosRequeridosTable.css'
 
@@ -117,6 +118,7 @@ const DocumentosRequeridosTable = ({
                       }}
                       className="documentos-requeridos-table__file-input"
                       type="file"
+                      accept={PDF_FILE_ACCEPT}
                       disabled={uploadBlocked}
                       onChange={(event) => {
                         onSelectFile?.(doc.id, event.target.files?.[0] ?? null)

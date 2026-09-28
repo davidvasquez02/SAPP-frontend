@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — documentos PDF en matrícula académica
+
+- Los selectores de archivos del proceso de matrícula académica solo muestran y aceptan PDF mediante `accept="application/pdf,.pdf"`.
+- La pantalla valida también el archivo al seleccionarlo: si no es PDF, no queda adjunto y el ítem muestra “Solo se permiten archivos PDF.”
+- Archivos: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`, `src/pages/Matricula/MatriculaPage.tsx` y `tests/matriculaDocumentosPdf.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 289.33 kB; JS 754.19 kB); Vite conserva el aviso no bloqueante de chunk mayor de 500 kB.
+
 ## Mejora 2026-09-27 — toast de aprobación de matrícula
 
 - La aprobación automática de una matrícula desde coordinación ya no abre un `window.alert`. Muestra un toast institucional con icono, cierre manual, contraste temático y cierre automático a los cinco segundos.

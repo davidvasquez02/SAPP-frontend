@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — carga exclusiva de PDF en matrícula académica
+
+## Estado y salida esperada
+
+- `DocumentosRequeridosTable` usa la constante compartida `PDF_FILE_ACCEPT` en el input de archivos, filtrando el diálogo nativo a `application/pdf,.pdf`.
+- `MatriculaPage` valida el archivo con `isPdfFile` antes de guardarlo en estado. Un archivo inválido se descarta y se informa “Solo se permiten archivos PDF.” junto al documento.
+- Salida esperada: no se pueden seleccionar Word, Excel, imágenes u otros formatos para documentos de matrícula; un archivo forzado fuera del filtro tampoco será preparado para cargar.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable.tsx`, `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaDocumentosPdf.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaDocumentosPdf.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 289.33 kB, JS 754.19 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — toast al aprobar matrícula en coordinación
 
 ## Estado y salida esperada

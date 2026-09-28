@@ -28,6 +28,7 @@ import type { PeriodoAcademicoMatriculaVigenteDto } from "../../modules/matricul
 import { uploadDocument } from "../../api/documentUploadService";
 import { fileToBase64 } from "../../utils/fileToBase64";
 import { sha256Hex } from "../../utils/sha256";
+import { isPdfFile } from "../../shared/files/pdfFile";
 import type {
   DocumentoRequerido,
   MateriaDto,
@@ -1223,6 +1224,22 @@ const MatriculaPage = () => {
                     }
                   }}
                   onSelectFile={(docId, file) => {
+                    if (file && !isPdfFile(file)) {
+                      setDocumentos((current) =>
+                        current.map((item) =>
+                          item.id === docId
+                            ? {
+                                ...item,
+                                selectedFile: null,
+                                uploadStatus: item.uploadedFileName ? "UPLOADED" : "NOT_SELECTED",
+                                errorMessage: "Solo se permiten archivos PDF.",
+                              }
+                            : item,
+                        ),
+                      );
+                      return;
+                    }
+
                     setDocumentos((current) =>
                       current.map((item) => {
                         if (item.id !== docId) {
