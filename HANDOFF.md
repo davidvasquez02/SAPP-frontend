@@ -1,5 +1,12 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — clic en tarjetas de estudiantes
+
+- Cambio limitado a `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.{tsx,css}`: eliminados handlers de arrastre, captura del puntero, supresión de clic y rueda. `overflow-x: hidden` y `touch-action: pan-y` impiden desplazamiento horizontal manual y permiten mantener el scroll vertical de la página. Las flechas conservan `scrollBy`, animación, estados de habilitación y soporte de teclado. Afecta matriculados y egresados, que comparten tablero.
+- Contrato y resultado esperado: `onStudentClick(estudiante)` recibe el estudiante al pulsar la tarjeta o su acción; las flechas desplazan el tablero. Sin cambios de API, datos, dependencias ni diseño de tarjetas. Ayuda de navegación ajustada a flechas.
+- Validación: ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y `npm run build` PASS (327 módulos). Primer build bloqueado por `spawn EPERM` dentro del sandbox; reejecución con permisos ampliados correcta. Persiste aviso de chunk >500 kB. Pendiente comprobación manual en sesión autenticada: clic en tarjeta y botón, flechas en ambos extremos y ausencia de desplazamiento horizontal por rueda/arrastre/táctil.
+- Se reutilizan `node_modules` y `package-lock.json` existentes; no se crearon entornos ni se cambiaron versiones, seeds o schemas.
+
 ## Actualización 2026-09-28 — respuesta nullable al consultar entrevistas
 
 - `getEntrevistasPorEvaluador` consume ahora `ApiResponse<EntrevistaPorEvaluadorDto[] | null>` y pasa `response.data` por la utilidad pura `normalizeEntrevistasPorEvaluador`.

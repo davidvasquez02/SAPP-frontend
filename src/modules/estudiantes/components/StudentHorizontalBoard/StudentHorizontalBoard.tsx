@@ -5,9 +5,6 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type MouseEvent,
-  type PointerEvent,
-  type WheelEvent,
 } from 'react'
 import { UsersRound } from 'lucide-react'
 import type { EstudianteCoordinacion } from '../../types'
@@ -22,17 +19,6 @@ interface StudentHorizontalBoardProps {
 }
 
 const SCROLL_DISTANCE = 620
-const DRAG_THRESHOLD = 6
-const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [contenteditable="true"]'
-
-interface DragState {
-  pointerId: number
-  originX: number
-  originY: number
-  originScrollLeft: number
-  dragging: boolean
-}
-
 const StudentHorizontalBoard = ({
   estudiantes,
   onStudentClick,
@@ -41,9 +27,6 @@ const StudentHorizontalBoard = ({
 }: StudentHorizontalBoardProps) => {
   const boardRef = useRef<HTMLDivElement | null>(null)
   const titleId = useId()
-  const dragRef = useRef<DragState | null>(null)
-  const suppressClickRef = useRef(false)
-  const [isDragging, setIsDragging] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
@@ -72,87 +55,10 @@ const StudentHorizontalBoard = ({
     })
   }
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== 'mouse' || event.button !== 0) return
-    if ((event.target as Element).closest(INTERACTIVE_SELECTOR)) return
-
-    // A drag can finish without the browser dispatching a click. Clear any
-    // stale suppression before starting the next gesture so a normal click
-    // always opens the student on its first attempt.
-    suppressClickRef.current = false
-    dragRef.current = {
-      pointerId: event.pointerId,
-      originX: event.clientX,
-      originY: event.clientY,
-      originScrollLeft: event.currentTarget.scrollLeft,
-      dragging: false,
-    }
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current
-    if (!drag || drag.pointerId !== event.pointerId) return
-    const deltaX = event.clientX - drag.originX
-    const deltaY = event.clientY - drag.originY
-
-    if (!drag.dragging) {
-      if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD) return
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        dragRef.current = null
-        event.currentTarget.releasePointerCapture(event.pointerId)
-        return
-      }
-      drag.dragging = true
-      suppressClickRef.current = true
-      setIsDragging(true)
-    }
-
-    event.preventDefault()
-    event.currentTarget.scrollLeft = drag.originScrollLeft - deltaX
-  }
-
-  const finishPointerGesture = (event: PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current
-    if (!drag || drag.pointerId !== event.pointerId) return
-    dragRef.current = null
-    setIsDragging(false)
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-  }
-
-  const cancelPointerGesture = (event: PointerEvent<HTMLDivElement>) => {
-    suppressClickRef.current = false
-    finishPointerGesture(event)
-  }
-
-  const handleClickCapture = (event: MouseEvent<HTMLDivElement>) => {
-    if (!suppressClickRef.current) return
-    event.preventDefault()
-    event.stopPropagation()
-    suppressClickRef.current = false
-  }
-
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
     event.preventDefault()
     scrollBoard(event.key === 'ArrowLeft' ? 'left' : 'right')
-  }
-
-  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
-    const board = event.currentTarget
-    const wheelDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
-    if (wheelDelta === 0) return
-
-    const deltaMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? board.clientWidth : 1
-    const scrollDelta = wheelDelta * deltaMultiplier
-    const maxScrollLeft = board.scrollWidth - board.clientWidth
-    const canMoveInDirection = scrollDelta < 0 ? board.scrollLeft > 0 : board.scrollLeft < maxScrollLeft
-
-    if (!canMoveInDirection) return
-    event.preventDefault()
-    board.scrollLeft = Math.max(0, Math.min(maxScrollLeft, board.scrollLeft + scrollDelta))
   }
 
   return (
@@ -167,7 +73,7 @@ const StudentHorizontalBoard = ({
         </div>
 
         <div className="student-horizontal-board__tools">
-          <p className="student-horizontal-board__hint">Usa la rueda, arrastra o pulsa las flechas</p>
+          <p className="student-horizontal-board__hint">Pulsa las flechas para desplazarte</p>
           <div className="student-horizontal-board__controls" aria-label="Controles de desplazamiento horizontal">
             <button type="button" className="student-horizontal-board__control" aria-label="Desplazar estudiantes hacia la izquierda" onClick={() => scrollBoard('left')} disabled={!canScrollLeft}>
               <span aria-hidden="true">←</span>
@@ -181,17 +87,10 @@ const StudentHorizontalBoard = ({
 
       <div
         ref={boardRef}
-        className={`student-horizontal-board__scroller${isDragging ? ' student-horizontal-board__scroller--dragging' : ''}`}
+        className="student-horizontal-board__scroller"
         tabIndex={0}
         aria-label={ariaLabel}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishPointerGesture}
-        onPointerCancel={cancelPointerGesture}
-        onLostPointerCapture={finishPointerGesture}
-        onClickCapture={handleClickCapture}
         onKeyDown={handleKeyDown}
-        onWheel={handleWheel}
         onScroll={updateScrollControls}
       >
         {estudiantes.map((estudiante) => (

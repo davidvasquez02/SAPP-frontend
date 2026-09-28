@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — tarjetas de estudiantes con navegación por flechas
+
+- El tablero de estudiantes y egresados se desplaza mediante las flechas existentes (también conserva las flechas de teclado). Se retiraron el arrastre, la captura del puntero, la supresión de clics y el desplazamiento horizontal mediante rueda o gestos para que el clic llegue directamente a la tarjeta. Se conserva el diseño de tarjetas y controles; la ayuda indica el uso de flechas.
+- Validación: TypeScript, ESLint focalizado y build correctos; persiste el aviso de Vite por tamaño de chunk.
+
 ## Corrección 2026-09-28 — ocultar Admisiones cuando entrevistas es null
 
 - El contrato de `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}` ahora declara explícitamente `data: EntrevistaPorEvaluadorDto[] | null`.
