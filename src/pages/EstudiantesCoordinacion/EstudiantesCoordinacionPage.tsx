@@ -14,10 +14,7 @@ import {
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
-import {
-  getEstudiantesPageSize,
-  paginateEstudiantes,
-} from '../../modules/estudiantes/utils/estudiantesList'
+import { paginateEstudiantes } from '../../modules/estudiantes/utils/estudiantesList'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
 
@@ -93,28 +90,6 @@ const EstudiantesCoordinacionPage = () => {
   )
   const [estudiantesPage, setEstudiantesPage] = useState(initialSnapshot?.estudiantesPage ?? 1)
   const [egresadosPage, setEgresadosPage] = useState(initialSnapshot?.egresadosPage ?? 1)
-  const [estudiantesPageSize, setEstudiantesPageSize] = useState(() =>
-    getEstudiantesPageSize(window.innerWidth),
-  )
-  const previousPageSizeRef = useRef(estudiantesPageSize)
-
-  useEffect(() => {
-    const updatePageSize = () => setEstudiantesPageSize(getEstudiantesPageSize(window.innerWidth))
-    window.addEventListener('resize', updatePageSize)
-    return () => window.removeEventListener('resize', updatePageSize)
-  }, [])
-
-  useEffect(() => {
-    const previousPageSize = previousPageSizeRef.current
-    if (previousPageSize === estudiantesPageSize) return
-
-    const preserveFirstVisibleItem = (currentPage: number) =>
-      Math.floor(((currentPage - 1) * previousPageSize) / estudiantesPageSize) + 1
-
-    setEstudiantesPage(preserveFirstVisibleItem)
-    setEgresadosPage(preserveFirstVisibleItem)
-    previousPageSizeRef.current = estudiantesPageSize
-  }, [estudiantesPageSize])
 
   useEffect(() => {
     if (initialSnapshot) {
@@ -312,12 +287,12 @@ const EstudiantesCoordinacionPage = () => {
   }, [busquedaFiltro, estadoFiltro, estudiantes, periodoFiltro])
 
   const estudiantesPagination = useMemo(
-    () => paginateEstudiantes(estudiantesVisibles, estudiantesPage, estudiantesPageSize),
-    [estudiantesPage, estudiantesPageSize, estudiantesVisibles],
+    () => paginateEstudiantes(estudiantesVisibles, estudiantesPage),
+    [estudiantesPage, estudiantesVisibles],
   )
   const egresadosPagination = useMemo(
-    () => paginateEstudiantes(egresados, egresadosPage, estudiantesPageSize),
-    [egresados, egresadosPage, estudiantesPageSize],
+    () => paginateEstudiantes(egresados, egresadosPage),
+    [egresados, egresadosPage],
   )
 
   useEffect(() => {
@@ -491,7 +466,6 @@ const EstudiantesCoordinacionPage = () => {
             start={estudiantesPagination.start}
             end={estudiantesPagination.end}
             total={estudiantesPagination.total}
-            columns={estudiantesPageSize}
             onPageChange={setEstudiantesPage}
           />
         ) : null}
@@ -537,7 +511,6 @@ const EstudiantesCoordinacionPage = () => {
               start={egresadosPagination.start}
               end={egresadosPagination.end}
               total={egresadosPagination.total}
-              columns={estudiantesPageSize}
               onPageChange={setEgresadosPage}
               title="Estudiantes egresados"
               ariaLabel="Listado de estudiantes egresados"

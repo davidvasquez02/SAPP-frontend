@@ -12,7 +12,6 @@ interface StudentHorizontalBoardProps {
   start: number
   end: number
   total: number
-  columns: number
   onPageChange: (page: number) => void
   title?: string
   ariaLabel?: string
@@ -27,7 +26,6 @@ const StudentHorizontalBoard = ({
   start,
   end,
   total,
-  columns,
   onPageChange,
   title = 'Estudiantes matriculados',
   ariaLabel = 'Listado de estudiantes',
@@ -47,11 +45,7 @@ const StudentHorizontalBoard = ({
         </p>
       </div>
 
-      <div
-        className="student-horizontal-board__grid"
-        aria-label={ariaLabel}
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
+      <div className="student-horizontal-board__grid" aria-label={ariaLabel}>
         {estudiantes.map((estudiante) => (
           <EstudianteCard
             key={estudiante.id}

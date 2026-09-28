@@ -32,6 +32,7 @@
 
 .student-horizontal-board__grid {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
   gap: 1rem;
   min-width: 0;
 }
@@ -90,6 +91,10 @@
 
   .student-horizontal-board__count {
     margin-left: 1.7rem;
+  }
+
+  .student-horizontal-board__grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .student-horizontal-board__pagination {
