@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — documentos faltantes de matrícula en informes
+
+## Estado, contrato y salida esperada
+
+- La causa era una diferencia real de nombres en el contrato, no de estructura global: admisión retorna `data.faltantes.aspirantesConDocumentosFaltantes[].inscripcionId`, pero matrícula retorna `data.faltantes.estudiantesConDocumentosFaltantes[].matriculaId`.
+- `getFaltantesReporte` normaliza ambas colecciones a `personasConDocumentosFaltantes`, con `{ id, documento, nombreCompleto, documentosFaltantes }`. La página deja de asumir que todo registro es aspirante; conserva el texto contextual de aspirante o estudiante según el tipo de informe.
+- Con el payload de matrícula adjunto, la salida esperada es la tarjeta **Información pendiente para generar el informe**, contador de estudiantes y una tarjeta desplegable por estudiante con sus documentos faltantes.
+
+## Paths, pruebas, entorno y continuidad
+
+- Implementación: `src/modules/reportes/services/reporteError.ts`; presentación: `src/pages/Reportes/ReportesPage.tsx`; regresión: `tests/reportesFaltantes.test.mjs`. No cambian rutas, servicios HTTP, schemas, permisos, datasets ni seeds.
+- Entorno único: reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un árbol npm adicional. Versiones declaradas: React/React DOM 19.2.0, React Router DOM 7.9.2, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.1. Comandos: `node --test --test-isolation=none tests/reportesFaltantes.test.mjs` y `npm run build`.
+- Resultado reciente: prueba dirigida PASS (1/1); build de producción PASS (323 módulos, CSS 287.20 kB, JS 753.15 kB). Pendiente externo: verificar con sesión institucional los casos de matrícula y créditos condonables. El aviso de chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — tooltip de Acta asociada en informes
 
 ## Estado, decisión y salida esperada

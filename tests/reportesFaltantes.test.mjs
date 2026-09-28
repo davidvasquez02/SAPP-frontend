@@ -5,13 +5,16 @@ import { createServer } from 'vite'
 test('admisión y matrícula conservan el mismo detalle de faltantes desde HTTP', async (t) => {
   const server = await createServer({ configFile: false, server: { middlewareMode: true, hmr: false }, appType: 'custom' })
   t.after(() => server.close())
-  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({
-    message: 'Existen documentos faltantes',
-    data: { faltantes: {
-      categoriasInstitucionalesFaltantes: ['Acta del comité'],
-      aspirantesConDocumentosFaltantes: [{ inscripcionId: 12, documento: 'TEST-12', nombreCompleto: 'Persona de prueba', documentosFaltantes: ['Documento de identidad', 'Recibo de pago'] }],
-    } },
-  }), { status: 409, headers: { 'Content-Type': 'application/json' } }))
+  t.mock.method(globalThis, 'fetch', async (input) => {
+    const esAdmision = String(input).includes('reportesAdmision')
+    const personas = esAdmision
+      ? { aspirantesConDocumentosFaltantes: [{ inscripcionId: 12, documento: 'TEST-12', nombreCompleto: 'Persona de prueba', documentosFaltantes: ['Documento de identidad', 'Recibo de pago'] }] }
+      : { estudiantesConDocumentosFaltantes: [{ matriculaId: 12, documento: 'TEST-12', nombreCompleto: 'Persona de prueba', documentosFaltantes: ['Documento de identidad', 'Recibo de pago'] }] }
+    return new Response(JSON.stringify({
+      message: 'Existen documentos faltantes',
+      data: { faltantes: { categoriasInstitucionalesFaltantes: ['Acta del comité'], ...personas } },
+    }), { status: 409, headers: { 'Content-Type': 'application/json' } })
+  })
   const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: () => null } })
   t.after(() => {
@@ -30,7 +33,7 @@ test('admisión y matrícula conservan el mismo detalle de faltantes desde HTTP'
       const detail = getFaltantesReporte(error)
       assert.equal(error.message, 'Existen documentos faltantes')
       assert.deepEqual(detail?.categoriasInstitucionalesFaltantes, ['Acta del comité'])
-      assert.deepEqual(detail?.aspirantesConDocumentosFaltantes[0].documentosFaltantes, ['Documento de identidad', 'Recibo de pago'])
+      assert.deepEqual(detail?.personasConDocumentosFaltantes[0].documentosFaltantes, ['Documento de identidad', 'Recibo de pago'])
       results.push(detail)
       return true
     })

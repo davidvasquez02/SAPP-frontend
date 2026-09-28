@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — faltantes visibles en informes de matrícula
+
+- El normalizador de errores de informes reconoce ahora las dos variantes del backend: admisión entrega `aspirantesConDocumentosFaltantes` con `inscripcionId`; matrícula entrega `estudiantesConDocumentosFaltantes` con `matriculaId`. Ambas se transforman en una lista neutral para la misma interfaz de faltantes.
+- En consecuencia, al recibir el JSON de matrícula adjunto se muestran los estudiantes y sus documentos pendientes, igual que en admisión. Los rótulos siguen siendo **aspirante** para admisión y **estudiante** para matrícula/créditos.
+- Archivos: `src/modules/reportes/services/reporteError.ts`, `src/pages/Reportes/ReportesPage.tsx` y `tests/reportesFaltantes.test.mjs`. Sin cambios de endpoints, payloads, permisos, datos, seeds o dependencias. Verificación: prueba dirigida PASS (1/1) y `npm run build` PASS (323 módulos; CSS 287.20 kB; JS 753.15 kB); permanece el aviso no bloqueante de chunk mayor de 500 kB.
+
 ## Corrección 2026-09-27 — ayuda legible en informes a dependencias
 
 - En **Informes a dependencias**, el contenido emergente de **Acta asociada** usa ahora una superficie y texto semánticos (`--surface-container-low` y `--text-primary`). Esto evita texto blanco sobre fondo claro tanto en `body.light` como en `body.dark`.

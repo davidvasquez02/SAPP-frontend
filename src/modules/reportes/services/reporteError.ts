@@ -1,7 +1,7 @@
 import { HttpError } from '../../../shared/http/httpClient'
 
-export interface AspiranteConDocumentosFaltantes {
-  inscripcionId: number
+export interface PersonaConDocumentosFaltantes {
+  id: number
   documento: string
   nombreCompleto: string
   documentosFaltantes: string[]
@@ -9,7 +9,7 @@ export interface AspiranteConDocumentosFaltantes {
 
 export interface FaltantesReporte {
   categoriasInstitucionalesFaltantes: string[]
-  aspirantesConDocumentosFaltantes: AspiranteConDocumentosFaltantes[]
+  personasConDocumentosFaltantes: PersonaConDocumentosFaltantes[]
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -24,22 +24,23 @@ export const getFaltantesReporte = (error: unknown): FaltantesReporte | null => 
   }
 
   const faltantes = error.data.faltantes
-  const aspirantes = Array.isArray(faltantes.aspirantesConDocumentosFaltantes)
-    ? faltantes.aspirantesConDocumentosFaltantes.flatMap((item) => {
+  const personas = [
+    ...(Array.isArray(faltantes.aspirantesConDocumentosFaltantes) ? faltantes.aspirantesConDocumentosFaltantes : []),
+    ...(Array.isArray(faltantes.estudiantesConDocumentosFaltantes) ? faltantes.estudiantesConDocumentosFaltantes : []),
+  ].flatMap((item) => {
         if (!isRecord(item)) return []
-        const inscripcionId = Number(item.inscripcionId)
-        if (!Number.isFinite(inscripcionId)) return []
+        const id = Number(item.inscripcionId ?? item.matriculaId)
+        if (!Number.isFinite(id)) return []
         return [{
-          inscripcionId,
+          id,
           documento: typeof item.documento === 'string' ? item.documento : '',
-          nombreCompleto: typeof item.nombreCompleto === 'string' ? item.nombreCompleto : 'Aspirante sin nombre',
+          nombreCompleto: typeof item.nombreCompleto === 'string' ? item.nombreCompleto : 'Persona sin nombre',
           documentosFaltantes: stringList(item.documentosFaltantes),
         }]
       })
-    : []
 
   const categorias = stringList(faltantes.categoriasInstitucionalesFaltantes)
-  return categorias.length > 0 || aspirantes.length > 0
-    ? { categoriasInstitucionalesFaltantes: categorias, aspirantesConDocumentosFaltantes: aspirantes }
+  return categorias.length > 0 || personas.length > 0
+    ? { categoriasInstitucionalesFaltantes: categorias, personasConDocumentosFaltantes: personas }
     : null
 }

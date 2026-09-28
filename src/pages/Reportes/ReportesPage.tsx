@@ -227,7 +227,7 @@ const ReportesPage = () => {
                   <h3 id="reports-missing-title">Información pendiente para generar el informe</h3>
                   <p>Complete los siguientes requisitos y vuelva a intentar.</p>
                 </div>
-                <span>{faltantes.aspirantesConDocumentosFaltantes.length} {tipo === 'ADMISION' ? 'aspirante' : 'estudiante'}{faltantes.aspirantesConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
+                <span>{faltantes.personasConDocumentosFaltantes.length} {tipo === 'ADMISION' ? 'aspirante' : 'estudiante'}{faltantes.personasConDocumentosFaltantes.length === 1 ? '' : 's'}</span>
               </div>
               {faltantes.categoriasInstitucionalesFaltantes.length > 0 ? (
                 <div className="reports__missing-institutional">
@@ -236,13 +236,13 @@ const ReportesPage = () => {
                 </div>
               ) : null}
               <div className="reports__missing-people">
-                {faltantes.aspirantesConDocumentosFaltantes.map((aspirante) => (
-                  <details key={aspirante.inscripcionId} className="reports__missing-person">
+                {faltantes.personasConDocumentosFaltantes.map((persona) => (
+                  <details key={persona.id} className="reports__missing-person">
                     <summary>
-                      <span><strong>{aspirante.nombreCompleto}</strong><small>Documento {aspirante.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${aspirante.inscripcionId}` : ''}</small></span>
-                      <span className="reports__missing-count">{aspirante.documentosFaltantes.length} pendiente{aspirante.documentosFaltantes.length === 1 ? '' : 's'}</span>
+                      <span><strong>{persona.nombreCompleto}</strong><small>Documento {persona.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${persona.id}` : ''}</small></span>
+                      <span className="reports__missing-count">{persona.documentosFaltantes.length} pendiente{persona.documentosFaltantes.length === 1 ? '' : 's'}</span>
                     </summary>
-                    <ul>{aspirante.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>
+                    <ul>{persona.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>
                   </details>
                 ))}
               </div>
