@@ -2,6 +2,21 @@
 
 ---
 
+# Handoff 2026-09-28 — título único del módulo de fechas
+
+## Estado y salida esperada
+
+- `FechasModulePage` usa `ModuleLayout title="Módulo de Fechas Académicas"` y ya no renderiza la tarjeta de encabezado interno con “Fechas académicas” ni su descripción.
+- Salida esperada: en `/fechas` la cabecera de la página muestra solo **Módulo de Fechas Académicas** antes del contenido de períodos y convocatorias.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/FechasModule/FechasModulePage.tsx`; regresión: `tests/configFechasPeriodos.test.ts`. Sin cambios de endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/configFechasPeriodos.test.ts` y `npm run build`.
+- Resultado reciente: regresión 2/2 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.40 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
 # Handoff 2026-09-28 — visibilidad de recordatorios de candidatura
 
 ## Estado y salida esperada

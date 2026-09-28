@@ -226,13 +226,8 @@ const FechasModulePage = () => {
   };
 
   return (
-    <ModuleLayout title="Módulo">
+    <ModuleLayout title="Módulo de Fechas Académicas">
       <section className="config-module">
-        <header className="config-module__header">
-          <h1>Fechas académicas</h1>
-          <p>Centraliza los períodos académicos y la gestión de convocatorias de admisión por programa.</p>
-        </header>
-
         {isLoading ? <p className="config-module__status">Cargando fechas académicas...</p> : null}
         {error ? <p className="config-module__status config-module__status--error">{error}</p> : null}
         {feedback ? <p className="config-module__feedback">{feedback}</p> : null}

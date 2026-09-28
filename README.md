@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — título único del módulo de fechas
+
+- La pantalla `/fechas` presenta ahora el título único **Módulo de Fechas Académicas** en la cabecera principal. Se retiró el bloque de subtítulo interno que repetía la jerarquía y la descripción general.
+- Alcance: `src/pages/FechasModule/FechasModulePage.tsx` y `tests/configFechasPeriodos.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 2/2 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.40 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-28 — visibilidad de recordatorios de candidatura
 
 - La sección de recordatorios de examen de candidatura doctoral consulta `GET /sapp/periodoAcademicoFecha/vigente`, reutilizando el servicio de matrícula. La condición usa el campo real anidado `periodo.notificacionCandidaturaEnviada`: con `true` se oculta y con `false` permanece disponible. `notificacionAperturaEnviada` solo corresponde al aviso de inicio de matrícula.

@@ -12,8 +12,8 @@ test('crea y actualiza períodos sin solicitar descripción y vuelve al listado'
   assert.doesNotMatch(configPeriodosSource, /await loadData\(\)/)
 })
 
-test('evita repetir el título del módulo de fechas', () => {
-  assert.match(fechasModuleSource, /<ModuleLayout title="Módulo">/)
-  assert.match(fechasModuleSource, /<h1>Fechas académicas<\/h1>/)
-  assert.doesNotMatch(fechasModuleSource, /Módulo de fechas académicas/)
+test('usa un único título para el módulo de fechas', () => {
+  assert.match(fechasModuleSource, /<ModuleLayout title="Módulo de Fechas Académicas">/)
+  assert.doesNotMatch(fechasModuleSource, /<header className="config-module__header">/)
+  assert.doesNotMatch(fechasModuleSource, /<h1>Fechas académicas<\/h1>/)
 })
