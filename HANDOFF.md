@@ -1,5 +1,21 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — visibilidad de Admisiones según entrevistas asignadas
+
+### Estado y contrato
+
+- `Sidebar` detecta evaluadores puros con `isEvaluadorAdmision(roles) && !canManagePosgrados(roles)` y, al montarse para esa sesión, ejecuta `getEntrevistasPorEvaluador(session.user.id)`.
+- Contrato reutilizado: `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}` devuelve `ApiResponse<Array<{ inscripcionId: number; completa: boolean }>>`. Para la visibilidad solo importa que `data.length > 0`; un arreglo vacío oculta **Admisiones**.
+- El estado de acceso se asocia con `userId` para no reutilizar el resultado de otra sesión. Mientras el resultado es `null`, la opción permanece oculta. La política preexistente ante error temporal se conserva: no retirar acceso potencial si el servidor no pudo responder. Coordinación, secretaría y administración no disparan esta comprobación.
+- La consulta anterior `getConvocatoriasAdmision()` fue retirada únicamente del menú. El listado y los detalles conservan sus propias consultas funcionales. Las rutas y la autorización del backend no cambian.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/components/Sidebar/Sidebar.tsx`, `src/app/navigationItems.ts`, `src/modules/admisiones/api/evaluacionAdmisionService.ts` y `tests/admisionesNavigation.test.ts`.
+- Resultado acumulado: pruebas focalizadas PASS (8/8), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.18 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: iniciar sesión con un evaluador cuya respuesta sea `data: []` y otro con registros, confirmando en Network una petición al arranque y la ausencia/presencia correspondiente del módulo en escritorio y móvil.
+
 ## Actualización 2026-09-28 — avisos de matrícula y hoja de vida sin observaciones
 
 ### Estado y salida esperada

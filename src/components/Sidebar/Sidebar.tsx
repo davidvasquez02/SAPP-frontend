@@ -4,7 +4,7 @@ import { LogOut } from 'lucide-react'
 import { useAuth } from '../../context/Auth'
 import { getPrimaryNavigationItems } from '../../app/navigationItems'
 import { canManagePosgrados, isEvaluadorAdmision } from '../../auth/roleGuards'
-import { getConvocatoriasAdmision } from '../../modules/admisiones/api/convocatoriaAdmisionService'
+import { getEntrevistasPorEvaluador } from '../../modules/admisiones/api/evaluacionAdmisionService'
 import { SidebarModuleIcon } from './SidebarModuleIcon'
 import './Sidebar.css'
 
@@ -60,12 +60,12 @@ const Sidebar = () => {
 
     let isMounted = true
 
-    getConvocatoriasAdmision()
-      .then((convocatorias) => {
+    getEntrevistasPorEvaluador(evaluatorUserId)
+      .then((entrevistas) => {
         if (isMounted) {
           setAdmisionesAccess({
             userId: evaluatorUserId,
-            hasAssigned: convocatorias.length > 0,
+            hasAssigned: entrevistas.length > 0,
           })
         }
       })

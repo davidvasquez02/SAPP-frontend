@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — visibilidad de Admisiones según entrevistas asignadas
+
+- Al iniciar la interfaz para `DOCENTE_POSGRADOS` o `DIRECTOR` sin perfil administrativo, el menú consulta `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={usuarioId}` mediante el servicio compartido `getEntrevistasPorEvaluador`.
+- Mientras se resuelve la consulta, **Admisiones** permanece oculto. Una respuesta exitosa con `data: []` mantiene el módulo oculto; solamente `data.length > 0` habilita la opción. Coordinación, secretaría y administración conservan su acceso sin depender de este resumen.
+- Se retiró del `Sidebar` la consulta anterior a `getConvocatoriasAdmision`. La regla pura de navegación y las rutas no cambiaron; el ajuste afecta la opción visible del menú, no la autorización del backend ni el acceso directo por URL.
+- Paths: `src/components/Sidebar/Sidebar.tsx` y `tests/admisionesNavigation.test.ts`; reutiliza `src/modules/admisiones/api/evaluacionAdmisionService.ts`. Sin endpoints adicionales, dependencias, variables, schemas, seeds ni datasets.
+- Verificación acumulada: pruebas focalizadas PASS (8/8), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.18 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm.
+
 ## Ajuste 2026-09-28 — avisos de matrícula y hoja de vida sin observaciones
 
 - En la validación de documentos de matrícula desde coordinación, el error retornado al intentar aprobar un documento —incluido el caso de documentos pendientes— dejó de usar el popup nativo `window.alert`. Ahora usa el toast institucional existente con variante de error, cierre manual y cierre automático. La aprobación automática completa conserva el mismo toast en variante de éxito.
