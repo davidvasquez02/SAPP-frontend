@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — notificación de apertura de matrícula
+
+- El contrato del período de matrícula vigente incorpora `notificacionAperturaEnviada`. Cuando el backend entrega `true`, el tablero de coordinación oculta por completo la tarjeta y el botón de notificación de inicio.
+- Un envío exitoso marca el estado local como enviado, evitando reenvíos sin esperar otra carga de la página.
+- Archivos: `src/modules/matricula/services/matriculaAcademicaService.ts`, `src/pages/Matricula/MatriculaPage.tsx` y `tests/notificacionAperturaMatricula.test.ts`. Sin cambios de endpoint, payload, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 287.90 kB; JS 753.46 kB); persiste el aviso no bloqueante de chunk mayor de 500 kB.
+
 ## Mejora 2026-09-27 — progreso bloqueante al crear matrícula
 
 - La creación o actualización de una matrícula presenta ahora una capa de progreso con spinner que bloquea toda interacción mientras valida, prepara documentos, crea la matrícula, carga archivos o finaliza el trámite.

@@ -491,6 +491,9 @@ const MatriculaPage = () => {
         periodoMatriculaVigente.periodo.id,
       );
       setNotificacionAperturaMessage(message);
+      setPeriodoMatriculaVigente((current) =>
+        current ? { ...current, notificacionAperturaEnviada: true } : current,
+      );
     } catch (error) {
       setNotificacionAperturaError(
         error instanceof Error
@@ -817,7 +820,7 @@ const MatriculaPage = () => {
             <p>Consulta y filtra las matrículas registradas por programa.</p>
           </header>
 
-          <section className="matricula-page__card matricula-page__notification-card">
+          {periodoMatriculaVigente?.notificacionAperturaEnviada !== true ? <section className="matricula-page__card matricula-page__notification-card">
             <div>
               <h4>Notificación de inicio de matrícula</h4>
               {isLoadingPeriodoVigente ? (
@@ -857,7 +860,7 @@ const MatriculaPage = () => {
                 {notificacionAperturaError}
               </p>
             ) : null}
-          </section>
+          </section> : null}
 
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
             <div className="matricula-page__filters-top-row">

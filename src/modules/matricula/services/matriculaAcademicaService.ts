@@ -36,6 +36,7 @@ export type PeriodoAcademicoMatriculaVigenteDto = {
   descripcion: string
   fechaFin: string
   fechaInicio: string
+  notificacionAperturaEnviada: boolean
   id: number
   periodo: {
     anio: number

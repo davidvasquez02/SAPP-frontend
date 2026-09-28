@@ -2,6 +2,24 @@
 
 ---
 
+# Handoff 2026-09-27 — visibilidad de notificación de apertura de matrícula
+
+## Estado, contrato y salida esperada
+
+- `GET /sapp/periodoAcademicoFecha/vigente` retorna ahora `notificacionAperturaEnviada` para el período cuyo `tipoTramite.nombre` es `MATRICULA`. El DTO `PeriodoAcademicoMatriculaVigenteDto` ya declara este booleano.
+- La tarjeta **Notificación de inicio de matrícula** solo se renderiza cuando ese campo no es `true`. Con la respuesta entregada por el usuario, la tarjeta no aparece.
+- Tras un `POST /sapp/matriculaAcademica/notificarAperturaMatricula` exitoso, el estado local cambia el booleano a `true`, por lo que desaparece el control y se evita un reenvío dentro de la sesión actual.
+
+## Paths, entorno y verificación
+
+- Implementación: `src/modules/matricula/services/matriculaAcademicaService.ts`, `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/notificacionAperturaMatricula.test.ts`. No cambian endpoint, payload, roles, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Comandos: `node --test --test-isolation=none tests/notificacionAperturaMatricula.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build de producción PASS (323 módulos, CSS 287.90 kB, JS 753.46 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — progreso al crear matrícula académica
 
 ## Estado, salida esperada y decisión
