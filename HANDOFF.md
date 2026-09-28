@@ -2,6 +2,22 @@
 
 ---
 
+# Handoff 2026-09-28 — notificación después de la carga documental de matrícula
+
+## Estado y salida esperada
+
+- La notificación `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` pertenece al flujo de carga del estudiante, no a la validación de coordinación.
+- Tras resolver cada `uploadDocument`, `MatriculaPage` consulta de nuevo los documentos y solo envía la notificación si todos los obligatorios tienen `documentoCargado` y `documentoUploadedResponse`. Esto evita invocar el endpoint antes de que el último archivo esté persistido.
+- Salida esperada: Network muestra primero todas las cargas `POST /sapp/document`, luego el `GET` de documentos de matrícula que confirma la totalidad obligatoria y finalmente el POST de notificación. Coordinación ya no llama ese endpoint al aprobar o rechazar.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`; regresión: `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Sin cambios de contratos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaNotificacionDocumentosCompletos.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 291.29 kB, JS 755.31 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
 # Handoff 2026-09-28 — título único del módulo de fechas
 
 ## Estado y salida esperada
@@ -6132,18 +6148,17 @@ npm run lint
 
 ---
 
-# Update 2026-09-16 — Notificación fiable al terminar la revisión documental de matrícula
+# Update 2026-09-16 — Notificación fiable al terminar la revisión documental de matrícula (reemplazado)
 
 ## Estado actual y decisión
-- En el detalle de matrícula de coordinación, una aprobación o rechazo exitoso se incorpora al checklist recargado antes de evaluar si terminó la revisión. Esto evita que una lectura inmediatamente posterior, todavía desactualizada, impida reconocer la decisión sobre el último documento.
-- Cuando todos los documentos **obligatorios** cargados están en `APROBADO` o `RECHAZADO`, se invoca `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` sin body. Los documentos opcionales se excluyen deliberadamente, incluso si están pendientes.
-- La protección `notifiedDocumentsMatriculaIdRef` conserva un solo envío exitoso por matrícula durante el montaje. El flujo independiente que avanza automáticamente la matrícula cuando todos los obligatorios están aprobados se mantiene.
+- Esta decisión fue reemplazada el 2026-09-28: coordinación ya no invoca la notificación de documentos completos al aprobar o rechazar.
+- El endpoint se ejecuta desde la carga del estudiante, una vez finalizan los `POST /sapp/document` y un GET posterior confirma que todos los documentos obligatorios quedaron registrados. El flujo independiente que avanza automáticamente la matrícula cuando todos los obligatorios están aprobados se mantiene.
 
 ## Paths, contratos y salida esperada
-- Orquestación y reconciliación local: `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` (`applyDocumentoDecision` y `refreshDocumentsAfterDecision`).
+- Orquestación actual: `src/pages/Matricula/MatriculaPage.tsx` (`handleConfirmMatricula` y `tieneDocumentosObligatoriosCargados`); coordinación conserva únicamente su reconciliación local en `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx`.
 - Transporte: `src/modules/matricula/services/matriculaAcademicaService.ts` (`notificarDocumentosCompletosMatricula`).
 - Entrada de decisión existente: `PUT /sapp/document` con `{ documentoId, aprobado, observaciones }`. Salida de finalización: `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos`, autenticado, sin body; admite envelope `ApiResponse<unknown>` o HTTP 204.
-- Resultado esperado: al confirmar el último obligatorio, aprobado o rechazado, Network muestra el POST de notificación aunque el GET de documentos inmediatamente posterior aún refleje el estado anterior. No hay cambios de schema, dependencias, variables, seeds ni datasets.
+- Resultado esperado: Network muestra el POST de notificación solamente después de que finalizaron las cargas y el GET de documentos confirma todos los obligatorios. No hay cambios de schema, dependencias, variables, seeds ni datasets.
 
 ## Entorno, retos y verificación
 - Reutilizar exclusivamente `/workspace/SAPP-frontend/node_modules`; no crear venv, conda, poetry, entornos Python ni un segundo árbol npm. Entorno observado: Node.js 24.15.0 y npm 11.4.2; versiones exactas del frontend en `README.md` y `package-lock.json`.

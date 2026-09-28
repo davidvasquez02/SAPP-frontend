@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-28 — notificación tras carga completa de documentos de matrícula
+
+- `POST /sapp/matriculaAcademica/{matriculaId}/notificarDocumentosCompletos` ya no se ejecuta al validar documentos desde coordinación. Ahora se invoca en la vista del estudiante, después de que todas las cargas seleccionadas terminan y una nueva consulta confirma que todos los documentos obligatorios están registrados.
+- Alcance: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` y `tests/matriculaNotificacionDocumentosCompletos.test.ts`. Sin cambios de endpoint, payload, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 291.29 kB; JS 755.31 kB); Vite conserva el aviso no bloqueante por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-28 — título único del módulo de fechas
 
 - La pantalla `/fechas` presenta ahora el título único **Módulo de Fechas Académicas** en la cabecera principal. Se retiró el bloque de subtítulo interno que repetía la jerarquía y la descripción general.

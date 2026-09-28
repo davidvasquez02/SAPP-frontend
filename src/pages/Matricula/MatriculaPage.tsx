@@ -23,6 +23,7 @@ import {
   getMatriculasAcademicas,
   getPeriodoMatriculaVigente,
   notificarAperturaMatricula,
+  notificarDocumentosCompletosMatricula,
 } from "../../modules/matricula/services/matriculaAcademicaService";
 import type { PeriodoAcademicoMatriculaVigenteDto } from "../../modules/matricula/services/matriculaAcademicaService";
 import { uploadDocument } from "../../api/documentUploadService";
@@ -114,6 +115,22 @@ const mapEstadoDocumento = (
   }
 
   return documento.documentoCargado ? "EN_REVISION" : "PENDIENTE";
+};
+
+const tieneDocumentosObligatoriosCargados = (
+  documentos: DocumentoTramiteItemDto[],
+) => {
+  const obligatorios = documentos.filter(
+    (documento) => documento.obligatorioTipoDocumentoTramite,
+  );
+
+  return (
+    obligatorios.length > 0 &&
+    obligatorios.every(
+      (documento) =>
+        documento.documentoCargado && documento.documentoUploadedResponse !== null,
+    )
+  );
 };
 
 const mapDocumentoCargadoToRequerido = (
@@ -655,7 +672,19 @@ const MatriculaPage = () => {
 
       applyMatriculaValidation(matriculaValidation, materiasCatalogo);
       setSubmissionStage("FINALIZING");
-      await loadDocumentosMatricula(matriculaValidation);
+      const documentosActualizados = await getDocumentosMatriculaAcademica(
+        matriculaValidation.matricula.id,
+      );
+      setDocumentos(documentosActualizados.map(mapDocumentoCargadoToRequerido));
+
+      if (
+        documentosConCambios.some((documento) => documento.obligatorio) &&
+        tieneDocumentosObligatoriosCargados(documentosActualizados)
+      ) {
+        await notificarDocumentosCompletosMatricula(
+          matriculaValidation.matricula.id,
+        );
+      }
 
     } catch (error) {
       const message =

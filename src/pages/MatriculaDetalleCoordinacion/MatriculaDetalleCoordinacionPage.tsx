@@ -11,7 +11,6 @@ import {
   aprobarMatriculaAcademica,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
-  notificarDocumentosCompletosMatricula,
   validarAsignaturasMatriculaAcademica,
 } from '../../modules/matricula/services/matriculaAcademicaService'
 import type {
@@ -136,7 +135,6 @@ const MatriculaDetalleCoordinacionPage = () => {
   const [actionStates, setActionStates] = useState<Record<number, DocumentoActionState>>({})
   const [isApprovingMatricula, setIsApprovingMatricula] = useState(false)
   const automaticApprovalMatriculaIdRef = useRef<number | null>(null)
-  const notifiedDocumentsMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
   const [toast, setToast] = useState<ToastFeedback | null>(null)
@@ -278,36 +276,6 @@ const MatriculaDetalleCoordinacionPage = () => {
     [getEstadoDocumento, requiredDocs],
   )
 
-  const notifyIfAllDocumentsReviewed = useCallback(
-    async (updatedDocuments: DocumentoTramiteItemDto[]) => {
-      if (notifiedDocumentsMatriculaIdRef.current === parsedMatriculaId) {
-        return
-      }
-
-      const documentsToReview = updatedDocuments.filter(
-        (documento) => documento.obligatorioTipoDocumentoTramite,
-      )
-      const allDocumentsReviewed =
-        documentsToReview.length > 0 &&
-        documentsToReview.every((documento) => {
-          if (!documento.documentoCargado || documento.documentoUploadedResponse == null) {
-            return false
-          }
-
-          const estado = getEstadoDocumento(documento)
-          return estado === 'APROBADO' || estado === 'RECHAZADO'
-        })
-
-      if (!allDocumentsReviewed) {
-        return
-      }
-
-      await notificarDocumentosCompletosMatricula(parsedMatriculaId)
-      notifiedDocumentsMatriculaIdRef.current = parsedMatriculaId
-    },
-    [getEstadoDocumento, parsedMatriculaId],
-  )
-
   const refreshDocumentsAfterDecision = useCallback(
     async (
       documentoId: number,
@@ -324,9 +292,8 @@ const MatriculaDetalleCoordinacionPage = () => {
         observacionesDocumento,
       )
       setDocumentos(updatedDocuments)
-      await notifyIfAllDocumentsReviewed(updatedDocuments)
     },
-    [loadDocumentos, notifyIfAllDocumentsReviewed],
+    [loadDocumentos],
   )
 
   const handleApproveDoc = async (id: number, disabled: boolean) => {
