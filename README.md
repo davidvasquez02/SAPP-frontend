@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-09-27 — título duplicado en matrícula estudiantil
+
+- En el detalle de matrícula del estudiante se retiró el encabezado interno **Proceso de matrícula**, ya que duplicaba el título proporcionado por la vista principal. Se conserva el período académico como contexto.
+- Archivos: `src/pages/Matricula/MatriculaPage.tsx` y `tests/matriculaProcesoTitle.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 287.97 kB; JS 753.41 kB); continúa el aviso no bloqueante de Vite por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — actualización estudiantil por documentos rechazados
 
 - En la vista de matrícula del estudiante, **Actualizar matrícula** solo se muestra para una matrícula existente cuando al menos un documento está en estado `RECHAZADO`. No aparece si los documentos están pendientes, en revisión o aprobados.

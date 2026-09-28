@@ -2,6 +2,23 @@
 
 ---
 
+# Handoff 2026-09-27 — título único en matrícula del estudiante
+
+## Estado y salida esperada
+
+- `ModuleLayout` ya muestra **Proceso de matrícula**. El encabezado interno de `MatriculaPage` ahora contiene solo el período académico, eliminando el título repetido que aparecía en la tarjeta superior.
+- Salida esperada: la pantalla presenta una sola vez **Proceso de matrícula**, seguido por “Periodo académico: …”.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx`; regresión: `tests/matriculaProcesoTitle.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaProcesoTitle.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.41 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — actualización de matrícula del estudiante
 
 ## Estado y salida esperada

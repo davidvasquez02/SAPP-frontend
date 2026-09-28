@@ -1074,7 +1074,6 @@ const MatriculaPage = () => {
           </div>
         ) : null}
         <header className="matricula-page__header">
-          <h3>Proceso de matrícula</h3>
           {convocatoria?.periodoLabel ? (
             <p>Periodo académico: {convocatoria.periodoLabel}</p>
           ) : null}
