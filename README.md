@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-28 — resumen de entrevistas por evaluador
+
+- El listado de admisiones para director/docente dejó de ejecutar `GET /sapp/evaluacionAdmision/info?...` por cada inscripción. Ahora realiza una única consulta `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={usuarioId}` al cargar la vista.
+- Contrato esperado: `{ ok, message, data: [{ inscripcionId: number, completa: boolean }] }`. La interfaz asocia `inscripcionId` con `InscripcionAdmisionDto.id`: `completa: true` muestra **Calificado**, `false` muestra **Pendiente de calificación**, y una inscripción ausente en `data` muestra **Evaluación no iniciada**. El orden visual existente se conserva con esos estados.
+- La consulta completa `getEvaluacionAdmisionInfo(inscripcionId, etapa)` permanece disponible y se sigue usando dentro del detalle de admisión; solo fue retirada del listado. Si falla el nuevo resumen, se muestra un error global con acción **Reintentar**, sin convertir el fallo técnico en un estado individual.
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx` y `tests/estadoEntrevista.test.ts`. Sin cambios de rutas de interfaz, permisos, schemas, seeds, datasets ni dependencias.
+- Verificación: pruebas focalizadas PASS (6/6), ESLint focalizado PASS, TypeScript PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.11 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno: Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. No hay backend, seed ni credenciales locales para validar la respuesta institucional.
+
 ## Ajuste 2026-09-28 — prioridad y orden de entrevistas asignadas
 
 - En **Admisiones > Mis entrevistas**, disponible para director de escuela y docentes evaluadores asignados sin perfil administrativo, **Tu entrevista** se presenta como un bloque principal de la tarjeta. Sus variantes pendiente, calificada y no iniciada usan superficies y colores semánticos compatibles con temas claro/oscuro.

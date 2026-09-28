@@ -1,5 +1,21 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-28 — resumen de entrevistas por evaluador
+
+### Estado y contrato
+
+- `AdmisionesProfesorPage` ya no importa ni llama `getEvaluacionAdmisionInfo` al cargar el listado. Una única llamada a `getEntrevistasPorEvaluador(session.user.id)` consume `GET /sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId={id}`.
+- DTO: `EntrevistaPorEvaluadorDto { inscripcionId: number; completa: boolean }`; envelope `ApiResponse<EntrevistaPorEvaluadorDto[]>`. La respuesta se reduce a un mapa indexado por `inscripcionId`, que se compara con `InscripcionAdmisionDto.id`.
+- Salida: `true → Calificado`, `false → Pendiente de calificación`, ID ausente → **Evaluación no iniciada**. Mientras carga se muestra **Consultando calificación…**. Un error HTTP produce un aviso global y botón **Reintentar**; no falsea los datos retornados.
+- El detalle conserva intacto `getEvaluacionAdmisionInfo`: `EvaluacionEtapaPage`, prefetch y validaciones continúan consultando la evaluación completa cuando corresponde.
+
+### Paths, pruebas y continuidad
+
+- Paths: `src/modules/admisiones/api/evaluacionAdmisionService.ts`, `src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx`, `src/modules/admisiones/utils/estadoEntrevista.ts` y `tests/estadoEntrevista.test.ts`. Sin dependencias, variables, permisos, schemas, seeds ni datasets nuevos.
+- Resultado: prueba focalizada PASS (6/6), ESLint focalizado PASS, `npx tsc -b --pretty false` PASS, `git diff --check` PASS y build PASS (324 módulos; CSS 293.21 kB; JS 757.11 kB). Vite conserva el aviso no bloqueante por un chunk mayor de 500 kB.
+- Entorno único: `D:\Users\david\Desktop\SAPP\react - curso\clase 1\SAPP-frontend`; Node.js 24.11.0, npm 11.6.1, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `node_modules` y `package-lock.json`; no crear entornos adicionales.
+- Pendiente institucional: confirmar en Network una sola petición de resumen por carga, validar asociaciones para IDs presentes/ausentes y comprobar que al entrar al detalle todavía se solicita `/evaluacionAdmision/info`.
+
 ## Actualización 2026-09-28 — prioridad y orden de entrevistas asignadas
 
 ### Estado, reglas y salida esperada

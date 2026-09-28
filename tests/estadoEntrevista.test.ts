@@ -12,6 +12,10 @@ const admisionesProfesorPath = new URL(
   '../src/pages/AdmisionesProfesor/AdmisionesProfesorPage.tsx',
   import.meta.url,
 )
+const evaluacionAdmisionServicePath = new URL(
+  '../src/modules/admisiones/api/evaluacionAdmisionService.ts',
+  import.meta.url,
+)
 
 const fila = (changes: Partial<EvaluacionAdmisionItem> = {}): EvaluacionAdmisionItem => ({
   id: 1, inscripcionId: 74, etapaEvaluacion: 'ENTREVISTA', aspecto: 'Aspecto',
@@ -52,6 +56,18 @@ test('el listado destaca la entrevista y no presenta la etapa no iniciada como e
 
   assert.match(source, /admisiones-profesor__interview-status/)
   assert.match(source, /getOrdenEstadoEntrevista\(estadoA\) - getOrdenEstadoEntrevista\(estadoB\)/)
-  assert.match(source, /label = ESTADO_ENTREVISTA_NO_INICIADA/)
+  assert.match(source, /estadosEntrevista\[inscripcionId\] \?\? ESTADO_ENTREVISTA_NO_INICIADA/)
   assert.doesNotMatch(source, /No se pudo consultar/)
+})
+
+test('el listado consulta una sola vez las entrevistas del evaluador y las asocia por inscripción', async () => {
+  const [pageSource, serviceSource] = await Promise.all([
+    readFile(admisionesProfesorPath, 'utf8'),
+    readFile(evaluacionAdmisionServicePath, 'utf8'),
+  ])
+
+  assert.match(serviceSource, /entrevistasPorEvaluador\?evaluadorId=\$\{encodeURIComponent\(evaluadorId\)\}/)
+  assert.match(pageSource, /getEntrevistasPorEvaluador\(usuarioId\)/)
+  assert.match(pageSource, /acc\[entrevista\.inscripcionId\] = entrevista\.completa/)
+  assert.doesNotMatch(pageSource, /getEvaluacionAdmisionInfo/)
 })

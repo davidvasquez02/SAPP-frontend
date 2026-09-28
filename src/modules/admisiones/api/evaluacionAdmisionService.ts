@@ -17,6 +17,25 @@ export const getEvaluacionAdmisionInfo = async (
   return response.data ?? []
 }
 
+export interface EntrevistaPorEvaluadorDto {
+  inscripcionId: number
+  completa: boolean
+}
+
+export const getEntrevistasPorEvaluador = async (
+  evaluadorId: number,
+): Promise<EntrevistaPorEvaluadorDto[]> => {
+  const response = await httpGet<ApiResponse<EntrevistaPorEvaluadorDto[]>>(
+    `/sapp/evaluacionAdmision/entrevistasPorEvaluador?evaluadorId=${encodeURIComponent(evaluadorId)}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'Error al obtener las entrevistas del evaluador')
+  }
+
+  return response.data ?? []
+}
+
 export interface RegistroPuntajeUpdateItem {
   id: number
   puntajeAspirante: number | null

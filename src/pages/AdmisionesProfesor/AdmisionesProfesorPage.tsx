@@ -12,10 +12,9 @@ import type { InscripcionAdmisionDto } from '../../modules/admisiones/api/types'
 import { getAspiranteFotoSrc } from '../../modules/admisiones/utils/aspiranteFoto'
 import { getProgramaNombreLargo } from '../../modules/admisiones/utils/programNames'
 import './AdmisionesProfesorPage.css'
-import { getEvaluacionAdmisionInfo } from '../../modules/admisiones/api/evaluacionAdmisionService'
+import { getEntrevistasPorEvaluador } from '../../modules/admisiones/api/evaluacionAdmisionService'
 import {
   ESTADO_ENTREVISTA_NO_INICIADA,
-  getEstadoEntrevista,
   getOrdenEstadoEntrevista,
 } from '../../modules/admisiones/utils/estadoEntrevista'
 
@@ -67,7 +66,9 @@ const AdmisionesProfesorPage = () => {
   const roles = session?.kind === 'SAPP' ? session.user.roles : []
   const isEvaluadorOnly = isEvaluadorAdmision(roles) && !canManagePosgrados(roles)
   const usuarioId = session?.user.id
-  const [estadosEntrevista, setEstadosEntrevista] = useState<Record<string, string>>({})
+  const [estadosEntrevista, setEstadosEntrevista] = useState<Record<number, string>>({})
+  const [loadingEstadosEntrevista, setLoadingEstadosEntrevista] = useState(false)
+  const [errorEstadosEntrevista, setErrorEstadosEntrevista] = useState<string | null>(null)
 
   const [activeConvocatorias, setActiveConvocatorias] = useState<ConvocatoriaAdmisionDto[]>([])
   const [inscripcionesByConvocatoria, setInscripcionesByConvocatoria] = useState<
@@ -191,28 +192,44 @@ const AdmisionesProfesorPage = () => {
     [inscripcionesConConvocatoria]
   )
 
-  useEffect(() => {
+  const loadEstadosEntrevista = useCallback(async () => {
     if (!isEvaluadorOnly || usuarioId == null) return
-    let cancelled = false
-    let cursor = 0
-    const ids = [...new Set(inscripcionesConConvocatoria.map((item) => item.id))]
+
+    setLoadingEstadosEntrevista(true)
+    setErrorEstadosEntrevista(null)
     setEstadosEntrevista({})
-    const worker = async () => {
-      while (!cancelled && cursor < ids.length) {
-        const id = ids[cursor++]
-        let label: string
-        try {
-          const items = await getEvaluacionAdmisionInfo(id, 'ENTREVISTA')
-          label = getEstadoEntrevista(items, usuarioId).label
-        } catch {
-          label = ESTADO_ENTREVISTA_NO_INICIADA
-        }
-        if (!cancelled) setEstadosEntrevista((current) => ({ ...current, [`${usuarioId}-${id}`]: label }))
-      }
+
+    try {
+      const entrevistas = await getEntrevistasPorEvaluador(usuarioId)
+      const nextEstados = entrevistas.reduce<Record<number, string>>((acc, entrevista) => {
+        acc[entrevista.inscripcionId] = entrevista.completa
+          ? 'Calificado'
+          : 'Pendiente de calificación'
+        return acc
+      }, {})
+      setEstadosEntrevista(nextEstados)
+    } catch (error) {
+      setErrorEstadosEntrevista(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible cargar el estado de las entrevistas.',
+      )
+    } finally {
+      setLoadingEstadosEntrevista(false)
     }
-    void Promise.all(Array.from({ length: Math.min(4, ids.length) }, worker))
-    return () => { cancelled = true }
-  }, [inscripcionesConConvocatoria, isEvaluadorOnly, usuarioId])
+  }, [isEvaluadorOnly, usuarioId])
+
+  useEffect(() => {
+    void loadEstadosEntrevista()
+  }, [loadEstadosEntrevista])
+
+  const getEstadoEntrevistaListado = useCallback(
+    (inscripcionId: number) => {
+      if (loadingEstadosEntrevista) return 'Consultando calificación…'
+      return estadosEntrevista[inscripcionId] ?? ESTADO_ENTREVISTA_NO_INICIADA
+    },
+    [estadosEntrevista, loadingEstadosEntrevista],
+  )
 
   const dccInscripciones = useMemo(
     () => inscripcionesConConvocatoria.filter((inscripcion) => isDcc(inscripcion)),
@@ -238,8 +255,8 @@ const AdmisionesProfesorPage = () => {
   const renderProgramaSection = useCallback(
     (title: string, rows: InscripcionConConvocatoria[]) => {
       const rowsOrdenadas = [...rows].sort((a, b) => {
-        const estadoA = estadosEntrevista[`${usuarioId}-${a.id}`]
-        const estadoB = estadosEntrevista[`${usuarioId}-${b.id}`]
+        const estadoA = getEstadoEntrevistaListado(a.id)
+        const estadoB = getEstadoEntrevistaListado(b.id)
         return getOrdenEstadoEntrevista(estadoA) - getOrdenEstadoEntrevista(estadoB)
       })
 
@@ -262,9 +279,7 @@ const AdmisionesProfesorPage = () => {
               const email = inscripcion.emailPersonal || '—'
               const telefono = inscripcion.telefono || '—'
               const fotoSrc = getAspiranteFotoSrc(inscripcion.foto)
-              const estadoEntrevista =
-                estadosEntrevista[`${usuarioId}-${inscripcion.id}`] ??
-                'Consultando calificación…'
+              const estadoEntrevista = getEstadoEntrevistaListado(inscripcion.id)
               const estadoEntrevistaTone =
                 estadoEntrevista === 'Pendiente de calificación'
                   ? 'pending'
@@ -338,7 +353,7 @@ const AdmisionesProfesorPage = () => {
       </section>
       )
     },
-    [goToEntrevistas, loadingInscripciones, estadosEntrevista, usuarioId]
+    [getEstadoEntrevistaListado, goToEntrevistas, loadingInscripciones]
   )
 
   if (!isEvaluadorOnly) {
@@ -377,6 +392,15 @@ const AdmisionesProfesorPage = () => {
             {errorInscripciones ? (
               <div className="admisiones-profesor__error">
                 <p>{errorInscripciones}</p>
+              </div>
+            ) : null}
+
+            {errorEstadosEntrevista ? (
+              <div className="admisiones-profesor__error">
+                <p>{errorEstadosEntrevista}</p>
+                <button type="button" onClick={loadEstadosEntrevista}>
+                  Reintentar
+                </button>
               </div>
             ) : null}
 
