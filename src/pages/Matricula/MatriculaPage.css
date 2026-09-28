@@ -196,6 +196,12 @@
     gap: 0.75rem;
 }
 
+.matricula-page__list-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
 .matricula-page__filters-top-row {
     display: grid;
     grid-template-columns: 1fr;

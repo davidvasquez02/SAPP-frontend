@@ -2,6 +2,23 @@
 
 ---
 
+# Handoff 2026-09-27 — títulos del tablero de matrículas académicas
+
+## Estado y salida esperada
+
+- La ruta de coordinación `/matricula/academica` usa `ModuleLayout title="Matrículas académicas"`.
+- Se retiró el encabezado superior del listado y se añadió `Listado de matrículas académicas` al inicio de la tarjeta de filtros, antes de Programa académico.
+
+## Paths, pruebas y entorno
+
+- Implementación: `src/pages/Matricula/MatriculaPage.tsx` y `MatriculaPage.css`; regresión: `tests/matriculaListadoTitle.test.ts`. No cambian endpoints, contratos, permisos, schemas, datasets ni seeds.
+- Reutilizar `node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni otro árbol npm. Ejecutar `node --test --test-isolation=none tests/matriculaListadoTitle.test.ts` y `npm run build`.
+- Resultado reciente: regresión 1/1 PASS y build PASS (323 módulos, CSS 287.97 kB, JS 753.51 kB). El aviso de Vite por chunk mayor de 500 kB no bloquea la compilación.
+
+---
+
+---
+
 # Handoff 2026-09-27 — aviso temporal de apertura de matrícula
 
 ## Estado y salida esperada

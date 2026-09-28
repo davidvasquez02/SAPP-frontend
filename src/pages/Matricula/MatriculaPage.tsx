@@ -828,13 +828,8 @@ const MatriculaPage = () => {
 
   if (canManageMatriculas) {
     return (
-      <ModuleLayout title="Matrícula">
+      <ModuleLayout title="Matrículas académicas">
         <div className="matricula-page">
-          <header className="matricula-page__header">
-            <h3>Listado de matrículas académicas</h3>
-            <p>Consulta y filtra las matrículas registradas por programa.</p>
-          </header>
-
           {periodoMatriculaVigente?.notificacionAperturaEnviada !== true ? <section className="matricula-page__card matricula-page__notification-card">
             <div>
               <h4>Notificación de inicio de matrícula</h4>
@@ -878,6 +873,7 @@ const MatriculaPage = () => {
           </section> : null}
 
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
+            <h3 className="matricula-page__list-title">Listado de matrículas académicas</h3>
             <div className="matricula-page__filters-top-row">
               <label className="sapp-filter-field matricula-page__filter-field">
                 <span>Programa académico</span>

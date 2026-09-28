@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-27 — jerarquía del listado de matrículas académicas
+
+- El título del módulo de coordinación ahora es **Matrículas académicas**. El subtítulo **Listado de matrículas académicas** se ubicó dentro de la tarjeta de filtros, inmediatamente antes de Programa académico, Período y Estado.
+- Archivos: `src/pages/Matricula/MatriculaPage.tsx`, `src/pages/Matricula/MatriculaPage.css` y `tests/matriculaListadoTitle.test.ts`. Sin cambios de API, permisos, datos, seeds ni dependencias. Verificación: regresión 1/1 PASS y build PASS (323 módulos; CSS 287.97 kB; JS 753.51 kB); persiste el aviso no bloqueante de Vite por chunk mayor de 500 kB.
+
 ## Ajuste 2026-09-27 — confirmación temporal de notificación de matrícula
 
 - Tras enviar correctamente la notificación de apertura, el mensaje del backend permanece visible cinco segundos. Luego se limpia y se vuelve a consultar `GET /sapp/periodoAcademicoFecha/vigente`.
