@@ -3,6 +3,7 @@ export interface DocumentUploadRequest {
   nombreArchivo: string
   tramiteId: number
   usuarioCargaId: number | null
+  cargaHistorica?: boolean
   aspiranteCargaId: number | null
   contenidoBase64: string
   mimeType: string

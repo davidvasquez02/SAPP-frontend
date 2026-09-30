@@ -1,5 +1,17 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-09-30 — cargue histórico de documentos
+
+- El cargue y reemplazo de documentos de Admisión y Matrículas en el detalle administrativo del estudiante envía `cargaHistorica: true` a `POST /sapp/document`. El backend puede resolver `{{NOMBRE_ESTUDIANTE}}` con el dueño del trámite, conservando `tramiteId`, `usuarioCargaId` y el resto del payload.
+- `DocumentUploadRequest` incorpora `cargaHistorica?: boolean`. Los cargues propios de estudiantes/aspirantes omiten el campo y conservan su comportamiento. La ruta mantiene el acceso existente de coordinación, secretaría y administración.
+- Validación: `npm run build` correcto (TypeScript y Vite, 327 módulos); permanece el aviso de chunk mayor de 500 kB. Pendiente comprobar el nombre generado con backend y sesión institucional.
+
+## Auditoría 2026-09-29 — paridad de roles administrativos
+
+- Requisito vigente: admin y secretaría deben disponer de los mismos módulos y funciones que coordinación. La revisión confirma diez módulos iguales para perfiles individuales, pero encuentra excepciones en evaluadores, recordatorios de candidatura y bandejas; también conflictos con roles adicionales DIRECTOR/ESTUDIANTE y pérdida de solicitudes asignadas al ocultar su sección.
+- Informe, evidencias, contratos y ajustes propuestos: [Revisión de paridad de roles](docs/revision-paridad-roles-2026-09-29.md). Esta entrega documenta la revisión; no modifica permisos ni comportamiento. La equivalencia en backend queda pendiente de validación institucional.
+- Pruebas existentes: 162/162 PASS; no acreditan la paridad nueva, pues algunas exigen exclusividad de coordinación. Entorno verificado: Node 24.11.0, npm 11.6.1, React/DOM 19.2.3, Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar node_modules y package-lock.json.
+
 ## Ajuste 2026-09-28 — tarjetas de estudiantes con navegación por flechas
 
 - El tablero de estudiantes y egresados se desplaza mediante las flechas existentes (también conserva las flechas de teclado). Se retiraron el arrastre, la captura del puntero, la supresión de clics y el desplazamiento horizontal mediante rueda o gestos para que el clic llegue directamente a la tarjeta. Se conserva el diseño de tarjetas y controles; la ayuda indica el uso de flechas.

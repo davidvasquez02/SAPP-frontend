@@ -1,5 +1,23 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Actualización 2026-09-30 — cargaHistorica en documentos
+
+- Implementado `cargaHistorica?: boolean` en `src/api/documentUploadTypes.ts` y `cargaHistorica: true` en `handleDocumentUpload` de `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.tsx`. El mismo manejador cubre cargar/reemplazar documentos de Admisión y Matrículas del histórico. La ruta `/coordinacion/estudiantes/:estudianteId` usa `ROLES_GESTION_POSGRADOS`.
+- Contrato: `uploadDocument` conserva `POST /sapp/document`, los IDs y todos los demás campos. Solo el flujo histórico administrativo agrega el booleano. No agregarlo por defecto en el servicio compartido: estudiantes/aspirantes deben seguir omitiéndolo. El backend resuelve `{{NOMBRE_ESTUDIANTE}}` usando al dueño del trámite cuando recibe `true`.
+- Validación: `npm run build` PASS, incluyendo TypeScript (327 módulos; JS 757.61 kB). El primer intento en sandbox falló por `spawn EPERM`; la repetición con el permiso existente de build pasó. Logs en la salida de terminal; avisos preexistentes de configuración npm y chunk mayor de 500 kB.
+- Entorno: Node 24.11.0, npm 11.6.1, React 19.2.3, Router DOM 7.11.0, TypeScript 5.9.3 y Vite/Rolldown 7.2.5. Reutilizar `node_modules` y `package-lock.json` del workspace Windows; no instalar dependencias ni crear entornos. Sin cambios de seeds, datasets o esquema.
+- Pendiente institucional: cargar y reemplazar un documento con plantilla `{{NOMBRE_ESTUDIANTE}}` desde coordinación/secretaría/admin; verificar que el nombre corresponde al titular y que `usuarioCargaId` sigue siendo el operador. Repetir carga propia de estudiante/aspirante y confirmar ausencia del campo. No se comprobó contra backend real.
+- Se preservaron los cambios previos en README/HANDOFF y el informe no rastreado `docs/revision-paridad-roles-2026-09-29.md`.
+- Verificación adicional: ESLint focalizado sobre ambos archivos TypeScript PASS y `git diff --check` PASS. No se agregaron pruebas para este cambio declarativo de payload.
+
+## Auditoría 2026-09-29 — admin y secretaría equivalentes a coordinación
+
+- Solicitud: revisión profunda e identificación de ajustes. Se entregó diagnóstico, sin editar código funcional. Informe completo: `docs/revision-paridad-roles-2026-09-29.md`.
+- Hallazgos: Ver evaluadores y recordatorios de candidatura aún exclusivos del coordinador; hideAssignedList difiere entre perfiles y el filtro availableRows elimina asignadas incluso cuando no se muestra su sección; DIRECTOR adicional oculta dos módulos y restringe bandeja; ESTUDIANTE adicional desplaza vistas administrativas.
+- Continuidad: reparar pérdida de asignadas y precedencia administrativa antes de extender hideAssignedList. Unificar capacidades con canManagePosgrados; actualizar pruebas que todavía exigen exclusividad; cubrir roles mixtos, filtros y asignaciones. Confirmar backend/gateway con sesiones reales: no hay código Java ni se verificaron permisos HTTP institucionales en esta revisión. Firmas siguen dependiendo de identidad/asignación y estado.
+- Verificación: suite Node completa `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs` PASS 162/162; subconjunto de autorización PASS 21/21. Matriz ejecutada en memoria sobre funciones reales: 10 módulos para cada gestor/alias y 8 con DIRECTOR adicional. Detalles y limitaciones en el informe.
+- Entorno: Windows/PowerShell en este checkout, Node 24.11.0, npm 11.6.1, React/DOM 19.2.3, Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5, ESLint 9.39.2. Reutilizados node_modules y package-lock.json; sin entornos adicionales ni nuevos schemas, seeds o datasets. No se enviaron recordatorios ni se firmaron documentos.
+
 ## Actualización 2026-09-28 — clic en tarjetas de estudiantes
 
 - Cambio limitado a `src/modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard.{tsx,css}`: eliminados handlers de arrastre, captura del puntero, supresión de clic y rueda. `overflow-x: hidden` y `touch-action: pan-y` impiden desplazamiento horizontal manual y permiten mantener el scroll vertical de la página. Las flechas conservan `scrollBy`, animación, estados de habilitación y soporte de teclado. Afecta matriculados y egresados, que comparten tablero.
