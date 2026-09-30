@@ -780,6 +780,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         nombreArchivo: file.name,
         tramiteId: documento.tramiteId,
         usuarioCargaId,
+        cargaHistorica: true,
         aspiranteCargaId: null,
         contenidoBase64,
         mimeType: file.type || 'application/octet-stream',
