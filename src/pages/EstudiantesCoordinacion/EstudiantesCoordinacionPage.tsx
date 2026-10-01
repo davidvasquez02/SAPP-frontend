@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { getInscripcionesByAspirantes } from '../../modules/admisiones/api/inscripcionAdmisionService'
-import { getFotosDocumentoByTramitesBulk } from '../../modules/documentos/api/documentoFotoService'
 import ProgramTypeToggle, { type ProgramType } from '../../modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle'
 import StudentHorizontalBoard from '../../modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard'
 import {
@@ -13,6 +11,8 @@ import {
   cacheEstudiantesListForDetail,
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
+import { aplicarFotosCacheadas } from '../../modules/estudiantes/services/estudianteFotoCache'
+import { cargarFotosDeEstudiantes } from '../../modules/estudiantes/services/estudianteFotoLoader'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
@@ -37,56 +37,6 @@ const compararEstudiantesPorSemestre = (
 
 const ordenarEstudiantesPorSemestre = (estudiantes: EstudianteCoordinacion[]) =>
   [...estudiantes].sort(compararEstudiantesPorSemestre)
-
-/**
- * Resuelve las fotos (ANX-4) de un grupo de estudiantes en 2 llamadas en total (una de
- * inscripciones, otra de fotos), en vez de 2 por estudiante: evitaba el 429 del gateway con
- * programas de varios estudiantes. Un fallo en el lote deja los placeholders sin romper el listado.
- */
-const cargarFotosDeEstudiantes = async (
-  estudiantes: (EstudianteCoordinacion & { idAspirante: number })[],
-): Promise<Map<number, string>> => {
-  const fotosPorEstudianteId = new Map<number, string>()
-
-  if (estudiantes.length === 0) {
-    return fotosPorEstudianteId
-  }
-
-  try {
-    const inscripcionesPorAspiranteId = await getInscripcionesByAspirantes(
-      estudiantes.map((estudiante) => estudiante.idAspirante),
-    )
-
-    const tramiteIdPorEstudianteId = new Map<number, number>()
-    estudiantes.forEach((estudiante) => {
-      const inscripcion = inscripcionesPorAspiranteId.get(estudiante.idAspirante)
-      if (inscripcion) {
-        tramiteIdPorEstudianteId.set(estudiante.id, inscripcion.id)
-      }
-    })
-
-    if (tramiteIdPorEstudianteId.size === 0) {
-      return fotosPorEstudianteId
-    }
-
-    const fotosPorTramiteId = await getFotosDocumentoByTramitesBulk({
-      codigoTipoTramite: 1002,
-      codigoTipoDocumentoTramite: 'ANX-4',
-      tramiteIds: [...tramiteIdPorEstudianteId.values()],
-    })
-
-    tramiteIdPorEstudianteId.forEach((tramiteId, estudianteId) => {
-      const fotoUrl = fotosPorTramiteId.get(tramiteId)
-      if (fotoUrl) {
-        fotosPorEstudianteId.set(estudianteId, fotoUrl)
-      }
-    })
-  } catch {
-    // Un fallo del lote conserva los placeholders sin afectar el listado.
-  }
-
-  return fotosPorEstudianteId
-}
 
 const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
   return resolveTipoPrograma({ id: programa.id, nombre: programa.nombre, codigoUis: programa.codigo })
@@ -148,6 +98,11 @@ const EstudiantesCoordinacionPage = () => {
 
     if (shouldReuseInitialStudents.current) {
       shouldReuseInitialStudents.current = false
+      // El snapshot se guardo antes de volver del detalle: si en el medio termino de resolver
+      // el fetch de fotos de la visita anterior, ya quedo en la cache aunque el componente de
+      // ese momento ya no exista. Se aplica aca para no perder esas fotos al volver.
+      setEstudiantes((current) => aplicarFotosCacheadas(current))
+      setEgresados((current) => aplicarFotosCacheadas(current))
       return () => {
         isCurrentRequest = false
       }
@@ -173,7 +128,7 @@ const EstudiantesCoordinacionPage = () => {
         }
 
         const estudiantesOrdenados = ordenarEstudiantesPorSemestre(data)
-        setEstudiantes(estudiantesOrdenados)
+        setEstudiantes(aplicarFotosCacheadas(estudiantesOrdenados))
 
         // La cola de fotos debe conservar el mismo orden por semestre que ve coordinación.
         const estudiantesConAspirante = estudiantesOrdenados.filter(
@@ -230,7 +185,7 @@ const EstudiantesCoordinacionPage = () => {
           await getEstudiantesByPrograma(programaSeleccionado.id, true),
         )
         if (!isCurrentRequest) return
-        setEgresados(data)
+        setEgresados(aplicarFotosCacheadas(data))
 
         const egresadosConAspirante = data.filter(
           (egresado): egresado is EstudianteCoordinacion & { idAspirante: number } =>
