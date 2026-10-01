@@ -94,6 +94,25 @@ export const getDocumentsByEstudiante = async (
   return response.data ?? []
 }
 
+/**
+ * Igual que getDocumentsByEstudiante, pero por id de estudiante. Dos filas Estudiante distintas
+ * pueden compartir el mismo codigoEstudianteUis (cargues historicos duplicados de maestria/doctorado),
+ * y por codigo el back solo puede devolver una de ellas. Por id no hay esa ambiguedad.
+ */
+export const getDocumentsByEstudianteId = async (
+  estudianteId: string | number,
+): Promise<DocumentosEstudianteGrupoDto[]> => {
+  const response = await httpGet<ApiResponse<DocumentosEstudianteGrupoDto[]>>(
+    `/sapp/document/by-estudiante-id/${encodeURIComponent(String(estudianteId))}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar los documentos del estudiante.')
+  }
+
+  return response.data ?? []
+}
+
 export const getDocumentById = async (
   documentoId: string | number,
 ): Promise<DocumentoCompletoDto> => {

@@ -9,7 +9,7 @@ import { sha256Hex } from '../../utils/sha256'
 import { downloadBase64File, downloadBlobFile, openBase64InNewTab } from '../../shared/files/base64FileUtils'
 import {
   getDocumentById,
-  getDocumentsByEstudiante,
+  getDocumentsByEstudianteId,
   type DocumentoEstudianteMetadataDto,
   type DocumentosEstudianteGrupoDto,
 } from '../../modules/documentos/api/documentosService'
@@ -603,7 +603,7 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [estadoError, setEstadoError] = useState<string | null>(null)
   const [isDownloadingZip, setIsDownloadingZip] = useState(false)
   const [downloadZipError, setDownloadZipError] = useState<string | null>(null)
-  const loadedDocumentsCodeRef = useRef<string | null>(null)
+  const loadedDocumentsEstudianteIdRef = useRef<number | null>(null)
 
   useEffect(() => () => {
     window.setTimeout(() => {
@@ -654,7 +654,7 @@ const EstudianteDetalleCoordinacionPage = () => {
     void loadEstudiante()
   }, [estudianteFromState, estudianteId])
 
-  const codigoEstudianteUis = getCodigoEstudianteUis(estudiante)
+  const estudianteIdActual = estudiante?.id ?? null
 
   const usuarioCargaId = useMemo(() => {
     if (session?.kind !== 'SAPP') {
@@ -666,40 +666,40 @@ const EstudianteDetalleCoordinacionPage = () => {
   }, [session])
 
   const refreshDocumentGroups = useCallback(async () => {
-    if (!codigoEstudianteUis) {
+    if (!estudianteIdActual) {
       return
     }
 
-    const data = await getDocumentsByEstudiante(codigoEstudianteUis)
+    const data = await getDocumentsByEstudianteId(estudianteIdActual)
     setDocumentGroups(data)
-  }, [codigoEstudianteUis])
+  }, [estudianteIdActual])
 
   useEffect(() => {
-    if (!codigoEstudianteUis) {
+    if (!estudianteIdActual) {
       setDocumentGroups([])
-      setDocumentsError(estudiante ? 'No se encontró código UIS para consultar documentos.' : null)
+      setDocumentsError(estudiante ? 'No se encontró el estudiante para consultar documentos.' : null)
       return
     }
 
-    if (loadedDocumentsCodeRef.current === codigoEstudianteUis) {
+    if (loadedDocumentsEstudianteIdRef.current === estudianteIdActual) {
       return
     }
 
     let ignore = false
-    loadedDocumentsCodeRef.current = codigoEstudianteUis
+    loadedDocumentsEstudianteIdRef.current = estudianteIdActual
     setIsLoadingDocuments(true)
     setDocumentsError(null)
 
     const loadDocuments = async () => {
       try {
-        const data = await getDocumentsByEstudiante(codigoEstudianteUis)
+        const data = await getDocumentsByEstudianteId(estudianteIdActual)
 
         if (!ignore) {
           setDocumentGroups(data)
         }
       } catch (err) {
         if (!ignore) {
-          loadedDocumentsCodeRef.current = null
+          loadedDocumentsEstudianteIdRef.current = null
           setDocumentGroups([])
           setDocumentsError(
             err instanceof Error
@@ -719,7 +719,7 @@ const EstudianteDetalleCoordinacionPage = () => {
     return () => {
       ignore = true
     }
-  }, [codigoEstudianteUis, estudiante])
+  }, [estudianteIdActual, estudiante])
 
   const admissionDocuments = useMemo(() => buildAdmissionDocuments(documentGroups), [documentGroups])
   const enrollmentGroups = useMemo(() => buildEnrollmentGroups(documentGroups), [documentGroups])
