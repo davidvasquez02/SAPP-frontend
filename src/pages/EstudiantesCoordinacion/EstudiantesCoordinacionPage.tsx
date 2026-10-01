@@ -386,17 +386,18 @@ const EstudiantesCoordinacionPage = () => {
         ) : null}
 
         {!isLoadingEstudiantes && estudiantesVisibles.length > 0 ? (
-          <>
+          <div className="estudiantes-coordinacion__board-wrapper">
             {isLoadingFotosEstudiantes ? (
-              <p className="estudiantes-coordinacion__fotos-status" role="status">
+              <div className="estudiantes-coordinacion__board-overlay" role="status">
                 <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
-              </p>
+                <p>Cargando la información de los estudiantes, un momento...</p>
+              </div>
             ) : null}
             <StudentHorizontalBoard
               estudiantes={estudiantesVisibles}
               onStudentClick={openStudentDetail}
             />
-          </>
+          </div>
         ) : null}
 
         <section className="estudiantes-coordinacion__graduates" aria-labelledby="egresados-title">
@@ -432,11 +433,12 @@ const EstudiantesCoordinacionPage = () => {
             </div>
           ) : null}
           {mostrarEgresados && !isLoadingEgresados && !errorEgresados && egresados.length > 0 ? (
-            <>
+            <div className="estudiantes-coordinacion__board-wrapper">
               {isLoadingFotosEgresados ? (
-                <p className="estudiantes-coordinacion__fotos-status" role="status">
+                <div className="estudiantes-coordinacion__board-overlay" role="status">
                   <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
-                </p>
+                  <p>Cargando la información de los estudiantes, un momento...</p>
+                </div>
               ) : null}
               <StudentHorizontalBoard
                 estudiantes={egresados}
@@ -444,7 +446,7 @@ const EstudiantesCoordinacionPage = () => {
                 title="Estudiantes egresados"
                 ariaLabel="Listado horizontal de estudiantes egresados"
               />
-            </>
+            </div>
           ) : null}
         </section>
       </section>
