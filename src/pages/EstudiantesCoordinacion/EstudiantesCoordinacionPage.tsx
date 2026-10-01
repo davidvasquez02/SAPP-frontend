@@ -11,7 +11,7 @@ import {
   cacheEstudiantesListForDetail,
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
-import { aplicarFotosCacheadas } from '../../modules/estudiantes/services/estudianteFotoCache'
+import { aplicarFotosCacheadas, tieneFotosPendientes } from '../../modules/estudiantes/services/estudianteFotoCache'
 import { cargarFotosDeEstudiantes } from '../../modules/estudiantes/services/estudianteFotoLoader'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
@@ -58,6 +58,8 @@ const EstudiantesCoordinacionPage = () => {
   const [isLoadingProgramas, setIsLoadingProgramas] = useState(!initialSnapshot)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
   const [isLoadingEgresados, setIsLoadingEgresados] = useState(false)
+  const [isLoadingFotosEstudiantes, setIsLoadingFotosEstudiantes] = useState(false)
+  const [isLoadingFotosEgresados, setIsLoadingFotosEgresados] = useState(false)
   const [egresadosRequest, setEgresadosRequest] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [errorEgresados, setErrorEgresados] = useState<string | null>(null)
@@ -136,8 +138,18 @@ const EstudiantesCoordinacionPage = () => {
             estudiante.idAspirante !== null,
         )
 
+        if (tieneFotosPendientes(estudiantesConAspirante)) {
+          setIsLoadingFotosEstudiantes(true)
+        }
+
         void cargarFotosDeEstudiantes(estudiantesConAspirante).then((fotosPorEstudianteId) => {
-          if (!isCurrentRequest || fotosPorEstudianteId.size === 0) {
+          if (!isCurrentRequest) {
+            return
+          }
+
+          setIsLoadingFotosEstudiantes(false)
+
+          if (fotosPorEstudianteId.size === 0) {
             return
           }
 
@@ -192,8 +204,16 @@ const EstudiantesCoordinacionPage = () => {
             egresado.idAspirante !== null,
         )
 
+        if (tieneFotosPendientes(egresadosConAspirante)) {
+          setIsLoadingFotosEgresados(true)
+        }
+
         void cargarFotosDeEstudiantes(egresadosConAspirante).then((fotosPorEstudianteId) => {
-          if (!isCurrentRequest || fotosPorEstudianteId.size === 0) return
+          if (!isCurrentRequest) return
+
+          setIsLoadingFotosEgresados(false)
+
+          if (fotosPorEstudianteId.size === 0) return
 
           setEgresados((current) => current.map((item) => {
             const fotoUrl = fotosPorEstudianteId.get(item.id)
@@ -366,10 +386,18 @@ const EstudiantesCoordinacionPage = () => {
         ) : null}
 
         {!isLoadingEstudiantes && estudiantesVisibles.length > 0 ? (
-          <StudentHorizontalBoard
-            estudiantes={estudiantesVisibles}
-            onStudentClick={openStudentDetail}
-          />
+          <>
+            {isLoadingFotosEstudiantes ? (
+              <p className="estudiantes-coordinacion__fotos-status" role="status">
+                <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
+                Terminando de cargar las fotos...
+              </p>
+            ) : null}
+            <StudentHorizontalBoard
+              estudiantes={estudiantesVisibles}
+              onStudentClick={openStudentDetail}
+            />
+          </>
         ) : null}
 
         <section className="estudiantes-coordinacion__graduates" aria-labelledby="egresados-title">
@@ -405,12 +433,20 @@ const EstudiantesCoordinacionPage = () => {
             </div>
           ) : null}
           {mostrarEgresados && !isLoadingEgresados && !errorEgresados && egresados.length > 0 ? (
-            <StudentHorizontalBoard
-              estudiantes={egresados}
-              onStudentClick={openStudentDetail}
-              title="Estudiantes egresados"
-              ariaLabel="Listado horizontal de estudiantes egresados"
-            />
+            <>
+              {isLoadingFotosEgresados ? (
+                <p className="estudiantes-coordinacion__fotos-status" role="status">
+                  <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
+                  Terminando de cargar las fotos...
+                </p>
+              ) : null}
+              <StudentHorizontalBoard
+                estudiantes={egresados}
+                onStudentClick={openStudentDetail}
+                title="Estudiantes egresados"
+                ariaLabel="Listado horizontal de estudiantes egresados"
+              />
+            </>
           ) : null}
         </section>
       </section>

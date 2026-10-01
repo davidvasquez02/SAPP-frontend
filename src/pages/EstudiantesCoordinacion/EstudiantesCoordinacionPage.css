@@ -26,6 +26,37 @@
   color: var(--text-secondary);
 }
 
+.estudiantes-coordinacion__fotos-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.estudiantes-coordinacion__fotos-spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  border: 2px solid color-mix(in srgb, var(--text-secondary), transparent 65%);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: estudiantes-coordinacion-fotos-spin 0.75s linear infinite;
+}
+
+@keyframes estudiantes-coordinacion-fotos-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .estudiantes-coordinacion__fotos-spinner {
+    animation-duration: 1.5s;
+  }
+}
+
 .estudiantes-coordinacion__status--error {
   width: fit-content;
   border-radius: 14px;

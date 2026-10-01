@@ -29,3 +29,7 @@ export const aplicarFotosCacheadas = <T extends { id: number; fotoUrl?: string |
     const fotoUrl = getFotoCacheada(estudiante.id)
     return fotoUrl ? { ...estudiante, fotoUrl } : estudiante
   })
+
+/** true si a alguno le falta la foto (ni la trae ya, ni esta en cache): hay trabajo pendiente. */
+export const tieneFotosPendientes = (estudiantes: { id: number; fotoUrl?: string | null }[]): boolean =>
+  estudiantes.some((estudiante) => !estudiante.fotoUrl && !getFotoCacheada(estudiante.id))
