@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { getInscripcionByAspirante } from '../../modules/admisiones/api/inscripcionAdmisionService'
-import { getFotoDocumentoByTramite } from '../../modules/documentos/api/documentoFotoService'
 import ProgramTypeToggle, { type ProgramType } from '../../modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle'
 import StudentHorizontalBoard from '../../modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard'
 import {
@@ -13,11 +11,11 @@ import {
   cacheEstudiantesListForDetail,
   consumeEstudiantesListFromDetail,
 } from '../../modules/estudiantes/services/estudiantesListCache'
+import { aplicarFotosCacheadas, tieneFotosPendientes } from '../../modules/estudiantes/services/estudianteFotoCache'
+import { cargarFotosDeEstudiantes } from '../../modules/estudiantes/services/estudianteFotoLoader'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
-
-const FOTO_CONCURRENCY_LIMIT = 4
 
 const normalizarTextoBusqueda = (value: string) =>
   value
@@ -40,24 +38,6 @@ const compararEstudiantesPorSemestre = (
 const ordenarEstudiantesPorSemestre = (estudiantes: EstudianteCoordinacion[]) =>
   [...estudiantes].sort(compararEstudiantesPorSemestre)
 
-const loadWithConcurrencyLimit = async <T,>(
-  items: T[],
-  task: (item: T) => Promise<void>,
-): Promise<void> => {
-  let nextIndex = 0
-  const worker = async () => {
-    while (nextIndex < items.length) {
-      const item = items[nextIndex]
-      nextIndex += 1
-      await task(item)
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(FOTO_CONCURRENCY_LIMIT, items.length) }, () => worker()),
-  )
-}
-
 const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
   return resolveTipoPrograma({ id: programa.id, nombre: programa.nombre, codigoUis: programa.codigo })
 }
@@ -78,6 +58,8 @@ const EstudiantesCoordinacionPage = () => {
   const [isLoadingProgramas, setIsLoadingProgramas] = useState(!initialSnapshot)
   const [isLoadingEstudiantes, setIsLoadingEstudiantes] = useState(false)
   const [isLoadingEgresados, setIsLoadingEgresados] = useState(false)
+  const [isLoadingFotosEstudiantes, setIsLoadingFotosEstudiantes] = useState(false)
+  const [isLoadingFotosEgresados, setIsLoadingFotosEgresados] = useState(false)
   const [egresadosRequest, setEgresadosRequest] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [errorEgresados, setErrorEgresados] = useState<string | null>(null)
@@ -118,6 +100,11 @@ const EstudiantesCoordinacionPage = () => {
 
     if (shouldReuseInitialStudents.current) {
       shouldReuseInitialStudents.current = false
+      // El snapshot se guardo antes de volver del detalle: si en el medio termino de resolver
+      // el fetch de fotos de la visita anterior, ya quedo en la cache aunque el componente de
+      // ese momento ya no exista. Se aplica aca para no perder esas fotos al volver.
+      setEstudiantes((current) => aplicarFotosCacheadas(current))
+      setEgresados((current) => aplicarFotosCacheadas(current))
       return () => {
         isCurrentRequest = false
       }
@@ -143,7 +130,7 @@ const EstudiantesCoordinacionPage = () => {
         }
 
         const estudiantesOrdenados = ordenarEstudiantesPorSemestre(data)
-        setEstudiantes(estudiantesOrdenados)
+        setEstudiantes(aplicarFotosCacheadas(estudiantesOrdenados))
 
         // La cola de fotos debe conservar el mismo orden por semestre que ve coordinación.
         const estudiantesConAspirante = estudiantesOrdenados.filter(
@@ -151,33 +138,27 @@ const EstudiantesCoordinacionPage = () => {
             estudiante.idAspirante !== null,
         )
 
-        void loadWithConcurrencyLimit(estudiantesConAspirante, async (estudiante) => {
-          try {
-            const inscripcion = await getInscripcionByAspirante(estudiante.idAspirante)
-            if (!inscripcion || !isCurrentRequest) {
-              return
-            }
+        if (tieneFotosPendientes(estudiantesConAspirante)) {
+          setIsLoadingFotosEstudiantes(true)
+        }
 
-            const fotoUrl = await getFotoDocumentoByTramite({
-              codigoTipoTramite: 1002,
-              codigoTipoDocumentoTramite: 'ANX-4',
-              tramiteId: inscripcion.id,
-            })
-
-            if (!fotoUrl || !isCurrentRequest) {
-              return
-            }
-
-            setEstudiantes((current) =>
-              current.map((currentEstudiante) =>
-                currentEstudiante.id === estudiante.id
-                  ? { ...currentEstudiante, fotoUrl }
-                  : currentEstudiante,
-              ),
-            )
-          } catch {
-            // Un fallo individual conserva el placeholder sin afectar el listado.
+        void cargarFotosDeEstudiantes(estudiantesConAspirante).then((fotosPorEstudianteId) => {
+          if (!isCurrentRequest) {
+            return
           }
+
+          setIsLoadingFotosEstudiantes(false)
+
+          if (fotosPorEstudianteId.size === 0) {
+            return
+          }
+
+          setEstudiantes((current) =>
+            current.map((currentEstudiante) => {
+              const fotoUrl = fotosPorEstudianteId.get(currentEstudiante.id)
+              return fotoUrl ? { ...currentEstudiante, fotoUrl } : currentEstudiante
+            }),
+          )
         })
       } catch (err) {
         if (!isCurrentRequest) {
@@ -216,29 +197,28 @@ const EstudiantesCoordinacionPage = () => {
           await getEstudiantesByPrograma(programaSeleccionado.id, true),
         )
         if (!isCurrentRequest) return
-        setEgresados(data)
+        setEgresados(aplicarFotosCacheadas(data))
 
         const egresadosConAspirante = data.filter(
           (egresado): egresado is EstudianteCoordinacion & { idAspirante: number } =>
             egresado.idAspirante !== null,
         )
 
-        void loadWithConcurrencyLimit(egresadosConAspirante, async (egresado) => {
-          try {
-            const inscripcion = await getInscripcionByAspirante(egresado.idAspirante)
-            if (!inscripcion || !isCurrentRequest) return
-            const fotoUrl = await getFotoDocumentoByTramite({
-              codigoTipoTramite: 1002,
-              codigoTipoDocumentoTramite: 'ANX-4',
-              tramiteId: inscripcion.id,
-            })
-            if (!fotoUrl || !isCurrentRequest) return
-            setEgresados((current) => current.map((item) =>
-              item.id === egresado.id ? { ...item, fotoUrl } : item,
-            ))
-          } catch {
-            // Un fallo individual conserva el placeholder sin afectar el listado.
-          }
+        if (tieneFotosPendientes(egresadosConAspirante)) {
+          setIsLoadingFotosEgresados(true)
+        }
+
+        void cargarFotosDeEstudiantes(egresadosConAspirante).then((fotosPorEstudianteId) => {
+          if (!isCurrentRequest) return
+
+          setIsLoadingFotosEgresados(false)
+
+          if (fotosPorEstudianteId.size === 0) return
+
+          setEgresados((current) => current.map((item) => {
+            const fotoUrl = fotosPorEstudianteId.get(item.id)
+            return fotoUrl ? { ...item, fotoUrl } : item
+          }))
         })
       } catch {
         if (isCurrentRequest) {
@@ -406,10 +386,18 @@ const EstudiantesCoordinacionPage = () => {
         ) : null}
 
         {!isLoadingEstudiantes && estudiantesVisibles.length > 0 ? (
-          <StudentHorizontalBoard
-            estudiantes={estudiantesVisibles}
-            onStudentClick={openStudentDetail}
-          />
+          <div className="estudiantes-coordinacion__board-wrapper">
+            {isLoadingFotosEstudiantes ? (
+              <div className="estudiantes-coordinacion__board-overlay" role="status">
+                <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
+                <p>Cargando la información de los estudiantes, un momento...</p>
+              </div>
+            ) : null}
+            <StudentHorizontalBoard
+              estudiantes={estudiantesVisibles}
+              onStudentClick={openStudentDetail}
+            />
+          </div>
         ) : null}
 
         <section className="estudiantes-coordinacion__graduates" aria-labelledby="egresados-title">
@@ -445,12 +433,20 @@ const EstudiantesCoordinacionPage = () => {
             </div>
           ) : null}
           {mostrarEgresados && !isLoadingEgresados && !errorEgresados && egresados.length > 0 ? (
-            <StudentHorizontalBoard
-              estudiantes={egresados}
-              onStudentClick={openStudentDetail}
-              title="Estudiantes egresados"
-              ariaLabel="Listado horizontal de estudiantes egresados"
-            />
+            <div className="estudiantes-coordinacion__board-wrapper">
+              {isLoadingFotosEgresados ? (
+                <div className="estudiantes-coordinacion__board-overlay" role="status">
+                  <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
+                  <p>Cargando la información de los estudiantes, un momento...</p>
+                </div>
+              ) : null}
+              <StudentHorizontalBoard
+                estudiantes={egresados}
+                onStudentClick={openStudentDetail}
+                title="Estudiantes egresados"
+                ariaLabel="Listado horizontal de estudiantes egresados"
+              />
+            </div>
           ) : null}
         </section>
       </section>

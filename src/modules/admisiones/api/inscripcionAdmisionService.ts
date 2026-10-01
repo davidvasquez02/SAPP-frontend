@@ -54,3 +54,28 @@ export const getInscripcionByAspirante = async (
 
   return response.data
 }
+
+/**
+ * Igual que getInscripcionByAspirante, pero para varios aspirantes en una sola llamada: evita que
+ * un listado (ej. el módulo de estudiantes) haga una petición por aspirante y agote el rate limit
+ * del gateway (429). Los aspirantes sin inscripción simplemente no aparecen en el mapa resultante.
+ */
+export const getInscripcionesByAspirantes = async (
+  aspiranteIds: number[],
+): Promise<Map<number, InscripcionAdmisionDto>> => {
+  const uniqueIds = [...new Set(aspiranteIds)].filter((id) => Number.isFinite(id) && id > 0)
+
+  if (uniqueIds.length === 0) {
+    return new Map()
+  }
+
+  const response = await httpGet<ApiResponse<InscripcionAdmisionDto[]>>(
+    `/sapp/inscripcionAdmision/by-aspirantes?aspiranteIds=${uniqueIds.join(',')}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'Error al obtener las inscripciones de los aspirantes')
+  }
+
+  return new Map((response.data ?? []).map((inscripcion) => [inscripcion.aspiranteId, inscripcion]))
+}

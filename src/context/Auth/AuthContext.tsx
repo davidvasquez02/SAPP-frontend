@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getLogoutRedirectUrl, loginFromGateway } from '../../api/authService'
 import { mapGatewayLoginToUserSession } from '../../api/authMappers'
+import { canManagePosgrados } from '../../auth/roleGuards'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
 import { clearBrowserSession } from '../../modules/auth/session/clearBrowserSession'
+import { prefetchFotosEstudiantesActivos } from '../../modules/estudiantes/services/estudianteFotoPrefetch'
 import { AuthContext } from './context'
 import type { AuthContextValue, AuthSession } from './types'
 
@@ -35,6 +37,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const authenticatedSession = mapGatewayLoginToUserSession(loginDto)
       setSessionState(authenticatedSession)
       saveSession(authenticatedSession)
+
+      // Adelanta la carga de fotos del modulo de Estudiantes para que, cuando el coordinador
+      // entre, ya esten en cache y no haya que esperar el lote (~10s). Fire-and-forget: no
+      // bloquea el login ni afecta nada si falla.
+      if (canManagePosgrados(authenticatedSession.user.roles)) {
+        void prefetchFotosEstudiantesActivos()
+      }
     } catch (error) {
       clearSession()
       setSessionState(null)
