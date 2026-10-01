@@ -390,7 +390,6 @@ const EstudiantesCoordinacionPage = () => {
             {isLoadingFotosEstudiantes ? (
               <p className="estudiantes-coordinacion__fotos-status" role="status">
                 <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
-                Terminando de cargar las fotos...
               </p>
             ) : null}
             <StudentHorizontalBoard
@@ -437,7 +436,6 @@ const EstudiantesCoordinacionPage = () => {
               {isLoadingFotosEgresados ? (
                 <p className="estudiantes-coordinacion__fotos-status" role="status">
                   <span className="estudiantes-coordinacion__fotos-spinner" aria-hidden="true" />
-                  Terminando de cargar las fotos...
                 </p>
               ) : null}
               <StudentHorizontalBoard
