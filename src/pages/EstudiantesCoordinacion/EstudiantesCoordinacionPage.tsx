@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
-import { getInscripcionByAspirante } from '../../modules/admisiones/api/inscripcionAdmisionService'
-import { getFotoDocumentoByTramite } from '../../modules/documentos/api/documentoFotoService'
+import { getInscripcionesByAspirantes } from '../../modules/admisiones/api/inscripcionAdmisionService'
+import { getFotosDocumentoByTramitesBulk } from '../../modules/documentos/api/documentoFotoService'
 import ProgramTypeToggle, { type ProgramType } from '../../modules/estudiantes/components/ProgramTypeToggle/ProgramTypeToggle'
 import StudentHorizontalBoard from '../../modules/estudiantes/components/StudentHorizontalBoard/StudentHorizontalBoard'
 import {
@@ -16,8 +16,6 @@ import {
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
 import './EstudiantesCoordinacionPage.css'
-
-const FOTO_CONCURRENCY_LIMIT = 4
 
 const normalizarTextoBusqueda = (value: string) =>
   value
@@ -40,22 +38,54 @@ const compararEstudiantesPorSemestre = (
 const ordenarEstudiantesPorSemestre = (estudiantes: EstudianteCoordinacion[]) =>
   [...estudiantes].sort(compararEstudiantesPorSemestre)
 
-const loadWithConcurrencyLimit = async <T,>(
-  items: T[],
-  task: (item: T) => Promise<void>,
-): Promise<void> => {
-  let nextIndex = 0
-  const worker = async () => {
-    while (nextIndex < items.length) {
-      const item = items[nextIndex]
-      nextIndex += 1
-      await task(item)
-    }
+/**
+ * Resuelve las fotos (ANX-4) de un grupo de estudiantes en 2 llamadas en total (una de
+ * inscripciones, otra de fotos), en vez de 2 por estudiante: evitaba el 429 del gateway con
+ * programas de varios estudiantes. Un fallo en el lote deja los placeholders sin romper el listado.
+ */
+const cargarFotosDeEstudiantes = async (
+  estudiantes: (EstudianteCoordinacion & { idAspirante: number })[],
+): Promise<Map<number, string>> => {
+  const fotosPorEstudianteId = new Map<number, string>()
+
+  if (estudiantes.length === 0) {
+    return fotosPorEstudianteId
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(FOTO_CONCURRENCY_LIMIT, items.length) }, () => worker()),
-  )
+  try {
+    const inscripcionesPorAspiranteId = await getInscripcionesByAspirantes(
+      estudiantes.map((estudiante) => estudiante.idAspirante),
+    )
+
+    const tramiteIdPorEstudianteId = new Map<number, number>()
+    estudiantes.forEach((estudiante) => {
+      const inscripcion = inscripcionesPorAspiranteId.get(estudiante.idAspirante)
+      if (inscripcion) {
+        tramiteIdPorEstudianteId.set(estudiante.id, inscripcion.id)
+      }
+    })
+
+    if (tramiteIdPorEstudianteId.size === 0) {
+      return fotosPorEstudianteId
+    }
+
+    const fotosPorTramiteId = await getFotosDocumentoByTramitesBulk({
+      codigoTipoTramite: 1002,
+      codigoTipoDocumentoTramite: 'ANX-4',
+      tramiteIds: [...tramiteIdPorEstudianteId.values()],
+    })
+
+    tramiteIdPorEstudianteId.forEach((tramiteId, estudianteId) => {
+      const fotoUrl = fotosPorTramiteId.get(tramiteId)
+      if (fotoUrl) {
+        fotosPorEstudianteId.set(estudianteId, fotoUrl)
+      }
+    })
+  } catch {
+    // Un fallo del lote conserva los placeholders sin afectar el listado.
+  }
+
+  return fotosPorEstudianteId
 }
 
 const getProgramaType = (programa: ProgramaCoordinacion): ProgramType | null => {
@@ -151,33 +181,17 @@ const EstudiantesCoordinacionPage = () => {
             estudiante.idAspirante !== null,
         )
 
-        void loadWithConcurrencyLimit(estudiantesConAspirante, async (estudiante) => {
-          try {
-            const inscripcion = await getInscripcionByAspirante(estudiante.idAspirante)
-            if (!inscripcion || !isCurrentRequest) {
-              return
-            }
-
-            const fotoUrl = await getFotoDocumentoByTramite({
-              codigoTipoTramite: 1002,
-              codigoTipoDocumentoTramite: 'ANX-4',
-              tramiteId: inscripcion.id,
-            })
-
-            if (!fotoUrl || !isCurrentRequest) {
-              return
-            }
-
-            setEstudiantes((current) =>
-              current.map((currentEstudiante) =>
-                currentEstudiante.id === estudiante.id
-                  ? { ...currentEstudiante, fotoUrl }
-                  : currentEstudiante,
-              ),
-            )
-          } catch {
-            // Un fallo individual conserva el placeholder sin afectar el listado.
+        void cargarFotosDeEstudiantes(estudiantesConAspirante).then((fotosPorEstudianteId) => {
+          if (!isCurrentRequest || fotosPorEstudianteId.size === 0) {
+            return
           }
+
+          setEstudiantes((current) =>
+            current.map((currentEstudiante) => {
+              const fotoUrl = fotosPorEstudianteId.get(currentEstudiante.id)
+              return fotoUrl ? { ...currentEstudiante, fotoUrl } : currentEstudiante
+            }),
+          )
         })
       } catch (err) {
         if (!isCurrentRequest) {
@@ -223,22 +237,13 @@ const EstudiantesCoordinacionPage = () => {
             egresado.idAspirante !== null,
         )
 
-        void loadWithConcurrencyLimit(egresadosConAspirante, async (egresado) => {
-          try {
-            const inscripcion = await getInscripcionByAspirante(egresado.idAspirante)
-            if (!inscripcion || !isCurrentRequest) return
-            const fotoUrl = await getFotoDocumentoByTramite({
-              codigoTipoTramite: 1002,
-              codigoTipoDocumentoTramite: 'ANX-4',
-              tramiteId: inscripcion.id,
-            })
-            if (!fotoUrl || !isCurrentRequest) return
-            setEgresados((current) => current.map((item) =>
-              item.id === egresado.id ? { ...item, fotoUrl } : item,
-            ))
-          } catch {
-            // Un fallo individual conserva el placeholder sin afectar el listado.
-          }
+        void cargarFotosDeEstudiantes(egresadosConAspirante).then((fotosPorEstudianteId) => {
+          if (!isCurrentRequest || fotosPorEstudianteId.size === 0) return
+
+          setEgresados((current) => current.map((item) => {
+            const fotoUrl = fotosPorEstudianteId.get(item.id)
+            return fotoUrl ? { ...item, fotoUrl } : item
+          }))
         })
       } catch {
         if (isCurrentRequest) {
