@@ -47,7 +47,7 @@ export const getPrimaryNavigationItems = (
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
     {
       to: '/trabajos-grado',
-      label: 'Proyectos de grado',
+      label: 'Proyectos de investigación',
       icon: '📘',
       visible: !isProfesorOnly && !isDirector,
     },
