@@ -296,8 +296,6 @@
 
 .plantillas-correo__codigo {
   margin: 0;
-  flex: 1 1 auto;
-  min-height: 30rem;
   overflow: auto;
   padding: 0.6rem;
   border-radius: 8px;
@@ -341,7 +339,6 @@
   flex-direction: column;
   gap: 0.6rem;
   min-width: 0;
-  min-height: 44rem;
 }
 
 .plantillas-correo__panel > .plantillas-correo__campo,
@@ -385,8 +382,6 @@
 }
 
 .plantillas-correo__editor {
-  flex: 1 1 auto;
-  min-height: 30rem;
   padding: 0.75rem;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 0.85rem;
@@ -395,9 +390,7 @@
 }
 
 .plantillas-correo__vista {
-  flex: 1 1 auto;
   width: 100%;
-  min-height: 30rem;
   border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
   border-radius: 12px;
   background: #ffffff;

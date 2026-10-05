@@ -30,6 +30,10 @@ const NOMBRE_IDIOMA: Record<IdiomaPlantillaCorreo, string> = {
 
 const CAMPOS_CORTOS: Campo[] = ['nombre', 'asunto', 'idioma']
 
+/* Altura aproximada de la fila de variables, que el editor compensa para quedar igual que la vista previa. */
+const ALTO_HERRAMIENTAS = 40
+const ALTO_MINIMO_VISTA = 360
+
 const datosDe = (plantilla: PlantillaCorreo): DatosPlantillaCorreo => ({
   nombre: plantilla.nombre,
   descripcion: plantilla.descripcion,
@@ -54,6 +58,15 @@ const PlantillaCorreoFormPage = () => {
   const [mensaje, setMensaje] = useState<string | null>(null)
 
   const editorRef = useRef<HTMLTextAreaElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [alturaVista, setAlturaVista] = useState(ALTO_MINIMO_VISTA)
+
+  /* Ajusta la vista previa a todo el contenido renderizado, sin barra de desplazamiento. */
+  const medirVista = () => {
+    const documento = iframeRef.current?.contentDocument
+    if (!documento) return
+    setAlturaVista(Math.max(documento.documentElement.scrollHeight + 16, ALTO_MINIMO_VISTA))
+  }
 
   useEffect(() => {
     if (!plantillaId) return
@@ -226,6 +239,7 @@ const PlantillaCorreoFormPage = () => {
               <textarea
                 ref={editorRef}
                 className="plantillas-correo__editor"
+                style={{ height: alturaVista + ALTO_HERRAMIENTAS }}
                 aria-label="Contenido HTML del correo"
                 value={valor}
                 onChange={(e) => actualizar('contenidoHtml', e.target.value)}
@@ -236,7 +250,7 @@ const PlantillaCorreoFormPage = () => {
             <input aria-label={ETIQUETAS[campo]} value={valor} onChange={(e) => actualizar(campo, e.target.value)} />
           )
         ) : campo === 'contenidoHtml' ? (
-          <pre className="plantillas-correo__codigo">{valor || '—'}</pre>
+          <pre className="plantillas-correo__codigo" style={{ height: alturaVista + ALTO_HERRAMIENTAS }}>{valor || '—'}</pre>
         ) : (
           <p className="plantillas-correo__valor">{campo === 'idioma' ? NOMBRE_IDIOMA[valor as IdiomaPlantillaCorreo] : valor || '—'}</p>
         )}
@@ -277,7 +291,15 @@ const PlantillaCorreoFormPage = () => {
                 <div className="plantillas-correo__campo-cabecera">
                   <span className="plantillas-correo__campo-etiqueta">Vista previa</span>
                 </div>
-                <iframe className="plantillas-correo__vista" title="Vista previa del correo" sandbox="" srcDoc={vistaPrevia} />
+                <iframe
+                  ref={iframeRef}
+                  className="plantillas-correo__vista"
+                  title="Vista previa del correo"
+                  sandbox="allow-same-origin"
+                  srcDoc={vistaPrevia}
+                  onLoad={medirVista}
+                  style={{ height: alturaVista }}
+                />
                 <p className="plantillas-correo__nota">
                   Las variables aparecen resaltadas solo para facilitar la edición de la plantilla. En el correo real llegan sin resaltar.
                 </p>
