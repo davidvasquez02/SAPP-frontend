@@ -94,3 +94,15 @@
   .gestion-profesores__hero, .gestion-profesores__card { padding: .75rem; }
   .gestion-profesores tr { padding: .875rem; }
 }
+
+.gestion-profesores__group-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.gestion-profesores__group-filters .gestion-profesores__group-select {
+  width: auto;
+  flex: 1 1 14rem;
+  min-width: 0;
+}

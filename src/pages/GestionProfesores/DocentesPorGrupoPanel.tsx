@@ -7,6 +7,8 @@ import {
   getGruposInvestigacion,
   registrarDocenteGrupoInvestigacion,
 } from '../../api/gruposInvestigacionService'
+import { getOpcionesInstituciones } from '../../api/gruposInvestigacionGestionService'
+import type { InstitucionGrupoDto } from '../../api/gruposInvestigacionGestionTypes'
 import type {
   DocenteDto,
   GrupoInvestigacionDocenteDto,
@@ -29,6 +31,10 @@ export const DocentesPorGrupoPanel = () => {
   const [grupos, setGrupos] = useState<GrupoInvestigacionDto[]>([])
   const [docentesGrupo, setDocentesGrupo] = useState<GrupoInvestigacionDocenteDto[]>([])
   const [grupoId, setGrupoId] = useState('')
+  const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
+  const [escuelas, setEscuelas] = useState<InstitucionGrupoDto[]>([])
+  const [facultadFiltro, setFacultadFiltro] = useState('')
+  const [escuelaFiltro, setEscuelaFiltro] = useState('')
   const [busquedaGrupo, setBusquedaGrupo] = useState('')
   const [paginaDisponibles, setPaginaDisponibles] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
@@ -85,6 +91,31 @@ export const DocentesPorGrupoPanel = () => {
       isCurrentGroup = false
     }
   }, [grupoId])
+
+  useEffect(() => {
+    getOpcionesInstituciones('FACULTAD').then(setFacultades).catch(() => setFacultades([]))
+    getOpcionesInstituciones('ESCUELA').then(setEscuelas).catch(() => setEscuelas([]))
+  }, [])
+
+  const escuelasFiltradas = escuelas.filter(
+    (escuela) => !facultadFiltro || String(escuela.institucionPadreId) === facultadFiltro,
+  )
+  const gruposFiltrados = grupos.filter(
+    (grupo) =>
+      (!escuelaFiltro || String(grupo.institucionId) === escuelaFiltro) &&
+      (!facultadFiltro || String(grupo.facultadId) === facultadFiltro),
+  )
+
+  const cambiarFacultad = (valor: string) => {
+    setFacultadFiltro(valor)
+    setEscuelaFiltro('')
+    setGrupoId('')
+  }
+
+  const cambiarEscuela = (valor: string) => {
+    setEscuelaFiltro(valor)
+    setGrupoId('')
+  }
 
   const selectedGroup = grupos.find((grupo) => String(grupo.id) === grupoId)
 
@@ -201,8 +232,12 @@ export const DocentesPorGrupoPanel = () => {
       {error ? <p className="gestion-profesores__message gestion-profesores__message--error" role="alert">{error}</p> : null}
       {success ? <p className="gestion-profesores__message gestion-profesores__message--success" role="status">{success}</p> : null}
       {isLoading ? <p className="gestion-profesores__empty">Cargando grupos...</p> : null}
-      <label className="gestion-profesores__group-select"><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => setGrupoId(event.target.value)}><option value="">Seleccione un grupo</option>{grupos.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
-      {selectedGroup ? <p className="gestion-profesores__selected-group"><strong>Grupo seleccionado:</strong> {selectedGroup.codigoNombre}</p> : null}
+      <div className="gestion-profesores__group-filters">
+        <label className="gestion-profesores__group-select"><span>Facultad</span><select value={facultadFiltro} onChange={(event) => cambiarFacultad(event.target.value)}><option value="">Todas las facultades</option>{facultades.map((facultad) => <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>)}</select></label>
+        <label className="gestion-profesores__group-select"><span>Escuela</span><select value={escuelaFiltro} onChange={(event) => cambiarEscuela(event.target.value)}><option value="">Todas las escuelas</option>{escuelasFiltradas.map((escuela) => <option key={escuela.id} value={escuela.id}>{escuela.nombre}</option>)}</select></label>
+        <label className="gestion-profesores__group-select"><span>Grupo de investigación</span><select value={grupoId} onChange={(event) => setGrupoId(event.target.value)}><option value="">Seleccione un grupo</option>{gruposFiltrados.map((grupo) => <option key={grupo.id} value={grupo.id}>{grupo.codigoNombre}</option>)}</select></label>
+      </div>
+      {selectedGroup ? <p className="gestion-profesores__selected-group"><strong>Grupo seleccionado:</strong> {selectedGroup.codigoNombre}{selectedGroup.institucionNombre ? <> · <strong>Escuela:</strong> {selectedGroup.institucionNombre}</> : null}{selectedGroup.facultadNombre ? <> · <strong>Facultad:</strong> {selectedGroup.facultadNombre}</> : null}</p> : null}
       {!grupoId ? <p className="gestion-profesores__empty">Seleccione un grupo para consultar sus docentes.</p> : isLoadingGroup ? <p className="gestion-profesores__empty">Cargando docentes del grupo...</p> : (
         <>
           <section className="gestion-profesores__group-section" aria-labelledby="integrantes-title">

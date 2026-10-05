@@ -1,6 +1,10 @@
 export interface GrupoInvestigacionDto {
   id: number
   codigoNombre: string
+  institucionId?: number | null
+  institucionNombre?: string | null
+  facultadId?: number | null
+  facultadNombre?: string | null
 }
 
 export interface GrupoInvestigacionDocenteDto {
