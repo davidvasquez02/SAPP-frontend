@@ -257,3 +257,14 @@
   background: var(--surface);
   color: var(--text-primary);
 }
+
+.gestion-grupos .sapp-filters-clear-button {
+  border: 1px solid var(--success);
+  background: transparent;
+  color: var(--success);
+  font-weight: 700;
+}
+
+.gestion-grupos .sapp-filters-clear-button:hover:enabled {
+  background: color-mix(in srgb, var(--success), transparent 92%);
+}
