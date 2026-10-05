@@ -13,6 +13,7 @@ import './GestionGruposInvestigacionPage.css'
 
 const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
 const TIPO_FACULTAD: TipoInstitucionGrupo = 'FACULTAD'
+const SIN_FACULTAD = 'SIN_FACULTAD'
 
 const NOMBRE_TIPO: Record<TipoInstitucionGrupo, string> = {
   FACULTAD: 'Facultad',
@@ -22,6 +23,9 @@ const NOMBRE_TIPO: Record<TipoInstitucionGrupo, string> = {
 interface MensajeNavegacion {
   mensaje?: string
 }
+
+const normalizarTexto = (texto: string) =>
+  texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 
 const InstitucionesGrupoPage = () => {
   const navigate = useNavigate()
@@ -34,6 +38,10 @@ const InstitucionesGrupoPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
 
+  const [busqueda, setBusqueda] = useState('')
+  const [tipoFiltro, setTipoFiltro] = useState('')
+  const [facultadFiltro, setFacultadFiltro] = useState('')
+
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nombreEditado, setNombreEditado] = useState('')
   const [padreEditado, setPadreEditado] = useState('')
@@ -42,6 +50,32 @@ const InstitucionesGrupoPage = () => {
     () => instituciones.filter((institucion) => institucion.tipo === TIPO_FACULTAD),
     [instituciones],
   )
+
+  const hayFiltros = busqueda.trim() !== '' || tipoFiltro !== '' || facultadFiltro !== ''
+
+  const institucionesVisibles = useMemo(() => {
+    const termino = normalizarTexto(busqueda)
+    return instituciones.filter((institucion) => {
+      if (tipoFiltro && institucion.tipo !== tipoFiltro) return false
+      if (facultadFiltro) {
+        if (facultadFiltro === SIN_FACULTAD) {
+          if (institucion.tipo !== TIPO_ESCUELA || institucion.institucionPadreId) return false
+        } else if (institucion.institucionPadreId !== Number(facultadFiltro)) {
+          return false
+        }
+      }
+      if (!termino) return true
+      return [institucion.nombre, institucion.institucionPadreNombre ?? ''].some((campo) =>
+        normalizarTexto(campo).includes(termino),
+      )
+    })
+  }, [instituciones, busqueda, tipoFiltro, facultadFiltro])
+
+  const limpiarFiltros = () => {
+    setBusqueda('')
+    setTipoFiltro('')
+    setFacultadFiltro('')
+  }
 
   const cargar = async () => {
     setError(null)
@@ -104,11 +138,51 @@ const InstitucionesGrupoPage = () => {
 
         {isLoading ? <p className="gestion-grupos__status">Cargando instituciones...</p> : null}
 
+        {!isLoading && instituciones.length > 0 ? (
+          <div className="sapp-filters-panel">
+            <label className="sapp-filter-field">
+              <span>Buscar por nombre de institución o facultad</span>
+              <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Eléctrica o Físico" />
+            </label>
+            <label className="sapp-filter-field">
+              <span>Tipo</span>
+              <select
+                value={tipoFiltro}
+                onChange={(e) => {
+                  setTipoFiltro(e.target.value)
+                  if (e.target.value === TIPO_FACULTAD) setFacultadFiltro('')
+                }}
+              >
+                <option value="">Todos</option>
+                <option value={TIPO_FACULTAD}>Facultad</option>
+                <option value={TIPO_ESCUELA}>Escuela</option>
+              </select>
+            </label>
+            <label className="sapp-filter-field">
+              <span>Facultad</span>
+              <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)} disabled={tipoFiltro === TIPO_FACULTAD}>
+                <option value="">Todas</option>
+                <option value={SIN_FACULTAD}>Sin facultad asignada</option>
+                {facultades.map((facultad) => (
+                  <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
+                ))}
+              </select>
+            </label>
+            <button type="button" className="sapp-filters-clear-button" onClick={limpiarFiltros} disabled={!hayFiltros}>
+              Limpiar filtros
+            </button>
+          </div>
+        ) : null}
+
         {!isLoading && instituciones.length === 0 ? (
           <p className="gestion-grupos__status">No hay instituciones registradas.</p>
         ) : null}
 
-        {!isLoading && instituciones.length > 0 ? (
+        {!isLoading && instituciones.length > 0 && institucionesVisibles.length === 0 ? (
+          <p className="gestion-grupos__status">No hay instituciones que coincidan con los filtros.</p>
+        ) : null}
+
+        {!isLoading && institucionesVisibles.length > 0 ? (
           <div className="gestion-grupos__table-wrap">
             <table>
               <thead>
@@ -120,7 +194,7 @@ const InstitucionesGrupoPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {instituciones.map((institucion) => {
+                {institucionesVisibles.map((institucion) => {
                   const editando = editandoId === institucion.id
                   return (
                     <tr key={institucion.id}>
