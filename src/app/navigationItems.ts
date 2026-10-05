@@ -77,6 +77,12 @@ export const getPrimaryNavigationItems = (
       icon: '🧑‍🏫',
       visible: canSeeGestionCoordinacion,
     },
+    {
+      to: '/coordinacion/grupos-investigacion',
+      label: 'Grupos de investigación',
+      icon: '🔬',
+      visible: canSeeGestionCoordinacion,
+    },
   ]
     .filter(({ visible }) => visible)
     .map(({ to, label, icon, children }) => ({ to, label, icon, children }))

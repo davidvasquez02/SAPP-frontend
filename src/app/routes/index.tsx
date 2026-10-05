@@ -28,6 +28,7 @@ import { creditosRoutes } from "./creditosRoutes";
 import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
+import GestionGruposInvestigacionPage from "../../pages/GestionGruposInvestigacion/GestionGruposInvestigacionPage";
 import { solicitudesRoutes } from "./solicitudesRoutes";
 import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
@@ -178,6 +179,14 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <GestionProfesoresPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GestionGruposInvestigacionPage />
               </RequireRoles>
             }
           />

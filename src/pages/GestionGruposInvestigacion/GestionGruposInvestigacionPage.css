@@ -1,0 +1,110 @@
+.gestion-grupos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.gestion-grupos__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gestion-grupos__header p {
+  margin: 0;
+  color: var(--text-secondary);
+  max-width: 60ch;
+}
+
+.gestion-grupos__alert {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+}
+
+.gestion-grupos__alert--error {
+  border: 1px solid color-mix(in srgb, #b91c1c, transparent 65%);
+  background: color-mix(in srgb, #b91c1c, var(--surface) 90%);
+  color: #b91c1c;
+}
+
+.gestion-grupos__alert--success {
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 65%);
+  background: color-mix(in srgb, var(--primary), var(--surface) 92%);
+  color: var(--text-primary);
+}
+
+.gestion-grupos__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.gestion-grupos__form {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface);
+}
+
+.gestion-grupos__form h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.gestion-grupos__form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-weight: 650;
+}
+
+.gestion-grupos__form input,
+.gestion-grupos__form select {
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.gestion-grupos__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.gestion-grupos__table-wrap {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+}
+
+.gestion-grupos__table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gestion-grupos__table-wrap th,
+.gestion-grupos__table-wrap td {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  color: var(--text-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 60%);
+}
+
+.gestion-grupos__row--retirado td {
+  color: var(--text-secondary);
+}
+
+.gestion-grupos__acciones {
+  display: flex;
+  gap: 0.5rem;
+}
