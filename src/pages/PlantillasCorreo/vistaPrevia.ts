@@ -13,12 +13,14 @@ const PREFACIO = '<!doctype html><html><head><meta charset="utf-8"></head>' +
  * automaticos, porque el sistema los agrega al enviar. Las variables se resaltan.
  */
 export const construirVistaPrevia = (html: string): string => {
-  const conBloques = html
-    .split(MARCADOR_ENCABEZADO).join(BLOQUE_AUTOMATICO('Encabezado general (se agrega automáticamente)'))
-    .split(MARCADOR_PIE).join(BLOQUE_AUTOMATICO('Pie general (se agrega automáticamente)'))
-  const resaltado = conBloques.replace(/\{\{(\w+)\}\}/g,
+  const cuerpo = html
+    .split(MARCADOR_ENCABEZADO).join('')
+    .split(MARCADOR_PIE).join('')
+  const resaltado = cuerpo.replace(/\{\{(\w+)\}\}/g,
     '<mark style="background:#fff3c4;padding:0 2px;border-radius:3px;">{{$1}}</mark>')
-  return `${PREFACIO}${resaltado}</body></html>`
+  const encabezado = BLOQUE_AUTOMATICO('Encabezado general (se agrega automáticamente)')
+  const pie = BLOQUE_AUTOMATICO('Pie general (se agrega automáticamente)')
+  return `${PREFACIO}${encabezado}${resaltado}${pie}</body></html>`
 }
 
 /** Nombres de las variables {{var}} usadas, sin los marcadores de encabezado y pie. */
