@@ -17,6 +17,9 @@ import './GestionGruposInvestigacionPage.css'
 
 const NUEVA_INSTITUCION = 'NUEVA'
 
+const normalizarTexto = (texto: string) =>
+  texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+
 interface FormState {
   codigo: string
   nombre: string
@@ -42,8 +45,29 @@ const GestionGruposInvestigacionPage = () => {
   const [isGuardando, setIsGuardando] = useState(false)
   const [corrigiendoInstitucion, setCorrigiendoInstitucion] = useState(false)
   const [nombreCorregido, setNombreCorregido] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [institucionFiltro, setInstitucionFiltro] = useState('')
+  const [estadoFiltro, setEstadoFiltro] = useState('')
 
   const institucionSeleccionada = instituciones.find((i) => String(i.id) === form.institucionId) ?? null
+
+  const hayFiltros = busqueda.trim() !== '' || institucionFiltro !== '' || estadoFiltro !== ''
+
+  const gruposFiltrados = grupos.filter((grupo) => {
+    if (institucionFiltro && String(grupo.institucionId) !== institucionFiltro) return false
+    if (estadoFiltro && grupo.estado !== estadoFiltro) return false
+    const termino = normalizarTexto(busqueda)
+    if (!termino) return true
+    return [grupo.codigo, grupo.nombre, grupo.institucionNombre].some((campo) =>
+      normalizarTexto(campo ?? '').includes(termino),
+    )
+  })
+
+  const limpiarFiltros = () => {
+    setBusqueda('')
+    setInstitucionFiltro('')
+    setEstadoFiltro('')
+  }
 
   const cargar = async () => {
     setIsLoading(true)
@@ -277,6 +301,41 @@ const GestionGruposInvestigacionPage = () => {
         ) : null}
 
         {!isLoading && grupos.length > 0 ? (
+          <div className="sapp-filters-panel">
+            <label className="sapp-filter-field">
+              <span>Buscar por código, nombre o institución</span>
+              <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. STI o Sistemas" />
+            </label>
+            <label className="sapp-filter-field">
+              <span>Institución</span>
+              <select value={institucionFiltro} onChange={(e) => setInstitucionFiltro(e.target.value)}>
+                <option value="">Todas</option>
+                {instituciones.map((institucion) => (
+                  <option key={institucion.id} value={institucion.id}>
+                    {institucion.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="sapp-filter-field">
+              <span>Estado</span>
+              <select value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="ACTIVO">Activo</option>
+                <option value="RETIRADO">Retirado</option>
+              </select>
+            </label>
+            <button type="button" className="sapp-filters-clear-button" onClick={limpiarFiltros} disabled={!hayFiltros}>
+              Limpiar filtros
+            </button>
+          </div>
+        ) : null}
+
+        {!isLoading && grupos.length > 0 && gruposFiltrados.length === 0 ? (
+          <p className="gestion-grupos__status">No hay grupos que coincidan con los filtros.</p>
+        ) : null}
+
+        {!isLoading && gruposFiltrados.length > 0 ? (
           <div className="gestion-grupos__table-wrap">
             <table>
               <thead>
@@ -289,12 +348,16 @@ const GestionGruposInvestigacionPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {grupos.map((grupo) => (
+                {gruposFiltrados.map((grupo) => (
                   <tr key={grupo.id} className={grupo.estado === 'RETIRADO' ? 'gestion-grupos__row--retirado' : ''}>
                     <td>{grupo.codigo}</td>
                     <td>{grupo.nombre}</td>
                     <td>{grupo.institucionNombre}</td>
-                    <td>{grupo.estado === 'RETIRADO' ? 'Retirado' : 'Activo'}</td>
+                    <td>
+                      <span className={`gestion-grupos__estado gestion-grupos__estado--${grupo.estado === 'RETIRADO' ? 'retirado' : 'activo'}`}>
+                        {grupo.estado === 'RETIRADO' ? 'Retirado' : 'Activo'}
+                      </span>
+                    </td>
                     <td className="gestion-grupos__acciones">
                       <button type="button" className="gestion-grupos__edit" onClick={() => abrirEdicion(grupo)} disabled={editando !== null}>
                         Editar

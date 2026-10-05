@@ -38,7 +38,7 @@
   background: color-mix(in srgb, var(--success), transparent 94%);
 }
 
-.gestion-grupos button {
+.gestion-grupos button:not(.sapp-filters-clear-button) {
   border-radius: 999px;
   padding: 0.55rem 1rem;
   font-weight: 700;
@@ -46,7 +46,7 @@
   cursor: pointer;
 }
 
-.gestion-grupos button:disabled {
+.gestion-grupos button:not(.sapp-filters-clear-button):disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -163,6 +163,26 @@
 
 .gestion-grupos__row--retirado td {
   color: var(--text-secondary);
+}
+
+.gestion-grupos__estado {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gestion-grupos__estado--activo {
+  background: color-mix(in srgb, var(--success), transparent 85%);
+  color: var(--success);
+}
+
+.gestion-grupos__estado--retirado {
+  background: color-mix(in srgb, var(--warning), transparent 85%);
+  color: var(--warning);
 }
 
 .gestion-grupos__acciones {
