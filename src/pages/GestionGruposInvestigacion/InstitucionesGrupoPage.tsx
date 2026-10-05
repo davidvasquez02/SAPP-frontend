@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  crearInstitucionGrupo,
   getInstitucionesGrupo,
   modificarInstitucionGrupo,
 } from '../../api/gruposInvestigacionGestionService'
@@ -8,7 +8,7 @@ import type {
   InstitucionGrupoDto,
   TipoInstitucionGrupo,
 } from '../../api/gruposInvestigacionGestionTypes'
-import { GruposInvestigacionLayout } from './GruposInvestigacionLayout'
+import { GruposInvestigacionLayout, RUTA_GRUPOS } from './GruposInvestigacionLayout'
 import './GestionGruposInvestigacionPage.css'
 
 const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
@@ -19,16 +19,20 @@ const NOMBRE_TIPO: Record<TipoInstitucionGrupo, string> = {
   ESCUELA: 'Escuela',
 }
 
+interface MensajeNavegacion {
+  mensaje?: string
+}
+
 const InstitucionesGrupoPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
+
   const [instituciones, setInstituciones] = useState<InstitucionGrupoDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isGuardando, setIsGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [mensaje, setMensaje] = useState<string | null>(null)
-
-  const [tipoNueva, setTipoNueva] = useState<TipoInstitucionGrupo>(TIPO_ESCUELA)
-  const [nombreNueva, setNombreNueva] = useState('')
-  const [padreNueva, setPadreNueva] = useState('')
+  const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
 
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nombreEditado, setNombreEditado] = useState('')
@@ -53,35 +57,6 @@ const InstitucionesGrupoPage = () => {
   useEffect(() => {
     void cargar()
   }, [])
-
-  const agregar = async () => {
-    if (!nombreNueva.trim()) {
-      setError('Escribe el nombre de la institución.')
-      return
-    }
-    if (tipoNueva === TIPO_ESCUELA && !padreNueva) {
-      setError('Selecciona la facultad a la que pertenece la escuela.')
-      return
-    }
-    setIsGuardando(true)
-    setError(null)
-    setMensaje(null)
-    try {
-      const creada = await crearInstitucionGrupo({
-        nombre: nombreNueva.trim(),
-        tipo: tipoNueva,
-        institucionPadreId: tipoNueva === TIPO_ESCUELA ? Number(padreNueva) : null,
-      })
-      setNombreNueva('')
-      setPadreNueva('')
-      setMensaje(`${NOMBRE_TIPO[creada.tipo]} "${creada.nombre}" agregada.`)
-      await cargar()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible agregar la institución.')
-    } finally {
-      setIsGuardando(false)
-    }
-  }
 
   const iniciarEdicion = (institucion: InstitucionGrupoDto) => {
     setEditandoId(institucion.id)
@@ -114,51 +89,18 @@ const InstitucionesGrupoPage = () => {
     }
   }
 
-  const sinFacultades = facultades.length === 0
-
   return (
     <GruposInvestigacionLayout>
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
-          <p>Facultades y escuelas de la UIS. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela. Revisa primero la lista: si la institución ya existe, no la agregues de nuevo; el sistema tampoco permite nombres repetidos.</p>
+          <p>Facultades y escuelas de la UIS. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.</p>
+          <button type="button" className="gestion-grupos__primary" onClick={() => navigate(`${RUTA_GRUPOS}/instituciones/nueva`)}>
+            Nueva institución
+          </button>
         </header>
 
         {error ? <p className="gestion-grupos__alert gestion-grupos__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
-
-        <form
-          className="gestion-grupos__inline-form"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void agregar()
-          }}
-        >
-          <label>
-            Tipo
-            <select value={tipoNueva} onChange={(e) => setTipoNueva(e.target.value as TipoInstitucionGrupo)}>
-              <option value={TIPO_ESCUELA}>Escuela</option>
-              <option value={TIPO_FACULTAD}>Facultad</option>
-            </select>
-          </label>
-          <label>
-            Nombre
-            <input value={nombreNueva} onChange={(e) => setNombreNueva(e.target.value)} placeholder="Nombre completo" />
-          </label>
-          {tipoNueva === TIPO_ESCUELA ? (
-            <label>
-              Facultad
-              <select value={padreNueva} onChange={(e) => setPadreNueva(e.target.value)} disabled={sinFacultades}>
-                <option value="">{sinFacultades ? 'Primero registra una facultad' : 'Selecciona una facultad'}</option>
-                {facultades.map((facultad) => (
-                  <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <button type="submit" className="gestion-grupos__primary" disabled={isGuardando}>
-            {isGuardando ? 'Guardando...' : 'Agregar'}
-          </button>
-        </form>
 
         {isLoading ? <p className="gestion-grupos__status">Cargando instituciones...</p> : null}
 
