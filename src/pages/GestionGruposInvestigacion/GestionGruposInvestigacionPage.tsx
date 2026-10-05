@@ -146,7 +146,7 @@ const GestionGruposInvestigacionPage = () => {
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
           <p>Crea, modifica o retira los grupos de investigación. Un grupo retirado se conserva con su historial y deja de ofrecerse para nuevas asignaciones.</p>
-          <button type="button" onClick={abrirNuevo} disabled={editando !== null}>
+          <button type="button" className="gestion-grupos__primary" onClick={abrirNuevo} disabled={editando !== null}>
             Nuevo grupo
           </button>
         </header>
@@ -202,8 +202,8 @@ const GestionGruposInvestigacionPage = () => {
             ) : null}
 
             <div className="gestion-grupos__form-actions">
-              <button type="button" onClick={cerrarFormulario} disabled={isGuardando}>Cancelar</button>
-              <button type="submit" disabled={isGuardando}>
+              <button type="button" className="gestion-grupos__secondary" onClick={cerrarFormulario} disabled={isGuardando}>Cancelar</button>
+              <button type="submit" className="gestion-grupos__primary" disabled={isGuardando}>
                 {isGuardando ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
@@ -236,11 +236,11 @@ const GestionGruposInvestigacionPage = () => {
                     <td>{grupo.institucionNombre}</td>
                     <td>{grupo.estado === 'RETIRADO' ? 'Retirado' : 'Activo'}</td>
                     <td className="gestion-grupos__acciones">
-                      <button type="button" onClick={() => abrirEdicion(grupo)} disabled={editando !== null}>
+                      <button type="button" className="gestion-grupos__edit" onClick={() => abrirEdicion(grupo)} disabled={editando !== null}>
                         Editar
                       </button>
                       {grupo.estado === 'ACTIVO' ? (
-                        <button type="button" onClick={() => void retirar(grupo)} disabled={editando !== null}>
+                        <button type="button" className="gestion-grupos__delete" onClick={() => void retirar(grupo)} disabled={editando !== null}>
                           Retirar
                         </button>
                       ) : null}
