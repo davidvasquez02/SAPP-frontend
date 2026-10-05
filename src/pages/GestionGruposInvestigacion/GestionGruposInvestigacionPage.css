@@ -268,3 +268,27 @@
 .gestion-grupos .sapp-filters-clear-button:hover:enabled {
   background: color-mix(in srgb, var(--success), transparent 92%);
 }
+
+.gestion-grupos__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.gestion-grupos__pagination button {
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  background: var(--surface);
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gestion-grupos__pagination button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

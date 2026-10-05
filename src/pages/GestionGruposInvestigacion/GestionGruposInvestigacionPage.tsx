@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   desactivarGrupoGestion,
   getGruposGestion,
-  getInstitucionesGrupo,
+  getOpcionesInstituciones,
   reactivarGrupoGestion,
   type FiltrosGruposGestion,
 } from '../../api/gruposInvestigacionGestionService'
@@ -68,7 +68,7 @@ const GestionGruposInvestigacionPage = () => {
   }
 
   useEffect(() => {
-    getInstitucionesGrupo()
+    getOpcionesInstituciones('ESCUELA')
       .then(setInstituciones)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
   }, [])

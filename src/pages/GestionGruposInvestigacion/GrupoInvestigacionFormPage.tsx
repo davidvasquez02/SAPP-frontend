@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   crearGrupoGestion,
   getGruposGestion,
-  getInstitucionesGrupo,
+  getOpcionesInstituciones,
   modificarGrupoGestion,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
@@ -33,7 +33,7 @@ const GrupoInvestigacionFormPage = () => {
       setError(null)
       try {
         const [institucionesData, gruposData] = await Promise.all([
-          getInstitucionesGrupo(),
+          getOpcionesInstituciones('ESCUELA'),
           esEdicion ? getGruposGestion() : Promise.resolve([] as GrupoGestionDto[]),
         ])
         setInstituciones(institucionesData)

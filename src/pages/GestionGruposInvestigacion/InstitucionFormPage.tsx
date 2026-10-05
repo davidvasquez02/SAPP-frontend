@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   crearInstitucionGrupo,
-  getInstitucionesGrupo,
+  getOpcionesInstituciones,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
   InstitucionGrupoDto,
@@ -31,7 +31,7 @@ const InstitucionFormPage = () => {
   const sinFacultades = facultades.length === 0
 
   useEffect(() => {
-    getInstitucionesGrupo()
+    getOpcionesInstituciones('FACULTAD')
       .then(setInstituciones)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
       .finally(() => setIsLoading(false))

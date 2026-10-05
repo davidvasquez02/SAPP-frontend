@@ -5,6 +5,7 @@ import type {
   GrupoGestionRequest,
   InstitucionGrupoDto,
   InstitucionGrupoRequest,
+  TipoInstitucionGrupo,
 } from './gruposInvestigacionGestionTypes'
 
 const GESTION_BASE = '/sapp/gruposInvestigacion/gestion'
@@ -48,8 +49,40 @@ export const reactivarGrupoGestion = async (id: number): Promise<GrupoGestionDto
   return response.data
 }
 
-export const getInstitucionesGrupo = async (): Promise<InstitucionGrupoDto[]> => {
-  const response = await httpGet<ApiResponse<InstitucionGrupoDto[]>>(`${GESTION_BASE}/instituciones`)
+export interface FiltrosInstitucionesGrupo {
+  busqueda?: string
+  tipo?: TipoInstitucionGrupo
+  facultadId?: number
+  sinFacultad?: boolean
+}
+
+export interface PaginaInstitucionesGrupo {
+  content: InstitucionGrupoDto[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+/** Listado paginado de facultades y escuelas, con filtros opcionales (los filtra el back). */
+export const getInstitucionesPaginadas = async (
+  filtros: FiltrosInstitucionesGrupo,
+  page: number,
+  size: number,
+): Promise<PaginaInstitucionesGrupo> => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (filtros.busqueda) params.set('busqueda', filtros.busqueda)
+  if (filtros.tipo) params.set('tipo', filtros.tipo)
+  if (filtros.facultadId !== undefined) params.set('facultadId', String(filtros.facultadId))
+  if (filtros.sinFacultad) params.set('sinFacultad', 'true')
+  const response = await httpGet<ApiResponse<PaginaInstitucionesGrupo>>(`${GESTION_BASE}/instituciones?${params.toString()}`)
+  return response.data
+}
+
+/** Lista liviana para selectores (facultades o escuelas), ordenada por nombre. */
+export const getOpcionesInstituciones = async (tipo?: TipoInstitucionGrupo): Promise<InstitucionGrupoDto[]> => {
+  const query = tipo ? `?tipo=${tipo}` : ''
+  const response = await httpGet<ApiResponse<InstitucionGrupoDto[]>>(`${GESTION_BASE}/instituciones/opciones${query}`)
   return response.data ?? []
 }
 
