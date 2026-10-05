@@ -99,7 +99,13 @@ const GestionGruposInvestigacionPage = () => {
   }, [])
 
   useEffect(() => {
-    const espera = setTimeout(() => void cargarGrupos(filtrosActuales()), 300)
+    const espera = setTimeout(() => {
+      void cargarGrupos({
+        busqueda: busqueda.trim(),
+        institucionId: institucionFiltro ? Number(institucionFiltro) : undefined,
+        estado: estadoFiltro || undefined,
+      })
+    }, 300)
     return () => clearTimeout(espera)
   }, [busqueda, institucionFiltro, estadoFiltro])
 
