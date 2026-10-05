@@ -25,10 +25,6 @@ export interface DatosPlantillaCorreo {
   contenidoHtml: string
 }
 
-export interface NuevaPlantillaCorreo extends DatosPlantillaCorreo {
-  sigla: string
-}
-
 const BASE = '/sapp/plantillasCorreo'
 
 export const getPlantillasCorreo = async (): Promise<PlantillaCorreoResumen[]> => {
@@ -41,12 +37,13 @@ export const getPlantillaCorreo = async (id: number): Promise<PlantillaCorreo> =
   return response.data
 }
 
-export const crearPlantillaCorreo = async (plantilla: NuevaPlantillaCorreo): Promise<PlantillaCorreo> => {
-  const response = await httpPost<ApiResponse<PlantillaCorreo>>(BASE, plantilla)
-  return response.data
-}
-
 export const actualizarPlantillaCorreo = async (id: number, datos: DatosPlantillaCorreo): Promise<PlantillaCorreo> => {
   const response = await httpPut<ApiResponse<PlantillaCorreo>>(`${BASE}/${id}`, datos)
   return response.data
+}
+
+/** Envia la version guardada de la plantilla al destinatario de pruebas, con un prefijo en el asunto. */
+export const enviarPruebaPlantillaCorreo = async (id: number): Promise<string> => {
+  const response = await httpPost<ApiResponse<unknown>>(`${BASE}/${id}/prueba`)
+  return response.message
 }

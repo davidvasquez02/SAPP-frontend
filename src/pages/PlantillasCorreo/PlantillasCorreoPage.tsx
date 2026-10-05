@@ -31,9 +31,6 @@ const PlantillasCorreoPage = () => {
       <section className="plantillas-correo">
         <header className="plantillas-correo__header">
           <p>Textos de los correos que envía el sistema. El encabezado y el pie generales se agregan automáticamente a cada correo.</p>
-          <button type="button" className="plantillas-correo__primary" onClick={() => navigate(`${RUTA_PLANTILLAS}/nueva`)}>
-            Nueva plantilla
-          </button>
         </header>
 
         {error ? <p className="plantillas-correo__alert plantillas-correo__alert--error" role="alert">{error}</p> : null}

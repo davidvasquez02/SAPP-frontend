@@ -229,14 +229,6 @@ export const AppRoutes = () => {
             }
           />
           <Route
-            path="/coordinacion/plantillas-correo/nueva"
-            element={
-              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
-                <PlantillaCorreoFormPage />
-              </RequireRoles>
-            }
-          />
-          <Route
             path="/coordinacion/plantillas-correo/:plantillaId/editar"
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
