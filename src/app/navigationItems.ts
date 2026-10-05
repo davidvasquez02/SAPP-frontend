@@ -83,6 +83,12 @@ export const getPrimaryNavigationItems = (
       icon: '🔬',
       visible: canSeeGestionCoordinacion,
     },
+    {
+      to: '/coordinacion/plantillas-correo',
+      label: 'Plantillas de correo',
+      icon: '✉️',
+      visible: canSeeGestionCoordinacion,
+    },
   ]
     .filter(({ visible }) => visible)
     .map(({ to, label, icon, children }) => ({ to, label, icon, children }))

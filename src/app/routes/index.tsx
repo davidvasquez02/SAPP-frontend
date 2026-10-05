@@ -33,6 +33,8 @@ import GrupoInvestigacionFormPage from "../../pages/GestionGruposInvestigacion/G
 import InstitucionesGrupoPage from "../../pages/GestionGruposInvestigacion/InstitucionesGrupoPage";
 import InstitucionFormPage from "../../pages/GestionGruposInvestigacion/InstitucionFormPage";
 import ProfesoresGrupoPage from "../../pages/GestionGruposInvestigacion/ProfesoresGrupoPage";
+import PlantillasCorreoPage from "../../pages/PlantillasCorreo/PlantillasCorreoPage";
+import PlantillaCorreoFormPage from "../../pages/PlantillasCorreo/PlantillaCorreoFormPage";
 import { solicitudesRoutes } from "./solicitudesRoutes";
 import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
@@ -215,6 +217,30 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <InstitucionFormPage tipo="FACULTAD" />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/plantillas-correo"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <PlantillasCorreoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/plantillas-correo/nueva"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <PlantillaCorreoFormPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/plantillas-correo/:plantillaId/editar"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <PlantillaCorreoFormPage />
               </RequireRoles>
             }
           />

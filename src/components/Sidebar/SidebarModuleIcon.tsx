@@ -47,6 +47,12 @@ const iconPaths: Record<string, React.ReactNode> = {
       <path d="M19 8v6M22 11h-6" />
     </>
   ),
+  '/coordinacion/plantillas-correo': (
+    <>
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </>
+  ),
   '/coordinacion/grupos-investigacion': (
     <>
       <path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2" />
