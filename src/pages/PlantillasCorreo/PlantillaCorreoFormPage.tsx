@@ -274,7 +274,9 @@ const PlantillaCorreoFormPage = () => {
               </div>
 
               <div className="plantillas-correo__panel">
-                <h2 className="plantillas-correo__titulo-panel">Vista previa</h2>
+                <div className="plantillas-correo__campo-cabecera">
+                  <span className="plantillas-correo__campo-etiqueta">Vista previa</span>
+                </div>
                 <iframe className="plantillas-correo__vista" title="Vista previa del correo" sandbox="" srcDoc={vistaPrevia} />
                 <p className="plantillas-correo__nota">
                   Las variables aparecen resaltadas solo para facilitar la edición de la plantilla. En el correo real llegan sin resaltar.

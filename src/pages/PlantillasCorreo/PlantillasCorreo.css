@@ -296,7 +296,8 @@
 
 .plantillas-correo__codigo {
   margin: 0;
-  max-height: 16rem;
+  flex: 1 1 auto;
+  min-height: 30rem;
   overflow: auto;
   padding: 0.6rem;
   border-radius: 8px;
@@ -334,11 +335,29 @@
   min-width: 0;
 }
 
+/* Los dos paneles tienen la misma altura y encabezado, para que el editor y la vista previa queden alineados. */
 .plantillas-correo__panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.6rem;
-  align-content: start;
   min-width: 0;
+  min-height: 44rem;
+}
+
+.plantillas-correo__panel > .plantillas-correo__campo,
+.plantillas-correo__panel > .plantillas-correo__campo-cabecera {
+  flex: 0 0 auto;
+}
+
+.plantillas-correo__panel > .plantillas-correo__campo {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.plantillas-correo__panel .plantillas-correo__campo-cabecera {
+  min-height: 2.2rem;
 }
 
 .plantillas-correo__titulo-panel {
@@ -366,7 +385,8 @@
 }
 
 .plantillas-correo__editor {
-  min-height: 22rem;
+  flex: 1 1 auto;
+  min-height: 30rem;
   padding: 0.75rem;
   font-family: ui-monospace, Consolas, monospace;
   font-size: 0.85rem;
@@ -375,8 +395,9 @@
 }
 
 .plantillas-correo__vista {
+  flex: 1 1 auto;
   width: 100%;
-  min-height: 26rem;
+  min-height: 30rem;
   border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
   border-radius: 12px;
   background: #ffffff;
