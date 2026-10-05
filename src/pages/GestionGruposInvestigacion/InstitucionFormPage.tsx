@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   crearInstitucionGrupo,
@@ -11,40 +11,39 @@ import type {
 import { GruposInvestigacionLayout, RUTA_GRUPOS } from './GruposInvestigacionLayout'
 import './GestionGruposInvestigacionPage.css'
 
-const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
-const TIPO_FACULTAD: TipoInstitucionGrupo = 'FACULTAD'
+interface InstitucionFormPageProps {
+  tipo: TipoInstitucionGrupo
+}
 
-const InstitucionFormPage = () => {
+/** Alta de una escuela o de una facultad, cada una en su propia pantalla. */
+const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
   const navigate = useNavigate()
-  const [instituciones, setInstituciones] = useState<InstitucionGrupoDto[]>([])
-  const [tipo, setTipo] = useState<TipoInstitucionGrupo>(TIPO_ESCUELA)
+  const esEscuela = tipo === 'ESCUELA'
+  const etiqueta = esEscuela ? 'escuela' : 'facultad'
+
+  const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
   const [nombre, setNombre] = useState('')
   const [facultadId, setFacultadId] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(esEscuela)
   const [isGuardando, setIsGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const facultades = useMemo(
-    () => instituciones.filter((institucion) => institucion.tipo === TIPO_FACULTAD),
-    [instituciones],
-  )
-  const sinFacultades = facultades.length === 0
-
   useEffect(() => {
+    if (!esEscuela) return
     getOpcionesInstituciones('FACULTAD')
-      .then(setInstituciones)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
+      .then(setFacultades)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las facultades.'))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [esEscuela])
 
   const volver = () => navigate(`${RUTA_GRUPOS}/instituciones`)
 
   const guardar = async () => {
     if (!nombre.trim()) {
-      setError('Escribe el nombre de la institución.')
+      setError(`Escribe el nombre de la ${etiqueta}.`)
       return
     }
-    if (tipo === TIPO_ESCUELA && !facultadId) {
+    if (esEscuela && !facultadId) {
       setError('Selecciona la facultad a la que pertenece la escuela.')
       return
     }
@@ -55,26 +54,30 @@ const InstitucionFormPage = () => {
       const creada = await crearInstitucionGrupo({
         nombre: nombre.trim(),
         tipo,
-        institucionPadreId: tipo === TIPO_ESCUELA ? Number(facultadId) : null,
+        institucionPadreId: esEscuela ? Number(facultadId) : null,
       })
-      const etiqueta = creada.tipo === TIPO_FACULTAD ? 'Facultad' : 'Escuela'
       navigate(`${RUTA_GRUPOS}/instituciones`, {
-        state: { mensaje: `${etiqueta} "${creada.nombre}" agregada correctamente.` },
+        state: { mensaje: `${esEscuela ? 'Escuela' : 'Facultad'} "${creada.nombre}" agregada correctamente.` },
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible agregar la institución.')
+      setError(err instanceof Error ? err.message : `No fue posible agregar la ${etiqueta}.`)
     } finally {
       setIsGuardando(false)
     }
   }
+
+  const sinFacultades = esEscuela && !isLoading && facultades.length === 0
 
   return (
     <GruposInvestigacionLayout>
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
           <div>
-            <h2 className="gestion-grupos__page-title">Nueva institución</h2>
-            <p>Revisa primero la lista: si la institución ya existe, no la agregues de nuevo. El sistema tampoco permite nombres repetidos. Si la facultad no aparece, agrégala primero como facultad en <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
+            <h2 className="gestion-grupos__page-title">{esEscuela ? 'Nueva escuela' : 'Nueva facultad'}</h2>
+            <p>
+              Revisa primero la lista: si la {etiqueta} ya existe, no la agregues de nuevo. El sistema tampoco permite nombres repetidos.
+              {esEscuela ? <> Si la facultad no aparece, agrégala primero en <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</> : null}
+            </p>
           </div>
         </header>
 
@@ -90,19 +93,11 @@ const InstitucionFormPage = () => {
             }}
           >
             <label>
-              Tipo
-              <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoInstitucionGrupo)}>
-                <option value={TIPO_ESCUELA}>Escuela</option>
-                <option value={TIPO_FACULTAD}>Facultad</option>
-              </select>
-            </label>
-
-            <label>
               Nombre
               <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre completo" />
             </label>
 
-            {tipo === TIPO_ESCUELA ? (
+            {esEscuela ? (
               <label>
                 Facultad
                 <select value={facultadId} onChange={(e) => setFacultadId(e.target.value)} disabled={sinFacultades}>

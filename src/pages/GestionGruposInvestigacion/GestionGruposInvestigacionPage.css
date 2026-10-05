@@ -292,3 +292,23 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.gestion-grupos__bloque {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.gestion-grupos__bloque-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gestion-grupos__conteo {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  font-weight: 600;
+}

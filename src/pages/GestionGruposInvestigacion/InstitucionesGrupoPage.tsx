@@ -4,7 +4,6 @@ import {
   getInstitucionesPaginadas,
   getOpcionesInstituciones,
   modificarInstitucionGrupo,
-  type FiltrosInstitucionesGrupo,
   type PaginaInstitucionesGrupo,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
@@ -17,66 +16,66 @@ import './GestionGruposInvestigacionPage.css'
 const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
 const TIPO_FACULTAD: TipoInstitucionGrupo = 'FACULTAD'
 const SIN_FACULTAD = 'SIN_FACULTAD'
-const TAMANO_PAGINA = 20
+const TAMANO_PAGINA = 10
 
-const NOMBRE_TIPO: Record<TipoInstitucionGrupo, string> = {
-  FACULTAD: 'Facultad',
-  ESCUELA: 'Escuela',
+const RUTA_NUEVA: Record<TipoInstitucionGrupo, string> = {
+  ESCUELA: `${RUTA_GRUPOS}/instituciones/escuelas/nueva`,
+  FACULTAD: `${RUTA_GRUPOS}/instituciones/facultades/nueva`,
+}
+
+const TITULO: Record<TipoInstitucionGrupo, string> = {
+  ESCUELA: 'Escuelas',
+  FACULTAD: 'Facultades',
 }
 
 interface MensajeNavegacion {
   mensaje?: string
 }
 
-const InstitucionesGrupoPage = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
+interface BloqueProps {
+  tipo: TipoInstitucionGrupo
+  busqueda: string
+  facultadFiltro: string
+  facultades: InstitucionGrupoDto[]
+  onMensaje: (mensaje: string) => void
+}
 
+/** Bloque de un tipo (escuelas o facultades): listado paginado y edicion en linea. */
+const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMensaje }: BloqueProps) => {
+  const navigate = useNavigate()
   const [pagina, setPagina] = useState<PaginaInstitucionesGrupo | null>(null)
-  const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
+  const [numero, setNumero] = useState(0)
+  const [recarga, setRecarga] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isGuardando, setIsGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
-
-  const [busqueda, setBusqueda] = useState('')
-  const [tipoFiltro, setTipoFiltro] = useState('')
-  const [facultadFiltro, setFacultadFiltro] = useState('')
-  const [numeroPagina, setNumeroPagina] = useState(0)
-  const [recarga, setRecarga] = useState(0)
-
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nombreEditado, setNombreEditado] = useState('')
   const [padreEditado, setPadreEditado] = useState('')
-
   const solicitudRef = useRef(0)
 
-  const hayFiltros = busqueda.trim() !== '' || tipoFiltro !== '' || facultadFiltro !== ''
+  const esEscuela = tipo === TIPO_ESCUELA
 
   useEffect(() => {
-    getOpcionesInstituciones(TIPO_FACULTAD)
-      .then(setFacultades)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las facultades.'))
-  }, [])
+    setNumero(0)
+  }, [busqueda, facultadFiltro])
 
   useEffect(() => {
     const espera = setTimeout(() => {
-      const filtros: FiltrosInstitucionesGrupo = {
+      const filtros = {
         busqueda: busqueda.trim() || undefined,
-        tipo: (tipoFiltro || undefined) as TipoInstitucionGrupo | undefined,
-        facultadId: facultadFiltro && facultadFiltro !== SIN_FACULTAD ? Number(facultadFiltro) : undefined,
-        sinFacultad: facultadFiltro === SIN_FACULTAD,
+        facultadId: esEscuela && facultadFiltro && facultadFiltro !== SIN_FACULTAD ? Number(facultadFiltro) : undefined,
+        sinFacultad: esEscuela && facultadFiltro === SIN_FACULTAD,
       }
       const solicitud = ++solicitudRef.current
       setError(null)
-      getInstitucionesPaginadas(filtros, numeroPagina, TAMANO_PAGINA)
+      getInstitucionesPaginadas({ ...filtros, tipo }, numero, TAMANO_PAGINA)
         .then((data) => {
           if (solicitud === solicitudRef.current) setPagina(data)
         })
         .catch((err: unknown) => {
           if (solicitud === solicitudRef.current) {
-            setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.')
+            setError(err instanceof Error ? err.message : `No fue posible cargar las ${TITULO[tipo].toLowerCase()}.`)
           }
         })
         .finally(() => {
@@ -84,45 +83,30 @@ const InstitucionesGrupoPage = () => {
         })
     }, 300)
     return () => clearTimeout(espera)
-  }, [busqueda, tipoFiltro, facultadFiltro, numeroPagina, recarga])
-
-  const cambiarFiltro = (cambio: () => void) => {
-    cambio()
-    setNumeroPagina(0)
-  }
-
-  const limpiarFiltros = () => {
-    setBusqueda('')
-    setTipoFiltro('')
-    setFacultadFiltro('')
-    setNumeroPagina(0)
-  }
+  }, [tipo, busqueda, facultadFiltro, numero, recarga, esEscuela])
 
   const iniciarEdicion = (institucion: InstitucionGrupoDto) => {
     setEditandoId(institucion.id)
     setNombreEditado(institucion.nombre)
     setPadreEditado(institucion.institucionPadreId ? String(institucion.institucionPadreId) : '')
-    setMensaje(null)
     setError(null)
   }
 
   const guardarEdicion = async (institucion: InstitucionGrupoDto) => {
     if (!nombreEditado.trim()) {
-      setError('El nombre de la institución es obligatorio.')
+      setError('El nombre es obligatorio.')
       return
     }
     setIsGuardando(true)
     setError(null)
-    setMensaje(null)
     try {
       await modificarInstitucionGrupo(institucion.id, {
         nombre: nombreEditado.trim(),
         institucionPadreId: institucion.tipo === TIPO_ESCUELA && padreEditado ? Number(padreEditado) : null,
       })
       setEditandoId(null)
-      setMensaje('La institución fue actualizada.')
+      onMensaje(`${TITULO[tipo].slice(0, -1)} actualizada.`)
       setRecarga((valor) => valor + 1)
-      getOpcionesInstituciones(TIPO_FACULTAD).then(setFacultades).catch(() => undefined)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No fue posible actualizar la institución.')
     } finally {
@@ -133,103 +117,51 @@ const InstitucionesGrupoPage = () => {
   const instituciones = pagina?.content ?? []
   const total = pagina?.totalElements ?? 0
   const totalPaginas = pagina?.totalPages ?? 0
+  const hayFiltros = busqueda.trim() !== '' || (esEscuela && facultadFiltro !== '')
 
   return (
-    <GruposInvestigacionLayout>
-      <section className="gestion-grupos">
-        <header className="gestion-grupos__header">
-          <p>Facultades y escuelas de la UIS. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.</p>
-          <button type="button" className="gestion-grupos__primary" onClick={() => navigate(`${RUTA_GRUPOS}/instituciones/nueva`)}>
-            Nueva institución
-          </button>
-        </header>
+    <section className="gestion-grupos__bloque" aria-labelledby={`bloque-${tipo}`}>
+      <div className="gestion-grupos__bloque-cabecera">
+        <h2 id={`bloque-${tipo}`} className="gestion-grupos__page-title">{TITULO[tipo]} <span className="gestion-grupos__conteo">({total})</span></h2>
+        <button type="button" className="gestion-grupos__primary" onClick={() => navigate(RUTA_NUEVA[tipo])}>
+          Nueva {tipo === TIPO_ESCUELA ? 'escuela' : 'facultad'}
+        </button>
+      </div>
 
-        {error ? <p className="gestion-grupos__alert gestion-grupos__alert--error" role="alert">{error}</p> : null}
-        {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
+      {error ? <p className="gestion-grupos__alert gestion-grupos__alert--error" role="alert">{error}</p> : null}
+      {isLoading ? <p className="gestion-grupos__status">Cargando {TITULO[tipo].toLowerCase()}...</p> : null}
 
-        <div className="sapp-filters-panel">
-          <label className="sapp-filter-field">
-            <span>Buscar por nombre de institución o facultad</span>
-            <input
-              type="search"
-              value={busqueda}
-              onChange={(e) => cambiarFiltro(() => setBusqueda(e.target.value))}
-              placeholder="Ej. Eléctrica o Físico"
-            />
-          </label>
-          <label className="sapp-filter-field">
-            <span>Tipo</span>
-            <select
-              value={tipoFiltro}
-              onChange={(e) => cambiarFiltro(() => {
-                setTipoFiltro(e.target.value)
-                if (e.target.value === TIPO_FACULTAD) setFacultadFiltro('')
-              })}
-            >
-              <option value="">Todos</option>
-              <option value={TIPO_FACULTAD}>Facultad</option>
-              <option value={TIPO_ESCUELA}>Escuela</option>
-            </select>
-          </label>
-          <label className="sapp-filter-field">
-            <span>Facultad</span>
-            <select
-              value={facultadFiltro}
-              onChange={(e) => cambiarFiltro(() => setFacultadFiltro(e.target.value))}
-              disabled={tipoFiltro === TIPO_FACULTAD}
-            >
-              <option value="">Todas</option>
-              <option value={SIN_FACULTAD}>Sin facultad asignada</option>
-              {facultades.map((facultad) => (
-                <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="sapp-filters-clear-button" onClick={limpiarFiltros} disabled={!hayFiltros}>
-            Limpiar filtros
-          </button>
-        </div>
+      {!isLoading && total === 0 ? (
+        <p className="gestion-grupos__status">
+          {hayFiltros ? `No hay ${TITULO[tipo].toLowerCase()} que coincidan con los filtros.` : `No hay ${TITULO[tipo].toLowerCase()} registradas.`}
+        </p>
+      ) : null}
 
-        {isLoading ? <p className="gestion-grupos__status">Cargando instituciones...</p> : null}
-
-        {!isLoading && total === 0 ? (
-          <p className="gestion-grupos__status">
-            {hayFiltros ? 'No hay instituciones que coincidan con los filtros.' : 'No hay instituciones registradas.'}
-          </p>
-        ) : null}
-
-        {!isLoading && instituciones.length > 0 ? (
-          <div className="gestion-grupos__table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Tipo</th>
-                  <th>Facultad</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {instituciones.map((institucion) => {
-                  const editando = editandoId === institucion.id
-                  return (
-                    <tr key={institucion.id}>
+      {!isLoading && instituciones.length > 0 ? (
+        <div className="gestion-grupos__table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                {esEscuela ? <th>Facultad</th> : null}
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {instituciones.map((institucion) => {
+                const editando = editandoId === institucion.id
+                return (
+                  <tr key={institucion.id}>
+                    <td>
+                      {editando ? (
+                        <input aria-label="Nuevo nombre" value={nombreEditado} onChange={(e) => setNombreEditado(e.target.value)} />
+                      ) : (
+                        institucion.nombre
+                      )}
+                    </td>
+                    {esEscuela ? (
                       <td>
                         {editando ? (
-                          <input
-                            aria-label="Nuevo nombre de la institución"
-                            value={nombreEditado}
-                            onChange={(e) => setNombreEditado(e.target.value)}
-                          />
-                        ) : (
-                          institucion.nombre
-                        )}
-                      </td>
-                      <td>{NOMBRE_TIPO[institucion.tipo]}</td>
-                      <td>
-                        {institucion.tipo === TIPO_FACULTAD ? (
-                          <span>—</span>
-                        ) : editando ? (
                           <select aria-label="Facultad de la escuela" value={padreEditado} onChange={(e) => setPadreEditado(e.target.value)}>
                             <option value="" disabled>Selecciona una facultad</option>
                             {facultades.map((facultad) => (
@@ -242,35 +174,98 @@ const InstitucionesGrupoPage = () => {
                           <span className="gestion-grupos__estado gestion-grupos__estado--retirado">Sin facultad asignada</span>
                         )}
                       </td>
-                      <td className="gestion-grupos__acciones">
-                        {editando ? (
-                          <>
-                            <button type="button" className="gestion-grupos__secondary" onClick={() => setEditandoId(null)} disabled={isGuardando}>Cancelar</button>
-                            <button type="button" className="gestion-grupos__primary" onClick={() => void guardarEdicion(institucion)} disabled={isGuardando}>
-                              {isGuardando ? 'Guardando...' : 'Guardar'}
-                            </button>
-                          </>
-                        ) : (
-                          <button type="button" className="gestion-grupos__edit" onClick={() => iniciarEdicion(institucion)} disabled={editandoId !== null}>
-                            Editar
+                    ) : null}
+                    <td className="gestion-grupos__acciones">
+                      {editando ? (
+                        <>
+                          <button type="button" className="gestion-grupos__secondary" onClick={() => setEditandoId(null)} disabled={isGuardando}>Cancelar</button>
+                          <button type="button" className="gestion-grupos__primary" onClick={() => void guardarEdicion(institucion)} disabled={isGuardando}>
+                            {isGuardando ? 'Guardando...' : 'Guardar'}
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
+                        </>
+                      ) : (
+                        <button type="button" className="gestion-grupos__edit" onClick={() => iniciarEdicion(institucion)} disabled={editandoId !== null}>
+                          Editar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
 
-        {!isLoading && totalPaginas > 1 ? (
-          <nav className="gestion-grupos__pagination" aria-label="Paginación de instituciones">
-            <button type="button" disabled={numeroPagina === 0} onClick={() => setNumeroPagina(numeroPagina - 1)}>Anterior</button>
-            <span>Página {numeroPagina + 1} de {totalPaginas}</span>
-            <button type="button" disabled={numeroPagina >= totalPaginas - 1} onClick={() => setNumeroPagina(numeroPagina + 1)}>Siguiente</button>
-          </nav>
-        ) : null}
+      {!isLoading && totalPaginas > 1 ? (
+        <nav className="gestion-grupos__pagination" aria-label={`Paginación de ${TITULO[tipo].toLowerCase()}`}>
+          <button type="button" disabled={numero === 0} onClick={() => setNumero(numero - 1)}>Anterior</button>
+          <span>Página {numero + 1} de {totalPaginas}</span>
+          <button type="button" disabled={numero >= totalPaginas - 1} onClick={() => setNumero(numero + 1)}>Siguiente</button>
+        </nav>
+      ) : null}
+    </section>
+  )
+}
+
+const InstitucionesGrupoPage = () => {
+  const location = useLocation()
+  const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
+
+  const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
+  const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
+  const [busqueda, setBusqueda] = useState('')
+  const [facultadFiltro, setFacultadFiltro] = useState('')
+
+  useEffect(() => {
+    getOpcionesInstituciones(TIPO_FACULTAD).then(setFacultades).catch(() => setFacultades([]))
+  }, [])
+
+  const hayFiltros = busqueda.trim() !== '' || facultadFiltro !== ''
+
+  return (
+    <GruposInvestigacionLayout>
+      <section className="gestion-grupos">
+        <header className="gestion-grupos__header">
+          <p>Facultades de la UIS y las escuelas de cada una. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.</p>
+        </header>
+
+        {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
+
+        <div className="sapp-filters-panel">
+          <label className="sapp-filter-field">
+            <span>Buscar por nombre</span>
+            <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Eléctrica o Físico" />
+          </label>
+          <label className="sapp-filter-field">
+            <span>Facultad (aplica a escuelas)</span>
+            <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)}>
+              <option value="">Todas</option>
+              <option value={SIN_FACULTAD}>Sin facultad asignada</option>
+              {facultades.map((facultad) => (
+                <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="sapp-filters-clear-button" onClick={() => { setBusqueda(''); setFacultadFiltro('') }} disabled={!hayFiltros}>
+            Limpiar filtros
+          </button>
+        </div>
+
+        <BloqueInstituciones
+          tipo={TIPO_FACULTAD}
+          busqueda={busqueda}
+          facultadFiltro=""
+          facultades={facultades}
+          onMensaje={setMensaje}
+        />
+        <BloqueInstituciones
+          tipo={TIPO_ESCUELA}
+          busqueda={busqueda}
+          facultadFiltro={facultadFiltro}
+          facultades={facultades}
+          onMensaje={setMensaje}
+        />
       </section>
     </GruposInvestigacionLayout>
   )

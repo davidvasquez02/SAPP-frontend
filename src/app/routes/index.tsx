@@ -203,10 +203,18 @@ export const AppRoutes = () => {
             }
           />
           <Route
-            path="/coordinacion/grupos-investigacion/instituciones/nueva"
+            path="/coordinacion/grupos-investigacion/instituciones/escuelas/nueva"
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
-                <InstitucionFormPage />
+                <InstitucionFormPage tipo="ESCUELA" />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/instituciones/facultades/nueva"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <InstitucionFormPage tipo="FACULTAD" />
               </RequireRoles>
             }
           />
