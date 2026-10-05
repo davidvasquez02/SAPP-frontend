@@ -40,3 +40,8 @@ export const crearInstitucionGrupo = async (nombre: string): Promise<Institucion
   const response = await httpPost<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones`, { nombre })
   return response.data
 }
+
+export const modificarInstitucionGrupo = async (id: number, nombre: string): Promise<InstitucionGrupoDto> => {
+  const response = await httpPut<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones/${id}`, { nombre })
+  return response.data
+}

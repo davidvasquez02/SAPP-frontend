@@ -119,6 +119,23 @@
   color: var(--text-primary);
 }
 
+.gestion-grupos__hint {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.gestion-grupos__institucion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.gestion-grupos__institucion-acciones label {
+  flex: 1 1 18rem;
+}
+
 .gestion-grupos__form-actions {
   display: flex;
   justify-content: flex-end;

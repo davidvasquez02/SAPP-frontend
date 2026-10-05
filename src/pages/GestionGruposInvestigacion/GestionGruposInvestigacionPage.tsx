@@ -7,6 +7,7 @@ import {
   getGruposGestion,
   getInstitucionesGrupo,
   modificarGrupoGestion,
+  modificarInstitucionGrupo,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
   GrupoGestionDto,
@@ -39,6 +40,10 @@ const GestionGruposInvestigacionPage = () => {
   const [editando, setEditando] = useState<GrupoGestionDto | 'nuevo' | null>(null)
   const [form, setForm] = useState<FormState>(FORM_VACIO)
   const [isGuardando, setIsGuardando] = useState(false)
+  const [corrigiendoInstitucion, setCorrigiendoInstitucion] = useState(false)
+  const [nombreCorregido, setNombreCorregido] = useState('')
+
+  const institucionSeleccionada = instituciones.find((i) => String(i.id) === form.institucionId) ?? null
 
   const cargar = async () => {
     setIsLoading(true)
@@ -83,6 +88,29 @@ const GestionGruposInvestigacionPage = () => {
   const cerrarFormulario = () => {
     setEditando(null)
     setForm(FORM_VACIO)
+    setCorrigiendoInstitucion(false)
+    setNombreCorregido('')
+  }
+
+  const guardarCorreccionInstitucion = async () => {
+    if (!institucionSeleccionada) return
+    if (!nombreCorregido.trim()) {
+      setError('El nombre de la institución es obligatorio.')
+      return
+    }
+    setIsGuardando(true)
+    setError(null)
+    setMensaje(null)
+    try {
+      await modificarInstitucionGrupo(institucionSeleccionada.id, nombreCorregido.trim())
+      setCorrigiendoInstitucion(false)
+      setMensaje('El nombre de la institución fue corregido.')
+      await cargar()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No fue posible corregir la institución.')
+    } finally {
+      setIsGuardando(false)
+    }
   }
 
   const guardar = async () => {
@@ -190,14 +218,46 @@ const GestionGruposInvestigacionPage = () => {
               </select>
             </label>
 
+            {institucionSeleccionada && !corrigiendoInstitucion ? (
+              <div className="gestion-grupos__institucion-acciones">
+                <button
+                  type="button"
+                  className="gestion-grupos__secondary"
+                  onClick={() => {
+                    setNombreCorregido(institucionSeleccionada.nombre)
+                    setCorrigiendoInstitucion(true)
+                  }}
+                >
+                  Corregir nombre de la institución
+                </button>
+              </div>
+            ) : null}
+
+            {institucionSeleccionada && corrigiendoInstitucion ? (
+              <div className="gestion-grupos__institucion-acciones">
+                <label>
+                  Nombre corregido de la institución
+                  <input value={nombreCorregido} onChange={(e) => setNombreCorregido(e.target.value)} />
+                </label>
+                <button type="button" className="gestion-grupos__secondary" onClick={() => setCorrigiendoInstitucion(false)} disabled={isGuardando}>
+                  Cancelar corrección
+                </button>
+                <button type="button" className="gestion-grupos__primary" onClick={() => void guardarCorreccionInstitucion()} disabled={isGuardando}>
+                  {isGuardando ? 'Guardando...' : 'Guardar nombre'}
+                </button>
+              </div>
+            ) : null}
+
             {form.institucionId === NUEVA_INSTITUCION ? (
               <label>
                 Nombre de la nueva institución
                 <input
                   value={form.nuevaInstitucion}
                   onChange={(e) => setForm((c) => ({ ...c, nuevaInstitucion: e.target.value }))}
-                  placeholder="Revisa primero la lista: si ya existe, selecciónala arriba"
                 />
+                <span className="gestion-grupos__hint">
+                  Revisa primero la lista: si la institución ya existe, selecciónala arriba en lugar de crearla.
+                </span>
               </label>
             ) : null}
 
