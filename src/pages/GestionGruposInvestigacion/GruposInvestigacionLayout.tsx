@@ -18,18 +18,20 @@ interface GruposInvestigacionLayoutProps {
 /** Marco comun de las pantallas de Grupos de investigacion: titulo, pestañas y contenido. */
 export const GruposInvestigacionLayout = ({ children }: GruposInvestigacionLayoutProps) => (
   <ModuleLayout title="Grupos de investigación">
-    <nav className="gestion-grupos__tabs" aria-label="Secciones de grupos de investigación">
-      {SECCIONES.map((seccion) => (
-        <NavLink
-          key={seccion.to}
-          to={seccion.to}
-          end={seccion.end}
-          className={({ isActive }) => `gestion-grupos__tab${isActive ? ' gestion-grupos__tab--active' : ''}`}
-        >
-          {seccion.label}
-        </NavLink>
-      ))}
-    </nav>
-    {children}
+    <div className="gestion-grupos-layout">
+      <nav className="gestion-grupos__tabs" aria-label="Secciones de grupos de investigación">
+        {SECCIONES.map((seccion) => (
+          <NavLink
+            key={seccion.to}
+            to={seccion.to}
+            end={seccion.end}
+            className={({ isActive }) => `gestion-grupos__tab${isActive ? ' gestion-grupos__tab--active' : ''}`}
+          >
+            {seccion.label}
+          </NavLink>
+        ))}
+      </nav>
+      {children}
+    </div>
   </ModuleLayout>
 )

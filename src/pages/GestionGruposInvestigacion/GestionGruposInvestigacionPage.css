@@ -192,6 +192,12 @@
   gap: 0.5rem;
 }
 
+.gestion-grupos-layout {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
 .gestion-grupos__tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
