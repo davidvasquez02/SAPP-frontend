@@ -8,8 +8,19 @@ import type {
 
 const GESTION_BASE = '/sapp/gruposInvestigacion/gestion'
 
-export const getGruposGestion = async (): Promise<GrupoGestionDto[]> => {
-  const response = await httpGet<ApiResponse<GrupoGestionDto[]>>(`${GESTION_BASE}/grupos`)
+export interface FiltrosGruposGestion {
+  busqueda?: string
+  institucionId?: number
+  estado?: string
+}
+
+export const getGruposGestion = async (filtros: FiltrosGruposGestion = {}): Promise<GrupoGestionDto[]> => {
+  const params = new URLSearchParams()
+  if (filtros.busqueda) params.set('busqueda', filtros.busqueda)
+  if (filtros.institucionId !== undefined) params.set('institucionId', String(filtros.institucionId))
+  if (filtros.estado) params.set('estado', filtros.estado)
+  const query = params.toString()
+  const response = await httpGet<ApiResponse<GrupoGestionDto[]>>(`${GESTION_BASE}/grupos${query ? `?${query}` : ''}`)
   return response.data ?? []
 }
 

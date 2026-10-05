@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import {
   crearGrupoGestion,
   crearInstitucionGrupo,
   desactivarGrupoGestion,
   getGruposGestion,
+  type FiltrosGruposGestion,
   getInstitucionesGrupo,
   modificarGrupoGestion,
   modificarInstitucionGrupo,
@@ -17,8 +18,6 @@ import './GestionGruposInvestigacionPage.css'
 
 const NUEVA_INSTITUCION = 'NUEVA'
 
-const normalizarTexto = (texto: string) =>
-  texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 
 interface FormState {
   codigo: string
@@ -53,14 +52,12 @@ const GestionGruposInvestigacionPage = () => {
 
   const hayFiltros = busqueda.trim() !== '' || institucionFiltro !== '' || estadoFiltro !== ''
 
-  const gruposFiltrados = grupos.filter((grupo) => {
-    if (institucionFiltro && String(grupo.institucionId) !== institucionFiltro) return false
-    if (estadoFiltro && grupo.estado !== estadoFiltro) return false
-    const termino = normalizarTexto(busqueda)
-    if (!termino) return true
-    return [grupo.codigo, grupo.nombre, grupo.institucionNombre].some((campo) =>
-      normalizarTexto(campo ?? '').includes(termino),
-    )
+  const solicitudGruposRef = useRef(0)
+
+  const filtrosActuales = (): FiltrosGruposGestion => ({
+    busqueda: busqueda.trim(),
+    institucionId: institucionFiltro ? Number(institucionFiltro) : undefined,
+    estado: estadoFiltro || undefined,
   })
 
   const limpiarFiltros = () => {
@@ -69,26 +66,34 @@ const GestionGruposInvestigacionPage = () => {
     setEstadoFiltro('')
   }
 
-  const cargar = async () => {
-    setIsLoading(true)
+  const cargarGrupos = async (filtros: FiltrosGruposGestion) => {
+    const solicitud = ++solicitudGruposRef.current
     setError(null)
     try {
-      const [gruposData, institucionesData] = await Promise.all([
-        getGruposGestion(),
-        getInstitucionesGrupo(),
-      ])
-      setGrupos(gruposData)
-      setInstituciones(institucionesData)
+      const gruposData = await getGruposGestion(filtros)
+      if (solicitud === solicitudGruposRef.current) setGrupos(gruposData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible cargar los grupos de investigación.')
+      if (solicitud === solicitudGruposRef.current) {
+        setError(err instanceof Error ? err.message : 'No fue posible cargar los grupos de investigación.')
+      }
     } finally {
-      setIsLoading(false)
+      if (solicitud === solicitudGruposRef.current) setIsLoading(false)
     }
   }
 
+  const cargar = () => cargarGrupos(filtrosActuales())
+
   useEffect(() => {
-    void cargar()
+    getInstitucionesGrupo()
+      .then(setInstituciones)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
   }, [])
+
+  useEffect(() => {
+    const espera = setTimeout(() => void cargarGrupos(filtrosActuales()), 300)
+    return () => clearTimeout(espera)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda, institucionFiltro, estadoFiltro])
 
   const abrirNuevo = () => {
     setEditando('nuevo')
@@ -296,11 +301,7 @@ const GestionGruposInvestigacionPage = () => {
 
         {isLoading ? <p className="gestion-grupos__status">Cargando grupos...</p> : null}
 
-        {!isLoading && grupos.length === 0 ? (
-          <p className="gestion-grupos__status">No hay grupos de investigación registrados.</p>
-        ) : null}
-
-        {!isLoading && grupos.length > 0 ? (
+        {!isLoading ? (
           <div className="sapp-filters-panel">
             <label className="sapp-filter-field">
               <span>Buscar por código, nombre o institución</span>
@@ -331,11 +332,13 @@ const GestionGruposInvestigacionPage = () => {
           </div>
         ) : null}
 
-        {!isLoading && grupos.length > 0 && gruposFiltrados.length === 0 ? (
-          <p className="gestion-grupos__status">No hay grupos que coincidan con los filtros.</p>
+        {!isLoading && grupos.length === 0 ? (
+          <p className="gestion-grupos__status">
+            {hayFiltros ? 'No hay grupos que coincidan con los filtros.' : 'No hay grupos de investigación registrados.'}
+          </p>
         ) : null}
 
-        {!isLoading && gruposFiltrados.length > 0 ? (
+        {!isLoading && grupos.length > 0 ? (
           <div className="gestion-grupos__table-wrap">
             <table>
               <thead>
@@ -348,7 +351,7 @@ const GestionGruposInvestigacionPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {gruposFiltrados.map((grupo) => (
+                {grupos.map((grupo) => (
                   <tr key={grupo.id} className={grupo.estado === 'RETIRADO' ? 'gestion-grupos__row--retirado' : ''}>
                     <td>{grupo.codigo}</td>
                     <td>{grupo.nombre}</td>
