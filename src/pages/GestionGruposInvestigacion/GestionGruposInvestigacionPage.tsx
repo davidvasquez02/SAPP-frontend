@@ -96,13 +96,11 @@ const GestionGruposInvestigacionPage = () => {
 
   useEffect(() => {
     void cargarInstituciones()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     const espera = setTimeout(() => void cargarGrupos(filtrosActuales()), 300)
     return () => clearTimeout(espera)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busqueda, institucionFiltro, estadoFiltro])
 
   const abrirNuevo = () => {
