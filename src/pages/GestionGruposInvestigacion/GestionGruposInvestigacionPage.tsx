@@ -1,55 +1,36 @@
 import { useEffect, useRef, useState } from 'react'
-import { ModuleLayout } from '../../components'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  crearGrupoGestion,
-  crearInstitucionGrupo,
   desactivarGrupoGestion,
   getGruposGestion,
-  type FiltrosGruposGestion,
   getInstitucionesGrupo,
-  modificarGrupoGestion,
-  modificarInstitucionGrupo,
   reactivarGrupoGestion,
+  type FiltrosGruposGestion,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
   GrupoGestionDto,
   InstitucionGrupoDto,
 } from '../../api/gruposInvestigacionGestionTypes'
+import { GruposInvestigacionLayout, RUTA_GRUPOS } from './GruposInvestigacionLayout'
 import './GestionGruposInvestigacionPage.css'
 
-const NUEVA_INSTITUCION = 'NUEVA'
-
-
-interface FormState {
-  codigo: string
-  nombre: string
-  institucionId: string
-  nuevaInstitucion: string
-}
-
-const FORM_VACIO: FormState = {
-  codigo: '',
-  nombre: '',
-  institucionId: '',
-  nuevaInstitucion: '',
+interface MensajeNavegacion {
+  mensaje?: string
 }
 
 const GestionGruposInvestigacionPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
+
   const [grupos, setGrupos] = useState<GrupoGestionDto[]>([])
   const [instituciones, setInstituciones] = useState<InstitucionGrupoDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [mensaje, setMensaje] = useState<string | null>(null)
-  const [editando, setEditando] = useState<GrupoGestionDto | 'nuevo' | null>(null)
-  const [form, setForm] = useState<FormState>(FORM_VACIO)
-  const [isGuardando, setIsGuardando] = useState(false)
-  const [corrigiendoInstitucion, setCorrigiendoInstitucion] = useState(false)
-  const [nombreCorregido, setNombreCorregido] = useState('')
+  const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
   const [busqueda, setBusqueda] = useState('')
   const [institucionFiltro, setInstitucionFiltro] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('')
-
-  const institucionSeleccionada = instituciones.find((i) => String(i.id) === form.institucionId) ?? null
 
   const hayFiltros = busqueda.trim() !== '' || institucionFiltro !== '' || estadoFiltro !== ''
 
@@ -82,20 +63,14 @@ const GestionGruposInvestigacionPage = () => {
     }
   }
 
-  const cargarInstituciones = async () => {
-    try {
-      setInstituciones(await getInstitucionesGrupo())
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.')
-    }
-  }
-
   const cargar = async () => {
-    await Promise.all([cargarGrupos(filtrosActuales()), cargarInstituciones()])
+    await cargarGrupos(filtrosActuales())
   }
 
   useEffect(() => {
-    void cargarInstituciones()
+    getInstitucionesGrupo()
+      .then(setInstituciones)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
   }, [])
 
   useEffect(() => {
@@ -108,97 +83,6 @@ const GestionGruposInvestigacionPage = () => {
     }, 300)
     return () => clearTimeout(espera)
   }, [busqueda, institucionFiltro, estadoFiltro])
-
-  const abrirNuevo = () => {
-    setEditando('nuevo')
-    setForm(FORM_VACIO)
-    setError(null)
-    setMensaje(null)
-  }
-
-  const abrirEdicion = (grupo: GrupoGestionDto) => {
-    setEditando(grupo)
-    setForm({
-      codigo: grupo.codigo,
-      nombre: grupo.nombre,
-      institucionId: String(grupo.institucionId),
-      nuevaInstitucion: '',
-    })
-    setError(null)
-    setMensaje(null)
-  }
-
-  const cerrarFormulario = () => {
-    setEditando(null)
-    setForm(FORM_VACIO)
-    setCorrigiendoInstitucion(false)
-    setNombreCorregido('')
-  }
-
-  const guardarCorreccionInstitucion = async () => {
-    if (!institucionSeleccionada) return
-    if (!nombreCorregido.trim()) {
-      setError('El nombre de la institución es obligatorio.')
-      return
-    }
-    setIsGuardando(true)
-    setError(null)
-    setMensaje(null)
-    try {
-      await modificarInstitucionGrupo(institucionSeleccionada.id, nombreCorregido.trim())
-      setCorrigiendoInstitucion(false)
-      setMensaje('El nombre de la institución fue corregido.')
-      await cargar()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible corregir la institución.')
-    } finally {
-      setIsGuardando(false)
-    }
-  }
-
-  const guardar = async () => {
-    if (!form.codigo.trim() || !form.nombre.trim()) {
-      setError('El código y el nombre del grupo son obligatorios.')
-      return
-    }
-    if (!form.institucionId) {
-      setError('Selecciona la institución del grupo.')
-      return
-    }
-
-    setIsGuardando(true)
-    setError(null)
-    setMensaje(null)
-    try {
-      let institucionId: number
-      if (form.institucionId === NUEVA_INSTITUCION) {
-        if (!form.nuevaInstitucion.trim()) {
-          setError('Escribe el nombre de la nueva institución.')
-          return
-        }
-        const creada = await crearInstitucionGrupo(form.nuevaInstitucion.trim())
-        institucionId = creada.id
-      } else {
-        institucionId = Number(form.institucionId)
-      }
-
-      const request = { codigo: form.codigo.trim(), nombre: form.nombre.trim(), institucionId }
-      if (editando === 'nuevo') {
-        await crearGrupoGestion(request)
-        setMensaje('Grupo de investigación creado correctamente.')
-      } else if (editando) {
-        await modificarGrupoGestion(editando.id, request)
-        setMensaje('Grupo de investigación actualizado correctamente.')
-      }
-
-      cerrarFormulario()
-      await cargar()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No fue posible guardar el grupo.')
-    } finally {
-      setIsGuardando(false)
-    }
-  }
 
   const reactivar = async (grupo: GrupoGestionDto) => {
     setError(null)
@@ -225,105 +109,17 @@ const GestionGruposInvestigacionPage = () => {
   }
 
   return (
-    <ModuleLayout title="Grupos de investigación">
+    <GruposInvestigacionLayout>
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
           <p>Crea, modifica o retira los grupos de investigación. Un grupo retirado se conserva con su historial y deja de ofrecerse para nuevas asignaciones.</p>
-          <button type="button" className="gestion-grupos__primary" onClick={abrirNuevo} disabled={editando !== null}>
+          <button type="button" className="gestion-grupos__primary" onClick={() => navigate(`${RUTA_GRUPOS}/nuevo`)}>
             Nuevo grupo
           </button>
         </header>
 
         {error ? <p className="gestion-grupos__alert gestion-grupos__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
-
-        {editando !== null ? (
-          <form
-            className="gestion-grupos__form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void guardar()
-            }}
-          >
-            <h2>{editando === 'nuevo' ? 'Nuevo grupo' : `Editar ${editando.codigo}`}</h2>
-
-            <label>
-              Código
-              <input value={form.codigo} onChange={(e) => setForm((c) => ({ ...c, codigo: e.target.value }))} />
-            </label>
-
-            <label>
-              Nombre
-              <input value={form.nombre} onChange={(e) => setForm((c) => ({ ...c, nombre: e.target.value }))} />
-            </label>
-
-            <label>
-              Institución
-              <select
-                value={form.institucionId}
-                onChange={(e) => setForm((c) => ({ ...c, institucionId: e.target.value, nuevaInstitucion: '' }))}
-              >
-                <option value="">Selecciona una institución</option>
-                {instituciones.map((institucion) => (
-                  <option key={institucion.id} value={institucion.id}>
-                    {institucion.nombre}
-                  </option>
-                ))}
-                <option value={NUEVA_INSTITUCION}>+ Nueva institución…</option>
-              </select>
-            </label>
-
-            {institucionSeleccionada && !corrigiendoInstitucion ? (
-              <div className="gestion-grupos__institucion-acciones">
-                <button
-                  type="button"
-                  className="gestion-grupos__secondary"
-                  onClick={() => {
-                    setNombreCorregido(institucionSeleccionada.nombre)
-                    setCorrigiendoInstitucion(true)
-                  }}
-                >
-                  Corregir nombre de la institución
-                </button>
-              </div>
-            ) : null}
-
-            {institucionSeleccionada && corrigiendoInstitucion ? (
-              <div className="gestion-grupos__institucion-acciones">
-                <label>
-                  Nombre corregido de la institución
-                  <input value={nombreCorregido} onChange={(e) => setNombreCorregido(e.target.value)} />
-                </label>
-                <button type="button" className="gestion-grupos__secondary" onClick={() => setCorrigiendoInstitucion(false)} disabled={isGuardando}>
-                  Cancelar corrección
-                </button>
-                <button type="button" className="gestion-grupos__primary" onClick={() => void guardarCorreccionInstitucion()} disabled={isGuardando}>
-                  {isGuardando ? 'Guardando...' : 'Guardar nombre'}
-                </button>
-              </div>
-            ) : null}
-
-            {form.institucionId === NUEVA_INSTITUCION ? (
-              <label>
-                Nombre de la nueva institución
-                <input
-                  value={form.nuevaInstitucion}
-                  onChange={(e) => setForm((c) => ({ ...c, nuevaInstitucion: e.target.value }))}
-                />
-                <span className="gestion-grupos__hint">
-                  Revisa primero la lista: si la institución ya existe, selecciónala arriba en lugar de crearla.
-                </span>
-              </label>
-            ) : null}
-
-            <div className="gestion-grupos__form-actions">
-              <button type="button" className="gestion-grupos__secondary" onClick={cerrarFormulario} disabled={isGuardando}>Cancelar</button>
-              <button type="submit" className="gestion-grupos__primary" disabled={isGuardando}>
-                {isGuardando ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </form>
-        ) : null}
 
         {isLoading ? <p className="gestion-grupos__status">Cargando grupos...</p> : null}
 
@@ -388,15 +184,15 @@ const GestionGruposInvestigacionPage = () => {
                       </span>
                     </td>
                     <td className="gestion-grupos__acciones">
-                      <button type="button" className="gestion-grupos__edit" onClick={() => abrirEdicion(grupo)} disabled={editando !== null}>
+                      <button type="button" className="gestion-grupos__edit" onClick={() => navigate(`${RUTA_GRUPOS}/${grupo.id}/editar`)}>
                         Editar
                       </button>
                       {grupo.estado === 'ACTIVO' ? (
-                        <button type="button" className="gestion-grupos__delete" onClick={() => void retirar(grupo)} disabled={editando !== null}>
+                        <button type="button" className="gestion-grupos__delete" onClick={() => void retirar(grupo)}>
                           Retirar
                         </button>
                       ) : (
-                        <button type="button" className="gestion-grupos__edit" onClick={() => void reactivar(grupo)} disabled={editando !== null}>
+                        <button type="button" className="gestion-grupos__edit" onClick={() => void reactivar(grupo)}>
                           Reactivar
                         </button>
                       )}
@@ -408,7 +204,7 @@ const GestionGruposInvestigacionPage = () => {
           </div>
         ) : null}
       </section>
-    </ModuleLayout>
+    </GruposInvestigacionLayout>
   )
 }
 

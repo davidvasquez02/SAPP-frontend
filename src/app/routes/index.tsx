@@ -29,6 +29,9 @@ import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
 import GestionGruposInvestigacionPage from "../../pages/GestionGruposInvestigacion/GestionGruposInvestigacionPage";
+import GrupoInvestigacionFormPage from "../../pages/GestionGruposInvestigacion/GrupoInvestigacionFormPage";
+import InstitucionesGrupoPage from "../../pages/GestionGruposInvestigacion/InstitucionesGrupoPage";
+import ProfesoresGrupoPage from "../../pages/GestionGruposInvestigacion/ProfesoresGrupoPage";
 import { solicitudesRoutes } from "./solicitudesRoutes";
 import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
@@ -187,6 +190,38 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <GestionGruposInvestigacionPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/instituciones"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <InstitucionesGrupoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/profesores"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <ProfesoresGrupoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/nuevo"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GrupoInvestigacionFormPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/:grupoId/editar"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GrupoInvestigacionFormPage />
               </RequireRoles>
             }
           />
