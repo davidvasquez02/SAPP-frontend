@@ -42,6 +42,11 @@ export const desactivarGrupoGestion = async (id: number): Promise<GrupoGestionDt
   return response.data
 }
 
+export const reactivarGrupoGestion = async (id: number): Promise<GrupoGestionDto> => {
+  const response = await httpPut<ApiResponse<GrupoGestionDto>>(`${GESTION_BASE}/grupos/${id}/reactivar`)
+  return response.data
+}
+
 export const getInstitucionesGrupo = async (): Promise<InstitucionGrupoDto[]> => {
   const response = await httpGet<ApiResponse<InstitucionGrupoDto[]>>(`${GESTION_BASE}/instituciones`)
   return response.data ?? []

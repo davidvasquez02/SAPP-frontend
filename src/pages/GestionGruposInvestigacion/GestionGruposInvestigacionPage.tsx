@@ -9,6 +9,7 @@ import {
   getInstitucionesGrupo,
   modificarGrupoGestion,
   modificarInstitucionGrupo,
+  reactivarGrupoGestion,
 } from '../../api/gruposInvestigacionGestionService'
 import type {
   GrupoGestionDto,
@@ -183,6 +184,18 @@ const GestionGruposInvestigacionPage = () => {
       setError(err instanceof Error ? err.message : 'No fue posible guardar el grupo.')
     } finally {
       setIsGuardando(false)
+    }
+  }
+
+  const reactivar = async (grupo: GrupoGestionDto) => {
+    setError(null)
+    setMensaje(null)
+    try {
+      await reactivarGrupoGestion(grupo.id)
+      setMensaje(`El grupo ${grupo.codigo} fue reactivado.`)
+      await cargar()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No fue posible reactivar el grupo.')
     }
   }
 
@@ -369,7 +382,11 @@ const GestionGruposInvestigacionPage = () => {
                         <button type="button" className="gestion-grupos__delete" onClick={() => void retirar(grupo)} disabled={editando !== null}>
                           Retirar
                         </button>
-                      ) : null}
+                      ) : (
+                        <button type="button" className="gestion-grupos__edit" onClick={() => void reactivar(grupo)} disabled={editando !== null}>
+                          Reactivar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
