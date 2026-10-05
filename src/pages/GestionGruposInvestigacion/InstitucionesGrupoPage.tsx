@@ -144,7 +144,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
               <tr>
                 <th>Nombre</th>
                 {esEscuela ? <th>Facultad</th> : null}
-                <th>Acciones</th>
+                <th className="gestion-grupos__col-acciones">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -175,7 +175,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
                         )}
                       </td>
                     ) : null}
-                    <td className="gestion-grupos__acciones">
+                    <td className="gestion-grupos__acciones gestion-grupos__acciones--derecha">
                       {editando ? (
                         <>
                           <button type="button" className="gestion-grupos__secondary" onClick={() => setEditandoId(null)} disabled={isGuardando}>Cancelar</button>
@@ -212,6 +212,7 @@ const InstitucionesGrupoPage = () => {
   const location = useLocation()
   const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
 
+  const [seccion, setSeccion] = useState<TipoInstitucionGrupo>(TIPO_ESCUELA)
   const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
   const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
   const [busqueda, setBusqueda] = useState('')
@@ -232,40 +233,65 @@ const InstitucionesGrupoPage = () => {
 
         {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
 
-        <div className="sapp-filters-panel">
-          <label className="sapp-filter-field">
-            <span>Buscar por nombre</span>
-            <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Eléctrica o Físico" />
-          </label>
-          <label className="sapp-filter-field">
-            <span>Facultad (aplica a escuelas)</span>
-            <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)}>
-              <option value="">Todas</option>
-              <option value={SIN_FACULTAD}>Sin facultad asignada</option>
-              {facultades.map((facultad) => (
-                <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="sapp-filters-clear-button" onClick={() => { setBusqueda(''); setFacultadFiltro('') }} disabled={!hayFiltros}>
-            Limpiar filtros
+        <div className="gestion-grupos__subtabs" role="tablist" aria-label="Tipo de institución">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={seccion === TIPO_ESCUELA}
+            className={`gestion-grupos__subtab${seccion === TIPO_ESCUELA ? ' gestion-grupos__subtab--active' : ''}`}
+            onClick={() => setSeccion(TIPO_ESCUELA)}
+          >
+            Escuelas
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={seccion === TIPO_FACULTAD}
+            className={`gestion-grupos__subtab${seccion === TIPO_FACULTAD ? ' gestion-grupos__subtab--active' : ''}`}
+            onClick={() => setSeccion(TIPO_FACULTAD)}
+          >
+            Facultades
           </button>
         </div>
 
-        <BloqueInstituciones
-          tipo={TIPO_FACULTAD}
-          busqueda={busqueda}
-          facultadFiltro=""
-          facultades={facultades}
-          onMensaje={setMensaje}
-        />
-        <BloqueInstituciones
-          tipo={TIPO_ESCUELA}
-          busqueda={busqueda}
-          facultadFiltro={facultadFiltro}
-          facultades={facultades}
-          onMensaje={setMensaje}
-        />
+        {seccion === TIPO_ESCUELA ? (
+          <>
+            <div className="sapp-filters-panel">
+              <label className="sapp-filter-field">
+                <span>Buscar por nombre</span>
+                <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Eléctrica o Sistemas" />
+              </label>
+              <label className="sapp-filter-field">
+                <span>Facultad</span>
+                <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)}>
+                  <option value="">Todas</option>
+                  <option value={SIN_FACULTAD}>Sin facultad asignada</option>
+                  {facultades.map((facultad) => (
+                    <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" className="sapp-filters-clear-button" onClick={() => { setBusqueda(''); setFacultadFiltro('') }} disabled={!hayFiltros}>
+                Limpiar filtros
+              </button>
+            </div>
+            <BloqueInstituciones
+              tipo={TIPO_ESCUELA}
+              busqueda={busqueda}
+              facultadFiltro={facultadFiltro}
+              facultades={facultades}
+              onMensaje={setMensaje}
+            />
+          </>
+        ) : (
+          <BloqueInstituciones
+            tipo={TIPO_FACULTAD}
+            busqueda=""
+            facultadFiltro=""
+            facultades={facultades}
+            onMensaje={setMensaje}
+          />
+        )}
       </section>
     </GruposInvestigacionLayout>
   )

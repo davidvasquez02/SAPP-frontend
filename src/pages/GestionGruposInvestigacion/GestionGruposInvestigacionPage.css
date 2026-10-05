@@ -312,3 +312,36 @@
   font-size: 0.9em;
   font-weight: 600;
 }
+
+.gestion-grupos__subtabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.gestion-grupos button.gestion-grupos__subtab {
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--on-surface);
+  font-weight: 700;
+  text-align: center;
+}
+
+.gestion-grupos button.gestion-grupos__subtab--active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.gestion-grupos__col-acciones {
+  text-align: right;
+}
+
+.gestion-grupos__acciones--derecha {
+  justify-content: flex-end;
+}
