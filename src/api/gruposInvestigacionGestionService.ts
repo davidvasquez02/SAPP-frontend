@@ -1,4 +1,4 @@
-import { httpGet, httpPost, httpPut } from '../shared/http/httpClient'
+import { httpDelete, httpGet, httpPost, httpPut } from '../shared/http/httpClient'
 import type { ApiResponse } from './types'
 import type {
   GrupoGestionDto,
@@ -89,6 +89,11 @@ export const getOpcionesInstituciones = async (tipo?: TipoInstitucionGrupo): Pro
 export const crearInstitucionGrupo = async (request: InstitucionGrupoRequest): Promise<InstitucionGrupoDto> => {
   const response = await httpPost<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones`, request)
   return response.data
+}
+
+/** Elimina una facultad o escuela. El back rechaza la eliminacion si tiene escuelas o grupos asociados. */
+export const eliminarInstitucionGrupo = async (id: number): Promise<void> => {
+  await httpDelete<ApiResponse<unknown> | undefined>(`${GESTION_BASE}/instituciones/${id}`)
 }
 
 export const modificarInstitucionGrupo = async (

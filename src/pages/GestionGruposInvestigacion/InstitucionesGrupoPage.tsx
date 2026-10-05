@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
+  eliminarInstitucionGrupo,
   getInstitucionesPaginadas,
   getOpcionesInstituciones,
   modificarInstitucionGrupo,
@@ -52,6 +53,8 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [nombreEditado, setNombreEditado] = useState('')
   const [padreEditado, setPadreEditado] = useState('')
+  const [confirmarEliminarId, setConfirmarEliminarId] = useState<number | null>(null)
+  const [isEliminando, setIsEliminando] = useState(false)
   const solicitudRef = useRef(0)
 
   const esEscuela = tipo === TIPO_ESCUELA
@@ -110,6 +113,22 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
       setError(err instanceof Error ? err.message : 'No fue posible actualizar la institución.')
     } finally {
       setIsGuardando(false)
+    }
+  }
+
+  const eliminar = async (institucion: InstitucionGrupoDto) => {
+    setIsEliminando(true)
+    setError(null)
+    try {
+      await eliminarInstitucionGrupo(institucion.id)
+      setConfirmarEliminarId(null)
+      onMensaje(`${TITULO[tipo].slice(0, -1)} "${institucion.nombre}" eliminada.`)
+      setRecarga((valor) => valor + 1)
+    } catch (err) {
+      setConfirmarEliminarId(null)
+      setError(err instanceof Error ? err.message : 'No fue posible eliminar la institución.')
+    } finally {
+      setIsEliminando(false)
     }
   }
 
@@ -182,10 +201,22 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
                             {isGuardando ? 'Guardando...' : 'Guardar'}
                           </button>
                         </>
+                      ) : confirmarEliminarId === institucion.id ? (
+                        <>
+                          <button type="button" className="gestion-grupos__secondary" onClick={() => setConfirmarEliminarId(null)} disabled={isEliminando}>Cancelar</button>
+                          <button type="button" className="gestion-grupos__delete" onClick={() => void eliminar(institucion)} disabled={isEliminando}>
+                            {isEliminando ? 'Eliminando...' : 'Confirmar eliminar'}
+                          </button>
+                        </>
                       ) : (
-                        <button type="button" className="gestion-grupos__edit" onClick={() => iniciarEdicion(institucion)} disabled={editandoId !== null}>
-                          Editar
-                        </button>
+                        <>
+                          <button type="button" className="gestion-grupos__edit" onClick={() => iniciarEdicion(institucion)} disabled={editandoId !== null}>
+                            Editar
+                          </button>
+                          <button type="button" className="gestion-grupos__delete" onClick={() => setConfirmarEliminarId(institucion.id)} disabled={editandoId !== null}>
+                            Eliminar
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>
