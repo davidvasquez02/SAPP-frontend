@@ -1,8 +1,9 @@
 const MARCADOR_ENCABEZADO = '{{encabezado}}'
 const MARCADOR_PIE = '{{pie}}'
 
+/* Bloques informativos: translucidos para no competir con el cuerpo que se edita. */
 const BLOQUE_AUTOMATICO = (texto: string) =>
-  `<div style="margin:8px 0;padding:10px 12px;border:1px dashed #438213;border-radius:6px;background:#f2f8ec;color:#2b5a0e;font:12px Arial,Helvetica,sans-serif;">${texto}</div>`
+  `<div style="margin:6px 0;padding:6px 10px;border:1px dashed #9aa3b2;border-radius:6px;background:#f4f5f7;color:#7a8290;opacity:0.55;font:11px Arial,Helvetica,sans-serif;text-align:center;">${texto}</div>`
 
 const PREFACIO = '<!doctype html><html><head><meta charset="utf-8"></head>' +
   '<body style="margin:0;padding:12px;background:#eef0f2;font-family:Arial,Helvetica,sans-serif;">'

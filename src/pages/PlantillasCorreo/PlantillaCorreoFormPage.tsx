@@ -254,6 +254,10 @@ const PlantillaCorreoFormPage = () => {
         <p className="plantillas-correo__aviso" role="note">
           El correo de prueba envía la versión guardada: guarda antes de probar.
         </p>
+        <p className="plantillas-correo__aviso-info" role="note">
+          Solo editas el cuerpo del correo. El encabezado y el pie se agregan automáticamente al enviar.
+          Las variables se reemplazan por los datos reales en cada envío.
+        </p>
 
         {error ? <p className="plantillas-correo__alert plantillas-correo__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="plantillas-correo__alert plantillas-correo__alert--success" role="status">{mensaje}</p> : null}
@@ -270,9 +274,6 @@ const PlantillaCorreoFormPage = () => {
             <div className="plantillas-correo__editor-vista">
               <div className="plantillas-correo__panel">
                 {renderCampo('contenidoHtml')}
-                <p className="plantillas-correo__meta">
-                  No incluyas encabezado ni pie: el sistema los agrega automáticamente. Las variables se reemplazan por los datos reales en cada envío.
-                </p>
               </div>
 
               <div className="plantillas-correo__panel">
@@ -312,11 +313,21 @@ const PlantillaCorreoFormPage = () => {
               >
                 {isEnviandoPrueba ? 'Enviando prueba...' : 'Enviar correo de prueba'}
               </button>
-              <button type="button" className="plantillas-correo__primary" onClick={intentarGuardar} disabled={isGuardando || confirmandoCambios}>
+              <button
+                type="button"
+                className="plantillas-correo__primary"
+                onClick={intentarGuardar}
+                disabled={isGuardando || confirmandoCambios || editando.length > 0 || modificados.length === 0}
+                title={editando.length > 0 ? 'Termina de editar todos los campos para guardar.' : 'No hay cambios para guardar.'}
+              >
                 Guardar
               </button>
             </div>
-            {pruebaBloqueadaPor ? <p className="plantillas-correo__meta plantillas-correo__meta--derecha">{pruebaBloqueadaPor}</p> : null}
+            {pruebaBloqueadaPor ? (
+              <p className="plantillas-correo__bloqueo" role="status">
+                <strong>Atención:</strong> {pruebaBloqueadaPor}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </section>

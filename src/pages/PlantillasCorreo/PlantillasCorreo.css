@@ -61,6 +61,27 @@
   text-align: right;
 }
 
+.plantillas-correo__aviso-info {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary), transparent 90%);
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.plantillas-correo__bloqueo {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--warning);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--warning), transparent 85%);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 .plantillas-correo button {
   border-radius: 999px;
   padding: 0.55rem 1rem;
