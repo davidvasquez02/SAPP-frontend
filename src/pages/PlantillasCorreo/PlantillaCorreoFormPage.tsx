@@ -251,13 +251,6 @@ const PlantillaCorreoFormPage = () => {
           <p>Sigla <strong>{original?.sigla}</strong>. La sigla no se puede cambiar porque el sistema la usa para enviar el correo.</p>
         </header>
 
-        <p className="plantillas-correo__aviso" role="note">
-          El correo de prueba envía la versión guardada: guarda antes de probar.
-        </p>
-        <p className="plantillas-correo__aviso-info" role="note">
-          Solo editas el cuerpo del correo. El encabezado y el pie se agregan automáticamente al enviar.
-          Las variables se reemplazan por los datos reales en cada envío.
-        </p>
 
         {error ? <p className="plantillas-correo__alert plantillas-correo__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="plantillas-correo__alert plantillas-correo__alert--success" role="status">{mensaje}</p> : null}
@@ -274,12 +267,16 @@ const PlantillaCorreoFormPage = () => {
             <div className="plantillas-correo__editor-vista">
               <div className="plantillas-correo__panel">
                 {renderCampo('contenidoHtml')}
+                <p className="plantillas-correo__nota" role="note">
+                  Solo editas el cuerpo del correo. El encabezado y el pie se agregan automáticamente al enviar.
+                  Las variables se reemplazan por los datos reales en cada envío.
+                </p>
               </div>
 
               <div className="plantillas-correo__panel">
                 <h2 className="plantillas-correo__titulo-panel">Vista previa</h2>
                 <iframe className="plantillas-correo__vista" title="Vista previa del correo" sandbox="" srcDoc={vistaPrevia} />
-                <p className="plantillas-correo__meta">Las variables aparecen resaltadas.</p>
+                <p className="plantillas-correo__nota">Las variables aparecen resaltadas.</p>
               </div>
             </div>
 
