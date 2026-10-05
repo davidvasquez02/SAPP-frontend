@@ -82,12 +82,21 @@ const GestionGruposInvestigacionPage = () => {
     }
   }
 
-  const cargar = () => cargarGrupos(filtrosActuales())
+  const cargarInstituciones = async () => {
+    try {
+      setInstituciones(await getInstitucionesGrupo())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.')
+    }
+  }
+
+  const cargar = async () => {
+    await Promise.all([cargarGrupos(filtrosActuales()), cargarInstituciones()])
+  }
 
   useEffect(() => {
-    getInstitucionesGrupo()
-      .then(setInstituciones)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
+    void cargarInstituciones()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
