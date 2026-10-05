@@ -4,6 +4,7 @@ import type {
   GrupoGestionDto,
   GrupoGestionRequest,
   InstitucionGrupoDto,
+  InstitucionGrupoRequest,
 } from './gruposInvestigacionGestionTypes'
 
 const GESTION_BASE = '/sapp/gruposInvestigacion/gestion'
@@ -52,12 +53,15 @@ export const getInstitucionesGrupo = async (): Promise<InstitucionGrupoDto[]> =>
   return response.data ?? []
 }
 
-export const crearInstitucionGrupo = async (nombre: string): Promise<InstitucionGrupoDto> => {
-  const response = await httpPost<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones`, { nombre })
+export const crearInstitucionGrupo = async (request: InstitucionGrupoRequest): Promise<InstitucionGrupoDto> => {
+  const response = await httpPost<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones`, request)
   return response.data
 }
 
-export const modificarInstitucionGrupo = async (id: number, nombre: string): Promise<InstitucionGrupoDto> => {
-  const response = await httpPut<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones/${id}`, { nombre })
+export const modificarInstitucionGrupo = async (
+  id: number,
+  request: InstitucionGrupoRequest,
+): Promise<InstitucionGrupoDto> => {
+  const response = await httpPut<ApiResponse<InstitucionGrupoDto>>(`${GESTION_BASE}/instituciones/${id}`, request)
   return response.data
 }

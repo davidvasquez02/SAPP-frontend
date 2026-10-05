@@ -130,10 +130,10 @@ const GestionGruposInvestigacionPage = () => {
               <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. STI o Sistemas" />
             </label>
             <label className="sapp-filter-field">
-              <span>Institución</span>
+              <span>Escuela</span>
               <select value={institucionFiltro} onChange={(e) => setInstitucionFiltro(e.target.value)}>
                 <option value="">Todas</option>
-                {instituciones.map((institucion) => (
+                {instituciones.filter((institucion) => institucion.tipo === 'ESCUELA').map((institucion) => (
                   <option key={institucion.id} value={institucion.id}>
                     {institucion.nombre}
                   </option>
@@ -167,7 +167,7 @@ const GestionGruposInvestigacionPage = () => {
                 <tr>
                   <th>Código</th>
                   <th>Nombre</th>
-                  <th>Institución</th>
+                  <th>Escuela</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>

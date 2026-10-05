@@ -95,7 +95,7 @@ const GrupoInvestigacionFormPage = () => {
         <header className="gestion-grupos__header">
           <div>
             <h2 className="gestion-grupos__page-title">{titulo}</h2>
-            <p>Un grupo siempre pertenece a una institución del catálogo. Si la institución no aparece, agrégala primero en la pestaña <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
+            <p>Un grupo pertenece a una escuela de la UIS. Si la escuela no aparece, agrégala primero en la pestaña <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
           </div>
         </header>
 
@@ -121,10 +121,10 @@ const GrupoInvestigacionFormPage = () => {
             </label>
 
             <label>
-              Institución
+              Escuela
               <select value={institucionId} onChange={(e) => setInstitucionId(e.target.value)}>
-                <option value="">Selecciona una institución</option>
-                {instituciones.map((institucion) => (
+                <option value="">Selecciona una escuela</option>
+                {instituciones.filter((institucion) => institucion.tipo === 'ESCUELA').map((institucion) => (
                   <option key={institucion.id} value={institucion.id}>
                     {institucion.nombre}
                   </option>
