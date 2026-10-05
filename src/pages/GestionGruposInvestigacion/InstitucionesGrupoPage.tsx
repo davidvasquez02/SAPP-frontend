@@ -15,7 +15,6 @@ import './GestionGruposInvestigacionPage.css'
 
 const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
 const TIPO_FACULTAD: TipoInstitucionGrupo = 'FACULTAD'
-const SIN_FACULTAD = 'SIN_FACULTAD'
 const TAMANO_PAGINA = 10
 
 const RUTA_NUEVA: Record<TipoInstitucionGrupo, string> = {
@@ -30,6 +29,7 @@ const TITULO: Record<TipoInstitucionGrupo, string> = {
 
 interface MensajeNavegacion {
   mensaje?: string
+  seccion?: TipoInstitucionGrupo
 }
 
 interface BloqueProps {
@@ -64,8 +64,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
     const espera = setTimeout(() => {
       const filtros = {
         busqueda: busqueda.trim() || undefined,
-        facultadId: esEscuela && facultadFiltro && facultadFiltro !== SIN_FACULTAD ? Number(facultadFiltro) : undefined,
-        sinFacultad: esEscuela && facultadFiltro === SIN_FACULTAD,
+        facultadId: esEscuela && facultadFiltro ? Number(facultadFiltro) : undefined,
       }
       const solicitud = ++solicitudRef.current
       setError(null)
@@ -210,9 +209,10 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
 
 const InstitucionesGrupoPage = () => {
   const location = useLocation()
-  const mensajeInicial = (location.state as MensajeNavegacion | null)?.mensaje ?? null
+  const navegacion = location.state as MensajeNavegacion | null
+  const mensajeInicial = navegacion?.mensaje ?? null
 
-  const [seccion, setSeccion] = useState<TipoInstitucionGrupo>(TIPO_ESCUELA)
+  const [seccion, setSeccion] = useState<TipoInstitucionGrupo>(navegacion?.seccion ?? TIPO_ESCUELA)
   const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
   const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
   const [busqueda, setBusqueda] = useState('')
@@ -265,7 +265,6 @@ const InstitucionesGrupoPage = () => {
                 <span>Facultad</span>
                 <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)}>
                   <option value="">Todas</option>
-                  <option value={SIN_FACULTAD}>Sin facultad asignada</option>
                   {facultades.map((facultad) => (
                     <option key={facultad.id} value={facultad.id}>{facultad.nombre}</option>
                   ))}

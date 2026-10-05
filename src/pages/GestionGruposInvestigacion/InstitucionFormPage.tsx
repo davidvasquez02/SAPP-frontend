@@ -36,7 +36,7 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
       .finally(() => setIsLoading(false))
   }, [esEscuela])
 
-  const volver = () => navigate(`${RUTA_GRUPOS}/instituciones`)
+  const volver = () => navigate(`${RUTA_GRUPOS}/instituciones`, { state: { seccion: tipo } })
 
   const guardar = async () => {
     if (!nombre.trim()) {
@@ -57,7 +57,10 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
         institucionPadreId: esEscuela ? Number(facultadId) : null,
       })
       navigate(`${RUTA_GRUPOS}/instituciones`, {
-        state: { mensaje: `${esEscuela ? 'Escuela' : 'Facultad'} "${creada.nombre}" agregada correctamente.` },
+        state: {
+          mensaje: `${esEscuela ? 'Escuela' : 'Facultad'} "${creada.nombre}" agregada correctamente.`,
+          seccion: tipo,
+        },
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : `No fue posible agregar la ${etiqueta}.`)
