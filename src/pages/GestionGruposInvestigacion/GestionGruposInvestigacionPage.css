@@ -14,10 +14,12 @@
   gap: 1rem;
 }
 
-.gestion-grupos__header p {
+.gestion-grupos__header p,
+.gestion-grupos__header > div {
   margin: 0;
+  flex: 1 1 22rem;
+  min-width: 0;
   color: var(--text-secondary);
-  max-width: 60ch;
 }
 
 .gestion-grupos__alert {
