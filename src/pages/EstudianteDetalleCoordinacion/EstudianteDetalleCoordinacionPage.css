@@ -290,7 +290,7 @@
 }
 
 .estudiante-detalle__profile-meta dt {
-    color: var(--text-secondary);
+    color: var(--primary);
     font-size: 0.78rem;
     font-weight: 800;
     text-transform: uppercase;

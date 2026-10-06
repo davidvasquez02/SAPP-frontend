@@ -14,6 +14,10 @@ Comandos: `npm run dev`, `npm run build`, `npm run preview` y `npm run lint`.
 Pruebas: `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`.
 Los catálogos provienen del backend; este frontend no tiene un comando de seeds.
 
+## Ajuste visual 2026-10-06 — detalle del estudiante
+
+- Los cinco subtítulos del panel derecho del perfil (correos, documento y director) usan el verde institucional `var(--primary)`, siguiendo el tema claro/oscuro. Los valores conservan su color de texto y la jerarquía existente.
+
 ## Implementación 2026-10-06 — Administración académica
 
 - Un acceso principal **Administración académica** reúne Calendario académico, Profesores, Grupos de investigación y Plantillas de correo. Menú interno persistente, navegación adaptable y cabecera institucional compartida; mismo acceso para coordinación, secretaría y administración.

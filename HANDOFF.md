@@ -1,5 +1,11 @@
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
+## Ajuste visual 2026-10-06 — subtítulos verdes en detalle de estudiante
+
+- Aplicada la vista previa aprobada: `src/pages/EstudianteDetalleCoordinacion/EstudianteDetalleCoordinacionPage.css`, selector `.estudiante-detalle__profile-meta dt`, usa `var(--primary)` en lugar de `var(--text-secondary)`. Cubre correo institucional, correo personal, documento, director de trabajo de grado y correo del director. Los valores (`dd`) conservan `--text-primary`; no cambian otros subtítulos.
+- El color consume el token existente de cada tema; no hay nuevos contratos, datos, permisos, dependencias ni entornos. Reutilizar `node_modules` y el entorno Windows/PowerShell documentado. Cambio CSS puntual; sin pruebas nuevas.
+- Validación de este ajuste: `npm run build` PASS (TypeScript y Vite, 353 módulos) y `git diff --check` PASS. Persiste el aviso previo de chunk >500 kB; logs en terminal de la conversación. No se verificó visualmente en sesión institucional.
+
 ## Implementación 2026-10-06 — Administración académica (estado vigente)
 
 - El usuario autorizó implementar el menú interno persistente, separar rutas y conservar accesos anteriores. Se eligió **Administración académica** para expresar el trabajo del coordinador con mayor claridad que Configuración. Esta autorización supera el estado de propuesta sin implementación registrado abajo.
