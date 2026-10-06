@@ -24,6 +24,7 @@ import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
 import { getProgramaAcademico } from '../../shared/domain/programaAcademico'
+import SolicitudesDocumentosEstudiante from './SolicitudesDocumentosEstudiante'
 
 const EMPTY_VALUE = '—'
 const SIN_PERIODO_KEY = '__SIN_PERIODO__'
@@ -913,11 +914,7 @@ const EstudianteDetalleCoordinacionPage = () => {
       )
     }
 
-    return withActionError(
-      <p className="estudiante-detalle__mini-status">
-        La consulta documental de esta pantalla se concentra en Admisión y Matrículas. Las solicitudes académicas no se recargan en este ajuste para evitar llamados documentales duplicados.
-      </p>
-    )
+    return null
   }, [activeDocumentAction, admissionDocuments, documentActionError, documentsError, enrollmentGroups, handleDocumentAction, handleDocumentUpload, isLoadingDocuments, tabActiva, uploadingDocumentAction])
 
   return (
@@ -945,7 +942,14 @@ const EstudianteDetalleCoordinacionPage = () => {
             />
             <StudentAcademicStats estudiante={estudiante} />
             <StudentDetailTabs activeTab={tabActiva} onChange={setTabActiva}>
-              {contenidoTab}
+              <div hidden={tabActiva === 'SOLICITUDES'}>{contenidoTab}</div>
+              <div hidden={tabActiva !== 'SOLICITUDES'}>
+                <SolicitudesDocumentosEstudiante
+                  key={estudiante.id}
+                  estudianteId={estudiante.id}
+                  active={tabActiva === 'SOLICITUDES'}
+                />
+              </div>
             </StudentDetailTabs>
           </div>
         ) : null}

@@ -378,6 +378,15 @@
     min-width: 0;
 }
 
+.estudiante-detalle__solicitudes-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+}
+
 .estudiante-detalle__tab-grid,
 .estudiante-detalle__admission-section,
 .estudiante-detalle__admission-group {

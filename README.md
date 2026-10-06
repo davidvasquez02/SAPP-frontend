@@ -14,6 +14,12 @@ Comandos: `npm run dev`, `npm run build`, `npm run preview` y `npm run lint`.
 Pruebas: `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`.
 Los catálogos provienen del backend; este frontend no tiene un comando de seeds.
 
+## Implementación 2026-10-06 — documentos de solicitudes en detalle del estudiante
+
+- La pestaña Solicitudes consulta las solicitudes del estudiante al abrirse y presenta sus adjuntos con el componente compartido del detalle de solicitudes: Ver y Descargar. Cada grupo incluye tipo, número, estado y fecha en Colombia; búsqueda por tipo/número, filtro de estado y paginación de cinco solicitudes.
+- Consulta documental solo para las solicitudes de la página visible, con errores/reintento independientes. Conserva los resultados al cambiar entre pestañas; Admisión y Matrículas mantienen su carga propia. Reutiliza los endpoints existentes de solicitudes por estudiante y documentos por trámite.
+- Validación: suite 168/168 PASS, ESLint focalizado PASS y build/TypeScript PASS. Pendiente comprobar con sesión institucional los documentos reales y las acciones de archivo.
+
 ## Ajuste visual 2026-10-06 — detalle del estudiante
 
 - Los cinco subtítulos del panel derecho del perfil (correos, documento y director) usan el verde institucional `var(--primary)`, siguiendo el tema claro/oscuro. Los valores conservan su color de texto y la jerarquía existente.
