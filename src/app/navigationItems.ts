@@ -47,7 +47,7 @@ export const getPrimaryNavigationItems = (
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
     {
       to: '/trabajos-grado',
-      label: 'Proyectos de grado',
+      label: 'Proyectos de investigación',
       icon: '📘',
       visible: !isProfesorOnly && !isDirector,
     },
@@ -75,6 +75,18 @@ export const getPrimaryNavigationItems = (
       to: '/coordinacion/profesores',
       label: 'Gestión profesores',
       icon: '🧑‍🏫',
+      visible: canSeeGestionCoordinacion,
+    },
+    {
+      to: '/coordinacion/grupos-investigacion',
+      label: 'Grupos de investigación',
+      icon: '🔬',
+      visible: canSeeGestionCoordinacion,
+    },
+    {
+      to: '/coordinacion/plantillas-correo',
+      label: 'Plantillas de correo',
+      icon: '✉️',
       visible: canSeeGestionCoordinacion,
     },
   ]

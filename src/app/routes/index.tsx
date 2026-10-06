@@ -28,6 +28,13 @@ import { creditosRoutes } from "./creditosRoutes";
 import { creditosCondonablesRoutes } from "./creditosCondonablesRoutes";
 import { matriculaRoutes } from "./matriculaRoutes";
 import { ProtectedRoute } from "./protectedRoute";
+import GestionGruposInvestigacionPage from "../../pages/GestionGruposInvestigacion/GestionGruposInvestigacionPage";
+import GrupoInvestigacionFormPage from "../../pages/GestionGruposInvestigacion/GrupoInvestigacionFormPage";
+import InstitucionesGrupoPage from "../../pages/GestionGruposInvestigacion/InstitucionesGrupoPage";
+import InstitucionFormPage from "../../pages/GestionGruposInvestigacion/InstitucionFormPage";
+import ProfesoresGrupoPage from "../../pages/GestionGruposInvestigacion/ProfesoresGrupoPage";
+import PlantillasCorreoPage from "../../pages/PlantillasCorreo/PlantillasCorreoPage";
+import PlantillaCorreoFormPage from "../../pages/PlantillasCorreo/PlantillaCorreoFormPage";
 import { solicitudesRoutes } from "./solicitudesRoutes";
 import { trabajosGradoRoutes } from "./trabajosGradoRoutes";
 
@@ -178,6 +185,78 @@ export const AppRoutes = () => {
             element={
               <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
                 <GestionProfesoresPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GestionGruposInvestigacionPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/instituciones"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <InstitucionesGrupoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/instituciones/escuelas/nueva"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <InstitucionFormPage tipo="ESCUELA" />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/instituciones/facultades/nueva"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <InstitucionFormPage tipo="FACULTAD" />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/plantillas-correo"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <PlantillasCorreoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/plantillas-correo/:plantillaId/editar"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <PlantillaCorreoFormPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/profesores"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <ProfesoresGrupoPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/nuevo"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GrupoInvestigacionFormPage />
+              </RequireRoles>
+            }
+          />
+          <Route
+            path="/coordinacion/grupos-investigacion/:grupoId/editar"
+            element={
+              <RequireRoles allowedRoles={ROLES_GESTION_POSGRADOS}>
+                <GrupoInvestigacionFormPage />
               </RequireRoles>
             }
           />

@@ -47,7 +47,7 @@ const TrabajosGradoPage = () => {
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
 
   return (
-    <ModuleLayout title="Proyectos de grado">
+    <ModuleLayout title="Proyectos de investigación">
       <section className="trabajos-grado-page">
         {isCoordinacion ? (
           <nav className="trabajos-grado-page__levels" aria-label="Nivel del proyecto">

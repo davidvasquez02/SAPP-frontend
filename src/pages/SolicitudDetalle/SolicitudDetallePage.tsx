@@ -510,7 +510,7 @@ const SolicitudDetallePage = () => {
           Volver a {location.pathname.startsWith('/creditos-condonables')
             ? 'créditos condonables'
             : location.pathname.startsWith('/trabajos-grado')
-              ? 'proyectos de grado'
+              ? 'proyectos de investigación'
               : 'solicitudes'}
         </BackButton>
 
