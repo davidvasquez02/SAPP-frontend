@@ -1,3 +1,4 @@
+import { RUTA_ADMINISTRACION } from '../../modules/administracionAcademica/rutas'
 import { CalendarDays, GraduationCap, ScrollText, UsersRound } from 'lucide-react'
 
 interface SidebarModuleIconProps {
@@ -6,6 +7,11 @@ interface SidebarModuleIconProps {
 }
 
 const iconPaths: Record<string, React.ReactNode> = {
+  [RUTA_ADMINISTRACION]: (
+    <>
+      <path d="m3 9 9-6 9 6M4 21h16M6 10v7M12 10v7M18 10v7M3 9h18" />
+    </>
+  ),
   '/creditos-condonables': (
     <>
       <rect width="20" height="14" x="2" y="5" rx="2" />

@@ -1,3 +1,4 @@
+import { RUTA_CALENDARIO } from '../../modules/administracionAcademica/rutas'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
@@ -128,7 +129,7 @@ const ConfigFechasAdmisionesPage = () => {
           ],
         })
       }
-      navigate('/fechas')
+      navigate(RUTA_CALENDARIO)
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No fue posible guardar el periodo.')
     } finally {
@@ -139,7 +140,7 @@ const ConfigFechasAdmisionesPage = () => {
   return (
     <ModuleLayout title={form.periodoId === null ? 'Crear período académico' : 'Editar período académico'}>
       <section className="config-fechas-admisiones">
-        <BackButton to="/fechas">Volver a fechas</BackButton>
+        <BackButton to={RUTA_CALENDARIO}>Volver a fechas</BackButton>
         <header className="config-fechas-admisiones__header">
           <div>
             <h1>{form.periodoId === null ? 'Crear período académico' : 'Editar período académico'}</h1>

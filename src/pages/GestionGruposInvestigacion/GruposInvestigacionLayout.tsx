@@ -3,7 +3,8 @@ import { NavLink } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
 import './GestionGruposInvestigacionPage.css'
 
-export const RUTA_GRUPOS = '/coordinacion/grupos-investigacion'
+import { RUTA_GRUPOS } from '../../modules/administracionAcademica/rutas'
+export { RUTA_GRUPOS } from '../../modules/administracionAcademica/rutas'
 
 const SECCIONES = [
   { to: RUTA_GRUPOS, label: 'Grupos', end: true },

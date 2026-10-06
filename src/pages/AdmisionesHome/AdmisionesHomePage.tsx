@@ -1,3 +1,4 @@
+import { RUTA_CALENDARIO } from '../../modules/administracionAcademica/rutas'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canManagePosgrados } from "../../auth/roleGuards";
 import { useNavigate } from "react-router-dom";
@@ -294,7 +295,7 @@ const AdmisionesHomePage = () => {
             <button
               type="button"
               className="admisiones-config-button"
-              onClick={() => navigate("/fechas")}
+              onClick={() => navigate(RUTA_CALENDARIO)}
             >
               <span aria-hidden="true">📅</span>
               Configurar fechas académicas

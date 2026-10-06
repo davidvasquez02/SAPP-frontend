@@ -1,3 +1,4 @@
+import { RUTA_CALENDARIO } from '../../modules/administracionAcademica/rutas'
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
@@ -197,7 +198,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
             <button
               type="button"
               className="convocatorias-config__new-button convocatorias-config__new-button--ghost"
-              onClick={() => navigate("/fechas")}
+              onClick={() => navigate(RUTA_CALENDARIO)}
             >
               Configurar fechas de semestre
             </button>

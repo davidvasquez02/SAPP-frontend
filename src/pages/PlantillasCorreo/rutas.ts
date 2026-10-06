@@ -1,1 +1,1 @@
-export const RUTA_PLANTILLAS = '/coordinacion/plantillas-correo'
+export { RUTA_PLANTILLAS } from '../../modules/administracionAcademica/rutas'

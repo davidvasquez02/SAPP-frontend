@@ -1,3 +1,4 @@
+import { RUTA_ADMINISTRACION } from '../modules/administracionAcademica/rutas'
 import { canManagePosgrados, hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
 
 export interface PrimaryNavigationItem {
@@ -70,23 +71,10 @@ export const getPrimaryNavigationItems = (
       visible: canSeeGestionCoordinacion,
     },
     { to: '/actas', label: 'Actas', icon: '📜', visible: canSeeGestionCoordinacion },
-    { to: '/fechas', label: 'Fechas', icon: '🗓️', visible: canSeeGestionCoordinacion },
     {
-      to: '/coordinacion/profesores',
-      label: 'Gestión profesores',
-      icon: '🧑‍🏫',
-      visible: canSeeGestionCoordinacion,
-    },
-    {
-      to: '/coordinacion/grupos-investigacion',
-      label: 'Grupos de investigación',
-      icon: '🔬',
-      visible: canSeeGestionCoordinacion,
-    },
-    {
-      to: '/coordinacion/plantillas-correo',
-      label: 'Plantillas de correo',
-      icon: '✉️',
+      to: RUTA_ADMINISTRACION,
+      label: 'Administración académica',
+      icon: '🏛️',
       visible: canSeeGestionCoordinacion,
     },
   ]

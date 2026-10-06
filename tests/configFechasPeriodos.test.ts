@@ -8,12 +8,12 @@ const fechasModuleSource = readFileSync('src/pages/FechasModule/FechasModulePage
 test('crea y actualiza períodos sin solicitar descripción y vuelve al listado', () => {
   assert.doesNotMatch(configPeriodosSource, /Descripción/)
   assert.match(configPeriodosSource, /descripcion: ''/)
-  assert.match(configPeriodosSource, /navigate\('\/fechas'\)/)
+  assert.match(configPeriodosSource, /navigate\(RUTA_CALENDARIO\)/)
   assert.doesNotMatch(configPeriodosSource, /await loadData\(\)/)
 })
 
 test('usa un único título para el módulo de fechas', () => {
-  assert.match(fechasModuleSource, /<ModuleLayout title="Módulo de Fechas Académicas">/)
+  assert.match(fechasModuleSource, /<ModuleLayout title="Calendario académico">/)
   assert.doesNotMatch(fechasModuleSource, /<header className="config-module__header">/)
   assert.doesNotMatch(fechasModuleSource, /<h1>Fechas académicas<\/h1>/)
 })

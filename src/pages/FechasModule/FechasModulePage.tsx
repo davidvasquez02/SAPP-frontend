@@ -1,3 +1,4 @@
+import { RUTA_CALENDARIO } from '../../modules/administracionAcademica/rutas'
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
@@ -226,7 +227,7 @@ const FechasModulePage = () => {
   };
 
   return (
-    <ModuleLayout title="Módulo de Fechas Académicas">
+    <ModuleLayout title="Calendario académico">
       <section className="config-module">
         {isLoading ? <p className="config-module__status">Cargando fechas académicas...</p> : null}
         {error ? <p className="config-module__status config-module__status--error">{error}</p> : null}
@@ -236,7 +237,7 @@ const FechasModulePage = () => {
           <article className="config-module__card">
             <div className="config-module__card-header">
               <div><h2>Períodos académicos</h2><p>Base para definir rangos de fechas y habilitar procesos por semestre.</p></div>
-              <button type="button" onClick={() => navigate("/fechas/periodos")}>Crear período académico</button>
+              <button type="button" onClick={() => navigate(`${RUTA_CALENDARIO}/periodos`)}>Crear período académico</button>
             </div>
             {periodos.length === 0 ? <p className="config-module__status">No hay períodos académicos registrados.</p> : null}
             {periodos.length > 0 ? <div className="config-module__table-wrap sapp-table-shell">
@@ -249,7 +250,7 @@ const FechasModulePage = () => {
                     <td data-label="Fin" data-date-group="Período académico">{formatFecha(item.periodo.fechaFin)}</td>
                     <td data-label="Inicio" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaInicio ?? null)}</td>
                     <td data-label="Fin" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaFin ?? null)}</td>
-                    <td data-label="Acciones" className="config-module__actions-cell"><button type="button" className="config-module__edit-button" onClick={() => navigate(`/fechas/periodos?periodoId=${item.periodo.id}`)}>Editar</button></td>
+                    <td data-label="Acciones" className="config-module__actions-cell"><button type="button" className="config-module__edit-button" onClick={() => navigate(`${RUTA_CALENDARIO}/periodos?periodoId=${item.periodo.id}`)}>Editar</button></td>
                   </tr>;
                 })}</tbody></table>
             </div> : null}

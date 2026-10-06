@@ -5,6 +5,18 @@
     padding: clamp(1rem, 2.2vw, 2rem);
 }
 
+.module-layout__section {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.module-layout__section-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-section-title);
+}
+
 .module-layout__header {
     display: flex;
     justify-content: space-between;

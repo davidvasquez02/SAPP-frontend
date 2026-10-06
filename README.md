@@ -1,5 +1,39 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+Minerva Posgrados centraliza admisiones, matrículas, liquidación, solicitudes,
+créditos condonables, trabajos de grado y gestión académica de EISI–UIS. Esta SPA
+organiza páginas, componentes y servicios HTTP por módulo y consume el backend
+Spring Boot; React Router protege la navegación según la sesión.
+
+Entorno local documentado: Windows/PowerShell, Node 24.11.0 y npm 11.6.1.
+Versiones resueltas en `package-lock.json`: React/DOM 19.2.3, React Router DOM
+7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+Reutilizar `node_modules`; en una instalación nueva, ejecutar `npm ci` y copiar
+`.env.example` a `.env.local` sin reemplazar una configuración existente.
+Comandos: `npm run dev`, `npm run build`, `npm run preview` y `npm run lint`.
+Pruebas: `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`.
+Los catálogos provienen del backend; este frontend no tiene un comando de seeds.
+
+## Implementación 2026-10-06 — Administración académica
+
+- Un acceso principal **Administración académica** reúne Calendario académico, Profesores, Grupos de investigación y Plantillas de correo. Menú interno persistente, navegación adaptable y cabecera institucional compartida; mismo acceso para coordinación, secretaría y administración.
+- Rutas canónicas bajo `/administracion-academica`: `/calendario`, `/calendario/periodos`, `/profesores`, `/grupos-investigacion` (incluidas sus subrutas) y `/plantillas-correo` (incluida `/:plantillaId/editar`). La portada abre Calendario académico.
+- Las rutas antiguas `/fechas/*`, `/coordinacion/profesores/*`, `/coordinacion/grupos-investigacion/*` y `/coordinacion/plantillas-correo/*` redirigen conservando parámetros, fragmentos, identificadores y estado de navegación. Los accesos desde Admisiones usan el destino nuevo; `/admisiones/convocatorias` permanece operativo.
+- Se reutilizan las pantallas y servicios existentes. No cambian contratos HTTP, datos, roles ni acciones de negocio. El nombre describe la gestión institucional y la distingue de preferencias personales.
+- Validación: build/TypeScript PASS (353 módulos; aviso existente de chunk >500 kB), ESLint focalizado PASS, suite ligera 165/165 PASS y prueba de integración de rutas/perfiles 1/1 PASS. Integración: `node --test --test-isolation=none tests/integration/administracionAcademicaRoutes.test.mjs`; requiere que el entorno permita Vite SSR (se verificó fuera del sandbox). Pendiente recorrido visual con sesión institucional y datos reales.
+
+## Antecedente 2026-10-06 — propuesta de configuración central
+
+- [Evaluación y planteamiento](docs/propuesta-configuracion-central-2026-10-06.md): antecedente del módulo implementado como Administración académica. La reorganización de navegación está implementada; la separación funcional adicional de convocatorias continúa como propuesta.
+- Reconsulta: Grupos de investigación y Plantillas de correo ya tienen entradas propias. Plantillas incluye búsqueda/idioma, paginación, edición HTML, vista previa y prueba de la versión guardada mediante `/sapp/plantillasCorreo`. Las cuatro secciones comparten permisos administrativos. La propuesta contempla reutilizar estas pantallas y revisar accesos compartidos de profesores/grupos y el solapamiento de convocatorias.
+- Revisión estática y propuesta visual; sin cambios funcionales ni pruebas/build de la aplicación en esta tarea.
+
+## Propuesta 2026-09-30 — manuales y videos para adopción
+
+- [Plan de manuales y videos](docs/propuesta-manuales-videos-minerva-2026-09-30.md): análisis de los 93 casos de aceptación de la versión 2; propone tres manuales por público y ocho videos, con 36 minutos objetivo para la biblioteca completa. Incluye secuencias de grabación, rutas de consulta por rol y matriz de cobertura de los 11 módulos.
+- Es una propuesta editorial: los manuales finales y las grabaciones quedan por producir y validar con la interfaz publicada. Se distinguen el portal de aspirantes, la sesión institucional y el enlace personal del jurado; las diferencias de permisos administrativos siguen pendientes de la validación descrita en la auditoría de roles.
+- Revisión documental únicamente; no se ejecutaron casos de aceptación, envíos, firmas ni pruebas de la aplicación en esta tarea.
+
 ## Ajuste 2026-09-30 — cargue histórico de documentos
 
 - El cargue y reemplazo de documentos de Admisión y Matrículas en el detalle administrativo del estudiante envía `cargaHistorica: true` a `POST /sapp/document`. El backend puede resolver `{{NOMBRE_ESTUDIANTE}}` con el dueño del trámite, conservando `tramiteId`, `usuarioCargaId` y el resto del payload.

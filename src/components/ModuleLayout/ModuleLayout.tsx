@@ -1,4 +1,6 @@
+import { useContext } from 'react'
 import { Link } from 'react-router-dom'
+import { EmbeddedModuleContext } from './EmbeddedModuleContext'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
 import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
@@ -20,12 +22,22 @@ type ModuleLayoutProps = {
 
 const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile = false }: ModuleLayoutProps) => {
   const { user } = useAuth()
+  const embedded = useContext(EmbeddedModuleContext)
   const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
   const functionalRole = user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE)
   const roleLabel = functionalRole ? formatRoleLabel(functionalRole) : 'SIN ROL ASIGNADO'
   const estudianteFoto =
     user?.estudiante?.foto ?? null
   const avatarSrc = imageDataUrl(estudianteFoto?.contenidoBase64, estudianteFoto?.mimeType) ?? FALLBACK_AVATAR
+
+  if (embedded) {
+    return (
+      <section className="module-layout__section" aria-label={title}>
+        <h3 className="module-layout__section-title">{title}</h3>
+        {children}
+      </section>
+    )
+  }
 
   return (
     <div className={`module-layout${compactOnMobile ? ' module-layout--compact-mobile' : ''}`}>
