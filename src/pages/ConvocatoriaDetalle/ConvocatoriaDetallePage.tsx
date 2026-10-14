@@ -662,10 +662,17 @@ const ConvocatoriaDetallePage = () => {
         onClose={() => setSelectedAspirante(null)}
         onCreated={(estudiante) => {
           setCreatedAspiranteIds((current) => new Set(current).add(estudiante.idAspirante));
-          setToast({
-            tone: "success",
-            message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`,
-          });
+          if (estudiante.advertenciaRolIam) {
+            setToast({
+              tone: "warning",
+              message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente. ${estudiante.advertenciaRolIam}`,
+            });
+          } else {
+            setToast({
+              tone: "success",
+              message: `Estudiante ${estudiante.codigoEstudianteUis} creado correctamente.`,
+            });
+          }
         }}
       />
       <EvaluadoresConvocatoriaDialog

@@ -50,4 +50,6 @@ export interface EstudianteCreadoDto {
   fechaEgreso: string | null
   idAspirante: number
   foto: DocumentoFotoDto | null
+  /** Presente solo si la asignación automática del rol ESTUDIANTE en el IAM falló; debe asignarse manualmente. */
+  advertenciaRolIam: string | null
 }
