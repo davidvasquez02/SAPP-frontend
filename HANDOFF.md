@@ -1,3 +1,58 @@
+## Continuidad: análisis técnico de los cuatro proyectos — 2026-10-10
+
+### Encargo y estado
+
+El usuario pidió analizar código/configuración, sin modificar código, y preparar material en español para trabajo de grado y sustentación. Entrega terminada en docs/trabajo-grado-tecnico: documento-tecnico.md, diagramas.md, seis .mmd, sustentacion.md (ocho diapositivas con notas, guion de unos cinco minutos, doce preguntas y conceptos), informacion-pendiente.md, referencias.md, evidencias.json, verificacion.md, verificacion-documental.json e indice.md. Se conserva como propuesta textual; no se pidió exportación PPTX/PDF.
+
+El borrador preexistente del 2026-10-09 estaba desactualizado y omitía el backend público. Se sustituyó su contenido técnico y su sección de continuidad; no repetir sus afirmaciones sobre backend incompleto, ID PersonaIdp, falta de historial/correos, acta obligatoria o contrato booleano de matrícula.
+
+### Rutas exactas y alcance
+
+- F: D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend
+- P: D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public
+- B: D:/Users/david/Desktop/SAPP/back - v2/sapp-backend
+- U: D:/Users/david/Desktop/SAPP/sapp-public-backend
+
+Son las rutas expresamente indicadas por el usuario; no hace falta volver a preguntar cuál analizar. Lo pendiente es qué commits están desplegados. No mezclar back-posgrados ni otras copias. El frontend institucional tenía README/HANDOFF modificados y docs/trabajo-grado-tecnico sin seguimiento al iniciar; se mantuvo el resto de sus notas históricas. HEAD institucional observado: b3640cd8e5432d88d9c0a5c7d061b8abfe3aea28.
+
+### Hallazgos y contratos que debe conocer una instancia nueva
+
+- Sistema cliente-servidor, dos SPA y dos Spring Boot, tablas PostgreSQL compartidas; no atribuir microservicios ni arquitectura limpia estricta. Java usa web/domain/persistence y los servicios dependen de JPA/Spring.
+- GET /inicio: filtro X-Internal-Token firmado, consulta IAM, exige UsuarioSapp local y rol válido. Respuesta id = usuarios_sapp.id. NO_TOKEN del cliente es marcador, filtrado por getToken. Sin autorización uniforme comprobada en todas las operaciones; sí existen controles de propietario en MiLiquidacionService y de firmante en FirmaDocumentoService.
+- Modelo actual: UsuarioSapp.idp_id, sin asociación PersonaIdp. migration_merge_personas_idp.sql elimina personas_idp; migration_estudiantes_unique_usuario_programa.sql cambia unicidad a usuario/programa. Esto difiere del AGENTS histórico; solo se documentó, no se aplicó ninguna migración.
+- GET /matriculaAcademica/vigente/estudiante/{id}: matrícula en lista o MatriculaVigenteEstadoResponse con periodoId/puedeCrear. Los endpoints de avisos/finalización documental sí existen. Radicar no consulta checklist aunque notificar/finalizar sí lo hacen.
+- Solicitudes: sigla inicial de homologación ENVIADA, constante Java ENVIADA_COMITE. PUT /solicitudesAcademicas/cambioEstado/{id} usa siglaEstado, actaId opcional, enviarConsejo y observaciones; rechazo exige observaciones, conserva motivoRechazo y fecha de resolución final. GET /{id}/historial existe. No afirmar que toda aprobación exige acta.
+- Admisión pública: consulta por inscripción/documento; POST /document; transición a PVALDOCS con UPDATE condicionado y evento_correo transaccional. U no consulta checklist en esa transición; B sí. cambioEstadoValDoc de B aún captura/silencia excepciones.
+- Jurados: token opaco de 32 bytes generado en B, hash SHA-256, expiración/revocación en U y descarga ligada al proceso tras aceptar. El filtro público registra URI/query y puede registrar el token: pendiente concreto. No es sesión JWT de jurado.
+- Correo: EmailService admite IAM/SMTP. Coexisten envíos directos y outbox; consumidor cada 600000 ms, lote 15, reclamo atascado >5 min, hasta cinco fallos. SKIP LOCKED no garantiza exactamente una entrega.
+- SQL: B/src/sapp.sql y src/main/resources/db, scripts de diversas épocas y semillas parciales. ddl-auto=none; sin Flyway encontrado. Un script menciona sapp-liquibase-manager, cuya ruta no se encontró en el alcance.
+- No atribuir recaudo de pagos, sincronización integral UIS, cobertura, rendimiento o alta disponibilidad sin evidencia.
+
+### Entorno, ejecución y logs
+
+Windows/PowerShell. Node 24.11.0, npm 11.6.1 y Java PATH 17.0.2 medidos. F: React/DOM 19.2.3, Router 7.11.0, TS 5.9.3, rolldown-vite 7.2.5, SWC 4.2.2, ESLint 9.39.2. P: React/DOM 19.2.7, TS 6.0.3, Vite 8.0.16, plugin React 6.0.2, compiler 1.0.0, ESLint 9.39.4. B/U: objetivo Java 21, Boot 4.0.0, Cloud 2025.1.0, wrapper Maven 3.9.11; JJWT 0.12.6 en B y dependencia 0.11.5 en U. PostgreSQL efectivo pendiente.
+
+Reutilizar los node_modules/lockfiles ya presentes; no crear venv, Conda, Poetry ni otro árbol npm. Ninguna dependencia instalada. No se ejecutaron endpoints, correos, SQL ni Java. No hay dataset integral sanitizado confirmado; no usar carpetas externas de datos personales para validación.
+
+Resultados nuevos del 2026-10-10:
+
+- node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs: PASS 168/168. Log: docs/trabajo-grado-tecnico/logs/frontend-tests.txt.
+- npm run build: tsc -b completó; Vite falló al cargar configuración con spawn EPERM y error SWC nativo/UTF-8. Log: logs/frontend-build.txt. No fue un build PASS.
+- npm run lint: 9 errores y 1 warning de fuentes preexistentes; logs/frontend-lint.txt.
+- SSR de tests/integration, build/lint de P y pruebas Java no ejecutados. Java PATH 17 no satisface 21.
+- Se identificaron 53 archivos frontend y 70 clases B/una U de tests; no confundir conteo de archivos con casos/cobertura.
+- Manifiesto: 22 grupos, 149 referencias existentes con SHA-256. Comprobación documental y git diff --check aparte; no se renderizó Mermaid.
+
+### Continuación sugerida
+
+Las preguntas concretas están en informacion-pendiente.md. Antes de integrar al documento final, obtener commits de despliegue, esquema aplicado/gestor Liquibase y configuración sanitizada del gateway. Priorizar autorización pública/institucional, completitud documental, requisitos de acta, logs de tokens, zona horaria, TLS y garantía del correo.
+
+Si se pide validar ejecución, seleccionar Java 21 y un entorno de pruebas aislado; reparar el problema de build solo dentro de un encargo que autorice esa tarea. No interpretar el análisis documental como permiso para enviar correos reales o ejecutar migraciones.
+
+Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se canceló; una escritura de documento largo por PowerShell excedió el límite de longitud de comando. Los archivos se escribieron con node_repl/fs. No quedó un script de generación añadido al proyecto.
+
+---
+
 # Handoff 2026-09-27 — evaluación adaptable y rueda en notas
 
 ## Implementación 2026-10-06 — documentos de solicitudes del estudiante
@@ -7442,3 +7497,14 @@ npm run lint
 - Pendiente institucional: verificar que `/mias` incluya `proceso.fechaLimitePago` después de publicar y validar el bloque destacado y el acordeón con sesión real, temas claro/oscuro y móvil.
 
 ---
+
+## Continuidad 2026-10-13 — error trim al cargar estudiantes
+
+- Causa confirmada en el JSON adjunto: `nombreCompleto` puede ser null, mientras `toEstudianteCoordinacion` ejecutaba `.trim()` directamente. Corregido en `src/modules/estudiantes/services/estudiantesMockService.ts`: DTO `string | null` y fallback **Nombre no disponible**. Listado y detalle comparten el mapeo; no se descartan estudiantes.
+- Contrato: GET `/sapp/estudiantes/consulta?programaId=1&egresados=false`, envoltorio `{ ok, message, data }`. Sin cambios de API. Falta confirmar con backend por qué algunos registros carecen de datos personales; la respuesta por sí sola no determina esa causa.
+- `tests/estudiantesConsulta.test.mjs`: Vite SSR, HTTP simulado, datos sintéticos; valida listado completo y detalle con nombres nulos, vacíos, con espacios y normales. Comando `node --test --test-isolation=none tests/estudiantesConsulta.test.mjs` PASS (1/1). ESLint focalizado PASS. Sin prueba visual autenticada.
+- Node v24.11.0; reutilizar `node_modules` y `package-lock.json`, sin nuevas instalaciones ni entornos Python. README/HANDOFF ya tenían modificaciones y existe `docs/trabajo-grado-tecnico/` sin seguimiento: conservarlos.
+
+- Validación de compilación: TypeScript (	sc -b) PASS; 
+pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario SWC (UNLOADABLE_DEPENDENCY). Pendiente repetir build en un entorno que permita esos subprocesos; no se modificaron dependencias.
+

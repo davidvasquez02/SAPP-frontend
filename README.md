@@ -14,6 +14,16 @@ Comandos: `npm run dev`, `npm run build`, `npm run preview` y `npm run lint`.
 Pruebas: `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`.
 Los catálogos provienen del backend; este frontend no tiene un comando de seeds.
 
+## Análisis técnico para trabajo de grado — 2026-10-10
+
+- Entrega: [índice](docs/trabajo-grado-tecnico/indice.md), [documento técnico](docs/trabajo-grado-tecnico/documento-tecnico.md), [seis diagramas Mermaid](docs/trabajo-grado-tecnico/diagramas.md), [ocho diapositivas, guion y doce preguntas](docs/trabajo-grado-tecnico/sustentacion.md) y [confirmaciones pendientes](docs/trabajo-grado-tecnico/informacion-pendiente.md).
+- Arquitectura observada: dos SPA (institucional y pública), dos aplicaciones Spring Boot y tablas PostgreSQL compartidas. Organización Java por web/domain/persistence. Gateway/IAM externos; correo IAM o SMTP con envíos directos y outbox evento_correo. SAPP complementa los sistemas UIS; no se acredita recaudo ni sincronización general.
+- Se revisaron las cuatro rutas indicadas. El backend actual sí implementa liquidación, trabajos de grado, historial y plantillas. UsuarioSapp contiene idp_id y /inicio devuelve usuarios_sapp.id; las migraciones actuales eliminan personas_idp y permiten estudiante por usuario/programa. Esquema efectivo pendiente de confirmación. Esta revisión sustituye las conclusiones del borrador del 9 de octubre.
+- Frontend institucional: React/DOM 19.2.3, Router 7.11.0, TS 5.9.3, rolldown-vite 7.2.5, SWC 4.2.2 y ESLint 9.39.2. Portal público: React/DOM 19.2.7, TS 6.0.3, Vite 8.0.16 y plugin React 6.0.2. Backends: Java objetivo 21, Spring Boot 4.0.0, Cloud BOM 2025.1.0 y Maven Wrapper 3.9.11.
+- Entorno medido: Node 24.11.0, npm 11.6.1; Java del PATH 17.0.2 (insuficiente para los backends). Reutilizar node_modules y lockfiles; sin instalaciones ni entornos nuevos.
+- Resultado del 10 de octubre: 168/168 pruebas frontend PASS; TypeScript completó; Vite falló con spawn EPERM y carga nativa SWC; lint reportó 9 errores y 1 advertencia preexistentes. [Logs y alcance](docs/trabajo-grado-tecnico/verificacion.md). Sin ejecución Java ni recorridos institucionales.
+- Se actualizaron documentos y diagramas; no se editó código/configuración ni se ejecutó SQL. El frontend no tiene seeds; en backend hay scripts/semillas parciales, sin instalación integral reproducible confirmada.
+
 ## Implementación 2026-10-06 — documentos de solicitudes en detalle del estudiante
 
 - La pestaña Solicitudes consulta las solicitudes del estudiante al abrirse y presenta sus adjuntos con el componente compartido del detalle de solicitudes: Ver y Descargar. Cada grupo incluye tipo, número, estado y fecha en Colombia; búsqueda por tipo/número, filtro de estado y paginación de cinco solicitudes.
@@ -2041,3 +2051,12 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El diálogo identifica período y programa, explica el efecto del cierre, usa acciones **Cancelar** / **Cerrar convocatoria** y presenta **Cerrando…** mientras responde el servidor. Admite Escape, clic en el fondo, foco inicial y retorno del foco al botón que lo abrió.
 - La presentación usa tokens semánticos, fondo atenuado, tarjeta redondeada, botones pill y adaptación móvil para conservar los temas claro y oscuro. No cambiaron el endpoint, payload, contrato ni permisos del cierre.
 - ESLint focalizado y build PASS (320 módulos; CSS 283.68 kB; JS 749.32 kB).
+
+## Corrección 2026-10-13 — carga de estudiantes con nombre nulo
+
+- La consulta de estudiantes admite `nombreCompleto: null`. El mapeo compartido de listado y detalle muestra **Nombre no disponible** para nombres nulos, vacíos o con solo espacios, evitando que `trim()` interrumpa toda la carga.
+- Regresión: `node --test --test-isolation=none tests/estudiantesConsulta.test.mjs` PASS (1/1); ESLint focalizado PASS. Sin cambios de endpoints, dependencias ni configuración.
+
+- Validación de compilación: TypeScript (	sc -b) PASS; 
+pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario SWC (UNLOADABLE_DEPENDENCY). Pendiente repetir build en un entorno que permita esos subprocesos; no se modificaron dependencias.
+

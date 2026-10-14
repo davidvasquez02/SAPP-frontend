@@ -1,0 +1,27 @@
+flowchart TB
+  F["F: SPA institucional React"]
+  P["P: SPA pública React"]
+  G["Gateway externo: configuración pendiente"]
+  subgraph Principal["B: aplicación Spring Boot principal"]
+    C["Controladores y filtro de identidad"]
+    S["Servicios de trámites y repositorios"]
+    W["Consumidor EventoCorreoService"]
+    C --> S
+    W --> E["EmailService"]
+  end
+  subgraph Publico["U: aplicación Spring Boot pública"]
+    CP["Controladores de aspirantes y evaluación"]
+    SP["Servicios y repositorios públicos"]
+    CP --> SP
+  end
+  DB[("PostgreSQL: datos de trámites y evento_correo")]
+  IAM["Directorio IAM"]
+  Mail["IAM o SMTP"]
+  F -.->|"HTTP: ruta externa por confirmar"| G
+  G -.->|"X-Internal-Token esperado"| C
+  P -->|"HTTP/JSON; ruta externa por confirmar"| CP
+  S --> DB
+  SP -->|"Datos y producción de eventos"| DB
+  W -->|"Reclama eventos y registra resultado"| DB
+  C -->|"AuthService"| IAM
+  E --> Mail

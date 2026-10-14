@@ -1,0 +1,16 @@
+flowchart LR
+  Gestion["Coordinación, secretaría y administración"]
+  Estudiante["Estudiante"]
+  Docente["Docente o director"]
+  Aspirante["Aspirante"]
+  Jurado["Jurado externo"]
+  SAPP["SAPP: apoyo a trámites de posgrados EISI-UIS"]
+  IAM["Gateway y directorio IAM externos"]
+  Correo["Servicio de correo: IAM o SMTP"]
+  Gestion --> SAPP
+  Estudiante --> SAPP
+  Docente --> SAPP
+  Aspirante --> SAPP
+  Jurado --> SAPP
+  SAPP -->|"Identidad y directorio"| IAM
+  SAPP -->|"Notificaciones"| Correo

@@ -1,0 +1,905 @@
+{
+  "date": "2026-10-10",
+  "scope": {
+    "F": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend",
+    "P": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public",
+    "B": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend",
+    "U": "D:/Users/david/Desktop/SAPP/sapp-public-backend"
+  },
+  "files": [
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/package.json",
+      "sha256": "5f45ac90c622e3c9af06ce7510b78b9ecac58fc8d390af208d511c35418618e3"
+    },
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/package-lock.json",
+      "sha256": "9cb3d1ff4ce792fac3aa4bf2341d03199b301a217753347eaf2f628356f8c05d"
+    },
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/main.tsx",
+      "sha256": "b493bd564ca42278d6551b7e6bf563a50113433a9558a3a31499e2fa843e8468"
+    },
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/app/routes/index.tsx",
+      "sha256": "f7407a4689aea3a27d16ca8dddac2090c7fae209fe8a3c2ef9cc49313b3c1874"
+    },
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/app/navigationItems.ts",
+      "sha256": "813cf4cfd15b9edf8c4f2615410956b40082cc8280a349c8c6852fad1db5fd56"
+    },
+    {
+      "evidence": "E01",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/auth/roleGuards.ts",
+      "sha256": "f2ceebb3f03fb936831d7f6a77d372011d57961b364ebe3d456a92a55035acf0"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/api/authService.ts",
+      "sha256": "07ed6f4bdd8964868e9721b3ed184c74dbccefaaffa29eaa9a4dc551bc151758"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/api/authMappers.ts",
+      "sha256": "4e9c5957ca16799871777e60af30560f7b949088d53fd1b920fa99a0b167954f"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/shared/http/httpClient.ts",
+      "sha256": "5f370ac2c6a494d28295a74fc2cc72f9fb218a9dd311340ea14352db0fc7c9a7"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/modules/auth/session/sessionStore.ts",
+      "sha256": "e118901be226f632a299b9696af10c28e923a128bd2989803dc0754903d1e962"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/context/Auth/AuthContext.tsx",
+      "sha256": "7ad8605ff218f94028147a0e13a461b739c470197fe3186c6323ee4dcfef1678"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/app/routes/protectedRoute.tsx",
+      "sha256": "650dc4e94a78f00cc5184df113885775fdc98f4911b03b5220509e6943858cd0"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/routes/RequireRoles/RequireRoles.tsx",
+      "sha256": "8a14d2c2dbc11c0f0f02578637cffb8a40d2dc6c543845ddeaad0aece5ff70b1"
+    },
+    {
+      "evidence": "E02",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/api/config.ts",
+      "sha256": "70d6d640ed433478de0e95fc3aabf9ed8e1df716d0fb8f79f32d8e25c60266d7"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/package.json",
+      "sha256": "b9e9baba7bb172334afe7db2f0695692c05e5b0cffa4c3a675154a6a9a7e1012"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/package-lock.json",
+      "sha256": "ba6d439d067bde76c43e811f4f2c263beed288184a19dd2da9cd1f73a47ba7b9"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/App.tsx",
+      "sha256": "92c296a2d6383de5a69d6318dae67e13d9b13146482d130e6aee8a7b8d17a0b2"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/context/Auth/AuthContext.tsx",
+      "sha256": "bcf3fd73719f78375f31f3d944d702946a2b32fb10cbdac8151a7e387d0003ed"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/api/aspiranteAuthService.ts",
+      "sha256": "1a724e7ba38ee2a5798ec95d3f74da3c0d8c388d0daaeeb7f669b17c412ee1ea"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/api/evaluacionJuradoService.ts",
+      "sha256": "2f306c4f1b78dade1f729b779ec7be0dee382cbd86bb88c27fab2ad5193773d7"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/pages/EvaluacionJurado/EvaluacionJuradoPage.tsx",
+      "sha256": "4e7d25868a95e424fae89a8df921fb14000d981456d6534bcb65826dd14feb50"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/pages/AspiranteDocumentos/AspiranteDocumentosPage.tsx",
+      "sha256": "654c436aa6476de7eac49e9e20b08dd5aea8c87a379ff57b3a334a4f3ef935dc"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/modules/documentos/documentFormatConfig.ts",
+      "sha256": "3e6621af61e06ca09ce9112164f9235281eed6a46d41faa98ed0f012db0456d3"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/utils/sha256.ts",
+      "sha256": "04f63c3e6c8d394af0136b177f83f2b79acf519bfbaafb0fa0e2c8f33ac7c835"
+    },
+    {
+      "evidence": "E03",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/src/api/config.ts",
+      "sha256": "191e82907f004bae5ce600db647e1a5bc33d3a4827f1f409069374d1c47e46ab"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/pom.xml",
+      "sha256": "91d4546b7b26b8a952494fff13871472040e4ab9c6dbb19a7ed5409d93f60930"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/SappApplication.java",
+      "sha256": "03b90149b00539ec0566a553413afd1bd716edd7d9e7810a845b3fffcf8a27b8"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/AuthService.java",
+      "sha256": "538ba4e48e1bd18398366e3d822c94728b67054fdcd40f3f4f23ad658c2955a9"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/config/InfrastructureHeadersFilter.java",
+      "sha256": "3ae05d8d46a75cf79b9c20e5acf8a8c95c3cdc7d46eb571e4a373f9ac1189f38"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/config/SecurityConfig.java",
+      "sha256": "1d009044a41b8075372ab452da8dd95937f1e8ec6a75869fcb6b05428b1cda52"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/client/IamDirectoryClient.java",
+      "sha256": "8011da35dd29e93c1f83435207bf32c0a0c4bf8441f0e3a4030d235547af693f"
+    },
+    {
+      "evidence": "E04",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/UsuarioActualService.java",
+      "sha256": "0b0f79acf8682107a2d691ce110cad13590f416463ac73b3635b9ba2e0c5ce2a"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/repository/MatriculaAcademicaRepository.java",
+      "sha256": "112eb144ad1d7748876bf7e6b986e5497fd039b427cec3741bd436fa8d44e456"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/repository/MatriculaAcademicaRepositoryImpl.java",
+      "sha256": "1602be82e9645ddf1c77d29dfb20575a72725cb8ac2ac0c91ef9f1986b0f377f"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/JPARepository/MatriculaAcademicaJPARepository.java",
+      "sha256": "c7d45698d80f0f98507be09dce801504be99a82eaf621c49ee38ae234324b790"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/mapper/MatriculaAcademicaMapper.java",
+      "sha256": "833e34f2cb185124045e7cfd829a034834093a43f5d0783ad69262d0b943471e"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/config/GlobalExceptionHandler.java",
+      "sha256": "992355846b5fcce4ac1b8e0cfa5ff802b3179ffc0c6d97e21fc1bf98b208b316"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/StandardResponseFactory.java",
+      "sha256": "3bc18e0bd79b81ce162ed2496a6c2de00890d1a31dff3099ee850241d1cb79f7"
+    },
+    {
+      "evidence": "E05",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/dto/response/StandardResponse.java",
+      "sha256": "6f8143c1c596a064f1431e61028b258c188473f2e2823e7ee1377729efca0dde"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/AspiranteController.java",
+      "sha256": "b3b307acf51e1d9a223a62af6ab542c15d5753d57fdf2c61d2d49c26c7ee769d"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/AspiranteService.java",
+      "sha256": "f5e92ec0965a9c906af4a2e1a31771810ef4ab6fd1ae26621706dbf9d4add4ec"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/InscripcionAdmisionController.java",
+      "sha256": "3d688744d3d944a91c9830b401aebf8315c3e7626b183e13b102b3fa6636cea0"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/InscripcionAdmisionService.java",
+      "sha256": "d15e066c637b701253aa646624214e919283c70dd5b3678a05df4a7eafd52f9e"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/EvaluacionAdmisionController.java",
+      "sha256": "ce2b70604b75a45465210a9e7fae476fdf879ac433a30c70cac785b21a416b96"
+    },
+    {
+      "evidence": "E06",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/EvaluacionAdmisionService.java",
+      "sha256": "a44665d96894cfabfd9585454e30019ab4c3929d8991ca9300b52ee80f31e2b6"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/controller/AspiranteController.java",
+      "sha256": "67f22816dde1a9b2c69b8c4771af4f806133b8c15f73220d84fc15cd74ccd1fd"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/domain/service/AspiranteService.java",
+      "sha256": "18a471c6d452cb1524ea664ef132b8e6fce1db1a855bebb5e115cf27a5b181fe"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/controller/InscripcionAdmisionController.java",
+      "sha256": "052f0bc30ea1457f30c0a5cc6402ffe199cda47e9505a64855f26390e945c6f4"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/domain/service/InscripcionAdmisionService.java",
+      "sha256": "b7167bcfb3317c67b2a38c4bcf470b41d65faf8df79e0262e33af77e42c84a87"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/domain/service/DocumentoService.java",
+      "sha256": "e055f3e92bf928f113f1026065364f2b8f5487aed8c36e6c69451a878b1e8b6c"
+    },
+    {
+      "evidence": "E07",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/controller/DocumentoContoller.java",
+      "sha256": "347b4be1b091e9c0707098177c88f07729c82a04b85f24f90a44b6cb592d531a"
+    },
+    {
+      "evidence": "E08",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/MatriculaAcademicaController.java",
+      "sha256": "75eb2f7c3f3649f5f7e0f28f98b0c5c04d7700b4f2b7ee8942f4a8ac9af040c3"
+    },
+    {
+      "evidence": "E08",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/MatriculaAcademicaService.java",
+      "sha256": "da5f8c8f308f018ae77e475ce124d1aca8c38bee88f297dd3470aca532f22b28"
+    },
+    {
+      "evidence": "E08",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/dto/response/MatriculaVigenteEstadoResponse.java",
+      "sha256": "eda7592ad873d28216c4f35d9e106f8a6831a23f340ee59b118c8548cb7d1597"
+    },
+    {
+      "evidence": "E08",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/dto/request/MatriculaAcademicaCreateRequest.java",
+      "sha256": "db456d8f174eacc60466e4e8772ec249bc511ba127f22c9743fe99dba87d4902"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/SolicitudesAcademicaController.java",
+      "sha256": "36b214564396400759decbb0362d5291147c77c14149cfb0c33f1b12698ca666"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/SolicitudesAcademicaService.java",
+      "sha256": "d64acba83cc96148b78cdcf11f87b0b509e5a83ca64d701814e347bab573fd9a"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/HistorialEstadoSolicitudService.java",
+      "sha256": "8a0f13dd148d3f083e481825e0ddb7b6a3bcdff1107de5c2f387baf9a4c70810"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/flujo/FlujoSolicitudResolver.java",
+      "sha256": "d818a9f70726a19fe0c667a95df096e2daac48761f7351bd221bbe62131a95ab"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/flujo/FlujoGenerico.java",
+      "sha256": "6f9f1de15769951a4d40925ecba79321e137efa10d5b37c4ac2235d6eb809e88"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/flujo/FlujoSolicitudAcademica.java",
+      "sha256": "b6933069d66f697339fbcc0fb1ca0a56a39d8ba808b825e0de41e066fb9283f1"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/dto/request/SolicitudesAcademicaRequest.java",
+      "sha256": "18d6150064b7b83b31486d5bb763fa7645ea6455c4ba47b16dfc412321369962"
+    },
+    {
+      "evidence": "E09",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/utils/SappEnum.java",
+      "sha256": "9fb5a9222f63c236b71132fb4ceb69fe72689ae68ce495862f16027258b178a9"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/pages/ConvocatoriaDetalle/ConvocatoriaDetallePage.tsx",
+      "sha256": "f65bd69b1b158ce1ec3a4192cf9e6a99bfe15fedc1b4436783f6204e35e47605"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage.tsx",
+      "sha256": "745e4fe51b39eb9ed58e348944ee84eb2e057cc31b3e888916fec3013618a918"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/pages/Matricula/MatriculaPage.tsx",
+      "sha256": "25079336b6b11efc7028a4ab66543e9f68d32d0ad4e3391af1a3cc12a09494c8"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx",
+      "sha256": "98aaaf7fba4584db01f6ff47142a695768d8c4ada29b9da85e0d00cb9c9a0971"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/modules/matricula/services/matriculaAcademicaService.ts",
+      "sha256": "3d8349ed3e2ac27fed7dbf061185d0ff10be3a7060c33ebe10921ace02bdaeaa"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/modules/solicitudes/components/SolicitudEstudianteForm/SolicitudEstudianteForm.tsx",
+      "sha256": "aae2fa24db473802d1f6cd089724a440c88bb6fa39014e2bfef702b28cbb2bf4"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/pages/SolicitudDetalle/SolicitudDetallePage.tsx",
+      "sha256": "dfcec754df3ce30a4fd4201eaef6b1b8699e11693711cc88607d6f1ac6e31577"
+    },
+    {
+      "evidence": "E10",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/modules/solicitudes/api/solicitudCambioEstadoService.ts",
+      "sha256": "28acd93870d0b31dee36b4a348eb46953bf53c8bf59762ef11cd0631c278921f"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/DocumentoContoller.java",
+      "sha256": "8e7e414b19b1036537510a0484c6448f58d32170c42174080f00c23d66eca9fc"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/DocumentosContenidoService.java",
+      "sha256": "8900ae81fcb55598c92e83934a63f6039d29851e8efb06a5f3b0912593cdd51c"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/DocumentoService.java",
+      "sha256": "5aa6473e9613485886b642f8b782a7c44adc40b24606874015a13ed72f66c287"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/FirmaDocumentoService.java",
+      "sha256": "7553b917c41ac0f7d9d849a031bd9137ac03ac2190f479fbe8de3f43068dbb69"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/dto/request/DocumentoRequest.java",
+      "sha256": "46f0f285bfb412377eff082c931129a7fb310904225bcc5b01a8309b33bce8a8"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/Documento.java",
+      "sha256": "4515264ca3bc6359db6c6bf19fb00d00a62026712c84d04d5fb689053cf386a6"
+    },
+    {
+      "evidence": "E11",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/DocumentosContenido.java",
+      "sha256": "aed83d750658048bfaa08ba774bf3b9f9672ca251be864246573efd6b4ecfcaf"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/UsuarioSapp.java",
+      "sha256": "063d6baa278c6a8d8b3bfad4f1cb7d6384ab79118f898efb56ad1e437de8342c"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/Estudiante.java",
+      "sha256": "49321bbe10ec6fe03c35beaa2d4eb36fb87aa141e1a3d032c472d901e27bbf09"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/SolicitudesAcademica.java",
+      "sha256": "c931a7ce98a21cfc2b8632a41828d5054c934eff38e9e6b3a9c15c327a4df1ff"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/entity/HistorialEstadoSolicitud.java",
+      "sha256": "a2f037734d2fd96c956be0b3e030936a3575cea1c0f102413c64079bafb4d571"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/sapp.sql",
+      "sha256": "3335c068f5d3e2ac785e6057cbec63c756d0861887f486aa7d6017957fb466de"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_merge_personas_idp.sql",
+      "sha256": "f2fb4d828e824dc2cf0199f28b0d2d887a03fd3c890d7497e1b8e33b94b63f90"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_estudiantes_unique_usuario_programa.sql",
+      "sha256": "bde7ee36ac830cd2b665ab26f4c43ad9e31ccc43adb76f4bacdcc404a83b001a"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_evaluacion_trabajos_grado.sql",
+      "sha256": "b3426956c2cdf5e7f2ba321c11107869927a62ef6342d30b8fe6735217b0e441"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_liquidacion_matricula_tablas.sql",
+      "sha256": "090e4ae6628fb46544eb3c11362f69cbda138734905ca643fd3393008516b795"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_evento_correo.sql",
+      "sha256": "cb5aa00839cb2824690151fa5127d58e7334491d9b3e8716db8a3c56aa4d40c0"
+    },
+    {
+      "evidence": "E12",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/db/migration_solicitudes_academicas_motivo_rechazo.sql",
+      "sha256": "5a2ddf436df1b7336d79ad38adc08763418adc369af3f2dffbce77be5f915ec8"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/EmailService.java",
+      "sha256": "b69474f12b2658aa281bd3c047cc8a2da46231746ba6cd74217aa7318d546f5e"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/IamEmailSenderClient.java",
+      "sha256": "79b68864e6d181698d970ee32adbeecab5d54cda80f9aa334268aac76922ff67"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/SmtpEmailSenderClient.java",
+      "sha256": "63057877cc412c84db3e32031dd3d9b5cfe2f81a0aa257afcb0638cf69fe07a7"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/IamM2mTokenService.java",
+      "sha256": "d01e959985e813cda60bda758c0c72f1661c30984467bc73f936dffd82f88424"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/PlantillaCorreoService.java",
+      "sha256": "a20e4563df0f1fc97ae7d874366cd4d887e0015c3cbb2d6d85b7e6c3e457d127"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/EventoCorreoService.java",
+      "sha256": "5ccb234c24c5fe9807fc55d8769fe1d68bca1553d1f92b42d1f21486a7292d02"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/NotificacionSolicitudAcademicaService.java",
+      "sha256": "5f4b7bce6ef55b54864c3181dc7919c34813abaf8f4d30dc087a2d83a05660cc"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/JPARepository/EventoCorreoJpaRepository.java",
+      "sha256": "ae592ae310a84d8cc40caf0f1e6c4eeb7931020e5f5021a3ff81500974f51173"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/persistence/repository/EventoCorreoRepositoryImpl.java",
+      "sha256": "b518297e6d4432aad228f10b105b36d6cae170ce641e7bbe8017c0e98cffb68a"
+    },
+    {
+      "evidence": "E13",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/scheduler/EventoCorreoScheduler.java",
+      "sha256": "38328a74260a1d25bec85f5b44e6ca30d914cf63ca385b8ad34800655e9d642b"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/pom.xml",
+      "sha256": "6520422d18877f9c73c7ac1b612a0d3b0e44f14f23b70900438a3736c8fbd238"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/controller/EvaluacionPublicaController.java",
+      "sha256": "aaecb73397b85f22d87410f94393d83e4d50711a9f6bb01ac78ac1c0b92e2311"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/domain/service/EvaluacionPublicaService.java",
+      "sha256": "8bcca84efd8c8a9e4d681e7a879f5dc63df0cefb10d796fbadbb47aa473ae5dd"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/persistence/entity/AccesoEvaluador.java",
+      "sha256": "2b56864e3c78fff827b4da381f0487547d925df2cc1207951d0beea799bd9ead"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/persistence/entity/EventoCorreo.java",
+      "sha256": "e08cd6ecb667541e02625ff820f4e159332990dccbe19bf23c1e8e64acb9976b"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/persistence/repository/SolicitudAcademicaEstadoRepositoryImpl.java",
+      "sha256": "bec1fbe0b5f73c07e318a69f7d26326e6769ad884696376205101fcfb2f5f98b"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/config/RequestLoggingFilter.java",
+      "sha256": "222d8e89b7fcafc6227aa23d321861c46394502f84966f854ee40b3316182a92"
+    },
+    {
+      "evidence": "E14",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/java/com/eisi/sapp/web/config/SecurityConfig.java",
+      "sha256": "6353d683fd0b3fde3405e1aaa39d98cb832da901b0ebe6474fe95b3af37f6c3a"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/LiquidacionMatriculaController.java",
+      "sha256": "a5129b80bab64e5f7115ba2306738d7f632d33e6c95ec5af8093d223492062d0"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/controller/ProcesoEvaluacionTgController.java",
+      "sha256": "27aac7c8cbecce63427a64d861b5163ef970ac2c03ff06347e79eda6dbe27101"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/ProcesoLiquidacionService.java",
+      "sha256": "a5c04f1b19588c0db6a7487f536a1de9a0114868561da507cdd0989a485d2bf4"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/LiquidacionCalculoService.java",
+      "sha256": "83fba1a12ea75d4523dbdf602da437a83a91ae68a488274d44f3428d65e27839"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/MiLiquidacionService.java",
+      "sha256": "0ba6d019afe489d84965254d8c06dd7e08e803abb2298c8b38fa23f31c4cdccc"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/ProcesoEvaluacionTgService.java",
+      "sha256": "a4a3e3017179f6db0f0045b6735c6802ba50806fc95a398eed0503b559fd1bad"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/AccesoEvaluadorService.java",
+      "sha256": "ff6377fca1539cbcc4023f5f406651e8ba8e74d41007396925c496f8e141496c"
+    },
+    {
+      "evidence": "E15",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/domain/service/RecordatorioCandidaturaService.java",
+      "sha256": "4759eec5bce3544d6f3e3f387901c52d56792f3562fa677d61b0d89a9ad6dd02"
+    },
+    {
+      "evidence": "E16",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/Dockerfile",
+      "sha256": "f07a3a5f91ae3d36b65ef3088355873e252c350e286a5a6fb230c76b13228a56"
+    },
+    {
+      "evidence": "E16",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/nginx.conf",
+      "sha256": "b9d54bdeb2d09279b4628db90a13f0c529a6ae6bd1e6c384c69262ced11fe145"
+    },
+    {
+      "evidence": "E16",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/.gitlab-ci.yml",
+      "sha256": "ff6adcee277807bfb0bba191e28010f6edff48819d370bc5b7e13fa087b417ee"
+    },
+    {
+      "evidence": "E16",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/vite.config.ts",
+      "sha256": "2b3b0643e07081ea78551644bead8f6577aece4e466e80ca826419164dab16ff"
+    },
+    {
+      "evidence": "E17",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/Dockerfile",
+      "sha256": "f07a3a5f91ae3d36b65ef3088355873e252c350e286a5a6fb230c76b13228a56"
+    },
+    {
+      "evidence": "E17",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/nginx.conf",
+      "sha256": "1ef025977b7051b8468dd933da3aaaba4e0b3b64e217d7ceb583060b6a8997ae"
+    },
+    {
+      "evidence": "E17",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/.gitlab-ci.yml",
+      "sha256": "ff6adcee277807bfb0bba191e28010f6edff48819d370bc5b7e13fa087b417ee"
+    },
+    {
+      "evidence": "E17",
+      "project": "P",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend-public/SAPP-frontend-public/SAPP-frontend-public/vite.config.ts",
+      "sha256": "28aeb0e29e7f27ef98825ed23be0911cbfb42cbe06204bcb05c112c21e9611f8"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/Dockerfile",
+      "sha256": "d9b36d5a88f84a414ff3eb5fe42946823f0862fda9ad5f8ae3dedd0917d23865"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/.gitlab-ci.yml",
+      "sha256": "53164aea508f8af1e88cc2e1247fa0046bd1f858d6b9b287657572320e830ade"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/.mvn/wrapper/maven-wrapper.properties",
+      "sha256": "821602a8cceb1f8f5945f80b82b27617ba88b74a8afae230a5df80affcb6a8ab"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/application.properties",
+      "sha256": "8536edf075468b14b7b63c115aecc5c4fc20a856de4ada4a07d0e4019135223c"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/resources/application-local.properties",
+      "sha256": "d3438a395d43f1b3b74b545b375493f0f5f12d8ded84f383148fca669e0249d6"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/config/FeignSslConfig.java",
+      "sha256": "4ed25f0185a818a3abfc83a56bec731d6530672bac8fdbfce68245877881f67d"
+    },
+    {
+      "evidence": "E18",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/main/java/com/eisi/sapp/web/config/RequestLoggingFilter.java",
+      "sha256": "961258c009e10c057ddf326d5251a25a06d6ae2a7ecd894633cb11643a546775"
+    },
+    {
+      "evidence": "E19",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/Dockerfile",
+      "sha256": "d9b36d5a88f84a414ff3eb5fe42946823f0862fda9ad5f8ae3dedd0917d23865"
+    },
+    {
+      "evidence": "E19",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/.gitlab-ci.yml",
+      "sha256": "de06a7f0006fb1c3387d07bf7e69beab90b16673db5283831d5f43a686ec94a6"
+    },
+    {
+      "evidence": "E19",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/.mvn/wrapper/maven-wrapper.properties",
+      "sha256": "821602a8cceb1f8f5945f80b82b27617ba88b74a8afae230a5df80affcb6a8ab"
+    },
+    {
+      "evidence": "E19",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/main/resources/application.properties",
+      "sha256": "0dd2e0ccf624c444d7c1ebbc8ca8d708a9e1f8c80c903e1256e0d51029df487c"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/tests/estadoSolicitud.test.ts",
+      "sha256": "4d662ccf1415b5737a8448e064fcd2fb0ad30a5972a59a351ce837534a09fd64"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/tests/matriculaFinancieraRules.test.ts",
+      "sha256": "fe90411aa8f53fd502089530245ea74fd67bba6859f348f3bd6ecf5b70d4e004"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/tests/solicitudDetalleAutorizacion.test.ts",
+      "sha256": "ef246888cc8aa0d07de08a34a53faf9ff86a47b67440468c94a0cf64f141b495"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/tests/reportesFaltantes.test.mjs",
+      "sha256": "2795754ab7a5ae658f1b45ef3c08bf768a7aa3fc1acac6d88e8f8707dfcc17b8"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/tests/integration/administracionAcademicaRoutes.test.mjs",
+      "sha256": "63e396d30c83b79e594ffedfb22c0f0426cd3262fa2804d76cd8eca528bab4aa"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/components/DocumentUploadCard/DocumentUploadCard.tsx",
+      "sha256": "15c251b02e3b913770b9d6eb9783c05d212e521ddbab434f503c0f6fc26db151"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/shared/files/pdfFile.ts",
+      "sha256": "68602a0484190655e110e20fa20ed4e333f1d5f3ad84c25833604574244ae5e4"
+    },
+    {
+      "evidence": "E20",
+      "project": "F",
+      "path": "D:/Users/david/Desktop/SAPP/react - curso/clase 1/SAPP-frontend/src/styles/globals.css",
+      "sha256": "d53e8b3708c7772e434738f96e943037c8eca19446b3e15eac4d79b5a4039a92"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/domain/service/AuthServiceTest.java",
+      "sha256": "1b6aec0069c03652effa5ca4088afb9727d320c21db4269111f55fcb2ad5f3dd"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/domain/service/MatriculaAcademicaServiceTest.java",
+      "sha256": "5d503a8960c5f4aedd4351e996885472f1adb8ed9683f578fa5216c6c2ab5c7f"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/domain/service/SolicitudesAcademicaServiceTest.java",
+      "sha256": "5a69a25be161616332d3f097bb6f7c0171b86d410569366a1b0421504cddf228"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/domain/service/EventoCorreoServiceTest.java",
+      "sha256": "a658596a64b61285647328962d11870453fb67ee128d00b54ee259058eaf1085"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/domain/service/MiLiquidacionServiceTest.java",
+      "sha256": "e32084448c7e38f49e614ce28a460e6aa7fb13bd0a68e2a3bf03bb62cf45d66d"
+    },
+    {
+      "evidence": "E21",
+      "project": "B",
+      "path": "D:/Users/david/Desktop/SAPP/back - v2/sapp-backend/src/test/java/com/eisi/sapp/web/config/InfrastructureHeadersFilterTest.java",
+      "sha256": "811c074c15a4d69e7d0ec764413a7706a7438240c3133fcb3a754c51190caab5"
+    },
+    {
+      "evidence": "E22",
+      "project": "U",
+      "path": "D:/Users/david/Desktop/SAPP/sapp-public-backend/src/test/java/com/eisi/sapp/SappPublicApplicationTests.java",
+      "sha256": "74cefaba93b926f517a1e1558241f8368f8bd05aef55a6881629e7bc01cf2c5c"
+    }
+  ]
+}

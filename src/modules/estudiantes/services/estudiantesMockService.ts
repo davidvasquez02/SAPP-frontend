@@ -34,7 +34,7 @@ type EstudianteConsultaBackend = {
       mimeType: string | null
     } | null
   }
-  nombreCompleto: string
+  nombreCompleto: string | null
   tipoDocumento?: string | null
   tipoDocumentoIdentificacion?: string | null
   numeroDocumento: string | null
@@ -120,7 +120,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     idAspirante: item.estudiante.idAspirante,
     codigo: item.estudiante.codigoEstudianteUis?.trim() || `EST-${item.estudiante.id}`,
     codigoEstudianteUis: item.estudiante.codigoEstudianteUis?.trim() || null,
-    nombreCompleto: item.nombreCompleto.trim(),
+    nombreCompleto: item.nombreCompleto?.trim() || 'Nombre no disponible',
     fotoUrl: null,
     foto: item.estudiante.foto ?? null,
     tipoDocumento: resolveTipoDocumento(item),

@@ -1,0 +1,24 @@
+sequenceDiagram
+  actor U as Usuario institucional
+  participant F as AuthProvider
+  participant G as Gateway externo
+  participant B as Filtro y AuthService
+  participant I as Directorio IAM
+  participant D as PostgreSQL
+  Note over U,G: Autenticación previa y protocolo fuera de los cuatro proyectos
+  U->>F: Abrir SPA
+  F->>G: GET /api/sapp/inicio
+  G->>B: GET /inicio y X-Internal-Token
+  B->>B: Verificar firma y extraer sujeto
+  alt Token ausente o inválido
+    B-->>F: HTTP 401
+  else Token verificado
+    B->>I: Consultar usuario por UUID
+    I-->>B: Identidad y roles
+    B->>D: Buscar UsuarioSapp por idp_id y datos académicos
+    D-->>B: Registro local
+    B->>B: Exigir registro local y rol SAPP permitido
+    B-->>F: UsuarioSAPPResponse o error
+    F->>F: Guardar sesión y aplicar guards
+  end
+  Note over F,B: NO_TOKEN es marcador del cliente; no es una credencial JWT
