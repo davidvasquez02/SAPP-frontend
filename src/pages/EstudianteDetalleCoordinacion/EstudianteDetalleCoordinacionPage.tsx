@@ -611,6 +611,7 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [isDownloadingZip, setIsDownloadingZip] = useState(false)
   const [downloadZipError, setDownloadZipError] = useState<string | null>(null)
   const loadedDocumentsEstudianteIdRef = useRef<number | null>(null)
+  const loadedEstudianteIdRef = useRef<number | null>(null)
 
   useEffect(() => () => {
     window.setTimeout(() => {
@@ -629,6 +630,13 @@ const EstudianteDetalleCoordinacionPage = () => {
       return
     }
 
+    // Una vez cargado el estudiante para este id, esta carga inicial no debe repetirse: si lo
+    // hiciera (p. ej. por un recalculo de estudianteFromState), pisaria con la foto vieja de
+    // location.state el estado que el usuario ya actualizo en pantalla (ver handleEstadoChange).
+    if (loadedEstudianteIdRef.current === id) {
+      return
+    }
+
     const loadEstudiante = async () => {
       const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
 
@@ -636,6 +644,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         setEstudiante(stateEstudiante)
         setIsLoading(false)
         setError(null)
+        loadedEstudianteIdRef.current = id
         return
       }
 
@@ -651,6 +660,7 @@ const EstudianteDetalleCoordinacionPage = () => {
         }
 
         setEstudiante(data)
+        loadedEstudianteIdRef.current = id
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
       } finally {
@@ -815,11 +825,14 @@ const EstudianteDetalleCoordinacionPage = () => {
     setIsUpdatingEstado(true)
     setEstadoMessage(null)
     setEstadoError(null)
+    // Se limpia antes del await, no despues: si se limpiara solo tras el exito, alguien que
+    // navegue a la lista mientras el PUT todavia esta en curso la encontraria sin invalidar y
+    // veria el estado viejo hasta una segunda visita.
+    clearEstudiantesListCache()
 
     try {
       await updateEstadoEstudiante(estudiante.id, nuevoEstado)
       setEstudiante((current) => current ? { ...current, estadoAcademico: nuevoEstado } : current)
-      clearEstudiantesListCache()
       setEstadoMessage(`El estudiante ahora está ${formatEstado(nuevoEstado).toLowerCase()}.`)
     } catch (err) {
       setEstadoError(err instanceof Error ? err.message : 'No fue posible actualizar el estado del estudiante.')
