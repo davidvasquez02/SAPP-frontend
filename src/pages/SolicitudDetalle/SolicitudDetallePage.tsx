@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { ScrollText } from 'lucide-react'
@@ -531,7 +532,7 @@ const SolicitudDetallePage = () => {
               <div className="solicitud-detalle-page__item">
                 <dt>Estudiante</dt>
                 <dd>
-                  {solicitud.estudiante} ({solicitud.codigoEstudianteUis})
+                  {formatNombrePersona(solicitud.estudiante)} ({solicitud.codigoEstudianteUis})
                 </dd>
               </div>
               <div className="solicitud-detalle-page__item">

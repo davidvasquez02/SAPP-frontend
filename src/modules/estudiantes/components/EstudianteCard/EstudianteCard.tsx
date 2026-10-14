@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../../../shared/utils/formatNombrePersona'
 import { type KeyboardEvent } from 'react'
 import { CalendarDays } from 'lucide-react'
 import type { EstudianteCoordinacion } from '../../types'
@@ -41,7 +42,7 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
       className={`estudiante-card${isInactive ? ' estudiante-card--inactive' : ''}`}
       role="link"
       tabIndex={0}
-      aria-label={`Ver perfil de ${estudiante.nombreCompleto}`}
+      aria-label={`Ver perfil de ${formatNombrePersona(estudiante.nombreCompleto)}`}
       onClick={onClick}
       onKeyDown={handleKeyDown}
     >
@@ -61,7 +62,7 @@ const EstudianteCard = ({ estudiante, onClick }: EstudianteCardProps) => {
 
       <div className="estudiante-card__content">
         <header className="estudiante-card__header">
-          <h3 className="estudiante-card__title">{estudiante.nombreCompleto}</h3>
+          <h3 className="estudiante-card__title">{formatNombrePersona(estudiante.nombreCompleto)}</h3>
           <p className="estudiante-card__code">Código UIS {estudiante.codigo}</p>
         </header>
 

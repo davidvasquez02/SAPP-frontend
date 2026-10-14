@@ -2060,3 +2060,12 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - Validación de compilación: TypeScript (	sc -b) PASS; 
 pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario SWC (UNLOADABLE_DEPENDENCY). Pendiente repetir build en un entorno que permita esos subprocesos; no se modificaron dependencias.
 
+
+## Ajustes 2026-10-14 — programa y nombres de estudiantes
+
+- Listado de coordinación conserva Doctorado/Maestría al recargar mediante `sessionStorage` (`sapp.estudiantes.programType`); el snapshot de regreso del detalle tiene prioridad. Valores ausentes/inválidos o almacenamiento bloqueado usan Doctorado y mantienen operativa la navegación.
+- `src/shared/utils/formatNombrePersona.ts` reúne el formato de presentación: primera letra de cada palabra en mayúscula, resto en minúscula, con tildes y nombres compuestos con guion. Ejemplo: `JOSÉ MARÍA DE LA PEÑA` → `José María De La Peña`. Vacíos conservan los mensajes existentes. El selector financiero preserva código UIS y programa en la etiqueta compuesta.
+- Aplicado a tarjetas/detalle de estudiantes, egresados, matrícula académica/financiera, créditos, solicitudes, reportes, perfil y encabezado. No se modifican payloads, nombres en BD, permisos ni endpoints.
+- Verificación: `npx tsc -b`, ESLint de todos los archivos fuente modificados y `git diff --check` PASS. Pruebas: `node --test --test-isolation=none tests/estudiantesConsulta.test.mjs tests/estudiantesPresentacion.test.mjs` PASS (2/2). La regresión incluye nulos, tildes, guiones, etiqueta compuesta, ambos programas y almacenamiento inválido/bloqueado. Build: TypeScript completó; Vite falla por el problema ambiental previo `spawn EPERM` / SWC `UNLOADABLE_DEPENDENCY`.
+- Entorno reutilizado: Windows/PowerShell, Node 24.11.0, npm 11.6.1; versiones de paquetes y ejecución del proyecto permanecen como se documentaron. Sin instalaciones, entornos Python/Conda/Poetry, seeds ni datasets nuevos. Reutilizar `node_modules` y lockfile.
+- Continuidad: comprobar en sesión autenticada Maestría → recargar → Maestría y volver desde detalle; revisar nombres en módulos con datos reales. No se ejecutó navegación autenticada. Logs de validación en la terminal de esta conversación.

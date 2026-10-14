@@ -20,7 +20,7 @@ test('listado y detalle toleran nombres nulos, vacíos y con espacios', async (t
   const { getEstudiantesByPrograma, getEstudianteById } = await server.ssrLoadModule('/src/modules/estudiantes/services/estudiantesMockService.ts')
   const estudiantes = await getEstudiantesByPrograma(1)
   assert.equal(estudiantes.length, 4)
-  assert.deepEqual(estudiantes.map((item) => item.nombreCompleto), ['Nombre no disponible', 'Nombre no disponible', 'Nombre no disponible', 'Persona de prueba'])
+  assert.deepEqual(estudiantes.map((item) => item.nombreCompleto), ['Nombre no disponible', 'Nombre no disponible', 'Nombre no disponible', 'Persona De Prueba'])
   assert.equal(estudiantes[0].numeroDocumento, 'N/A')
   assert.equal((await getEstudianteById(1)).nombreCompleto, 'Nombre no disponible')
 })

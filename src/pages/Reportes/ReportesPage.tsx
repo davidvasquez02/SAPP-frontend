@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ModuleLayout } from '../../components'
@@ -239,7 +240,7 @@ const ReportesPage = () => {
                 {faltantes.personasConDocumentosFaltantes.map((persona) => (
                   <details key={persona.id} className="reports__missing-person">
                     <summary>
-                      <span><strong>{persona.nombreCompleto}</strong><small>Documento {persona.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${persona.id}` : ''}</small></span>
+                      <span><strong>{formatNombrePersona(persona.nombreCompleto)}</strong><small>Documento {persona.documento || 'no registrado'}{tipo === 'ADMISION' ? ` · Inscripción ${persona.id}` : ''}</small></span>
                       <span className="reports__missing-count">{persona.documentosFaltantes.length} pendiente{persona.documentosFaltantes.length === 1 ? '' : 's'}</span>
                     </summary>
                     <ul>{persona.documentosFaltantes.map((documento) => <li key={documento}>{documento}</li>)}</ul>

@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
@@ -441,7 +442,7 @@ const StudentProfileHeader = ({
           <img
             className="estudiante-detalle__profile-photo"
             src={fotoSrc}
-            alt={`Foto de ${estudiante.nombreCompleto}`}
+            alt={`Foto de ${formatNombrePersona(estudiante.nombreCompleto)}`}
           />
         ) : (
           <div className="estudiante-detalle__profile-placeholder" aria-label="Sin foto">
@@ -455,7 +456,7 @@ const StudentProfileHeader = ({
 
       <div className="estudiante-detalle__profile-main">
         <span className="estudiante-detalle__eyebrow">Perfil académico</span>
-        <h1 className="estudiante-detalle__title">{estudiante.nombreCompleto || 'Sin información'}</h1>
+        <h1 className="estudiante-detalle__title">{formatNombrePersona(estudiante.nombreCompleto) || 'Sin información'}</h1>
         <div className="estudiante-detalle__profile-tags" aria-label="Resumen académico">
           <span className="estudiante-detalle__code-pill">Código UIS {getCodigoEstudianteUis(estudiante) || EMPTY_VALUE}</span>
           <span className="estudiante-detalle__program-pill">{getProgramaDisplay(estudiante)}</span>

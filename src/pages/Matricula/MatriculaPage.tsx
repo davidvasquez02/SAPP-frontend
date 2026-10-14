@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import { Link } from "react-router-dom";
@@ -973,7 +974,7 @@ const MatriculaPage = () => {
                       {paginatedMatriculas.map((item) => (
                         <tr key={item.id}>
                           <td>
-                            <strong>{item.estudianteNombreCompleto}</strong>
+                            <strong>{formatNombrePersona(item.estudianteNombreCompleto)}</strong>
                             <br />
                             <small>
                               Código UIS: {item.codigoEstudianteUis ?? "—"}
@@ -1013,7 +1014,7 @@ const MatriculaPage = () => {
                     <article className="matricula-page__mobile-card" key={item.id}>
                       <header className="matricula-page__mobile-card-header">
                         <div>
-                          <h4>{item.estudianteNombreCompleto}</h4>
+                          <h4>{formatNombrePersona(item.estudianteNombreCompleto)}</h4>
                           <p>Código UIS: {item.codigoEstudianteUis ?? "—"}</p>
                         </div>
                         <span className={getMatriculaEstadoClassName(item.estado)}>

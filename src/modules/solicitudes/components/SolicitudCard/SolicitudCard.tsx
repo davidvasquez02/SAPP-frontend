@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../../../shared/utils/formatNombrePersona'
 import type { SolicitudCoordinadorDto } from '../../types'
 import StatusBadge from '../StatusBadge/StatusBadge'
 import './SolicitudCard.css'
@@ -44,7 +45,7 @@ const SolicitudCard = ({ solicitud, onClick }: SolicitudCardProps) => {
       </header>
 
       <p className="solicitud-card__subtitle">
-        {solicitud.estudiante} • {solicitud.codigoEstudianteUis}
+        {formatNombrePersona(solicitud.estudiante)} • {solicitud.codigoEstudianteUis}
       </p>
 
       <dl className="solicitud-card__meta">

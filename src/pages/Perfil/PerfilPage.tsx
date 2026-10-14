@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
@@ -108,7 +109,7 @@ const PerfilPage = () => {
 
   const fullName = useMemo(() => {
     if (!user) return 'Usuario'
-    return user.nombreCompleto || [user.persona.nombre1, user.persona.nombre2, user.persona.apellido1, user.persona.apellido2].filter(Boolean).join(' ')
+    return formatNombrePersona(user.nombreCompleto || [user.persona.nombre1, user.persona.nombre2, user.persona.apellido1, user.persona.apellido2].filter(Boolean).join(' '))
   }, [user])
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {

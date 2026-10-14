@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
@@ -604,7 +605,7 @@ const MatriculaDetalleCoordinacionPage = () => {
           <>
             <article className="matricula-detalle__card">
               <header className="matricula-detalle__header">
-                <h2>Matrícula de {matricula.estudianteNombreCompleto}</h2>
+                <h2>Matrícula de {formatNombrePersona(matricula.estudianteNombreCompleto)}</h2>
                 <p>{matricula.programaAcademico}</p>
               </header>
 
@@ -613,7 +614,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <strong>Matrícula:</strong> #{matricula.id}
                 </p>
                 <p>
-                  <strong>Estudiante:</strong> {matricula.estudianteNombreCompleto}
+                  <strong>Estudiante:</strong> {formatNombrePersona(matricula.estudianteNombreCompleto)}
                 </p>
                 <p>
                   <strong>Código UIS:</strong> {matricula.codigoEstudianteUis ?? '—'}

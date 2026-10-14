@@ -15,6 +15,7 @@ import { aplicarFotosCacheadas, tieneFotosPendientes } from '../../modules/estud
 import { cargarFotosDeEstudiantes } from '../../modules/estudiantes/services/estudianteFotoLoader'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../../modules/estudiantes/types'
 import { resolveTipoPrograma } from '../../shared/domain/programaAcademico'
+import { leerProgramaEstudiantes, guardarProgramaEstudiantes } from '../../modules/estudiantes/services/estudiantesProgramaSeleccion'
 import './EstudiantesCoordinacionPage.css'
 
 const normalizarTextoBusqueda = (value: string) =>
@@ -48,7 +49,7 @@ const EstudiantesCoordinacionPage = () => {
   const shouldReuseInitialStudents = useRef(Boolean(initialSnapshot))
   const [programas, setProgramas] = useState<ProgramaCoordinacion[]>(initialSnapshot?.programas ?? [])
   const [programTypeSeleccionado, setProgramTypeSeleccionado] = useState<ProgramType>(
-    initialSnapshot?.programTypeSeleccionado ?? 'doctorado',
+    initialSnapshot?.programTypeSeleccionado ?? leerProgramaEstudiantes(),
   )
   const [estudiantes, setEstudiantes] = useState<EstudianteCoordinacion[]>(initialSnapshot?.estudiantes ?? [])
   const [egresados, setEgresados] = useState<EstudianteCoordinacion[]>(initialSnapshot?.egresados ?? [])
@@ -67,6 +68,10 @@ const EstudiantesCoordinacionPage = () => {
   const [busquedaFiltro, setBusquedaFiltro] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('ACTIVO')
   const [mostrarFiltrosAdicionales, setMostrarFiltrosAdicionales] = useState(false)
+
+  useEffect(() => {
+    guardarProgramaEstudiantes(programTypeSeleccionado)
+  }, [programTypeSeleccionado])
 
   useEffect(() => {
     if (initialSnapshot) {

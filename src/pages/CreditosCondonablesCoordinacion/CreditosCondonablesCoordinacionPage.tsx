@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ModuleLayout } from '../../components'
@@ -57,7 +58,7 @@ const SolicitudMobileCard = ({ solicitud }: { solicitud: SolicitudAcademicaDto }
     <article className="creditos-condonables__card">
       <header className="creditos-condonables__card-header">
         <div>
-          <h3>{displayText(solicitud.estudiante, 'Estudiante sin nombre')}</h3>
+          <h3>{displayText(formatNombrePersona(solicitud.estudiante), 'Estudiante sin nombre')}</h3>
           <p className="creditos-condonables__student-code">Código UIS: {displayText(solicitud.codigoEstudianteUis, '—')}</p>
           <p className="creditos-condonables__request-type">{displayText(solicitud.tipoSolicitud, 'Sin descripción.')}</p>
         </div>
@@ -189,7 +190,7 @@ const CreditosCondonablesCoordinacionPage = () => {
           <header><h2 id="creditos-historico-title">Histórico de solicitudes</h2><p>Solicitudes aprobadas y rechazadas.</p></header>
           <div className="creditos-condonables__filters">
             <EstadoFilter id="estado-credito-historico" value={estadoHistoricoId} estados={estadosHistoricos} disabled={loading} onChange={(value) => { setEstadoHistoricoId(value); setHistoryPage(1) }} />
-            <label className="creditos-condonables__field sapp-filter-field" htmlFor="estudiante-credito-historico"><span>Estudiante</span><select id="estudiante-credito-historico" value={estudianteId} disabled={loading || estudiantesHistoricos.length === 0} onChange={(event) => { setEstudianteId(event.target.value); setHistoryPage(1) }}><option value="">Todos</option>{estudiantesHistoricos.map((student) => <option key={student.id} value={student.id}>{student.nombre}{student.codigo ? ` — ${student.codigo}` : ''}</option>)}</select></label>
+            <label className="creditos-condonables__field sapp-filter-field" htmlFor="estudiante-credito-historico"><span>Estudiante</span><select id="estudiante-credito-historico" value={estudianteId} disabled={loading || estudiantesHistoricos.length === 0} onChange={(event) => { setEstudianteId(event.target.value); setHistoryPage(1) }}><option value="">Todos</option>{estudiantesHistoricos.map((student) => <option key={student.id} value={student.id}>{formatNombrePersona(student.nombre)}{student.codigo ? ` — ${student.codigo}` : ''}</option>)}</select></label>
             <button className="sapp-filters-clear-button" type="button" disabled={loading || (estadoHistoricoId === null && !estudianteId)} onClick={() => { setEstadoHistoricoId(null); setEstudianteId(''); setHistoryPage(1) }}>Limpiar filtros</button>
           </div>
           {renderResults(historyPagination.rows, historico.length === 0 ? 'No hay solicitudes en el histórico.' : 'No hay solicitudes históricas con los filtros seleccionados.')}

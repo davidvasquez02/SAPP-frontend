@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../../shared/utils/formatNombrePersona'
 import type { ApiResponse } from '../../../api/types'
 import { httpFile, httpGet, httpPut, type HttpFileResponse } from '../../../shared/http/httpClient'
 import type { EstudianteCoordinacion, ProgramaCoordinacion } from '../types'
@@ -120,7 +121,7 @@ const toEstudianteCoordinacion = (item: EstudianteConsultaBackend): EstudianteCo
     idAspirante: item.estudiante.idAspirante,
     codigo: item.estudiante.codigoEstudianteUis?.trim() || `EST-${item.estudiante.id}`,
     codigoEstudianteUis: item.estudiante.codigoEstudianteUis?.trim() || null,
-    nombreCompleto: item.nombreCompleto?.trim() || 'Nombre no disponible',
+    nombreCompleto: formatNombrePersona(item.nombreCompleto) || 'Nombre no disponible',
     fotoUrl: null,
     foto: item.estudiante.foto ?? null,
     tipoDocumento: resolveTipoDocumento(item),

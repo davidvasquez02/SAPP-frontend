@@ -1,3 +1,4 @@
+import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { EmbeddedModuleContext } from './EmbeddedModuleContext'
@@ -23,7 +24,7 @@ type ModuleLayoutProps = {
 const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile = false }: ModuleLayoutProps) => {
   const { user } = useAuth()
   const embedded = useContext(EmbeddedModuleContext)
-  const displayName = user ? user.nombreCompleto || user.username : 'Usuario'
+  const displayName = user ? formatNombrePersona(user.nombreCompleto) || user.username : 'Usuario'
   const functionalRole = user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE)
   const roleLabel = functionalRole ? formatRoleLabel(functionalRole) : 'SIN ROL ASIGNADO'
   const estudianteFoto =
