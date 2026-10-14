@@ -59,6 +59,7 @@ const PerfilPage = () => {
   const [signatureTitle, setSignatureTitle] = useState('')
   const [isLoadingSignature, setIsLoadingSignature] = useState(true)
   const [isSavingSignature, setIsSavingSignature] = useState(false)
+  const [isReadingSignature, setIsReadingSignature] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
@@ -116,12 +117,8 @@ const PerfilPage = () => {
     setMessage('')
     setError('')
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
-    if (!hasStudentRole && !signatureTitle.trim()) {
-      setError('Ingresa el título que acompañará la firma.')
-      event.target.value = ''
-      return
-    }
     if (!['image/png', 'image/jpeg'].includes(file.type)) {
       setError('Selecciona una imagen PNG o JPG.')
       return
@@ -130,17 +127,29 @@ const PerfilPage = () => {
       setError('La imagen no puede superar 2 MB.')
       return
     }
+    setIsReadingSignature(true)
     try {
       const firma = await readFile(file)
       setSelectedSignature(firma)
-      await saveSignature(firma)
     } catch (readError) {
       setError(readError instanceof Error ? readError.message : 'No fue posible leer la imagen.')
+    } finally {
+      setIsReadingSignature(false)
     }
   }
 
-  const saveSignature = async (firma: FirmaPerfil) => {
-    if (!user) return
+  const saveSignature = async () => {
+    if (!user || isSavingSignature || isLoadingSignature || isReadingSignature) return
+    setMessage('')
+    if (!signature) {
+      setError('Selecciona una imagen para la firma.')
+      return
+    }
+    if (!hasStudentRole && !signatureTitle.trim()) {
+      setError('Ingresa el título que acompañará la firma.')
+      return
+    }
+    const firma = signature
 
     setIsSavingSignature(true)
     setMessage('')
@@ -156,10 +165,6 @@ const PerfilPage = () => {
     } finally {
       setIsSavingSignature(false)
     }
-  }
-
-  const handleRetry = () => {
-    if (selectedSignature) void saveSignature(selectedSignature)
   }
 
   if (!user) return null
@@ -237,16 +242,16 @@ const PerfilPage = () => {
         </section>}
 
         <section className="profile-page__card profile-page__signature" aria-labelledby="signature-title">
-          <div className="profile-page__heading"><span aria-hidden="true">✎</span><div><h2 id="signature-title">Firma</h2><p>Carga la imagen que se utilizará para firmar documentos autorizados.</p></div></div>
+          <div className="profile-page__heading"><span aria-hidden="true">✎</span><div><h2 id="signature-title">Firma</h2><p>Selecciona la imagen y guarda los cambios para utilizarla en documentos autorizados.</p></div></div>
           <div className="profile-page__signature-content">
             <div className="profile-page__signature-preview">
               {isLoadingSignature ? <span>Cargando firma…</span> : signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}
             </div>
             <div className="profile-page__signature-actions">
-              {!hasStudentRole && <label className="profile-page__title-field"><span>Título</span><input type="text" value={signatureTitle} onChange={(event) => setSignatureTitle(event.target.value)} placeholder="Ej. PhD." maxLength={100} disabled={isSavingSignature || isLoadingSignature} /></label>}
-              <label className="profile-page__file-button">{isSavingSignature ? 'Guardando firma…' : signatureSrc ? 'Reemplazar imagen' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature || isLoadingSignature} /></label>
+              {!hasStudentRole && <label className="profile-page__title-field"><span>Título</span><input type="text" value={signatureTitle} onChange={(event) => { setSignatureTitle(event.target.value); setMessage('') }} placeholder="Ej. PhD." maxLength={100} disabled={isSavingSignature || isLoadingSignature} /></label>}
+              <label className="profile-page__file-button">{isReadingSignature ? 'Leyendo imagen…' : signatureSrc ? 'Reemplazar imagen' : 'Seleccionar imagen'}<input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} disabled={isSavingSignature || isLoadingSignature || isReadingSignature} /></label>
               <small>PNG o JPG, máximo 2 MB. Se recomienda fondo blanco.</small>
-              {error && selectedSignature && <button type="button" onClick={handleRetry} disabled={isSavingSignature}>Reintentar carga</button>}
+              <button type="button" onClick={() => { void saveSignature() }} disabled={isSavingSignature || isLoadingSignature || isReadingSignature || !signature}>{isSavingSignature ? 'Guardando firma…' : 'Guardar firma'}</button>
             </div>
           </div>
           {error && <p className="profile-page__feedback profile-page__feedback--error" role="alert">{error}</p>}

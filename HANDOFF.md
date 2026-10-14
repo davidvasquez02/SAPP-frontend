@@ -1,4 +1,13 @@
 
+## Ajuste 2026-10-14 — guardado explícito de firma en perfil
+
+- Seleccionar PNG/JPG (máximo 2 MB) solo carga una vista previa local. `Guardar firma` ejecuta el envío; cambiar únicamente el título reutiliza `savedSignature`, sin exigir otro archivo. La validación de título obligatorio se realiza al guardar para los roles que ya lo editaban; ESTUDIANTE mantiene el campo oculto y el payload sin título.
+- `src/pages/Perfil/PerfilPage.tsx`: lectura y guardado bloquean el botón para evitar envíos simultáneos; errores conservan imagen/título para reintentar con el mismo botón. El input se limpia tras seleccionar para admitir elegir nuevamente el mismo archivo. Se reutilizan estilos semánticos existentes.
+- Contrato sin cambios: `POST /sapp/firmaUsuario/{usuarioId}`, `{ titulo?: string, contenidoFirma: data URL }`; lectura `GET` al mismo endpoint. Sin cambios de dependencias, permisos, esquema ni backend.
+- Validación: ESLint focalizado, `npx tsc -b` y `git diff --check` PASS; `node --test --test-isolation=none tests/firmaPerfilGuardado.test.mjs` PASS (1/1), HTTP simulado comprueba actualización solo de título conservando contenido y omisión de título para estudiantes. Logs en terminal de esta conversación. Build Vite no repetido: sigue registrado el bloqueo ambiental EPERM/SWC.
+- Continuidad: verificar en sesión autenticada selección sin envío, guardado de imagen nueva, título solo, rol estudiante y reintento tras error. No se probó navegación con backend real. Reutilizar Windows/PowerShell, Node 24.11.0, npm 11.6.1, `node_modules` y lockfile existentes; no crear entornos ni instalar paquetes. Sin seeds/datasets nuevos.
+
+
 ## Ajustes 2026-10-14 — programa y nombres de estudiantes
 
 - Listado de coordinación conserva Doctorado/Maestría al recargar mediante `sessionStorage` (`sapp.estudiantes.programType`); el snapshot de regreso del detalle tiene prioridad. Valores ausentes/inválidos o almacenamiento bloqueado usan Doctorado y mantienen operativa la navegación.
