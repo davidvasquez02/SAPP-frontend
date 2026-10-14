@@ -630,40 +630,45 @@ const EstudianteDetalleCoordinacionPage = () => {
       return
     }
 
-    // Una vez cargado el estudiante para este id, esta carga inicial no debe repetirse: si lo
-    // hiciera (p. ej. por un recalculo de estudianteFromState), pisaria con la foto vieja de
-    // location.state el estado que el usuario ya actualizo en pantalla (ver handleEstadoChange).
+    // Evita repetir esta carga para el mismo id (p. ej. por un recalculo de estudianteFromState).
     if (loadedEstudianteIdRef.current === id) {
       return
     }
 
-    const loadEstudiante = async () => {
-      const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
+    // location.state sobrevive a un F5: si el estudiante cambio de estado en una visita anterior
+    // a esta misma pantalla, seguiria trayendo la foto vieja de cuando se navego desde la lista.
+    // Por eso solo se usa para pintar algo de entrada (sin parpadeo de "Cargando..."); la fuente
+    // de verdad siempre es el fetch al back, que corre igual y reemplaza lo que haga falta.
+    const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
 
-      if (stateEstudiante) {
-        setEstudiante(stateEstudiante)
-        setIsLoading(false)
-        setError(null)
-        loadedEstudianteIdRef.current = id
-        return
-      }
-
+    if (stateEstudiante) {
+      setEstudiante(stateEstudiante)
+      setIsLoading(false)
+      setError(null)
+    } else {
       setIsLoading(true)
       setError(null)
+    }
 
+    const loadEstudiante = async () => {
       try {
         const data = await getEstudianteById(id)
 
         if (!data) {
-          setError('No se encontró información para el estudiante seleccionado.')
+          if (!stateEstudiante) {
+            setError('No se encontró información para el estudiante seleccionado.')
+          }
           return
         }
 
         setEstudiante(data)
-        loadedEstudianteIdRef.current = id
+        setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
+        if (!stateEstudiante) {
+          setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
+        }
       } finally {
+        loadedEstudianteIdRef.current = id
         setIsLoading(false)
       }
     }
