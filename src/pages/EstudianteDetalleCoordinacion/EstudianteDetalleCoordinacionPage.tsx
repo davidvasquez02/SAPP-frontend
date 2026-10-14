@@ -427,11 +427,12 @@ const StudentProfileHeader = ({
 }: StudentProfileHeaderProps) => {
   const fotoSrc = getFotoSrc(estudiante)
   const estadoActual = estudiante.estadoAcademico.trim().toUpperCase()
-  const estadoAlterno = estadoActual === 'ACTIVO'
-    ? { estado: 'INACTIVO' as const, label: 'Inactivar estudiante' }
-    : estadoActual === 'INACTIVO'
-      ? { estado: 'ACTIVO' as const, label: 'Activar estudiante' }
-      : null
+  const estadosAlternos = (['ACTIVO', 'INACTIVO'] as const)
+    .filter((estado) => estado !== estadoActual)
+    .map((estado) => ({
+      estado,
+      label: estado === 'ACTIVO' ? 'Activar estudiante' : 'Inactivar estudiante',
+    }))
 
   return (
     <article className="estudiante-detalle__profile-card">
@@ -477,16 +478,21 @@ const StudentProfileHeader = ({
             )}
             {isDownloadingZip ? 'Preparando descarga...' : 'Descargar información'}
           </button>
-          {estadoAlterno ? (
+          {estadosAlternos.map(({ estado, label }, index) => (
             <button
+              key={estado}
               type="button"
-              className="estudiante-detalle__state-button estudiante-detalle__state-button--primary"
+              className={
+                index === 0
+                  ? 'estudiante-detalle__state-button estudiante-detalle__state-button--primary'
+                  : 'estudiante-detalle__state-button'
+              }
               disabled={isUpdatingEstado}
-              onClick={() => onEstadoChange(estadoAlterno.estado)}
+              onClick={() => onEstadoChange(estado)}
             >
-              {isUpdatingEstado ? 'Actualizando...' : estadoAlterno.label}
+              {isUpdatingEstado ? 'Actualizando...' : label}
             </button>
-          ) : null}
+          ))}
           {estadoActual !== 'EGRESADO' ? (
             <button
               type="button"
