@@ -3,12 +3,14 @@ export const RUTA_CALENDARIO = `${RUTA_ADMINISTRACION}/calendario`
 export const RUTA_PROFESORES = `${RUTA_ADMINISTRACION}/profesores`
 export const RUTA_GRUPOS = `${RUTA_ADMINISTRACION}/grupos-investigacion`
 export const RUTA_PLANTILLAS = `${RUTA_ADMINISTRACION}/plantillas-correo`
+export const RUTA_RUBRICA = `${RUTA_ADMINISTRACION}/rubrica-evaluacion`
 
 export const SECCIONES_ADMINISTRACION = [
   { to: RUTA_CALENDARIO, label: 'Calendario académico', description: 'Períodos y fechas de los procesos', icon: '/fechas' },
   { to: RUTA_PROFESORES, label: 'Profesores', description: 'Vinculación docente a posgrados', icon: '/coordinacion/profesores' },
   { to: RUTA_GRUPOS, label: 'Grupos de investigación', description: 'Grupos, instituciones e integrantes', icon: '/coordinacion/grupos-investigacion' },
   { to: RUTA_PLANTILLAS, label: 'Plantillas de correo', description: 'Contenido de las comunicaciones', icon: '/coordinacion/plantillas-correo' },
+  { to: RUTA_RUBRICA, label: 'Rúbrica de evaluación', description: 'Formato que se entrega a los jurados de trabajo de grado', icon: '/coordinacion/rubrica-evaluacion' },
 ] as const
 
 export const RUTAS_ANTERIORES_ADMINISTRACION = [

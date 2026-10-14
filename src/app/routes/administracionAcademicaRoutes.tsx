@@ -13,6 +13,7 @@ import InstitucionFormPage from '../../pages/GestionGruposInvestigacion/Instituc
 import ProfesoresGrupoPage from '../../pages/GestionGruposInvestigacion/ProfesoresGrupoPage'
 import PlantillasCorreoPage from '../../pages/PlantillasCorreo/PlantillasCorreoPage'
 import PlantillaCorreoFormPage from '../../pages/PlantillasCorreo/PlantillaCorreoFormPage'
+import RubricaEvaluacionPage from '../../pages/RubricaEvaluacion/RubricaEvaluacionPage'
 import {
   RUTA_ADMINISTRACION,
   RUTAS_ANTERIORES_ADMINISTRACION,
@@ -38,6 +39,7 @@ export const administracionAcademicaRoutes = (
       <Route path="grupos-investigacion/instituciones/facultades/nueva" element={<InstitucionFormPage tipo="FACULTAD" />} />
       <Route path="plantillas-correo" element={<PlantillasCorreoPage />} />
       <Route path="plantillas-correo/:plantillaId/editar" element={<PlantillaCorreoFormPage />} />
+      <Route path="rubrica-evaluacion" element={<RubricaEvaluacionPage />} />
     </Route>
     {RUTAS_ANTERIORES_ADMINISTRACION.map(({ anterior }) => (
       <Route key={anterior} path={`${anterior}/*`} element={
