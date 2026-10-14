@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-10",
+  "scope": "Controles documentales, no ejecución de aplicación ni renderizado Mermaid",
+  "evidenceGroups": 22,
+  "references": 149,
+  "sourceHashChangesSinceIndex": [],
+  "missingLocalLinks": [],
+  "mermaidSources": [
+    {
+      "file": "01-contexto.mmd",
+      "exactBlock": true,
+      "kind": "flowchart LR"
+    },
+    {
+      "file": "02-componentes.mmd",
+      "exactBlock": true,
+      "kind": "flowchart TB"
+    },
+    {
+      "file": "03-despliegue.mmd",
+      "exactBlock": true,
+      "kind": "flowchart LR"
+    },
+    {
+      "file": "04-entidades.mmd",
+      "exactBlock": true,
+      "kind": "erDiagram"
+    },
+    {
+      "file": "05-secuencia-inicio.mmd",
+      "exactBlock": true,
+      "kind": "sequenceDiagram"
+    },
+    {
+      "file": "06-secuencia-homologacion.mmd",
+      "exactBlock": true,
+      "kind": "sequenceDiagram"
+    }
+  ],
+  "slides": 8,
+  "juryQuestions": 12,
+  "scriptWords": 654,
+  "frontendTests": {
+    "passed": 168,
+    "failed": 0
+  },
+  "gitDiffCheck": "PASS; únicamente advertencias de normalización LF/CRLF",
+  "mermaidRendered": false
+}

@@ -1,0 +1,35 @@
+erDiagram
+  UsuarioSapp ||--o{ Estudiante : "usuario_id"
+  ProgramaAcademico ||--o{ Estudiante : "programa_id"
+  Aspirante ||--o{ Estudiante : "aspirante_id"
+  ProgramaAcademico ||--o{ ConvocatoriaAdmision : "programa_id"
+  PeriodoAcademico ||--o{ ConvocatoriaAdmision : "periodo_id"
+  Aspirante ||--o{ InscripcionAdmision : "aspirante_id"
+  ConvocatoriaAdmision ||--o{ InscripcionAdmision : "convocatoria_id"
+  Estudiante ||--o{ MatriculaAcademica : "estudiante_id"
+  PeriodoAcademico ||--o{ MatriculaAcademica : "periodo_id"
+  MatriculaAcademica ||--o{ MatriculaAsignatura : "matricula_id"
+  Estudiante ||--o{ SolicitudesAcademica : "estudiante_id"
+  SolicitudesAcademica ||--o{ HistorialEstadoSolicitud : "solicitud_academica_id"
+  DocumentosContenido ||--o| Documento : "documento_contenido_id"
+  UsuarioSapp {
+    bigint id PK
+    uuid idp_id UK
+  }
+  Estudiante {
+    bigint id PK
+    bigint usuario_id FK
+    bigint programa_id FK
+  }
+  SolicitudesAcademica {
+    bigint id PK
+    bigint estudiante_id FK
+    bigint estado_id FK
+  }
+  Documento {
+    bigint id PK
+    bigint documento_contenido_id FK
+    bigint tramite_id
+    int version
+    int secuencia
+  }

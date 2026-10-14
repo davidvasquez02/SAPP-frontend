@@ -1,5 +1,59 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+Minerva Posgrados centraliza admisiones, matrículas, liquidación, solicitudes,
+créditos condonables, trabajos de grado y gestión académica de EISI–UIS. Esta SPA
+organiza páginas, componentes y servicios HTTP por módulo y consume el backend
+Spring Boot; React Router protege la navegación según la sesión.
+
+Entorno local documentado: Windows/PowerShell, Node 24.11.0 y npm 11.6.1.
+Versiones resueltas en `package-lock.json`: React/DOM 19.2.3, React Router DOM
+7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2.
+Reutilizar `node_modules`; en una instalación nueva, ejecutar `npm ci` y copiar
+`.env.example` a `.env.local` sin reemplazar una configuración existente.
+Comandos: `npm run dev`, `npm run build`, `npm run preview` y `npm run lint`.
+Pruebas: `node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`.
+Los catálogos provienen del backend; este frontend no tiene un comando de seeds.
+
+## Análisis técnico para trabajo de grado — 2026-10-10
+
+- Entrega: [índice](docs/trabajo-grado-tecnico/indice.md), [documento técnico](docs/trabajo-grado-tecnico/documento-tecnico.md), [seis diagramas Mermaid](docs/trabajo-grado-tecnico/diagramas.md), [ocho diapositivas, guion y doce preguntas](docs/trabajo-grado-tecnico/sustentacion.md) y [confirmaciones pendientes](docs/trabajo-grado-tecnico/informacion-pendiente.md).
+- Arquitectura observada: dos SPA (institucional y pública), dos aplicaciones Spring Boot y tablas PostgreSQL compartidas. Organización Java por web/domain/persistence. Gateway/IAM externos; correo IAM o SMTP con envíos directos y outbox evento_correo. SAPP complementa los sistemas UIS; no se acredita recaudo ni sincronización general.
+- Se revisaron las cuatro rutas indicadas. El backend actual sí implementa liquidación, trabajos de grado, historial y plantillas. UsuarioSapp contiene idp_id y /inicio devuelve usuarios_sapp.id; las migraciones actuales eliminan personas_idp y permiten estudiante por usuario/programa. Esquema efectivo pendiente de confirmación. Esta revisión sustituye las conclusiones del borrador del 9 de octubre.
+- Frontend institucional: React/DOM 19.2.3, Router 7.11.0, TS 5.9.3, rolldown-vite 7.2.5, SWC 4.2.2 y ESLint 9.39.2. Portal público: React/DOM 19.2.7, TS 6.0.3, Vite 8.0.16 y plugin React 6.0.2. Backends: Java objetivo 21, Spring Boot 4.0.0, Cloud BOM 2025.1.0 y Maven Wrapper 3.9.11.
+- Entorno medido: Node 24.11.0, npm 11.6.1; Java del PATH 17.0.2 (insuficiente para los backends). Reutilizar node_modules y lockfiles; sin instalaciones ni entornos nuevos.
+- Resultado del 10 de octubre: 168/168 pruebas frontend PASS; TypeScript completó; Vite falló con spawn EPERM y carga nativa SWC; lint reportó 9 errores y 1 advertencia preexistentes. [Logs y alcance](docs/trabajo-grado-tecnico/verificacion.md). Sin ejecución Java ni recorridos institucionales.
+- Se actualizaron documentos y diagramas; no se editó código/configuración ni se ejecutó SQL. El frontend no tiene seeds; en backend hay scripts/semillas parciales, sin instalación integral reproducible confirmada.
+
+## Implementación 2026-10-06 — documentos de solicitudes en detalle del estudiante
+
+- La pestaña Solicitudes consulta las solicitudes del estudiante al abrirse y presenta sus adjuntos con el componente compartido del detalle de solicitudes: Ver y Descargar. Cada grupo incluye tipo, número, estado y fecha en Colombia; búsqueda por tipo/número, filtro de estado y paginación de cinco solicitudes.
+- Consulta documental solo para las solicitudes de la página visible, con errores/reintento independientes. Conserva los resultados al cambiar entre pestañas; Admisión y Matrículas mantienen su carga propia. Reutiliza los endpoints existentes de solicitudes por estudiante y documentos por trámite.
+- Validación: suite 168/168 PASS, ESLint focalizado PASS y build/TypeScript PASS. Pendiente comprobar con sesión institucional los documentos reales y las acciones de archivo.
+
+## Ajuste visual 2026-10-06 — detalle del estudiante
+
+- Los cinco subtítulos del panel derecho del perfil (correos, documento y director) usan el verde institucional `var(--primary)`, siguiendo el tema claro/oscuro. Los valores conservan su color de texto y la jerarquía existente.
+
+## Implementación 2026-10-06 — Administración académica
+
+- Un acceso principal **Administración académica** reúne Calendario académico, Profesores, Grupos de investigación y Plantillas de correo. Menú interno persistente, navegación adaptable y cabecera institucional compartida; mismo acceso para coordinación, secretaría y administración.
+- Rutas canónicas bajo `/administracion-academica`: `/calendario`, `/calendario/periodos`, `/profesores`, `/grupos-investigacion` (incluidas sus subrutas) y `/plantillas-correo` (incluida `/:plantillaId/editar`). La portada abre Calendario académico.
+- Las rutas antiguas `/fechas/*`, `/coordinacion/profesores/*`, `/coordinacion/grupos-investigacion/*` y `/coordinacion/plantillas-correo/*` redirigen conservando parámetros, fragmentos, identificadores y estado de navegación. Los accesos desde Admisiones usan el destino nuevo; `/admisiones/convocatorias` permanece operativo.
+- Se reutilizan las pantallas y servicios existentes. No cambian contratos HTTP, datos, roles ni acciones de negocio. El nombre describe la gestión institucional y la distingue de preferencias personales.
+- Validación: build/TypeScript PASS (353 módulos; aviso existente de chunk >500 kB), ESLint focalizado PASS, suite ligera 165/165 PASS y prueba de integración de rutas/perfiles 1/1 PASS. Integración: `node --test --test-isolation=none tests/integration/administracionAcademicaRoutes.test.mjs`; requiere que el entorno permita Vite SSR (se verificó fuera del sandbox). Pendiente recorrido visual con sesión institucional y datos reales.
+
+## Antecedente 2026-10-06 — propuesta de configuración central
+
+- [Evaluación y planteamiento](docs/propuesta-configuracion-central-2026-10-06.md): antecedente del módulo implementado como Administración académica. La reorganización de navegación está implementada; la separación funcional adicional de convocatorias continúa como propuesta.
+- Reconsulta: Grupos de investigación y Plantillas de correo ya tienen entradas propias. Plantillas incluye búsqueda/idioma, paginación, edición HTML, vista previa y prueba de la versión guardada mediante `/sapp/plantillasCorreo`. Las cuatro secciones comparten permisos administrativos. La propuesta contempla reutilizar estas pantallas y revisar accesos compartidos de profesores/grupos y el solapamiento de convocatorias.
+- Revisión estática y propuesta visual; sin cambios funcionales ni pruebas/build de la aplicación en esta tarea.
+
+## Propuesta 2026-09-30 — manuales y videos para adopción
+
+- [Plan de manuales y videos](docs/propuesta-manuales-videos-minerva-2026-09-30.md): análisis de los 93 casos de aceptación de la versión 2; propone tres manuales por público y ocho videos, con 36 minutos objetivo para la biblioteca completa. Incluye secuencias de grabación, rutas de consulta por rol y matriz de cobertura de los 11 módulos.
+- Es una propuesta editorial: los manuales finales y las grabaciones quedan por producir y validar con la interfaz publicada. Se distinguen el portal de aspirantes, la sesión institucional y el enlace personal del jurado; las diferencias de permisos administrativos siguen pendientes de la validación descrita en la auditoría de roles.
+- Revisión documental únicamente; no se ejecutaron casos de aceptación, envíos, firmas ni pruebas de la aplicación en esta tarea.
+
 ## Ajuste 2026-09-30 — cargue histórico de documentos
 
 - El cargue y reemplazo de documentos de Admisión y Matrículas en el detalle administrativo del estudiante envía `cargaHistorica: true` a `POST /sapp/document`. El backend puede resolver `{{NOMBRE_ESTUDIANTE}}` con el dueño del trámite, conservando `tramiteId`, `usuarioCargaId` y el resto del payload.
@@ -1997,3 +2051,12 @@ SAPP Frontend es la SPA institucional de EISI–UIS para centralizar admisiones,
 - El diálogo identifica período y programa, explica el efecto del cierre, usa acciones **Cancelar** / **Cerrar convocatoria** y presenta **Cerrando…** mientras responde el servidor. Admite Escape, clic en el fondo, foco inicial y retorno del foco al botón que lo abrió.
 - La presentación usa tokens semánticos, fondo atenuado, tarjeta redondeada, botones pill y adaptación móvil para conservar los temas claro y oscuro. No cambiaron el endpoint, payload, contrato ni permisos del cierre.
 - ESLint focalizado y build PASS (320 módulos; CSS 283.68 kB; JS 749.32 kB).
+
+## Corrección 2026-10-13 — carga de estudiantes con nombre nulo
+
+- La consulta de estudiantes admite `nombreCompleto: null`. El mapeo compartido de listado y detalle muestra **Nombre no disponible** para nombres nulos, vacíos o con solo espacios, evitando que `trim()` interrumpa toda la carga.
+- Regresión: `node --test --test-isolation=none tests/estudiantesConsulta.test.mjs` PASS (1/1); ESLint focalizado PASS. Sin cambios de endpoints, dependencias ni configuración.
+
+- Validación de compilación: TypeScript (	sc -b) PASS; 
+pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario SWC (UNLOADABLE_DEPENDENCY). Pendiente repetir build en un entorno que permita esos subprocesos; no se modificaron dependencias.
+

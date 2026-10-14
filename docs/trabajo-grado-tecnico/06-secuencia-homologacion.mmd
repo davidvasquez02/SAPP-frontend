@@ -1,0 +1,28 @@
+sequenceDiagram
+  actor E as Estudiante
+  participant F as SPA institucional
+  participant B as SolicitudesAcademicaService
+  participant D as PostgreSQL
+  participant M as NotificacionSolicitudAcademicaService
+  actor C as Gestión académica
+  E->>F: Completar homologación
+  F->>B: POST /solicitudesAcademicas
+  B->>B: Validar tipo y asignaturas
+  B->>D: Guardar solicitud ENVIADA, detalles e historial
+  B->>M: Avisar solicitud pendiente de gestión
+  B-->>F: StandardResponse con solicitud
+  C->>F: Revisar y decidir
+  F->>B: PUT /solicitudesAcademicas/cambioEstado/{id}
+  Note over F,B: siglaEstado; actaId opcional; observaciones al rechazar
+  alt APROBADA
+    B->>D: Estado, fecha de resolución e historial de homologación
+  else RECHAZADA
+    B->>B: Exigir observaciones
+    B->>D: Estado, fecha de resolución y motivoRechazo
+  end
+  B->>D: Registrar historial del cambio
+  B-->>F: Resultado o error
+  F->>B: GET /solicitudesAcademicas/{id}/historial
+  B-->>F: Bitácora
+  Note over F,D: Escrituras del servicio transaccionales; correo no es parte de la transacción de BD
+  Note over F,B: Gateway omitido para legibilidad; no implica autorización uniforme por operación

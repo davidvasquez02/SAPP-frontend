@@ -1,0 +1,19 @@
+flowchart LR
+  CI["GitLab CI: plantillas externas v5.0.0"]
+  FB["Build de F y P: Node 24 y dist"]
+  JB["Build de B y U: Maven y Java 21"]
+  NF["Imagen F: nginx:alpine, puerto 80"]
+  NP["Imagen P: nginx:alpine, puerto 80"]
+  J1["Imagen B: Temurin 21 JRE, puerto 8080"]
+  J2["Imagen U: Temurin 21 JRE, puerto 8080"]
+  Infra["Trigger de infraestructura externa"]
+  DB[("PostgreSQL: ubicación y versión pendientes")]
+  CI --> FB
+  CI --> JB
+  FB -->|"Dockerfile copia dist"| NF
+  FB -->|"Dockerfile copia dist"| NP
+  JB -->|"Dockerfile copia JAR"| J1
+  JB -->|"Dockerfile copia JAR"| J2
+  CI -.-> Infra
+  J1 -->|"JDBC configurado"| DB
+  J2 -->|"JDBC configurado"| DB
