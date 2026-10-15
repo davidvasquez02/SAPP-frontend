@@ -54,7 +54,7 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
           {fechaSustentacion && <div><dt>Fecha de sustentación</dt><dd>{fechaSustentacion}</dd></div>}
           {sustentacion.modalidad && <div><dt>Modalidad</dt><dd>{sustentacion.modalidad}</dd></div>}
           {sustentacion.lugar && <div><dt>Lugar</dt><dd>{sustentacion.lugar}</dd></div>}
-          {sustentacion.esVirtual && sustentacion.enlace && (
+          {(sustentacion.esVirtual || sustentacion.esHibrida) && sustentacion.enlace && (
             <div><dt>Enlace de sustentación</dt><dd><a href={sustentacion.enlace} target="_blank" rel="noreferrer">Ingresar a la sustentación</a></dd></div>
           )}
         </dl>

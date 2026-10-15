@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Implementación 2026-10-15 — sustentaciones híbridas
+
+- Programar sustentación admite el código de catálogo `HIBRIDA` (Híbrida): muestra y exige lugar físico y URL de videoconferencia. Presencial exige lugar y Virtual exige URL; los campos que no aplican se envían como null para evitar conservar datos de otra modalidad.
+- Coordinación y estudiante ven lugar y enlace simultáneamente para Híbrida. La lectura conserva compatibilidad con respuestas planas y anidadas. Las URL de reunión deben ser http/https y los errores se muestran antes del envío.
+- Backend reutiliza los campos existentes y el mismo endpoint `POST /sapp/procesoEvaluacionTg/solicitud/{id}/sustentacion`. Las citaciones incluyen lugar y enlace clicable, en español/inglés (Hybrid), separado del enlace personal del jurado para evaluar. Las plantillas actuales se reutilizan.
+- El usuario confirmó que ya agregó HIBRIDA al catálogo (id 3); el código resuelve por código, sin depender de ese ID. No hay SQL adicional que ejecutar en esa BD. Se conserva un script idempotente en backend para otros entornos; no se ejecutó SQL desde esta tarea.
+- Validación: TypeScript/build, ESLint focalizado y suite frontend 184/184 PASS; backend 13/13 pruebas seleccionadas PASS; Edge 5/5 PASS (4 escenarios y padre), incluyendo vista de estudiante, reglas Presencial/Virtual y formulario móvil oscuro. Permanece aviso de chunk >500 kB. Logs `.sustentacion-hibrida-*.log`; continuidad en HANDOFF.md. Desplegar backend antes del frontend y comprobar con sesión institucional.
+
 ## Implementación 2026-10-15 — documentos de Admisiones bajo demanda
 
 - Documentos cargados solicita `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...&incluirContenido=false`. Conserva requisitos, archivos pendientes/cargados, versiones, estados y observaciones; su caché solo guarda metadatos y comparte solicitudes pendientes entre pantalla principal y sección.

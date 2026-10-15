@@ -32,7 +32,7 @@ import {
 } from './estadoProcesoEvaluacion'
 import { esExamenCandidaturaDoctoral } from '../constants'
 import { presentarNotaFinalCandidatura, presentarValorEvaluacion } from './presentacionEvaluacion'
-import { obtenerDetalleSustentacion, tieneDetalleSustentacion } from './sustentacion'
+import { obtenerDetalleSustentacion, tieneDetalleSustentacion, requiereLugarSustentacion, requiereEnlaceSustentacion, validarUbicacionSustentacion } from './sustentacion'
 import './ProcesoEvaluacionPanel.css'
 
 interface ProcesoEvaluacionPanelProps {
@@ -280,20 +280,17 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       setError('Selecciona la fecha y la modalidad de la sustentación.')
       return
     }
-    if (modalidad === 'VIRTUAL' && !enlace.trim()) {
-      setError('La modalidad virtual requiere un enlace.')
-      return
-    }
-    if (modalidad === 'PRESENCIAL' && !lugar.trim()) {
-      setError('La modalidad presencial requiere un lugar.')
+    const ubicacionError = validarUbicacionSustentacion(modalidad, lugar, enlace)
+    if (ubicacionError) {
+      setError(ubicacionError)
       return
     }
     void runMutation(
       () => programarSustentacion(solicitudId, {
         fechaSustentacion,
         modalidadCodigo: modalidad,
-        lugar: lugar.trim() || null,
-        enlace: enlace.trim() || null,
+        lugar: requiereLugarSustentacion(modalidad) ? lugar.trim() : null,
+        enlace: requiereEnlaceSustentacion(modalidad) ? enlace.trim() : null,
         notificarJurados,
       }),
       'Sustentación programada correctamente.',
@@ -411,7 +408,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
         </div>
       )}
 
-      {formulario === 'sustentacion' && <div className="evaluacion-tg__form-card"><h4>Programar sustentación</h4><div className="evaluacion-tg__form-grid"><label><span>Fecha y hora *</span><input type="datetime-local" value={fechaSustentacion} onChange={(e) => setFechaSustentacion(e.target.value)} /></label><label><span>Modalidad *</span><select value={modalidad} onChange={(e) => setModalidad(e.target.value)}>{catalogos?.modalidades.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>{modalidad === 'PRESENCIAL' && <label><span>Lugar *</span><input value={lugar} onChange={(e) => setLugar(e.target.value)} /></label>}{modalidad === 'VIRTUAL' && <label><span>Enlace *</span><input type="url" value={enlace} onChange={(e) => setEnlace(e.target.value)} /></label>}</div><label className="evaluacion-tg__check"><input type="checkbox" checked={notificarJurados} onChange={(e) => setNotificarJurados(e.target.checked)} /> Notificar a los jurados</label><div className="evaluacion-tg__form-actions"><button type="button" onClick={submitSustentacion} disabled={busy}>Programar</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
+      {formulario === 'sustentacion' && <div className="evaluacion-tg__form-card"><h4>Programar sustentación</h4><div className="evaluacion-tg__form-grid"><label><span>Fecha y hora *</span><input type="datetime-local" value={fechaSustentacion} onChange={(e) => setFechaSustentacion(e.target.value)} /></label><label><span>Modalidad *</span><select value={modalidad} onChange={(e) => setModalidad(e.target.value)}>{catalogos?.modalidades.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>{requiereLugarSustentacion(modalidad) && <label><span>Lugar *</span><input value={lugar} onChange={(e) => setLugar(e.target.value)} /></label>}{requiereEnlaceSustentacion(modalidad) && <label><span>Enlace *</span><input type="url" value={enlace} onChange={(e) => setEnlace(e.target.value)} /></label>}</div><label className="evaluacion-tg__check"><input type="checkbox" checked={notificarJurados} onChange={(e) => setNotificarJurados(e.target.checked)} /> Notificar a los jurados</label><div className="evaluacion-tg__form-actions"><button type="button" onClick={submitSustentacion} disabled={busy}>Programar</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
       {formulario === 'resultado' && canRegisterResult && <div className="evaluacion-tg__form-card"><h4>Registrar resultado</h4><div className="evaluacion-tg__form-grid">{esCandidaturaDoctoral ? <label><span>Nota final *</span><input type="number" min="0" max="5" step="0.01" value={notaFinal} onChange={(e) => setNotaFinal(e.target.value)} aria-describedby="nota-final-ayuda" /></label> : <label><span>Resultado *</span><select value={resultado} onChange={(e) => setResultado(e.target.value)}>{catalogos?.resultados.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>}<label><span>Acta</span><select value={actaId} onChange={(e) => setActaId(e.target.value)}><option value="">Sin acta asociada</option>{actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} — {acta.nombre}</option>)}</select></label></div>{esCandidaturaDoctoral && <p id="nota-final-ayuda">La nota se precarga con el promedio de las calificaciones de sustentación de los jurados activos. Puedes modificarla antes de registrar.</p>}<div className="evaluacion-tg__form-actions"><button type="button" disabled={busy || (esCandidaturaDoctoral ? !notaFinalValida : !resultado)} onClick={() => void runMutation(() => registrarResultado(solicitudId, esCandidaturaDoctoral ? { resultadoCodigo: '', notaFinal: notaFinalNumero, actaId: actaId ? Number(actaId) : null } : { resultadoCodigo: resultado, notaFinal: null, actaId: actaId ? Number(actaId) : null }), 'Resultado registrado y proceso cerrado.')}>Registrar resultado</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
@@ -434,7 +431,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
         </div>
       )}
 
-      {tieneDetalleSustentacion(sustentacion) && <section className="evaluacion-tg__section"><h4>Información de la sustentación</h4><dl className="evaluacion-tg__summary">{sustentacion.fecha && <div><dt>Fecha y hora</dt><dd>{formatDate(sustentacion.fecha, true)}</dd></div>}{sustentacion.modalidad && <div><dt>Modalidad</dt><dd>{sustentacion.modalidad}</dd></div>}{sustentacion.lugar && <div><dt>Lugar</dt><dd>{sustentacion.lugar}</dd></div>}{sustentacion.esVirtual && sustentacion.enlace && <div><dt>Enlace de sustentación</dt><dd><a href={sustentacion.enlace} target="_blank" rel="noreferrer">Ingresar a la sustentación</a></dd></div>}</dl></section>}
+      {tieneDetalleSustentacion(sustentacion) && <section className="evaluacion-tg__section"><h4>Información de la sustentación</h4><dl className="evaluacion-tg__summary">{sustentacion.fecha && <div><dt>Fecha y hora</dt><dd>{formatDate(sustentacion.fecha, true)}</dd></div>}{sustentacion.modalidad && <div><dt>Modalidad</dt><dd>{sustentacion.modalidad}</dd></div>}{sustentacion.lugar && <div><dt>Lugar</dt><dd>{sustentacion.lugar}</dd></div>}{(sustentacion.esVirtual || sustentacion.esHibrida) && sustentacion.enlace && <div><dt>Enlace de sustentación</dt><dd><a href={sustentacion.enlace} target="_blank" rel="noreferrer">Ingresar a la sustentación</a></dd></div>}</dl></section>}
 
       <section className="evaluacion-tg__section">
         <h4>Histórico de cambios</h4>
