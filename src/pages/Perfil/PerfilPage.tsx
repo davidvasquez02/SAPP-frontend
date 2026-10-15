@@ -2,6 +2,7 @@ import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ModuleLayout } from '../../components'
+import { getIdpAccountUrl } from '../../api/configuracionService'
 import { canManagePosgrados, ROLES, hasAnyRole } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
@@ -65,6 +66,7 @@ const PerfilPage = () => {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
+  const [idpAccountUrl, setIdpAccountUrl] = useState<string | null>(null)
   const roles = user?.roles ?? []
   const isCoordination = canManagePosgrados(roles)
   const hasStudentRole = hasAnyRole(roles, [ROLES.ESTUDIANTE])
@@ -109,6 +111,16 @@ const PerfilPage = () => {
     void loadSignature()
     return () => { active = false }
   }, [usuarioId])
+
+  useEffect(() => {
+    let active = true
+
+    getIdpAccountUrl()
+      .then((url) => { if (active) setIdpAccountUrl(url) })
+      .catch(() => { /* Si falla, el boton simplemente no se muestra. */ })
+
+    return () => { active = false }
+  }, [])
 
   const fullName = useMemo(() => {
     if (!user) return 'Usuario'
@@ -202,7 +214,19 @@ const PerfilPage = () => {
         </section>
 
         <section className="profile-page__card" aria-labelledby="personal-title">
-          <div className="profile-page__heading"><div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div></div>
+          <div className="profile-page__heading">
+            <div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div>
+            {idpAccountUrl && (
+              <a
+                className="profile-page__file-button profile-page__heading-action"
+                href={idpAccountUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Actualizar mi información
+              </a>
+            )}
+          </div>
           <dl className="profile-page__data-grid">
             {!isCoordination && <div><dt>Tipo de documento</dt><dd>{user.persona.tipoDocumento}</dd></div>}
             {!isCoordination && <div><dt>Número de documento</dt><dd>{user.persona.numeroDocumento}</dd></div>}

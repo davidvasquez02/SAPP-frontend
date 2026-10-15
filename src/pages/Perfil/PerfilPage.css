@@ -146,6 +146,7 @@
 .profile-page__heading > span { color: var(--primary); font-size: 1.5rem; }
 .profile-page__heading h2 { font-size: 1.15rem; }
 .profile-page__heading p { margin-top: .2rem; color: var(--text-secondary); font-size: .9rem; }
+.profile-page__heading-action { margin-left: auto; white-space: nowrap; text-decoration: none; }
 .profile-page__data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2rem; margin: 0; }
 .profile-page__data-grid div { padding-bottom: .7rem; border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 72%); }
 .profile-page__data-grid dt { color: var(--text-secondary); font-size: .8rem; }
