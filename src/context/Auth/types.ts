@@ -1,4 +1,5 @@
 import type { EstudianteDto, LoginDetalleDto, PersonaDto } from '../../api/authTypes'
+import type { DirectorGradoPerfil } from '../../modules/perfil/services/directorGradoPerfilService'
 
 export type SessionKind = 'SAPP'
 
@@ -36,5 +37,6 @@ export interface AuthContextValue {
   isInitializing: boolean
   initializationError: string | null
   retryInitialization: () => Promise<void>
+  actualizarDirectorGrado: (asignacion: DirectorGradoPerfil) => void
   logout: () => Promise<void>
 }

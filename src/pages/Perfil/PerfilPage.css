@@ -5,6 +5,50 @@
   margin: 0 auto;
 }
 
+.profile-page__director {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--outline);
+}
+
+.profile-page__director-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 38rem;
+}
+
+.profile-page__director-form p { margin: 0; }
+
+.profile-page__director select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .65rem .75rem;
+  border: 1px solid var(--outline);
+  border-radius: .75rem;
+  background: var(--surface-container-low);
+  color: var(--on-surface, var(--text-primary));
+  font: inherit;
+}
+
+.profile-page__director select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.profile-page__director button {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: .65rem 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.profile-page__director button:disabled { opacity: .55; cursor: not-allowed; }
+
 .profile-page__hero {
   position: relative;
   display: flex;

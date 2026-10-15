@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Implementación 2026-10-14 — director de grado desde Mi perfil
+
+- Estudiantes sin director pueden seleccionar grupo de investigación y un docente de posgrado de ese grupo, y guardar directamente. La asignación existente se muestra sin edición; un nombre/correo vacío por fallo de IAM no habilita su reemplazo.
+- Consulta y guardado: `GET/PUT /sapp/estudiantes/{estudianteId}/director-grado`, payload `{ grupoInvestigacionId, directorId }` (ID local de usuarios_sapp). La respuesta StandardResponse contiene `{ estudianteId, puedeAsignar, grupo: { id, nombre } | null, director: { id, nombreCompleto, correo } | null }`. El catálogo existente admite `soloPosgrados=true` al consultar docentes por grupo.
+- Backend valida sesión, rol ESTUDIANTE_POSGRADOS, propiedad, pertenencia al grupo y rol DOCENTE_POSGRADOS vigente; guarda ambos campos de aspirantes de forma atómica solo cuando director_id sigue nulo. Sin migración ni cambios de dependencias. Asignación directa, sin aprobación/correos automáticos.
+- El perfil conserva la firma seleccionada al actualizar el contexto y persistir ambas proyecciones del estudiante. Gestiona consultas fallidas, grupos vacíos, respuestas antiguas, reintentos y conflicto 409. Estilos verificados en claro/oscuro y móvil.
+- Validación: 173/173 pruebas ligeras PASS; 9/9 pruebas de navegador PASS (incluye el caso padre); TypeScript, build de producción y ESLint focalizado PASS. Backend: 64/64 pruebas seleccionadas PASS con Microsoft JDK 21.0.9 existente. Permanece el aviso de chunk >500 kB. Logs locales `.director-grado-*.log`; comandos y continuidad en HANDOFF.md. Navegador con datos sintéticos, sin acceso al backend/IAM real.
+
 Minerva Posgrados centraliza admisiones, matrículas, liquidación, solicitudes,
 créditos condonables, trabajos de grado y gestión académica de EISI–UIS. Esta SPA
 organiza páginas, componentes y servicios HTTP por módulo y consume el backend
@@ -2077,3 +2085,11 @@ pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario 
 - Contrato sin cambios: `POST /sapp/firmaUsuario/{usuarioId}`, `{ titulo?: string, contenidoFirma: data URL }`; lectura `GET` al mismo endpoint. Sin cambios de dependencias, permisos, esquema ni backend.
 - Validación: ESLint focalizado, `npx tsc -b` y `git diff --check` PASS; `node --test --test-isolation=none tests/firmaPerfilGuardado.test.mjs` PASS (1/1), HTTP simulado comprueba actualización solo de título conservando contenido y omisión de título para estudiantes. Logs en terminal de esta conversación. Build Vite no repetido: sigue registrado el bloqueo ambiental EPERM/SWC.
 - Continuidad: verificar en sesión autenticada selección sin envío, guardado de imagen nueva, título solo, rol estudiante y reintento tras error. No se probó navegación con backend real. Reutilizar Windows/PowerShell, Node 24.11.0, npm 11.6.1, `node_modules` y lockfile existentes; no crear entornos ni instalar paquetes. Sin seeds/datasets nuevos.
+
+## Revisión rápida — 2026-10-14
+
+- Alcance: frontend institucional y backend `D:/Users/david/Desktop/SAPP/back - v2/sapp-backend`; revisión estática y verificaciones locales, sin cambios funcionales.
+- Frontend: 171/171 pruebas PASS (`node --test --test-isolation=none tests/*.test.ts tests/*.test.mjs`), log `.quick-review-tests.log`. `npm run build`: TypeScript completó; Vite falló por `spawn EPERM` y carga nativa SWC. `npm run lint`: 9 errores y 1 advertencia.
+- Backend: pom exige Java 21 y Spring Boot 4.0.0; Java disponible en PATH 17.0.2. No se ejecutaron pruebas Java. Migraciones SQL manuales, `ddl-auto=none`, sin dependencia Flyway/Liquibase encontrada.
+- Prioridad: RequestLoggingFilter.logStart excluye únicamente Authorization al registrar headers en DEBUG; puede registrar X-Internal-Token y otros secretos. Revisar filtrado antes de habilitar DEBUG. Autenticación mediante InfrastructureHeadersFilter; autorización por endpoint requiere auditoría específica.
+- Continuidad: resolver lint, verificar build en entorno que permita procesos nativos, ejecutar tests backend con JDK 21 y revisar redacción de logs/migraciones. Reutilizar node_modules y Maven Wrapper; sin instalaciones, seeds, consultas BD ni nuevos entornos. Los demás proyectos públicos no se revisaron en esta pasada.

@@ -19,8 +19,9 @@ export interface EstudianteFotoDto {
 }
 
 export interface DirectorTrabajoGradoDto {
-  nombreCompleto: string
-  correo: string
+  id?: number
+  nombreCompleto: string | null
+  correo: string | null
 }
 
 export interface EstudianteDto {

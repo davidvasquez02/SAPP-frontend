@@ -12,6 +12,7 @@ import {
   type FirmaPerfil,
 } from '../../modules/perfil/services/firmaPerfilService'
 import './PerfilPage.css'
+import { DirectorGradoPerfilForm } from '../../modules/perfil/components/DirectorGradoPerfilForm'
 
 const MAX_SIGNATURE_SIZE = 2 * 1024 * 1024
 const COORDINATION_PROGRAMS = [
@@ -53,7 +54,8 @@ const formatDateInColombia = (value: string | undefined) => {
 }
 
 const PerfilPage = () => {
-  const { user } = useAuth()
+  const { user, actualizarDirectorGrado } = useAuth()
+  const usuarioId = user?.id
   const [savedSignature, setSavedSignature] = useState<FirmaPerfil | null>(null)
   const [selectedSignature, setSelectedSignature] = useState<FirmaPerfil | null>(null)
   const [signatureTitle, setSignatureTitle] = useState('')
@@ -81,14 +83,14 @@ const PerfilPage = () => {
   )
 
   useEffect(() => {
-    if (!user) return
+    if (!usuarioId) return
     let active = true
 
     const loadSignature = async () => {
       setIsLoadingSignature(true)
       setError('')
       try {
-        const currentSignature = await obtenerFirmaUsuario(user.id)
+        const currentSignature = await obtenerFirmaUsuario(usuarioId)
         if (!active || !currentSignature) return
         const match = currentSignature.contenidoFirma.match(/^data:([^;]+);base64,(.+)$/)
         setSavedSignature({
@@ -106,7 +108,7 @@ const PerfilPage = () => {
 
     void loadSignature()
     return () => { active = false }
-  }, [user])
+  }, [usuarioId])
 
   const fullName = useMemo(() => {
     if (!user) return 'Usuario'
@@ -235,10 +237,11 @@ const PerfilPage = () => {
             <div><dt>Cohorte</dt><dd>{valueOrPending(user.estudiante?.cohorte)}</dd></div>
             <div><dt>Estado académico</dt><dd>{valueOrPending(user.estudiante?.estado)}</dd></div>
             <div><dt>Fecha de ingreso</dt><dd>{formatDateInColombia(user.estudiante?.fechaIngreso)}</dd></div>
-            <div><dt>Director de trabajo de grado</dt><dd>{user.estudiante?.directorTg?.nombreCompleto ?? ''}</dd></div>
-            <div><dt>Correo del director</dt><dd>{user.estudiante?.directorTg?.correo ?? ''}</dd></div>
+            {!hasStudentRole && <div><dt>Director de trabajo de grado</dt><dd>{user.estudiante?.directorTg?.nombreCompleto ?? ''}</dd></div>}
+            {!hasStudentRole && <div><dt>Correo del director</dt><dd>{user.estudiante?.directorTg?.correo ?? ''}</dd></div>}
             {/* <div><dt>ID de estudiante</dt><dd>{valueOrPending(user.estudiante?.id)}</dd></div> */}
           </dl>
+          {hasStudentRole && user.estudiante?.id && <DirectorGradoPerfilForm key={user.estudiante.id} estudianteId={user.estudiante.id} onActualizado={actualizarDirectorGrado} />}
         </section>}
 
         <section className="profile-page__card profile-page__signature" aria-labelledby="signature-title">

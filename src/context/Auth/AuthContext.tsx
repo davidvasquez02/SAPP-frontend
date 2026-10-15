@@ -7,6 +7,8 @@ import { clearBrowserSession } from '../../modules/auth/session/clearBrowserSess
 import { prefetchFotosEstudiantesActivos } from '../../modules/estudiantes/services/estudianteFotoPrefetch'
 import { AuthContext } from './context'
 import type { AuthContextValue, AuthSession } from './types'
+import { actualizarDirectorEnSession } from '../../modules/perfil/utils/directorGradoSession'
+import type { DirectorGradoPerfil } from '../../modules/perfil/services/directorGradoPerfilService'
 
 const getInitialSession = () => {
   const storedSession = getSession()
@@ -70,6 +72,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [])
 
+  const actualizarDirectorGrado = useCallback((asignacion: DirectorGradoPerfil) => {
+    setSessionState((current) => actualizarDirectorEnSession(current, asignacion))
+  }, [])
+
+  useEffect(() => {
+    if (session) saveSession(session)
+  }, [session])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
@@ -79,9 +89,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isInitializing,
       initializationError,
       retryInitialization: initializeFromGateway,
+      actualizarDirectorGrado,
       logout,
     }),
-    [session, isInitializing, initializationError, initializeFromGateway, logout],
+    [session, isInitializing, initializationError, initializeFromGateway, actualizarDirectorGrado, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
