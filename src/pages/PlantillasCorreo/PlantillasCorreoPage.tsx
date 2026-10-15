@@ -93,9 +93,9 @@ const PlantillasCorreoPage = () => {
             <table className="plantillas-correo__table">
               <colgroup>
                 <col style={{ width: '28%' }} />
-                <col style={{ width: '50%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '10%' }} />
+                <col />
+                <col style={{ width: '6.5rem' }} />
+                <col style={{ width: '7rem' }} />
               </colgroup>
               <thead>
                 <tr>
@@ -108,16 +108,16 @@ const PlantillasCorreoPage = () => {
               <tbody>
                 {visibles.map((plantilla) => (
                   <tr key={plantilla.id}>
-                    <td><strong className="plantillas-correo__nombre">{plantilla.nombre}</strong></td>
-                    <td>
+                    <td data-label="Nombre"><strong className="plantillas-correo__nombre">{plantilla.nombre}</strong></td>
+                    <td data-label="Descripción">
                       <span className="plantillas-correo__descripcion" title={plantilla.descripcion}>{plantilla.descripcion}</span>
                     </td>
-                    <td className="plantillas-correo__centrado">
+                    <td data-label="Idioma" className="plantillas-correo__centrado">
                       <span className={`plantillas-correo__idioma plantillas-correo__idioma--${plantilla.idioma.toLowerCase()}`}>
                         {NOMBRE_IDIOMA[plantilla.idioma]}
                       </span>
                     </td>
-                    <td className="plantillas-correo__centrado">
+                    <td data-label="Acciones" className="plantillas-correo__centrado">
                       <button type="button" className="plantillas-correo__edit" onClick={() => navigate(`${RUTA_PLANTILLAS}/${plantilla.id}/editar`)}>
                         Editar
                       </button>

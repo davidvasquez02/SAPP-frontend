@@ -1,3 +1,25 @@
+## Ajuste 2026-10-14 — responsividad de Proyectos de investigación
+
+- Maestría y doctorado usan una cuadrícula principal que permite encogerse; la tabla se desplaza dentro de su contenedor sin ensanchar pestañas, filtros ni recordatorios. Filtros según ancho útil, paginación flexible y filas móviles con texto largo ajustado; hasta 560 px, etiquetas y valores se apilan para facilitar lectura.
+- Edge con CSS real y contenido sintético: 44 combinaciones de ancho/tema/nivel (320–1920 px, claro/oscuro, maestría/doctorado) PASS; sin desbordamiento global ni controles recortados. Pendiente recorrido autenticado con datos institucionales. Sin cambios de API, roles ni envío de recordatorios.
+
+- Implementación limitada a src/pages/TrabajosGrado/TrabajosGradoPage.css; reglas de componentes compartidos acotadas por .trabajos-grado-page. Se conservan los ajustes anteriores de calendario/plantillas. Fixture temporal con estilos reales eliminado tras validar 320,390,494,640,768,900,1024,1100,1280,1440,1920 px en ambos temas/niveles; resultados en terminal sin log persistente. No verifica carga autenticada ni interacción con backend. No se enviaron correos.
+- Entorno existente Windows/PowerShell, node_modules y Edge/Playwright ya descritos; sin instalaciones ni nuevos entornos. git diff --check PASS. Build inicial completó TypeScript pero Vite bloqueado por EPERM/SWC en sandbox; reintento con escalación PASS (TypeScript + Vite, 364 módulos, aviso previo de chunk >500 kB). Sin commit ni despliegue.
+
+## Ajuste 2026-10-14 — responsividad de Plantillas de correo
+
+- Columnas de idioma/acciones con espacio reservado y descripción flexible; se evita recortar Editar en tamaños intermedios. Filtros se redistribuyen según el ancho útil y Limpiar filtros deja de estirarse a la altura del panel. A 780 px o menos, cada plantilla se presenta como tarjeta con etiquetas y acción de ancho completo.
+- Edge con CSS real y contenido sintético: 24 combinaciones (320–1920 px, claro/oscuro) PASS; sin desbordamiento global ni Editar recortado. Build/TypeScript, ESLint focalizado y git diff --check PASS. Permanece el aviso existente de chunk >500 kB. Pendiente recorrido con sesión institucional. Sin cambios de API ni dependencias.
+
+- Archivos: src/pages/PlantillasCorreo/PlantillasCorreo.css y PlantillasCorreoPage.tsx (colgroup y data-label de celdas). El fixture local verificó anchos 320,390,494,768,900,1024,1100,1200,1280,1350,1440,1920 con ambos temas, contenido largo y acciones; fue temporal y se eliminó. Resultado en terminal, sin log persistente. Reutiliza el mismo Edge/Playwright y node_modules descritos en la entrada anterior; sin entornos nuevos. Build inicial pasó TypeScript pero Vite falló por sandbox EPERM/SWC; reintento con escalación PASS (364 módulos, aviso existente de chunk >500 kB). Mantener los cambios previos del calendario. Sin despliegue ni commit.
+
+## Ajuste 2026-10-14 — responsividad Administración académica
+
+- Corregido el encogimiento de contenedores flex: src/components/ModuleLayout/ModuleLayout.css agrega min-width:0 al módulo y su contenido en todos los anchos. src/pages/FechasModule/FechasModulePage.css lo aplica al calendario, tarjetas, grupos de programas y wrappers; estos limitan el ancho al 100%. Los encabezados permiten wrap, textos largos se parten y los botones respetan el contenedor. Se conservan las tablas/tarjetas móviles y el breakpoint de navegación existente de 1200 px.
+- Contratos HTTP, datos, permisos y dependencias sin cambios. Resultado esperado: sin scroll horizontal global al reducir ventana; tablas de escritorio anchas se desplazan dentro de su tarjeta, móvil conserva sus tarjetas.
+- Validación: npm run build PASS (TypeScript + Vite, 364 módulos; aviso de chunk >500 kB); git diff --check PASS. Edge headless con CSS real y markup sintético del layout/calendario: 22 combinaciones (320,390,494,768,900,1024,1200,1280,1350,1440,1920 px, temas light/dark) PASS, verifica ancho del documento y botones visibles. Resultados en terminal de esta conversación, sin log persistente. Fixture temporal eliminado; no se agregó suite nueva por tratarse de CSS de bajo impacto. No se comprobó sesión institucional ni las otras pantallas del módulo en navegador; ese recorrido queda pendiente.
+- Entorno: Windows/PowerShell, node_modules y lockfile existentes; sin instalaciones ni nuevos entornos. Playwright existente en C:/Users/david/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright con canal msedge. Primer arranque dentro del sandbox falló spawn EPERM; verificación realizada con escalación autorizada. No hay seeds ni datasets nuevos. Cambios locales sin commit ni despliegue.
+
 
 ## Implementación 2026-10-14 — grupo y director de grado en Mi perfil
 

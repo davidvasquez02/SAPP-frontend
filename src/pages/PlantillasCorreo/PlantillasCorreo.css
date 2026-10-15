@@ -2,6 +2,7 @@
   --idioma-es: #1f5fa8;
   --idioma-en: #7a4bb0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   min-width: 0;
 }
@@ -129,6 +130,8 @@
 /* Lista */
 
 .plantillas-correo__table-wrap {
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
@@ -419,13 +422,90 @@
   gap: 0.75rem;
 }
 
-@media (max-width: 720px) {
-  .plantillas-correo__table colgroup col {
-    width: auto !important;
+/* El espacio útil depende también del menú interno, no solo del viewport. */
+.plantillas-correo .sapp-filters-panel {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  align-items: end;
+}
+
+.plantillas-correo .sapp-filter-field,
+.plantillas-correo .sapp-filter-field input,
+.plantillas-correo .sapp-filter-field select {
+  min-width: 0;
+  width: 100%;
+}
+
+.plantillas-correo .sapp-filters-clear-button {
+  min-height: 44px;
+  white-space: normal;
+}
+
+@media (max-width: 780px) {
+  .plantillas-correo__table-wrap {
+    border: 0;
+    overflow: visible;
   }
 
-  .plantillas-correo__table td:nth-child(2) {
-    width: 50%;
+  .plantillas-correo__table,
+  .plantillas-correo__table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .plantillas-correo__table colgroup {
+    display: none;
+  }
+
+  .plantillas-correo__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .plantillas-correo__table tbody {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .plantillas-correo__table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1rem;
+    border: 1px solid var(--outline);
+    border-radius: 18px;
+    background: var(--surface);
+  }
+
+  .plantillas-correo__table td {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.5rem 0;
+    border: 0;
+    text-align: left !important;
+  }
+
+  .plantillas-correo__table td::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+    font-weight: 600;
+  }
+
+  .plantillas-correo__descripcion {
+    display: block;
+    overflow: visible;
+  }
+
+  .plantillas-correo__idioma {
+    justify-self: start;
+  }
+
+  .plantillas-correo__edit {
+    width: 100%;
+    min-height: 44px;
   }
 }
 

@@ -1,5 +1,23 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-10-14 — responsividad de Proyectos de investigación
+
+- Maestría y doctorado usan una cuadrícula principal que permite encogerse; la tabla se desplaza dentro de su contenedor sin ensanchar pestañas, filtros ni recordatorios. Filtros según ancho útil, paginación flexible y filas móviles con texto largo ajustado; hasta 560 px, etiquetas y valores se apilan para facilitar lectura.
+- Edge con CSS real y contenido sintético: 44 combinaciones de ancho/tema/nivel (320–1920 px, claro/oscuro, maestría/doctorado) PASS; sin desbordamiento global ni controles recortados. Pendiente recorrido autenticado con datos institucionales. Build/TypeScript y git diff --check PASS. Permanece el aviso de chunk >500 kB. Sin cambios de API, roles ni envío de recordatorios.
+
+
+## Ajuste 2026-10-14 — responsividad de Plantillas de correo
+
+- Columnas de idioma/acciones con espacio reservado y descripción flexible; se evita recortar Editar en tamaños intermedios. Filtros se redistribuyen según el ancho útil y Limpiar filtros deja de estirarse a la altura del panel. A 780 px o menos, cada plantilla se presenta como tarjeta con etiquetas y acción de ancho completo.
+- Edge con CSS real y contenido sintético: 24 combinaciones (320–1920 px, claro/oscuro) PASS; sin desbordamiento global ni Editar recortado. Build/TypeScript, ESLint focalizado y git diff --check PASS. Permanece el aviso existente de chunk >500 kB. Pendiente recorrido con sesión institucional. Sin cambios de API ni dependencias.
+
+
+## Ajuste 2026-10-14 — responsividad del calendario académico
+
+- Las tarjetas y contenedores permiten encogerse en escritorio y tamaños intermedios. El ancho mínimo de las tablas queda dentro de su desplazamiento horizontal local; encabezados y botones pueden reorganizarse. Se conserva la presentación móvil existente y los tokens de ambos temas.
+- Validación: build de producción/TypeScript PASS (aviso existente de chunk >500 kB), git diff --check PASS y Edge con fixture de CSS real: 22 combinaciones de ancho/tema (320–1920 px), sin desbordamiento del documento y con botones visibles. Pendiente recorrido autenticado con datos institucionales.
+
+
 ## Implementación 2026-10-14 — director de grado desde Mi perfil
 
 - Estudiantes sin director pueden seleccionar grupo de investigación y un docente de posgrado de ese grupo, y guardar directamente. La asignación existente se muestra sin edición; un nombre/correo vacío por fallo de IAM no habilita su reemplazo.
