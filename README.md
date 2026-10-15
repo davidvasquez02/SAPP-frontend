@@ -1,5 +1,14 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Implementación 2026-10-15 — documentos de Admisiones bajo demanda
+
+- Documentos cargados solicita `GET /sapp/document?codigoTipoTramite=1002&tramiteId=...&incluirContenido=false`. Conserva requisitos, archivos pendientes/cargados, versiones, estados y observaciones; su caché solo guarda metadatos y comparte solicitudes pendientes entre pantalla principal y sección.
+- Ver/Descargar obtiene únicamente el archivo seleccionado mediante `GET /sapp/document/{id}` y reutiliza las utilidades actuales de base64/Blob. La vista previa abre su pestaña antes de esperar la red y la cierra si falla. Aprobar/rechazar invalida y recarga el listado ligero.
+- El archivo de hoja de vida deja de precargarse con el detalle: al abrir su sección consulta metadatos por tipo documental y después el contenido por ID. Conserva caché de vista previa después de abrirla. Se mantienen las precargas pequeñas de componentes/puntajes de evaluación.
+- Backend: `incluirContenido` es opcional y predetermina `true`; otros consumidores conservan su comportamiento. Con `false`, una proyección JPQL no selecciona `contenido_base64`; la respuesta omite ese campo. Sin migraciones, cambios de dependencias o permisos. Desplegar backend antes del frontend.
+- Validación: TypeScript/build y ESLint focalizado PASS; suite frontend 180/180 PASS, navegador Edge 6/6 PASS (5 escenarios y caso padre), backend 31/31 pruebas seleccionadas PASS. Se verificaron SQL generado, compatibilidad, PDF/imagen, errores/reintentos, aprobación/rechazo y carga de hoja de vida al abrir su sección.
+- Medición sintética de JSON sin comprimir: listado con un base64 de 2 MiB y un requisito pendiente pasó de 2.098.143 a 961 bytes (99,95 % menos); mismos metadatos al retirar contenido. No es una medición de latencia ni de archivos institucionales. Logs locales `.admisiones-documentos-*.log` y backend `target/admisiones-documentos-tests.log`; ejecución y límites en HANDOFF.md.
+
 ## Ajuste 2026-10-14 — responsividad de Proyectos de investigación
 
 - Maestría y doctorado usan una cuadrícula principal que permite encogerse; la tabla se desplaza dentro de su contenedor sin ensanchar pestañas, filtros ni recordatorios. Filtros según ancho útil, paginación flexible y filas móviles con texto largo ajustado; hasta 560 px, etiquetas y valores se apilan para facilitar lectura.

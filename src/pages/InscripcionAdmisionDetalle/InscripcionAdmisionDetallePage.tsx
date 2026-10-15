@@ -18,7 +18,6 @@ import {
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
 import {
   prefetchEvaluacionEtapa,
-  prefetchHojaVidaDocumento,
 } from '../../modules/admisiones/pages/EvaluacionEtapaPage/evaluacionPrefetchCache'
 import { validateEvaluacionCompleta } from '../../modules/admisiones/utils/validateEvaluacionCompleta'
 import { prefetchInscripcionDocumentos } from '../InscripcionDocumentos/documentosPrefetchCache'
@@ -294,7 +293,6 @@ const InscripcionAdmisionDetallePage = () => {
         errors.documentos = e instanceof Error ? e.message : 'Error cargando documentos.'
       }),
       prefetchEvaluacionEtapa(parsedInscripcionId, 'HOJA_DE_VIDA')
-        .then(() => prefetchHojaVidaDocumento(parsedInscripcionId))
         .catch((e) => {
           errors['hoja-vida'] = e instanceof Error ? e.message : 'Error cargando hoja de vida.'
         }),

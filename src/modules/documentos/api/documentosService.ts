@@ -44,12 +44,14 @@ interface DocumentosByTramiteParams {
   tramiteId: number
   codigoTipoTramite: string | number
   codigoTipoDocumentoTramite?: string
+  incluirContenido?: boolean
 }
 
 export const getDocumentosByTramiteParams = async ({
   tramiteId,
   codigoTipoTramite,
   codigoTipoDocumentoTramite,
+  incluirContenido,
 }: DocumentosByTramiteParams): Promise<DocumentoTramiteItemDto[]> => {
   const qs = new URLSearchParams({
     codigoTipoTramite: String(codigoTipoTramite),
@@ -59,6 +61,8 @@ export const getDocumentosByTramiteParams = async ({
   if (codigoTipoDocumentoTramite) {
     qs.set('codigoTipoDocumentoTramite', codigoTipoDocumentoTramite)
   }
+
+  if (incluirContenido !== undefined) qs.set('incluirContenido', String(incluirContenido))
 
   const response = await httpGet<ApiResponse<DocumentoTramiteItemDto[]>>(
     `/sapp/document?${qs.toString()}`,
@@ -73,10 +77,12 @@ export const getDocumentosByTramiteParams = async ({
 
 export const getDocumentosByTramite = async (
   tramiteId: number,
+  incluirContenido = true,
 ): Promise<DocumentoTramiteItemDto[]> => {
   return getDocumentosByTramiteParams({
     tramiteId,
     codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
+    incluirContenido,
   })
 }
 

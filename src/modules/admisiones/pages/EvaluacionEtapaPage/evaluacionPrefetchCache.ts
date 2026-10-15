@@ -1,4 +1,4 @@
-import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
+import { getDocumentById, getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
 import {
   CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
   CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
@@ -17,11 +17,16 @@ export const prefetchEvaluacionEtapa = async (inscripcionId: number, etapa: Etap
   evaluacionCache.set(cacheKey, await getEvaluacionAdmisionInfo(inscripcionId, etapa))
 }
 
-export const prefetchHojaVidaDocumento = async (inscripcionId: number) => {
-  if (hojaVidaDocCache.has(inscripcionId)) return
-  const documentos = await getDocumentosByTramiteParams({ tramiteId: inscripcionId, codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION, codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION })
+/** Solo invocar al abrir la seccion Hoja de vida; el detalle no precarga archivos. */
+export const cargarHojaVidaDocumento = async (inscripcionId: number): Promise<HojaVidaPreviewDocument | null> => {
+  const cached = hojaVidaDocCache.get(inscripcionId)
+  if (cached) return cached
+  const documentos = await getDocumentosByTramiteParams({ tramiteId: inscripcionId, codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION, codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, incluirContenido: false })
   const uploaded = documentos[0]?.documentoUploadedResponse
-  const base64 = uploaded?.base64DocumentoContenido || uploaded?.contenidoBase64
-  if (!uploaded || !base64) return
-  hojaVidaDocCache.set(inscripcionId, { base64, mimeType: uploaded?.mimeTypeDocumentoContenido || uploaded?.mimeType || 'application/pdf', filename: uploaded?.nombreArchivoDocumento || 'hoja-de-vida.pdf' })
+  if (!uploaded?.idDocumento) return null
+  const file = await getDocumentById(uploaded.idDocumento)
+  if (!file.contenidoBase64) return null
+  const resolved = { base64: file.contenidoBase64, mimeType: file.mimeType || uploaded.mimeTypeDocumentoContenido || 'application/pdf', filename: file.nombreArchivo || uploaded.nombreArchivoDocumento || 'hoja-de-vida.pdf' }
+  hojaVidaDocCache.set(inscripcionId, resolved)
+  return resolved
 }

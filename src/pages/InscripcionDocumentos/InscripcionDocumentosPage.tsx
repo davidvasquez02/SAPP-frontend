@@ -201,7 +201,6 @@ const InscripcionDocumentosPage = () => {
 
   const handleViewDocumento = async (
     documentoId: number,
-    base64?: string,
     mimeType?: string,
     filename?: string,
   ) => {
@@ -213,8 +212,8 @@ const InscripcionDocumentosPage = () => {
 
     updateActionState(documentoId, { viewing: true })
     try {
-      const documentoCompleto = base64 ? null : await getDocumentById(documentoId)
-      const contenido = base64 ?? documentoCompleto?.contenidoBase64
+      const documentoCompleto = await getDocumentById(documentoId)
+      const contenido = documentoCompleto.contenidoBase64
 
       if (!contenido) {
         throw new Error('No hay contenido para visualizar.')
@@ -237,14 +236,13 @@ const InscripcionDocumentosPage = () => {
 
   const handleDownloadDocumento = async (
     documentoId: number,
-    base64?: string,
     mimeType?: string,
     filename?: string,
   ) => {
     updateActionState(documentoId, { downloading: true })
     try {
-      const documentoCompleto = base64 ? null : await getDocumentById(documentoId)
-      const contenido = base64 ?? documentoCompleto?.contenidoBase64
+      const documentoCompleto = await getDocumentById(documentoId)
+      const contenido = documentoCompleto.contenidoBase64
 
       if (!contenido) {
         throw new Error('No hay contenido para descargar.')
@@ -374,8 +372,6 @@ const InscripcionDocumentosPage = () => {
             const actionState = documentoId ? getActionState(documentoId) : null
             const validacionEstado = documento.validacionEstado
             const documentoResponse = documento.documentoUploadedResponse
-            const base64 =
-              documentoResponse?.base64DocumentoContenido ?? documentoResponse?.contenidoBase64
             const mimeType =
               documentoResponse?.mimeTypeDocumentoContenido ??
               documentoResponse?.mimeType ??
@@ -474,7 +470,7 @@ const InscripcionDocumentosPage = () => {
                       type="button"
                       className="sapp-document-action inscripcion-documentos__view-button"
                       onClick={() =>
-                        documentoId && handleViewDocumento(documentoId, base64, mimeType, filename)
+                        documentoId && handleViewDocumento(documentoId, mimeType, filename)
                       }
                       disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
                       aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
@@ -485,7 +481,7 @@ const InscripcionDocumentosPage = () => {
                       type="button"
                       className="sapp-document-action inscripcion-documentos__download-button"
                       onClick={() =>
-                        documentoId && handleDownloadDocumento(documentoId, base64, mimeType, filename)
+                        documentoId && handleDownloadDocumento(documentoId, mimeType, filename)
                       }
                       disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}
                       aria-disabled={!canOpenActions || actionState?.viewing || actionState?.downloading}

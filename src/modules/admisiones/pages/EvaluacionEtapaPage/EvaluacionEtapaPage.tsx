@@ -13,10 +13,8 @@ import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evalua
 import { groupByEvaluador } from '../../utils/groupByEvaluador'
 import './EvaluacionEtapaPage.css'
 import type { InscripcionDetalleOutletContext } from '../../../../pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
-import { evaluacionCache, hojaVidaDocCache } from './evaluacionPrefetchCache'
+import { evaluacionCache, cargarHojaVidaDocumento } from './evaluacionPrefetchCache'
 import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
-import { getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
-import { CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION } from '../../../documentos/constants'
 import { clearEvaluationDrafts, getEvaluationDrafts, setEvaluationDrafts } from '../../utils/evaluacionDraftStore'
 
 interface EvaluacionEtapaPageProps {
@@ -173,11 +171,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       return
     }
 
-    const resolveHojaVidaDocumento = (base64: string, mimeType: string, filename: string): HojaVidaPreviewDocument => ({
-      base64,
-      mimeType,
-      filename,
-    })
+    let active = true
 
     const loadHojaVidaDoc = async () => {
       if (Number.isNaN(inscripcionIdNumber)) {
@@ -191,34 +185,18 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       setHojaVidaPreviewDoc(null)
 
       try {
-        const cachedDoc = hojaVidaDocCache.get(inscripcionIdNumber)
-        if (cachedDoc) {
-          setHojaVidaPreviewDoc(cachedDoc)
-          setHojaVidaDocStatus('ready')
-          return
-        }
-
-        const documentos = await getDocumentosByTramiteParams({
-          tramiteId: inscripcionIdNumber,
-          codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
-          codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
-        })
-        const uploaded = documentos[0]?.documentoUploadedResponse
-        const base64 = uploaded?.base64DocumentoContenido || uploaded?.contenidoBase64
-        const mimeType = uploaded?.mimeTypeDocumentoContenido || uploaded?.mimeType || 'application/pdf'
-        const filename = uploaded?.nombreArchivoDocumento || 'hoja-de-vida.pdf'
-
-        if (!uploaded || !base64) {
+        const resolvedDoc = await cargarHojaVidaDocumento(inscripcionIdNumber)
+        if (!active) return
+        if (!resolvedDoc) {
           setHojaVidaDocStatus('missing')
           setHojaVidaDocMessage('No se encontró documento de hoja de vida para previsualizar.')
           return
         }
 
-        const resolvedDoc = resolveHojaVidaDocumento(base64, mimeType, filename)
-        hojaVidaDocCache.set(inscripcionIdNumber, resolvedDoc)
         setHojaVidaPreviewDoc(resolvedDoc)
         setHojaVidaDocStatus('ready')
       } catch (errorResponse) {
+        if (!active) return
         setHojaVidaDocStatus('error')
         setHojaVidaDocMessage(
           errorResponse instanceof Error
@@ -229,6 +207,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     }
 
     loadHojaVidaDoc()
+    return () => { active = false }
   }, [inscripcionIdNumber, isHojaDeVida])
 
   useEffect(() => {
