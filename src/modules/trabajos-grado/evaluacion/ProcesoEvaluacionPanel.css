@@ -84,7 +84,11 @@
 .evaluacion-tg button.evaluacion-tg__confirmation-cancel { border-color: var(--outline); background: var(--surface); color: var(--text-primary); }
 .evaluacion-tg button.evaluacion-tg__confirmation-confirm { border-color: var(--danger); background: var(--danger); color: var(--on-danger, var(--surface)); }
 .evaluacion-tg__confirmation-actions button:disabled { cursor: wait; }
-.evaluacion-tg__chip--aceptada { border-color: var(--success); color: var(--success); }
+.evaluacion-tg__chip--aceptada {
+  border-color: color-mix(in srgb, var(--success), var(--outline) 40%);
+  background: color-mix(in srgb, var(--success) 22%, var(--surface));
+  color: var(--text-primary);
+}
 .evaluacion-tg__chip--declinada, .evaluacion-tg__chip--reemplazado { border-color: var(--danger); color: var(--danger); }
 .evaluacion-tg__timeline { margin: 1rem 0 0; padding: 0; list-style: none; }
 .evaluacion-tg__timeline li { display: grid; grid-template-columns: 1rem 1fr; gap: .7rem; padding-bottom: 1rem; }

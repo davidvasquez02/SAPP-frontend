@@ -130,10 +130,11 @@ const RubricaCelda = ({ evaluaciones }: { evaluaciones: JuradoEvaluador['evaluac
             className="evaluacion-tg__rubrica-download"
             disabled={descargandoId === evaluacion.id}
             onClick={() => void descargar(evaluacion)}
-            title={evaluacion.rubricaNombreArchivo ?? undefined}
+            title={`Descargar rúbrica: ${momento} (${evaluacion.rubricaNombreArchivo})`}
+            aria-label={`Descargar rúbrica de ${momento}`}
           >
             <span aria-hidden="true">⬇</span>
-            {descargandoId === evaluacion.id ? 'Descargando…' : momento}
+            {descargandoId === evaluacion.id ? 'Descargando…' : 'Descargar rúbrica'}
           </button>
         )
       })}
