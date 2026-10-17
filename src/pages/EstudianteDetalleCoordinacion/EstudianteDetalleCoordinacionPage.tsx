@@ -1,5 +1,5 @@
 import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
@@ -21,6 +21,7 @@ import {
   type EstadoEstudiante,
 } from '../../modules/estudiantes/services/estudiantesMockService'
 import { clearEstudiantesListCache } from '../../modules/estudiantes/services/estudiantesListCache'
+import { getFotoCacheada } from '../../modules/estudiantes/services/estudianteFotoCache'
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
@@ -106,10 +107,10 @@ const getFotoSrc = (estudiante: EstudianteCoordinacion) => {
   const contenidoBase64 = estudiante.foto?.contenidoBase64?.trim()
 
   if (contenidoBase64) {
-    return `data:image/png;base64,${contenidoBase64}`
+    return `data:${estudiante.foto?.mimeType || 'image/png'};base64,${contenidoBase64}`
   }
 
-  return estudiante.fotoUrl
+  return estudiante.fotoUrl || getFotoCacheada(estudiante.id)
 }
 
 const getCodigoEstudianteUis = (estudiante: EstudianteCoordinacion | null) => {
@@ -611,8 +612,6 @@ const EstudianteDetalleCoordinacionPage = () => {
   const [estadoError, setEstadoError] = useState<string | null>(null)
   const [isDownloadingZip, setIsDownloadingZip] = useState(false)
   const [downloadZipError, setDownloadZipError] = useState<string | null>(null)
-  const loadedDocumentsEstudianteIdRef = useRef<number | null>(null)
-  const loadedEstudianteIdRef = useRef<number | null>(null)
 
   useEffect(() => () => {
     window.setTimeout(() => {
@@ -631,13 +630,8 @@ const EstudianteDetalleCoordinacionPage = () => {
       return
     }
 
-    // Evita repetir esta carga para el mismo id (p. ej. por un recalculo de estudianteFromState).
-    if (loadedEstudianteIdRef.current === id) {
-      return
-    }
-
     // location.state sobrevive a un F5: si el estudiante cambio de estado en una visita anterior
-    // a esta misma pantalla, seguiria trayendo la foto vieja de cuando se navego desde la lista.
+    // a esta misma pantalla, seguiria trayendo los datos de cuando se navego desde la lista.
     // Por eso solo se usa para pintar algo de entrada (sin parpadeo de "Cargando..."); la fuente
     // de verdad siempre es el fetch al back, que corre igual y reemplaza lo que haga falta.
     const stateEstudiante = estudianteFromState?.id === id ? estudianteFromState : null
@@ -647,13 +641,18 @@ const EstudianteDetalleCoordinacionPage = () => {
       setIsLoading(false)
       setError(null)
     } else {
+      setEstudiante(null)
       setIsLoading(true)
       setError(null)
     }
 
+    let ignore = false
+
     const loadEstudiante = async () => {
       try {
         const data = await getEstudianteById(id)
+
+        if (ignore) return
 
         if (!data) {
           if (!stateEstudiante) {
@@ -662,19 +661,27 @@ const EstudianteDetalleCoordinacionPage = () => {
           return
         }
 
-        setEstudiante(data)
+        // La consulta del perfil puede omitir la foto ANX-4 ya resuelta por el listado.
+        setEstudiante((current) => ({
+          ...data,
+          fotoUrl: data.fotoUrl || getFotoCacheada(id)
+            || (current?.id === id ? current.fotoUrl : null),
+        }))
         setError(null)
       } catch (err) {
-        if (!stateEstudiante) {
+        if (!ignore && !stateEstudiante) {
           setError(err instanceof Error ? err.message : 'No fue posible cargar el detalle.')
         }
       } finally {
-        loadedEstudianteIdRef.current = id
-        setIsLoading(false)
+        if (!ignore) setIsLoading(false)
       }
     }
 
     void loadEstudiante()
+
+    return () => {
+      ignore = true
+    }
   }, [estudianteFromState, estudianteId])
 
   const estudianteIdActual = estudiante?.id ?? null
@@ -697,19 +704,17 @@ const EstudianteDetalleCoordinacionPage = () => {
     setDocumentGroups(data)
   }, [estudianteIdActual])
 
+  // Solo cambia de consulta cuando cambia la identidad, no al refrescar el perfil/estado.
   useEffect(() => {
     if (!estudianteIdActual) {
       setDocumentGroups([])
-      setDocumentsError(estudiante ? 'No se encontró el estudiante para consultar documentos.' : null)
-      return
-    }
-
-    if (loadedDocumentsEstudianteIdRef.current === estudianteIdActual) {
+      setDocumentsError(null)
+      setIsLoadingDocuments(false)
       return
     }
 
     let ignore = false
-    loadedDocumentsEstudianteIdRef.current = estudianteIdActual
+    setDocumentGroups([])
     setIsLoadingDocuments(true)
     setDocumentsError(null)
 
@@ -722,7 +727,6 @@ const EstudianteDetalleCoordinacionPage = () => {
         }
       } catch (err) {
         if (!ignore) {
-          loadedDocumentsEstudianteIdRef.current = null
           setDocumentGroups([])
           setDocumentsError(
             err instanceof Error
@@ -742,7 +746,7 @@ const EstudianteDetalleCoordinacionPage = () => {
     return () => {
       ignore = true
     }
-  }, [estudianteIdActual, estudiante])
+  }, [estudianteIdActual])
 
   const admissionDocuments = useMemo(() => buildAdmissionDocuments(documentGroups), [documentGroups])
   const enrollmentGroups = useMemo(() => buildEnrollmentGroups(documentGroups), [documentGroups])

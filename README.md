@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-10-16 — foto y documentos del detalle del estudiante
+
+- Al refrescar el perfil, se conserva la foto recibida del listado o de su caché si la consulta no trae imagen; una foto incluida por el servidor tiene prioridad y usa su MIME.
+- Admisión y Matrículas completan su consulta documental aunque el perfil se actualice antes de recibirla. El efecto depende del ID del estudiante; actualizar datos/estado o cambiar de pestaña no cancela ni repite esa consulta. Se eliminó la marca de carga que impedía recuperarse tras la cancelación y se descartan respuestas de perfiles abandonados.
+- Validación: se reprodujeron los fallos en el bundle anterior; con la corrección, Edge 6/6 PASS (cinco escenarios y padre), suite existente 184/184 PASS, TypeScript/build, ESLint focalizado y `git diff --check` PASS. Permanece el aviso existente de chunk >500 kB. APIs sintéticas; pendiente comprobar con sesión institucional. Logs `.estudiante-detalle-*.log` y continuidad en HANDOFF.md.
+- Se mantienen los endpoints de consulta y documentos por ID de estudiante, sin cambios de contratos, dependencias ni base de datos. Cambio local, sin despliegue.
+
 ## Implementación 2026-10-15 — sustentaciones híbridas
 
 - Programar sustentación admite el código de catálogo `HIBRIDA` (Híbrida): muestra y exige lugar físico y URL de videoconferencia. Presencial exige lugar y Virtual exige URL; los campos que no aplican se envían como null para evitar conservar datos de otra modalidad.
