@@ -88,19 +88,6 @@ const EvaluacionDetalle = ({ evaluacion, tipoSolicitudCodigo }: {
   const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
   const { etiqueta, valor } = presentarValorEvaluacion(evaluacion, tipoSolicitudCodigo)
   const observaciones = evaluacion.observaciones?.trim()
-  const [descargando, setDescargando] = useState(false)
-
-  const descargarRubrica = async () => {
-    setDescargando(true)
-    try {
-      const rubrica = await descargarRubricaDiligenciada(evaluacion.id)
-      downloadBase64File(rubrica.contenidoBase64, rubrica.mimeType, rubrica.nombreArchivo)
-    } catch {
-      // Falla silenciosa: no hay un lugar en esta tabla para mostrar un error puntual por fila.
-    } finally {
-      setDescargando(false)
-    }
-  }
 
   return (
     <article className="evaluacion-tg__evaluation">
@@ -109,12 +96,47 @@ const EvaluacionDetalle = ({ evaluacion, tipoSolicitudCodigo }: {
         <span><b>{etiqueta}:</b> {valor}</span>
       )}
       {observaciones && <span><b>Observaciones:</b> {observaciones}</span>}
-      {evaluacion.rubricaNombreArchivo && (
-        <button type="button" className="evaluacion-tg__rubrica-download" disabled={descargando} onClick={() => void descargarRubrica()}>
-          {descargando ? 'Descargando…' : `Descargar rúbrica (${evaluacion.rubricaNombreArchivo})`}
-        </button>
-      )}
     </article>
+  )
+}
+
+const RubricaCelda = ({ evaluaciones }: { evaluaciones: JuradoEvaluador['evaluaciones'] }) => {
+  const [descargandoId, setDescargandoId] = useState<number | null>(null)
+  const conRubrica = evaluaciones?.filter((evaluacion) => evaluacion.rubricaNombreArchivo) ?? []
+
+  if (conRubrica.length === 0) return <span className="evaluacion-tg__rubrica-empty">—</span>
+
+  const descargar = async (evaluacion: JuradoEvaluador['evaluaciones'][number]) => {
+    setDescargandoId(evaluacion.id)
+    try {
+      const rubrica = await descargarRubricaDiligenciada(evaluacion.id)
+      downloadBase64File(rubrica.contenidoBase64, rubrica.mimeType, rubrica.nombreArchivo)
+    } catch {
+      // Falla silenciosa: no hay un lugar en esta columna para mostrar un error puntual por fila.
+    } finally {
+      setDescargandoId(null)
+    }
+  }
+
+  return (
+    <div className="evaluacion-tg__rubricas">
+      {conRubrica.map((evaluacion) => {
+        const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
+        return (
+          <button
+            key={evaluacion.id}
+            type="button"
+            className="evaluacion-tg__rubrica-download"
+            disabled={descargandoId === evaluacion.id}
+            onClick={() => void descargar(evaluacion)}
+            title={evaluacion.rubricaNombreArchivo ?? undefined}
+          >
+            <span aria-hidden="true">⬇</span>
+            {descargandoId === evaluacion.id ? 'Descargando…' : momento}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
@@ -432,7 +454,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
 
       {formulario === 'resultado' && canRegisterResult && <div className="evaluacion-tg__form-card"><h4>Registrar resultado</h4><div className="evaluacion-tg__form-grid">{esCandidaturaDoctoral ? <label><span>Nota final *</span><input type="number" min="0" max="5" step="0.01" value={notaFinal} onChange={(e) => setNotaFinal(e.target.value)} aria-describedby="nota-final-ayuda" /></label> : <label><span>Resultado *</span><select value={resultado} onChange={(e) => setResultado(e.target.value)}>{catalogos?.resultados.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>}<label><span>Acta</span><select value={actaId} onChange={(e) => setActaId(e.target.value)}><option value="">Sin acta asociada</option>{actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} — {acta.nombre}</option>)}</select></label></div>{esCandidaturaDoctoral && <p id="nota-final-ayuda">La nota se precarga con el promedio de las calificaciones de sustentación de los jurados activos. Puedes modificarla antes de registrar.</p>}<div className="evaluacion-tg__form-actions"><button type="button" disabled={busy || (esCandidaturaDoctoral ? !notaFinalValida : !resultado)} onClick={() => void runMutation(() => registrarResultado(solicitudId, esCandidaturaDoctoral ? { resultadoCodigo: '', notaFinal: notaFinalNumero, actaId: actaId ? Number(actaId) : null } : { resultadoCodigo: resultado, notaFinal: null, actaId: actaId ? Number(actaId) : null }), 'Resultado registrado y proceso cerrado.')}>Registrar resultado</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
-      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><div><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{canManageJurors && formulario !== 'designar' && <button type="button" className="evaluacion-tg__add-evaluator" onClick={() => { setReemplazando(null); setJurado(EMPTY_JURADO); setFormulario('designar') }} disabled={busy}><span aria-hidden="true">＋</span> Agregar evaluador</button>}</div>{activeJurors.length === 0 ? <p>No se han agregado evaluadores.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span></td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td><td data-label="Evaluaciones">{item.evaluaciones?.length ? <div className="evaluacion-tg__evaluations">{item.evaluaciones.map((evaluation) => <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} tipoSolicitudCodigo={proceso.tipoSolicitudCodigo} />)}</div> : 'Pendientes'}</td>{hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions"><button type="button" disabled={busy} onClick={() => void runMutation(() => reenviarInvitacion(solicitudId, item.id), 'Invitación reenviada.')}>Reenviar</button><button type="button" disabled={busy} onClick={() => { setReemplazando(item); setJurado(EMPTY_JURADO); setFormulario('designar') }}>Reemplazar</button><button type="button" className="danger" disabled={busy} onClick={(event) => { retiroTriggerRef.current = event.currentTarget; setJuradoARetirar(item) }}>Retirar</button></div>}</td>}</tr>)}</tbody></table></div>}</section>
+      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><div><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{canManageJurors && formulario !== 'designar' && <button type="button" className="evaluacion-tg__add-evaluator" onClick={() => { setReemplazando(null); setJurado(EMPTY_JURADO); setFormulario('designar') }} disabled={busy}><span aria-hidden="true">＋</span> Agregar evaluador</button>}</div>{activeJurors.length === 0 ? <p>No se han agregado evaluadores.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th><th>Rúbrica</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span></td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td><td data-label="Evaluaciones">{item.evaluaciones?.length ? <div className="evaluacion-tg__evaluations">{item.evaluaciones.map((evaluation) => <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} tipoSolicitudCodigo={proceso.tipoSolicitudCodigo} />)}</div> : 'Pendientes'}</td><td data-label="Rúbrica"><RubricaCelda evaluaciones={item.evaluaciones} /></td>{hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions"><button type="button" disabled={busy} onClick={() => void runMutation(() => reenviarInvitacion(solicitudId, item.id), 'Invitación reenviada.')}>Reenviar</button><button type="button" disabled={busy} onClick={() => { setReemplazando(item); setJurado(EMPTY_JURADO); setFormulario('designar') }}>Reemplazar</button><button type="button" className="danger" disabled={busy} onClick={(event) => { retiroTriggerRef.current = event.currentTarget; setJuradoARetirar(item) }}>Retirar</button></div>}</td>}</tr>)}</tbody></table></div>}</section>
 
       {juradoARetirar && (
         <div className="evaluacion-tg__confirmation" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setJuradoARetirar(null) }}>

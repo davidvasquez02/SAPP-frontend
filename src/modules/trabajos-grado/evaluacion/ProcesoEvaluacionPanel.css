@@ -63,8 +63,11 @@
 .evaluacion-tg__evaluation > strong { color: var(--text-primary); font-size: var(--font-size-small); }
 .evaluacion-tg__evaluation span { color: var(--text-secondary); font-size: var(--font-size-caption); overflow-wrap: anywhere; }
 .evaluacion-tg__evaluation span b { color: var(--text-primary); }
-.evaluacion-tg__rubrica-download { justify-self: start; margin-top: .2rem; border: 1px solid var(--primary); border-radius: 999px; padding: .3rem .8rem; font-size: var(--font-size-caption); color: var(--primary); background: var(--surface); cursor: pointer; }
+.evaluacion-tg__rubricas { display: grid; gap: .4rem; min-width: 8rem; }
+.evaluacion-tg__rubrica-download { display: inline-flex; align-items: center; gap: .35rem; justify-self: start; border: 1px solid var(--primary); border-radius: 999px; padding: .3rem .7rem; font-size: var(--font-size-caption); color: var(--primary); background: var(--surface); cursor: pointer; white-space: nowrap; }
+.evaluacion-tg__rubrica-download span { color: inherit; font-size: inherit; }
 .evaluacion-tg__rubrica-download:disabled { opacity: .55; cursor: not-allowed; }
+.evaluacion-tg__rubrica-empty { color: var(--text-secondary); }
 .evaluacion-tg__inactive { opacity: .58; }
 .evaluacion-tg__confirmation { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 1rem; background: color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 48%); backdrop-filter: blur(2px); }
 .evaluacion-tg__confirmation-dialog { position: relative; display: grid; width: min(100%, 34rem); max-height: calc(100vh - 2rem); overflow-y: auto; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 1.4rem; padding: clamp(1.25rem, 4vw, 1.75rem); background: var(--surface); color: var(--text-primary); box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--on-surface, var(--text-primary)), transparent 62%); }
