@@ -49,12 +49,28 @@
   transition: gap 0.24s ease;
 }
 
+.sidebar__brand-logo,
+.mobile-navigation__brand-logo {
+  display: block;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.sidebar__brand-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Acerca el búho dentro del margen blanco de la imagen original. */
+  transform: scale(1.4);
+}
+
 .sidebar__brand-logo {
   width: 38px;
   height: 38px;
   min-width: 38px;
-  border-radius: 9px;
-  object-fit: contain;
   transform-origin: center;
   transition:
     opacity 0.2s ease,
@@ -229,12 +245,10 @@
     line-height: 1.2;
   }
 
-  .mobile-navigation__brand img {
+  .mobile-navigation__brand-logo {
     width: 40px;
     height: 40px;
     flex: none;
-    border-radius: 9px;
-    object-fit: contain;
   }
 
   .mobile-navigation__menu-button,

@@ -143,7 +143,9 @@ const Sidebar = () => {
     <>
       <header className="mobile-navigation">
         <NavLink to="/" className="mobile-navigation__brand" aria-label="Ir al inicio">
-          <img src="/brand/eisi%20imagen.png" alt="" aria-hidden="true" />
+          <span className="mobile-navigation__brand-logo" aria-hidden="true">
+            <img className="sidebar__brand-image" src="/brand/minerva-buho.png" alt="" />
+          </span>
           <span>Minerva | Posgrados</span>
         </NavLink>
         <button
@@ -191,7 +193,9 @@ const Sidebar = () => {
           tabIndex={mobileTabIndex}
           onClick={() => isMobile && closeMenu(false)}
         >
-          <img className="sidebar__brand-logo" src="/brand/eisi%20imagen.png" alt="" aria-hidden="true" />
+          <span className="sidebar__brand-logo" aria-hidden="true">
+            <img className="sidebar__brand-image" src="/brand/minerva-buho.png" alt="" />
+          </span>
           <span className="sidebar__brand-name">Minerva | Posgrados</span>
         </NavLink>
 

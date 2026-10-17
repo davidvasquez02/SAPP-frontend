@@ -1,5 +1,10 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Ajuste 2026-10-16 — búho de Minerva en el sidebar
+
+- La imagen proporcionada del búho reemplaza el icono de EISI en la marca del sidebar y en su cabecera móvil. Encuadre compacto, sin borde ni sombra añadidos y esquinas de 9px. El logo conserva su tamaño y desaparece al desplegar el menú de escritorio para dar paso a «Minerva | Posgrados».
+- Verificado en Edge: escritorio por hover/teclado y móvil a 390/768px, claro/oscuro; apertura, Escape, cierre y enlace al inicio funcionan. TypeScript/build, ESLint focalizado y `git diff --check` PASS. Permanece aviso existente de chunk >500 kB. Sin cambios de rutas, roles o acciones del menú.
+
 ## Corrección 2026-10-16 — documentos solo al agregar evaluadores
 
 - Solo guardar un nuevo evaluador conserva los documentos ya cargados y actualiza proceso, solicitud e históricos sin repetir `GET /sapp/document`. Alcance confirmado por el usuario: esta optimización es exclusiva del alta de evaluadores.
