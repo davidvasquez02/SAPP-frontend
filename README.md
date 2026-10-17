@@ -1,5 +1,21 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Corrección 2026-10-16 — documentos solo al agregar evaluadores
+
+- Solo guardar un nuevo evaluador conserva los documentos ya cargados y actualiza proceso, solicitud e históricos sin repetir `GET /sapp/document`. Alcance confirmado por el usuario: esta optimización es exclusiva del alta de evaluadores.
+- Reemplazar, retirar, reenviar invitaciones, enviar recordatorios y las demás acciones conservan la recarga documental original. Subir una versión corregida, firmar o reintentar también mantiene su consulta. No cambia la carga inicial ni los contratos HTTP.
+- Validación: Edge 9/9 PASS (evaluadores/documentos y regresión de sustentaciones), suite existente 184/184 PASS, TypeScript/build, ESLint focalizado y `git diff --check` PASS. APIs sintéticas, sin invitaciones reales; pendiente recorrido institucional. Permanece aviso de chunk >500 kB. Logs `.evaluadores-solo-agregar-*.log`; continuidad en HANDOFF.md.
+
+## Corrección 2026-10-16 — nombre del archivo al registrar solicitudes
+
+- La tarjeta compartida `DocumentUploadCard` muestra «Archivo seleccionado» como estado y conserva el nombre en la línea «Archivo», evitando repetirlo en la selección individual del formulario de solicitudes (incluido trabajo de grado).
+- Validación: renderizado con archivos sintéticos en los siete estados de la tarjeta PASS, TypeScript/build, ESLint focalizado y `git diff --check` PASS. Permanece aviso existente de chunk >500 kB. Sin cambios de carga, contratos o dependencias.
+
+## Ajuste 2026-10-16 — encuadre de foto del estudiante
+
+- La foto del perfil usa un marco de retrato 4:5, ancho moderado (128–152 px y 128 px en móvil), bordes suaves y un pequeño margen interior. La imagen se muestra completa, sin deformarla ni recortarla para llenar un cuadrado; conserva los tokens del tema.
+- Validación: TypeScript/build PASS y Edge con perfil/foto sintéticos en 18 combinaciones de ancho/tema (320–1920 px, claro/oscuro), dimensiones limitadas y foto contenida dentro de la tarjeta. Permanece aviso existente de chunk >500 kB. Solo CSS; contratos y carga de datos conservados.
+
 ## Corrección 2026-10-16 — foto y documentos del detalle del estudiante
 
 - Al refrescar el perfil, se conserva la foto recibida del listado o de su caché si la consulta no trae imagen; una foto incluida por el servidor tiene prioridad y usa su MIME.

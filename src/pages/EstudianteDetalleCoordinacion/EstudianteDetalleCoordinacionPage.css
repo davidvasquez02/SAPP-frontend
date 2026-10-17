@@ -57,9 +57,11 @@
 }
 
 .estudiante-detalle__profile-photo-shell {
-    width: clamp(7.5rem, 12vw, 10rem);
-    aspect-ratio: 1;
-    border-radius: 28px;
+    width: clamp(8rem, 10vw, 9.5rem);
+    max-width: 100%;
+    aspect-ratio: 4 / 5;
+    padding: 0.3rem;
+    border-radius: 20px;
     overflow: hidden;
     background: var(--surface-container-low);
     border: 1px solid color-mix(in srgb, var(--outline), transparent 12%);
@@ -70,7 +72,9 @@
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 15px;
 }
 
 .estudiante-detalle__profile-placeholder {
@@ -620,7 +624,7 @@
         text-align: left;
     }
     .estudiante-detalle__profile-photo-shell {
-        width: min(100%, 11rem);
+        width: min(100%, 8rem);
     }
     .estudiante-detalle__profile-meta {
         grid-template-columns: 1fr;

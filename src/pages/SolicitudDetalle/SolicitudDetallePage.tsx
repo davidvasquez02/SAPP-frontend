@@ -328,13 +328,13 @@ const SolicitudDetallePage = () => {
     }
   }
 
-  const refreshSolicitud = useCallback(async () => {
+  const refreshSolicitud = useCallback(async ({ recargarDocumentos = true }: { recargarDocumentos?: boolean } = {}) => {
     if (!solicitud) return
     const refreshed = await getSolicitudAcademicaById(solicitud.id)
     setSolicitud(refreshed)
     setHistorialSolicitud(await getHistorialSolicitudAcademica(refreshed.id))
     const codigo = refreshed.tipoTramiteCodigo?.trim()
-    if (codigo) await loadDocumentos(refreshed.id, codigo)
+    if (recargarDocumentos && codigo) await loadDocumentos(refreshed.id, codigo)
   }, [loadDocumentos, solicitud])
 
   useEffect(() => {
@@ -834,6 +834,8 @@ const SolicitudDetallePage = () => {
                 documentos={documentos}
                 actas={actas}
                 onUpdated={refreshSolicitud}
+                // Solo agregar un evaluador conserva los documentos ya cargados.
+                onJuradoAdded={() => refreshSolicitud({ recargarDocumentos: false })}
               />
             )}
 

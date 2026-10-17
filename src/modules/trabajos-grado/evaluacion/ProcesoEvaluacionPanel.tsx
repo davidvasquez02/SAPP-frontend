@@ -42,6 +42,7 @@ interface ProcesoEvaluacionPanelProps {
   documentos: SolicitudDocumentoAdjuntoDto[]
   actas: ActaDto[]
   onUpdated: () => Promise<void>
+  onJuradoAdded: () => Promise<void>
 }
 
 type FormularioActivo = 'designar' | 'sustentacion' | 'resultado' | null
@@ -140,7 +141,7 @@ const RubricaCelda = ({ evaluaciones }: { evaluaciones: JuradoEvaluador['evaluac
   )
 }
 
-const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: ProcesoEvaluacionPanelProps) => {
+const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJuradoAdded }: ProcesoEvaluacionPanelProps) => {
   const [proceso, setProceso] = useState<ProcesoEvaluacionTg | null>(null)
   const [historial, setHistorial] = useState<HistorialProcesoEvaluacion[]>([])
   const [catalogos, setCatalogos] = useState<CatalogosEvaluacion | null>(null)
@@ -227,7 +228,11 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
   )
   const canManageJurors = ESTADOS_CON_DESIGNACION.has(estado)
 
-  const runMutation = async (operation: () => Promise<unknown>, success: string) => {
+  const runMutation = async (
+    operation: () => Promise<unknown>,
+    success: string,
+    refresh = onUpdated,
+  ) => {
     setBusy(true)
     setError(null)
     setMessage(null)
@@ -236,7 +241,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
       const [nextProceso, nextHistorial] = await Promise.all([
         getProcesoEvaluacion(solicitudId),
         getHistorialProcesoEvaluacion(solicitudId),
-        onUpdated(),
+        refresh(),
       ])
       setProceso(nextProceso)
       setHistorial(nextHistorial)
@@ -314,6 +319,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated }: P
         })
       },
       'Jurado registrado e invitación enviada.',
+      onJuradoAdded,
     )
   }
 

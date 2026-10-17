@@ -31,14 +31,6 @@ const STATUS_LABELS: Record<DocumentUploadItem['status'], string> = {
   ERROR: 'Error ❌',
 }
 
-const getStatusLabel = (item: DocumentUploadItem): string => {
-  if (item.status === 'READY_TO_UPLOAD' && item.selectedFile) {
-    return item.selectedFile.name
-  }
-
-  return STATUS_LABELS[item.status]
-}
-
 const getUploadButtonLabel = (status: DocumentUploadItem['status']): string => {
   if (status === 'UPLOADING') {
     return 'Subiendo…'
@@ -140,7 +132,7 @@ export const DocumentUploadCard = ({
       ) : null}
 
       <div className="document-upload-card__status-row">
-        <span className={statusClass}>{getStatusLabel(item)}</span>
+        <span className={statusClass}>{STATUS_LABELS[item.status]}</span>
         {fileName ? (
           <span className="document-upload-card__filename">Archivo: {fileName}</span>
         ) : (
