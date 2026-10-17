@@ -4,6 +4,7 @@ import type { SolicitudDocumentoAdjuntoDto } from '../../solicitudes/types/docum
 import {
   buscarBancoJurados,
   definirDocumentoEvaluar,
+  descargarRubricaDiligenciada,
   designarJurados,
   enviarAAjustes,
   enviarRecordatorios,
@@ -16,6 +17,7 @@ import {
   reemplazarJurado,
   retirarJurado,
 } from './api'
+import { downloadBase64File } from '../../../shared/files/base64FileUtils'
 import type {
   BancoJurado,
   CatalogosEvaluacion,
@@ -86,6 +88,19 @@ const EvaluacionDetalle = ({ evaluacion, tipoSolicitudCodigo }: {
   const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
   const { etiqueta, valor } = presentarValorEvaluacion(evaluacion, tipoSolicitudCodigo)
   const observaciones = evaluacion.observaciones?.trim()
+  const [descargando, setDescargando] = useState(false)
+
+  const descargarRubrica = async () => {
+    setDescargando(true)
+    try {
+      const rubrica = await descargarRubricaDiligenciada(evaluacion.id)
+      downloadBase64File(rubrica.contenidoBase64, rubrica.mimeType, rubrica.nombreArchivo)
+    } catch {
+      // Falla silenciosa: no hay un lugar en esta tabla para mostrar un error puntual por fila.
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <article className="evaluacion-tg__evaluation">
@@ -94,6 +109,11 @@ const EvaluacionDetalle = ({ evaluacion, tipoSolicitudCodigo }: {
         <span><b>{etiqueta}:</b> {valor}</span>
       )}
       {observaciones && <span><b>Observaciones:</b> {observaciones}</span>}
+      {evaluacion.rubricaNombreArchivo && (
+        <button type="button" className="evaluacion-tg__rubrica-download" disabled={descargando} onClick={() => void descargarRubrica()}>
+          {descargando ? 'Descargando…' : `Descargar rúbrica (${evaluacion.rubricaNombreArchivo})`}
+        </button>
+      )}
     </article>
   )
 }

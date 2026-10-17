@@ -9,6 +9,7 @@ import type {
   ProcesoEvaluacionTg,
   ProgramarSustentacionRequest,
   RegistrarResultadoRequest,
+  RubricaDiligenciadaDto,
 } from './types'
 import { buildBancoJuradosPath } from './bancoJurados'
 
@@ -89,6 +90,12 @@ export const definirDocumentoEvaluar = async (solicitudId: number, documentoId: 
   unwrap(
     await httpPut<ApiResponse<ProcesoEvaluacionTg>>(`${BASE}/solicitud/${solicitudId}/documento-evaluar/${documentoId}`),
     'No fue posible definir el documento a evaluar.',
+  )
+
+export const descargarRubricaDiligenciada = async (evaluacionId: number): Promise<RubricaDiligenciadaDto> =>
+  unwrap(
+    await httpGet<ApiResponse<RubricaDiligenciadaDto>>(`${BASE}/evaluaciones/${evaluacionId}/rubrica`),
+    'No fue posible descargar la rúbrica de evaluación diligenciada.',
   )
 
 export const enviarAAjustes = async (solicitudId: number) =>

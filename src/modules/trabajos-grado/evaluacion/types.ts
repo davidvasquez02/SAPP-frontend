@@ -31,6 +31,8 @@ export interface EvaluacionJurado {
   resultadoNombre?: string | null
   nota?: number | null
   observaciones?: string | null
+  rubricaNombreArchivo?: string | null
+  rubricaFechaCarga?: string | null
   fechaRegistro?: string | null
 }
 
@@ -149,4 +151,11 @@ export interface RegistrarResultadoRequest {
   resultadoCodigo: string
   notaFinal: number | null
   actaId: number | null
+}
+
+export interface RubricaDiligenciadaDto {
+  nombreArchivo: string
+  mimeType: string
+  tamanoBytes: number
+  contenidoBase64: string
 }
