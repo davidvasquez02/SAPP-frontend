@@ -1,0 +1,15 @@
+flowchart TB
+  subgraph SPA["Frontend institucional: SPA React + TypeScript"]
+    R["Navegación y acceso: AppRoutes, Layout y guardas"]
+    M["Interfaz por trámite: páginas y componentes de admisiones, matrícula, solicitudes, créditos y trabajos de grado"]
+    S["Servicios de API y adaptación: operaciones por trámite, DTOs y mapeadores"]
+    H["Comunicación HTTP: clientes compartidos que encapsulan fetch"]
+    T["Apoyo transversal: AuthProvider, useAuth, sesión, roles, componentes comunes y tema global"]
+    R --> M
+    M --> S
+    S --> H
+    T -.-> R
+    T -.-> M
+  end
+  B["Backend institucional: API REST con JSON"]
+  H -->|"HTTP"| B

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createServer } from 'vite'
+import { createTestServer as createServer } from './helpers/createTestServer.mjs'
 
 test('admisión y matrícula conservan el mismo detalle de faltantes desde HTTP', async (t) => {
   const server = await createServer({ configFile: false, server: { middlewareMode: true, hmr: false }, appType: 'custom' })

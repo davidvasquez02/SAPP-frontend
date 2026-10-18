@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createServer } from 'vite'
+import { createTestServer as createServer } from './helpers/createTestServer.mjs'
 
 test('nombres de presentación y selección conservada al recargar', async (t) => {
   const server = await createServer({ configFile: false, server: { middlewareMode: true, hmr: false }, appType: 'custom' })

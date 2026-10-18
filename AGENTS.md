@@ -531,6 +531,19 @@ Estas reglas son **mandatorias** para cualquier cambio visual futuro en este rep
 
 ## 9. Testing
 
+### Validación obligatoria para futuras solicitudes de IA
+
+Estas instrucciones aplican a cualquier ajuste, corrección o funcionalidad del aplicativo:
+
+- Revisar las pruebas existentes de los módulos afectados antes de implementar el cambio.
+- Actualizar las pruebas cuando cambie el comportamiento esperado y crear las necesarias para cubrir funcionalidades nuevas, errores corregidos y regresiones. Incluir casos válidos, validaciones, fallos y permisos cuando correspondan.
+- Probar el comportamiento observable y los contratos del sistema; evitar pruebas que solo reproduzcan la implementación. No modificar lógica del aplicativo únicamente para facilitar una prueba.
+- Ejecutar las pruebas del área afectada durante el desarrollo y `npm test` antes de dar el trabajo por terminado. Si cambia código ejecutable de `src`, ejecutar también `npm run test:coverage` y revisar la cobertura global y del módulo afectado, incluidos los componentes React.
+- Mantener el alcance de cobertura sobre todo `src`. No excluir archivos, omitir pruebas, eliminar aserciones ni reducir exigencias para ocultar fallos o mejorar artificialmente el porcentaje. Una reducción de cobertura debe investigarse y explicarse.
+- Si cambia código del aplicativo, ejecutar `npm run build` y las pruebas de integración pertinentes cuando el cambio afecte flujos que estas validan. Reutilizar las herramientas y dependencias existentes.
+- Corregir las regresiones introducidas antes de finalizar. Si una validación no puede ejecutarse o falla por un problema previo, informar el comando, el motivo y la limitación; no afirmar que pasó ni modificar comportamiento ajeno al alcance para silenciarla.
+- En la entrega indicar brevemente qué pruebas se crearon o actualizaron, cuáles se ejecutaron y sus resultados. Para cambios exclusivamente documentales o de instrucciones, basta revisar el diff; no es necesario ejecutar la suite del aplicativo.
+
 - Backend:
   - tests de servicios (unitarios) para reglas de negocio clave:
     - cálculo de liquidaciones,
