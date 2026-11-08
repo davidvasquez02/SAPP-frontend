@@ -51,7 +51,7 @@ const EMPTY_JURADO: JuradoInput = { nombre: '', correo: '', institucion: '', ext
 const SUCCESS_MESSAGE_DURATION_MS = 5_000
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
-const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION'])
+const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION', 'CONCEPTOS_REC', 'EN_AJUSTES', 'AJUSTES_RECIB'])
 
 const formatEstadoNombre = (nombre: string | null | undefined, codigo: string): string =>
   (nombre?.trim() || codigo).toLocaleUpperCase('es-CO')
