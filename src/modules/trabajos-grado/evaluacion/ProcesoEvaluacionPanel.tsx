@@ -47,7 +47,7 @@ interface ProcesoEvaluacionPanelProps {
 
 type FormularioActivo = 'designar' | 'sustentacion' | 'resultado' | null
 
-const EMPTY_JURADO: JuradoInput = { nombre: '', correo: '', institucion: '', externo: true, idioma: 'ES' }
+const EMPTY_JURADO: JuradoInput = { nombre: '', correo: '', institucion: '', externo: true, idioma: 'ES', motivoReemplazo: '' }
 const SUCCESS_MESSAGE_DURATION_MS = 5_000
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
@@ -452,6 +452,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
             {!reemplazando && <><label><span>Fecha límite *</span><input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} /></label><label><span>Documento a evaluar *</span><select value={documentoId} onChange={(e) => setDocumentoId(e.target.value)}><option value="">Selecciona un documento</option>{documentos.map((doc) => <option key={doc.idDocumento} value={doc.idDocumento}>{doc.nombreArchivo}</option>)}</select></label></>}
           </div>
           <label className="evaluacion-tg__check"><input type="checkbox" checked={jurado.externo} onChange={(e) => setJurado((v) => ({ ...v, externo: e.target.checked }))} /> Evaluador externo a la UIS</label>
+          {reemplazando && <label><span>Motivo del reemplazo (opcional)</span><textarea value={jurado.motivoReemplazo} onChange={(e) => setJurado((v) => ({ ...v, motivoReemplazo: e.target.value }))} placeholder="Por qué se reemplaza a este jurado" /></label>}
           <div className="evaluacion-tg__form-actions"><button type="button" onClick={submitJurado} disabled={busy}>{busy ? 'Guardando…' : reemplazando ? 'Reemplazar e invitar' : 'Guardar jurado'}</button><button type="button" className="secondary" onClick={() => { setFormulario(null); setReemplazando(null); setJurado(EMPTY_JURADO) }} disabled={busy}>Cancelar</button></div>
         </div>
       )}

@@ -112,6 +112,17 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
     assert.equal(added, 0)
   })
 
+  await t.test('reemplazar envía el motivo del reemplazo cuando se diligencia', async s => {
+    const view = mount(s)
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Reemplazar' }))
+    fill(view)
+    ui.fireEvent.change(view.getByLabelText('Motivo del reemplazo (opcional)'), { target: { value: 'Conflicto de interés' } })
+    ui.fireEvent.click(view.getByRole('button', { name: 'Reemplazar e invitar' }))
+    await view.findByText('El jurado fue reemplazado y el nuevo evaluador fue invitado.')
+    assert.equal(calls[0].body.motivoReemplazo, 'Conflicto de interés')
+  })
+
   await t.test('jurado reemplazado tras declinar conserva visible el motivo de declinación', async s => {
     proceso = { ...proceso, jurados: [{ ...jurado, activo: false, estadoInvitacion: 'REEMPLAZADO', motivoDeclinacion: 'Conflicto de interés con el director' }] }
     const view = mount(s)

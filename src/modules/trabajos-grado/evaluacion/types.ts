@@ -130,6 +130,7 @@ export interface JuradoInput {
   institucion: string
   externo: boolean
   idioma: IdiomaJurado
+  motivoReemplazo?: string
 }
 
 export interface DesignarJuradosRequest {
