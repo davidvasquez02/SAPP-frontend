@@ -112,6 +112,13 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
     assert.equal(added, 0)
   })
 
+  await t.test('jurado reemplazado tras declinar conserva visible el motivo de declinación', async s => {
+    proceso = { ...proceso, jurados: [{ ...jurado, activo: false, estadoInvitacion: 'REEMPLAZADO', motivoDeclinacion: 'Conflicto de interés con el director' }] }
+    const view = mount(s)
+    await ready(view)
+    await view.findByText('Declinó: Conflicto de interés con el director')
+  })
+
   await t.test('retiro requiere confirmación; cancelar y Escape no eliminan', async s => {
     const view = mount(s)
     await ready(view)

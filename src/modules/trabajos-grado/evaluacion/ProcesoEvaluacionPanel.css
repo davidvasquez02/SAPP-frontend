@@ -90,6 +90,7 @@
   color: var(--text-primary);
 }
 .evaluacion-tg__chip--declinada, .evaluacion-tg__chip--reemplazado { border-color: var(--danger); color: var(--danger); }
+.evaluacion-tg__motivo-declinacion { display: block; margin-top: .3rem; color: var(--text-secondary); font-size: var(--font-size-caption); }
 .evaluacion-tg__timeline { margin: 1rem 0 0; padding: 0; list-style: none; }
 .evaluacion-tg__timeline li { display: grid; grid-template-columns: 1rem 1fr; gap: .7rem; padding-bottom: 1rem; }
 .evaluacion-tg__timeline li > span { width: .75rem; height: .75rem; margin-top: .35rem; border-radius: 50%; background: var(--primary); }
