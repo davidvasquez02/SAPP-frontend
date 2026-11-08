@@ -40,12 +40,19 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
   })
   await t.test('carga exige campos y rechaza MIME incorrecto o tamaño excesivo', async s => {
     const v = mount(s); await ready(v); click(v, '+ Cargar acta'); ui.fireEvent.submit(v.container.querySelector('form'))
-    assert.ok(v.getByText('Complete el nombre, el código, el año y seleccione un archivo PDF.'))
+    assert.ok(v.getByText('Complete el nombre, el código, el año y seleccione un archivo PDF o Word.'))
     const input = v.container.querySelector('input[type=file]')
     ui.fireEvent.change(input, { target: { files: [new ui.dom.window.File(['x'], 'imagen.png', { type: 'image/png' })] } })
-    assert.ok(v.getByText('El archivo del acta debe estar en formato PDF.'))
+    assert.ok(v.getByText('El archivo del acta debe estar en formato PDF o Word.'))
     const huge = new ui.dom.window.File(['x'], 'grande.pdf', { type: 'application/pdf' }); Object.defineProperty(huge, 'size', { value: 16 * 1024 * 1024 })
     ui.fireEvent.change(input, { target: { files: [huge] } }); assert.ok(v.getByText('El archivo no puede superar 15 MB.')); assert.equal(writes.length, 0)
+  })
+  await t.test('acepta actas en Word mientras no se les haya montado el flujo de firma', async s => {
+    const v = mount(s); await ready(v); click(v, '+ Cargar acta')
+    const input = v.container.querySelector('input[type=file]')
+    const docx = new ui.dom.window.File(['x'], 'acta.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+    ui.fireEvent.change(input, { target: { files: [docx] } })
+    assert.equal(v.queryByText('El archivo del acta debe estar en formato PDF o Word.'), null)
   })
   await t.test('crear acta envía PDF, checksum y campos normalizados', async s => {
     const v = mount(s); await ready(v); click(v, '+ Cargar acta')

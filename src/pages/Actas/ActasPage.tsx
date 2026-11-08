@@ -8,6 +8,15 @@ import "./ActasPage.css";
 const PAGE_SIZE = 10;
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
 const SUCCESS_MESSAGE_DURATION_MS = 5_000;
+// Las actas se manejan en Word mientras están abiertas (sin firmar) y solo pasan a PDF
+// cuando se cierran (coordinador y director de escuela firman) -- ver sesión de pruebas
+// 19/oct. El sistema de firmas y el estado abierta/cerrada quedan para una versión
+// posterior; por ahora solo se amplía el formato aceptado.
+const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+];
 
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
@@ -196,9 +205,9 @@ const ActasPage = () => {
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
     setError(null);
-    if (selected && selected.type !== "application/pdf") {
+    if (selected && !TIPOS_ARCHIVO_ACTA_PERMITIDOS.includes(selected.type)) {
       setFile(null);
-      setError("El archivo del acta debe estar en formato PDF.");
+      setError("El archivo del acta debe estar en formato PDF o Word.");
       event.target.value = "";
       return;
     }
@@ -216,7 +225,7 @@ const ActasPage = () => {
     setError(null);
     setSuccess(null);
     if (!file || !nombre.trim() || !codigoActa.trim() || !/^\d{4}$/.test(anio)) {
-      setError("Complete el nombre, el código, el año y seleccione un archivo PDF.");
+      setError("Complete el nombre, el código, el año y seleccione un archivo PDF o Word.");
       return;
     }
 
@@ -272,7 +281,7 @@ const ActasPage = () => {
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
             <div className="actas-form__wide actas-form__file" role="group" aria-labelledby="actas-file-label">
               <span id="actas-file-label">Archivo del acta (PDF, máximo 15 MB) *</span>
-              <FileSelectButton accept="application/pdf,.pdf" onChange={handleFile}>
+              <FileSelectButton accept="application/pdf,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" onChange={handleFile}>
                 {file ? "Reemplazar archivo" : "Seleccionar archivo"}
               </FileSelectButton>
               <small className={file ? undefined : "actas-form__file-empty"}>
