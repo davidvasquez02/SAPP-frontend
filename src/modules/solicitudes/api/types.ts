@@ -91,6 +91,7 @@ export interface CreateSolicitudRequestDto {
   solicitudHomologacionesAsignaturas?: SolicitudHomologacionAsignaturaRequestDto[]
   tituloTrabajo?: string
   resumenTrabajo?: string
+  solicitudBaseId?: number
 }
 
 export interface CreateSolicitudResponseDto {

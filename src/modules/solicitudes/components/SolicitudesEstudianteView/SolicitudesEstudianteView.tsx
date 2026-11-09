@@ -6,6 +6,7 @@ import { uploadDocument } from '../../../../api/documentUploadService'
 import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
 import SolicitudEstudianteForm, {
+  type SolicitudEstudianteInitialValues,
   type SolicitudEstudiantePayload,
 } from '../SolicitudEstudianteForm/SolicitudEstudianteForm'
 import SolicitudesTable from '../SolicitudesTable/SolicitudesTable'
@@ -49,12 +50,25 @@ const SolicitudesEstudianteView = ({
 }: SolicitudesEstudianteViewProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  // "Crear reintento" en SolicitudDetallePage manda esto por location.state para abrir el
+  // formulario ya en modo FORM, con el tipo de trámite fijo y el título/resumen prellenados.
+  // Se captura una sola vez al montar (no se lee location.state en cada render): si quedara
+  // vivo en el historial, reabrir "Agregar solicitud" a mano después seguiría mostrando el
+  // aviso de reintento con datos viejos.
+  const [reintentoState] = useState(() => location.state as SolicitudEstudianteInitialValues | null)
+  useEffect(() => {
+    // Limpia el state de navegación una vez consumido (reintentoState ya quedó capturado
+    // arriba); el path no cambia, así que esto no dispara una recarga de la vista.
+    if (reintentoState?.solicitudBaseId != null) {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [navigate, location.pathname, reintentoState])
   const { session } = useAuth()
   const estudianteId =
     session && session.kind === 'SAPP' && 'estudiante' in session.user
       ? session.user.estudiante?.id ?? null
       : null
-  const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>('LIST')
+  const [viewMode, setViewMode] = useState<'LIST' | 'FORM'>(reintentoState?.solicitudBaseId != null ? 'FORM' : 'LIST')
   const [tiposSolicitud, setTiposSolicitud] = useState<TipoSolicitudDto[]>([])
   const [rows, setRows] = useState<SolicitudEstudianteRowDto[]>([])
   const [estadoId, setEstadoId] = useState<number | null>(null)
@@ -206,6 +220,7 @@ const SolicitudesEstudianteView = ({
         tipoSolicitudId: payload.tipoSolicitudId,
         tituloTrabajo: payload.tituloTrabajo,
         resumenTrabajo: payload.resumenTrabajo,
+        solicitudBaseId: payload.solicitudBaseId,
         fechaResolucion: null,
         observaciones: payload.observaciones || '',
         modalidadId: payload.modalidadId ?? undefined,
@@ -394,6 +409,7 @@ const SolicitudesEstudianteView = ({
             estudianteId={estudianteId as number}
             telefonoEstudiante={telefonoEstudiante}
             correoEstudiante={correoEstudiante}
+            initialValues={reintentoState?.solicitudBaseId != null ? reintentoState : undefined}
             onPreviewCreditoCondonable={async (previewPayload) =>
               previsualizarSolicitudCredito({
                 estudianteId: previewPayload.estudianteId,

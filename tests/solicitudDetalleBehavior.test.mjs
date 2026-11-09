@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createElement } from 'react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { reactApiHarness } from './helpers/domHarness.mjs'
 
 test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t => {
@@ -52,6 +52,17 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
         createElement(Routes, null, createElement(Route, { path: '/solicitudes/:solicitudId', element: createElement(Page) }))))
   }
   const mount = (s, roles = ['COORDINADOR'], id = '24') => { s.after(ui.cleanup); return ui.render(tree(roles, 18, id)) }
+  const CrearReintentoDestinoProbe = () => createElement('div', { 'data-testid': 'crear-reintento-destino' }, JSON.stringify(useLocation().state))
+  const mountConDestinoReintento = (s, roles, estudianteId = 18, id = '24') => {
+    s.after(ui.cleanup)
+    const user = { id: 10, username: 'persona', nombreCompleto: 'Persona de prueba', roles, persona: { id: 10 }, estudiante: { id: estudianteId }, detalle: { estudiante: { id: estudianteId } } }
+    return ui.render(createElement(MemoryRouter, { initialEntries: [`/solicitudes/${id}`] },
+      createElement(AuthContext.Provider, { value: { session: { kind: 'SAPP', user }, user } },
+        createElement(Routes, null,
+          createElement(Route, { path: '/solicitudes/:solicitudId', element: createElement(Page) }),
+          createElement(Route, { path: '/trabajos-grado', element: createElement(CrearReintentoDestinoProbe) }),
+        ))))
+  }
   const ready = async view => { await view.findByRole('heading', { name: /Solicitud 24/ }) }
   const signatureState = () => {
     solicitud = { ...solicitud, estadoSigla: 'PFIR_COOR_POS', estado: 'POR FIRMA', solicitudCreditoCondonable: { personaAsignadaId: 10 } }
@@ -206,5 +217,29 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     solicitud = { ...solicitud, tipoSolicitudCodigo: 'OTRA', tipoSolicitudId: 11 }
     const view = mount(sub); await ready(view); ui.fireEvent.click(view.getByRole('button', { name: 'Aprobar' })); await view.findByText('¿Requiere aprobación del Consejo Académico?')
     ui.fireEvent.click(view.getByRole('button', { name: consejo ? 'Sí, enviar al Consejo' : 'No, aprobar directamente' })); const select = await view.findByRole('combobox'); ui.fireEvent.change(select, { target: { value: '8' } }); ui.fireEvent.click(view.getByRole('button', { name: 'Aprobar con acta' })); await view.findByText('Estado actualizado correctamente'); assert.equal(changes[0].enviarConsejo, String(consejo))
+  })
+
+  await t.test('trabajo de grado aplazado deja al estudiante crear un reintento enlazado', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'APLAZADA', estado: 'APLAZADA', tipoSolicitudCodigo: 'DEF_TI_MISI', tipoSolicitudId: 6, tituloTrabajo: 'Tesis original', resumenTrabajo: 'Resumen original' }
+    const view = mountConDestinoReintento(s, ['ESTUDIANTE'])
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Crear reintento' }))
+    const destino = JSON.parse((await view.findByTestId('crear-reintento-destino')).textContent)
+    assert.equal(destino.solicitudBaseId, 24)
+    assert.equal(destino.tipoSolicitudId, 6)
+    assert.equal(destino.tituloTrabajo, 'Tesis original')
+    assert.equal(destino.resumenTrabajo, 'Resumen original')
+  })
+
+  await t.test('el botón de crear reintento no aparece fuera de APLAZADA ni para el coordinador', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'APLAZADA', tipoSolicitudCodigo: 'DEF_TI_MISI' }
+    const asCoordinador = mount(s, ['COORDINADOR'])
+    await ready(asCoordinador)
+    assert.equal(asCoordinador.queryAllByRole('button', { name: 'Crear reintento' }).length, 0)
+    await ui.cleanup()
+    solicitud = { ...solicitud, estadoSigla: 'ENVIADA', estado: 'ENVIADA A COMITE' }
+    const enviada = mount(s, ['ESTUDIANTE'])
+    await ready(enviada)
+    assert.equal(enviada.queryAllByRole('button', { name: 'Crear reintento' }).length, 0)
   })
 })

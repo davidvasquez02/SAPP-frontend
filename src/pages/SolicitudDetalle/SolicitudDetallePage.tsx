@@ -1,6 +1,6 @@
 import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
 import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
@@ -63,6 +63,7 @@ const formatHistoryDate = (value: string) => {
 
 const SolicitudDetallePage = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { solicitudId } = useParams<{ solicitudId: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
@@ -305,6 +306,24 @@ const SolicitudDetallePage = () => {
   )
   const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
   const esSolicitudTrabajoGrado = tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo)
+  // Un trabajo de grado APLAZADA es un estado final (ver FlujoTrabajoGrado.esEstadoFinal): el
+  // estudiante no puede seguir avanzando esta misma solicitud, pero puede radicar un reintento
+  // enlazado a esta (solicitudBaseId) -- ver sesión de pruebas 19/oct, "trabajo aplazado".
+  const showCrearReintento = isEstudiante && esSolicitudTrabajoGrado && currentEstado === 'APLAZADA'
+  const handleCrearReintento = () => {
+    if (!solicitud) return
+    const nivelPath = location.pathname.startsWith('/trabajos-grado')
+      ? location.pathname.split('/solicitudes/')[0]
+      : '/trabajos-grado'
+    navigate(nivelPath, {
+      state: {
+        tipoSolicitudId: solicitud.tipoSolicitudId,
+        tituloTrabajo: tituloTrabajo || undefined,
+        resumenTrabajo: resumenTrabajo || undefined,
+        solicitudBaseId: solicitud.id,
+      },
+    })
+  }
   const isHomologacion = solicitud?.tipoSolicitudCodigo?.trim().toLocaleUpperCase() === 'HOMOLOG'
   const showHistorialAction = isCoordinador && isHomologacion && !['APROBADA', 'RECHAZADA'].includes(currentEstado)
 
@@ -595,6 +614,19 @@ const SolicitudDetallePage = () => {
                 </div>
               )}
             </dl>
+
+            {showCrearReintento && (
+              <section className="solicitud-detalle-page__signature-actions">
+                <p>Este trabajo quedó aplazado. Podés radicar un nuevo intento a partir de esta solicitud.</p>
+                <button
+                  className="solicitud-detalle-page__save"
+                  type="button"
+                  onClick={handleCrearReintento}
+                >
+                  Crear reintento
+                </button>
+              </section>
+            )}
 
             {showActaAsociada && (
               <section className="solicitud-detalle-page__acta" aria-labelledby="acta-asociada-title">

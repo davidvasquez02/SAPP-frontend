@@ -43,6 +43,7 @@ export interface SolicitudEstudiantePayload {
   tipoSolicitudId: number
   tituloTrabajo?: string
   resumenTrabajo?: string
+  solicitudBaseId?: number
   observaciones: string
   modalidadId: number | null
   motivosCreditoCondonable: string[]
@@ -55,11 +56,20 @@ export interface SolicitudEstudiantePayload {
   }>
 }
 
+/** Reintento de un trabajo de grado que quedó APLAZADA: ver SolicitudDetallePage "Crear reintento". */
+export interface SolicitudEstudianteInitialValues {
+  tipoSolicitudId: number
+  tituloTrabajo?: string
+  resumenTrabajo?: string
+  solicitudBaseId: number
+}
+
 interface SolicitudEstudianteFormProps {
   tipos: TipoSolicitudDto[]
   estudianteId: number
   telefonoEstudiante: string
   correoEstudiante: string
+  initialValues?: SolicitudEstudianteInitialValues
   onPreviewCreditoCondonable: (payload: {
     estudianteId: number
     tipoSolicitudId: number
@@ -141,16 +151,17 @@ const SolicitudEstudianteForm = ({
   estudianteId,
   telefonoEstudiante,
   correoEstudiante,
+  initialValues,
   onPreviewCreditoCondonable,
   onSubmit,
 }: SolicitudEstudianteFormProps) => {
-  const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(null)
+  const [tipoSolicitudId, setTipoSolicitudId] = useState<number | null>(initialValues?.tipoSolicitudId ?? null)
   const [documentosDraft, setDocumentosDraft] = useState<SolicitudDocumentoDraft[]>([])
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
   const [documentosError, setDocumentosError] = useState<string | null>(null)
   const [observaciones, setObservaciones] = useState('')
-  const [tituloTrabajo, setTituloTrabajo] = useState('')
-  const [resumenTrabajo, setResumenTrabajo] = useState('')
+  const [tituloTrabajo, setTituloTrabajo] = useState(initialValues?.tituloTrabajo ?? '')
+  const [resumenTrabajo, setResumenTrabajo] = useState(initialValues?.resumenTrabajo ?? '')
   const [modalidades, setModalidades] = useState<ModalidadContraprestacionDto[]>([])
   const [modalidadId, setModalidadId] = useState<number | null>(null)
   const [loadingModalidades, setLoadingModalidades] = useState(false)
@@ -594,6 +605,7 @@ const SolicitudEstudianteForm = ({
       tipoSolicitudId,
       ...(requiereTituloTrabajo ? { tituloTrabajo: tituloTrabajo.trim() } : {}),
       ...(requiereResumenTrabajo ? { resumenTrabajo: resumenTrabajo.trim() } : {}),
+      ...(initialValues?.solicitudBaseId != null ? { solicitudBaseId: initialValues.solicitudBaseId } : {}),
       observaciones,
       modalidadId,
       motivosCreditoCondonable: motivosCredito.map((item) => item.trim()).filter(Boolean),
@@ -692,11 +704,19 @@ const SolicitudEstudianteForm = ({
         <p className="solicitud-estudiante-form__alert solicitud-estudiante-form__alert--success">{successMsg}</p>
       )}
 
+      {initialValues?.solicitudBaseId != null && (
+        <p className="solicitud-estudiante-form__alert">
+          Estás creando un reintento de la solicitud #{initialValues.solicitudBaseId}, que quedó aplazada. El tipo
+          de trámite queda fijo al de la solicitud original; podés ajustar el título y el resumen si corresponde.
+        </p>
+      )}
+
       <div className="solicitud-estudiante-form__section">
         <label htmlFor="tipoSolicitud">Tipo de trámite *</label>
         <select
           id="tipoSolicitud"
           value={tipoSolicitudId ?? ''}
+          disabled={initialValues?.solicitudBaseId != null}
           onChange={(event) => {
             const nextValue = event.target.value
             setTipoSolicitudId(nextValue ? Number(nextValue) : null)

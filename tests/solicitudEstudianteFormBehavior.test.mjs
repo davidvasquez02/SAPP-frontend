@@ -47,6 +47,21 @@ test('formulario de solicitudes React: validación, documentos y homologación',
   }
   const submit = view => ui.fireEvent.submit(view.container.querySelector('form'))
 
+  await t.test('initialValues (reintento de un trabajo aplazado) fija el tipo y lo bloquea', async s => {
+    const sent = []
+    const view = mount(s, {
+      initialValues: { tipoSolicitudId: 99, solicitudBaseId: 50 },
+      onSubmit: data => sent.push(data),
+    })
+    assert.ok(view.getByText(/reintento de la solicitud #50/))
+    const select = view.getByLabelText(/Tipo de trámite/)
+    assert.equal(select.value, '99')
+    assert.equal(select.disabled, true)
+    await ui.waitFor(() => assert.equal(Boolean(view.queryByText('Cargando documentos requeridos...')), false))
+    submit(view)
+    assert.equal(sent[0]?.solicitudBaseId, 50)
+  })
+
   await t.test('sin tipo o con configuración incompleta no envía solicitudes', async s => {
     const sent = []
     const view = mount(s, { onSubmit: data => sent.push(data) })
