@@ -31,7 +31,7 @@ export async function cambiarEstadoSolicitud(
   }
 }
 
-/** Mueve una solicitud de RADICADA a ENVIADA (comite asesor), una vez validados sus requisitos. */
+/** Mueve una solicitud de EN_VALIDACION_COORDINACION a ENVIADA (comite asesor), una vez validados sus requisitos. */
 export async function enviarSolicitudAComite(solicitudId: number): Promise<void> {
   const response = await httpPut<ApiResponse<unknown | null>>(`/sapp/solicitudesAcademicas/${solicitudId}/enviarAComite`)
 

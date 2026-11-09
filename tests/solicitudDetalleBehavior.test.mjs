@@ -236,21 +236,21 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     assert.equal(destino.resumenTrabajo, 'Resumen original')
   })
 
-  await t.test('coordinador envia a comite una solicitud radicada y el estudiante nunca ve esa accion', async s => {
-    solicitud = { ...solicitud, estadoSigla: 'RADICADA', estado: 'RADICADA' }
+  await t.test('coordinador envia a comite una solicitud en validacion de coordinacion y el estudiante nunca ve esa accion', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'EN_VALIDACION_COORDINACION', estado: 'EN_VALIDACION_COORDINACION' }
     const view = mount(s, ['COORDINADOR'])
     await ready(view)
     ui.fireEvent.click(view.getByRole('button', { name: 'Enviar a comité' }))
     await view.findByText('Solicitud enviada al comité asesor')
     assert.equal(enviosAComite, 1)
     await ui.cleanup()
-    solicitud = { ...solicitud, estadoSigla: 'RADICADA', estado: 'RADICADA' }
+    solicitud = { ...solicitud, estadoSigla: 'EN_VALIDACION_COORDINACION', estado: 'EN_VALIDACION_COORDINACION' }
     const estudiante = mount(s, ['ESTUDIANTE'])
     await ready(estudiante)
     assert.equal(estudiante.queryAllByRole('button', { name: 'Enviar a comité' }).length, 0)
   })
 
-  await t.test('el botón de enviar a comité no aparece fuera de RADICADA', async s => {
+  await t.test('el botón de enviar a comité no aparece fuera de validación de coordinación', async s => {
     const view = mount(s, ['COORDINADOR'])
     await ready(view)
     assert.equal(view.queryAllByRole('button', { name: 'Enviar a comité' }).length, 0)

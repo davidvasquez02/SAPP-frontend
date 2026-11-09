@@ -8,7 +8,7 @@ interface StatusBadgeProps {
 }
 
 const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, string> = {
-  RADICADA: 'devuelta',
+  EN_VALIDACION_COORDINACION: 'devuelta',
   ENVIADA: 'enviada-comite',
   EN_REVISION: 'en-revision',
   APROBADA: 'aprobada',

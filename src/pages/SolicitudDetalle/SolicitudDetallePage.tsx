@@ -270,8 +270,8 @@ const SolicitudDetallePage = () => {
   const estabaEnInstanciaResolutiva = estabaEnComite || estabaEnConsejo
   const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
   const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
-  // RADICADA es el estado de intake, antes de que el comite la vea (ver SolicitudesAcademicaService#enviarAComite).
-  const canEnviarAComite = isCoordinador && currentEstado === 'RADICADA'
+  // EN_VALIDACION_COORDINACION es el estado de intake, antes de que el comite la vea (ver SolicitudesAcademicaService#enviarAComite).
+  const canEnviarAComite = isCoordinador && currentEstado === 'EN_VALIDACION_COORDINACION'
   const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
     solicitud?.tipoSolicitudId,
     solicitud?.estadoSigla,

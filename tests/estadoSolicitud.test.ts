@@ -11,7 +11,7 @@ import {
 } from '../src/modules/solicitudes/utils/estadoSolicitud.ts'
 
 const estadosTrabajoGrado = [
-  [0, 'RADICADA', 'EN VALIDACIÓN DE COORDINACIÓN'],
+  [0, 'EN_VALIDACION_COORDINACION', 'EN VALIDACIÓN DE COORDINACIÓN'],
   [12, 'JUR_POR_DESIG', 'JURADO POR NOTIFICAR'],
   [13, 'JUR_INVITADO', 'JURADO INVITADO'],
   [14, 'EN_EVALUACION', 'EN EVALUACIÓN'],
