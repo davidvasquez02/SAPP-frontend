@@ -22,3 +22,7 @@ test('presenta con el toast institucional los errores al aprobar documentos', ()
   assert.match(approveHandler, /setToast\(\{\s*tone: 'error'/)
   assert.doesNotMatch(approveHandler, /window\.alert/)
 })
+
+test('no queda ningún popup nativo del navegador en el resto de la pantalla (#48)', () => {
+  assert.doesNotMatch(pageSource, /window\.alert|window\.confirm|window\.prompt/)
+})

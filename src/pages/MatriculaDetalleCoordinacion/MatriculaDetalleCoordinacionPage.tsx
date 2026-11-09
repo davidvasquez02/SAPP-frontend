@@ -391,7 +391,10 @@ const MatriculaDetalleCoordinacionPage = () => {
       const updatedDocuments = await refreshDocumentsAfterDecision(id, 'RECHAZADO', trimmed)
       await finalizeCompletedRequiredReview(updatedDocuments)
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       setBusyDocumentoId(null)
     }
@@ -404,7 +407,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     filename?: string,
   ) => {
     if (!base64) {
-      window.alert('No hay contenido para visualizar.')
+      setToast({ tone: 'error', message: 'No hay contenido para visualizar.' })
       return
     }
 
@@ -413,7 +416,10 @@ const MatriculaDetalleCoordinacionPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
       openBase64InNewTab(base64, mimeType ?? 'application/pdf', filename)
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       updateActionState(documentoId, { viewing: false })
     }
@@ -426,7 +432,7 @@ const MatriculaDetalleCoordinacionPage = () => {
     filename?: string,
   ) => {
     if (!base64) {
-      window.alert('No hay contenido para descargar.')
+      setToast({ tone: 'error', message: 'No hay contenido para descargar.' })
       return
     }
 
@@ -435,7 +441,10 @@ const MatriculaDetalleCoordinacionPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
       downloadBase64File(base64, mimeType ?? 'application/pdf', filename ?? 'documento.pdf')
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       updateActionState(documentoId, { downloading: false })
     }
@@ -561,7 +570,7 @@ const MatriculaDetalleCoordinacionPage = () => {
       .filter((item): item is MatriculaAsignaturaValidacionPayload => item !== null)
 
     if (asignaturas.length === 0) {
-      window.alert('Debe seleccionar al menos una asignatura para aprobar o rechazar.')
+      setToast({ tone: 'error', message: 'Debe seleccionar al menos una asignatura para aprobar o rechazar.' })
       return
     }
 
@@ -575,9 +584,12 @@ const MatriculaDetalleCoordinacionPage = () => {
     try {
       await validarAsignaturasMatriculaAcademica(matricula.id, payload)
       await loadDetalle()
-      window.alert('La validación de asignaturas fue guardada correctamente.')
+      setToast({ tone: 'success', message: 'La validación de asignaturas fue guardada correctamente.' })
     } catch (requestError) {
-      window.alert(requestError instanceof Error ? requestError.message : String(requestError))
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
     } finally {
       setIsSavingAsignaturas(false)
     }

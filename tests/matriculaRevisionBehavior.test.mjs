@@ -15,13 +15,12 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
       base64DocumentoContenido: 'JVBERi0=', mimeTypeDocumentoContenido: 'application/pdf',
     } : null,
   })
-  let matricula, documents, missing, fetchError, decisionError, finalizationError, approvalError, validationError, decisions, approvals, finalized, savedSubjects, alerts
+  let matricula, documents, missing, fetchError, decisionError, finalizationError, approvalError, validationError, decisions, approvals, finalized, savedSubjects
   const ok = data => Response.json({ ok: true, data })
-  t.beforeEach(s => {
+  t.beforeEach(() => {
     matricula = { id: 24, estudianteNombreCompleto: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', periodoAcademico: '2026-2', estado: 'PENDIENTE_DOCUMENTOS', fechaSolicitud: '2026-10-17T10:00:00', asignaturas: [{ id: 33, asignaturaId: 7, asignaturaCodigo: 'UIS-7', asignaturaNombre: 'Investigación', estado: 'PENDIENTE', observaciones: null }] }
     documents = [document()]; missing = false; fetchError = false; decisionError = false; finalizationError = false; approvalError = false; validationError = false
-    decisions = []; approvals = 0; finalized = 0; savedSubjects = []; alerts = []
-    s.mock.method(window, 'alert', text => alerts.push(text))
+    decisions = []; approvals = 0; finalized = 0; savedSubjects = []
     ui.response((url, init) => {
       const path = new URL(url, 'https://example.test').pathname
       if (path.endsWith('/matriculaAcademica')) return fetchError ? Response.json({ message: 'Detalle no disponible' }, { status: 503 }) : ok(missing ? [] : [matricula])
@@ -170,12 +169,12 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     const view = mount(s)
     await ready(view)
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
-    assert.deepEqual(alerts, ['Debe seleccionar al menos una asignatura para aprobar o rechazar.'])
+    await view.findByText('Debe seleccionar al menos una asignatura para aprobar o rechazar.')
     assert.equal(savedSubjects.length, 0)
     ui.fireEvent.click(view.getAllByRole('button', { name: 'Rechazar' }).at(-1))
     ui.fireEvent.change(view.getByPlaceholderText('Observaciones de validación'), { target: { value: '  No cumple prerrequisito  ' } })
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
-    await ui.waitFor(() => assert.ok(alerts.includes('La validación de asignaturas fue guardada correctamente.')))
+    await view.findByText('La validación de asignaturas fue guardada correctamente.')
     assert.deepEqual(savedSubjects, [{ usuarioRevisionId: 10, observaciones: 'Revision manual', asignaturas: [{ asignaturaId: 7, estado: 'NO_MATRICULADA', observaciones: 'No cumple prerrequisito' }] }])
   })
 
@@ -185,7 +184,7 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     await ready(view)
     ui.fireEvent.click(view.getAllByRole('button', { name: 'Aprobar' }).at(-1))
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
-    await ui.waitFor(() => assert.ok(alerts.includes('Validación no guardada')))
+    await view.findByText('Validación no guardada')
     assert.ok(view.getByRole('button', { name: 'Aprobada' }))
     validationError = false
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
