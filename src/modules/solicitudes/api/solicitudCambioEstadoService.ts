@@ -7,7 +7,7 @@ export type SolicitudEstadoTarget = EstadoSolicitudSigla
 export async function cambiarEstadoSolicitud(
   solicitudId: number,
   target: SolicitudEstadoTarget,
-  options: { enviarConsejo?: boolean; actaId?: number; observaciones?: string } = {},
+  options: { enviarConsejo?: boolean; actaId?: number; observaciones?: string; referenciaActa?: string } = {},
 ): Promise<void> {
   const params = new URLSearchParams({ siglaEstado: target })
 
@@ -21,6 +21,10 @@ export async function cambiarEstadoSolicitud(
 
   if (options.observaciones !== undefined) {
     params.set('observaciones', options.observaciones)
+  }
+
+  if (options.referenciaActa !== undefined) {
+    params.set('referenciaActa', options.referenciaActa)
   }
 
   const path = `/sapp/solicitudesAcademicas/cambioEstado/${solicitudId}?${params.toString()}`

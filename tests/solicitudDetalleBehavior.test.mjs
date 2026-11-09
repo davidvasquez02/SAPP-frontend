@@ -267,4 +267,31 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     await ready(enviada)
     assert.equal(enviada.queryAllByRole('button', { name: 'Crear reintento' }).length, 0)
   })
+
+  await t.test('ajuste #5: aprobar un trabajo de grado no exige acta, acepta una referencia libre opcional', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'ENVIADA', estado: 'ENVIADA A COMITE', tipoSolicitudId: 6, tipoSolicitudCodigo: 'DEF_TI_MISI' }
+    const view = mount(s)
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Aprobar y enviar a consejo académico' }))
+    assert.equal(view.queryAllByRole('combobox').length, 0)
+    assert.equal(view.queryAllByText('Acta *').length, 0)
+    const aprobar = await view.findByRole('button', { name: 'Aprobar' })
+    assert.equal(aprobar.disabled, false)
+    ui.fireEvent.click(aprobar)
+    await view.findByText('Estado actualizado correctamente')
+    assert.equal(changes[0].siglaEstado, 'APROBADA')
+    assert.equal('referenciaActa' in changes[0], false)
+    assert.equal('actaId' in changes[0], false)
+  })
+
+  await t.test('ajuste #5: la referencia escrita al aprobar un trabajo de grado llega al back', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'ENVIADA', estado: 'ENVIADA A COMITE', tipoSolicitudId: 6, tipoSolicitudCodigo: 'DEF_TI_MISI' }
+    const view = mount(s)
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Aprobar y enviar a consejo académico' }))
+    ui.fireEvent.change(await view.findByLabelText('Referencia (opcional)'), { target: { value: '  Sesión de comité del 5 de noviembre  ' } })
+    ui.fireEvent.click(view.getByRole('button', { name: 'Aprobar' }))
+    await view.findByText('Estado actualizado correctamente')
+    assert.equal(changes[0].referenciaActa, 'Sesión de comité del 5 de noviembre')
+  })
 })

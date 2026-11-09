@@ -99,6 +99,7 @@ const SolicitudDetallePage = () => {
   const [selectedActaId, setSelectedActaId] = useState('')
   const [actasLoading, setActasLoading] = useState(false)
   const [actasError, setActasError] = useState<string | null>(null)
+  const [referenciaActa, setReferenciaActa] = useState('')
   const [pendingEnviarConsejo, setPendingEnviarConsejo] = useState<boolean | undefined>()
   const [showRejectionDialog, setShowRejectionDialog] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
@@ -429,6 +430,7 @@ const SolicitudDetallePage = () => {
     enviarConsejo?: boolean,
     actaId?: number,
     observaciones?: string,
+    referenciaActaAprobacion?: string,
   ) => {
     if (!solicitud || !canResolveSolicitud) {
       return
@@ -439,7 +441,12 @@ const SolicitudDetallePage = () => {
     setUpdateSuccess(null)
 
     try {
-      await cambiarEstadoSolicitud(solicitud.id, target, { enviarConsejo, actaId, observaciones })
+      await cambiarEstadoSolicitud(solicitud.id, target, {
+        enviarConsejo,
+        actaId,
+        observaciones,
+        referenciaActa: referenciaActaAprobacion,
+      })
 
       try {
         const refreshed = await getSolicitudAcademicaById(solicitud.id)
@@ -509,6 +516,15 @@ const SolicitudDetallePage = () => {
       return
     }
 
+    if (esSolicitudTrabajoGrado) {
+      // Ajuste #5: estos trámites no exigen un acta ya cargada en el sistema (nomenclatura
+      // oficial aún sin confirmar, ver #4) -- aceptan una referencia de texto libre, opcional.
+      setReferenciaActa('')
+      setActasError(null)
+      setShowActaSelection(true)
+      return
+    }
+
     void openActaSelection()
   }
 
@@ -518,6 +534,12 @@ const SolicitudDetallePage = () => {
   }
 
   const handleConfirmApproval = () => {
+    if (esSolicitudTrabajoGrado) {
+      setShowActaSelection(false)
+      void handleResolverSolicitud('APROBADA', pendingEnviarConsejo, undefined, undefined, referenciaActa.trim() || undefined)
+      return
+    }
+
     const actaId = Number(selectedActaId)
     if (!Number.isInteger(actaId) || actaId <= 0) {
       setActasError('Debes seleccionar el acta asociada a la aprobación.')
@@ -975,63 +997,99 @@ const SolicitudDetallePage = () => {
                   onClick={() => setShowActaSelection(false)}
                 />
                 <div className="solicitud-detalle-page__modal-dialog">
-                  <h3 id="acta-selection-title">Seleccionar acta asociada</h3>
-                  <p>
-                    La solicitud estaba en {estabaEnConsejo ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}.
-                    Selecciona un acta de esa instancia para registrar la aprobación.
-                  </p>
-
-                  {actasLoading ? (
-                    <p role="status">Consultando actas...</p>
+                  {esSolicitudTrabajoGrado ? (
+                    <>
+                      <h3 id="acta-selection-title">Aprobar solicitud</h3>
+                      <p>
+                        Este trámite no exige un acta ya cargada en el sistema. Podés dejar una referencia libre
+                        (número de sesión, fecha, lo que tengas a mano) — es opcional.
+                      </p>
+                      <label className="solicitud-detalle-page__field">
+                        <span>Referencia (opcional)</span>
+                        <input
+                          value={referenciaActa}
+                          onChange={(event) => setReferenciaActa(event.target.value)}
+                          placeholder="Ej: sesión de comité del 5 de noviembre"
+                        />
+                      </label>
+                      <div className="solicitud-detalle-page__modal-actions">
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                          type="button"
+                          onClick={handleConfirmApproval}
+                        >
+                          Aprobar
+                        </button>
+                        <button
+                          className="solicitud-detalle-page__back"
+                          type="button"
+                          onClick={() => setShowActaSelection(false)}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
                   ) : (
-                    <label className="solicitud-detalle-page__field">
-                      <span>Acta *</span>
-                      <select
-                        value={selectedActaId}
-                        onChange={(event) => {
-                          setSelectedActaId(event.target.value)
-                          setActasError(null)
-                        }}
-                        disabled={actas.length === 0}
-                      >
-                        <option value="">Selecciona un acta</option>
-                        {actas.map((acta) => (
-                          <option key={acta.id} value={acta.id}>
-                            {acta.codigo} — {acta.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
+                    <>
+                      <h3 id="acta-selection-title">Seleccionar acta asociada</h3>
+                      <p>
+                        La solicitud estaba en {estabaEnConsejo ? 'Consejo Académico' : 'Comité Asesor de Posgrados'}.
+                        Selecciona un acta de esa instancia para registrar la aprobación.
+                      </p>
 
-                  {!actasLoading && actas.length === 0 && !actasError && (
-                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
-                      No hay actas disponibles para esta instancia.
-                    </p>
-                  )}
-                  {actasError && (
-                    <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
-                      {actasError}
-                    </p>
-                  )}
+                      {actasLoading ? (
+                        <p role="status">Consultando actas...</p>
+                      ) : (
+                        <label className="solicitud-detalle-page__field">
+                          <span>Acta *</span>
+                          <select
+                            value={selectedActaId}
+                            onChange={(event) => {
+                              setSelectedActaId(event.target.value)
+                              setActasError(null)
+                            }}
+                            disabled={actas.length === 0}
+                          >
+                            <option value="">Selecciona un acta</option>
+                            {actas.map((acta) => (
+                              <option key={acta.id} value={acta.id}>
+                                {acta.codigo} — {acta.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
 
-                  <div className="solicitud-detalle-page__modal-actions">
-                    <button
-                      className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
-                      type="button"
-                      onClick={handleConfirmApproval}
-                      disabled={actasLoading || !selectedActaId}
-                    >
-                      Aprobar con acta
-                    </button>
-                    <button
-                      className="solicitud-detalle-page__back"
-                      type="button"
-                      onClick={() => setShowActaSelection(false)}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                      {!actasLoading && actas.length === 0 && !actasError && (
+                        <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                          No hay actas disponibles para esta instancia.
+                        </p>
+                      )}
+                      {actasError && (
+                        <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                          {actasError}
+                        </p>
+                      )}
+
+                      <div className="solicitud-detalle-page__modal-actions">
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                          type="button"
+                          onClick={handleConfirmApproval}
+                          disabled={actasLoading || !selectedActaId}
+                        >
+                          Aprobar con acta
+                        </button>
+                        <button
+                          className="solicitud-detalle-page__back"
+                          type="button"
+                          onClick={() => setShowActaSelection(false)}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
