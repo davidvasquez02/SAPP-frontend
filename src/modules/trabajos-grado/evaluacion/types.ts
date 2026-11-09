@@ -98,6 +98,8 @@ export interface ProcesoEvaluacionTg {
   fechaLimiteEvaluacion?: string | null
   documentoEvaluarId?: number | null
   documentoEvaluarNombre?: string | null
+  cartaRespuestasId?: number | null
+  cartaRespuestasNombre?: string | null
   documentos?: DocumentoEvaluacion[]
   jurados: JuradoEvaluador[]
   sustentacion?: SustentacionEvaluacion | null

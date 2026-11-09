@@ -41,6 +41,19 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
     const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); ui.fireEvent.click(v.getByRole('button', { name: 'Cargar archivo nuevamente' })); await v.findByText('El archivo se cargó correctamente y quedó asignado como el nuevo documento a evaluar.')
     assert.equal(writes.length, 2); assert.ok(writes[0].path.endsWith('/document')); assert.ok(writes[1].path.includes('documento-evaluar')); assert.equal(committed, 1)
   })
+  await t.test('ajuste #11/#12: carga la carta de respuestas como documento aparte, sin reasignar el documento evaluado', async s => {
+    requirements = [...requirements, { idTipoDocumentoTramite: 7, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: false, documentoUploadedResponse: null }]
+    const v = mount(s, Adjustments)
+    await v.findByText('Documento sintético')
+    const bytes = new TextEncoder().encode('%PDF-carta')
+    const cartaFile = new ui.dom.window.File([bytes], 'carta.pdf', { type: 'application/pdf' })
+    cartaFile.arrayBuffer = async () => bytes.buffer
+    ui.fireEvent.change(v.getByLabelText('Carta de respuestas a las observaciones (opcional)'), { target: { files: [cartaFile] } })
+    await v.findByText('Archivo seleccionado: carta.pdf')
+    ui.fireEvent.click(v.getByRole('button', { name: 'Cargar carta de respuestas' }))
+    await v.findByText('La carta de respuestas se cargó correctamente.')
+    assert.equal(writes.length, 1); assert.ok(writes[0].path.endsWith('/document')); assert.equal(writes[0].body.tipoDocumentoTramiteId, 7)
+  })
   await t.test('fuera de ajustes no ofrece carga ni consulta checklist', async s => {
     const before = ui.requests.length; const v = mount(s, Adjustments, { enAjustes: false }); await ui.waitFor(() => assert.equal(v.queryAllByText('Consultando el proceso de evaluación…').length, 0)); assert.equal(v.container.textContent, '')
     assert.equal(ui.requests.slice(before).filter(r => r.url.includes('/document?')).length, 0)

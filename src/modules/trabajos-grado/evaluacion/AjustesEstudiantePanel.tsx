@@ -26,11 +26,16 @@ const AjustesEstudiantePanel = ({
 }: AjustesEstudiantePanelProps) => {
   const [proceso, setProceso] = useState<ProcesoEvaluacionTg | null>(null)
   const [requirement, setRequirement] = useState<DocumentChecklistItemDto | null>(null)
+  const [cartaRequirement, setCartaRequirement] = useState<DocumentChecklistItemDto | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [cartaFile, setCartaFile] = useState<File | null>(null)
+  const [cartaUploading, setCartaUploading] = useState(false)
+  const [cartaError, setCartaError] = useState<string | null>(null)
+  const [cartaMessage, setCartaMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -39,15 +44,19 @@ const AjustesEstudiantePanel = ({
       const process = await getProcesoEvaluacion(solicitudId)
       setProceso(process)
 
-      if (enAjustes && process.documentoEvaluarId != null) {
+      if (enAjustes) {
         const codigo = Number(codigoTipoTramite)
         if (!Number.isFinite(codigo)) throw new Error('No fue posible determinar el tipo de trámite del documento.')
         const requirements = await getChecklistDocumentos({ codigoTipoTramite: codigo, tramiteId: solicitudId })
         setRequirement(
-          requirements.find((item) => item.documentoUploadedResponse?.idDocumento === process.documentoEvaluarId) ?? null,
+          process.documentoEvaluarId != null
+            ? requirements.find((item) => item.documentoUploadedResponse?.idDocumento === process.documentoEvaluarId) ?? null
+            : null,
         )
+        setCartaRequirement(requirements.find((item) => item.codigoTipoDocumentoTramite === 'CARTA_RESPUESTAS_TG') ?? null)
       } else {
         setRequirement(null)
+        setCartaRequirement(null)
       }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'No fue posible consultar el proceso de evaluación.')
@@ -104,6 +113,36 @@ const AjustesEstudiantePanel = ({
     }
   }
 
+  const handleUploadCarta = async () => {
+    if (!enAjustes || !cartaFile || !cartaRequirement) return
+    setCartaUploading(true)
+    setCartaError(null)
+    setCartaMessage(null)
+    try {
+      const buffer = await cartaFile.arrayBuffer()
+      await uploadDocument({
+        tipoDocumentoTramiteId: cartaRequirement.idTipoDocumentoTramite,
+        nombreArchivo: cartaFile.name,
+        tramiteId: solicitudId,
+        usuarioCargaId,
+        aspiranteCargaId: null,
+        contenidoBase64: await fileToBase64(cartaFile),
+        mimeType: cartaFile.type || 'application/octet-stream',
+        tamanoBytes: cartaFile.size,
+        checksum: await sha256Hex(buffer),
+      })
+      setCartaFile(null)
+      setCartaMessage('La carta de respuestas se cargó correctamente.')
+      await Promise.all([load(), onUploaded()])
+    } catch (uploadError) {
+      setCartaError(
+        uploadError instanceof Error ? uploadError.message : 'No fue posible cargar la carta de respuestas.',
+      )
+    } finally {
+      setCartaUploading(false)
+    }
+  }
+
   if (loading) return <p className="ajustes-estudiante__status">Consultando el proceso de evaluación…</p>
   if (!enAjustes) return error ? <p className="ajustes-estudiante__error" role="alert">{error}</p> : null
 
@@ -152,6 +191,36 @@ const AjustesEstudiantePanel = ({
       )}
       {error && <p className="ajustes-estudiante__error" role="alert">{error}</p>}
       {message && <p className="ajustes-estudiante__success" role="status">{message}</p>}
+      {cartaRequirement && (
+        <div className="ajustes-estudiante__upload">
+          <label>
+            <span>Carta de respuestas a las observaciones (opcional)</span>
+            <input
+              type="file"
+              accept={PDF_FILE_ACCEPT}
+              onChange={(event) => {
+                const selectedFile = event.target.files?.[0] ?? null
+                if (selectedFile && !isPdfFile(selectedFile)) {
+                  setCartaFile(null)
+                  setCartaError('Solo se permiten archivos PDF.')
+                  event.target.value = ''
+                  return
+                }
+                setCartaError(null)
+                setCartaFile(selectedFile)
+              }}
+              disabled={cartaUploading}
+            />
+          </label>
+          {cartaFile && <p>Archivo seleccionado: {cartaFile.name}</p>}
+          {proceso?.cartaRespuestasNombre && <p>Carta ya cargada: {proceso.cartaRespuestasNombre}</p>}
+          <button type="button" onClick={() => void handleUploadCarta()} disabled={!cartaFile || cartaUploading}>
+            {cartaUploading ? 'Cargando…' : 'Cargar carta de respuestas'}
+          </button>
+          {cartaError && <p className="ajustes-estudiante__error" role="alert">{cartaError}</p>}
+          {cartaMessage && <p className="ajustes-estudiante__success" role="status">{cartaMessage}</p>}
+        </div>
+      )}
     </section>
   )
 }
