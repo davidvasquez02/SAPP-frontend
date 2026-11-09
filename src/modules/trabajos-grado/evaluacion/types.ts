@@ -40,6 +40,7 @@ export interface JuradoEvaluador {
   id: number
   orden?: number
   nombre: string
+  tratamiento?: string | null
   correo: string
   institucion: string | null
   externo: boolean
@@ -130,6 +131,7 @@ export interface BancoJurado {
 
 export interface JuradoInput {
   nombre: string
+  tratamiento?: string
   correo: string
   institucion: string
   externo: boolean

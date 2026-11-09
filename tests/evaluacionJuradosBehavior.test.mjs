@@ -123,6 +123,25 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
     assert.equal(calls[0].body.motivoReemplazo, 'Conflicto de interés')
   })
 
+  await t.test('ajuste #15: el tratamiento del jurado se envía al designarlo y se muestra junto al nombre', async s => {
+    const view = mount(s)
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: /Agregar evaluador/ }))
+    fill(view)
+    ui.fireEvent.change(view.getByLabelText('Tratamiento (opcional)'), { target: { value: 'Dra.' } })
+    ui.fireEvent.change(view.getByLabelText(/Documento a evaluar/), { target: { value: '102' } })
+    ui.fireEvent.click(view.getByRole('button', { name: 'Guardar jurado' }))
+    await view.findByText('Jurado registrado e invitación enviada.')
+    assert.equal(calls[1].body.jurados[0].tratamiento, 'Dra.')
+  })
+
+  await t.test('ajuste #15: el tratamiento registrado se muestra junto al nombre del jurado', async s => {
+    proceso = { ...proceso, jurados: [{ ...jurado, tratamiento: 'Ing.' }] }
+    const view = mount(s)
+    await ready(view)
+    await view.findByText('Ing. Jurado inicial')
+  })
+
   await t.test('jurado reemplazado tras declinar conserva visible el motivo de declinación', async s => {
     proceso = { ...proceso, jurados: [{ ...jurado, activo: false, estadoInvitacion: 'REEMPLAZADO', motivoDeclinacion: 'Conflicto de interés con el director' }] }
     const view = mount(s)
