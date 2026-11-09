@@ -52,6 +52,8 @@ export interface JuradoEvaluador {
   fechaRespuesta?: string | null
   fechaLimiteEvaluacion?: string | null
   motivoDeclinacion?: string | null
+  nombreSugerido?: string | null
+  correoSugerido?: string | null
   evaluaciones: EvaluacionJurado[]
 }
 

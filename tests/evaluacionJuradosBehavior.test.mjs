@@ -130,6 +130,21 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
     await view.findByText('Declinó: Conflicto de interés con el director')
   })
 
+  await t.test('ajuste #7: jurado que declina y sugiere reemplazo deja la sugerencia visible', async s => {
+    proceso = { ...proceso, jurados: [{ ...jurado, activo: false, estadoInvitacion: 'DECLINADA', nombreSugerido: 'Dra. Ana Maria Rueda', correoSugerido: 'ana.rueda@universidad.edu.co' }] }
+    const view = mount(s)
+    await ready(view)
+    await view.findByText('Sugiere: Dra. Ana Maria Rueda (ana.rueda@universidad.edu.co)')
+  })
+
+  await t.test('ajuste #7: sin sugerencia no aparece la línea de "Sugiere"', async s => {
+    proceso = { ...proceso, jurados: [{ ...jurado, activo: false, estadoInvitacion: 'DECLINADA', motivoDeclinacion: 'No puedo participar' }] }
+    const view = mount(s)
+    await ready(view)
+    await view.findByText('Declinó: No puedo participar')
+    assert.equal(view.queryAllByText(/Sugiere:/).length, 0)
+  })
+
   await t.test('retiro requiere confirmación; cancelar y Escape no eliminan', async s => {
     const view = mount(s)
     await ready(view)
