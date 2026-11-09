@@ -10,9 +10,6 @@ import DocumentosRequeridosTable from "../../modules/matricula/components/Docume
 import MatriculaClosedState from "../../modules/matricula/components/MatriculaClosedState/MatriculaClosedState";
 import MateriasSelectedTable from "../../modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable";
 import MateriasSelector from "../../modules/matricula/components/MateriasSelector/MateriasSelector";
-import {
-  fetchMatriculaConvocatoria,
-} from "../../modules/matricula/services/matriculaMockService";
 import { getDocumentosPorTipoTramite } from "../../api/tramiteDocumentService";
 import type { TramiteDocumentoDto } from "../../api/tramiteDocumentTypes";
 import type { DocumentoTramiteItemDto } from "../../modules/documentos/api/types";
@@ -345,10 +342,25 @@ const MatriculaPage = () => {
           return;
         }
 
-        const convocatoriaResult = await fetchMatriculaConvocatoria();
+        const periodoVigente = await getPeriodoMatriculaVigente();
         if (cancelled) {
           return;
         }
+
+        const convocatoriaResult: MatriculaConvocatoria = periodoVigente
+          ? {
+              isOpen: true,
+              periodoLabel: periodoVigente.periodo.anioPeriodo,
+              fechaInicio: periodoVigente.fechaInicio,
+              fechaFin: periodoVigente.fechaFin,
+            }
+          : {
+              isOpen: false,
+              periodoLabel: "",
+              fechaInicio: "",
+              fechaFin: "",
+              mensaje: "No hay fechas de matrícula habilitadas actualmente.",
+            };
 
         loadedConvocatoria = true;
         setConvocatoria(convocatoriaResult);

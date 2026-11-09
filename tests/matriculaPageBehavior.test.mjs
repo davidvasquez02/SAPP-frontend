@@ -112,6 +112,7 @@ test('página de matrícula React: roles, creación, documentos y listado admini
   await t.test('materias seleccionadas no se duplican y pueden retirarse antes de confirmar', async s => {
     const view = mount(s)
     await ready(view)
+    assert.ok(view.getByText('Periodo académico: 2026-2'))
     assert.equal(view.getByRole('button', { name: 'Confirmar matrícula' }).disabled, true)
     await add(view)
     assert.equal(view.getByRole('button', { name: 'Confirmar matrícula' }).disabled, false)
