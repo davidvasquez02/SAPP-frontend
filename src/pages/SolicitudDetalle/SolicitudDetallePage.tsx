@@ -856,8 +856,8 @@ const SolicitudDetallePage = () => {
                   )}
                   {canEnviarAComite && (
                     <>
-                      <h3>Validación de requisitos</h3>
-                      <p>La solicitud está radicada. Confirmá que está completa para enviarla al comité asesor de posgrados.</p>
+                      <h3>Validación de coordinación</h3>
+                      <p>La solicitud está en validación de coordinación. Confirmá que está completa para enviarla al comité asesor de posgrados.</p>
                       <div className="solicitud-detalle-page__estado-controls">
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
