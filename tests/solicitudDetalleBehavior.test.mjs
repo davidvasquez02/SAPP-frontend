@@ -8,12 +8,12 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
   const ui = await reactApiHarness(t)
   const { default: Page } = await ui.load('/src/pages/SolicitudDetalle/SolicitudDetallePage.tsx')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
-  let solicitud, own, detailFailure, historyFailure, docsFailure, actasFailure, changeFailure, signFailure, refreshFailureAfterSign, changes, signatures, historyCalls
+  let solicitud, own, detailFailure, historyFailure, docsFailure, actasFailure, changeFailure, signFailure, refreshFailureAfterSign, changes, signatures, historyCalls, enviosAComite
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     solicitud = { id: 24, estudianteId: 18, estudiante: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', tipoSolicitudId: 99, tipoSolicitudCodigo: 'GENERAL', tipoSolicitud: 'Solicitud general', tipoTramiteCodigo: '100', estadoId: 1, estadoSigla: 'ENVIADA', estado: 'ENVIADA A COMITE', fechaRegistro: '2026-10-17', fechaResolucion: null, observaciones: 'Detalle de prueba' }
     own = true; detailFailure = false; historyFailure = false; docsFailure = false; actasFailure = false; changeFailure = false; signFailure = false; refreshFailureAfterSign = false
-    changes = []; signatures = 0; historyCalls = 0
+    changes = []; signatures = 0; historyCalls = 0; enviosAComite = 0
     ui.response((url, init) => {
       const parsed = new URL(url, 'https://example.test')
       const path = parsed.pathname
@@ -26,6 +26,11 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
         if (changeFailure) return Response.json({ message: 'Transición rechazada' }, { status: 409 })
         changes.push(Object.fromEntries(parsed.searchParams))
         solicitud = { ...solicitud, estadoSigla: parsed.searchParams.get('siglaEstado'), estado: parsed.searchParams.get('siglaEstado'), motivoRechazo: parsed.searchParams.get('observaciones') }
+        return ok(null)
+      }
+      if (path.endsWith('/solicitudesAcademicas/24/enviarAComite')) {
+        enviosAComite++
+        solicitud = { ...solicitud, estadoSigla: 'ENVIADA', estado: 'ENVIADA' }
         return ok(null)
       }
       if (path.endsWith('/firmasDocumento/solicitudesAcademicas/24')) {
@@ -229,6 +234,26 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     assert.equal(destino.tipoSolicitudId, 6)
     assert.equal(destino.tituloTrabajo, 'Tesis original')
     assert.equal(destino.resumenTrabajo, 'Resumen original')
+  })
+
+  await t.test('coordinador envia a comite una solicitud radicada y el estudiante nunca ve esa accion', async s => {
+    solicitud = { ...solicitud, estadoSigla: 'RADICADA', estado: 'RADICADA' }
+    const view = mount(s, ['COORDINADOR'])
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Enviar a comité' }))
+    await view.findByText('Solicitud enviada al comité asesor')
+    assert.equal(enviosAComite, 1)
+    await ui.cleanup()
+    solicitud = { ...solicitud, estadoSigla: 'RADICADA', estado: 'RADICADA' }
+    const estudiante = mount(s, ['ESTUDIANTE'])
+    await ready(estudiante)
+    assert.equal(estudiante.queryAllByRole('button', { name: 'Enviar a comité' }).length, 0)
+  })
+
+  await t.test('el botón de enviar a comité no aparece fuera de RADICADA', async s => {
+    const view = mount(s, ['COORDINADOR'])
+    await ready(view)
+    assert.equal(view.queryAllByRole('button', { name: 'Enviar a comité' }).length, 0)
   })
 
   await t.test('el botón de crear reintento no aparece fuera de APLAZADA ni para el coordinador', async s => {

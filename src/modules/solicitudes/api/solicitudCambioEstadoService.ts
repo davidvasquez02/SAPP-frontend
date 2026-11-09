@@ -30,3 +30,12 @@ export async function cambiarEstadoSolicitud(
     throw new Error(response.message || 'No fue posible cambiar el estado de la solicitud.')
   }
 }
+
+/** Mueve una solicitud de RADICADA a ENVIADA (comite asesor), una vez validados sus requisitos. */
+export async function enviarSolicitudAComite(solicitudId: number): Promise<void> {
+  const response = await httpPut<ApiResponse<unknown | null>>(`/sapp/solicitudesAcademicas/${solicitudId}/enviarAComite`)
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible enviar la solicitud a comite.')
+  }
+}

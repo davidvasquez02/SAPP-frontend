@@ -1,4 +1,5 @@
 export type EstadoSolicitudSigla =
+  | 'RADICADA'
   | 'ENVIADA'
   | 'EN_REVISION'
   | 'APROBADA'
@@ -26,6 +27,7 @@ export interface EstadoSolicitudCatalogItem {
 }
 
 export const DEFAULT_ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
+  { id: 0, sigla: 'RADICADA', label: 'RADICADA' },
   { id: 1, sigla: 'ENVIADA', label: 'ENVIADA A COMITE ASESOR DE POSGRADOS' },
   { id: 2, sigla: 'EN_REVISION', label: 'EN REVISION POR COMITE ASESOR DE POSGRADOS' },
   { id: 3, sigla: 'APROBADA', label: 'APROBADA' },
@@ -51,6 +53,7 @@ let estadosSolicitudCatalog = [...DEFAULT_ESTADOS_SOLICITUD_CATALOG]
 let estadoBySigla = new Map(estadosSolicitudCatalog.map((estado) => [estado.sigla, estado]))
 
 const ESTADO_SIGLA_MAP: Record<string, EstadoSolicitudSigla> = {
+  RADICADA: 'RADICADA',
   ENVIADA: 'ENVIADA',
   REGISTRADA: 'ENVIADA',
   REGISTRADO: 'ENVIADA',

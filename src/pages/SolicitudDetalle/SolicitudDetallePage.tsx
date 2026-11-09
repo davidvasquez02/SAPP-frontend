@@ -15,6 +15,7 @@ import {
 } from '../../modules/solicitudes/api/solicitudesAcademicasService'
 import {
   cambiarEstadoSolicitud,
+  enviarSolicitudAComite,
   type SolicitudEstadoTarget,
 } from '../../modules/solicitudes/api/solicitudCambioEstadoService'
 import { getSolicitudDocumentosAdjuntos } from '../../modules/solicitudes/api/solicitudDocumentosService'
@@ -269,6 +270,8 @@ const SolicitudDetallePage = () => {
   const estabaEnInstanciaResolutiva = estabaEnComite || estabaEnConsejo
   const showMotivosCredito = isTipoCreditoCondonable(solicitud?.tipoSolicitudCodigo)
   const canResolveSolicitud = isCoordinador && estabaEnInstanciaResolutiva
+  // RADICADA es el estado de intake, antes de que el comite la vea (ver SolicitudesAcademicaService#enviarAComite).
+  const canEnviarAComite = isCoordinador && currentEstado === 'RADICADA'
   const approvalButtonLabel = getAprobacionTrabajoGradoLabel(
     solicitud?.tipoSolicitudId,
     solicitud?.estadoSigla,
@@ -447,6 +450,32 @@ const SolicitudDetallePage = () => {
       }
     } catch (updateEstadoError) {
       setUpdateError(getErrorMessage(updateEstadoError, 'No fue posible actualizar el estado de la solicitud.'))
+    } finally {
+      setIsUpdatingEstado(false)
+    }
+  }
+
+  const handleEnviarAComiteClick = async () => {
+    if (!solicitud || !canEnviarAComite) {
+      return
+    }
+
+    setIsUpdatingEstado(true)
+    setUpdateError(null)
+    setUpdateSuccess(null)
+
+    try {
+      await enviarSolicitudAComite(solicitud.id)
+
+      try {
+        const refreshed = await getSolicitudAcademicaById(solicitud.id)
+        setSolicitud(refreshed)
+        setUpdateSuccess('Solicitud enviada al comité asesor')
+      } catch {
+        setUpdateError('Solicitud enviada a comité pero no se pudo recargar el detalle')
+      }
+    } catch (enviarAComiteError) {
+      setUpdateError(getErrorMessage(enviarAComiteError, 'No fue posible enviar la solicitud a comité.'))
     } finally {
       setIsUpdatingEstado(false)
     }
@@ -799,7 +828,7 @@ const SolicitudDetallePage = () => {
               </section>
             )}
 
-            {(canResolveSolicitud || updateError || updateSuccess) && (
+            {(canResolveSolicitud || canEnviarAComite || updateError || updateSuccess) && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
                   {canResolveSolicitud && (
@@ -821,6 +850,22 @@ const SolicitudDetallePage = () => {
                           disabled={isUpdatingEstado}
                         >
                           {isUpdatingEstado ? 'Procesando...' : 'Rechazar'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {canEnviarAComite && (
+                    <>
+                      <h3>Validación de requisitos</h3>
+                      <p>La solicitud está radicada. Confirmá que está completa para enviarla al comité asesor de posgrados.</p>
+                      <div className="solicitud-detalle-page__estado-controls">
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
+                          type="button"
+                          onClick={handleEnviarAComiteClick}
+                          disabled={isUpdatingEstado}
+                        >
+                          {isUpdatingEstado ? 'Procesando...' : 'Enviar a comité'}
                         </button>
                       </div>
                     </>

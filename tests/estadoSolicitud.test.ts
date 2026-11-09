@@ -11,6 +11,7 @@ import {
 } from '../src/modules/solicitudes/utils/estadoSolicitud.ts'
 
 const estadosTrabajoGrado = [
+  [0, 'RADICADA', 'RADICADA'],
   [12, 'JUR_POR_DESIG', 'JURADO POR NOTIFICAR'],
   [13, 'JUR_INVITADO', 'JURADO INVITADO'],
   [14, 'EN_EVALUACION', 'EN EVALUACIÓN'],
