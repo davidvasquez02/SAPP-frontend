@@ -1,0 +1,197 @@
+.banco-evaluadores {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.banco-evaluadores__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.banco-evaluadores__header p {
+  margin: 0;
+  flex: 1 1 22rem;
+  min-width: 0;
+  color: var(--text-secondary);
+}
+
+.banco-evaluadores__alert {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+}
+
+.banco-evaluadores__alert--error {
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger), transparent 65%);
+  background: color-mix(in srgb, var(--danger), transparent 94%);
+}
+
+.banco-evaluadores__alert--success {
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success), transparent 65%);
+  background: color-mix(in srgb, var(--success), transparent 94%);
+}
+
+.banco-evaluadores button {
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.banco-evaluadores button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.banco-evaluadores__primary {
+  border: 0;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.banco-evaluadores__form-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface);
+}
+
+.banco-evaluadores__form-card h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.banco-evaluadores__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.9rem;
+}
+
+.banco-evaluadores__form-grid label,
+.banco-evaluadores__filters label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-weight: 650;
+}
+
+.banco-evaluadores__form-grid input,
+.banco-evaluadores__form-grid select,
+.banco-evaluadores__form-grid textarea,
+.banco-evaluadores__filters input {
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 30%);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.banco-evaluadores__wide {
+  grid-column: 1 / -1;
+}
+
+.banco-evaluadores__check {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.banco-evaluadores__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.banco-evaluadores__form-actions button.secondary {
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.banco-evaluadores__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.banco-evaluadores__filters label:first-child {
+  flex: 1 1 20rem;
+}
+
+.banco-evaluadores__status {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.banco-evaluadores__table-wrap {
+  overflow-x: auto;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
+}
+
+.banco-evaluadores__table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.banco-evaluadores__table-wrap th,
+.banco-evaluadores__table-wrap td {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  color: var(--text-primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 60%);
+}
+
+.banco-evaluadores__row--retirado td {
+  color: var(--text-secondary);
+}
+
+.banco-evaluadores__estado {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.banco-evaluadores__estado--activo {
+  background: color-mix(in srgb, var(--success), transparent 85%);
+  color: var(--success);
+}
+
+.banco-evaluadores__estado--retirado {
+  background: color-mix(in srgb, var(--warning), transparent 85%);
+  color: var(--warning);
+}
+
+.banco-evaluadores__acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.banco-evaluadores__acciones button {
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+}
+
+.banco-evaluadores__acciones button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
