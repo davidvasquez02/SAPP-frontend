@@ -27,7 +27,10 @@ test('página de matrícula React: roles, creación, documentos y listado admini
       const parsed = new URL(url, 'https://example.test')
       const path = parsed.pathname
       if (path.endsWith('/matriculaAcademica/vigente/estudiante/18')) return validationError ? Response.json({ message: 'Validación temporalmente no disponible' }, { status: 503 }) : ok(validation)
-      if (path.endsWith('/asignaturas')) return ok([subject, { ...subject, id: 2, nombre: 'Seminario', codigoUis: 'UIS-2', nivel: 2 }])
+      if (path.endsWith('/asignaturas')) {
+        assert.equal(parsed.searchParams.get('programaId'), '1')
+        return ok([subject, { ...subject, id: 2, nombre: 'Seminario', codigoUis: 'UIS-2', nivel: 2 }])
+      }
       if (path.endsWith('/tramite/document')) return docsError
         ? Response.json({ message: 'Checklist no disponible' }, { status: 503 })
         : ok([{ id: 5, nombre: 'Certificado', descripcion: 'Certificado académico', obligatorio: true }])
@@ -74,7 +77,7 @@ test('página de matrícula React: roles, creación, documentos y listado admini
   })
   const mount = (s, roles = ['ESTUDIANTE']) => {
     s.after(ui.cleanup)
-    const user = { id: '10', username: 'persona', nombreCompleto: 'Persona de prueba', roles, estudiante: { id: 18 } }
+    const user = { id: '10', username: 'persona', nombreCompleto: 'Persona de prueba', roles, estudiante: { id: 18, programaId: 1 } }
     return ui.render(createElement(MemoryRouter, null,
       createElement(AuthContext.Provider, { value: { session: { kind: 'SAPP', user }, user } }, createElement(Page))))
   }

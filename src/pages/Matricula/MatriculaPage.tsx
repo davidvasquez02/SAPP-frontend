@@ -309,6 +309,14 @@ const MatriculaPage = () => {
     return (session.user as AuthUser).estudiante?.id ?? null;
   }, [session]);
 
+  const programaId = useMemo(() => {
+    if (session?.kind !== "SAPP") {
+      return null;
+    }
+
+    return (session.user as AuthUser).estudiante?.programaId ?? null;
+  }, [session]);
+
   const usuarioCargaId = useMemo(() => {
     if (session?.kind !== "SAPP") {
       return null;
@@ -319,7 +327,7 @@ const MatriculaPage = () => {
   }, [session]);
 
   useEffect(() => {
-    if (!isEstudiante || !estudianteId) {
+    if (!isEstudiante || !estudianteId || !programaId) {
       return;
     }
 
@@ -358,7 +366,7 @@ const MatriculaPage = () => {
         setErrorForm(null);
 
         const [materiasResult] = await Promise.all([
-          getAsignaturasPorPrograma(1),
+          getAsignaturasPorPrograma(programaId),
           loadDocumentosMatricula(matriculaValidation),
         ]);
 
@@ -395,7 +403,7 @@ const MatriculaPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [estudianteId, isEstudiante, loadDocumentosMatricula]);
+  }, [estudianteId, isEstudiante, loadDocumentosMatricula, programaId]);
 
   useEffect(() => {
     if (!canManageMatriculas) {
