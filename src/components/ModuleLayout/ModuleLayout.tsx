@@ -8,7 +8,6 @@ import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
-const EISI_LOGO_SRC = '/brand/eisi%20imagen.png'
 const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
@@ -63,11 +62,6 @@ const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile
               className="module-layout__institutional-logo"
               src={UIS_LOGO_SRC}
               alt="Universidad Industrial de Santander"
-            />
-            <img
-              className="module-layout__institutional-logo module-layout__institutional-logo--eisi"
-              src={EISI_LOGO_SRC}
-              alt="Escuela de Ingeniería de Sistemas e Informática"
             />
           </div>
         </div>
