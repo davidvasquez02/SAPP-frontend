@@ -1,11 +1,12 @@
 import { Route } from 'react-router-dom'
 import AdministracionRedirect from './AdministracionRedirect'
 import RequireRoles from '../../routes/RequireRoles/RequireRoles'
-import { ROLES_GESTION_POSGRADOS } from '../../auth/roleGuards'
+import { ROLES, ROLES_GESTION_POSGRADOS } from '../../auth/roleGuards'
 import AdministracionAcademicaLayout from '../../pages/AdministracionAcademica/AdministracionAcademicaLayout'
 import FechasModulePage from '../../pages/FechasModule/FechasModulePage'
 import ConfigFechasAdmisionesPage from '../../pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage'
 import GestionProfesoresPage from '../../pages/GestionProfesores/GestionProfesoresPage'
+import GestionRolesPage from '../../pages/GestionRoles/GestionRolesPage'
 import GestionGruposInvestigacionPage from '../../pages/GestionGruposInvestigacion/GestionGruposInvestigacionPage'
 import GrupoInvestigacionFormPage from '../../pages/GestionGruposInvestigacion/GrupoInvestigacionFormPage'
 import InstitucionesGrupoPage from '../../pages/GestionGruposInvestigacion/InstitucionesGrupoPage'
@@ -42,6 +43,11 @@ export const administracionAcademicaRoutes = (
       <Route path="plantillas-correo/:plantillaId/editar" element={<PlantillaCorreoFormPage />} />
       <Route path="rubrica-evaluacion" element={<RubricaEvaluacionPage />} />
       <Route path="banco-evaluadores" element={<BancoEvaluadoresPage />} />
+      <Route path="roles" element={
+        <RequireRoles allowedRoles={[ROLES.COORDINACION, ROLES.ADMIN]}>
+          <GestionRolesPage />
+        </RequireRoles>
+      } />
     </Route>
     {RUTAS_ANTERIORES_ADMINISTRACION.map(({ anterior }) => (
       <Route key={anterior} path={`${anterior}/*`} element={

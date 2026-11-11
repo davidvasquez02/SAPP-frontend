@@ -1,0 +1,34 @@
+.gestion-roles { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.gestion-roles__hero, .gestion-roles__card { padding: clamp(1rem, 2vw, 1.5rem); border: 1px solid color-mix(in srgb, var(--outline), transparent 20%); border-radius: 20px; background: var(--surface-container-low); box-shadow: var(--shadow-xs); }
+.gestion-roles h1, .gestion-roles h2, .gestion-roles p { margin: 0; }
+.gestion-roles__hero p { color: var(--text-secondary); }
+.gestion-roles__card { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.gestion-roles__search { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem; }
+.gestion-roles__search label { display: flex; flex: 1 1 18rem; flex-direction: column; gap: .35rem; min-width: 0; color: var(--text-secondary); font-weight: 600; }
+.gestion-roles__search input { min-height: 2.5rem; border: 1px solid var(--outline); border-radius: 10px; padding: 0 .75rem; background: var(--surface); color: var(--text-primary); }
+.gestion-roles__search button, .gestion-roles__asignar, .gestion-roles__retirar { border: 0; border-radius: 999px; padding: .55rem 1.1rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.gestion-roles__search button, .gestion-roles__asignar { background: var(--primary); color: var(--on-primary); }
+.gestion-roles__retirar { border: 1px solid var(--danger); background: transparent; color: var(--danger); }
+.gestion-roles button:disabled { opacity: .55; cursor: not-allowed; }
+.gestion-roles__results { display: flex; flex-direction: column; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.gestion-roles__result { display: flex; flex-direction: column; gap: .2rem; width: 100%; border: 1px solid var(--outline); border-radius: 12px; padding: .75rem 1rem; background: var(--surface); text-align: left; cursor: pointer; }
+.gestion-roles__result span { color: var(--text-secondary); font-size: var(--font-size-small); }
+.gestion-roles__result--active { border-color: var(--primary); background: color-mix(in srgb, var(--primary), transparent 92%); }
+.gestion-roles__roles { display: flex; flex-direction: column; gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.gestion-roles__role { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--outline); border-radius: 12px; padding: .65rem 1rem; }
+.gestion-roles__role-badge { padding: .3rem .7rem; border-radius: 999px; background: color-mix(in srgb, var(--text-secondary), transparent 88%); color: var(--text-secondary); font-weight: 700; }
+.gestion-roles__role-badge--active { background: color-mix(in srgb, var(--primary), transparent 86%); color: var(--primary); }
+.gestion-roles__message, .gestion-roles__empty { padding: .8rem 1rem; border-radius: 12px; }
+.gestion-roles__message--error { color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger), transparent 65%); background: color-mix(in srgb, var(--danger), transparent 94%); }
+.gestion-roles__message--success { color: var(--success); border: 1px solid color-mix(in srgb, var(--success), transparent 65%); background: color-mix(in srgb, var(--success), transparent 94%); }
+.gestion-roles__empty { text-align: center; color: var(--text-secondary); }
+@media (max-width: 800px) {
+  .gestion-roles { gap: 1rem; width: 100%; }
+  .gestion-roles__hero, .gestion-roles__card { padding: 1rem; border-radius: 16px; }
+  .gestion-roles__search { flex-direction: column; align-items: stretch; }
+  .gestion-roles__search label { flex: 1 1 auto; width: 100%; }
+  .gestion-roles__search input { width: 100%; min-height: 44px; font-size: 16px; box-sizing: border-box; }
+  .gestion-roles__search button { width: 100%; min-height: 44px; }
+  .gestion-roles__role { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .gestion-roles__asignar, .gestion-roles__retirar { width: 100%; min-height: 44px; }
+}

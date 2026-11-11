@@ -9,6 +9,7 @@ export { CreditosCondonablesCoordinacionPage } from "./CreditosCondonablesCoordi
 export { EstudianteDetalleCoordinacionPage } from "./EstudianteDetalleCoordinacion";
 export { EstudiantesCoordinacionPage } from "./EstudiantesCoordinacion";
 export { GestionProfesoresPage } from "./GestionProfesores";
+export { GestionRolesPage } from "./GestionRoles";
 export { HomePage } from "./Home";
 export { PerfilPage } from "./Perfil";
 export { ReportesPage } from "./Reportes";

@@ -81,6 +81,12 @@ const iconPaths: Record<string, React.ReactNode> = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </>
   ),
+  '/coordinacion/roles': (
+    <>
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3" />
+    </>
+  ),
 }
 
 const lucideIcons = {

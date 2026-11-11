@@ -5,6 +5,7 @@ export const RUTA_GRUPOS = `${RUTA_ADMINISTRACION}/grupos-investigacion`
 export const RUTA_PLANTILLAS = `${RUTA_ADMINISTRACION}/plantillas-correo`
 export const RUTA_RUBRICA = `${RUTA_ADMINISTRACION}/rubrica-evaluacion`
 export const RUTA_BANCO_EVALUADORES = `${RUTA_ADMINISTRACION}/banco-evaluadores`
+export const RUTA_ROLES = `${RUTA_ADMINISTRACION}/roles`
 
 export const SECCIONES_ADMINISTRACION = [
   { to: RUTA_CALENDARIO, label: 'Calendario académico', description: 'Períodos y fechas de los procesos', icon: '/fechas' },
@@ -13,6 +14,7 @@ export const SECCIONES_ADMINISTRACION = [
   { to: RUTA_PLANTILLAS, label: 'Plantillas de correo', description: 'Contenido de las comunicaciones', icon: '/coordinacion/plantillas-correo' },
   { to: RUTA_RUBRICA, label: 'Rúbrica de evaluación', description: 'Formato que se entrega a los jurados de trabajo de grado', icon: '/coordinacion/rubrica-evaluacion' },
   { to: RUTA_BANCO_EVALUADORES, label: 'Banco de evaluadores', description: 'Personas interesadas en ser jurado, antes de participar en un proceso', icon: '/coordinacion/banco-evaluadores' },
+  { to: RUTA_ROLES, label: 'Gestión de roles', description: 'Asignar o retirar roles del IAM a un usuario', icon: '/coordinacion/roles' },
 ] as const
 
 export const RUTAS_ANTERIORES_ADMINISTRACION = [
