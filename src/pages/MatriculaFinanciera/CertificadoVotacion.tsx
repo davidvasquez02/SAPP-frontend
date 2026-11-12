@@ -7,14 +7,14 @@ import { sha256Hex } from '../../utils/sha256'
 import { downloadSolicitudDocument, openSolicitudDocument } from '../../modules/solicitudes/utils/solicitudDocumentFile'
 import { Aviso } from './FinancieraUi'
 
-interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void; onValidChange?: (value: boolean) => void; onPendingUploadChange?: (upload: (() => Promise<boolean>) | null) => void; embedded?: boolean; required?: boolean; deferredUpload?: boolean }
-export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange, onValidChange, onPendingUploadChange, embedded = false, required = false, deferredUpload = false }: CertificadoVotacionProps) {
+interface CertificadoVotacionProps { liquidacionId: number; editable: boolean; onChange: () => void; onBusyChange?: (value: boolean) => void; onValidChange?: (value: boolean) => void; onPendingUploadChange?: (upload: (() => Promise<boolean>) | null) => void; embedded?: boolean; required?: boolean; deferredUpload?: boolean; codigo?: string; titulo?: string }
+export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyChange, onValidChange, onPendingUploadChange, embedded = false, required = false, deferredUpload = false, codigo = 'ANX-39', titulo = 'Certificado de votación' }: CertificadoVotacionProps) {
   const { session } = useAuth()
   const consulta = useConsulta(useCallback((signal: AbortSignal) => listarCertificados(liquidacionId, signal), [liquidacionId]))
   const op = useOperacion()
   const [file, setFile] = useState<File | null>(null)
   const [inputKey, setInputKey] = useState(0)
-  const requirement = consulta.data?.find(d => d.codigoTipoDocumentoTramite === 'ANX-39')
+  const requirement = consulta.data?.find(d => d.codigoTipoDocumentoTramite === codigo)
   const current = requirement?.documentoUploadedResponse
   const valid = Boolean(current && current.estadoDocumento !== 'RECHAZADO')
   useEffect(() => { onValidChange?.(valid) }, [onValidChange, valid])
@@ -29,7 +29,7 @@ export function CertificadoVotacion({ liquidacionId, editable, onChange, onBusyC
     } finally { onBusyChange?.(false) }
   }, 'Certificado guardado.') }
   useEffect(() => { onPendingUploadChange?.(file && requirement ? () => uploadRef.current() : null); return () => onPendingUploadChange?.(null) }, [file, onPendingUploadChange, requirement])
-  return <section className={embedded ? 'mf-certificate' : 'mf-card'}><h3>Certificado de votación</h3><p>{required ? 'Obligatorio para guardar una respuesta afirmativa.' : 'Opcional. Puedes cargarlo como respaldo si coordinación dispone del documento.'} Reemplazar crea una nueva versión.</p>
+  return <section className={embedded ? 'mf-certificate' : 'mf-card'}><h3>{titulo}</h3><p>{required ? 'Obligatorio para guardar una respuesta afirmativa.' : 'Opcional. Puedes cargarlo como respaldo si coordinación dispone del documento.'} Reemplazar crea una nueva versión.</p>
     <Aviso error={consulta.error || op.error} message={op.message} />
     {consulta.loading ? <p>Cargando documento…</p> : !requirement ? <p>No está disponible el certificado en el catálogo. Contacta a coordinación.</p> : <>
       <p>{current ? current.nombreArchivoDocumento : 'Sin documento cargado.'}</p>

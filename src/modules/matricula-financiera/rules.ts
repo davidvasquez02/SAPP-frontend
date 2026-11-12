@@ -7,8 +7,10 @@ export function seleccionarRespuestas(respuestas: RespuestasRequest, tipo: TipoE
 export function respuestasCompletas(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas?: PreguntaLiquidacion[]): boolean {
   return Object.values(seleccionarRespuestas(respuestas, tipo, preguntas)).every(respuesta => typeof respuesta === 'boolean')
 }
-export function respuestasListasParaGuardar(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas: PreguntaLiquidacion[], certificadoValido: boolean, coordinacion = false): boolean {
-  return respuestasCompletas(respuestas, tipo, preguntas) && (coordinacion || respuestas.certificadoVotacion !== true || certificadoValido)
+export function respuestasListasParaGuardar(respuestas: RespuestasRequest, tipo: TipoEstudianteLiquidacion, preguntas: PreguntaLiquidacion[], certificadoVotacionValido: boolean, coordinacion = false, certificadoCumLaudeValido = true): boolean {
+  return respuestasCompletas(respuestas, tipo, preguntas)
+    && (coordinacion || respuestas.certificadoVotacion !== true || certificadoVotacionValido)
+    && (coordinacion || respuestas.cumLaude !== true || certificadoCumLaudeValido)
 }
 export function ordenarPreguntasEstudiante(preguntas: PreguntaLiquidacion[]): PreguntaLiquidacion[] {
   return [
@@ -78,6 +80,7 @@ export const ALERTAS: Record<string, string> = {
   PERMANENCIA_AMPLIADA: 'Permanencia ampliada: confirmar el acta que la autoriza.',
   SEMESTRE_FUERA_DE_TARIFA: 'Sin tarifa aplicable: revisar tarifas o fijar un valor final autorizado.',
   VOTACION_SIN_CERTIFICADO: 'Falta certificado de votación o su marca de recepción por correo.',
+  CUM_LAUDE_SIN_CERTIFICADO: 'Falta certificado de Cum Laude o su marca de recepción por correo.',
   ESTUDIANTE_NO_ACTIVO: 'Estudiante no activo: revisar si corresponde liquidarlo.',
   CUENTA_IAM_PENDIENTE: 'Sin cuenta propia: registrar respuestas por coordinación y avisar por otro medio.',
 }

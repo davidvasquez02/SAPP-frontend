@@ -26,7 +26,7 @@ export interface LiquidacionMatricula {
   periodoIngreso?: string | null; permanenciaMaxima?: string | null; cohorte?: number | null; promocion?: number | null
   semestre?: number | null; semestreOrigen?: 'CALCULADO' | 'MANUAL'; estado: EstadoLiquidacion
   preguntas: PreguntaLiquidacion[]
-  respuestas: RespuestasLiquidacion; origenRespuesta?: 'ESTUDIANTE' | 'COORDINADOR' | null; certificadoVotacionRecibido?: boolean
+  respuestas: RespuestasLiquidacion; origenRespuesta?: 'ESTUDIANTE' | 'COORDINADOR' | null; certificadoVotacionRecibido?: boolean; certificadoCumLaudeRecibido?: boolean
   fechaEnvioSolicitud?: string | null; fechaUltimoRecordatorio?: string | null; fechaRespuesta?: string | null; fechaLiquidada?: string | null
   calculo?: CalculoLiquidacion | null; ajusteManual: number; valorFinalManual?: number | null; totalFinal?: number | null
   observaciones?: string | null; alertas: string[]; motivoExclusion?: string | null; motivoDevolucion?: string | null; liquidada: boolean
@@ -37,7 +37,7 @@ export interface MiLiquidacion {
   liquidacionId: number; proceso: Pick<ProcesoLiquidacion, 'id' | 'periodo' | 'estado' | 'fechaLimiteRespuesta' | 'fechaLimitePago'>
   programa: string; codigoEstudiante: string; tipoEstudiante: TipoEstudianteLiquidacion; estado: EstadoLiquidacion
   puedeResponder: boolean; fueraDePlazo: boolean; preguntas: PreguntaLiquidacion[]; respuestas: RespuestasLiquidacion
-  certificado: { requerido: boolean; cargado: boolean }
+  certificado: { requerido: boolean; cargado: boolean }; certificadoCumLaude: { requerido: boolean; cargado: boolean }
   valores: null | { totalFinal: number; desglose: null | { matricula: number; derechosAcademicos: number; descuentos: number; salud: number } }
 }
 export interface StandardResponse<T> { ok: boolean; message: string; data: T }
