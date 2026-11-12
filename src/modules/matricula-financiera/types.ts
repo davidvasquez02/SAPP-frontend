@@ -57,7 +57,8 @@ export interface CuerposLiquidacion {
   respuestas: RespuestasCoordinacionRequest; ajustes: AjustesLiquidacionRequest
   excluir: { motivo: string }; reincluir: undefined; liquidada: { liquidada: boolean }
 }
-export interface FiltrosLiquidaciones { programaId?: number; estado?: EstadoLiquidacion | ''; tipo?: TipoEstudianteLiquidacion | ''; texto?: string }
+export type OrigenRespuestaLiquidacion = 'ESTUDIANTE' | 'COORDINADOR'
+export interface FiltrosLiquidaciones { programaId?: number; estado?: EstadoLiquidacion | ''; tipo?: TipoEstudianteLiquidacion | ''; texto?: string; origenRespuesta?: OrigenRespuestaLiquidacion | '' }
 export interface TarifaRequest { semestreDesde: number; semestreHasta: number; factorMatricula: number; factorDerechos: number; activo: boolean }
 export interface TarifaMatricula extends TarifaRequest { id: number; programaId: number }
 export interface EstudianteBusqueda { id: number; codigoNombre: string }
