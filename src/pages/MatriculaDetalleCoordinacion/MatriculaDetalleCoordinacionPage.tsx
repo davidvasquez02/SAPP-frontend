@@ -830,6 +830,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                     <tr>
                       <th>Código</th>
                       <th>Asignatura</th>
+                      <th>Institución</th>
                       <th>Estado</th>
                       <th>Validación coordinación</th>
                       <th>Comentarios</th>
@@ -849,6 +850,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                       <tr key={asignatura.id}>
                         <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
                         <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
+                        <td data-label="Institución">{asignatura.asignaturaInstitucion?.trim() || '—'}</td>
                         <td data-label="Estado">{getAsignaturaEstadoLabel(asignatura.estado)}</td>
                         <td data-label="Validación coordinación">
                           {isFinalizada ? (

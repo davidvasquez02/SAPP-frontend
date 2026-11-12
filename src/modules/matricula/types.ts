@@ -28,6 +28,7 @@ export type MateriaSeleccionada = MateriaDto & {
   grupo?: string | null
   observaciones?: string | null
   externa?: AsignaturaExternaDto
+  institucion?: string | null
 }
 
 export type DocumentoRequerido = {

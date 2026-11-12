@@ -29,6 +29,7 @@ import { fileToBase64 } from "../../utils/fileToBase64";
 import { sha256Hex } from "../../utils/sha256";
 import { isPdfFile } from "../../shared/files/pdfFile";
 import type {
+  AsignaturaExternaDto,
   DocumentoRequerido,
   MateriaDto,
   MateriaSeleccionada,
@@ -36,6 +37,8 @@ import type {
   MatriculaAcademicaVigenteDto,
   MatriculaConvocatoria,
 } from "../../modules/matricula/types";
+import MateriaExternaForm from "../../modules/matricula/components/MateriaExternaForm/MateriaExternaForm";
+import { PROGRAMAS_ACADEMICOS } from "../../shared/domain/programaAcademico";
 import {
   formatBackendDateTime,
   getMatriculaAcademicaDetallePath,
@@ -152,6 +155,8 @@ const MatriculaPage = () => {
   const [convocatoria, setConvocatoria] =
     useState<MatriculaConvocatoria | null>(null);
   const [materiasCatalogo, setMateriasCatalogo] = useState<MateriaDto[]>([]);
+  const [programaMateriasId, setProgramaMateriasId] = useState<number | null>(null);
+  const [loadingMateriasPrograma, setLoadingMateriasPrograma] = useState(false);
   const [documentos, setDocumentos] = useState<DocumentoRequerido[]>([]);
   const [activeMatricula, setActiveMatricula] =
     useState<MatriculaAcademicaVigenteDto | null>(null);
@@ -244,6 +249,7 @@ const MatriculaPage = () => {
             estado: asignatura.estado,
             grupo: asignatura.grupo,
             observaciones: asignatura.observaciones,
+            institucion: asignatura.asignaturaInstitucion,
           } satisfies MateriaSeleccionada;
         })
 
@@ -387,6 +393,7 @@ const MatriculaPage = () => {
         }
 
         setMateriasCatalogo(materiasResult);
+        setProgramaMateriasId(programaId);
 
         applyMatriculaValidation(matriculaValidation, materiasResult);
       } catch (error) {
@@ -555,6 +562,43 @@ const MatriculaPage = () => {
     });
   };
 
+  const handleAddExterna = (externa: AsignaturaExternaDto) => {
+    setSelectedMaterias((current) => [
+      ...current,
+      {
+        id: -(Date.now() + current.length),
+        nombre: externa.nombre,
+        codigo: externa.codigo,
+        nivel: null,
+        addedAt: new Date().toISOString(),
+        externa,
+        institucion: externa.institucion,
+      },
+    ]);
+  };
+
+  const handleProgramaMateriasChange = async (nuevoProgramaId: number) => {
+    if (nuevoProgramaId === programaMateriasId) {
+      return;
+    }
+
+    try {
+      setLoadingMateriasPrograma(true);
+      setErrorForm(null);
+      const materiasResult = await getAsignaturasPorPrograma(nuevoProgramaId);
+      setMateriasCatalogo(materiasResult);
+      setProgramaMateriasId(nuevoProgramaId);
+    } catch (error) {
+      setErrorForm(
+        error instanceof Error
+          ? error.message
+          : "No fue posible consultar las materias del programa seleccionado.",
+      );
+    } finally {
+      setLoadingMateriasPrograma(false);
+    }
+  };
+
   const handleConfirmMatricula = async () => {
     if (!estudianteId) {
       setErrorForm("No fue posible identificar el estudiante autenticado.");
@@ -590,9 +634,11 @@ const MatriculaPage = () => {
         await crearMatriculaAcademica({
           estudianteId,
           periodoId: latestValidation.periodoId,
-          asignaturas: selectedMaterias.map((materia) => ({
-            asignaturaId: materia.id,
-          })),
+          asignaturas: selectedMaterias.map((materia) =>
+            materia.externa
+              ? { externa: materia.externa, grupo: materia.grupo ?? undefined }
+              : { asignaturaId: materia.id, grupo: materia.grupo ?? undefined },
+          ),
         });
       }
 
@@ -1244,12 +1290,32 @@ const MatriculaPage = () => {
               {!loadingForm && !errorForm ? (
                 <>
                   {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
-                    <MateriasSelector
-                      materias={materiasCatalogo}
-                      selected={selectedMaterias}
-                      onAdd={handleAddMateria}
-                      disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula}
-                    />
+                    <>
+                      <label className="matricula-page__programa-materias-field">
+                        <span>Programa de la materia</span>
+                        <select
+                          value={programaMateriasId ?? ""}
+                          disabled={isSubmitting || loadingMateriasPrograma}
+                          onChange={(event) => void handleProgramaMateriasChange(Number(event.target.value))}
+                        >
+                          {Object.values(PROGRAMAS_ACADEMICOS).map((programa) => (
+                            <option key={programa.id} value={programa.id}>
+                              {programa.codigoUis} - {programa.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <MateriasSelector
+                        materias={materiasCatalogo}
+                        selected={selectedMaterias}
+                        onAdd={handleAddMateria}
+                        disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula || loadingMateriasPrograma}
+                      />
+                      <MateriaExternaForm
+                        disabled={isSubmitting}
+                        onAdd={handleAddExterna}
+                      />
+                    </>
                   ) : null}
                   <MateriasSelectedTable
                     selected={selectedMaterias}

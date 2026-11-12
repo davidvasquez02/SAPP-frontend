@@ -364,6 +364,26 @@
     color: #7a4f00;
 }
 
+.matricula-page__programa-materias-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: min(100%, 28rem);
+    margin-bottom: 0.85rem;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.matricula-page__programa-materias-field select {
+    border: 1px solid var(--outline);
+    border-radius: 12px;
+    min-height: 2.8rem;
+    padding: 0.65rem 0.85rem;
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
 .matricula-page__estado-badge--pendiente-validacion {
     background: color-mix(in srgb, #1769aa 24%, var(--surface));
     color: #0d4a7a;
