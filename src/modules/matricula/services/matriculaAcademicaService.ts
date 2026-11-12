@@ -3,6 +3,7 @@ import { getDocumentosByTramiteParams } from '../../documentos/api/documentosSer
 import type { DocumentoTramiteItemDto } from '../../documentos/api/types'
 import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../constants'
 import type {
+  HistorialAsignaturaDto,
   InclusionCancelacionDecisionPayload,
   InclusionCancelacionPayload,
   MateriaDto,
@@ -275,6 +276,19 @@ export const solicitarInclusionCancelacion = async (
 
   if (!response.ok) {
     throw new Error(response.message || 'No fue posible registrar la solicitud de inclusión y/o cancelación.')
+  }
+
+  return response.data
+}
+
+/** Ajuste 49: historial de cambios de estado de cada materia, de todas las matriculas del estudiante. */
+export const getHistorialAsignaturasEstudiante = async (estudianteId: number): Promise<HistorialAsignaturaDto[]> => {
+  const response = await httpGet<ApiResponse<HistorialAsignaturaDto[]>>(
+    `/sapp/matriculaAcademica/estudiante/${estudianteId}/historialAsignaturas`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible consultar el historial de materias.')
   }
 
   return response.data

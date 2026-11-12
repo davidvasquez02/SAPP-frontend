@@ -27,13 +27,14 @@ import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/format
 import './EstudianteDetalleCoordinacionPage.css'
 import { getProgramaAcademico } from '../../shared/domain/programaAcademico'
 import SolicitudesDocumentosEstudiante from './SolicitudesDocumentosEstudiante'
+import HistorialAsignaturasEstudiante from '../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante'
 
 const EMPTY_VALUE = '—'
 const SIN_PERIODO_KEY = '__SIN_PERIODO__'
 const ADMISSION_TYPES = ['ADMISION_ASPIRANTE', 'ADMISION_COORDINACION'] as const
 const ENROLLMENT_TYPES = ['MATRICULA', 'MATRICULA_PRIMERA_VEZ'] as const
 
-type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES'
+type DetalleTab = 'MATRICULAS' | 'ADMISION' | 'SOLICITUDES' | 'HISTORIAL_MATERIAS'
 type DocumentAction = 'view' | 'download'
 
 type DocumentCardDocument = DocumentoEstudianteMetadataDto & {
@@ -61,6 +62,7 @@ const TAB_OPTIONS: { id: DetalleTab; label: string }[] = [
   { id: 'MATRICULAS', label: 'Matrículas' },
   { id: 'ADMISION', label: 'Admisión' },
   { id: 'SOLICITUDES', label: 'Solicitudes' },
+  { id: 'HISTORIAL_MATERIAS', label: 'Historial de materias' },
 ]
 
 const formatDate = (value?: string | null) => {
@@ -971,12 +973,19 @@ const EstudianteDetalleCoordinacionPage = () => {
             />
             <StudentAcademicStats estudiante={estudiante} />
             <StudentDetailTabs activeTab={tabActiva} onChange={setTabActiva}>
-              <div hidden={tabActiva === 'SOLICITUDES'}>{contenidoTab}</div>
+              <div hidden={tabActiva === 'SOLICITUDES' || tabActiva === 'HISTORIAL_MATERIAS'}>{contenidoTab}</div>
               <div hidden={tabActiva !== 'SOLICITUDES'}>
                 <SolicitudesDocumentosEstudiante
                   key={estudiante.id}
                   estudianteId={estudiante.id}
                   active={tabActiva === 'SOLICITUDES'}
+                />
+              </div>
+              <div hidden={tabActiva !== 'HISTORIAL_MATERIAS'}>
+                <HistorialAsignaturasEstudiante
+                  key={estudiante.id}
+                  estudianteId={estudiante.id}
+                  active={tabActiva === 'HISTORIAL_MATERIAS'}
                 />
               </div>
             </StudentDetailTabs>

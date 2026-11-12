@@ -30,6 +30,7 @@ import {
 } from '../../modules/matricula/utils/matriculaPresentation'
 import { tieneDocumentosObligatoriosRevisados } from '../../modules/matricula/utils/documentosMatricula'
 import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base64FileUtils'
+import HistorialAsignaturasEstudiante from '../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante'
 import './MatriculaDetalleCoordinacionPage.css'
 
 interface DocumentoActionState {
@@ -1016,6 +1017,11 @@ const MatriculaDetalleCoordinacionPage = () => {
                 </div>
               </article>
             ) : null}
+
+            <article className="matricula-detalle__card">
+              <h3>Historial de materias</h3>
+              <HistorialAsignaturasEstudiante estudianteId={matricula.estudianteId} matriculaId={matricula.id} />
+            </article>
           </>
         ) : null}
 

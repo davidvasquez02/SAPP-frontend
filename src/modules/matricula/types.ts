@@ -138,6 +138,19 @@ export type InclusionCancelacionDecisionPayload = {
   observaciones?: string | null
 }
 
+export type HistorialAsignaturaDto = {
+  matriculaId: number
+  periodoAcademico: string
+  asignaturaId: number
+  asignaturaCodigo: string | null
+  asignaturaNombre: string
+  estadoAnterior: string | null
+  estadoNuevo: string
+  fecha: string
+  responsable: string
+  detalle: string | null
+}
+
 export type MatriculaVigenteValidationResult =
   | {
       status: 'EXISTS'

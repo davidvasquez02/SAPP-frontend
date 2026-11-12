@@ -1,0 +1,25 @@
+.historial-asignaturas__status {
+  color: var(--text-secondary);
+  padding: 0.6rem 0;
+}
+
+.historial-asignaturas__status--error {
+  color: var(--error, #b3261e);
+}
+
+.historial-asignaturas__wrapper {
+  overflow-x: auto;
+}
+
+.historial-asignaturas {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historial-asignaturas th,
+.historial-asignaturas td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+  vertical-align: top;
+}

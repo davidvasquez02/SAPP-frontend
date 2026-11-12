@@ -14,6 +14,7 @@ import {
 } from '../../modules/perfil/services/firmaPerfilService'
 import './PerfilPage.css'
 import { DirectorGradoPerfilForm } from '../../modules/perfil/components/DirectorGradoPerfilForm'
+import HistorialAsignaturasEstudiante from '../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante'
 
 const MAX_SIGNATURE_SIZE = 2 * 1024 * 1024
 const COORDINATION_PROGRAMS = [
@@ -266,6 +267,11 @@ const PerfilPage = () => {
             {/* <div><dt>ID de estudiante</dt><dd>{valueOrPending(user.estudiante?.id)}</dd></div> */}
           </dl>
           {hasStudentRole && user.estudiante?.id && <DirectorGradoPerfilForm key={user.estudiante.id} estudianteId={user.estudiante.id} onActualizado={actualizarDirectorGrado} />}
+        </section>}
+
+        {hasStudentRole && user.estudiante?.id && <section className="profile-page__card" aria-labelledby="historial-materias-title">
+          <div className="profile-page__heading"><div><h2 id="historial-materias-title">Historial de materias</h2><p>Cada cambio de estado de tus materias, de todas tus matrículas.</p></div></div>
+          <HistorialAsignaturasEstudiante estudianteId={user.estudiante.id} />
         </section>}
 
         <section className="profile-page__card profile-page__signature" aria-labelledby="signature-title">
