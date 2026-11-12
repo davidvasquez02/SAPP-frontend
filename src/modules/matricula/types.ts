@@ -14,12 +14,20 @@ export type MateriaDto = {
   programaId?: number
 }
 
+export type AsignaturaExternaDto = {
+  codigo: string
+  nombre: string
+  creditos: number
+  institucion: string
+}
+
 export type MateriaSeleccionada = MateriaDto & {
   addedAt: string
   matriculaAsignaturaId?: number
   estado?: string
   grupo?: string | null
   observaciones?: string | null
+  externa?: AsignaturaExternaDto
 }
 
 export type DocumentoRequerido = {
@@ -38,7 +46,9 @@ export type DocumentoRequerido = {
 }
 
 export type MatriculaAsignaturaPayload = {
-  asignaturaId: number
+  asignaturaId?: number
+  grupo?: string | null
+  externa?: AsignaturaExternaDto
 }
 
 export type MatriculaAcademicaCreatePayload = {
@@ -53,9 +63,11 @@ export type MatriculaAsignaturaVigenteDto = {
   asignaturaId: number
   asignaturaCodigo: string | null
   asignaturaNombre: string
+  asignaturaInstitucion?: string | null
   grupo: string | null
   estado: string
   observaciones: string | null
+  esInclusionCancelacion?: boolean
 }
 
 export type MatriculaAsignaturaValidacionDecision = 'APROBADA' | 'NO_MATRICULADA'
@@ -81,6 +93,7 @@ export type MatriculaAcademicaVigenteDto = {
   codigoEstudianteUis?: string | null
   programaAcademico?: string
   estado: string
+  documentosCompletos?: boolean | null
   fechaSolicitud: string
   fechaRevision?: string | null
   observaciones: string | null
@@ -98,6 +111,7 @@ export type MatriculaAcademicaListadoDto = {
   periodoAcademico: string
   programaAcademico: string
   estado: string
+  documentosCompletos?: boolean | null
   fechaSolicitud: string
   fechaRevision: string | null
   observaciones: string | null

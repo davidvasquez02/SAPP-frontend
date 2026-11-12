@@ -25,15 +25,26 @@ const humanizeUnknownEstado = (estado: string): string => {
   return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1).toLowerCase()}`
 }
 
-export const getMatriculaEstadoLabel = (estado: string): string =>
-  MATRICULA_ESTADO_LABELS[estado.trim().toUpperCase()] ?? humanizeUnknownEstado(estado)
+/**
+ * Ajuste 40: PENDIENTE_DOCUMENTOS cubre dos situaciones distintas -- al estudiante le faltan
+ * documentos por cargar (documentosCompletos === false), o ya cargó todo y espera a que
+ * coordinación apruebe/rechace cada uno (documentosCompletos === true). documentosCompletos es
+ * null fuera de ese estado, donde no aplica la distinción.
+ */
+export const getMatriculaEstadoLabel = (estado: string, documentosCompletos?: boolean | null): string => {
+  const normalized = estado.trim().toUpperCase()
+  if (normalized === 'PENDIENTE_DOCUMENTOS' && documentosCompletos != null) {
+    return documentosCompletos ? 'Pendiente de validación' : 'Pendiente de documentos'
+  }
+  return MATRICULA_ESTADO_LABELS[normalized] ?? humanizeUnknownEstado(estado)
+}
 
 export const getAsignaturaEstadoLabel = (estado: string): string =>
   ASIGNATURA_ESTADO_LABELS[estado.trim().toUpperCase()] ?? humanizeUnknownEstado(estado)
 
-export const getMatriculaEstadoModifier = (estado: string): string => {
+export const getMatriculaEstadoModifier = (estado: string, documentosCompletos?: boolean | null): string => {
   const normalized = estado.trim().toUpperCase()
-  if (normalized === 'PENDIENTE_DOCUMENTOS') return 'pendiente-documentos'
+  if (normalized === 'PENDIENTE_DOCUMENTOS') return documentosCompletos ? 'pendiente-validacion' : 'pendiente-documentos'
   if (normalized === 'RADICADA') return 'radicada'
   if (normalized === 'FINALIZADA') return 'finalizada'
   return 'default'

@@ -364,6 +364,11 @@
     color: #7a4f00;
 }
 
+.matricula-page__estado-badge--pendiente-validacion {
+    background: color-mix(in srgb, #1769aa 24%, var(--surface));
+    color: #0d4a7a;
+}
+
 .matricula-page__estado-badge--radicada {
     background: color-mix(in srgb, var(--inverse-primary) 25%, var(--surface));
     color: color-mix(in srgb, var(--inverse-primary), #001f4d 35%);

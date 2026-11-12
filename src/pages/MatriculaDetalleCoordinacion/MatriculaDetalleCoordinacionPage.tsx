@@ -115,8 +115,8 @@ const getEstadoDocumentoClassName = (documento: DocumentoTramiteItemDto) => {
 }
 
 
-const getEstadoBadgeClassName = (estado: string) => {
-  return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado)}`
+const getEstadoBadgeClassName = (estado: string, documentosCompletos?: boolean | null) => {
+  return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado, documentosCompletos)}`
 }
 
 const MatriculaDetalleCoordinacionPage = () => {
@@ -635,7 +635,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                   <strong>Periodo:</strong> {matricula.periodoAcademico}
                 </p>
                 <p>
-                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado)}>{getMatriculaEstadoLabel(matricula.estado)}</span>
+                  <strong>Estado:</strong> <span className={getEstadoBadgeClassName(matricula.estado, matricula.documentosCompletos)}>{getMatriculaEstadoLabel(matricula.estado, matricula.documentosCompletos)}</span>
                 </p>
                 <p>
                   <strong>Fecha solicitud:</strong> {formatBackendDateTime(matricula.fechaSolicitud)}

@@ -195,8 +195,8 @@ const MatriculaPage = () => {
   const [notificacionAperturaError, setNotificacionAperturaError] = useState<string | null>(null);
   const [notificacionAperturaMessage, setNotificacionAperturaMessage] = useState<string | null>(null);
 
-  const getMatriculaEstadoClassName = (estado: string) => {
-    return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado)}`;
+  const getMatriculaEstadoClassName = (estado: string, documentosCompletos?: boolean | null) => {
+    return `matricula-page__estado-badge matricula-page__estado-badge--${getMatriculaEstadoModifier(estado, documentosCompletos)}`;
   };
 
   const applyMatriculaValidation = (
@@ -1003,8 +1003,8 @@ const MatriculaPage = () => {
                           <td>{item.programaAcademico}</td>
                           <td>{item.periodoAcademico}</td>
                           <td>
-                            <span className={getMatriculaEstadoClassName(item.estado)}>
-                              {getMatriculaEstadoLabel(item.estado)}
+                            <span className={getMatriculaEstadoClassName(item.estado, item.documentosCompletos)}>
+                              {getMatriculaEstadoLabel(item.estado, item.documentosCompletos)}
                             </span>
                           </td>
                           <td>{formatBackendDateTime(item.fechaSolicitud)}</td>
@@ -1037,8 +1037,8 @@ const MatriculaPage = () => {
                           <h4>{formatNombrePersona(item.estudianteNombreCompleto)}</h4>
                           <p>Código UIS: {item.codigoEstudianteUis ?? "—"}</p>
                         </div>
-                        <span className={getMatriculaEstadoClassName(item.estado)}>
-                          {getMatriculaEstadoLabel(item.estado)}
+                        <span className={getMatriculaEstadoClassName(item.estado, item.documentosCompletos)}>
+                          {getMatriculaEstadoLabel(item.estado, item.documentosCompletos)}
                         </span>
                       </header>
                       <div className="matricula-page__mobile-card-academic">
@@ -1201,8 +1201,8 @@ const MatriculaPage = () => {
                     <h4 id="matricula-tracking-title">Resumen de la matrícula</h4>
                     <p className="matricula-page__description">Consulta el estado informado para este periodo.</p>
                   </div>
-                  <span className={getMatriculaEstadoClassName(activeMatricula.estado)}>
-                    {getMatriculaEstadoLabel(activeMatricula.estado)}
+                  <span className={getMatriculaEstadoClassName(activeMatricula.estado, activeMatricula.documentosCompletos)}>
+                    {getMatriculaEstadoLabel(activeMatricula.estado, activeMatricula.documentosCompletos)}
                   </span>
                 </header>
                 <div className="matricula-page__tracking-grid">
