@@ -66,6 +66,9 @@ export type OrigenRespuestaLiquidacion = 'ESTUDIANTE' | 'COORDINADOR'
 export interface FiltrosLiquidaciones { programaId?: number; estado?: EstadoLiquidacion | ''; tipo?: TipoEstudianteLiquidacion | ''; texto?: string; origenRespuesta?: OrigenRespuestaLiquidacion | '' }
 export interface TarifaRequest { semestreDesde: number; semestreHasta: number; factorMatricula: number; factorDerechos: number; activo: boolean }
 export interface TarifaMatricula extends TarifaRequest { id: number; programaId: number }
+export interface EstudianteVistaPreviaConvocatoria { estudianteId: number; codigoEstudiante: string; nombreCompleto: string; tipoEstudiante: TipoEstudianteLiquidacion }
+export interface ProgramaVistaPreviaConvocatoria { programaId: number; programaCodigoNombre: string; estudiantes: EstudianteVistaPreviaConvocatoria[] }
+export interface VistaPreviaConvocatoria { programas: ProgramaVistaPreviaConvocatoria[] }
 export interface EstudianteBusqueda { id: number; codigoNombre: string }
 export interface ProgramaFinanciera { id: number; nombre: string }
 export interface PeriodoFinanciera { id: number; anio: number; periodo: number; anioPeriodo: string }

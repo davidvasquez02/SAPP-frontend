@@ -2,7 +2,7 @@ import * as AuthStorage from '../../context/Auth/AuthStorage'
 import { API_URL } from '../../api/config'
 import type { DocumentChecklistItemDto } from '../../api/documentChecklistTypes'
 import type { DocumentUploadRequest, DocumentUploadResponseDto } from '../../api/documentUploadTypes'
-import type { CuerposAcciones, CuerposLiquidacion, CrearProcesoRequest, EstudianteBusqueda, FiltrosLiquidaciones, LiquidacionMatricula, MiLiquidacion, ParametrosProceso, PeriodoFinanciera, ProcesoLiquidacion, ProgramaFinanciera, RespuestasRequest, ResultadoAcciones, ResultadoEnvio, TarifaMatricula, TarifaRequest, TipoEstudianteLiquidacion } from './types'
+import type { CuerposAcciones, CuerposLiquidacion, CrearProcesoRequest, EstudianteBusqueda, FiltrosLiquidaciones, LiquidacionMatricula, MiLiquidacion, ParametrosProceso, PeriodoFinanciera, ProcesoLiquidacion, ProgramaFinanciera, RespuestasRequest, ResultadoAcciones, ResultadoEnvio, TarifaMatricula, TarifaRequest, TipoEstudianteLiquidacion, VistaPreviaConvocatoria } from './types'
 
 export { LiquidacionApiError } from './transport'
 import { createLiquidacionClient } from './transport'
@@ -18,6 +18,7 @@ export const listarLiquidaciones = (id: number, filtros: FiltrosLiquidaciones = 
   return call<LiquidacionMatricula[]>(`/procesos/${id}/liquidaciones?${query}`, { signal })
 }
 export const ejecutarAccionProceso = <K extends keyof ResultadoAcciones>(id: number, accion: K, body?: CuerposAcciones[K]) => call<ResultadoAcciones[K]>(`/procesos/${id}/${accion}`, json('POST', body))
+export const vistaPreviaConvocatoria = (id: number, body: CuerposAcciones['convocar']) => call<VistaPreviaConvocatoria>(`/procesos/${id}/convocar/vistaPrevia`, json('POST', body))
 export const publicarProceso = (id: number, fechaLimitePago: string) => call<ResultadoEnvio>(`/procesos/${id}/publicar`, json('POST', { fechaLimitePago }))
 export const obtenerLiquidacion = (id: number, signal?: AbortSignal) => call<LiquidacionMatricula>(`/liquidaciones/${id}`, { signal })
 export const actualizarLiquidacion = <K extends keyof CuerposLiquidacion>(id: number, accion: K, body?: CuerposLiquidacion[K]) => call<LiquidacionMatricula>(`/liquidaciones/${id}/${accion}`, json('PUT', body))
