@@ -3,6 +3,8 @@ import { getDocumentosByTramiteParams } from '../../documentos/api/documentosSer
 import type { DocumentoTramiteItemDto } from '../../documentos/api/types'
 import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../constants'
 import type {
+  InclusionCancelacionDecisionPayload,
+  InclusionCancelacionPayload,
   MateriaDto,
   MatriculaAcademicaCreatePayload,
   MatriculaAcademicaListadoDto,
@@ -246,3 +248,51 @@ export const getDocumentosMatriculaAcademica = async (
     tramiteId: matriculaId,
     codigoTipoTramite: CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA,
   })
+
+/** Ajuste 50: ventana corta y opcional, tras FINALIZADA, para incluir/cancelar materias. */
+export const getVentanaInclusionCancelacionVigente = async (): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
+  const response = await httpGet<ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>>(
+    '/sapp/periodoAcademicoFecha/vigente',
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible verificar la ventana de inclusión y cancelación.')
+  }
+
+  return response.data.find(
+    (fecha) => fecha.tipoTramite.nombre.trim().toUpperCase() === 'INCLUSION_CANCELACION_MATRICULA',
+  ) ?? null
+}
+
+export const solicitarInclusionCancelacion = async (
+  matriculaId: number,
+  payload: InclusionCancelacionPayload,
+): Promise<MatriculaAcademicaVigenteDto> => {
+  const response = await httpPost<ApiResponse<MatriculaAcademicaVigenteDto>>(
+    `/sapp/matriculaAcademica/${matriculaId}/inclusionCancelacion`,
+    payload,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible registrar la solicitud de inclusión y/o cancelación.')
+  }
+
+  return response.data
+}
+
+export const decidirInclusionCancelacion = async (
+  matriculaId: number,
+  matriculaAsignaturaId: number,
+  payload: InclusionCancelacionDecisionPayload,
+): Promise<MatriculaAcademicaVigenteDto> => {
+  const response = await httpPut<ApiResponse<MatriculaAcademicaVigenteDto>>(
+    `/sapp/matriculaAcademica/${matriculaId}/inclusionCancelacion/${matriculaAsignaturaId}`,
+    payload,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible aplicar la decisión de inclusión o cancelación.')
+  }
+
+  return response.data
+}

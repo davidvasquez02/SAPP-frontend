@@ -10,6 +10,7 @@ import ValidationButtons from '../../modules/documentos/components/ValidationBut
 import type { DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
 import {
   aprobarMatriculaAcademica,
+  decidirInclusionCancelacion,
   getDocumentosMatriculaAcademica,
   getMatriculasAcademicas,
   finalizarRevisionDocumentosMatricula,
@@ -141,6 +142,8 @@ const MatriculaDetalleCoordinacionPage = () => {
   const completedReviewFinalizationMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
+  const [inclusionCancelacionObservaciones, setInclusionCancelacionObservaciones] = useState<Record<number, string>>({})
+  const [decidingInclusionCancelacionId, setDecidingInclusionCancelacionId] = useState<number | null>(null)
   const [toast, setToast] = useState<ToastFeedback | null>(null)
 
   const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
@@ -595,6 +598,30 @@ const MatriculaDetalleCoordinacionPage = () => {
     }
   }
 
+  const handleDecidirInclusionCancelacion = async (matriculaAsignaturaId: number, aprobado: boolean) => {
+    if (!matricula || session?.kind !== 'SAPP') {
+      return
+    }
+
+    setDecidingInclusionCancelacionId(matriculaAsignaturaId)
+    try {
+      await decidirInclusionCancelacion(matricula.id, matriculaAsignaturaId, {
+        aprobado,
+        usuarioRevisionId: session.user.id,
+        observaciones: inclusionCancelacionObservaciones[matriculaAsignaturaId]?.trim() || null,
+      })
+      await loadDetalle()
+      setToast({ tone: 'success', message: aprobado ? 'Solicitud aprobada correctamente.' : 'Solicitud rechazada correctamente.' })
+    } catch (requestError) {
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
+    } finally {
+      setDecidingInclusionCancelacionId(null)
+    }
+  }
+
   if (!canManageMatriculas) {
     return (
       <ModuleLayout title="Matrícula">
@@ -923,6 +950,72 @@ const MatriculaDetalleCoordinacionPage = () => {
               ) : null}
             </article>
 
+            {matricula.asignaturas.some((asignatura) => ['INCLUSION_SOLICITADA', 'CANCELACION_SOLICITADA'].includes(asignatura.estado.toUpperCase())) ? (
+              <article className="matricula-detalle__card">
+                <h3>Solicitudes de inclusión y cancelación pendientes</h3>
+                <div className="matricula-detalle__table-wrapper sapp-table-shell">
+                  <table className="matricula-detalle__table sapp-table" role="grid">
+                    <thead>
+                      <tr>
+                        <th>Asignatura</th>
+                        <th>Tipo</th>
+                        <th>Decisión</th>
+                        <th>Observaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {matricula.asignaturas
+                        .filter((asignatura) => ['INCLUSION_SOLICITADA', 'CANCELACION_SOLICITADA'].includes(asignatura.estado.toUpperCase()))
+                        .map((asignatura) => {
+                          const esInclusion = asignatura.estado.toUpperCase() === 'INCLUSION_SOLICITADA'
+                          const deciding = decidingInclusionCancelacionId === asignatura.id
+                          return (
+                            <tr key={asignatura.id}>
+                              <td data-label="Asignatura">{asignatura.asignaturaNombre}{asignatura.asignaturaInstitucion ? ` (${asignatura.asignaturaInstitucion})` : ''}</td>
+                              <td data-label="Tipo">{esInclusion ? 'Inclusión' : 'Cancelación'}</td>
+                              <td data-label="Decisión">
+                                <div className="matricula-detalle__decision-group">
+                                  <button
+                                    type="button"
+                                    className="matricula-detalle__decision-button matricula-detalle__decision-button--approve"
+                                    disabled={deciding}
+                                    onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, true)}
+                                  >
+                                    Aprobar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="matricula-detalle__decision-button matricula-detalle__decision-button--reject"
+                                    disabled={deciding}
+                                    onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, false)}
+                                  >
+                                    Rechazar
+                                  </button>
+                                </div>
+                              </td>
+                              <td data-label="Observaciones">
+                                <textarea
+                                  className="matricula-detalle__asignatura-comments"
+                                  value={inclusionCancelacionObservaciones[asignatura.id] ?? ''}
+                                  onChange={(event) =>
+                                    setInclusionCancelacionObservaciones((current) => ({
+                                      ...current,
+                                      [asignatura.id]: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Observaciones de la decisión"
+                                  rows={2}
+                                  disabled={deciding}
+                                />
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            ) : null}
           </>
         ) : null}
 

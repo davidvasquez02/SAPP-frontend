@@ -121,6 +121,23 @@ export type MatriculaAcademicaListadoDto = {
   asignaturas: MatriculaAsignaturaVigenteDto[]
 }
 
+export type InclusionAsignaturaPayload = {
+  asignaturaId?: number
+  grupo?: string | null
+  externa?: AsignaturaExternaDto
+}
+
+export type InclusionCancelacionPayload = {
+  incluir?: InclusionAsignaturaPayload[]
+  cancelarAsignaturaIds?: number[]
+}
+
+export type InclusionCancelacionDecisionPayload = {
+  aprobado: boolean
+  usuarioRevisionId?: number
+  observaciones?: string | null
+}
+
 export type MatriculaVigenteValidationResult =
   | {
       status: 'EXISTS'

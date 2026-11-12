@@ -38,6 +38,7 @@ import type {
   MatriculaConvocatoria,
 } from "../../modules/matricula/types";
 import MateriaExternaForm from "../../modules/matricula/components/MateriaExternaForm/MateriaExternaForm";
+import InclusionCancelacionPanel from "../../modules/matricula/components/InclusionCancelacionPanel/InclusionCancelacionPanel";
 import { PROGRAMAS_ACADEMICOS } from "../../shared/domain/programaAcademico";
 import {
   formatBackendDateTime,
@@ -575,6 +576,16 @@ const MatriculaPage = () => {
         institucion: externa.institucion,
       },
     ]);
+  };
+
+  const handleInclusionCancelacionEnviada = async () => {
+    if (!estudianteId) return;
+    try {
+      const validation = await getMatriculaVigenteValidationByEstudiante(estudianteId);
+      applyMatriculaValidation(validation, materiasCatalogo);
+    } catch {
+      // La UI ya muestra el mensaje de éxito del panel; un refresco fallido no es crítico.
+    }
   };
 
   const handleProgramaMateriasChange = async (nuevoProgramaId: number) => {
@@ -1445,6 +1456,13 @@ const MatriculaPage = () => {
                   {isSubmitting ? (hasExistingMatricula ? "Actualizando..." : "Confirmando...") : hasExistingMatricula ? "Actualizar matrícula" : "Confirmar matrícula"}
                 </button>
               </div>
+            ) : null}
+            {isReadOnlyMatriculaFinalizada && activeMatricula ? (
+              <InclusionCancelacionPanel
+                matricula={activeMatricula}
+                materiasCatalogo={materiasCatalogo}
+                onSolicitudEnviada={() => void handleInclusionCancelacionEnviada()}
+              />
             ) : null}
           </>
         ) : null}
