@@ -16,15 +16,20 @@ export function ordenarPreguntasEstudiante(preguntas: PreguntaLiquidacion[]): Pr
     ...preguntas.filter(pregunta => pregunta.clave === 'certificadoVotacion'),
   ]
 }
-export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<LiquidacionMatricula, 'estado' | 'totalFinal'>, accion: keyof CuerposLiquidacion): boolean {
+export function puedeEditarFila(proceso: EstadoProcesoLiquidacion, fila: Pick<LiquidacionMatricula, 'estado' | 'totalFinal' | 'soportePagoRecibido'>, accion: keyof CuerposLiquidacion): boolean {
   if (proceso === 'PUBLICADO') return false
   if (accion === 'ajustes') return true
   if (accion === 'reincluir') return fila.estado === 'NO_LIQUIDAR'
-  if (accion === 'respuestas' || accion === 'excluir') return fila.estado === 'PENDIENTE_RESPUESTA' || fila.estado === 'RESPONDIDA'
-  return fila.estado === 'LIQUIDADA' || (fila.estado === 'RESPONDIDA' && fila.totalFinal != null)
+  if (accion === 'respuestas') return fila.estado === 'PENDIENTE_RESPUESTA' || fila.estado === 'RESPONDIDA' || fila.estado === 'DEVUELTA'
+  if (accion === 'excluir') return fila.estado !== 'LIQUIDADA' && fila.estado !== 'NO_LIQUIDAR' && fila.estado !== 'PAGO_CONFIRMADO'
+  if (accion === 'aprobar' || accion === 'devolver') return fila.estado === 'RESPONDIDA'
+  if (accion === 'aprobarSoportePago') return fila.estado === 'LIQUIDADA' && !!fila.soportePagoRecibido
+  if (accion === 'rechazarSoportePago') return fila.estado === 'LIQUIDADA'
+  return fila.estado === 'LIQUIDADA' || (fila.estado === 'APROBADA' && fila.totalFinal != null)
 }
 export const etiquetaEstadoLiquidacion = (estado: LiquidacionMatricula['estado']): string => ({
-  PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'No liquidar',
+  PENDIENTE_RESPUESTA: 'Pendiente de respuesta', RESPONDIDA: 'Respondida', DEVUELTA: 'Devuelta para corrección',
+  APROBADA: 'Aprobada', LIQUIDADA: 'Liquidada', NO_LIQUIDAR: 'No liquidar', PAGO_CONFIRMADO: 'Pago confirmado',
 })[estado]
 
 /** Convierte una entrada monetaria colombiana a decimal sin redondearla. */

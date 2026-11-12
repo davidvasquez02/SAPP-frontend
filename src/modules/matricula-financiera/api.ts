@@ -21,6 +21,8 @@ export const ejecutarAccionProceso = <K extends keyof ResultadoAcciones>(id: num
 export const publicarProceso = (id: number, fechaLimitePago: string) => call<ResultadoEnvio>(`/procesos/${id}/publicar`, json('POST', { fechaLimitePago }))
 export const obtenerLiquidacion = (id: number, signal?: AbortSignal) => call<LiquidacionMatricula>(`/liquidaciones/${id}`, { signal })
 export const actualizarLiquidacion = <K extends keyof CuerposLiquidacion>(id: number, accion: K, body?: CuerposLiquidacion[K]) => call<LiquidacionMatricula>(`/liquidaciones/${id}/${accion}`, json('PUT', body))
+export const aprobarSoportePago = (id: number) => call<LiquidacionMatricula>(`/liquidaciones/${id}/soportePago/aprobar`, json('PUT'))
+export const rechazarSoportePago = (id: number, motivo: string) => call<LiquidacionMatricula>(`/liquidaciones/${id}/soportePago/rechazar`, json('PUT', { motivo }))
 export const agregarLiquidacion = (procesoId: number, body: { estudianteId: number; tipoEstudiante: TipoEstudianteLiquidacion }) => call<LiquidacionMatricula>(`/procesos/${procesoId}/liquidaciones`, json('POST', body))
 // Buscador existente del catálogo de estudiantes, fuera del controlador financiero.
 export async function buscarEstudiantes(query: string, signal?: AbortSignal): Promise<EstudianteBusqueda[]> {

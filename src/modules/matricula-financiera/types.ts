@@ -1,5 +1,5 @@
 export type EstadoProcesoLiquidacion = 'BORRADOR' | 'ABIERTO' | 'CERRADO' | 'PUBLICADO'
-export type EstadoLiquidacion = 'PENDIENTE_RESPUESTA' | 'RESPONDIDA' | 'LIQUIDADA' | 'NO_LIQUIDAR'
+export type EstadoLiquidacion = 'PENDIENTE_RESPUESTA' | 'RESPONDIDA' | 'DEVUELTA' | 'APROBADA' | 'LIQUIDADA' | 'NO_LIQUIDAR' | 'PAGO_CONFIRMADO'
 export type TipoEstudianteLiquidacion = 'VIGENTE' | 'NUEVO'
 export interface ResumenProceso { convocados: number; pendientes: number; respondidas: number; noLiquidar: number; liquidadas: number; conAlertas: number }
 export interface ParametrosProceso {
@@ -29,7 +29,8 @@ export interface LiquidacionMatricula {
   respuestas: RespuestasLiquidacion; origenRespuesta?: 'ESTUDIANTE' | 'COORDINADOR' | null; certificadoVotacionRecibido?: boolean
   fechaEnvioSolicitud?: string | null; fechaUltimoRecordatorio?: string | null; fechaRespuesta?: string | null; fechaLiquidada?: string | null
   calculo?: CalculoLiquidacion | null; ajusteManual: number; valorFinalManual?: number | null; totalFinal?: number | null
-  observaciones?: string | null; alertas: string[]; motivoExclusion?: string | null; liquidada: boolean
+  observaciones?: string | null; alertas: string[]; motivoExclusion?: string | null; motivoDevolucion?: string | null; liquidada: boolean
+  soportePagoRecibido?: boolean; motivoRechazoSoportePago?: string | null
 }
 export interface PreguntaLiquidacion { clave: keyof RespuestasLiquidacion; aplica: boolean; texto: string }
 export interface MiLiquidacion {
@@ -47,15 +48,19 @@ export interface ResultadoRecalculo { recalculadas: number; sinCambios: number }
 export interface ResultadoAcciones {
   convocar: ResultadoConvocatoria; enviarSolicitudes: ResultadoEnvio; enviarRecordatorio: ResultadoEnvio
   cerrar: ProcesoLiquidacion; reabrir: ProcesoLiquidacion; recalcular: ResultadoRecalculo
+  enviarRecordatorioSoportePago: ResultadoEnvio
 }
 export interface CuerposAcciones {
   convocar: { incluirVigentes: boolean; incluirNuevos: boolean }
   enviarSolicitudes: { liquidacionIds?: number[] }; enviarRecordatorio: { liquidacionIds?: number[] }
   cerrar: undefined; reabrir: undefined; recalcular: undefined
+  enviarRecordatorioSoportePago: { liquidacionIds?: number[] }
 }
 export interface CuerposLiquidacion {
   respuestas: RespuestasCoordinacionRequest; ajustes: AjustesLiquidacionRequest
   excluir: { motivo: string }; reincluir: undefined; liquidada: { liquidada: boolean }
+  aprobar: undefined; devolver: { motivo: string }
+  aprobarSoportePago: undefined; rechazarSoportePago: { motivo: string }
 }
 export type OrigenRespuestaLiquidacion = 'ESTUDIANTE' | 'COORDINADOR'
 export interface FiltrosLiquidaciones { programaId?: number; estado?: EstadoLiquidacion | ''; tipo?: TipoEstudianteLiquidacion | ''; texto?: string; origenRespuesta?: OrigenRespuestaLiquidacion | '' }
