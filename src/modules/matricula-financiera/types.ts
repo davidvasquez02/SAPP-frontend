@@ -25,6 +25,7 @@ export interface LiquidacionMatricula {
   programaId: number; programa: string; programaCodigo: string; tipoEstudiante: TipoEstudianteLiquidacion
   periodoIngreso?: string | null; permanenciaMaxima?: string | null; cohorte?: number | null; promocion?: number | null
   semestre?: number | null; semestreOrigen?: 'CALCULADO' | 'MANUAL'; estado: EstadoLiquidacion
+  preguntas: PreguntaLiquidacion[]
   respuestas: RespuestasLiquidacion; origenRespuesta?: 'ESTUDIANTE' | 'COORDINADOR' | null; certificadoVotacionRecibido?: boolean
   fechaEnvioSolicitud?: string | null; fechaUltimoRecordatorio?: string | null; fechaRespuesta?: string | null; fechaLiquidada?: string | null
   calculo?: CalculoLiquidacion | null; ajusteManual: number; valorFinalManual?: number | null; totalFinal?: number | null
