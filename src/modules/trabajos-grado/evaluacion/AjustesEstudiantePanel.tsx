@@ -14,6 +14,9 @@ interface AjustesEstudiantePanelProps {
   codigoTipoTramite: string
   usuarioCargaId: number | null
   enAjustes: boolean
+  // Ajuste #11/#12: justo despues de cargar la correccion el estado ya avanzo a
+  // AJUSTES_RECIB, pero la carta de respuestas (opcional) sigue siendo valida en ese momento.
+  permiteCartaRespuestas: boolean
   onUploaded: () => Promise<void> | void
 }
 
@@ -22,6 +25,7 @@ const AjustesEstudiantePanel = ({
   codigoTipoTramite,
   usuarioCargaId,
   enAjustes,
+  permiteCartaRespuestas,
   onUploaded,
 }: AjustesEstudiantePanelProps) => {
   const [proceso, setProceso] = useState<ProcesoEvaluacionTg | null>(null)
@@ -44,12 +48,12 @@ const AjustesEstudiantePanel = ({
       const process = await getProcesoEvaluacion(solicitudId)
       setProceso(process)
 
-      if (enAjustes) {
+      if (enAjustes || permiteCartaRespuestas) {
         const codigo = Number(codigoTipoTramite)
         if (!Number.isFinite(codigo)) throw new Error('No fue posible determinar el tipo de trámite del documento.')
         const requirements = await getChecklistDocumentos({ codigoTipoTramite: codigo, tramiteId: solicitudId })
         setRequirement(
-          process.documentoEvaluarId != null
+          enAjustes && process.documentoEvaluarId != null
             ? requirements.find((item) => item.documentoUploadedResponse?.idDocumento === process.documentoEvaluarId) ?? null
             : null,
         )
@@ -63,7 +67,7 @@ const AjustesEstudiantePanel = ({
     } finally {
       setLoading(false)
     }
-  }, [codigoTipoTramite, enAjustes, solicitudId])
+  }, [codigoTipoTramite, enAjustes, permiteCartaRespuestas, solicitudId])
 
   useEffect(() => {
     void load()
@@ -144,21 +148,27 @@ const AjustesEstudiantePanel = ({
   }
 
   if (loading) return <p className="ajustes-estudiante__status">Consultando el proceso de evaluación…</p>
-  if (!enAjustes) return error ? <p className="ajustes-estudiante__error" role="alert">{error}</p> : null
+  if (!enAjustes && !permiteCartaRespuestas) return error ? <p className="ajustes-estudiante__error" role="alert">{error}</p> : null
 
   const documentName = proceso?.documentoEvaluarNombre?.trim() || 'documento en evaluación'
 
   return (
     <section className="ajustes-estudiante" aria-labelledby="ajustes-estudiante-title">
       <h3 id="ajustes-estudiante-title">Ajustes solicitados por los evaluadores</h3>
-      <p>Revisa los conceptos y carga nuevamente el archivo <strong>{documentName}</strong>.</p>
-      <div className="ajustes-estudiante__observations">
-        <h4>Conceptos de los evaluadores</h4>
-        {observations.length ? <ul>{observations.map((item, index) => (
-          <li key={`${item.jurado}-${index}`}><strong>{item.jurado}:</strong> {item.text}</li>
-        ))}</ul> : <p>No se registraron observaciones para mostrar.</p>}
-      </div>
-      {requirement ? (
+      {enAjustes ? (
+        <>
+          <p>Revisa los conceptos y carga nuevamente el archivo <strong>{documentName}</strong>.</p>
+          <div className="ajustes-estudiante__observations">
+            <h4>Conceptos de los evaluadores</h4>
+            {observations.length ? <ul>{observations.map((item, index) => (
+              <li key={`${item.jurado}-${index}`}><strong>{item.jurado}:</strong> {item.text}</li>
+            ))}</ul> : <p>No se registraron observaciones para mostrar.</p>}
+          </div>
+        </>
+      ) : (
+        <p>Ya cargaste la corrección. Todavía podés adjuntar la carta de respuestas si hace falta.</p>
+      )}
+      {enAjustes && (requirement ? (
         <div className="ajustes-estudiante__upload">
           <label>
             <span>Nuevo archivo para {documentName}</span>
@@ -188,7 +198,7 @@ const AjustesEstudiantePanel = ({
         <p className="ajustes-estudiante__error" role="alert">
           No fue posible relacionar el documento en evaluación con los requisitos de esta solicitud.
         </p>
-      )}
+      ))}
       {error && <p className="ajustes-estudiante__error" role="alert">{error}</p>}
       {message && <p className="ajustes-estudiante__success" role="status">{message}</p>}
       {cartaRequirement && (
