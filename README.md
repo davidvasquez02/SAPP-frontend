@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Correcciones de trabajos de investigación — 2026-11-14
+
+Se conservan los dos selectores PDF existentes y se reemplazan sus acciones independientes por **Guardar correcciones**. El trabajo corregido es obligatorio; la carta de respuestas sigue siendo opcional. Seleccionar archivos no los envía. Al guardar, se carga primero la carta seleccionada y después el trabajo: el backend existente asigna la nueva versión, cambia a `AJUSTES_RECIB` y conserva sus avisos actuales. La solicitud, el historial, el proceso y los adjuntos se actualizan sin recargar la página. Si falla el trabajo después de guardar la carta, el reintento en el mismo panel no duplica esa carta; si falla la actualización de pantalla, se puede reconsultar sin reenviar documentos. Son peticiones secuenciales, no una transacción conjunta; no cambian API, esquema ni backend.
+
+Validación: panel **14/14 PASS**, integración Edge **4/4 PASS**, build y lint de los archivos del panel/pruebas **PASS**. `npm test` y `npm run test:coverage`: **597/634 PASS, 37 fallos**; los mismos 37 se reprodujeron sobre HEAD en una copia temporal de las diez suites afectadas (**78/115 PASS**). No se corrigieron comportamientos ajenos al alcance. Cobertura global actual: líneas **85,54 %**, sentencias **83,20 %**, ramas **71,52 %**, funciones **78,39 %**; panel: líneas **96,87 %**, ramas **85,10 %**, funciones **100 %**. El verificador independiente confirma todo `src` (351 archivos, 117 TSX); el script encadenado de cobertura no lo ejecuta cuando la suite falla. Las mediciones históricas con 345 archivos/8951 líneas no son comparables directamente con las 9435 líneas actuales.
+
+Comandos: `npm run dev`, `npm test`, `npm run test:coverage`, `node scripts/verify-coverage.mjs`, `npm run build`. Para la integración y los logs, ver la entrada de esta fecha en `HANDOFF.md`. Se reutilizan Windows/PowerShell, Node **24.11.0**, npm **11.6.1**, React/DOM **19.2.3**, Router **7.11.0**, TypeScript **5.9.3**, Rolldown-Vite **7.2.5**, ESLint **9.39.2**, Testing Library React/DOM **16.3.3/10.4.2** y jsdom **29.1.1**. Sin instalaciones, seeds o migraciones nuevos.
+
 ## Arquitectura del frontend para la sustentación — 2026-10-18
 
 Material en [docs/arquitectura-frontend](docs/arquitectura-frontend/README.md): dos láminas PowerPoint editables, imágenes y fuente Mermaid, con evidencia del código y guion. Complementa los diagramas existentes del sistema completo. Describe una SPA modular con separación de responsabilidades y estructura híbrida (`pages`/`api`/`components` junto a `modules`). Incluye composición, Provider/Context, servicios de API, Adapter/Mapper y hooks personalizados.

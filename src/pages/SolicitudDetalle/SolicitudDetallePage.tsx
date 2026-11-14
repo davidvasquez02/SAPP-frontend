@@ -302,10 +302,6 @@ const SolicitudDetallePage = () => {
     [4, 5, 6, 7, 8, 9].includes(solicitud.tipoSolicitudId)
   const solicitudEnAjustes =
     solicitud?.estadoId === 16 || solicitud?.estadoSigla?.trim().toLocaleUpperCase() === 'EN_AJUSTES'
-  // Ajuste #11/#12: cargar la correccion mueve el estado a AJUSTES_RECIB de inmediato, pero
-  // la carta de respuestas (opcional) sigue siendo valida justo despues -- el backend ya la
-  // acepta sin exigir un estado puntual (ver ProcesoEvaluacionTgService#registrarPosibleCorreccion).
-  const permiteCartaRespuestas = solicitudEnAjustes || currentEstado === 'AJUSTES_RECIB'
   const tituloTrabajo = solicitud?.tituloTrabajo?.trim() || procesoEvaluacion?.titulo?.trim() || ''
   const resumenTrabajo = solicitud?.resumenTrabajo?.trim() || procesoEvaluacion?.resumen?.trim() || ''
   const esCandidaturaDoctoral = esExamenCandidaturaDoctoral(
@@ -694,7 +690,6 @@ const SolicitudDetallePage = () => {
                 codigoTipoTramite={solicitud.tipoTramiteCodigo?.trim() ?? ''}
                 usuarioCargaId={usuarioSappId}
                 enAjustes={solicitudEnAjustes}
-                permiteCartaRespuestas={permiteCartaRespuestas}
                 onUploaded={refreshSolicitud}
               />
             )}

@@ -16,7 +16,7 @@
 .ajustes-estudiante__upload { display: grid; gap: 0.75rem; }
 .ajustes-estudiante__upload label { display: grid; gap: 0.5rem; font-weight: 600; }
 .ajustes-estudiante__upload input { width: 100%; min-height: 44px; color: inherit; }
-.ajustes-estudiante__upload button {
+.ajustes-estudiante__save {
   justify-self: start;
   min-height: 44px;
   padding: 0.65rem 1.25rem;
@@ -26,7 +26,7 @@
   color: var(--on-primary);
   cursor: pointer;
 }
-.ajustes-estudiante__upload button:disabled { opacity: 0.6; cursor: not-allowed; }
+.ajustes-estudiante__save:disabled { opacity: 0.6; cursor: not-allowed; }
 .ajustes-estudiante__error { color: var(--error); }
 .ajustes-estudiante__success { color: var(--primary); font-weight: 600; }
 .ajustes-estudiante__status { color: var(--on-surface-variant); }

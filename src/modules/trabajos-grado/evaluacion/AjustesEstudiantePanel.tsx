@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getChecklistDocumentos } from '../../../api/documentChecklistService'
 import type { DocumentChecklistItemDto } from '../../../api/documentChecklistTypes'
 import { uploadDocument } from '../../../api/documentUploadService'
 import { fileToBase64 } from '../../../utils/fileToBase64'
 import { sha256Hex } from '../../../utils/sha256'
 import { isPdfFile, PDF_FILE_ACCEPT } from '../../../shared/files/pdfFile'
-import { definirDocumentoEvaluar, getProcesoEvaluacion } from './api'
+import { getProcesoEvaluacion } from './api'
 import type { ProcesoEvaluacionTg } from './types'
 import './AjustesEstudiantePanel.css'
 
@@ -14,9 +14,6 @@ interface AjustesEstudiantePanelProps {
   codigoTipoTramite: string
   usuarioCargaId: number | null
   enAjustes: boolean
-  // Ajuste #11/#12: justo despues de cargar la correccion el estado ya avanzo a
-  // AJUSTES_RECIB, pero la carta de respuestas (opcional) sigue siendo valida en ese momento.
-  permiteCartaRespuestas: boolean
   onUploaded: () => Promise<void> | void
 }
 
@@ -25,7 +22,6 @@ const AjustesEstudiantePanel = ({
   codigoTipoTramite,
   usuarioCargaId,
   enAjustes,
-  permiteCartaRespuestas,
   onUploaded,
 }: AjustesEstudiantePanelProps) => {
   const [proceso, setProceso] = useState<ProcesoEvaluacionTg | null>(null)
@@ -37,18 +33,27 @@ const AjustesEstudiantePanel = ({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [cartaFile, setCartaFile] = useState<File | null>(null)
-  const [cartaUploading, setCartaUploading] = useState(false)
   const [cartaError, setCartaError] = useState<string | null>(null)
-  const [cartaMessage, setCartaMessage] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [refreshError, setRefreshError] = useState(false)
+  const busyRef = useRef(false)
+  const savedCartaFile = useRef<File | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setSaved(false)
+    setMessage(null)
+    setRefreshError(false)
+    setFile(null)
+    setCartaFile(null)
+    setCartaError(null)
+    savedCartaFile.current = null
     setError(null)
     try {
       const process = await getProcesoEvaluacion(solicitudId)
       setProceso(process)
 
-      if (enAjustes || permiteCartaRespuestas) {
+      if (enAjustes) {
         const codigo = Number(codigoTipoTramite)
         if (!Number.isFinite(codigo)) throw new Error('No fue posible determinar el tipo de trámite del documento.')
         const requirements = await getChecklistDocumentos({ codigoTipoTramite: codigo, tramiteId: solicitudId })
@@ -67,11 +72,11 @@ const AjustesEstudiantePanel = ({
     } finally {
       setLoading(false)
     }
-  }, [codigoTipoTramite, enAjustes, permiteCartaRespuestas, solicitudId])
+  }, [codigoTipoTramite, enAjustes, solicitudId])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    if (enAjustes) void load()
+  }, [enAjustes, load])
 
   const observations = useMemo(
     () => proceso?.jurados.flatMap((jurado) =>
@@ -82,80 +87,68 @@ const AjustesEstudiantePanel = ({
     [proceso],
   )
 
+  const refresh = async () => {
+    setRefreshError(false)
+    try {
+      await Promise.all([
+        getProcesoEvaluacion(solicitudId).then(setProceso),
+        onUploaded(),
+      ])
+    } catch {
+      setRefreshError(true)
+    }
+  }
+
   const handleUpload = async () => {
-    // Este reemplazo pertenece exclusivamente a los ajustes solicitados por los
-    // evaluadores. Nunca reasignar el documento evaluado desde otro estado.
-    if (!enAjustes || !file || !requirement) return
+    if (busyRef.current || saved || !enAjustes || !file || !requirement || cartaError) return
+    if (cartaFile && !cartaRequirement) return
+    busyRef.current = true
     setUploading(true)
     setError(null)
-    setMessage(null)
     try {
-      const buffer = await file.arrayBuffer()
-      const uploadedDocument = await uploadDocument({
-        tipoDocumentoTramiteId: requirement.idTipoDocumentoTramite,
-        nombreArchivo: file.name,
+      const prepare = async (selected: File, item: DocumentChecklistItemDto) => ({
+        tipoDocumentoTramiteId: item.idTipoDocumentoTramite,
+        nombreArchivo: selected.name,
         tramiteId: solicitudId,
         usuarioCargaId,
         aspiranteCargaId: null,
-        contenidoBase64: await fileToBase64(file),
-        mimeType: file.type || 'application/octet-stream',
-        tamanoBytes: file.size,
-        checksum: await sha256Hex(buffer),
+        contenidoBase64: await fileToBase64(selected),
+        mimeType: selected.type || 'application/pdf',
+        tamanoBytes: selected.size,
+        checksum: await sha256Hex(await selected.arrayBuffer()),
       })
-      await definirDocumentoEvaluar(solicitudId, uploadedDocument.id)
+      // Preparar ambos antes de escribir. La corrección se envía al final porque
+      // su carga asigna el documento evaluado y avanza el estado en el backend.
+      const corrected = await prepare(file, requirement)
+      const carta = cartaFile && cartaRequirement && savedCartaFile.current !== cartaFile
+        ? await prepare(cartaFile, cartaRequirement) : null
+      if (carta) {
+        await uploadDocument(carta)
+        savedCartaFile.current = cartaFile
+      }
+      await uploadDocument(corrected)
+      setSaved(true)
       setFile(null)
-      setMessage('El archivo se cargó correctamente y quedó asignado como el nuevo documento a evaluar.')
-      await Promise.all([load(), onUploaded()])
+      setCartaFile(null)
+      setMessage('Las correcciones se guardaron correctamente.')
+      await refresh()
     } catch (uploadError) {
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : 'No fue posible cargar y asignar el nuevo documento para evaluación.',
-      )
+      setError(uploadError instanceof Error ? uploadError.message : 'No fue posible guardar las correcciones.')
     } finally {
+      busyRef.current = false
       setUploading(false)
     }
   }
 
-  const handleUploadCarta = async () => {
-    if (!enAjustes || !cartaFile || !cartaRequirement) return
-    setCartaUploading(true)
-    setCartaError(null)
-    setCartaMessage(null)
-    try {
-      const buffer = await cartaFile.arrayBuffer()
-      await uploadDocument({
-        tipoDocumentoTramiteId: cartaRequirement.idTipoDocumentoTramite,
-        nombreArchivo: cartaFile.name,
-        tramiteId: solicitudId,
-        usuarioCargaId,
-        aspiranteCargaId: null,
-        contenidoBase64: await fileToBase64(cartaFile),
-        mimeType: cartaFile.type || 'application/octet-stream',
-        tamanoBytes: cartaFile.size,
-        checksum: await sha256Hex(buffer),
-      })
-      setCartaFile(null)
-      setCartaMessage('La carta de respuestas se cargó correctamente.')
-      await Promise.all([load(), onUploaded()])
-    } catch (uploadError) {
-      setCartaError(
-        uploadError instanceof Error ? uploadError.message : 'No fue posible cargar la carta de respuestas.',
-      )
-    } finally {
-      setCartaUploading(false)
-    }
-  }
-
+  if (!enAjustes && !saved) return null
   if (loading) return <p className="ajustes-estudiante__status">Consultando el proceso de evaluación…</p>
-  if (!enAjustes && !permiteCartaRespuestas) return error ? <p className="ajustes-estudiante__error" role="alert">{error}</p> : null
 
   const documentName = proceso?.documentoEvaluarNombre?.trim() || 'documento en evaluación'
 
   return (
     <section className="ajustes-estudiante" aria-labelledby="ajustes-estudiante-title">
       <h3 id="ajustes-estudiante-title">Ajustes solicitados por los evaluadores</h3>
-      {enAjustes ? (
+      {!saved && (
         <>
           <p>Revisa los conceptos y carga nuevamente el archivo <strong>{documentName}</strong>.</p>
           <div className="ajustes-estudiante__observations">
@@ -165,10 +158,8 @@ const AjustesEstudiantePanel = ({
             ))}</ul> : <p>No se registraron observaciones para mostrar.</p>}
           </div>
         </>
-      ) : (
-        <p>Ya cargaste la corrección. Todavía podés adjuntar la carta de respuestas si hace falta.</p>
       )}
-      {enAjustes && (requirement ? (
+      {!saved && (requirement ? (
         <div className="ajustes-estudiante__upload">
           <label>
             <span>Nuevo archivo para {documentName}</span>
@@ -190,9 +181,6 @@ const AjustesEstudiantePanel = ({
             />
           </label>
           {file && <p>Archivo seleccionado: {file.name}</p>}
-          <button type="button" onClick={() => void handleUpload()} disabled={!file || uploading}>
-            {uploading ? 'Cargando…' : 'Cargar archivo nuevamente'}
-          </button>
         </div>
       ) : (
         <p className="ajustes-estudiante__error" role="alert">
@@ -201,7 +189,7 @@ const AjustesEstudiantePanel = ({
       ))}
       {error && <p className="ajustes-estudiante__error" role="alert">{error}</p>}
       {message && <p className="ajustes-estudiante__success" role="status">{message}</p>}
-      {cartaRequirement && (
+      {!saved && cartaRequirement && (
         <div className="ajustes-estudiante__upload">
           <label>
             <span>Carta de respuestas a las observaciones (opcional)</span>
@@ -219,18 +207,21 @@ const AjustesEstudiantePanel = ({
                 setCartaError(null)
                 setCartaFile(selectedFile)
               }}
-              disabled={cartaUploading}
+              disabled={uploading}
             />
           </label>
           {cartaFile && <p>Archivo seleccionado: {cartaFile.name}</p>}
           {proceso?.cartaRespuestasNombre && <p>Carta ya cargada: {proceso.cartaRespuestasNombre}</p>}
-          <button type="button" onClick={() => void handleUploadCarta()} disabled={!cartaFile || cartaUploading}>
-            {cartaUploading ? 'Cargando…' : 'Cargar carta de respuestas'}
-          </button>
           {cartaError && <p className="ajustes-estudiante__error" role="alert">{cartaError}</p>}
-          {cartaMessage && <p className="ajustes-estudiante__success" role="status">{cartaMessage}</p>}
         </div>
       )}
+      {!saved && <button className="ajustes-estudiante__save" type="button" onClick={() => void handleUpload()} disabled={!file || !requirement || uploading || Boolean(cartaError)}>
+        {uploading ? 'Guardando…' : 'Guardar correcciones'}
+      </button>}
+      {refreshError && <div role="alert">
+        <p>Las correcciones están guardadas, pero no fue posible actualizar la solicitud.</p>
+        <button className="ajustes-estudiante__save" type="button" disabled={uploading} onClick={() => void refresh()}>Actualizar solicitud</button>
+      </div>}
     </section>
   )
 }

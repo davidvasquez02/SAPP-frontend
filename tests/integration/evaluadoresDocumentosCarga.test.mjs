@@ -24,12 +24,12 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
     page.setDefaultTimeout(8000)
     const state = {
       documentsGets: 0, processGets: 0, historyGets: 0, mutations: 0, failDocuments,
-      fileId: 101, fileName: 'tesis-original.pdf',
+      fileId: 101, fileName: 'tesis-original.pdf', cartaName: null, uploads: [],
       proceso: { id: 9, solicitudAcademicaId: 42, tipoSolicitudCodigo: 'DEF_TESIS_DCC', titulo: 'Tesis de prueba', programa: 'Doctorado',
         estadoSolicitud: student ? 'EN_AJUSTES' : 'JUR_POR_DESIG', documentoEvaluarId: 101, documentoEvaluarNombre: 'tesis-original.pdf',
         fechaLimiteEvaluacion: '2027-12-01', jurados: [] },
     }
-    const solicitud = () => ({ id: 42, estudianteId: 10, estudiante: 'Estudiante de prueba', codigoEstudianteUis: '20260001', programaAcademico: 'Doctorado', tipoSolicitudId: 9, tipoSolicitudCodigo: 'DEF_TESIS_DCC', tipoSolicitud: 'Defensa de tesis doctoral', tipoTramiteCodigo: '1008', estadoId: student ? 16 : 15, estadoSigla: state.proceso.estadoSolicitud, estado: state.proceso.estadoSolicitud, fechaRegistro: '2026-10-16', fechaResolucion: null, observaciones: null })
+    const solicitud = () => ({ id: 42, estudianteId: 10, estudiante: 'Estudiante de prueba', codigoEstudianteUis: '20260001', programaAcademico: 'Doctorado', tipoSolicitudId: 9, tipoSolicitudCodigo: 'DEF_TESIS_DCC', tipoSolicitud: 'Defensa de tesis doctoral', tipoTramiteCodigo: '1008', estadoId: student ? (state.proceso.estadoSolicitud === 'EN_AJUSTES' ? 16 : 21) : 15, estadoSigla: state.proceso.estadoSolicitud, estado: state.proceso.estadoSolicitud, fechaRegistro: '2026-10-16', fechaResolucion: null, observaciones: null })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', async route => {
@@ -49,6 +49,15 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       if (url.pathname.endsWith('/document')) {
         if (request.method() === 'POST') {
           const payload = request.postDataJSON()
+          state.uploads.push(payload.tipoDocumentoTramiteId)
+          if (payload.tipoDocumentoTramiteId === 38) {
+            state.cartaName = payload.nombreArchivo
+            return reply({ id: 103 })
+          }
+          state.proceso.estadoSolicitud = 'AJUSTES_RECIB'
+          state.proceso.documentoEvaluarId = 102
+          state.proceso.documentoEvaluarNombre = payload.nombreArchivo
+          state.mutations++
           state.fileId = 102
           state.fileName = payload.nombreArchivo
           return reply({ id: state.fileId })
@@ -56,7 +65,8 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
         state.documentsGets++
         if (state.failDocuments) return reply(null, 502)
         return reply([{ idTipoDocumentoTramite: 37, codigoTipoDocumentoTramite: 'ANX-26', nombreTipoDocumentoTramite: 'Tesis', descripcionTipoDocumentoTramite: 'Documento de tesis', obligatorioTipoDocumentoTramite: true, documentoCargado: true,
-          documentoUploadedResponse: { idDocumento: state.fileId, nombreArchivoDocumento: state.fileName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } }])
+          documentoUploadedResponse: { idDocumento: state.fileId, nombreArchivoDocumento: state.fileName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } },
+          ...(student ? [{ idTipoDocumentoTramite: 38, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: Boolean(state.cartaName), documentoUploadedResponse: state.cartaName ? { idDocumento: 103, nombreArchivoDocumento: state.cartaName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } : null }] : [])])
       }
       if (url.pathname.endsWith('/procesoEvaluacionTg/catalogos')) return reply({ modalidades: [], estadosInvitacion: [], momentos: [], conceptos: [], resultados: [] })
       if (url.pathname.endsWith('/procesoEvaluacionTg/solicitud/42')) { state.processGets++; return reply(state.proceso) }
@@ -70,7 +80,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
         assert.equal(payload.documentoEvaluarId, state.fileId)
         state.mutations++
         state.proceso.estadoSolicitud = 'JUR_INVITADO'
-        state.proceso.jurados.push({ ...payload.jurados[0], id: state.mutations, activo: true, estadoInvitacion: 'PENDIENTE', evaluaciones: [] })
+        state.proceso.jurados.push({ ...payload.jurados[0], id: state.mutations, activo: true, estadoInvitacion: 'PENDIENTE', estadoInvitacionCodigo: 'PENDIENTE', evaluaciones: [] })
         return reply(state.proceso)
       }
       const jurado = url.pathname.match(/\/jurados\/(\d+)(\/reenviar-invitacion)?$/)
@@ -161,13 +171,25 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
   await t.test('subir una versión corregida sí recarga la lista y muestra el archivo nuevo', async () => {
     await scenario(async (page, state) => {
       const panel = page.locator('.ajustes-estudiante')
-      await panel.locator('input[type=file]').waitFor()
+      await panel.getByLabel('Nuevo archivo para tesis-original.pdf').waitFor()
+      assert.equal(await panel.locator('button').count(), 1)
       const before = state.documentsGets
-      await panel.locator('input[type=file]').setInputFiles({ name: 'tesis-corregida.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
-      await panel.getByRole('button', { name: 'Cargar archivo nuevamente', exact: true }).click()
+      const navigations = []
+      page.on('framenavigated', frame => { if (frame === page.mainFrame()) navigations.push(frame.url()) })
+      await panel.getByLabel('Nuevo archivo para tesis-original.pdf').setInputFiles({ name: 'tesis-corregida.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
+      await panel.getByLabel('Carta de respuestas a las observaciones (opcional)').setInputFiles({ name: 'carta.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
+      assert.deepEqual(state.uploads, [])
+      await panel.getByRole('button', { name: 'Guardar correcciones', exact: true }).click()
       await page.locator('.documentos-adjuntos__filename').filter({ hasText: 'tesis-corregida.pdf' }).waitFor()
       assert.ok(state.documentsGets > before)
+      await page.locator('.documentos-adjuntos__filename').filter({ hasText: 'carta.pdf' }).waitFor()
       assert.equal(state.proceso.documentoEvaluarId, 102)
+      assert.equal(state.proceso.estadoSolicitud, 'AJUSTES_RECIB')
+      assert.deepEqual(state.uploads, [38, 37])
+      assert.deepEqual(navigations, [])
+      await page.getByText('AJUSTES RECIBIDOS', { exact: true }).first().waitFor()
+      assert.equal(await panel.locator('input[type=file]').count(), 0)
+      assert.equal(await panel.getByRole('button', { name: 'Guardar correcciones' }).count(), 0)
     }, { student: true })
   })
 })

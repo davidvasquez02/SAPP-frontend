@@ -38,21 +38,76 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
     failed = false; await ui.act(async () => ref.current.commitChanges()); assert.equal(committed, 1)
   })
   await t.test('ajustes muestran conceptos y solo reasignan tras carga exitosa', async s => {
-    const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); ui.fireEvent.click(v.getByRole('button', { name: 'Cargar archivo nuevamente' })); await v.findByText('El archivo se cargó correctamente y quedó asignado como el nuevo documento a evaluar.')
-    assert.equal(writes.length, 2); assert.ok(writes[0].path.endsWith('/document')); assert.ok(writes[1].path.includes('documento-evaluar')); assert.equal(committed, 1)
+    const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await v.findByText('Las correcciones se guardaron correctamente.')
+    assert.equal(writes.length, 1); assert.ok(writes[0].path.endsWith('/document')); assert.equal(committed, 1)
   })
-  await t.test('ajuste #11/#12: carga la carta de respuestas como documento aparte, sin reasignar el documento evaluado', async s => {
-    requirements = [...requirements, { idTipoDocumentoTramite: 7, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: false, documentoUploadedResponse: null }]
-    const v = mount(s, Adjustments)
-    await v.findByText('Documento sintético')
+  const addCartaRequirement = () => { requirements.push({ idTipoDocumentoTramite: 7, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: false, documentoUploadedResponse: null }) }
+  const selectCarta = (v, type = 'application/pdf') => {
     const bytes = new TextEncoder().encode('%PDF-carta')
-    const cartaFile = new ui.dom.window.File([bytes], 'carta.pdf', { type: 'application/pdf' })
-    cartaFile.arrayBuffer = async () => bytes.buffer
-    ui.fireEvent.change(v.getByLabelText('Carta de respuestas a las observaciones (opcional)'), { target: { files: [cartaFile] } })
-    await v.findByText('Archivo seleccionado: carta.pdf')
-    ui.fireEvent.click(v.getByRole('button', { name: 'Cargar carta de respuestas' }))
-    await v.findByText('La carta de respuestas se cargó correctamente.')
-    assert.equal(writes.length, 1); assert.ok(writes[0].path.endsWith('/document')); assert.equal(writes[0].body.tipoDocumentoTramiteId, 7)
+    const selected = new ui.dom.window.File([bytes], type === 'application/pdf' ? 'carta.pdf' : 'imagen.png', { type })
+    selected.arrayBuffer = async () => bytes.buffer
+    ui.fireEvent.change(v.getByLabelText('Carta de respuestas a las observaciones (opcional)'), { target: { files: [selected] } })
+  }
+  await t.test('dos selectores y un solo botón: guarda carta antes del trabajo sin reasignación adicional', async s => {
+    addCartaRequirement()
+    const v = mount(s, Adjustments); await v.findByText('Corregir referencias')
+    assert.equal(v.container.querySelectorAll('input[type=file]').length, 2)
+    assert.equal(v.getAllByRole('button').length, 1)
+    const save = v.getByRole('button', { name: 'Guardar correcciones' })
+    selectCarta(v); assert.equal(save.disabled, true)
+    file(v); assert.equal(writes.length, 0)
+    ui.fireEvent.click(save); ui.fireEvent.click(save)
+    await v.findByText('Las correcciones se guardaron correctamente.')
+    assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7, 4])
+    assert.equal(writes.every(w => w.path.endsWith('/document')), true)
+    assert.equal(committed, 1); assert.equal(v.container.querySelectorAll('input[type=file]').length, 0)
+    assert.equal(v.queryByRole('button', { name: 'Guardar correcciones' }), null)
+  })
+  await t.test('carta inválida bloquea el guardado hasta corregir la selección', async s => {
+    addCartaRequirement()
+    const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); selectCarta(v, 'image/png')
+    assert.ok(v.getByText('Solo se permiten archivos PDF.'))
+    assert.equal(v.getByRole('button', { name: 'Guardar correcciones' }).disabled, true)
+    assert.equal(writes.length, 0)
+    selectCarta(v); ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' }))
+    await ui.waitFor(() => assert.equal(committed, 1))
+  })
+  await t.test('fallo de carta impide cargar el trabajo y conserva ambos archivos para reintentar', async s => {
+    addCartaRequirement()
+    const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); selectCarta(v); failed = true
+    ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await v.findByText(/Documento no disponible/)
+    assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7]); assert.equal(committed, 0)
+    assert.ok(v.getByText('Archivo seleccionado: corregido.pdf')); assert.ok(v.getByText('Archivo seleccionado: carta.pdf'))
+    failed = false; ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' }))
+    await ui.waitFor(() => assert.equal(committed, 1))
+    assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7, 7, 4])
+  })
+  await t.test('fallo del trabajo permite reintentar sin duplicar la carta guardada', async s => {
+    addCartaRequirement()
+    ui.response((url, init) => {
+      if (init.method === 'POST') {
+        const body = JSON.parse(init.body); writes.push({ body })
+        if (body.tipoDocumentoTramiteId === 4 && writes.length === 2) return Response.json({ message: 'Trabajo no guardado' }, { status: 409 })
+        return Response.json({ ok: true, data: { id: 81 } })
+      }
+      return Response.json({ ok: true, data: url.includes('/procesoEvaluacionTg/') ? process : requirements })
+    })
+    const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); selectCarta(v)
+    ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await v.findByText(/Trabajo no guardado/)
+    assert.equal(committed, 0)
+    ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await ui.waitFor(() => assert.equal(committed, 1))
+    assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7, 4, 4])
+  })
+  await t.test('fallo al refrescar permite actualizar sin volver a guardar documentos', async s => {
+    let refreshFailed = true
+    const v = mount(s, Adjustments, { onUploaded: async () => { committed++; if (refreshFailed) throw new Error('Sin conexión') } })
+    await v.findByText('Corregir referencias'); file(v)
+    ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' }))
+    await v.findByText('Las correcciones están guardadas, pero no fue posible actualizar la solicitud.')
+    assert.equal(writes.length, 1)
+    refreshFailed = false
+    ui.fireEvent.click(v.getByRole('button', { name: 'Actualizar solicitud' }))
+    await ui.waitFor(() => assert.equal(committed, 2)); assert.equal(writes.length, 1)
   })
   await t.test('fuera de ajustes no ofrece carga ni consulta checklist', async s => {
     const before = ui.requests.length; const v = mount(s, Adjustments, { enAjustes: false }); await ui.waitFor(() => assert.equal(v.queryAllByText('Consultando el proceso de evaluación…').length, 0)); assert.equal(v.container.textContent, '')
@@ -60,10 +115,10 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
   })
   await t.test('ajustes sin requisito relacionado y PDF inválido impiden envío', async s => {
     requirements = []; let v = mount(s, Adjustments); await v.findByText('No fue posible relacionar el documento en evaluación con los requisitos de esta solicitud.'); await ui.cleanup()
-    requirements = [{ idTipoDocumentoTramite: 4, documentoUploadedResponse: { idDocumento: 80 } }]; v = mount(s, Adjustments); await v.findByRole('button', { name: 'Cargar archivo nuevamente' }); file(v, 'image/png'); assert.ok(v.getByText('Solo se permiten archivos PDF.')); assert.equal(writes.length, 0)
+    requirements = [{ idTipoDocumentoTramite: 4, documentoUploadedResponse: { idDocumento: 80 } }]; v = mount(s, Adjustments); await v.findByRole('button', { name: 'Guardar correcciones' }); file(v, 'image/png'); assert.ok(v.getByText('Solo se permiten archivos PDF.')); assert.equal(writes.length, 0)
   })
   await t.test('fallo en carga de ajustes no reasigna documento y permite reintentar', async s => {
-    const v = mount(s, Adjustments); await v.findByRole('button', { name: 'Cargar archivo nuevamente' }); file(v); failed = true; ui.fireEvent.click(v.getByRole('button', { name: 'Cargar archivo nuevamente' })); await v.findByText(/Documento no disponible/)
-    assert.equal(writes.length, 1); failed = false; ui.fireEvent.click(v.getByRole('button', { name: 'Cargar archivo nuevamente' })); await ui.waitFor(() => assert.equal(committed, 1)); assert.equal(writes.length, 3)
+    const v = mount(s, Adjustments); await v.findByRole('button', { name: 'Guardar correcciones' }); file(v); failed = true; ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await v.findByText(/Documento no disponible/)
+    assert.equal(writes.length, 1); failed = false; ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await ui.waitFor(() => assert.equal(committed, 1)); assert.equal(writes.length, 2)
   })
 })
