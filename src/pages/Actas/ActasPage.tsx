@@ -3,7 +3,23 @@ import { FileSelectButton, ModuleLayout } from "../../components";
 import { crearActa, eliminarActa, getActas, getDocumentoActa } from "../../modules/actas/api";
 import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
+import { canPreviewSolicitudDocument } from "../../modules/solicitudes/utils/solicitudDocumentFile";
 import "./ActasPage.css";
+
+const getFileExtension = (mimeType: string): string => {
+  const normalized = mimeType.toLowerCase().split(";", 1)[0].trim();
+  if (normalized === "application/pdf") return "pdf";
+  if (normalized === "application/msword") return "doc";
+  if (normalized === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "docx";
+  return "bin";
+};
+
+const getFileTypeLabel = (mimeType: string): string => {
+  const normalized = mimeType.toLowerCase().split(";", 1)[0].trim();
+  if (normalized === "application/pdf") return "PDF";
+  if (normalized === "application/msword" || normalized === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "Word";
+  return "Archivo";
+};
 
 const PAGE_SIZE = 10;
 const MAX_FILE_SIZE = 15 * 1024 * 1024;
@@ -173,7 +189,7 @@ const ActasPage = () => {
       }
 
       const mimeType = document.mimeType || acta.mimeType || "application/pdf";
-      const filename = document.nombreArchivo || `${acta.codigo}.pdf`;
+      const filename = document.nombreArchivo || `${acta.codigo}.${getFileExtension(mimeType)}`;
       if (action === "view") {
         openBase64InNewTab(document.contenidoBase64, mimeType, filename);
       } else {
@@ -312,9 +328,9 @@ const ActasPage = () => {
               <td className="actas-table__name" data-label="Nombre del acta">{acta.nombre}</td>
               <td className="actas-table__year" data-label="Año">{getActaYear(acta) || "—"}</td>
               <td className="actas-table__date" data-label="Fecha de creación">{formatDate(acta.fechaCreacion)}</td>
-              <td className="actas-table__observations" data-label="Observaciones">{acta.observaciones || "—"}</td>
-              <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">PDF · {formatSize(acta.tamanoBytes)}</span></td>
-              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
+              <td className="actas-table__observations" data-label="Observaciones">{acta.observaciones ? <span className="actas-table__observations-text" title={acta.observaciones}>{acta.observaciones}</span> : "—"}</td>
+              <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">{getFileTypeLabel(acta.mimeType)} · {formatSize(acta.tamanoBytes)}</span></td>
+              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled || !canPreviewSolicitudDocument(acta.mimeType)} title={canPreviewSolicitudDocument(acta.mimeType) ? undefined : "Vista previa no disponible para este tipo de archivo"} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
             </tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
