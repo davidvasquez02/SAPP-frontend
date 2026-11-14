@@ -51,7 +51,10 @@ const EMPTY_JURADO: JuradoInput = { nombre: '', tratamiento: '', correo: '', ins
 const SUCCESS_MESSAGE_DURATION_MS = 5_000
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
-const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION', 'CONCEPTOS_REC', 'EN_AJUSTES', 'AJUSTES_RECIB'])
+// Hallazgo de pruebas (2026-11-14, ajuste #10): con la sustentacion ya programada puede
+// pasar que un jurado se retire (una urgencia, por ejemplo); el coordinador necesita poder
+// gestionarlo igual, aunque la fecha y el lugar ya esten comunicados.
+const ESTADOS_CON_DESIGNACION = new Set(['JUR_POR_DESIG', 'JUR_INVITADO', 'EN_EVALUACION', 'CONCEPTOS_REC', 'EN_AJUSTES', 'AJUSTES_RECIB', 'SUST_PROGRAMADA'])
 // Hallazgo de pruebas (2026-11-14, ajuste #9): "Reenviar" es para un enlace perdido o
 // vencido, no para volver a invitar a alguien que ya respondio.
 const ESTADOS_INVITACION_CON_REENVIO = new Set(['PENDIENTE', 'VENCIDA'])
