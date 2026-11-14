@@ -293,7 +293,7 @@ const SolicitudDetallePage = () => {
   const showProcesoEvaluacion =
     isCoordinador &&
     tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo) &&
-    !['ENVIADA', 'EN_REVISION', 'ENVIADA_COMITE', 'ENVIADA_CONSEJO', 'RECHAZADA'].includes(
+    !['EN_VALIDACION_COORDINACION', 'ENVIADA', 'EN_REVISION', 'ENVIADA_COMITE', 'ENVIADA_CONSEJO', 'RECHAZADA'].includes(
       solicitud?.estadoSigla?.trim().toLocaleUpperCase() ?? '',
     )
   const showAjustesEstudiante =
@@ -391,6 +391,7 @@ const SolicitudDetallePage = () => {
       setDocsError(null)
 
       const solicitudActualizada = await getSolicitudAcademicaById(solicitud.id)
+      setHistorialSolicitud(await getHistorialSolicitudAcademica(solicitudActualizada.id))
       const codigoTipoTramiteActualizado = solicitudActualizada.tipoTramiteCodigo?.trim()
 
       if (!codigoTipoTramiteActualizado) {
@@ -829,27 +830,6 @@ const SolicitudDetallePage = () => {
               </section>
             )}
 
-            {(canSignAllDocuments || signError || signSuccess) && (
-              <section className="solicitud-detalle-page__signature-actions">
-                {canSignAllDocuments && (
-                  <button
-                    className="solicitud-detalle-page__save"
-                    type="button"
-                    onClick={handleFirmarDocumentos}
-                    disabled={isSigning}
-                  >
-                    {isSigning ? 'Firmando documentos...' : 'Firmar documentos'}
-                  </button>
-                )}
-                {signError && (
-                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
-                    {signError}
-                  </p>
-                )}
-                {signSuccess && <p className="solicitud-detalle-page__success">{signSuccess}</p>}
-              </section>
-            )}
-
             {(canResolveSolicitud || canEnviarAComite || updateError || updateSuccess) && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
@@ -889,6 +869,14 @@ const SolicitudDetallePage = () => {
                         >
                           {isUpdatingEstado ? 'Procesando...' : 'Enviar a comité'}
                         </button>
+                        <button
+                          className="solicitud-detalle-page__decision solicitud-detalle-page__decision--reject"
+                          type="button"
+                          onClick={handleRejectClick}
+                          disabled={isUpdatingEstado}
+                        >
+                          {isUpdatingEstado ? 'Procesando...' : 'Rechazar'}
+                        </button>
                       </div>
                     </>
                   )}
@@ -913,6 +901,27 @@ const SolicitudDetallePage = () => {
               }}
             />
 
+            {(canSignAllDocuments || signError || signSuccess) && (
+              <section className="solicitud-detalle-page__signature-actions">
+                {canSignAllDocuments && (
+                  <button
+                    className="solicitud-detalle-page__save"
+                    type="button"
+                    onClick={handleFirmarDocumentos}
+                    disabled={isSigning}
+                  >
+                    {isSigning ? 'Firmando documentos...' : 'Firmar documentos'}
+                  </button>
+                )}
+                {signError && (
+                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                    {signError}
+                  </p>
+                )}
+                {signSuccess && <p className="solicitud-detalle-page__success">{signSuccess}</p>}
+              </section>
+            )}
+
             {showAjustesEstudiante && (
               <AjustesEstudiantePanel
                 solicitudId={solicitud.id}
@@ -923,7 +932,7 @@ const SolicitudDetallePage = () => {
               />
             )}
 
-            {isEstudiante && procesoEvaluacion && (
+            {isEstudiante && procesoEvaluacion && currentEstado !== 'EN_VALIDACION_COORDINACION' && (
               <ProcesoEvaluacionEstudiante proceso={procesoEvaluacion} />
             )}
 
