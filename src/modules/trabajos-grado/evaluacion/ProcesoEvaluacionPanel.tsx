@@ -260,6 +260,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
   const selectBanco = (item: BancoJurado) => {
     setJurado({
       nombre: item.nombre,
+      tratamiento: item.tratamiento ?? '',
       correo: item.correo,
       institucion: item.institucion ?? '',
       externo: item.externo ?? true,

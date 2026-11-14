@@ -121,6 +121,7 @@ export interface ProcesoEvaluacionTg {
 
 export interface BancoJurado {
   nombre: string
+  tratamiento?: string | null
   correo: string
   institucion?: string | null
   externo?: boolean
