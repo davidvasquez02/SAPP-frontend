@@ -1022,8 +1022,9 @@ const SolicitudDetallePage = () => {
                           </p>
                           <label className="solicitud-detalle-page__field">
                             <span>Decisión del consejo (opcional)</span>
-                            <input
+                            <textarea
                               value={referenciaActa}
+                              rows={4}
                               onChange={(event) => setReferenciaActa(event.target.value)}
                               placeholder="Ej: aprobado por el consejo de posgrados del 5 de noviembre"
                             />
