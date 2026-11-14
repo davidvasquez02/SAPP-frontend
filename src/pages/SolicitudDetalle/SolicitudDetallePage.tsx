@@ -437,7 +437,11 @@ const SolicitudDetallePage = () => {
     observaciones?: string,
     referenciaActaAprobacion?: string,
   ) => {
-    if (!solicitud || !canResolveSolicitud) {
+    // Ajuste #1 (iteracion 2): el boton Rechazar tambien vive en el bloque de
+    // EN_VALIDACION_COORDINACION (canEnviarAComite), no solo en comite/consejo
+    // (canResolveSolicitud) -- este guard se quedaba solo con el segundo y el rechazo no
+    // hacia nada desde coordinacion.
+    if (!solicitud || (!canResolveSolicitud && !canEnviarAComite)) {
       return
     }
 
@@ -816,35 +820,6 @@ const SolicitudDetallePage = () => {
               </section>
             )}
 
-            {!showProcesoEvaluacion && (
-              <section className="solicitud-detalle-page__change-history" aria-labelledby="historial-solicitud-title">
-                <h3 id="historial-solicitud-title">Histórico de cambios</h3>
-                {historialSolicitudLoading ? (
-                  <p role="status">Cargando histórico...</p>
-                ) : historialSolicitudError ? (
-                  <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
-                    {historialSolicitudError}
-                  </p>
-                ) : historialSolicitud.length === 0 ? (
-                  <p>No hay cambios de estado registrados.</p>
-                ) : (
-                  <ol>
-                    {historialSolicitud.map((item, index) => (
-                      <li key={`${item.estadoNuevoSigla}-${item.fecha}-${index}`}>
-                        <span aria-hidden="true" />
-                        <div>
-                          <strong>{item.estadoNuevo || item.estadoNuevoSigla}</strong>
-                          <small>{formatHistoryDate(item.fecha)}</small>
-                          {item.responsable && <p><b>Responsable:</b> {item.responsable}</p>}
-                          {item.detalle && <p>{item.detalle}</p>}
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </section>
-            )}
-
             {(canResolveSolicitud || canEnviarAComite || updateError || updateSuccess) && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
@@ -951,6 +926,39 @@ const SolicitudDetallePage = () => {
                 onJuradoAdded={() => refreshSolicitud({ recargarDocumentos: false })}
               />
             )}
+
+            <section className="solicitud-detalle-page__change-history" aria-labelledby="historial-solicitud-title">
+              {/* Ajuste #5 (iteracion 2): esta seccion se mostraba solo antes de JUR_POR_DESIG
+                  (showProcesoEvaluacion la ocultaba), pero es la unica que trae texto libre
+                  como la "Referencia" de la decision del comite/consejo -- distinto titulo del
+                  historico de ProcesoEvaluacionPanel (jurados/evaluacion) para no confundirlos. */}
+              <h3 id="historial-solicitud-title">
+                {esSolicitudTrabajoGrado ? 'Histórico de cambios de la solicitud' : 'Histórico de cambios'}
+              </h3>
+              {historialSolicitudLoading ? (
+                <p role="status">Cargando histórico...</p>
+              ) : historialSolicitudError ? (
+                <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
+                  {historialSolicitudError}
+                </p>
+              ) : historialSolicitud.length === 0 ? (
+                <p>No hay cambios de estado registrados.</p>
+              ) : (
+                <ol>
+                  {historialSolicitud.map((item, index) => (
+                    <li key={`${item.estadoNuevoSigla}-${item.fecha}-${index}`}>
+                      <span aria-hidden="true" />
+                      <div>
+                        <strong>{item.estadoNuevo || item.estadoNuevoSigla}</strong>
+                        <small>{formatHistoryDate(item.fecha)}</small>
+                        {item.responsable && <p><b>Responsable:</b> {item.responsable}</p>}
+                        {item.detalle && <p>{item.detalle}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
 
             {showConsejoConfirmation && (
               <div
