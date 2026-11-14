@@ -36,7 +36,7 @@ export const DEFAULT_ESTADOS_SOLICITUD_CATALOG: EstadoSolicitudCatalogItem[] = [
   { id: 6, sigla: 'PFIR_DIR_TG', label: 'POR FIRMA DIRECTOR DE TG' },
   { id: 7, sigla: 'PFIR_COOR_POS', label: 'POR FIRMA COORDINADOR DE POSGRADOS' },
   { id: 8, sigla: 'PFIR_CAR_CONT', label: 'POR FIRMA CARTA CONTRAPRESTACION' },
-  { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO ACADEMICO' },
+  { id: 10, sigla: 'ENVIADA_CONSEJO', label: 'ENVIADA A CONSEJO' },
   { id: 12, sigla: 'JUR_POR_DESIG', label: 'JURADO POR NOTIFICAR' },
   { id: 13, sigla: 'JUR_INVITADO', label: 'JURADO INVITADO' },
   { id: 14, sigla: 'EN_EVALUACION', label: 'EN EVALUACIÓN' },
