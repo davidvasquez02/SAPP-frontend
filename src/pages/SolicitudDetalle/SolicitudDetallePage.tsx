@@ -1009,18 +1009,37 @@ const SolicitudDetallePage = () => {
                   {esSolicitudTrabajoGrado ? (
                     <>
                       <h3 id="acta-selection-title">Aprobar solicitud</h3>
-                      <p>
-                        Este trámite no exige un acta ya cargada en el sistema. Podés dejar una referencia libre
-                        (número de sesión, fecha, lo que tengas a mano) — es opcional.
-                      </p>
-                      <label className="solicitud-detalle-page__field">
-                        <span>Referencia (opcional)</span>
-                        <input
-                          value={referenciaActa}
-                          onChange={(event) => setReferenciaActa(event.target.value)}
-                          placeholder="Ej: sesión de comité del 5 de noviembre"
-                        />
-                      </label>
+                      {currentEstado === 'ENVIADA_CONSEJO' ? (
+                        <>
+                          <p>
+                            Este trámite no exige un acta ya cargada en el sistema. Podés dejar la decisión del
+                            consejo en texto libre — es opcional.
+                          </p>
+                          <label className="solicitud-detalle-page__field">
+                            <span>Decisión del consejo (opcional)</span>
+                            <input
+                              value={referenciaActa}
+                              onChange={(event) => setReferenciaActa(event.target.value)}
+                              placeholder="Ej: aprobado por el consejo de posgrados del 5 de noviembre"
+                            />
+                          </label>
+                        </>
+                      ) : (
+                        <>
+                          <p>
+                            Este trámite no exige un acta ya cargada en el sistema. Podés dejar una referencia libre
+                            (número de sesión, fecha, lo que tengas a mano) — es opcional.
+                          </p>
+                          <label className="solicitud-detalle-page__field">
+                            <span>Referencia (opcional)</span>
+                            <input
+                              value={referenciaActa}
+                              onChange={(event) => setReferenciaActa(event.target.value)}
+                              placeholder="Ej: sesión de comité del 5 de noviembre"
+                            />
+                          </label>
+                        </>
+                      )}
                       <div className="solicitud-detalle-page__modal-actions">
                         <button
                           className="solicitud-detalle-page__decision solicitud-detalle-page__decision--approve"
