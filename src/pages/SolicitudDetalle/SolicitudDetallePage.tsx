@@ -34,6 +34,7 @@ import {
 import {
   esExamenCandidaturaDoctoral,
   getAprobacionTrabajoGradoLabel,
+  isTipoTrabajoGrado,
   tieneProcesoEvaluacionTg,
 } from '../../modules/trabajos-grado/constants'
 import ProcesoEvaluacionPanel from '../../modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel'
@@ -310,6 +311,9 @@ const SolicitudDetallePage = () => {
   )
   const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
   const esSolicitudTrabajoGrado = tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo)
+  const fichaProyecto = esSolicitudTrabajoGrado || isTipoTrabajoGrado(solicitud?.tipoSolicitudId)
+  const categoria = showMotivosCredito ? 'Crédito condonable' : fichaProyecto ? 'Proyecto de grado' : 'Solicitud general'
+  const tituloSeccion = showMotivosCredito ? 'Información del crédito condonable' : fichaProyecto ? 'Información del proyecto' : 'Información de la solicitud'
   // Un trabajo de grado APLAZADA es un estado final (ver FlujoTrabajoGrado.esEstadoFinal): el
   // estudiante no puede seguir avanzando esta misma solicitud, pero puede radicar un reintento
   // enlazado a esta (solicitudBaseId) -- ver sesión de pruebas 19/oct, "trabajo aplazado".
@@ -599,77 +603,81 @@ const SolicitudDetallePage = () => {
         ) : (
           <>
             <header className="solicitud-detalle-page__header">
-              {esSolicitudTrabajoGrado && <p>Proyecto de grado · Solicitud {solicitud.id}</p>}
-              <h2>{esSolicitudTrabajoGrado ? solicitud.tipoSolicitud : `Solicitud ${solicitud.id} — ${solicitud.tipoSolicitud}`}</h2>
+              <div>
+                <p>{categoria} · Solicitud {solicitud.id}</p>
+                <h2>{solicitud.tipoSolicitud}</h2>
+              </div>
+              <StatusBadge
+                estado={solicitud.estadoSigla || solicitud.estado}
+                programaAcademico={solicitud.programaAcademico}
+              />
             </header>
 
-            <dl className="solicitud-detalle-page__grid">
-              <div className="solicitud-detalle-page__item">
+            <dl className="solicitud-detalle-page__grid" aria-label="Datos generales">
+              <div>
                 <dt>Estudiante</dt>
                 <dd>
-                  {formatNombrePersona(solicitud.estudiante)} ({solicitud.codigoEstudianteUis})
+                  {formatNombrePersona(solicitud.estudiante)}
+                  {solicitud.codigoEstudianteUis && <small>Código {solicitud.codigoEstudianteUis}</small>}
                 </dd>
               </div>
-              <div className="solicitud-detalle-page__item">
+              <div>
                 <dt>Programa académico</dt>
                 <dd>{solicitud.programaAcademico}</dd>
               </div>
-              <div className="solicitud-detalle-page__item">
-                <dt>Estado</dt>
-                <dd>
-                  <StatusBadge
-                    estado={solicitud.estadoSigla || solicitud.estado}
-                    programaAcademico={solicitud.programaAcademico}
-                  />
-                </dd>
-              </div>
-              <div className="solicitud-detalle-page__item">
-                <dt>Fecha registro</dt>
+              <div>
+                <dt>Fecha de registro</dt>
                 <dd>{formatDate(solicitud.fechaRegistro)}</dd>
               </div>
-              <div className="solicitud-detalle-page__item">
-                <dt>Fecha resolución</dt>
+              <div>
+                <dt>Fecha de resolución</dt>
                 <dd>{formatDate(solicitud.fechaResolucion)}</dd>
               </div>
-              {showDatosTrabajo && (
-                <>
-                  <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                    <dt>Título</dt>
-                    <dd>{tituloTrabajo || 'Sin título registrado.'}</dd>
-                  </div>
-                  {!esCandidaturaDoctoral && (
-                    <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                      <dt>Resumen</dt>
-                      <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
+            </dl>
+
+            <section className="solicitud-detalle-page__ficha" aria-labelledby="informacion-solicitud">
+              <h3 id="informacion-solicitud">{tituloSeccion}</h3>
+              <dl>
+                {showDatosTrabajo && (
+                  <>
+                    <div>
+                      <dt>Título</dt>
+                      <dd>{tituloTrabajo || 'Sin título registrado.'}</dd>
                     </div>
-                  )}
-                </>
-              )}
-              <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                <dt>{currentEstado === 'RECHAZADA' ? 'Motivo de rechazo' : 'Observaciones'}</dt>
-                <dd>
-                  {currentEstado === 'RECHAZADA'
-                    ? solicitud.motivoRechazo?.trim() || 'Sin motivo de rechazo registrado.'
-                    : solicitud.observaciones?.trim() || 'Sin observaciones.'}
-                </dd>
-              </div>
-              {showMotivosCredito && (
-                <div className="solicitud-detalle-page__item solicitud-detalle-page__item--full">
-                  <dt>Motivos para la solicitud del crédito condonable</dt>
-                  <dd>
-                    {solicitud.motivosCreditoCondonable?.length ? (
-                      <ul className="solicitud-detalle-page__motivos-list">
-                        {solicitud.motivosCreditoCondonable.map((motivo, index) => (
-                          <li key={`${motivo}-${index}`}>{motivo}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      'Sin motivos registrados.'
+                    {!esCandidaturaDoctoral && (
+                      <div>
+                        <dt>Resumen</dt>
+                        <dd>{resumenTrabajo || 'Sin resumen registrado.'}</dd>
+                      </div>
                     )}
+                  </>
+                )}
+                <div>
+                  <dt>{currentEstado === 'RECHAZADA' ? 'Motivo de rechazo' : 'Observaciones'}</dt>
+                  <dd>
+                    {currentEstado === 'RECHAZADA'
+                      ? solicitud.motivoRechazo?.trim() || 'Sin motivo de rechazo registrado.'
+                      : solicitud.observaciones?.trim() || 'Sin observaciones.'}
                   </dd>
                 </div>
-              )}
-            </dl>
+                {showMotivosCredito && (
+                  <div>
+                    <dt>Motivos para la solicitud del crédito condonable</dt>
+                    <dd>
+                      {solicitud.motivosCreditoCondonable?.length ? (
+                        <ul className="solicitud-detalle-page__motivos-list">
+                          {solicitud.motivosCreditoCondonable.map((motivo, index) => (
+                            <li key={`${motivo}-${index}`}>{motivo}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        'Sin motivos registrados.'
+                      )}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </section>
 
             {showCrearReintento && (
               <section className="solicitud-detalle-page__signature-actions">
@@ -875,6 +883,7 @@ const SolicitudDetallePage = () => {
             )}
 
             <DocumentosAdjuntos
+              mostrarCantidad
               documentos={documentos}
               isLoading={docsLoading}
               error={docsError}

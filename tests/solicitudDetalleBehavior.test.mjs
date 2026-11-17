@@ -68,10 +68,45 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
           createElement(Route, { path: '/trabajos-grado', element: createElement(CrearReintentoDestinoProbe) }),
         ))))
   }
-  const ready = async view => { await view.findByRole('heading', { name: /Solicitud 24/ }) }
+  const ready = async view => { await view.findByRole('heading', { name: solicitud.tipoSolicitud, level: 2 }) }
   const signatureState = () => {
     solicitud = { ...solicitud, estadoSigla: 'PFIR_COOR_POS', estado: 'POR FIRMA', solicitudCreditoCondonable: { personaAsignadaId: 10 } }
   }
+
+  await t.test('la ficha general agrupa los datos del estudiante y conserva programa y fechas', async s => {
+    solicitud.programaAcademico = '347 - Doctorado - Sistemas'
+    const view = mount(s)
+    await ready(view)
+    assert.ok(view.getByText('Solicitud general · Solicitud 24'))
+    const datos = view.getByLabelText('Datos generales')
+    assert.match(datos.querySelector('dd').textContent, /Persona de Prueba.*Código 2026001/i)
+    assert.equal(view.getByText(solicitud.programaAcademico).tagName, 'DD')
+    assert.equal(view.getByText('Fecha de registro').nextElementSibling.textContent, '17/10/2026')
+    assert.equal(view.getByText('Fecha de resolución').nextElementSibling.textContent, '—')
+    assert.equal(datos.querySelector('.status-badge'), null)
+    assert.ok(view.getByRole('heading', { name: 'Información de la solicitud' }))
+    assert.equal(view.queryByText('Resumen'), null)
+  })
+
+  await t.test('crédito rechazado muestra todos los motivos y distingue el rechazo de las observaciones', async s => {
+    Object.assign(solicitud, { tipoSolicitudCodigo: 'CRED_COND', estadoSigla: 'RECHAZADA',
+      motivosCreditoCondonable: ['Motivo académico', 'Motivo económico'], motivoRechazo: 'Falta soporte' })
+    const view = mount(s, ['ESTUDIANTE'])
+    const ficha = await view.findByRole('region', { name: 'Información del crédito condonable' })
+    assert.ok(view.getByText('Crédito condonable · Solicitud 24'))
+    assert.deepEqual([...ficha.querySelectorAll('li')].map(item => item.textContent), solicitud.motivosCreditoCondonable)
+    assert.equal(view.getByText('Motivo de rechazo').nextElementSibling.textContent, 'Falta soporte')
+    assert.equal(view.queryByText('Detalle de prueba'), null)
+  })
+
+  await t.test('candidatura conserva el título y omite el resumen según el tipo', async s => {
+    Object.assign(solicitud, { tipoSolicitudCodigo: 'CAND_DOCTORAL', tituloTrabajo: 'Proyecto de prueba', resumenTrabajo: 'Resumen reservado' })
+    const view = mount(s)
+    await view.findByRole('region', { name: 'Información del proyecto' })
+    assert.ok(view.getByText('Proyecto de grado · Solicitud 24'))
+    assert.ok(view.getByText('Proyecto de prueba'))
+    assert.equal(view.queryByText('Resumen reservado'), null)
+  })
 
   await t.test('id inválido y fallo de consulta no muestran el detalle', async s => {
     let view = mount(s, ['COORDINADOR'], 'invalido')
@@ -80,7 +115,7 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     detailFailure = true
     view = mount(s)
     await view.findByText('Detalle no disponible')
-    assert.equal(view.queryAllByRole('heading', { name: /Solicitud 24/ }).length, 0)
+    assert.equal(view.queryAllByRole('heading', { name: solicitud.tipoSolicitud, level: 2 }).length, 0)
   })
 
   await t.test('estudiante solo ve solicitudes devueltas por su consulta personal', async s => {

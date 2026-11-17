@@ -28,14 +28,29 @@
     color: var(--on-primary);
 }
 
-.solicitud-detalle-page__header h2 {
-    margin: 0;
+.solicitud-detalle-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
     overflow-wrap: anywhere;
 }
 
+.solicitud-detalle-page__header h2,
+.solicitud-detalle-page__ficha h3 {
+    margin: 0;
+}
+
 .solicitud-detalle-page__header p {
-    margin: 0.25rem 0 0;
+    margin: 0 0 0.35rem;
     color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.solicitud-detalle-page__header .status-badge {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
 }
 
 .solicitud-detalle-page--trabajo-grado {
@@ -44,31 +59,6 @@
     gap: 1.25rem;
     padding: clamp(1rem, 3vw, 2rem);
     border-radius: var(--radius-card);
-}
-
-.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__header {
-    padding: clamp(1rem, 2.5vw, 1.5rem);
-    border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 60%);
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--primary) 6%, var(--surface-container-low));
-}
-
-.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__header p {
-    margin: 0 0 .35rem;
-    color: var(--primary);
-    font-size: var(--font-size-caption, .8rem);
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-}
-
-.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__grid {
-    gap: .75rem;
-}
-
-.solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__item {
-    padding: 1rem;
-    border-radius: var(--radius-sm, .9rem);
 }
 
 .solicitud-detalle-page--trabajo-grado .solicitud-detalle-page__estado-editor,
@@ -83,43 +73,62 @@
     margin-top: 0;
 }
 
-.solicitud-detalle-page__grid {
+.solicitud-detalle-page__grid,
+.solicitud-detalle-page__ficha,
+.solicitud-detalle-page > .documentos-adjuntos {
+    border-top: 1px solid var(--outline);
+    padding-top: 1.25rem;
+}
+
+.solicitud-detalle-page__grid,
+.solicitud-detalle-page__ficha dl {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    gap: 1.25rem;
     margin: 0;
-}
-
-.solicitud-detalle-page__item {
-    min-width: 0;
-    margin: 0;
-    padding: 0.75rem;
-    border: 1px solid var(--outline);
-    border-radius: 0.9rem;
-    background: var(--surface-container-low);
-}
-
-.solicitud-detalle-page__item dt {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.35rem;
-}
-
-.solicitud-detalle-page__item dd {
-    min-width: 0;
-    margin: 0;
-    font-weight: 600;
-}
-
-.solicitud-detalle-page__item .status-badge {
-    max-width: 100%;
-    white-space: normal;
     overflow-wrap: anywhere;
-    text-align: center;
 }
 
-.solicitud-detalle-page__item--full {
-    grid-column: 1 / -1;
+.solicitud-detalle-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.solicitud-detalle-page__ficha dl {
+    margin-top: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.solicitud-detalle-page__grid dt,
+.solicitud-detalle-page__ficha dt,
+.solicitud-detalle-page__grid small,
+.solicitud-detalle-page .documentos-adjuntos__header small {
+    color: var(--text-secondary);
+    font-size: var(--font-size-small);
+}
+
+.solicitud-detalle-page__grid dd,
+.solicitud-detalle-page__ficha dd {
+    margin: 0.25rem 0 0;
+    color: var(--text-primary);
+}
+
+.solicitud-detalle-page__grid dd {
+    font-weight: var(--font-weight-semibold);
+}
+
+.solicitud-detalle-page__grid small {
+    display: block;
+    font-weight: var(--font-weight-regular);
+}
+
+.solicitud-detalle-page__ficha dd {
+    white-space: pre-wrap;
+}
+
+.solicitud-detalle-page .documentos-adjuntos__header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .solicitud-detalle-page__acta {
@@ -536,6 +545,14 @@
 }
 
 @media (max-width: 768px) {
+    .solicitud-detalle-page__header {
+        flex-direction: column;
+    }
+
+    .solicitud-detalle-page__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .solicitud-detalle-page {
         padding: 1rem;
     }
@@ -623,7 +640,6 @@
         padding: 0.8rem;
     }
 
-    .solicitud-detalle-page__item,
     .solicitud-detalle-page__acta,
     .solicitud-detalle-page__homologaciones tr {
         padding: 0.75rem;

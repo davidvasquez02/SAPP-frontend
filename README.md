@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Detalle de solicitudes — 2026-11-17
+
+Coordinación y estudiantes comparten una ficha para solicitudes generales, trabajos de grado y créditos condonables. El encabezado reúne categoría, número, tipo y estado. Los datos generales pasan de dos columnas a una en móvil. El código UIS acompaña al estudiante y el programa conserva el texto completo enviado por la API. Cada trámite agrupa sus campos de lectura y el encabezado de adjuntos indica cuántos archivos contiene la sección.
+
+Validación en Edge con datos sintéticos en 24 combinaciones de trámite, rol, ancho y tema. Pasaron las 30 pruebas del detalle, las cuatro pruebas de integración de adjuntos y la compilación. La suite completa y la instrumentada registraron 605 de 637 pruebas aprobadas. Los 32 fallos figuran en la ejecución anterior. Cobertura de líneas de todo `src` del 85,69 % y del componente de detalle del 90,49 %. El desglose y los comandos están en `HANDOFF.md`.
+
 ## Correcciones de trabajos de investigación — 2026-11-14
 
 Se conservan los dos selectores PDF existentes y se reemplazan sus acciones independientes por **Guardar correcciones**. El trabajo corregido es obligatorio; la carta de respuestas sigue siendo opcional. Seleccionar archivos no los envía. Al guardar, se carga primero la carta seleccionada y después el trabajo: el backend existente asigna la nueva versión, cambia a `AJUSTES_RECIB` y conserva sus avisos actuales. La solicitud, el historial, el proceso y los adjuntos se actualizan sin recargar la página. Si falla el trabajo después de guardar la carta, el reintento en el mismo panel no duplica esa carta; si falla la actualización de pantalla, se puede reconsultar sin reenviar documentos. Son peticiones secuenciales, no una transacción conjunta; no cambian API, esquema ni backend.

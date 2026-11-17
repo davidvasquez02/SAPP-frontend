@@ -7,13 +7,14 @@ import {
 import './DocumentosAdjuntos.css'
 
 interface DocumentosAdjuntosProps {
+  mostrarCantidad?: boolean
   documentos: SolicitudDocumentoAdjuntoDto[]
   isLoading: boolean
   error?: string | null
   onRetry?: () => void
 }
 
-const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: DocumentosAdjuntosProps) => {
+const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry, mostrarCantidad }: DocumentosAdjuntosProps) => {
   const handleOpen = (documento: SolicitudDocumentoAdjuntoDto) => {
     void openSolicitudDocument(documento.base64Contenido, documento.mimeType, documento.nombreArchivo)
   }
@@ -26,6 +27,9 @@ const DocumentosAdjuntos = ({ documentos, isLoading, error, onRetry }: Documento
     <section className="documentos-adjuntos" aria-live="polite">
       <header className="documentos-adjuntos__header">
         <h3>Documentos adjuntos</h3>
+        {mostrarCantidad && !isLoading && !error && (
+          <small>{documentos.length} {documentos.length === 1 ? 'documento' : 'documentos'}</small>
+        )}
       </header>
 
       {isLoading ? (
