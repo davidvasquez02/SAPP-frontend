@@ -1,4 +1,5 @@
 import { RUTA_ADMINISTRACION } from '../modules/administracionAcademica/rutas'
+import { RUTA_PROYECTOS } from '../modules/trabajos-grado/rutas'
 import { canManagePosgrados, hasAnyRole, isProfesor, ROLES } from '../auth/roleGuards'
 
 export interface PrimaryNavigationItem {
@@ -47,7 +48,7 @@ export const getPrimaryNavigationItems = (
     },
     { to: '/solicitudes', label: 'Solicitudes', icon: '📨', visible: true },
     {
-      to: '/trabajos-grado',
+      to: RUTA_PROYECTOS,
       label: 'Proyectos de investigación',
       icon: '📘',
       visible: !isProfesorOnly && !isDirector,

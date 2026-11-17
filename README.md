@@ -1,5 +1,11 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Rutas de proyectos de investigación — 2026-11-17
+
+La entrada del módulo es `/proyectos-investigacion`. Los listados usan `/proyectos-investigacion/maestria` y `/proyectos-investigacion/doctorado`. El detalle añade `/solicitudes/:solicitudId` al nivel. Los enlaces anteriores con el prefijo `/trabajos-grado` redirigen automáticamente y conservan el identificador, la consulta y el fragmento. El nivel inicial y los permisos siguen dependiendo del perfil.
+
+Validación de la migración en el bundle de producción local: compilación correcta, 47/47 pruebas de rutas y detalle, y 17/17 de integración en Edge. La suite completa registró 615/647 aprobadas, con los mismos 32 fallos previos.
+
 ## Decisiones de trabajos de grado — 2026-11-17
 
 Cada decisión de coordinación actualiza la ficha y su histórico en la misma página. Al pasar de comité a consejo, coordinación y estudiante pueden leer la **Referencia del comité** debajo de las observaciones. Al pasar de consejo a **Jurado por notificar**, también aparece la **Decisión del consejo**, con sus saltos de línea. Ambos campos muestran el texto opcional guardado en el histórico de la solicitud. La cronología completa se consulta en una sola sección, debajo del proceso de evaluación.
@@ -1248,7 +1254,7 @@ para validación y previsualización de producción.
 
 ## Decisión reciente — módulo inicial de Proyectos de grado (2026-09-22)
 
-- Se creó el módulo protegido `/trabajos-grado`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
+- Se creó el módulo protegido `/proyectos-investigacion`, con las rutas de **Trabajo de investigación de maestría** y **Tesis doctoral** para estudiantes y coordinación.
 - Los tipos de solicitud 13, 9, 6 y 7 se presentan en la ruta de maestría; los tipos 13, 9, 8, 4 y 5 en doctorado. El tipo compartido 13 conserva su identificador y el nombre exacto entregado por el catálogo del backend.
 - Esos seis tipos ya no se muestran ni se ofrecen para crear desde el módulo general de Solicitudes. No se cambiaron endpoints ni DTO: el nuevo módulo reutiliza por ahora los servicios, formularios, filtros, tablas y detalle existentes.
 - El estudiante es dirigido al nivel inferido de su programa y no puede navegar al otro; coordinación dispone de ambos niveles. Las funcionalidades de expediente, avances, evaluadores, defensa y calificación se implementarán posteriormente.

@@ -1,3 +1,12 @@
+## Migración de rutas de proyectos de investigación — 2026-11-17
+
+- La base pública se define en `src/modules/trabajos-grado/rutas.ts` y la usa el menú, su icono y el router. El listado genera enlaces al detalle por nivel. El botón de regreso y la creación de reintentos reutilizan el parámetro de nivel de la ruta.
+- `src/app/routes/trabajosGradoRoutes.tsx` mantiene un alias protegido desde `/trabajos-grado/*` que reemplaza la entrada del historial y conserva el resto de la URL y el estado de navegación. La entrada al módulo y la corrección del nivel del estudiante también conservan el contexto. El formulario consume el estado de reintento una sola vez. Las referencias a rutas web en esta guía usan el prefijo vigente; las rutas de archivos conservan el nombre interno del módulo.
+- Se reutilizó el entorno Windows/Node/Edge descrito en esta guía. La migración afecta al router de la SPA, sin cambios de API, datos, dependencias o permisos. Para que las nuevas URLs estén disponibles en producción se requiere publicar el bundle de este cambio con el fallback habitual a la SPA.
+
+- Validación local: compilación correcta (aviso habitual de tamaño del bundle), 47/47 pruebas de rutas, navegación y detalle, y 17/17 de integración en Edge con datos sintéticos. La integración cubre entrada por URL anterior con consulta y fragmento, enlaces canónicos del menú y regreso, decisiones, documentos y sustentación. Logs: `.proyectos-rutas-area-final.log` y `.proyectos-rutas-edge.log`.
+- `npm test` y `npm run test:coverage`: 615/647 aprobadas, con los 32 fallos previos. Se verificó el alcance con `node scripts/verify-coverage.mjs` (352 archivos, 117 TSX). Cobertura global de líneas 85,84 %, sentencias 83,48 %, ramas 71,94 % y funciones 78,55 %. Líneas del router y del módulo de rutas 100 %, página de proyectos 95,83 % y detalle 93,48 %. Logs: `.proyectos-rutas-tests-verificados.log` y `.proyectos-rutas-cobertura-verificada.log`.
+
 ## Decisiones e histórico de trabajos de grado — 2026-11-17
 
 - En `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`, el envío a comité y la resolución reconsultan el detalle y el histórico tras la escritura. El histórico anterior permanece visible durante la lectura en segundo plano. Si falla una lectura, se puede reintentar desde la sección afectada sin volver a enviar la decisión.
@@ -1183,7 +1192,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 
 - `SolicitudDetallePage` trata como sesión estudiantil restringida a quien tenga `ESTUDIANTE`/`ESTUDIANTE_POSGRADOS` y no tenga permisos de gestión. Resuelve el ID desde `session.user.estudiante.id` con fallback a `session.user.detalle.estudiante.id`, consulta exclusivamente `getSolicitudesAcademicasByEstudiante(estudianteId)` y busca allí el `solicitudId` de la URL.
 - Si el ID no pertenece a la colección del estudiante autenticado, no se llama al endpoint global de detalle, no se montan documentos ni paneles derivados y se muestra **No tienes permiso para consultar esta solicitud.** Al iniciar cada validación se ejecuta `setSolicitud(null)`; cambiar de cuenta dispara de nuevo el efecto por sus dependencias de estudiante y permisos.
-- La regla está en el detalle compartido y por tanto aplica a cualquier tipo de solicitud mostrado por `/solicitudes/:solicitudId` y `/trabajos-grado/:nivel/solicitudes/:solicitudId`. Los gestores conservan `GET /sapp/solicitudesAcademicas/{id}`. La ruta de créditos condonables ya exige gestión en el router.
+- La regla está en el detalle compartido y por tanto aplica a cualquier tipo de solicitud mostrado por `/solicitudes/:solicitudId` y `/proyectos-investigacion/:nivel/solicitudes/:solicitudId`. Los gestores conservan `GET /sapp/solicitudesAcademicas/{id}`. La ruta de créditos condonables ya exige gestión en el router.
 
 ## Contratos, artefactos y próximos pasos
 
@@ -1387,7 +1396,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 
 - ESLint focalizado PASS; regresiones dirigidas PASS (16/16); suite Node PASS (74/74); build PASS (309 módulos, CSS 263.63 kB, JS 734.86 kB); `git diff --check` PASS. El lint global conserva 9 errores preexistentes ajenos a este cambio. Avisos no bloqueantes: npm reporta `Unknown env config "http-proxy"` y Vite reporta el chunk JavaScript mayor de 500 kB.
 - Entorno exacto: Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. Reutilizar `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; no crear venv, Conda, Poetry ni un segundo árbol npm.
-- Próximo paso: validar `/trabajos-grado/doctorado/solicitudes/:id` con el response institucional de candidatura ya sustentada, ambos roles, temas claro/oscuro, teclado y viewports móvil/escritorio. No se tomó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y no dispone de credenciales/backend reproducibles.
+- Próximo paso: validar `/proyectos-investigacion/doctorado/solicitudes/:id` con el response institucional de candidatura ya sustentada, ambos roles, temas claro/oscuro, teclado y viewports móvil/escritorio. No se tomó captura porque el contenedor no incluye Chromium, Chrome ni Firefox y no dispone de credenciales/backend reproducibles.
 
 ---
 
@@ -1672,7 +1681,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 ## Estado, decision y salida esperada
 
 - `src/pages/TrabajosGrado/TrabajosGradoPage.tsx` dejo de solicitar el catalogo completo de estados en `SolicitudesEstudianteView` y `SolicitudesCoordinadorView`. Ambas vistas usan ahora su comportamiento predeterminado, compartido con creditos condonables: `getEstadosPresentesEnSolicitudes` cruza el catalogo de `GET /sapp/estadosSolicitud` con las solicitudes cargadas.
-- En `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`, el selector conserva **Todos** y muestra solo estados presentes en los registros del listado correspondiente. Si no hay registros en `PFIR_DIR_TG`, `PFIR_COOR_POS` o `PFIR_CAR_CONT`, esas opciones de firma no deben aparecer. La seleccion activa vuelve semanticamente a todos si su estado deja de estar disponible.
+- En `/proyectos-investigacion/maestria` y `/proyectos-investigacion/doctorado`, el selector conserva **Todos** y muestra solo estados presentes en los registros del listado correspondiente. Si no hay registros en `PFIR_DIR_TG`, `PFIR_COOR_POS` o `PFIR_CAR_CONT`, esas opciones de firma no deben aparecer. La seleccion activa vuelve semanticamente a todos si su estado deja de estar disponible.
 - La vista de estudiante calcula las opciones después del tipo seleccionado; la de coordinacion las calcula sobre las filas disponibles no asignadas, tal como ya estaba implementado. No se alteraron estados, filas, endpoints, payloads, schemas, permisos, dependencias, variables, seeds ni datasets.
 
 ## Entorno, pruebas y continuidad
@@ -1816,7 +1825,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 - Implementación: `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionEstudiante.{tsx,css}`, integración en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y ampliación de contrato en `src/modules/trabajos-grado/evaluacion/types.ts`.
 - Contrato principal: envelope `{ ok, message, data }` de `GET /sapp/procesoEvaluacionTg/solicitud/{id}`. Se consumen `resultado`, `resultadoCodigo`, `fechaResultado`, `notaFinal`, sustentación plana o anidada y `jurados[]`; de cada jurado, `activo`, `orden`, `nombre`, `institucion`, estado y `evaluaciones[]`; de cada evaluación, momento, concepto/resultado/nota y observaciones.
 - Para el ejemplo de solicitud 78, la salida esperada destaca **Aprobado**, la fecha de resultado y la sustentación presencial en sala 104 EISI; lista a fiona, rubi y michi con sus conceptos, resultados y observaciones, y omite a morgan porque fue reemplazado. El correo de ningún jurado debe aparecer.
-- No hay artifacts, schemas, seeds ni datasets nuevos. Ruta a validar con sesión estudiantil: `/trabajos-grado/:nivel/solicitudes/78` (o `/solicitudes/78`, según el punto de entrada).
+- No hay artifacts, schemas, seeds ni datasets nuevos. Ruta a validar con sesión estudiantil: `/proyectos-investigacion/:nivel/solicitudes/78` (o `/solicitudes/78`, según el punto de entrada).
 
 ## Entorno, pruebas y próximos pasos
 - Entorno único: `/workspace/SAPP-frontend/node_modules` y `package-lock.json`; Node.js 24.15.0, npm 11.4.2, React/DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otra instalación ni crear venv, Conda o Poetry; no es un proyecto Python.
@@ -1828,10 +1837,10 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 # Handoff 2026-09-24 — grado en el catálogo de maestría
 
 ## Estado, contrato y salida esperada
-- `/trabajos-grado/maestria` usa los tipos `[13, 10, 6, 7]`: envío de tema,
+- `/proyectos-investigacion/maestria` usa los tipos `[13, 10, 6, 7]`: envío de tema,
   grado, propuesta y defensa. Ya no incluye el ID legado `8` ni el ID vigente
   `9` de candidatura, porque ambos son exclusivos de doctorado.
-- `/trabajos-grado/doctorado` usa `[13, 10, 8, 9, 4, 5]`; conserva las dos
+- `/proyectos-investigacion/doctorado` usa `[13, 10, 8, 9, 4, 5]`; conserva las dos
   variantes de candidatura por compatibilidad con catálogos institucionales y
   añade **GRADO**. `esExamenCandidaturaDoctoral` reconoce IDs 8/9 y el código
   `CAND_DOCTORAL`.
@@ -2012,7 +2021,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 - Implementación: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`. No hay schemas, artifacts, dependencias, variables, seeds ni datasets nuevos.
 - Verificación local 2026-09-24: ESLint focalizado PASS; `node --test --test-isolation=none tests/*.test.ts` PASS (48/48); `npm run build` PASS (309 módulos, CSS 244.73 kB y JS 726.81 kB); `git diff --check` PASS. Persisten el warning ambiental npm `Unknown env config "http-proxy"` y el aviso informativo del chunk JavaScript mayor de 500 kB.
 - Entorno único: `/workspace/SAPP-frontend/node_modules`; Node.js 24.15.0, npm 11.4.2, React/React DOM 19.2.3, React Router DOM 7.11.0, TypeScript 5.9.3, Vite/Rolldown 7.2.5 y ESLint 9.39.2. No ejecutar otro `npm install` ni crear venv, Conda o Poetry; no es un proyecto Python.
-- Pendiente: validar visualmente las rutas protegidas `/solicitudes`, `/trabajos-grado/maestria` y `/trabajos-grado/doctorado` con una sesión institucional, en claro/oscuro y escritorio/móvil. El repositorio no incluye credenciales ni backend reproducible.
+- Pendiente: validar visualmente las rutas protegidas `/solicitudes`, `/proyectos-investigacion/maestria` y `/proyectos-investigacion/doctorado` con una sesión institucional, en claro/oscuro y escritorio/móvil. El repositorio no incluye credenciales ni backend reproducible.
 
 ---
 
@@ -2125,7 +2134,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 
 ## Estado actual, causa y salida esperada
 - Se confirmó la causa: `getNivelTrabajoGrado` solo buscaba la sigla histórica `DCC`, por lo que el nombre vigente `347 - DOCTORADO EN CIENCIAS DE LA COMPUTACION` caía en el fallback de maestría. La función ahora delega en el resolvedor canónico `resolveTipoPrograma`, que reconoce nombres oficiales, códigos UIS (`302`/`347`), tildes y siglas legadas.
-- `TrabajosGradoPage` usa este resultado para redirigir al estudiante y elegir el catálogo. Un estudiante doctoral navega a `/trabajos-grado/doctorado` y recibe `[13, 8, 9, 4, 5]`; maestría conserva `[13, 6, 7]`. Un valor ausente o desconocido mantiene por compatibilidad el fallback a maestría.
+- `TrabajosGradoPage` usa este resultado para redirigir al estudiante y elegir el catálogo. Un estudiante doctoral navega a `/proyectos-investigacion/doctorado` y recibe `[13, 8, 9, 4, 5]`; maestría conserva `[13, 6, 7]`. Un valor ausente o desconocido mantiene por compatibilidad el fallback a maestría.
 - No se modificaron endpoints, DTO, payloads, permisos, schemas ni base de datos. El contrato de sesión sigue leyendo `session.user.estudiante?.programaCodigoNombre` con respaldo en `session.user.programa`.
 
 ## Paths, entorno, pruebas y continuidad
@@ -2461,7 +2470,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 # Update 2026-09-22 — proceso privado de evaluación de trabajos de grado
 
 ## Estado actual y decisiones
-- `SolicitudDetallePage` monta `ProcesoEvaluacionPanel` únicamente para coordinación, cuando el código es uno de los cinco trámites evaluables y la solicitud ya dejó Comité/Consejo. `TEMA_T` nunca monta el proceso. El botón Volver conserva ahora el nivel de `/trabajos-grado/:nivel`.
+- `SolicitudDetallePage` monta `ProcesoEvaluacionPanel` únicamente para coordinación, cuando el código es uno de los cinco trámites evaluables y la solicitud ya dejó Comité/Consejo. `TEMA_T` nunca monta el proceso. El botón Volver conserva ahora el nivel de `/proyectos-investigacion/:nivel`.
 - `src/modules/trabajos-grado/evaluacion/api.ts` contiene los 12 contratos privados bajo `/sapp/procesoEvaluacionTg`; `types.ts` declara proceso, jurados, evaluaciones, catálogos y payloads. Se usa el cliente compartido, que ya adjunta JWT Bearer y extrae `message` de errores JSON.
 - El panel implementa resumen, barra contextual, designación de un jurado por llamada (el endpoint permite sumar jurados), banco con debounce, historial activo/inactivo, reenvío/reemplazo/retiro, recordatorios, documento, ajustes, sustentación, resultado y línea de tiempo. Catálogos no están hardcodeados; `ES`/`EN` sí son el contrato de idioma.
 - `SolicitudAcademicaDto` y `CreateSolicitudRequestDto` admiten `tituloTrabajo` y `resumenTrabajo`. La elegibilidad por código está centralizada en `src/modules/trabajos-grado/constants.ts`; los IDs históricos siguen temporalmente para filtrar los listados existentes hasta que esos componentes migren por completo al código.
@@ -2487,7 +2496,7 @@ Las herramientas de shell funcionaron, pero apply_patch quedó pendiente y se ca
 # Update 2026-09-22 — módulo inicial de Proyectos de grado
 
 ## Estado actual y alcance
-- Existe un nuevo acceso **Proyectos de grado** y las rutas `/trabajos-grado/maestria` y `/trabajos-grado/doctorado`. Estudiantes ven solo el nivel inferido de `programaCodigoNombre`; coordinación puede alternar ambos.
+- Existe un nuevo acceso **Proyectos de grado** y las rutas `/proyectos-investigacion/maestria` y `/proyectos-investigacion/doctorado`. Estudiantes ven solo el nivel inferido de `programaCodigoNombre`; coordinación puede alternar ambos.
 - La clasificación está centralizada en `src/modules/trabajos-grado/constants.ts`: maestría usa tipos 13, 6 y 7; doctorado usa 13, 8, 4 y 5. El tipo 13 conserva su ID y el nombre exacto entregado por el backend.
 - Las vistas reutilizables de solicitudes aceptan inclusión/exclusión de tipos, transformación de etiquetas y una ruta de detalle configurable. El módulo general excluye los seis tipos trasladados; no hubo cambios de API, payload, schema, seeds ni datasets.
 - El detalle sigue usando `SolicitudDetallePage` y los endpoints `/sapp/solicitudesAcademicas`. Las futuras funciones de expediente, informes, evaluadores, calificación y defensa no forman parte de este incremento.
@@ -7034,7 +7043,7 @@ npm run lint
 - Regla de dominio de presentación: `src/modules/trabajos-grado/constants.ts`.
 - Integración del módulo: `src/pages/TrabajosGrado/TrabajosGradoPage.tsx`.
 - Punto extensible de filtrado de filas: `src/modules/solicitudes/components/SolicitudesCoordinadorView/SolicitudesCoordinadorView.tsx` y `src/modules/solicitudes/components/SolicitudesEstudianteView/SolicitudesEstudianteView.tsx`.
-- El contrato REST no cambia. El listado debe seguir entregando `tipoSolicitudId`, `tipoSolicitudCodigo` y `programaAcademico`; ejemplo relevante: `{ "tipoSolicitudId": 13, "tipoSolicitudCodigo": "TEMA_T", "programaAcademico": "61204 - DCC" }` se ve solo en `/trabajos-grado/doctorado`. El mismo tipo con un programa que no contiene `DCC` se ve solo en `/trabajos-grado/maestria`.
+- El contrato REST no cambia. El listado debe seguir entregando `tipoSolicitudId`, `tipoSolicitudCodigo` y `programaAcademico`; ejemplo relevante: `{ "tipoSolicitudId": 13, "tipoSolicitudCodigo": "TEMA_T", "programaAcademico": "61204 - DCC" }` se ve solo en `/proyectos-investigacion/doctorado`. El mismo tipo con un programa que no contiene `DCC` se ve solo en `/proyectos-investigacion/maestria`.
 - No se agregaron endpoints, schemas, paquetes, variables, seeds ni datasets.
 
 ## Retos y próximos pasos
@@ -7577,7 +7586,7 @@ npm run lint
 
 - `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` elimina automáticamente cada mensaje exitoso cinco segundos después de mostrarlo y limpia el temporizador al reemplazar el mensaje o desmontar el panel. Los errores permanecen visibles para permitir diagnóstico y reintento.
 - Cuando `formulario === 'designar'`, la cabecera de **Jurados evaluadores** oculta **Agregar evaluador**. El título y los controles del formulario abierto siguen indicando si se agrega o reemplaza un jurado; al cancelar o completar la operación, la acción reaparece cuando el estado admite designaciones.
-- No cambiaron endpoints, DTO, payloads, estados, permisos, rutas, estilos, schemas, variables, dependencias, seeds ni datasets. La salida esperada en `/trabajos-grado/doctorado/solicitudes/:id` es un solo rótulo **Agregar evaluador** durante la captura y la desaparición del aviso exitoso después de 5 s.
+- No cambiaron endpoints, DTO, payloads, estados, permisos, rutas, estilos, schemas, variables, dependencias, seeds ni datasets. La salida esperada en `/proyectos-investigacion/doctorado/solicitudes/:id` es un solo rótulo **Agregar evaluador** durante la captura y la desaparición del aviso exitoso después de 5 s.
 
 ## Pruebas, entorno y continuidad
 

@@ -6,7 +6,7 @@ import { preview } from 'vite'
 // npm run build primero. APIs sintéticas; sin registros, invitaciones o correos reales.
 const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.SAPP_PLAYWRIGHT_MODULE || 'playwright')
-const routePath = '/trabajos-grado/doctorado/solicitudes/42'
+const routePath = '/proyectos-investigacion/doctorado/solicitudes/42'
 
 test('solo agregar evaluadores reutiliza documentos; las demás acciones conservan su recarga', { timeout: 120000 }, async t => {
   const server = await preview({ configFile: false, preview: { host: '127.0.0.1', port: 0 }, logLevel: 'error' })

@@ -6,7 +6,7 @@ import { preview } from 'vite'
 // Ejecutar npm run build primero. Sesiones y respuestas sintéticas; no se envían correos reales.
 const require = createRequire(import.meta.url)
 const { chromium } = require(process.env.SAPP_PLAYWRIGHT_MODULE || 'playwright')
-const routePath = '/trabajos-grado/maestria/solicitudes/42'
+const routePath = '/proyectos-investigacion/maestria/solicitudes/42'
 const modalidades = [
   { codigo: 'PRESENCIAL', nombre: 'Presencial' },
   { codigo: 'VIRTUAL', nombre: 'Virtual' },

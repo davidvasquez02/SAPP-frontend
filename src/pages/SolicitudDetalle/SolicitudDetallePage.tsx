@@ -1,6 +1,7 @@
 import { formatNombrePersona } from '../../shared/utils/formatNombrePersona'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { RUTA_PROYECTOS, rutaNivelProyecto } from '../../modules/trabajos-grado/rutas'
 import { ScrollText } from 'lucide-react'
 import { BackButton, ModuleLayout } from '../../components'
 import { canManagePosgrados, hasAnyRole } from '../../auth/roleGuards'
@@ -80,7 +81,7 @@ function referenciaDelHistorial(historial: SolicitudHistorialDto[], estadoDestin
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { solicitudId } = useParams<{ solicitudId: string }>()
+  const { solicitudId, nivel } = useParams<{ solicitudId: string; nivel: string }>()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isCoordinador = canManagePosgrados(roles)
@@ -348,10 +349,7 @@ const SolicitudDetallePage = () => {
   const showCrearReintento = isEstudiante && esSolicitudTrabajoGrado && currentEstado === 'APLAZADA'
   const handleCrearReintento = () => {
     if (!solicitud) return
-    const nivelPath = location.pathname.startsWith('/trabajos-grado')
-      ? location.pathname.split('/solicitudes/')[0]
-      : '/trabajos-grado'
-    navigate(nivelPath, {
+    navigate(nivel ? rutaNivelProyecto(nivel) : RUTA_PROYECTOS, {
       state: {
         tipoSolicitudId: solicitud.tipoSolicitudId,
         tituloTrabajo: tituloTrabajo || undefined,
@@ -616,14 +614,14 @@ const SolicitudDetallePage = () => {
         <BackButton
           to={location.pathname.startsWith('/creditos-condonables')
             ? '/creditos-condonables'
-            : location.pathname.startsWith('/trabajos-grado')
-              ? location.pathname.split('/solicitudes/')[0]
+            : nivel
+              ? rutaNivelProyecto(nivel)
               : '/solicitudes'}
           state={{ refreshAt: Date.now() }}
         >
           Volver a {location.pathname.startsWith('/creditos-condonables')
             ? 'créditos condonables'
-            : location.pathname.startsWith('/trabajos-grado')
+            : nivel
               ? 'proyectos de investigación'
               : 'solicitudes'}
         </BackButton>

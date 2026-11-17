@@ -59,10 +59,11 @@ const SolicitudesEstudianteView = ({
   useEffect(() => {
     // Limpia el state de navegación una vez consumido (reintentoState ya quedó capturado
     // arriba); el path no cambia, así que esto no dispara una recarga de la vista.
-    if (reintentoState?.solicitudBaseId != null) {
-      navigate(location.pathname, { replace: true, state: null })
+    if (reintentoState?.solicitudBaseId != null && location.state === reintentoState) {
+      const { pathname, search, hash } = location
+      navigate({ pathname, search, hash }, { replace: true, state: null })
     }
-  }, [navigate, location.pathname, reintentoState])
+  }, [navigate, location, reintentoState])
   const { session } = useAuth()
   const estudianteId =
     session && session.kind === 'SAPP' && 'estudiante' in session.user

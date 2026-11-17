@@ -1,4 +1,5 @@
 import { RUTA_ADMINISTRACION } from '../../modules/administracionAcademica/rutas'
+import { RUTA_PROYECTOS } from '../../modules/trabajos-grado/rutas'
 import { CalendarDays, GraduationCap, ScrollText, UsersRound } from 'lucide-react'
 
 interface SidebarModuleIconProps {
@@ -26,7 +27,7 @@ const iconPaths: Record<string, React.ReactNode> = {
       <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" />
     </>
   ),
-  '/trabajos-grado': (
+  [RUTA_PROYECTOS]: (
     <>
       <path d="M2 5.5A3.5 3.5 0 0 1 5.5 2H11v18H5.5A3.5 3.5 0 0 0 2 23.5z" />
       <path d="M22 5.5A3.5 3.5 0 0 0 18.5 2H13v18h5.5a3.5 3.5 0 0 1 3.5 3.5z" />

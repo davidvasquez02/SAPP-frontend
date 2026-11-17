@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Navigate, NavLink, useParams } from 'react-router-dom'
+import { Navigate, NavLink, useLocation, useParams } from 'react-router-dom'
+import { rutaNivelProyecto } from '../../modules/trabajos-grado/rutas'
 import { ModuleLayout } from '../../components'
 import { canManagePosgrados, hasAnyRole, ROLES } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
@@ -19,6 +20,7 @@ const isNivel = (value: string | undefined): value is NivelTrabajoGrado =>
 
 const TrabajosGradoPage = () => {
   const { nivel } = useParams<{ nivel?: string }>()
+  const { search, hash, state } = useLocation()
   const { session } = useAuth()
   const roles = useMemo(() => (session?.kind === 'SAPP' ? session.user.roles : []), [session])
   const isEstudiante = hasAnyRole(roles, ['ESTUDIANTE'])
@@ -33,17 +35,14 @@ const TrabajosGradoPage = () => {
     [nivelSeleccionado],
   )
 
-  if (!nivel) {
-    return <Navigate to={`/trabajos-grado/${isEstudiante ? nivelEstudiante : 'maestria'}`} replace />
-  }
-
   if (!isNivel(nivel) || (isEstudiante && nivel !== nivelEstudiante)) {
-    return <Navigate to={`/trabajos-grado/${nivelEstudiante}`} replace />
+    const destino = !nivel && !isEstudiante ? 'maestria' : nivelEstudiante
+    return <Navigate to={{ pathname: rutaNivelProyecto(destino), search, hash }} state={state} replace />
   }
 
   const tipos = TIPOS_TRABAJO_GRADO_POR_NIVEL[nivel]
   const titulo = nivel === 'doctorado' ? 'Tesis doctoral' : 'Trabajo de investigación de maestría'
-  const detailPath = (solicitudId: number) => `/trabajos-grado/${nivel}/solicitudes/${solicitudId}`
+  const detailPath = (solicitudId: number) => `${rutaNivelProyecto(nivel)}/solicitudes/${solicitudId}`
   const usuarioSappId = session?.kind === 'SAPP' ? session.user.id : null
 
   return (
@@ -51,8 +50,8 @@ const TrabajosGradoPage = () => {
       <section className="trabajos-grado-page">
         {isCoordinacion ? (
           <nav className="trabajos-grado-page__levels" aria-label="Nivel del proyecto">
-            <NavLink to="/trabajos-grado/maestria">Trabajo de investigación de maestría</NavLink>
-            <NavLink to="/trabajos-grado/doctorado">Tesis doctoral</NavLink>
+            <NavLink to={rutaNivelProyecto('maestria')}>Trabajo de investigación de maestría</NavLink>
+            <NavLink to={rutaNivelProyecto('doctorado')}>Tesis doctoral</NavLink>
           </nav>
         ) : null}
         <header className="trabajos-grado-page__header">

@@ -67,7 +67,7 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
       createElement(AuthContext.Provider, { value: { session: { kind: 'SAPP', user }, user } },
         createElement(Routes, null,
           createElement(Route, { path: '/solicitudes/:solicitudId', element: createElement(Page) }),
-          createElement(Route, { path: '/trabajos-grado', element: createElement(CrearReintentoDestinoProbe) }),
+          createElement(Route, { path: '/proyectos-investigacion', element: createElement(CrearReintentoDestinoProbe) }),
         ))))
   }
   const ready = async view => { await view.findByRole('heading', { name: solicitud.tipoSolicitud, level: 2 }) }

@@ -27,7 +27,7 @@ test('distribución del detalle de solicitudes en ambos temas', async t => {
       await t.test(`${familia} · ${estudiante ? 'estudiante' : 'coordinación'}`, async () => {
         const page = await browser.newPage()
         try {
-          const path = familia === 'proyecto' ? '/trabajos-grado/doctorado/solicitudes/42'
+          const path = familia === 'proyecto' ? '/proyectos-investigacion/doctorado/solicitudes/42'
             : familia === 'credito' && !estudiante ? '/creditos-condonables/42' : '/solicitudes/42'
           const solicitud = {
             id: 42, estudianteId: 10, estudiante: 'Juan Carlos Vega Delgado', codigoEstudianteUis: '225840',
@@ -60,10 +60,18 @@ test('distribución del detalle de solicitudes en ambos temas', async t => {
             await page.evaluate(value => localStorage.setItem('sapp-theme', value), theme)
             for (const width of [1440, 390]) {
               await page.setViewportSize({ width, height: 960 })
-              await page.goto(origin + path)
+              const enlaceAnterior = familia === 'proyecto' && width === 1440
+              await page.goto(origin + (enlaceAnterior ? '/trabajos-grado/doctorado/solicitudes/42?origen=aviso#detalle' : path))
               const header = page.locator('.solicitud-detalle-page__header')
               const title = header.getByRole('heading', { name: nombre })
               await title.waitFor()
+              if (enlaceAnterior) {
+                assert.equal(page.url(), origin + path + '?origen=aviso#detalle')
+                const volver = page.getByRole('link', { name: /Volver a proyectos de investigación/ })
+                assert.equal(await volver.getAttribute('href'), '/proyectos-investigacion/doctorado')
+                const menu = page.locator('.sidebar').getByRole('link', { name: 'Proyectos de investigación', exact: true })
+                assert.equal(await menu.getAttribute('href'), '/proyectos-investigacion')
+              }
               await page.getByRole('region', { name: tituloSeccion }).waitFor()
               await page.getByText('0 documentos', { exact: true }).waitFor()
               assert.ok(await page.locator('body').evaluate((body, value) => body.classList.contains(value), theme))
