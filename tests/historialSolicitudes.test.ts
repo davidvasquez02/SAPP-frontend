@@ -9,15 +9,15 @@ const panelEvaluacion = readFileSync('src/modules/trabajos-grado/evaluacion/Proc
 
 test('todas las solicitudes consultan el historial académico por identificador', () => {
   assert.match(solicitudesApi, /`\/solicitudesAcademicas\/\$\{encodeURIComponent\(solicitudId\)\}\/historial`/)
-  assert.match(detalle, /getHistorialSolicitudAcademica\(response\.id\)/)
+  assert.match(detalle, /cargarHistorial\(response\.id\)/)
   assert.match(detalle, /Histórico de cambios/)
   assert.match(detalle, /item\.responsable/)
   assert.match(detalle, /item\.detalle/)
 })
 
 test('proyectos de grado deja de usar el historial específico del proceso', () => {
-  assert.match(evaluacionApi, /`\/solicitudesAcademicas\/\$\{encodeURIComponent\(solicitudId\)\}\/historial`/)
+  assert.doesNotMatch(evaluacionApi, /getHistorialProcesoEvaluacion/)
   assert.doesNotMatch(evaluacionApi, /\$\{BASE\}\/solicitud\/\$\{solicitudId\}\/historial/)
-  assert.doesNotMatch(panelEvaluacion, /Estado anterior:/)
+  assert.doesNotMatch(panelEvaluacion, /Histórico de cambios|Estado anterior:/)
   assert.doesNotMatch(panelEvaluacion, /Tiempo en estado anterior:/)
 })

@@ -9,11 +9,13 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
   const { default: Page } = await ui.load('/src/pages/SolicitudDetalle/SolicitudDetallePage.tsx')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
   let solicitud, own, detailFailure, historyFailure, docsFailure, actasFailure, changeFailure, signFailure, refreshFailureAfterSign, changes, signatures, historyCalls, enviosAComite
+  let historialSolicitud
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     solicitud = { id: 24, estudianteId: 18, estudiante: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', tipoSolicitudId: 99, tipoSolicitudCodigo: 'GENERAL', tipoSolicitud: 'Solicitud general', tipoTramiteCodigo: '100', estadoId: 1, estadoSigla: 'ENVIADA', estado: 'ENVIADA A COMITE', fechaRegistro: '2026-10-17', fechaResolucion: null, observaciones: 'Detalle de prueba' }
     own = true; detailFailure = false; historyFailure = false; docsFailure = false; actasFailure = false; changeFailure = false; signFailure = false; refreshFailureAfterSign = false
     changes = []; signatures = 0; historyCalls = 0; enviosAComite = 0
+    historialSolicitud = [{ estadoNuevoSigla: 'ENVIADA', estadoNuevo: 'Enviada', fecha: '2026-10-17T10:30:00', responsable: 'Secretaría', detalle: 'Registro inicial' }]
     ui.response((url, init) => {
       const parsed = new URL(url, 'https://example.test')
       const path = parsed.pathname
@@ -21,7 +23,7 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
       if (path.endsWith('/solicitudesAcademicas/asignadas')) return ok([])
       if (path.endsWith('/solicitudesAcademicas/24/historial')) return historyFailure
         ? Response.json({ message: 'Historial no disponible' }, { status: 503 })
-        : ok([{ estadoNuevoSigla: 'ENVIADA', estadoNuevo: 'Enviada', fecha: '2026-10-17T10:30:00', responsable: 'Secretaría', detalle: 'Registro inicial' }])
+        : ok(historialSolicitud)
       if (path.endsWith('/solicitudesAcademicas/cambioEstado/24')) {
         if (changeFailure) return Response.json({ message: 'Transición rechazada' }, { status: 409 })
         changes.push(Object.fromEntries(parsed.searchParams))
@@ -108,6 +110,26 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     assert.equal(view.queryByText('Resumen reservado'), null)
   })
 
+  for (const [estadoSigla, comite, consejo] of [
+    ['EN_VALIDACION_COORDINACION', false, false], ['ENVIADA', false, false],
+    ['ENVIADA_CONSEJO', true, false], ['JUR_POR_DESIG', true, true], ['EN_EVALUACION', true, true],
+  ]) {
+    await t.test(`el estudiante ve las referencias registradas que corresponden a ${estadoSigla}`, async s => {
+      Object.assign(solicitud, { estadoSigla, tipoSolicitudCodigo: 'PROP_TI_MISI' })
+      historialSolicitud = [
+        ['JUR_POR_DESIG', '05', 'Observaciones: Referencia: Primera línea\nSegunda línea'],
+        ['ENVIADA_CONSEJO', '04', 'Observaciones: Referencia: Acta 4'],
+        ['ENVIADA_CONSEJO', '03', 'Observaciones: Referencia: Acta previa'],
+        ['ENVIADA_CONSEJO', '06', 'Observaciones: Otro movimiento'],
+      ].map(([sigla, minuto, detalle]) => ({ estadoNuevoSigla: sigla, estadoNuevo: sigla, fecha: `2026-11-17T16:${minuto}:00`, detalle, responsable: 'Coordinación' }))
+      const view = mount(s, ['ESTUDIANTE'])
+      await view.findByText('Observaciones: Otro movimiento')
+      const ficha = ui.within(view.getByRole('region', { name: 'Información del proyecto' }))
+      assert.equal(ficha.queryByText('Referencia del comité')?.nextElementSibling.textContent, comite ? 'Acta 4' : undefined)
+      assert.equal(ficha.queryByText('Decisión del consejo')?.nextElementSibling.textContent, consejo ? 'Primera línea\nSegunda línea' : undefined)
+    })
+  }
+
   await t.test('id inválido y fallo de consulta no muestran el detalle', async s => {
     let view = mount(s, ['COORDINADOR'], 'invalido')
     await view.findByText('ID inválido')
@@ -162,6 +184,25 @@ test('detalle de solicitud React: propiedad, decisiones, actas y firma', async t
     await view.findByText('Estado actualizado correctamente')
     assert.deepEqual(changes, [{ siglaEstado: 'RECHAZADA', observaciones: 'Soporte incompleto & sin firma' }])
     assert.ok(view.getByText('Soporte incompleto & sin firma'))
+  })
+
+  await t.test('si el detalle falla tras enviar a comité permite reconsultar sin repetir el envío', async s => {
+    Object.assign(solicitud, { tipoSolicitudCodigo: 'PROP_TESIS_DCC', estadoSigla: 'EN_VALIDACION_COORDINACION', estado: 'EN VALIDACION DE COORDINACION' })
+    const view = mount(s)
+    await ready(view)
+    detailFailure = true
+    ui.fireEvent.click(view.getByRole('button', { name: 'Enviar a comité' }))
+    const actualizar = await view.findByRole('button', { name: 'Actualizar detalle' })
+    assert.equal(view.queryByRole('button', { name: 'Enviar a comité' }), null)
+    detailFailure = false
+    historyFailure = true
+    ui.fireEvent.click(actualizar)
+    await view.findByText('Historial no disponible')
+    historyFailure = false
+    ui.fireEvent.click(view.getByRole('button', { name: 'Actualizar histórico' }))
+    await view.findByText('Registro inicial')
+    assert.equal(enviosAComite, 1)
+    assert.equal(view.queryByRole('button', { name: 'Actualizar detalle' }), null)
   })
 
   await t.test('aprobación desde comité exige acta y excluye las de Consejo', async s => {

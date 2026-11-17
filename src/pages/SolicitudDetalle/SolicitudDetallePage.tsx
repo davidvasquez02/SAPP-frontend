@@ -63,6 +63,20 @@ const formatHistoryDate = (value: string) => {
   return `${day}/${month}/${year}, ${hour}:${minute}${second ? `:${second}` : ''}`
 }
 
+function referenciaDelHistorial(historial: SolicitudHistorialDto[], estadoDestino: 'ENVIADA_CONSEJO' | 'JUR_POR_DESIG') {
+  let fecha = ''
+  let referencia = ''
+  for (const evento of historial) {
+    if (evento.estadoNuevoSigla !== estadoDestino || evento.fecha < fecha) continue
+    const texto = evento.detalle?.match(/^\s*(?:Observaciones:\s*)?Referencia:\s*([\s\S]*)$/i)?.[1].trim()
+    if (texto) {
+      fecha = evento.fecha
+      referencia = texto
+    }
+  }
+  return referencia
+}
+
 const SolicitudDetallePage = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -92,6 +106,7 @@ const SolicitudDetallePage = () => {
   const [docsLoading, setDocsLoading] = useState(false)
   const [docsError, setDocsError] = useState<string | null>(null)
   const [isUpdatingEstado, setIsUpdatingEstado] = useState(false)
+  const [detallePendiente, setDetallePendiente] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null)
   const [showConsejoConfirmation, setShowConsejoConfirmation] = useState(false)
@@ -112,6 +127,23 @@ const SolicitudDetallePage = () => {
   const [isSignedAssignmentConsumed, setIsSignedAssignmentConsumed] = useState(false)
   const [procesoEvaluacion, setProcesoEvaluacion] = useState<ProcesoEvaluacionTg | null>(null)
 
+  const lecturaHistorial = useRef(0)
+  const cargarHistorial = useCallback(async (id: number, mostrarCarga = false) => {
+    const lectura = ++lecturaHistorial.current
+    if (mostrarCarga) setHistorialSolicitudLoading(true)
+    setHistorialSolicitudError(null)
+    try {
+      const cambios = await getHistorialSolicitudAcademica(id)
+      if (lectura === lecturaHistorial.current) setHistorialSolicitud(cambios)
+    } catch (error) {
+      if (lectura === lecturaHistorial.current) {
+        setHistorialSolicitudError(getErrorMessage(error, 'No fue posible cargar el histórico de cambios.'))
+      }
+    } finally {
+      if (lectura === lecturaHistorial.current) setHistorialSolicitudLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
     if (Number.isNaN(parsedId)) {
@@ -124,6 +156,9 @@ const SolicitudDetallePage = () => {
     setLoading(true)
     setError(null)
     setSolicitud(null)
+    setDetallePendiente(false)
+    setUpdateError(null)
+    setUpdateSuccess(null)
     setHistorialHomologaciones([])
     setShowHistorialHomologaciones(false)
     setHistorialError(null)
@@ -151,18 +186,7 @@ const SolicitudDetallePage = () => {
         setSolicitud(response)
         setIsSignedAssignmentConsumed(false)
         setLoading(false)
-        getHistorialSolicitudAcademica(response.id)
-          .then((history) => {
-            if (mounted) setHistorialSolicitud(history)
-          })
-          .catch((historyError) => {
-            if (mounted) {
-              setHistorialSolicitudError(getErrorMessage(historyError, 'No fue posible cargar el histórico de cambios.'))
-            }
-          })
-          .finally(() => {
-            if (mounted) setHistorialSolicitudLoading(false)
-          })
+        void cargarHistorial(response.id)
       })
       .catch((fetchError) => {
         if (mounted) {
@@ -174,8 +198,9 @@ const SolicitudDetallePage = () => {
 
     return () => {
       mounted = false
+      lecturaHistorial.current++
     }
-  }, [debeValidarPropiedadEstudiante, estudianteId, solicitudId])
+  }, [cargarHistorial, debeValidarPropiedadEstudiante, estudianteId, solicitudId])
 
   useEffect(() => {
     const parsedId = Number(solicitudId ?? '')
@@ -312,6 +337,9 @@ const SolicitudDetallePage = () => {
   const showDatosTrabajo = Boolean(tituloTrabajo || (!esCandidaturaDoctoral && resumenTrabajo))
   const esSolicitudTrabajoGrado = tieneProcesoEvaluacionTg(solicitud?.tipoSolicitudCodigo)
   const fichaProyecto = esSolicitudTrabajoGrado || isTipoTrabajoGrado(solicitud?.tipoSolicitudId)
+  const mostrarReferencias = esSolicitudTrabajoGrado && !['EN_VALIDACION_COORDINACION', 'ENVIADA'].includes(currentEstado)
+  const referenciaComite = mostrarReferencias && referenciaDelHistorial(historialSolicitud, 'ENVIADA_CONSEJO')
+  const decisionConsejo = mostrarReferencias && currentEstado !== 'ENVIADA_CONSEJO' && referenciaDelHistorial(historialSolicitud, 'JUR_POR_DESIG')
   const categoria = showMotivosCredito ? 'Crédito condonable' : fichaProyecto ? 'Proyecto de grado' : 'Solicitud general'
   const tituloSeccion = showMotivosCredito ? 'Información del crédito condonable' : fichaProyecto ? 'Información del proyecto' : 'Información de la solicitud'
   // Un trabajo de grado APLAZADA es un estado final (ver FlujoTrabajoGrado.esEstadoFinal): el
@@ -357,12 +385,14 @@ const SolicitudDetallePage = () => {
 
   const refreshSolicitud = useCallback(async ({ recargarDocumentos = true }: { recargarDocumentos?: boolean } = {}) => {
     if (!solicitud) return
-    const refreshed = await getSolicitudAcademicaById(solicitud.id)
+    const [refreshed] = await Promise.all([
+      getSolicitudAcademicaById(solicitud.id),
+      cargarHistorial(solicitud.id),
+    ])
     setSolicitud(refreshed)
-    setHistorialSolicitud(await getHistorialSolicitudAcademica(refreshed.id))
     const codigo = refreshed.tipoTramiteCodigo?.trim()
     if (recargarDocumentos && codigo) await loadDocumentos(refreshed.id, codigo)
-  }, [loadDocumentos, solicitud])
+  }, [cargarHistorial, loadDocumentos, solicitud])
 
   useEffect(() => {
     if (!showProcesoEvaluacion || actas.length > 0 || actasLoading || processActasRequestedRef.current) return
@@ -430,6 +460,20 @@ const SolicitudDetallePage = () => {
 
   const isSolicitudOtra = solicitud?.tipoSolicitudId === 11
 
+  const actualizarTrasDecision = async () => {
+    setIsUpdatingEstado(true)
+    setUpdateError(null)
+    try {
+      await refreshSolicitud({ recargarDocumentos: false })
+      setDetallePendiente(false)
+    } catch {
+      setDetallePendiente(true)
+      setUpdateError('El cambio quedó guardado. No fue posible consultar el detalle actualizado.')
+    } finally {
+      setIsUpdatingEstado(false)
+    }
+  }
+
   const handleResolverSolicitud = async (
     target: Extract<SolicitudEstadoTarget, 'APROBADA' | 'RECHAZADA'>,
     enviarConsejo?: boolean,
@@ -457,13 +501,8 @@ const SolicitudDetallePage = () => {
         referenciaActa: referenciaActaAprobacion,
       })
 
-      try {
-        const refreshed = await getSolicitudAcademicaById(solicitud.id)
-        setSolicitud(refreshed)
-        setUpdateSuccess('Estado actualizado correctamente')
-      } catch {
-        setUpdateError('Estado actualizado pero no se pudo recargar el detalle')
-      }
+      await actualizarTrasDecision()
+      setUpdateSuccess('Estado actualizado correctamente')
     } catch (updateEstadoError) {
       setUpdateError(getErrorMessage(updateEstadoError, 'No fue posible actualizar el estado de la solicitud.'))
     } finally {
@@ -483,13 +522,8 @@ const SolicitudDetallePage = () => {
     try {
       await enviarSolicitudAComite(solicitud.id)
 
-      try {
-        const refreshed = await getSolicitudAcademicaById(solicitud.id)
-        setSolicitud(refreshed)
-        setUpdateSuccess('Solicitud enviada al comité asesor')
-      } catch {
-        setUpdateError('Solicitud enviada a comité pero no se pudo recargar el detalle')
-      }
+      await actualizarTrasDecision()
+      setUpdateSuccess('Solicitud enviada al comité asesor')
     } catch (enviarAComiteError) {
       setUpdateError(getErrorMessage(enviarAComiteError, 'No fue posible enviar la solicitud a comité.'))
     } finally {
@@ -660,6 +694,18 @@ const SolicitudDetallePage = () => {
                       : solicitud.observaciones?.trim() || 'Sin observaciones.'}
                   </dd>
                 </div>
+                {referenciaComite && (
+                  <div>
+                    <dt>Referencia del comité</dt>
+                    <dd>{referenciaComite}</dd>
+                  </div>
+                )}
+                {decisionConsejo && (
+                  <div>
+                    <dt>Decisión del consejo</dt>
+                    <dd>{decisionConsejo}</dd>
+                  </div>
+                )}
                 {showMotivosCredito && (
                   <div>
                     <dt>Motivos para la solicitud del crédito condonable</dt>
@@ -826,7 +872,7 @@ const SolicitudDetallePage = () => {
             {(canResolveSolicitud || canEnviarAComite || updateError || updateSuccess) && (
               <>
                 <section className="solicitud-detalle-page__estado-editor">
-                  {canResolveSolicitud && (
+                  {canResolveSolicitud && !detallePendiente && (
                     <>
                       <h3>Resolver solicitud</h3>
                       <div className="solicitud-detalle-page__estado-controls">
@@ -849,7 +895,7 @@ const SolicitudDetallePage = () => {
                       </div>
                     </>
                   )}
-                  {canEnviarAComite && (
+                  {canEnviarAComite && !detallePendiente && (
                     <>
                       <h3>Validación de coordinación</h3>
                       <p>La solicitud está en validación de coordinación. Confirmá que está completa para enviarla al comité asesor de posgrados.</p>
@@ -875,6 +921,9 @@ const SolicitudDetallePage = () => {
                   )}
                   {updateError && (
                     <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error">{updateError}</p>
+                  )}
+                  {detallePendiente && (
+                    <button type="button" disabled={isUpdatingEstado} onClick={() => void actualizarTrasDecision()}>Actualizar detalle</button>
                   )}
                   {updateSuccess && <p className="solicitud-detalle-page__success">{updateSuccess}</p>}
                 </section>
@@ -932,10 +981,6 @@ const SolicitudDetallePage = () => {
             )}
 
             <section className="solicitud-detalle-page__change-history" aria-labelledby="historial-solicitud-title">
-              {/* Ajuste #5 (iteracion 2): esta seccion se mostraba solo antes de JUR_POR_DESIG
-                  (showProcesoEvaluacion la ocultaba), pero es la unica que trae texto libre
-                  como la "Referencia" de la decision del comite/consejo -- distinto titulo del
-                  historico de ProcesoEvaluacionPanel (jurados/evaluacion) para no confundirlos. */}
               <h3 id="historial-solicitud-title">
                 {esSolicitudTrabajoGrado ? 'Histórico de cambios de la solicitud' : 'Histórico de cambios'}
               </h3>
@@ -943,7 +988,8 @@ const SolicitudDetallePage = () => {
                 <p role="status">Cargando histórico...</p>
               ) : historialSolicitudError ? (
                 <p className="solicitud-detalle-page__status solicitud-detalle-page__status--error" role="alert">
-                  {historialSolicitudError}
+                  {historialSolicitudError}{' '}
+                  <button type="button" onClick={() => void cargarHistorial(solicitud.id, true)}>Actualizar histórico</button>
                 </p>
               ) : historialSolicitud.length === 0 ? (
                 <p>No hay cambios de estado registrados.</p>

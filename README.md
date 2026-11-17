@@ -1,5 +1,15 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Decisiones de trabajos de grado — 2026-11-17
+
+Cada decisión de coordinación actualiza la ficha y su histórico en la misma página. Al pasar de comité a consejo, coordinación y estudiante pueden leer la **Referencia del comité** debajo de las observaciones. Al pasar de consejo a **Jurado por notificar**, también aparece la **Decisión del consejo**, con sus saltos de línea. Ambos campos muestran el texto opcional guardado en el histórico de la solicitud. La cronología completa se consulta en una sola sección, debajo del proceso de evaluación.
+
+La compilación y el flujo en Edge pasaron. La suite completa y la instrumentada registraron 611/643 aprobadas, con los mismos 32 fallos previos. La cobertura de líneas del detalle alcanzó el 93,50 %.
+
+## Navegación de escritorio — 2026-11-17
+
+La barra lateral expandida da espacio al nombre completo «Proyectos de investigación» y permite que las etiquetas largas continúen en otra línea. La prueba de navegador comprueba su lectura al pasar el puntero y al enfocar el enlace con el teclado.
+
 ## Detalle de solicitudes — 2026-11-17
 
 Coordinación y estudiantes comparten una ficha para solicitudes generales, trabajos de grado y créditos condonables. El encabezado reúne categoría, número, tipo y estado. Los datos generales pasan de dos columnas a una en móvil. El código UIS acompaña al estudiante y el programa conserva el texto completo enviado por la API. Cada trámite agrupa sus campos de lectura y el encabezado de adjuntos indica cuántos archivos contiene la sección.

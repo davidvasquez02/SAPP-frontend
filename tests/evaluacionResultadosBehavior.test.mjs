@@ -20,7 +20,6 @@ test('resultados React: calificaciones, actas, cierre y rúbricas', async t => {
     ui.response(async (url, init) => {
       const path = new URL(url, 'https://example.test').pathname
       if (path.endsWith('/catalogos')) return ok({ modalidades: [], resultados: [{ codigo: 'APROBADO', nombre: 'Aprobado' }, { codigo: 'REPROBADO', nombre: 'Reprobado' }], conceptos: [], momentos: [], estadosInvitacion: [] })
-      if (path.endsWith('/42/historial')) return ok(mutations.length ? [{ estadoNuevoSigla: 'FINALIZADA', estadoNuevo: 'Finalizada', fecha: '2026-10-17T10:00:00', responsable: 'Coordinación', detalle: 'Resultado registrado' }] : [])
       if (path.endsWith('/solicitud/42')) return ok(proceso)
       if (path.endsWith('/resultado')) {
         if (hold) await new Promise(resolve => { release = resolve })
@@ -69,7 +68,7 @@ test('resultados React: calificaciones, actas, cierre y rúbricas', async t => {
     assert.equal(refreshed, 1)
     assert.ok(ui.within(view.getByLabelText('Calificación definitiva')).getByText('4,30'))
     assert.equal(view.queryAllByRole('button', { name: 'Registrar resultado' }).length, 0)
-    assert.ok(view.getByText('Resultado registrado'))
+    assert.equal(view.queryByRole('heading', { name: 'Histórico de cambios' }), null)
   })
 
   await t.test('nota vacía o fuera de 0–5 deshabilita envío', async s => {

@@ -1,6 +1,6 @@
 .sidebar {
   --sidebar-collapsed-width: 84px;
-  --sidebar-expanded-width: 284px;
+  --sidebar-expanded-width: 19.5rem;
   width: var(--sidebar-collapsed-width);
   background: linear-gradient(
     180deg,
@@ -186,6 +186,7 @@
 .sidebar:focus-within .sidebar__label {
   opacity: 1;
   width: auto;
+  white-space: normal;
 }
 
 .sidebar__footer {

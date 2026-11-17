@@ -9,7 +9,6 @@ import {
   enviarAAjustes,
   enviarRecordatorios,
   getCatalogosEvaluacion,
-  getHistorialProcesoEvaluacion,
   getProcesoEvaluacion,
   programarSustentacion,
   reenviarInvitacion,
@@ -21,7 +20,6 @@ import { downloadBase64File } from '../../../shared/files/base64FileUtils'
 import type {
   BancoJurado,
   CatalogosEvaluacion,
-  HistorialProcesoEvaluacion,
   IdiomaJurado,
   JuradoEvaluador,
   JuradoInput,
@@ -150,7 +148,6 @@ const RubricaCelda = ({ evaluaciones }: { evaluaciones: JuradoEvaluador['evaluac
 
 const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJuradoAdded }: ProcesoEvaluacionPanelProps) => {
   const [proceso, setProceso] = useState<ProcesoEvaluacionTg | null>(null)
-  const [historial, setHistorial] = useState<HistorialProcesoEvaluacion[]>([])
   const [catalogos, setCatalogos] = useState<CatalogosEvaluacion | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -182,13 +179,11 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
     setLoading(true)
     setError(null)
     try {
-      const [nextProceso, nextCatalogos, nextHistorial] = await Promise.all([
+      const [nextProceso, nextCatalogos] = await Promise.all([
         getProcesoEvaluacion(solicitudId),
         getCatalogosEvaluacion(),
-        getHistorialProcesoEvaluacion(solicitudId),
       ])
       setProceso(nextProceso)
-      setHistorial(nextHistorial)
       setCatalogos(nextCatalogos)
       setFechaLimite(nextProceso.fechaLimiteEvaluacion ?? suggestedDeadline(nextProceso.tipoSolicitudCodigo))
       setDocumentoId(nextProceso.documentoEvaluarId ? String(nextProceso.documentoEvaluarId) : '')
@@ -244,13 +239,11 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
     setMessage(null)
     try {
       await operation()
-      const [nextProceso, nextHistorial] = await Promise.all([
+      const [nextProceso] = await Promise.all([
         getProcesoEvaluacion(solicitudId),
-        getHistorialProcesoEvaluacion(solicitudId),
         refresh(),
       ])
       setProceso(nextProceso)
-      setHistorial(nextHistorial)
       setMessage(success)
       setFormulario(null)
       setReemplazando(null)
@@ -409,9 +402,8 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
         {canSendReminders && <button type="button" onClick={() => {
           setBusy(true); setError(null); setMessage(null)
           enviarRecordatorios(solicitudId).then(async (count) => {
-            const [nextProceso, nextHistorial] = await Promise.all([getProcesoEvaluacion(solicitudId), getHistorialProcesoEvaluacion(solicitudId), onUpdated()])
+            const [nextProceso] = await Promise.all([getProcesoEvaluacion(solicitudId), onUpdated()])
             setProceso(nextProceso)
-            setHistorial(nextHistorial)
             setMessage(`Se enviaron ${count} recordatorio(s).`)
           }).catch((e: unknown) => setError(getErrorMessage(e, 'No fue posible enviar recordatorios.'))).finally(() => setBusy(false))
         }} disabled={busy} title="Solo se envían a jurados que aceptaron y aún no evaluaron.">Enviar recordatorios</button>}
@@ -490,26 +482,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
 
       {tieneDetalleSustentacion(sustentacion) && <section className="evaluacion-tg__section"><h4>Información de la sustentación</h4><dl className="evaluacion-tg__summary">{sustentacion.fecha && <div><dt>Fecha y hora</dt><dd>{formatDate(sustentacion.fecha, true)}</dd></div>}{sustentacion.modalidad && <div><dt>Modalidad</dt><dd>{sustentacion.modalidad}</dd></div>}{sustentacion.lugar && <div><dt>Lugar</dt><dd>{sustentacion.lugar}</dd></div>}{(sustentacion.esVirtual || sustentacion.esHibrida) && sustentacion.enlace && <div><dt>Enlace de sustentación</dt><dd><a href={sustentacion.enlace} target="_blank" rel="noreferrer">Ingresar a la sustentación</a></dd></div>}</dl></section>}
 
-      <section className="evaluacion-tg__section">
-        <h4>Histórico de cambios</h4>
-        {historial.length === 0 ? <p>No hay cambios de estado registrados.</p> : (
-          <ol className="evaluacion-tg__timeline">
-            {historial.map((item, index) => (
-              <li key={`${item.estadoNuevoSigla}-${item.fecha}-${index}`}>
-                <span aria-hidden="true" />
-                <div>
-                  <strong>{formatEstadoNombre(item.estadoNuevo, item.estadoNuevoSigla)}</strong>
-                  <small>{formatDate(item.fecha, true)}</small>
-                  <div className="evaluacion-tg__timeline-meta">
-                    {item.responsable && <span><b>Responsable:</b> {item.responsable}</span>}
-                  </div>
-                  {item.detalle && <p>{item.detalle}</p>}
-                </div>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
     </section>
   )
 }

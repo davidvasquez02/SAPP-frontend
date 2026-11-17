@@ -83,6 +83,20 @@ test('distribución del detalle de solicitudes en ambos temas', async t => {
                 await page.screenshot({ path: join(process.env.SAPP_DETALLE_CAPTURAS, `detalle-${width}-${theme}.png`),
                   clip: { x: top.x, y: top.y, width: top.width, height: bottom.y + bottom.height - top.y } })
               }
+              if (familia === 'proyecto' && estudiante && width === 1440) {
+                const enlace = page.locator('.sidebar').getByRole('link', { name: 'Proyectos de investigación', exact: true })
+                if (theme === 'light') await enlace.hover()
+                else await enlace.focus()
+                const etiqueta = enlace.locator('.sidebar__label')
+                await page.waitForFunction(el => {
+                  const texto = document.createRange()
+                  texto.selectNodeContents(el)
+                  const caja = el.getBoundingClientRect()
+                  return getComputedStyle(el).opacity === '1' && caja.width > 0 &&
+                    [...texto.getClientRects()].every(linea => linea.right <= caja.right + 1 && linea.bottom <= caja.bottom + 1)
+                }, await etiqueta.elementHandle())
+                await page.mouse.move(width - 1, 0)
+              }
             }
           }
         } finally {

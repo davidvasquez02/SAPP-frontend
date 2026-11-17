@@ -13,7 +13,7 @@ test('un estudiante solo resuelve el detalle desde sus propias solicitudes', () 
 
 test('el cambio de sesión vuelve a ejecutar la validación y limpia el detalle anterior', () => {
   assert.match(detailSource, /setSolicitud\(null\)/)
-  assert.match(detailSource, /\[debeValidarPropiedadEstudiante, estudianteId, solicitudId\]/)
+  assert.match(detailSource, /\[cargarHistorial, debeValidarPropiedadEstudiante, estudianteId, solicitudId\]/)
 })
 
 test('solo pregunta si una solicitud OTRA en comité debe enviarse al Consejo', () => {

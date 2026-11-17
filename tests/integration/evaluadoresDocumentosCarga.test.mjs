@@ -18,7 +18,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
   const browser = await chromium.launch({ headless: true, channel: process.env.SAPP_BROWSER_CHANNEL || 'msedge' })
   t.after(() => browser.close())
 
-  const scenario = async (run, { student = false, failDocuments = false } = {}) => {
+  const scenario = async (run, { student = false, failDocuments = false, validarProyecto = false } = {}) => {
     const context = await browser.newContext({ acceptDownloads: true })
     const page = await context.newPage()
     page.setDefaultTimeout(8000)
@@ -26,11 +26,12 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       documentsGets: 0, processGets: 0, historyGets: 0, mutations: 0, failDocuments,
       fileId: 101, fileName: 'tesis-original.pdf', cartaName: null, uploads: [],
       proceso: { id: 9, solicitudAcademicaId: 42, tipoSolicitudCodigo: 'DEF_TESIS_DCC', titulo: 'Tesis de prueba', programa: 'Doctorado',
-        estadoSolicitud: student ? 'EN_AJUSTES' : 'JUR_POR_DESIG', documentoEvaluarId: 101, documentoEvaluarNombre: 'tesis-original.pdf',
+        estadoSolicitud: validarProyecto ? 'EN_VALIDACION_COORDINACION' : student ? 'EN_AJUSTES' : 'JUR_POR_DESIG', documentoEvaluarId: 101, documentoEvaluarNombre: 'tesis-original.pdf',
         fechaLimiteEvaluacion: '2027-12-01', jurados: [] },
     }
     const solicitud = () => ({ id: 42, estudianteId: 10, estudiante: 'Estudiante de prueba', codigoEstudianteUis: '20260001', programaAcademico: 'Doctorado', tipoSolicitudId: 9, tipoSolicitudCodigo: 'DEF_TESIS_DCC', tipoSolicitud: 'Defensa de tesis doctoral', tipoTramiteCodigo: '1008', estadoId: student ? (state.proceso.estadoSolicitud === 'EN_AJUSTES' ? 16 : 21) : 15, estadoSigla: state.proceso.estadoSolicitud, estado: state.proceso.estadoSolicitud, fechaRegistro: '2026-10-16', fechaResolucion: null, observaciones: null })
     const errors = []
+    const historial = []
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', async route => {
       const request = route.request()
@@ -42,8 +43,20 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       })
       if (url.pathname.endsWith('/solicitudesAcademicas/42')) return reply(solicitud())
       if (url.pathname.endsWith('/solicitudesAcademicas/estudiante')) return reply([solicitud()])
+      if (validarProyecto && request.method() === 'PUT' && (
+        url.pathname.endsWith('/42/enviarAComite') || url.pathname.endsWith('/cambioEstado/42')
+      )) {
+        const destinos = { EN_VALIDACION_COORDINACION: 'ENVIADA', ENVIADA: 'ENVIADA_CONSEJO', ENVIADA_CONSEJO: 'JUR_POR_DESIG' }
+        const destino = destinos[state.proceso.estadoSolicitud]
+        const referencia = url.searchParams.get('referenciaActa')
+        state.proceso.estadoSolicitud = destino
+        historial.push({ estadoNuevoSigla: destino, estadoNuevo: destino, fecha: `2026-11-17T16:4${historial.length}:00`,
+          responsable: 'Coordinación', detalle: referencia && `Observaciones: Referencia: ${referencia}` })
+        return reply(null)
+      }
       if (url.pathname.endsWith('/solicitudesAcademicas/42/historial')) {
         state.historyGets++
+        if (validarProyecto) return reply(historial)
         return reply(state.mutations ? [{ estadoNuevoSigla: state.proceso.estadoSolicitud, estadoNuevo: 'Jurado actualizado', fecha: '2026-10-16T10:00:00', responsable: 'Coordinación', detalle: `Cambio ${state.mutations}` }] : [])
       }
       if (url.pathname.endsWith('/document')) {
@@ -106,6 +119,34 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
     } finally { await context.close() }
   }
 
+  await t.test('las decisiones de coordinación actualizan la ficha y un único histórico en la misma página', async () => {
+    await scenario(async (page, state) => {
+      const ficha = page.getByRole('region', { name: 'Información del proyecto' })
+      const historico = page.getByRole('region', { name: 'Histórico de cambios de la solicitud' })
+      const decision = 'Evaluadores propuestos:\n\n1. Ana\n2. Juan'
+      const documento = await page.evaluateHandle(() => document)
+      await page.getByRole('button', { name: 'Enviar a comité' }).click()
+      await historico.getByText('ENVIADA', { exact: true }).waitFor()
+      assert.equal(await ficha.getByText('Referencia del comité').count(), 0)
+      await page.getByRole('button', { name: /Aprobar/ }).click()
+      await page.getByLabel('Referencia (opcional)').fill('Acta 4')
+      await page.getByRole('dialog').getByRole('button', { name: 'Aprobar', exact: true }).click()
+      await ficha.getByText('Acta 4', { exact: true }).waitFor()
+      await historico.getByText('ENVIADA_CONSEJO', { exact: true }).waitFor()
+      assert.equal(await ficha.getByText('Decisión del consejo').count(), 0)
+      await page.getByRole('button', { name: /Aprobar/ }).click()
+      await page.getByLabel('Decisión del consejo (opcional)').fill(decision)
+      await page.getByRole('dialog').getByRole('button', { name: 'Aprobar', exact: true }).click()
+      await historico.getByText('JUR_POR_DESIG', { exact: true }).waitFor()
+      await page.getByRole('heading', { name: 'Proceso de evaluación' }).waitFor()
+      assert.equal(await ficha.getByText('Decisión del consejo').locator('..').locator('dd').textContent(), decision)
+      assert.equal(await ficha.getByText('Acta 4', { exact: true }).count(), 1)
+      assert.equal(await page.getByRole('heading', { name: /Histórico de cambios/ }).count(), 1)
+      assert.equal(state.historyGets, 4)
+      assert.ok(await documento.evaluate(inicial => inicial === document))
+    }, { validarProyecto: true })
+  })
+
   const completarJurado = async (page, nombre) => {
     const form = page.locator('.evaluacion-tg__form-card')
     await form.getByLabel('Nombre *', { exact: true }).fill(nombre)
@@ -148,8 +189,9 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       await page.getByRole('status').filter({ hasText: 'Jurado retirado.' }).waitFor()
       assert.equal(state.documentsGets, initialDocs + 4)
       assert.ok(state.processGets > initialProcess)
-      assert.ok(state.historyGets > initialHistory)
-      await page.getByText('Cambio 6', { exact: true }).first().waitFor()
+      assert.equal(initialHistory, 1)
+      assert.equal(state.historyGets, initialHistory + 6)
+      await page.getByText('Cambio 6', { exact: true }).waitFor()
       assert.equal(await page.getByRole('button', { name: 'Descargar tesis-original.pdf', exact: true }).isEnabled(), true)
       const download = page.waitForEvent('download')
       await page.getByRole('button', { name: 'Descargar tesis-original.pdf', exact: true }).click()

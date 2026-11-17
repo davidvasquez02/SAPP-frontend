@@ -1,3 +1,18 @@
+## Decisiones e histórico de trabajos de grado — 2026-11-17
+
+- En `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx`, el envío a comité y la resolución reconsultan el detalle y el histórico tras la escritura. El histórico anterior permanece visible durante la lectura en segundo plano. Si falla una lectura, se puede reintentar desde la sección afectada sin volver a enviar la decisión.
+- El flujo verificado es `EN_VALIDACION_COORDINACION → ENVIADA → ENVIADA_CONSEJO → JUR_POR_DESIG`. La referencia que escribió el comité se guarda en el evento de llegada a consejo. La decisión del consejo se guarda en el evento de llegada a jurado por notificar. La ficha utiliza la referencia no vacía más reciente por destino según `fecha`, elimina el prefijo de `detalle` y conserva el texto multilínea. El histórico exterior muestra el detalle original completo.
+- `ProcesoEvaluacionPanel.tsx` ya delegaba al detalle la actualización después de gestionar jurados, registrar resultados y enviar recordatorios. Se retiraron del panel su segunda lectura de `/solicitudesAcademicas/{id}/historial`, la lista interna y sus estilos exclusivos. Se mantiene el contrato del backend y se reutiliza el entorno Windows/Node/Edge documentado abajo.
+- Las pruebas del detalle, histórico y resultados pasaron 46/46, y las de autorización 3/3. La compilación pasó con el aviso existente de tamaño de bundle. En Edge, `tests/integration/evaluadoresDocumentosCarga.test.mjs` pasó 5/5 con datos sintéticos. Verifica un GET del histórico al abrir y otro por transición, un único histórico tras abrir el panel y la identidad del documento del navegador durante las tres acciones. Logs locales en `.tg-historico-area-final.log` y `.tg-historico-edge-final.log`.
+
+- `npm test` y `npm run test:coverage` dieron 611/643 aprobadas. Los 32 nombres de pruebas o grupos fallidos coinciden con la ejecución anterior. Cobertura global de líneas 85,80 %, sentencias 83,44 %, ramas 71,80 % y funciones 78,53 %. Líneas del detalle 93,50 %, del panel de evaluación 95,09 % y de su módulo API 97,14 %. `node scripts/verify-coverage.mjs` confirmó los 351 archivos de src (117 TSX). Logs en `.tg-historico-tests-final.log` y `.tg-historico-coverage-final.log`.
+
+## Etiqueta de proyectos en la navegación de escritorio — 2026-11-17
+
+En `src/components/Sidebar/Sidebar.css`, la barra expandida mide 19,5 rem y las etiquetas admiten varias líneas al pasar el puntero o recibir foco. La prueba de regresión en `tests/integration/solicitudDetallePresentacion.test.mjs` comprueba en Edge que cada línea de «Proyectos de investigación» cabe dentro de la etiqueta activa del estudiante.
+
+Pasaron las pruebas de navegación (13/13), la integración en Edge (7/7) y `npm run build`. La suite completa dio 605/637 aprobadas. Los nombres de los 32 fallos coinciden con la ejecución anterior. Logs locales en `.sidebar-area.log`, `.sidebar-edge.log` y `.sidebar-tests.log`. El único cambio del aplicativo es CSS.
+
 ## Ficha de solicitudes — 2026-11-17
 
 - La estructura común y los estilos viven en `src/pages/SolicitudDetalle/SolicitudDetallePage.tsx` y su CSS. La ficha utiliza los campos estructurados de `SolicitudAcademicaDto`. El programa llega como cadena única. La fecha de resolución vacía conserva «—». La sección específica mantiene las condiciones de título, resumen, candidatura, observaciones, rechazo y motivos del crédito.
