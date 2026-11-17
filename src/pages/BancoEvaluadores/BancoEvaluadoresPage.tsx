@@ -10,6 +10,8 @@ import {
 import type { EvaluadorCandidatoDto, EvaluadorCandidatoRequest } from '../../api/evaluadorCandidatoTypes'
 import './BancoEvaluadoresPage.css'
 
+const ITEMS_POR_PAGINA = 10
+
 const EMPTY_FORM: EvaluadorCandidatoRequest = {
   nombre: '',
   tratamiento: '',
@@ -31,6 +33,11 @@ const BancoEvaluadoresPage = () => {
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [guardando, setGuardando] = useState(false)
 
+  const [pagina, setPagina] = useState(1)
+  const totalPaginas = Math.max(1, Math.ceil(candidatos.length / ITEMS_POR_PAGINA))
+  const inicioPagina = (pagina - 1) * ITEMS_POR_PAGINA
+  const candidatosPagina = candidatos.slice(inicioPagina, inicioPagina + ITEMS_POR_PAGINA)
+
   const solicitudRef = useRef(0)
 
   const cargar = async (query: string, mostrarRetirar: boolean) => {
@@ -41,7 +48,10 @@ const BancoEvaluadoresPage = () => {
         busqueda: query.trim() || undefined,
         activo: mostrarRetirar ? undefined : true,
       })
-      if (solicitud === solicitudRef.current) setCandidatos(data)
+      if (solicitud === solicitudRef.current) {
+        setCandidatos(data)
+        setPagina((actual) => Math.min(actual, Math.max(1, Math.ceil(data.length / ITEMS_POR_PAGINA))))
+      }
     } catch (err) {
       if (solicitud === solicitudRef.current) {
         setError(err instanceof Error ? err.message : 'No fue posible cargar el banco de evaluadores.')
@@ -170,8 +180,8 @@ const BancoEvaluadoresPage = () => {
         )}
 
         <div className="banco-evaluadores__filters">
-          <label><span>Buscar por nombre, correo o institución</span><input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Ana o Universidad Nacional" /></label>
-          <label className="banco-evaluadores__check"><input type="checkbox" checked={mostrarRetirados} onChange={(e) => setMostrarRetirados(e.target.checked)} /> Mostrar retirados</label>
+          <label><span>Buscar por nombre, correo o institución</span><input type="search" value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setPagina(1) }} placeholder="Ej. Ana o Universidad Nacional" /></label>
+          <label className="banco-evaluadores__check"><input type="checkbox" checked={mostrarRetirados} onChange={(e) => { setMostrarRetirados(e.target.checked); setPagina(1) }} /> Mostrar retirados</label>
         </div>
 
         {isLoading ? <p className="banco-evaluadores__status">Cargando banco de evaluadores...</p> : null}
@@ -194,7 +204,7 @@ const BancoEvaluadoresPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {candidatos.map((candidato) => (
+                {candidatosPagina.map((candidato) => (
                   <tr key={candidato.id} className={!candidato.activo ? 'banco-evaluadores__row--retirado' : undefined}>
                     <td>{candidato.tratamiento ? `${candidato.tratamiento} ` : ''}{candidato.nombre}</td>
                     <td>{candidato.correo}</td>
@@ -219,6 +229,13 @@ const BancoEvaluadoresPage = () => {
             </table>
           </div>
         ) : null}
+        {!isLoading && totalPaginas > 1 && (
+          <nav className="banco-evaluadores__pagination" aria-label="Paginación del banco de evaluadores">
+            <button type="button" disabled={pagina === 1} onClick={() => setPagina(pagina - 1)}>Anterior</button>
+            <span aria-live="polite">Página {pagina} de {totalPaginas}</span>
+            <button type="button" disabled={pagina === totalPaginas} onClick={() => setPagina(pagina + 1)}>Siguiente</button>
+          </nav>
+        )}
       </section>
     </ModuleLayout>
   )

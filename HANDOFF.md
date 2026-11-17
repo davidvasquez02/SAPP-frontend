@@ -1,3 +1,9 @@
+## Paginación del Banco de evaluadores
+
+La tabla de `src/pages/BancoEvaluadores/BancoEvaluadoresPage.tsx` pagina localmente el listado filtrado por la API. Si una actualización deja la página fuera de rango, se muestra la última disponible. Los controles siguen el patrón visual de Créditos condonables. La regresión en `tests/bancoEvaluadoresBehavior.test.mjs` verifica diez filas, una última página parcial y el reinicio al cambiar el filtro.
+
+Validación: 7/7 pruebas del banco y compilación correctas. npm test: 622/648. npm run test:coverage: 620/648, con un caso de previsualización PDF y su grupo fallidos solo bajo cobertura. Cobertura de líneas: 86,45 % global y 80,85 % en el banco. Alcance verificado con node scripts/verify-coverage.mjs. Logs locales: .banco-area.log, .banco-build.log, .banco-tests.log y .banco-coverage.log.
+
 ## Migración de rutas de proyectos de investigación — 2026-11-17
 
 - La base pública se define en `src/modules/trabajos-grado/rutas.ts` y la usa el menú, su icono y el router. El listado genera enlaces al detalle por nivel. El botón de regreso y la creación de reintentos reutilizan el parámetro de nivel de la ruta.

@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Paginación del Banco de evaluadores
+
+El listado muestra diez evaluadores por página. Al cambiar la búsqueda o el filtro «Mostrar retirados», vuelve a la primera página.
+
 ## Rutas de proyectos de investigación — 2026-11-17
 
 La entrada del módulo es `/proyectos-investigacion`. Los listados usan `/proyectos-investigacion/maestria` y `/proyectos-investigacion/doctorado`. El detalle añade `/solicitudes/:solicitudId` al nivel. Los enlaces anteriores con el prefijo `/trabajos-grado` redirigen automáticamente y conservan el identificador, la consulta y el fragmento. El nivel inicial y los permisos siguen dependiendo del perfil.
