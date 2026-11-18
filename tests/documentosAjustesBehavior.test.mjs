@@ -69,12 +69,12 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
     const bytes = new TextEncoder().encode('%PDF-carta')
     const selected = new ui.dom.window.File([bytes], type === 'application/pdf' ? 'carta.pdf' : 'imagen.png', { type })
     selected.arrayBuffer = async () => bytes.buffer
-    ui.fireEvent.change(v.getByLabelText('Carta de respuestas a las observaciones (opcional)'), { target: { files: [selected] } })
+    ui.fireEvent.change(v.getByRole('heading', { name: 'Carta de respuestas a las observaciones' }).closest('article').querySelector('input[type=file]'), { target: { files: [selected] } })
   }
   await t.test('dos selectores y un solo botón: guarda carta antes del trabajo sin reasignación adicional', async s => {
     addCartaRequirement()
     const v = mount(s, Adjustments); await v.findByText('Corregir referencias')
-    assert.equal(v.container.querySelectorAll('input[type=file]').length, 2)
+    assert.equal(v.container.querySelectorAll('.document-upload-card .file-select-button input[type=file]').length, 2)
     assert.equal(v.getAllByRole('button').length, 1)
     const save = v.getByRole('button', { name: 'Guardar correcciones' })
     selectCarta(v); assert.equal(save.disabled, true)
@@ -100,7 +100,7 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
     const v = mount(s, Adjustments); await v.findByText('Corregir referencias'); file(v); selectCarta(v); failed = true
     ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' })); await v.findByText(/Documento no disponible/)
     assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7]); assert.equal(committed, 0)
-    assert.ok(v.getByText('Archivo seleccionado: corregido.pdf')); assert.ok(v.getByText('Archivo seleccionado: carta.pdf'))
+    assert.ok(v.getByText('Archivo: corregido.pdf')); assert.ok(v.getByText('Archivo: carta.pdf'))
     failed = false; ui.fireEvent.click(v.getByRole('button', { name: 'Guardar correcciones' }))
     await ui.waitFor(() => assert.equal(committed, 1))
     assert.deepEqual(writes.map(w => w.body.tipoDocumentoTramiteId), [7, 7, 4])

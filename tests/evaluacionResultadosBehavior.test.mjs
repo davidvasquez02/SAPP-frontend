@@ -52,6 +52,13 @@ test('resultados React: calificaciones, actas, cierre y rúbricas', async t => {
     const badge = await view.findByText('CONCEPTOS RECIBIDOS', { exact: true })
     assert.ok(badge.classList.contains('status-badge--en-revision'))
   })
+
+  await t.test('en ajustes usa una variante de estado propia', async s => {
+    proceso.estadoSolicitud = 'EN_AJUSTES'
+    const view = mount(s)
+    const badge = await view.findByText('EN AJUSTES DEL ESTUDIANTE', { exact: true })
+    assert.ok(badge.classList.contains('status-badge--en-ajustes'))
+  })
   const save = view => ui.fireEvent.click(view.getAllByRole('button', { name: 'Registrar resultado' }).at(-1))
 
   await t.test('jurado activo sin sustentación bloquea registro del resultado', async s => {

@@ -231,13 +231,15 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
   await t.test('subir una versión corregida sí recarga la lista y muestra el archivo nuevo', async () => {
     await scenario(async (page, state) => {
       const panel = page.locator('.ajustes-estudiante')
-      await panel.getByLabel('Nuevo archivo para tesis-original.pdf').waitFor()
+      const trabajo = panel.locator('article').filter({ has: page.getByRole('heading', { name: 'Nuevo archivo para tesis-original.pdf' }) })
+      const carta = panel.locator('article').filter({ has: page.getByRole('heading', { name: 'Carta de respuestas a las observaciones' }) })
+      await trabajo.waitFor()
       assert.equal(await panel.locator('button').count(), 1)
       const before = state.documentsGets
       const navigations = []
       page.on('framenavigated', frame => { if (frame === page.mainFrame()) navigations.push(frame.url()) })
-      await panel.getByLabel('Nuevo archivo para tesis-original.pdf').setInputFiles({ name: 'tesis-corregida.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
-      await panel.getByLabel('Carta de respuestas a las observaciones (opcional)').setInputFiles({ name: 'carta.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
+      await trabajo.getByLabel('Seleccionar archivo').setInputFiles({ name: 'tesis-corregida.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
+      await carta.getByLabel('Seleccionar archivo').setInputFiles({ name: 'carta.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
       assert.deepEqual(state.uploads, [])
       await panel.getByRole('button', { name: 'Guardar correcciones', exact: true }).click()
       await page.locator('.documentos-adjuntos__filename').filter({ hasText: 'tesis-corregida.pdf' }).waitFor()

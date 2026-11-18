@@ -57,6 +57,12 @@ body.dark .status-badge.status-badge--enviada-consejo {
   color: #b3261e;
 }
 
+.status-badge.status-badge--en-ajustes {
+  background: color-mix(in srgb, #facc15 24%, var(--surface));
+  border-color: color-mix(in srgb, #facc15 52%, var(--outline));
+  color: var(--text-primary);
+}
+
 .status-badge.status-badge--devuelta {
   background: color-mix(in srgb, var(--outline), transparent 86%);
   border-color: color-mix(in srgb, var(--outline), transparent 58%);

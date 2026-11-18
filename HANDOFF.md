@@ -11,6 +11,18 @@
 - Cobertura global actual: líneas **8193/9475 = 86,46 %** (antes 86,45 %), sentencias **84,10 %**, ramas **72,44 %**, funciones **79,35 %**. Formulario: líneas **96,48 %**, ramas **87,53 %**; editor: líneas **92,95 %** (antes 91,54 %), ramas **77,58 %**; utilidades de documentos: líneas/funciones **100 %**; panel de correcciones conserva líneas **96,87 %**. Ninguna reducción en las métricas globales o de los módulos afectados. Alcance: **352 archivos/117 TSX**, sin exclusiones añadidas. Informe `coverage/index.html`, `coverage-summary.json`, `coverage-final.json`, `scope.json` y `lcov.info`; comparación con el informe previo en `.carta-coverage-before.log`, alcance en `.carta-coverage-scope.log`. No queda implementación pendiente en este ajuste; los 26 fallos previos requieren trabajo aparte.
 - Preferencia vigente del usuario: incluir un nombre sugerido de commit en cada entrega con cambios. Para este ajuste: `fix(solicitudes): mostrar carta de respuestas solo después de cargarla`. No crear el commit sin solicitud; cambios locales, sin despliegue.
 
+## Tarjetas de carga en correcciones — 2026-11-18
+
+`AjustesEstudiantePanel.tsx` reutiliza `DocumentUploadCard` para el trabajo obligatorio y la carta opcional. El panel valida los PDF y sigue enviando la carta seleccionada primero y el trabajo corregido al final desde el mismo botón. Las pruebas del panel y de Edge seleccionan los archivos dentro de las tarjetas y comprueban el guardado conjunto.
+
+Pasaron 16/16 pruebas del área, 6/6 en Edge y la compilación. La suite completa y la instrumentada registraron 628/654 aprobadas con los mismos 26 fallos previos. Cobertura de líneas global 86,45 %, del panel 96,55 % y de la tarjeta 97,77 %. Alcance verificado sobre 352 archivos. Logs locales en `.tarjetas-ajustes-area.log`, `.tarjetas-ajustes-edge.log`, `.tarjetas-ajustes-build.log`, `.tarjetas-ajustes-tests.log` y `.tarjetas-ajustes-cov.log`.
+
+## Estado «En ajustes del estudiante» — 2026-11-18
+
+`StatusBadge` aplica una variante exclusiva a `EN_AJUSTES`. El amarillo se mezcla con los tokens de superficie y borde del tema y usa el color de texto principal. La prueba del panel verifica que el estado recibe su propia variante.
+
+Pasaron las 15 pruebas del área y la compilación. La suite y la cobertura dieron 628/654 aprobadas con los mismos 26 fallos previos. Cobertura de líneas global 86,46 % y de StatusBadge 100 %. Se verificó el alcance sobre los 352 archivos de src. Logs locales en `.ajustes-badge-area.log`, `.ajustes-badge-build.log`, `.ajustes-badge-tests.log` y `.ajustes-badge-cov.log`.
+
 ## Colores de los estados de trabajos de grado — 2026-11-18
 
 El encabezado y `ProcesoEvaluacionPanel.tsx` usan `StatusBadge`. `CONCEPTOS_REC` conserva el ámbar existente. Si el código del panel no figura en el catálogo, conserva el nombre recibido con color neutro. La prueba del panel verifica la variante compartida de «Conceptos recibidos».

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { DocumentUploadCard } from '../../../components/DocumentUploadCard/DocumentUploadCard'
+import type { DocumentUploadItem } from '../../documentos/types/documentUploadTypes'
 import { getChecklistDocumentos } from '../../../api/documentChecklistService'
 import type { DocumentChecklistItemDto } from '../../../api/documentChecklistTypes'
 import { uploadDocument } from '../../../api/documentUploadService'
@@ -15,6 +17,17 @@ interface AjustesEstudiantePanelProps {
   usuarioCargaId: number | null
   enAjustes: boolean
   onUploaded: () => Promise<void> | void
+}
+
+function documentoParaCorreccion(id: number, nombre: string, file: File | null, obligatorio: boolean): DocumentUploadItem {
+  return {
+    id,
+    codigo: String(id),
+    nombre,
+    obligatorio,
+    selectedFile: file,
+    status: file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
+  }
 }
 
 const AjustesEstudiantePanel = ({
@@ -160,28 +173,16 @@ const AjustesEstudiantePanel = ({
         </>
       )}
       {!saved && (requirement ? (
-        <div className="ajustes-estudiante__upload">
-          <label>
-            <span>Nuevo archivo para {documentName}</span>
-            <input
-              type="file"
-              accept={PDF_FILE_ACCEPT}
-              onChange={(event) => {
-                const selectedFile = event.target.files?.[0] ?? null
-                if (selectedFile && !isPdfFile(selectedFile)) {
-                  setFile(null)
-                  setError('Solo se permiten archivos PDF.')
-                  event.target.value = ''
-                  return
-                }
-                setError(null)
-                setFile(selectedFile)
-              }}
-              disabled={uploading}
-            />
-          </label>
-          {file && <p>Archivo seleccionado: {file.name}</p>}
-        </div>
+        <DocumentUploadCard
+          item={documentoParaCorreccion(requirement.idTipoDocumentoTramite, `Nuevo archivo para ${documentName}`, file, true)}
+          fileAccept={PDF_FILE_ACCEPT}
+          disabled={uploading}
+          onSelectFile={(_, selected) => {
+            const invalido = selected != null && !isPdfFile(selected)
+            setError(invalido ? 'Solo se permiten archivos PDF.' : null)
+            setFile(invalido ? null : selected)
+          }}
+        />
       ) : (
         <p className="ajustes-estudiante__error" role="alert">
           No fue posible relacionar el documento en evaluación con los requisitos de esta solicitud.
@@ -191,26 +192,16 @@ const AjustesEstudiantePanel = ({
       {message && <p className="ajustes-estudiante__success" role="status">{message}</p>}
       {!saved && cartaRequirement && (
         <div className="ajustes-estudiante__upload">
-          <label>
-            <span>Carta de respuestas a las observaciones (opcional)</span>
-            <input
-              type="file"
-              accept={PDF_FILE_ACCEPT}
-              onChange={(event) => {
-                const selectedFile = event.target.files?.[0] ?? null
-                if (selectedFile && !isPdfFile(selectedFile)) {
-                  setCartaFile(null)
-                  setCartaError('Solo se permiten archivos PDF.')
-                  event.target.value = ''
-                  return
-                }
-                setCartaError(null)
-                setCartaFile(selectedFile)
-              }}
-              disabled={uploading}
-            />
-          </label>
-          {cartaFile && <p>Archivo seleccionado: {cartaFile.name}</p>}
+          <DocumentUploadCard
+            item={documentoParaCorreccion(cartaRequirement.idTipoDocumentoTramite, 'Carta de respuestas a las observaciones', cartaFile, false)}
+            fileAccept={PDF_FILE_ACCEPT}
+            disabled={uploading}
+            onSelectFile={(_, selected) => {
+              const invalido = selected != null && !isPdfFile(selected)
+              setCartaError(invalido ? 'Solo se permiten archivos PDF.' : null)
+              setCartaFile(invalido ? null : selected)
+            }}
+          />
           {proceso?.cartaRespuestasNombre && <p>Carta ya cargada: {proceso.cartaRespuestasNombre}</p>}
           {cartaError && <p className="ajustes-estudiante__error" role="alert">{cartaError}</p>}
         </div>

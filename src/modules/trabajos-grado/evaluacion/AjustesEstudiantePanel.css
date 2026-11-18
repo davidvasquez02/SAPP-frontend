@@ -14,8 +14,6 @@
 .ajustes-estudiante__observations ul { margin: 0.75rem 0 0; padding-left: 1.25rem; }
 .ajustes-estudiante__observations li + li { margin-top: 0.75rem; }
 .ajustes-estudiante__upload { display: grid; gap: 0.75rem; }
-.ajustes-estudiante__upload label { display: grid; gap: 0.5rem; font-weight: 600; }
-.ajustes-estudiante__upload input { width: 100%; min-height: 44px; color: inherit; }
 .ajustes-estudiante__save {
   justify-self: start;
   min-height: 44px;

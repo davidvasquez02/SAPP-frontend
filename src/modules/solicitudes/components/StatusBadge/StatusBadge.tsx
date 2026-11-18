@@ -23,7 +23,7 @@ const STATE_CLASSNAME: Record<ReturnType<typeof normalizeEstadoSolicitud>, strin
   JUR_INVITADO: 'en-revision',
   EN_EVALUACION: 'en-revision',
   CONCEPTOS_REC: 'en-revision',
-  EN_AJUSTES: 'devuelta',
+  EN_AJUSTES: 'en-ajustes',
   SUST_PROGRAMADA: 'en-revision',
   SUSTENTADA: 'aprobada',
   APLAZADA: 'devuelta',

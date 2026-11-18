@@ -1,5 +1,7 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+En **Ajustes solicitados por los evaluadores**, el trabajo corregido y la carta opcional usan las mismas tarjetas de carga que el formulario de creación de solicitudes. Ambos archivos se envían desde **Guardar correcciones**.
+
 ## Carta de respuestas según la etapa — 2026-11-18
 
 La carta `CARTA_RESPUESTAS_TG` se omite del formulario de creación de solicitudes y de los requisitos pendientes del editor general. Su carga permanece en el panel de correcciones, junto con el trabajo corregido y el único botón **Guardar correcciones**. Una vez guardada, aparece como adjunto para quienes ya tienen acceso a la solicitud; el editor general permite verla/descargarla, sin ofrecer reemplazo fuera de correcciones. El filtro utiliza el código, no un ID de catálogo. Es un ajuste de frontend; se conservan los contratos de API, permisos y avisos existentes.
@@ -8,6 +10,7 @@ Validación: **29/29** pruebas del área, **6/6** de integración en Edge y comp
 
 
 El encabezado del detalle y el panel de evaluación de trabajos de grado comparten los colores del estado de la solicitud.
+El estado «En ajustes del estudiante» se identifica con una etiqueta amarilla suave.
 
 ## Paginación del Banco de evaluadores
 
