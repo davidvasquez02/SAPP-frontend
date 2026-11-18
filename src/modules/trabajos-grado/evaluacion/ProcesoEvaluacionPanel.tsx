@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ActaDto } from '../../actas/types'
+import StatusBadge from '../../solicitudes/components/StatusBadge/StatusBadge'
 import type { SolicitudDocumentoAdjuntoDto } from '../../solicitudes/types/documentosAdjuntos'
 import {
   buscarBancoJurados,
@@ -369,9 +370,10 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
           <h3 id="evaluacion-tg-title">Proceso de evaluación</h3>
           <p>{proceso.titulo}</p>
         </div>
-        <span className="evaluacion-tg__state">
-          {formatEstadoNombre(proceso.estadoSolicitudNombre, proceso.estadoSolicitud)}
-        </span>
+        <StatusBadge
+          estado={proceso.estadoSolicitud}
+          etiquetaAlternativa={formatEstadoNombre(proceso.estadoSolicitudNombre, proceso.estadoSolicitud)}
+        />
       </header>
 
       {notaFinalPresentada && (

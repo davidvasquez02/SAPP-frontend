@@ -5,7 +5,7 @@
 .evaluacion-tg__header > div > p:last-child { margin-top: .3rem; color: var(--text-secondary); overflow-wrap: anywhere; }
 .evaluacion-tg__header h3, .evaluacion-tg__header p, .evaluacion-tg__section h4 { margin: 0; }
 .evaluacion-tg__eyebrow { color: var(--primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); letter-spacing: .08em; text-transform: uppercase; }
-.evaluacion-tg__state, .evaluacion-tg__chip { display: inline-flex; width: fit-content; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--outline); background: var(--surface-container-low); font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); }
+.evaluacion-tg__chip { display: inline-flex; width: fit-content; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--outline); background: var(--surface-container-low); font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); }
 .evaluacion-tg__final-grade { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; margin-top: 1.25rem; padding: 1rem 1.25rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 55%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
 .evaluacion-tg__final-grade > div { display: flex; align-items: baseline; gap: .75rem; }
 .evaluacion-tg__final-grade span { color: var(--text-secondary); font-weight: var(--font-weight-semibold); }
@@ -114,7 +114,7 @@
    project-degree request comfortable in that real content width. */
 @container (max-width: 700px) {
   .evaluacion-tg__header { display: grid; }
-  .evaluacion-tg__state { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .evaluacion-tg__header > .status-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .evaluacion-tg__ready { grid-template-columns: auto minmax(0, 1fr); }
   .evaluacion-tg__ready button { grid-column: 1 / -1; width: 100%; }
   .evaluacion-tg__summary, .evaluacion-tg__form-grid { grid-template-columns: 1fr; }

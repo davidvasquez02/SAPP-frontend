@@ -1,3 +1,9 @@
+## Colores de los estados de trabajos de grado — 2026-11-18
+
+El encabezado y `ProcesoEvaluacionPanel.tsx` usan `StatusBadge`. `CONCEPTOS_REC` conserva el ámbar existente. Si el código del panel no figura en el catálogo, conserva el nombre recibido con color neutro. La prueba del panel verifica la variante compartida de «Conceptos recibidos».
+
+Pasaron 14/14 pruebas del área, 5/5 en Edge y la compilación. La suite completa y la instrumentada dieron 623/649 aprobadas, con los mismos 26 fallos de la suite previa. Cobertura de líneas global 86,45 %, del panel 95,09 % y de StatusBadge 100 %. Alcance verificado sobre 352 archivos. Logs en `.estado-area.log`, `.estado-edge.log`, `.estado-build.log`, `.estado-tests.log` y `.estado-cov.log`.
+
 ## Paginación del Banco de evaluadores
 
 La tabla de `src/pages/BancoEvaluadores/BancoEvaluadoresPage.tsx` pagina localmente el listado filtrado por la API. Si una actualización deja la página fuera de rango, se muestra la última disponible. Los controles siguen el patrón visual de Créditos condonables. La regresión en `tests/bancoEvaluadoresBehavior.test.mjs` verifica diez filas, una última página parcial y el reinicio al cambiar el filtro.

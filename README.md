@@ -1,5 +1,7 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+El encabezado del detalle y el panel de evaluación de trabajos de grado comparten los colores del estado de la solicitud.
+
 ## Paginación del Banco de evaluadores
 
 El listado muestra diez evaluadores por página. Al cambiar la búsqueda o el filtro «Mostrar retirados», vuelve a la primera página.
