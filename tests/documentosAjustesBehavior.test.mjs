@@ -42,6 +42,29 @@ test('documentos editables y ajustes: validación PDF, carga y reasignación', a
     assert.equal(writes.length, 1); assert.ok(writes[0].path.endsWith('/document')); assert.equal(committed, 1)
   })
   const addCartaRequirement = () => { requirements.push({ idTipoDocumentoTramite: 7, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: false, documentoUploadedResponse: null }) }
+  await t.test('carta sin archivo permanece oculta en la consulta y el editor general', async s => {
+    addCartaRequirement()
+    for (const editable of [true, false]) {
+      const v = mount(s, Editor, { editable }); await v.findByText('Documento sintético')
+      assert.equal(Boolean(v.queryByText('Carta de respuestas')), false)
+      assert.equal(v.container.querySelectorAll('input[type=file]').length, editable ? 1 : 0)
+      await ui.cleanup()
+    }
+    assert.equal(writes.length, 0)
+  })
+  await t.test('carta cargada se muestra para consulta sin permitir reemplazarla desde el editor general', async s => {
+    addCartaRequirement()
+    requirements[1].documentoCargado = true
+    requirements[1].documentoUploadedResponse = { idDocumento: 91, nombreArchivoDocumento: 'carta.pdf', fechaCargaDocumento: '2030-01-01', mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERg==' }
+    for (const editable of [true, false]) {
+      const v = mount(s, Editor, { editable }); await v.findByText('Carta de respuestas')
+      assert.ok(v.getByRole('button', { name: 'Ver carta.pdf' }))
+      assert.ok(v.getByRole('button', { name: 'Descargar carta.pdf' }))
+      assert.equal(Boolean(v.queryByLabelText('Reemplazar Carta de respuestas')), false)
+      assert.equal(v.container.querySelectorAll('input[type=file]').length, editable ? 1 : 0)
+      await ui.cleanup()
+    }
+  })
   const selectCarta = (v, type = 'application/pdf') => {
     const bytes = new TextEncoder().encode('%PDF-carta')
     const selected = new ui.dom.window.File([bytes], type === 'application/pdf' ? 'carta.pdf' : 'imagen.png', { type })

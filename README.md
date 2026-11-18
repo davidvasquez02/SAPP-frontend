@@ -1,5 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Carta de respuestas según la etapa — 2026-11-18
+
+La carta `CARTA_RESPUESTAS_TG` se omite del formulario de creación de solicitudes y de los requisitos pendientes del editor general. Su carga permanece en el panel de correcciones, junto con el trabajo corregido y el único botón **Guardar correcciones**. Una vez guardada, aparece como adjunto para quienes ya tienen acceso a la solicitud; el editor general permite verla/descargarla, sin ofrecer reemplazo fuera de correcciones. El filtro utiliza el código, no un ID de catálogo. Es un ajuste de frontend; se conservan los contratos de API, permisos y avisos existentes.
+
+Validación: **29/29** pruebas del área, **6/6** de integración en Edge y compilación correctas. `npm test` y `npm run test:coverage`: **627/653 aprobadas**, con los mismos 26 fallos de la validación previa. Cobertura global de líneas **86,46 %** (antes 86,45 %); alcance completo de `src` verificado. Resultados y comandos en `HANDOFF.md`.
+
+
 El encabezado del detalle y el panel de evaluación de trabajos de grado comparten los colores del estado de la solicitud.
 
 ## Paginación del Banco de evaluadores

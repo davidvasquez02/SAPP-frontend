@@ -18,13 +18,13 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
   const browser = await chromium.launch({ headless: true, channel: process.env.SAPP_BROWSER_CHANNEL || 'msedge' })
   t.after(() => browser.close())
 
-  const scenario = async (run, { student = false, failDocuments = false, validarProyecto = false } = {}) => {
+  const scenario = async (run, { student = false, failDocuments = false, validarProyecto = false, cartaName = null } = {}) => {
     const context = await browser.newContext({ acceptDownloads: true })
     const page = await context.newPage()
     page.setDefaultTimeout(8000)
     const state = {
       documentsGets: 0, processGets: 0, historyGets: 0, mutations: 0, failDocuments,
-      fileId: 101, fileName: 'tesis-original.pdf', cartaName: null, uploads: [],
+      fileId: 101, fileName: 'tesis-original.pdf', cartaName, uploads: [],
       proceso: { id: 9, solicitudAcademicaId: 42, tipoSolicitudCodigo: 'DEF_TESIS_DCC', titulo: 'Tesis de prueba', programa: 'Doctorado',
         estadoSolicitud: validarProyecto ? 'EN_VALIDACION_COORDINACION' : student ? 'EN_AJUSTES' : 'JUR_POR_DESIG', documentoEvaluarId: 101, documentoEvaluarNombre: 'tesis-original.pdf',
         fechaLimiteEvaluacion: '2027-12-01', jurados: [] },
@@ -79,7 +79,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
         if (state.failDocuments) return reply(null, 502)
         return reply([{ idTipoDocumentoTramite: 37, codigoTipoDocumentoTramite: 'ANX-26', nombreTipoDocumentoTramite: 'Tesis', descripcionTipoDocumentoTramite: 'Documento de tesis', obligatorioTipoDocumentoTramite: true, documentoCargado: true,
           documentoUploadedResponse: { idDocumento: state.fileId, nombreArchivoDocumento: state.fileName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } },
-          ...(student ? [{ idTipoDocumentoTramite: 38, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: Boolean(state.cartaName), documentoUploadedResponse: state.cartaName ? { idDocumento: 103, nombreArchivoDocumento: state.cartaName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } : null }] : [])])
+          { idTipoDocumentoTramite: 38, codigoTipoDocumentoTramite: 'CARTA_RESPUESTAS_TG', nombreTipoDocumentoTramite: 'Carta de respuestas', obligatorioTipoDocumentoTramite: false, documentoCargado: Boolean(state.cartaName), documentoUploadedResponse: state.cartaName ? { idDocumento: 103, nombreArchivoDocumento: state.cartaName, mimeTypeDocumentoContenido: 'application/pdf', base64DocumentoContenido: 'JVBERi0xLjQKJSVFT0YK' } : null }])
       }
       if (url.pathname.endsWith('/procesoEvaluacionTg/catalogos')) return reply({ modalidades: [], estadosInvitacion: [], momentos: [], conceptos: [], resultados: [] })
       if (url.pathname.endsWith('/procesoEvaluacionTg/solicitud/42')) { state.processGets++; return reply(state.proceso) }
@@ -208,6 +208,24 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       await page.locator('.documentos-adjuntos__filename').filter({ hasText: 'tesis-original.pdf' }).waitFor()
       assert.equal(state.documentsGets, before + 1)
     }, { failDocuments: true })
+  })
+
+  await t.test('la carta se muestra como adjunto únicamente si existe, para estudiante y coordinación', async () => {
+    for (const student of [true, false]) {
+      for (const cartaName of [null, 'carta.pdf']) {
+        await scenario(async page => {
+          const adjuntos = page.locator('.documentos-adjuntos')
+          await adjuntos.getByText('tesis-original.pdf', { exact: true }).waitFor()
+          assert.equal(await adjuntos.getByText('Carta de respuestas', { exact: true }).count(), cartaName ? 1 : 0)
+          if (cartaName) {
+            await adjuntos.getByRole('button', { name: 'Ver carta.pdf', exact: true }).waitFor()
+            const download = page.waitForEvent('download')
+            await adjuntos.getByRole('button', { name: 'Descargar carta.pdf', exact: true }).click()
+            assert.equal((await download).suggestedFilename(), 'carta.pdf')
+          }
+        }, { student, cartaName })
+      }
+    }
   })
 
   await t.test('subir una versión corregida sí recarga la lista y muestra el archivo nuevo', async () => {

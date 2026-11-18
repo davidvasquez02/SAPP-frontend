@@ -18,6 +18,7 @@ import { formatTipoSolicitudLabel } from '../../utils/tipoSolicitudLabel'
 import { htmlToPdf } from '../../utils/htmlToPdf'
 import { getConfiguracionDatosTrabajo, getErrorTituloTrabajo } from '../../utils/datosTrabajoSolicitud'
 import {
+  esCartaRespuestasTg,
   limitarDocumentosSoporte,
   MAX_DOCUMENTOS_SOPORTE_ADICIONAL,
   permiteMultiplesArchivos,
@@ -250,7 +251,7 @@ const SolicitudEstudianteForm = ({
         if (!mounted) {
           return
         }
-        setDocumentosDraft(documentos.map(mapDocumentoToDraft))
+        setDocumentosDraft(documentos.filter((documento) => !esCartaRespuestasTg(documento.codigo)).map(mapDocumentoToDraft))
       })
       .catch((documentsError) => {
         if (!mounted) {

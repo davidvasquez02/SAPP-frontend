@@ -6,6 +6,7 @@ import { fileToBase64 } from '../../../../utils/fileToBase64'
 import { sha256Hex } from '../../../../utils/sha256'
 import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { downloadSolicitudDocument, openSolicitudDocument } from '../../utils/solicitudDocumentFile'
+import { esCartaRespuestasTg } from '../../utils/documentosSolicitud'
 import './SolicitudDocumentosEditor.css'
 
 const ENFORCE_REQUIRED_DOCS = false
@@ -53,7 +54,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
           codigoTipoTramite: codigoTipoTramiteAsNumber,
           tramiteId: solicitudId,
         })
-        setRequirements(response)
+        setRequirements(response.filter((item) => !esCartaRespuestasTg(item.codigoTipoDocumentoTramite) || item.documentoUploadedResponse != null))
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : 'No fue posible cargar el checklist de documentos.')
       } finally {
@@ -195,7 +196,7 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
                       </>
                     )}
 
-                    {editable && (
+                    {editable && !esCartaRespuestasTg(requirement.codigoTipoDocumentoTramite) && (
                       <>
                         <label className="solicitud-documentos-editor__file-input-label" aria-label={`Reemplazar ${requirement.nombreTipoDocumentoTramite}`}>
                           Reemplazar

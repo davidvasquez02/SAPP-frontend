@@ -88,6 +88,38 @@ test('formulario de solicitudes React: validación, documentos y homologación',
     await ui.waitFor(() => assert.equal(sent.length, 1))
   })
 
+  await t.test('crear solicitud omite la carta del catálogo, conserva otros anexos y no la envía', async s => {
+    docs = [
+      { id: 75, codigo: 'CARTA_RESPUESTAS_TG', nombre: 'Carta de respuestas a las observaciones', obligatorio: false },
+      { id: 37, codigo: 'ANX-26', nombre: 'Tesis', obligatorio: true },
+      { id: 38, codigo: 'ANX-27', nombre: 'Formato de evaluadores', obligatorio: false },
+    ]
+    const sent = []
+    const view = mount(s, { onSubmit: data => sent.push(data) })
+    await select(view, 99)
+    assert.equal(Boolean(view.queryByText('Carta de respuestas a las observaciones')), false)
+    assert.ok(view.getByText('Formato de evaluadores'))
+    assert.equal(view.container.querySelectorAll('input[type=file]').length, 2)
+    submit(view)
+    assert.ok(view.getByText('Adjunta todos los documentos obligatorios antes de registrar la solicitud.'))
+    const selected = new File(['%PDF'], 'tesis.pdf', { type: 'application/pdf' })
+    ui.fireEvent.change(view.getAllByLabelText('Seleccionar archivo')[0], { target: { files: [selected] } })
+    submit(view)
+    await ui.waitFor(() => assert.equal(sent.length, 1))
+    assert.deepEqual(sent[0].documentos.map(doc => doc.id), [37, 38])
+    assert.equal(sent[0].documentos[0].file, selected)
+  })
+  await t.test('carta exclusiva de correcciones no bloquea la creación aunque el catálogo la marque obligatoria', async s => {
+    docs = [{ id: 999, codigo: 'CARTA_RESPUESTAS_TG', nombre: 'Carta de respuestas', obligatorio: true }]
+    const sent = []
+    const view = mount(s, { onSubmit: data => sent.push(data) })
+    await select(view, 99)
+    assert.equal(view.container.querySelectorAll('input[type=file]').length, 0)
+    submit(view)
+    await ui.waitFor(() => assert.equal(sent.length, 1))
+    assert.deepEqual(sent[0].documentos, [])
+  })
+
   await t.test('exige soporte obligatorio, rechaza PNG y envía PDF sin perder observaciones', async s => {
     docs = [{ id: 5, codigo: 'ANX-1', nombre: 'Certificado', obligatorio: true }]
     const sent = []

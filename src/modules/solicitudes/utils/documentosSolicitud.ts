@@ -1,3 +1,5 @@
+export const esCartaRespuestasTg = (codigo: string | undefined): boolean => codigo === 'CARTA_RESPUESTAS_TG'
+
 const normalizeDocumentoDescriptor = (value: string): string =>
   value
     .normalize('NFD')
