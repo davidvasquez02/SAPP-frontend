@@ -1,3 +1,11 @@
+## Editor visual de plantillas de correo — 2026-11-19
+
+- Ruta: `/administracion-academica/plantillas-correo/:plantillaId/editar`. `src/pages/PlantillasCorreo/EditorMensajeCorreo.tsx` edita el cuerpo en un iframe aislado y convierte las etiquetas de datos a `{{variable}}` antes de actualizar el borrador. `vistaPrevia.ts` aplica ejemplos al texto visible y conserva los atributos HTML. La API conserva `PUT /sapp/plantillasCorreo/{id}` con `contenidoHtml` y `POST /sapp/plantillasCorreo/{id}/prueba` sin destinatario en el cuerpo.
+- La lista de datos se deriva de la versión guardada. El contrato disponible carece de un catálogo autorizado por sigla. Queda pendiente verificar con backend el catálogo completo y contrastar la vista previa con plantillas reales y el correo recibido.
+- Entorno reutilizado: Windows, PowerShell, Node 24.11.0 y npm 11.6.1, con las dependencias y el lockfile existentes. Las pruebas de UI simulan la API y el envío.
+- Validación: `node --test --test-isolation=none tests/plantillaCorreoBehavior.test.mjs` pasó 9/9. `npm run build`, ESLint de los archivos modificados y `node --test --test-isolation=none tests/integration/plantillaCorreoEditor.test.mjs` en Edge pasaron. Para Edge se usó `SAPP_PLAYWRIGHT_MODULE` apuntando al Playwright del runtime local. La integración cubre inserción en asunto y cuerpo, formato, validación y cambio de enlace y envío simulado.
+- `npm test` y `npm run test:coverage` dieron 631/657, con los mismos 26 fallos que la validación anterior (logs `.plantillas-tests-final.log` y `.plantillas-coverage-final.log`). `node scripts/verify-coverage.mjs` verificó 353 archivos de `src`. La cobertura global de líneas pasó de 86,45 % a 86,12 % al incorporar el editor. El editor alcanzó 52 %, el formulario 86,36 % y la vista previa 100 %. La ejecución de Edge comprueba interacciones nativas con rangos y formato que no se contabilizan en la suite instrumentada.
+
 ## Iconos de navegación — 2026-11-19
 
 `src/components/Sidebar/SidebarModuleIcon.tsx` asigna el calendario con verificación a `/matricula` y el birrete a `RUTA_PROYECTOS`. Inicio y la barra lateral consumen ese componente compartido.

@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Editor visual de plantillas de correo — 2026-11-19
+
+En **Administración académica → Plantillas de correo**, el campo **Mensaje** ofrece edición visual con negrita, listas y enlaces. **Insertar dato** permite reutilizar en el asunto y en el mensaje las variables presentes en la versión guardada de esa plantilla. La vista previa muestra ejemplos de cómo se leerá el correo. Se guarda el HTML mediante la API existente y el envío de prueba sigue usando la versión guardada.
+
 ## Iconos de navegación — 2026-11-19
 
 Matrícula usa un calendario con una marca de verificación y Proyectos de investigación usa el birrete. El inicio y la barra lateral comparten los dos iconos.

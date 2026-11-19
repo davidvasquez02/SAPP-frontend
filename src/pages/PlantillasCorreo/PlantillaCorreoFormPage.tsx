@@ -9,7 +9,8 @@ import {
   type IdiomaPlantillaCorreo,
   type PlantillaCorreo,
 } from '../../api/plantillasCorreoService'
-import { construirVistaPrevia, extraerVariables } from './vistaPrevia'
+import { conDatosDeEjemplo, construirVistaPrevia, etiquetaVariable, extraerVariables } from './vistaPrevia'
+import EditorMensajeCorreo from './EditorMensajeCorreo'
 import { RUTA_PLANTILLAS } from './rutas'
 import './PlantillasCorreo.css'
 
@@ -20,7 +21,7 @@ const ETIQUETAS: Record<Campo, string> = {
   asunto: 'Asunto',
   idioma: 'Idioma',
   descripcion: 'Descripción',
-  contenidoHtml: 'Contenido',
+  contenidoHtml: 'Mensaje',
 }
 
 const NOMBRE_IDIOMA: Record<IdiomaPlantillaCorreo, string> = {
@@ -29,10 +30,6 @@ const NOMBRE_IDIOMA: Record<IdiomaPlantillaCorreo, string> = {
 }
 
 const CAMPOS_CORTOS: Campo[] = ['nombre', 'asunto', 'idioma']
-
-/* Altura aproximada de la fila de variables, que el editor compensa para quedar igual que la vista previa. */
-const ALTO_HERRAMIENTAS = 40
-const ALTO_MINIMO_VISTA = 360
 
 const datosDe = (plantilla: PlantillaCorreo): DatosPlantillaCorreo => ({
   nombre: plantilla.nombre,
@@ -57,16 +54,7 @@ const PlantillaCorreoFormPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [mensaje, setMensaje] = useState<string | null>(null)
 
-  const editorRef = useRef<HTMLTextAreaElement>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [alturaVista, setAlturaVista] = useState(ALTO_MINIMO_VISTA)
-
-  /* Ajusta la vista previa a todo el contenido renderizado, sin barra de desplazamiento. */
-  const medirVista = () => {
-    const documento = iframeRef.current?.contentDocument
-    if (!documento) return
-    setAlturaVista(Math.max(documento.documentElement.scrollHeight + 16, ALTO_MINIMO_VISTA))
-  }
+  const asuntoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!plantillaId) return
@@ -87,8 +75,8 @@ const PlantillaCorreoFormPage = () => {
   const htmlDiferido = useDeferredValue(valores?.contenidoHtml ?? '')
   const vistaPrevia = useMemo(() => construirVistaPrevia(htmlDiferido), [htmlDiferido])
   const variables = useMemo(
-    () => extraerVariables(`${valores?.asunto ?? ''}\n${valores?.contenidoHtml ?? ''}`),
-    [valores],
+    () => extraerVariables(`${original?.asunto ?? ''}\n${original?.contenidoHtml ?? ''}`),
+    [original],
   )
 
   const pruebaBloqueadaPor = editando.length > 0
@@ -115,20 +103,15 @@ const PlantillaCorreoFormPage = () => {
     terminarEdicion(campo)
   }
 
-  const insertarEnCursor = (texto: string) => {
-    const editor = editorRef.current
-    const actual = valores?.contenidoHtml ?? ''
-    if (!editor) {
-      actualizar('contenidoHtml', actual + texto)
-      return
-    }
-    const inicio = editor.selectionStart
-    const fin = editor.selectionEnd
-    actualizar('contenidoHtml', actual.slice(0, inicio) + texto + actual.slice(fin))
-    requestAnimationFrame(() => {
-      editor.focus()
-      editor.setSelectionRange(inicio + texto.length, inicio + texto.length)
-    })
+  const insertarDatoEnAsunto = (nombre: string) => {
+    const input = asuntoRef.current
+    if (!input || !variables.includes(nombre)) return
+    const dato = `{{${nombre}}}`
+    const inicio = input.selectionStart ?? input.value.length
+    const fin = input.selectionEnd ?? inicio
+    actualizar('asunto', input.value.slice(0, inicio) + dato + input.value.slice(fin))
+    input.focus()
+    requestAnimationFrame(() => input.setSelectionRange(inicio + dato.length, inicio + dato.length))
   }
 
   const intentarGuardar = () => {
@@ -226,31 +209,22 @@ const PlantillaCorreoFormPage = () => {
           ) : campo === 'descripcion' ? (
             <textarea aria-label="Descripción" rows={4} value={valor} onChange={(e) => actualizar('descripcion', e.target.value)} />
           ) : campo === 'contenidoHtml' ? (
+            <EditorMensajeCorreo html={valor} variables={variables} onChange={(html) => actualizar('contenidoHtml', html)} />
+          ) : campo === 'asunto' ? (
             <>
-              <div className="plantillas-correo__herramientas" aria-label="Insertar en el contenido">
-                <span>Variables:</span>
-                {variables.length === 0 ? <span className="plantillas-correo__meta">ninguna</span> : null}
-                {variables.map((variable) => (
-                  <button key={variable} type="button" className="plantillas-correo__chip" onClick={() => insertarEnCursor(`{{${variable}}}`)}>
-                    {`{{${variable}}}`}
-                  </button>
-                ))}
-              </div>
-              <textarea
-                ref={editorRef}
-                className="plantillas-correo__editor"
-                style={{ height: alturaVista + ALTO_HERRAMIENTAS }}
-                aria-label="Contenido HTML del correo"
-                value={valor}
-                onChange={(e) => actualizar('contenidoHtml', e.target.value)}
-                spellCheck={false}
-              />
+              <input ref={asuntoRef} aria-label="Asunto" value={valor} onChange={(e) => actualizar(campo, e.target.value)} />
+              {variables.length > 0 && (
+                <select aria-label="Insertar dato en el asunto" value="" onChange={(e) => insertarDatoEnAsunto(e.target.value)}>
+                  <option value="" disabled>Insertar dato</option>
+                  {variables.map((nombre) => <option key={nombre} value={nombre}>{etiquetaVariable(nombre)}</option>)}
+                </select>
+              )}
             </>
           ) : (
             <input aria-label={ETIQUETAS[campo]} value={valor} onChange={(e) => actualizar(campo, e.target.value)} />
           )
         ) : campo === 'contenidoHtml' ? (
-          <pre className="plantillas-correo__codigo" style={{ height: alturaVista + ALTO_HERRAMIENTAS }}>{valor || '—'}</pre>
+          <p className="plantillas-correo__meta">Consulta el mensaje en la vista previa.</p>
         ) : (
           <p className="plantillas-correo__valor">{campo === 'idioma' ? NOMBRE_IDIOMA[valor as IdiomaPlantillaCorreo] : valor || '—'}</p>
         )}
@@ -282,27 +256,21 @@ const PlantillaCorreoFormPage = () => {
               <div className="plantillas-correo__panel">
                 {renderCampo('contenidoHtml')}
                 <p className="plantillas-correo__nota" role="note">
-                  Solo editas el cuerpo del correo. El encabezado y el pie se agregan automáticamente al enviar.
-                  Las variables se reemplazan por los datos reales en cada envío.
+                  El sistema completa los datos del destinatario y agrega el encabezado y el pie institucional al enviar.
                 </p>
               </div>
 
               <div className="plantillas-correo__panel">
                 <div className="plantillas-correo__campo-cabecera">
-                  <span className="plantillas-correo__campo-etiqueta">Vista previa</span>
+                  <span className="plantillas-correo__campo-etiqueta">Vista previa con datos de ejemplo</span>
                 </div>
+                <p className="plantillas-correo__valor"><strong>Asunto</strong> {conDatosDeEjemplo(valores.asunto)}</p>
                 <iframe
-                  ref={iframeRef}
                   className="plantillas-correo__vista"
                   title="Vista previa del correo"
                   sandbox="allow-same-origin"
                   srcDoc={vistaPrevia}
-                  onLoad={medirVista}
-                  style={{ height: alturaVista }}
                 />
-                <p className="plantillas-correo__nota">
-                  Las variables aparecen resaltadas solo para facilitar la edición de la plantilla. En el correo real llegan sin resaltar.
-                </p>
               </div>
             </div>
 
