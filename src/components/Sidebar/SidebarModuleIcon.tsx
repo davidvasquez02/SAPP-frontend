@@ -27,11 +27,10 @@ const iconPaths: Record<string, React.ReactNode> = {
       <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" />
     </>
   ),
-  [RUTA_PROYECTOS]: (
+  '/matricula': (
     <>
-      <path d="M2 5.5A3.5 3.5 0 0 1 5.5 2H11v18H5.5A3.5 3.5 0 0 0 2 23.5z" />
-      <path d="M22 5.5A3.5 3.5 0 0 0 18.5 2H13v18h5.5a3.5 3.5 0 0 1 3.5 3.5z" />
-      <path d="m15.5 9 1.5 1.5 3-3" />
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M7 3v4m10-4v4M3 10h18m-13 5 3 3 5-5" />
     </>
   ),
   '/admisiones': (
@@ -91,7 +90,7 @@ const iconPaths: Record<string, React.ReactNode> = {
 }
 
 const lucideIcons = {
-  '/matricula': GraduationCap,
+  [RUTA_PROYECTOS]: GraduationCap,
   '/coordinacion/estudiantes': UsersRound,
   '/actas': ScrollText,
   '/fechas': CalendarDays,

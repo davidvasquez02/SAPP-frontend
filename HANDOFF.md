@@ -1,3 +1,11 @@
+## Iconos de navegación — 2026-11-19
+
+`src/components/Sidebar/SidebarModuleIcon.tsx` asigna el calendario con verificación a `/matricula` y el birrete a `RUTA_PROYECTOS`. Inicio y la barra lateral consumen ese componente compartido.
+
+Se agregaron comprobaciones de ambos accesos en `tests/presentacionRutasBehavior.test.mjs` y `tests/navegacionSesionBehavior.test.mjs`. Pasaron las 20 pruebas del área, el renderizado directo de React y `npm run build`. En la ejecución completa, `npm test` registró 629 aprobadas y 26 fallos, incluidos casos de actas, evaluación y matrícula financiera.
+
+`npm run test:coverage` también terminó con fallos de la suite. El informe generado en `coverage/index.html` registró 84,09 % de sentencias globales y 8 de 8 en el componente compartido. `node scripts/verify-coverage.mjs` verificó el alcance sobre 352 archivos de `src`.
+
 ## Visibilidad de carta de respuestas — 2026-11-18
 
 - Solicitud del usuario: ajuste solo frontend. `CARTA_RESPUESTAS_TG` no debe ofrecerse al crear ni mostrarse como requisito pendiente al consultar; su selector permanece en correcciones y, cuando existe el archivo, se consulta como adjunto por los perfiles con acceso. Carta opcional y guardado único se conservan.

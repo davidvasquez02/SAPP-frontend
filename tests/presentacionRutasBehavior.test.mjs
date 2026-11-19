@@ -32,6 +32,14 @@ test('presentación y rutas: tarjetas, resultados, accesos y tarifas', async t =
     const proceso = { tipoSolicitudCodigo: 'CAND_DOCTORAL', notaFinal: 4.5, resultado: 'APROBADO', fechaResultado: '2030-01-01', modalidadSustentacion: 'VIRTUAL', fechaSustentacion: '2030-01-02T10:00:00', enlaceSustentacion: 'https://meet.example.test/', jurados: [{ id: 1, nombre: 'Jurado activo', activo: true, evaluaciones: [] }, { id: 2, nombre: 'Jurado inactivo', activo: false, evaluaciones: [] }] }
     const v = mount(s, h(modules.Evaluation, { proceso })); assert.ok(v.getByText('Jurado activo')); assert.equal(v.queryAllByText('Jurado inactivo').length, 0); assert.ok(v.getByText('Evaluación pendiente.'))
   })
+  await t.test('Matrícula muestra un calendario con check y Proyectos de investigación un birrete', s => {
+    const view = mount(s, h(modules.Home))
+    const calendar = view.getByRole('link', { name: 'Matrícula', exact: true }).querySelector('svg')
+    const cap = view.getByRole('link', { name: 'Proyectos de investigación', exact: true }).querySelector('svg')
+    assert.ok(calendar?.querySelector('rect'))
+    assert.ok(calendar?.querySelector('path[d*="m-13 5 3 3 5-5"]'))
+    assert.ok(cap?.querySelector('path[d="M22 10v6"]'))
+  })
   await t.test('inicio y matrícula ofrecen accesos coherentes con perfil', async s => {
     let v = mount(s, h(modules.Home)); assert.ok(v.getByRole('link', { name: 'Estudiantes' })); await ui.cleanup(); v = mount(s, h(MatriculaHomePage), { roles: ['ESTUDIANTE_POSGRADOS'] }); assert.ok(v.getByRole('link', { name: /Liquidación/ }))
   })

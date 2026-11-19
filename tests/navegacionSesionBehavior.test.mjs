@@ -69,4 +69,12 @@ test('navegación, limpieza de sesión, plantillas y recordatorios', async t => 
     const v = mount(s, Reminders); await v.findByRole('button', { name: 'Enviar recordatorios' }); ui.fireEvent.click(v.getByRole('button', { name: 'Enviar recordatorios' })); failure = true; ui.fireEvent.click(v.getByRole('button', { name: 'Confirmar y enviar' })); await v.findAllByText(/Servicio no disponible/)
     failure = false; ui.fireEvent.click(v.getByRole('button', { name: 'Confirmar y enviar' })); await v.findByText('Se enviaron 2 recordatorios de examen de candidatura doctoral.')
   })
+  await t.test('Matrícula muestra un calendario con check y Proyectos de investigación un birrete', s => {
+    const view = mount(s)
+    const calendar = view.getByRole('link', { name: 'Matrícula', exact: true }).querySelector('svg')
+    const cap = view.getByRole('link', { name: 'Proyectos de investigación', exact: true }).querySelector('svg')
+    assert.ok(calendar?.querySelector('rect'))
+    assert.ok(calendar?.querySelector('path[d*="m-13 5 3 3 5-5"]'))
+    assert.ok(cap?.querySelector('path[d="M22 10v6"]'))
+  })
 })
