@@ -234,7 +234,7 @@ const EvaluacionEtapaSection = ({
                     <span className="evaluacion-etapa-section__total-note">{total.aspecto}</span>
                   </td>
                   <td data-label="Consideraciones">
-                    <span className="evaluacion-etapa-section__text-muted">Se calcula automáticamente con los puntajes de arriba.</span>
+                    <span className="evaluacion-etapa-section__text-muted">Cálculo automático</span>
                   </td>
                   <td data-label="Puntaje máximo" className="evaluacion-etapa-section__cell-max">{total.puntajeMax}</td>
                   <td className="evaluacion-etapa-section__cell-nota">
