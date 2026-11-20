@@ -1,3 +1,10 @@
+## Vista previa de convocatoria de matrícula financiera — 2026-11-20
+
+- Ajuste #20 en `src/pages/MatriculaFinanciera/ProcesoLiquidacionPage.tsx`. La vista previa conserva las opciones enviadas con sus resultados. Cambiar una casilla invalida la vista anterior y descarta respuestas de consultas iniciadas con criterios anteriores, aunque se vuelva a marcar la misma opción. Confirmar usa las opciones de la lista visible. Los endpoints y payloads conservan su contrato.
+- La regresión en `tests/financieraWorkflowBehavior.test.mjs` retrasa la primera respuesta, cambia el criterio, verifica que no se puede confirmar la lista anterior y compara los payloads de la nueva vista previa y de confirmación. Reutiliza Node 24 y las dependencias locales con una API simulada.
+- Pasaron la regresión nueva, ESLint de los archivos cambiados y `npm run build`. La suite de flujo financiero tuvo 8 aprobadas y 8 fallos previos. `npm test` reportó 635 aprobadas y 33 fallos. Logs de esta revisión en `%TEMP%\sapp-20-area-final.log`, `%TEMP%\sapp-20-test-final.log`, `%TEMP%\sapp-20-coverage-final.log` y `%TEMP%\sapp-20-build.log`. Queda la prueba de aceptación con un proceso de convocatoria en el ambiente de pruebas.
+- `npm run test:coverage` reportó 633 aprobadas y 35 fallos, incluidos dos resultados extra de la suite de autenticación. El informe registró 85,43 % de líneas globales y 82,81 % en la página de liquidación. El informe previo disponible correspondía a un corte con menos archivos de admisiones. El verificador ejecutado por separado confirmó 356 archivos de `src`.
+
 ## Expansión de la barra lateral — 2026-11-20
 
 `src/components/Sidebar/Sidebar.css` conserva las etiquetas y los subenlaces de escritorio en una línea durante la transición de ancho. La columna del grupo puede contraerse sin que el texto imponga su ancho mínimo. En móvil, las etiquetas pueden ocupar varias líneas.

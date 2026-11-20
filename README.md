@@ -1,5 +1,7 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+La convocatoria de matrícula financiera exige una vista previa vigente. Si cambian los criterios, hay que volver a consultar la lista antes de confirmar.
+
 En escritorio, las etiquetas de la barra lateral conservan una sola línea durante la expansión para evitar saltos en los iconos.
 
 El formulario de programación de sustentación separa los campos de los botones «Programar» y «Cancelar» en todas las modalidades.

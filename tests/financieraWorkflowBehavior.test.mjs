@@ -29,6 +29,12 @@ test('matrícula financiera React: liquidación, exclusión, publicación y perf
         if (failure) return Response.json({ ok: false, message: 'Operación no disponible', data: { estado: 'Verifica el estado del proceso' } }, { status: 409 })
         const body = init.body ? JSON.parse(init.body) : undefined
         writes.push({ path, method: init.method, body })
+        if (path.endsWith('/convocar/vistaPrevia')) {
+          return ok({ programas: [{ programaId: 1, programaCodigoNombre: 'MISI', estudiantes: [
+            { estudianteId: 18, codigoEstudiante: '2026001', nombreCompleto: body.incluirNuevos ? 'Estudiante nuevo' : 'Estudiante vigente', tipoEstudiante: body.incluirNuevos ? 'NUEVO' : 'VIGENTE' },
+          ] }] })
+        }
+        if (path.endsWith('/convocar')) return ok({ creadas: 1, yaExistentes: 0, omitidos: [] })
         if (path.endsWith('/publicar')) { proceso = { ...proceso, estado: 'PUBLICADO', fechaLimitePago: body.fechaLimitePago }; return ok({ enviados: 1, omitidos: [] }) }
         if (path.endsWith('/liquidada')) fila = { ...fila, estado: body.liquidada ? 'LIQUIDADA' : 'RESPONDIDA' }
         else if (path.endsWith('/excluir')) fila = { ...fila, estado: 'NO_LIQUIDAR' }
@@ -48,6 +54,33 @@ test('matrícula financiera React: liquidación, exclusión, publicación y perf
   }
   const mountProcess = s => { s.after(ui.cleanup); return ui.render(withProfile(createElement(Process), ['COORDINADOR'])) }
   const readyProcess = async view => { await view.findByRole('heading', { name: 'Publicar resultados' }) }
+
+  await t.test('descarta la vista previa pendiente si cambian las opciones y confirma con la consulta vigente', async s => {
+    proceso.estado = 'BORRADOR'
+    const view = mountProcess(s)
+    hold = true
+    ui.fireEvent.click(await view.findByRole('button', { name: 'Ver vista previa' }))
+    await ui.waitFor(() => assert.ok(release))
+    const incluirNuevos = view.getByLabelText('Incluir nuevos')
+    ui.fireEvent.click(incluirNuevos)
+    assert.equal(incluirNuevos.checked, false)
+    hold = false
+    release()
+
+    const consultar = await view.findByRole('button', { name: 'Ver vista previa' })
+    assert.equal(view.queryByRole('button', { name: /Confirmar convocatoria/ }), null)
+    assert.equal(view.queryByText('Estudiante Nuevo'), null)
+    assert.equal(writes.length, 1)
+    assert.deepEqual(writes[0].body, { incluirVigentes: true, incluirNuevos: true })
+
+    ui.fireEvent.click(consultar)
+    await view.findByText('Estudiante Vigente')
+    ui.fireEvent.click(view.getByRole('button', { name: 'Confirmar convocatoria (1)' }))
+    await view.findByText('Convocatoria procesada.')
+    assert.deepEqual(writes.map(({ path }) => path.split('/9/')[1]), ['convocar/vistaPrevia', 'convocar/vistaPrevia', 'convocar'])
+    assert.deepEqual(writes[1].body, { incluirVigentes: true, incluirNuevos: false })
+    assert.deepEqual(writes[2].body, writes[1].body)
+  })
 
   await t.test('confirmar en PUTTY requiere casilla y cancelar no modifica fila', s => {
     const view = mountActions(s)
