@@ -192,3 +192,6 @@
 @container (max-width: 430px) {
   .evaluacion-estudiante__evaluator { padding: .85rem; }
 }
+
+.evaluacion-estudiante__round { margin-left: .5rem; padding: .05rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), var(--surface) 88%); color: var(--primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); }
+.evaluacion-estudiante__notice { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 45%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary), var(--surface) 92%); color: var(--text-primary); }

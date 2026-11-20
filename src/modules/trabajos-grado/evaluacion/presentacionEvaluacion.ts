@@ -1,4 +1,4 @@
-import type { EvaluacionJurado } from './types'
+import type { EvaluacionJurado, JuradoEvaluador } from './types'
 
 export interface ValorEvaluacionPresentado {
   etiqueta: 'Concepto' | 'Resultado' | 'Nota' | 'Evaluación'
@@ -52,4 +52,33 @@ export const presentarNotaFinalCandidatura = (
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(notaFinal)
+}
+
+export const ETIQUETA_TRAS_CORRECCIONES = 'Tras las correcciones'
+
+export const rondaDeEvaluacion = (evaluacion: EvaluacionJurado): number => evaluacion.ronda ?? 1
+
+export const esConceptoDelDocumento = (evaluacion: EvaluacionJurado): boolean =>
+  evaluacion.momentoCodigo?.trim().toLocaleUpperCase('es-CO') === 'CONCEPTO_DOCUMENTO'
+
+/** Etiqueta que distingue el concepto emitido tras revisar las correcciones del concepto original. */
+export const etiquetaRondaEvaluacion = (evaluacion: EvaluacionJurado): string | null =>
+  esConceptoDelDocumento(evaluacion) && rondaDeEvaluacion(evaluacion) > 1 ? ETIQUETA_TRAS_CORRECCIONES : null
+
+/** Evaluaciones del jurado en el orden en que se emitieron: ronda y luego fecha de registro. */
+export const evaluacionesOrdenadas = (jurado: JuradoEvaluador): EvaluacionJurado[] =>
+  [...(jurado.evaluaciones ?? [])].sort((first, second) =>
+    rondaDeEvaluacion(first) - rondaDeEvaluacion(second)
+    || (first.fechaRegistro ?? '').localeCompare(second.fechaRegistro ?? ''))
+
+/** Cuantos jurados activos que aceptaron ya emitieron su concepto de la ronda vigente, y cuantos deben hacerlo. */
+export const progresoConceptosDeLaRonda = (
+  jurados: JuradoEvaluador[],
+  ronda: number,
+): { emitidos: number, total: number } => {
+  const evaluadores = jurados.filter((jurado) => jurado.activo)
+  const emitidos = evaluadores.filter((jurado) => (jurado.evaluaciones ?? []).some(
+    (evaluacion) => esConceptoDelDocumento(evaluacion) && rondaDeEvaluacion(evaluacion) === ronda,
+  )).length
+  return { emitidos, total: evaluadores.length }
 }

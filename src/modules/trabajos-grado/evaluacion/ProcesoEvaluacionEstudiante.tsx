@@ -1,4 +1,9 @@
-import { presentarNotaFinalCandidatura, presentarValorEvaluacion } from './presentacionEvaluacion'
+import {
+  etiquetaRondaEvaluacion,
+  evaluacionesOrdenadas,
+  presentarNotaFinalCandidatura,
+  presentarValorEvaluacion,
+} from './presentacionEvaluacion'
 import { obtenerDetalleSustentacion, tieneDetalleSustentacion } from './sustentacion'
 import type { ProcesoEvaluacionTg } from './types'
 import './ProcesoEvaluacionEstudiante.css'
@@ -49,6 +54,12 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
         </div>
       </header>
 
+      {proceso.estadoSolicitud?.trim().toLocaleUpperCase('es-CO') === 'AJUSTES_RECIB' && (
+        <p className="evaluacion-estudiante__notice" role="status">
+          Tus correcciones fueron entregadas. Los evaluadores las están revisando y emitirán un nuevo concepto.
+        </p>
+      )}
+
       {tieneDetalleSustentacion(sustentacion) && (
         <dl className="evaluacion-estudiante__defense" aria-label="Información de la sustentación">
           {fechaSustentacion && <div><dt>Fecha de sustentación</dt><dd>{fechaSustentacion}</dd></div>}
@@ -83,14 +94,15 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
                 <p className="evaluacion-estudiante__empty">Evaluación pendiente.</p>
               ) : (
                 <div className="evaluacion-estudiante__evaluations">
-                  {jurado.evaluaciones.map((evaluacion) => {
+                  {evaluacionesOrdenadas(jurado).map((evaluacion) => {
+                    const etiquetaRonda = etiquetaRondaEvaluacion(evaluacion)
                     const presentation = presentarValorEvaluacion(evaluacion, proceso.tipoSolicitudCodigo)
                     const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
                     const observaciones = evaluacion.observaciones?.trim()
 
                     return (
                       <section key={evaluacion.id} className="evaluacion-estudiante__evaluation">
-                        <h6>{momento}</h6>
+                        <h6>{momento}{etiquetaRonda && <small className="evaluacion-estudiante__round">{etiquetaRonda}</small>}</h6>
                         <dl>
                           <div>
                             <dt>{presentation.etiqueta}</dt>
