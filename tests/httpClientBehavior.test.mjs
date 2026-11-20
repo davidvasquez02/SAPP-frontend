@@ -69,6 +69,41 @@ test('cliente HTTP: autenticación, errores de validación y descargas', async t
     assert.equal(session.getToken(), token.accessToken)
   })
 
+  await t.test('recupera una consulta redirigida con un único reintento sin caché', async () => {
+    const start = api.requests.length
+    const controller = new AbortController()
+    const redirect = new Response(null)
+    Object.defineProperty(redirect, 'type', { value: 'opaqueredirect' })
+    api.response(() => api.requests.length === start + 1 ? redirect : Response.json({ id: 126 }))
+
+    assert.deepEqual(await http.httpGet('/solicitudesAcademicas/126', {
+      signal: controller.signal,
+    }), { id: 126 })
+    const attempts = api.requests.slice(start)
+    assert.equal(attempts.length, 2)
+    for (const attempt of attempts) {
+      assert.equal(attempt.url, '/api/sapp/solicitudesAcademicas/126')
+      assert.equal(attempt.init.redirect, 'manual')
+      assert.equal(attempt.init.signal, controller.signal)
+      assert.equal(attempt.headers.get('Authorization'), 'Bearer token-sintetico')
+    }
+    assert.equal(attempts[1].init.cache, 'reload')
+  })
+
+  await t.test('expone redirecciones persistentes y evita reenviar escrituras', async () => {
+    api.response(() => new Response(null, { status: 302 }))
+    for (const [call, expectedAttempts] of [
+      [() => http.httpFile('/descarga'), 2],
+      [() => http.httpPost('/solicitud', { observaciones: 'Borrador' }), 1],
+      [() => http.httpDelete('/solicitud/126'), 1],
+    ]) {
+      const start = api.requests.length
+      await assert.rejects(call(), /El servidor redirigió la petición/)
+      assert.equal(api.requests.length - start, expectedAttempts)
+      assert.equal(session.getToken(), token.accessToken)
+    }
+  })
+
   await t.test('errores de campos admiten arrays, objetos y respuestas no JSON', async () => {
     const cases = [
       [{ message: 'Datos inválidos', errors: ['Falta documento', { field: 'nombre', message: 'obligatorio' }, { defaultMessage: 'Fuera de plazo' }, null, 1, { message: 8 }] }, 'Datos inválidos: Falta documento · nombre: obligatorio · Fuera de plazo'],

@@ -1,4 +1,5 @@
 import type { StandardResponse } from './types'
+import { fetchApi } from '../../shared/http/fetchApi.ts'
 
 export class LiquidacionApiError extends Error {
   status: number
@@ -28,12 +29,12 @@ export function createLiquidacionClient(apiUrl: string, session: SessionAccess) 
     return payload
   }
   const call = async <T>(path: string, init: RequestInit = {}, sibling = false): Promise<T> => {
-    const response = await fetch(`${root}${sibling ? '' : '/liquidacionMatricula'}${path}`, { ...init, headers: headersFor(init) })
+    const response = await fetchApi(`${root}${sibling ? '' : '/liquidacionMatricula'}${path}`, { ...init, headers: headersFor(init) })
     const payload = await checkResponse(response) as StandardResponse<T>
     return payload.data
   }
   const file = async (path: string) => {
-    const response = await fetch(`${root}/liquidacionMatricula${path}`, { headers: headersFor({}) })
+    const response = await fetchApi(`${root}/liquidacionMatricula${path}`, { headers: headersFor({}) })
     if (!response.ok) await checkResponse(response)
     return response
   }

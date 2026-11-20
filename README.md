@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Recuperación de redirecciones REST — 2026-11-20
+
+Si el gateway redirige una consulta o descarga GET, SAPP repite la petición una vez sin usar la respuesta en caché. Si la redirección persiste o afecta un envío, el cliente devuelve un aviso sin recargar la vista ni repetir la escritura. Para corregir el origen, revisar en el gateway el destino de la redirección y el estado de su sesión. Si la sesión expiró, la API debe responder con HTTP 401 y reservar el redireccionamiento al proveedor de identidad para la navegación del usuario.
+
 La convocatoria de matrícula financiera exige una vista previa vigente. Si cambian los criterios, hay que volver a consultar la lista antes de confirmar.
 
 En escritorio, las etiquetas de la barra lateral conservan una sola línea durante la expansión para evitar saltos en los iconos.

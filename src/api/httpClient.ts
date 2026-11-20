@@ -1,5 +1,6 @@
 import * as AuthStorage from '../context/Auth/AuthStorage'
 import { API_URL } from './config'
+import { fetchApi } from '../shared/http/fetchApi'
 
 export type RequestOptions = RequestInit & {
   skipAuth?: boolean
@@ -45,7 +46,7 @@ export async function request<T>(input: RequestInfo | URL, init: RequestOptions 
     //  headers.set('Authorization', `Bearer ${session.accessToken}`)
   }
 
-  const response = await fetch(buildUrl(input), {
+  const response = await fetchApi(buildUrl(input), {
     ...requestInit,
     headers,
   })

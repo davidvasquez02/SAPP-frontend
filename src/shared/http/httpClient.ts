@@ -1,5 +1,6 @@
 import { clearSession, getToken } from '../../modules/auth/session/sessionStore'
 import { API_URL } from '../../api/config'
+import { fetchApi } from './fetchApi'
 
 type HttpOptions = RequestInit & {
   auth?: boolean
@@ -127,7 +128,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(buildUrl(path), {
+  const response = await fetchApi(buildUrl(path), {
     ...requestInit,
     headers,
   })
@@ -172,7 +173,7 @@ export async function httpFile(path: string, options: HttpOptions = {}): Promise
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(buildUrl(path), {
+  const response = await fetchApi(buildUrl(path), {
     ...requestInit,
     headers,
   })
