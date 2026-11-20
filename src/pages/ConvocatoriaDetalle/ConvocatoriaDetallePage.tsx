@@ -5,7 +5,8 @@ import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
-import { getConvocatoriasAdmision, getEvaluadoresConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import { downloadDocumentosAspirantesConvocatoria, getConvocatoriasAdmision, getEvaluadoresConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import { downloadBlobFile } from "../../shared/files/base64FileUtils";
 import type { ConvocatoriaAdmisionDto, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
@@ -48,6 +49,7 @@ const ConvocatoriaDetallePage = () => {
   const [toast, setToast] = useState<ToastFeedback | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [excelAspirantes, setExcelAspirantes] = useState<File | null>(null);
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
   const excelInputRef = useRef<HTMLInputElement | null>(null);
   const [aspirantesQuery, setAspirantesQuery] = useState("");
   const [aspirantesPage, setAspirantesPage] = useState(1);
@@ -292,6 +294,25 @@ const ConvocatoriaDetallePage = () => {
     [loadInscripciones],
   );
 
+  const handleDownloadDocumentos = useCallback(async () => {
+    if (!parsedConvocatoriaId || isDownloadingZip) return;
+    setIsDownloadingZip(true);
+    try {
+      const file = await downloadDocumentosAspirantesConvocatoria(parsedConvocatoriaId);
+      downloadBlobFile(file.blob, file.filename || `aspirantes-convocatoria-${parsedConvocatoriaId}.zip`);
+    } catch (downloadError) {
+      setToast({
+        tone: "warning",
+        message:
+          downloadError instanceof Error
+            ? downloadError.message
+            : "No fue posible descargar los documentos de los aspirantes.",
+      });
+    } finally {
+      setIsDownloadingZip(false);
+    }
+  }, [isDownloadingZip, parsedConvocatoriaId]);
+
   const handleOpenExcelAspirantes = useCallback(() => {
     if (!convocatoria || convocatoriaCerrada) {
       window.alert("No es posible cargar aspirantes porque la convocatoria está cerrada.");
@@ -404,7 +425,19 @@ const ConvocatoriaDetallePage = () => {
                     </p>
                   </div>
                 </aside>
-              ) : canCreateAspirante ? <>
+              ) : null}
+              {convocatoriaCerrada && canCreateAspirante ? (
+                <button
+                  type="button"
+                  className="convocatoria-detalle__create-button"
+                  onClick={() => void handleDownloadDocumentos()}
+                  disabled={isDownloadingZip || !parsedConvocatoriaId}
+                  aria-busy={isDownloadingZip}
+                >
+                  {isDownloadingZip ? "Preparando descarga..." : "Descargar documentos de aspirantes"}
+                </button>
+              ) : null}
+              {!convocatoriaCerrada && canCreateAspirante ? <>
                 <button
                   type="button"
                   className="convocatoria-detalle__create-button"

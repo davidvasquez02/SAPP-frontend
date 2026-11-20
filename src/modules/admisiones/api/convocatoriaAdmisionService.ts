@@ -1,4 +1,5 @@
-import { httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { httpFile, httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import type { HttpFileResponse } from '../../../shared/http/httpClient'
 import type {
   ConvocatoriaAdmisionCloseResponse,
   ConvocatoriaAdmisionCreateResponse,
@@ -75,3 +76,12 @@ export const getEvaluadoresConvocatoria = async (
 
   return response.data ?? []
 }
+
+/**
+ * Zip con los documentos de todos los aspirantes de una convocatoria finalizada: carpetas Admitidos y No admitidos, y dentro
+ * de cada aspirante las carpetas de su expediente. El backend rechaza la descarga si la convocatoria sigue abierta.
+ */
+export const downloadDocumentosAspirantesConvocatoria = async (
+  convocatoriaId: number,
+): Promise<HttpFileResponse> =>
+  httpFile(`/sapp/convocatoriaAdmision/${encodeURIComponent(convocatoriaId)}/documentos-zip`, { method: 'GET' })
