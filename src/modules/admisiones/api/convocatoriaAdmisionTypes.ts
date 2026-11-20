@@ -11,7 +11,7 @@ export type ConvocatoriaAdmisionDto = {
   fechaFin: string
   observaciones: string | null
   vigente: boolean
-  /** false cuando ya hay puntajes de entrevista registrados: la convocatoria deja de poder editarse. */
+  /** false cuando la evaluación ya se inició para algún aspirante: la convocatoria y sus evaluadores dejan de poder editarse. */
   editable?: boolean
 }
 
@@ -42,6 +42,13 @@ export type EvaluadorConvocatoriaDto = {
   evaluadorId: number
   id: number
   programa: string
+  /** Miembro fijo del comité por su cargo (coordinador o director de escuela): no se puede quitar. */
+  fijo?: boolean
+}
+
+export type DocenteEvaluadorOption = {
+  uuid: string
+  nombre: string
 }
 
 export type ConvocatoriaAdmisionListResponse = ApiResponse<ConvocatoriaAdmisionDto[]>

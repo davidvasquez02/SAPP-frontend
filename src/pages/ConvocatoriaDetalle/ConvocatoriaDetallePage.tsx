@@ -5,9 +5,9 @@ import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
-import { downloadDocumentosAspirantesConvocatoria, getConvocatoriasAdmision, getEvaluadoresConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
+import { addEvaluadorConvocatoria, downloadDocumentosAspirantesConvocatoria, getConvocatoriasAdmision, getDocentesEvaluadores, getEvaluadoresConvocatoria, removeEvaluadorConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import { downloadBlobFile } from "../../shared/files/base64FileUtils";
-import type { ConvocatoriaAdmisionDto, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
+import type { ConvocatoriaAdmisionDto, DocenteEvaluadorOption, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
 import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/inscripcionAdmisionService";
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
 import type { AspiranteCreateResponseDto } from "../../modules/admisiones/api/aspiranteCreateTypes";
@@ -64,6 +64,11 @@ const ConvocatoriaDetallePage = () => {
   const [evaluadores, setEvaluadores] = useState<EvaluadorConvocatoriaDto[]>([]);
   const [evaluadoresLoading, setEvaluadoresLoading] = useState(false);
   const [evaluadoresError, setEvaluadoresError] = useState<string | null>(null);
+  const [candidatos, setCandidatos] = useState<DocenteEvaluadorOption[]>([]);
+  const [candidatosLoading, setCandidatosLoading] = useState(false);
+  const [candidatosError, setCandidatosError] = useState<string | null>(null);
+  const [evaluadoresBusy, setEvaluadoresBusy] = useState(false);
+  const [evaluadoresActionError, setEvaluadoresActionError] = useState<string | null>(null);
 
   const { periodoAcademico, periodoLabel, programaNombre, programaId, cupos } =
     useMemo(() => {
@@ -370,10 +375,57 @@ const ConvocatoriaDetallePage = () => {
     }
   }, [parsedConvocatoriaId]);
 
+  // Los miembros del comité se pueden cambiar mientras la evaluación no se haya iniciado para ningún aspirante.
+  const evaluadoresEditables = convocatoria?.editable !== false;
+
+  const loadCandidatos = useCallback(async () => {
+    setCandidatosLoading(true);
+    setCandidatosError(null);
+    try {
+      setCandidatos(await getDocentesEvaluadores());
+    } catch (err) {
+      setCandidatos([]);
+      setCandidatosError(err instanceof Error ? err.message : "No fue posible cargar los docentes.");
+    } finally {
+      setCandidatosLoading(false);
+    }
+  }, []);
+
   const handleOpenEvaluadores = useCallback(() => {
     setIsEvaluadoresOpen(true);
+    setEvaluadoresActionError(null);
     void loadEvaluadores();
-  }, [loadEvaluadores]);
+    if (evaluadoresEditables) void loadCandidatos();
+  }, [evaluadoresEditables, loadCandidatos, loadEvaluadores]);
+
+  const runEvaluadoresAction = useCallback(
+    async (action: () => Promise<void>) => {
+      setEvaluadoresBusy(true);
+      setEvaluadoresActionError(null);
+      try {
+        await action();
+        await loadEvaluadores();
+      } catch (err) {
+        setEvaluadoresActionError(err instanceof Error ? err.message : "No fue posible actualizar los evaluadores.");
+      } finally {
+        setEvaluadoresBusy(false);
+      }
+    },
+    [loadEvaluadores],
+  );
+
+  const handleAddEvaluador = useCallback(
+    (uuid: string) => {
+      if (!parsedConvocatoriaId) return;
+      void runEvaluadoresAction(() => addEvaluadorConvocatoria(parsedConvocatoriaId, uuid));
+    },
+    [parsedConvocatoriaId, runEvaluadoresAction],
+  );
+
+  const handleRemoveEvaluador = useCallback(
+    (asignacionId: number) => void runEvaluadoresAction(() => removeEvaluadorConvocatoria(asignacionId)),
+    [runEvaluadoresAction],
+  );
 
   return (
     <ModuleLayout title="Admisiones">
@@ -776,6 +828,16 @@ const ConvocatoriaDetallePage = () => {
         error={evaluadoresError}
         onClose={() => setIsEvaluadoresOpen(false)}
         onRetry={() => void loadEvaluadores()}
+        management={{
+          editable: evaluadoresEditables,
+          candidatos,
+          candidatosLoading,
+          candidatosError,
+          busy: evaluadoresBusy,
+          actionError: evaluadoresActionError,
+          onAdd: handleAddEvaluador,
+          onRemove: handleRemoveEvaluador,
+        }}
       />
     </ModuleLayout>
   );

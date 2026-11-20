@@ -351,7 +351,7 @@ const ConvocatoriasAdmisionConfigPage = () => {
                                   disabled={isRefreshing || item.editable === false}
                                   title={
                                     item.editable === false
-                                      ? "Ya no se puede editar: la entrevista de al menos un aspirante ya se inició."
+                                      ? "Ya no se puede editar: la evaluación de al menos un aspirante ya se inició."
                                       : undefined
                                   }
                                 >

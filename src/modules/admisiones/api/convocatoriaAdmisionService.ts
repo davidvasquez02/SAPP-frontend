@@ -1,4 +1,4 @@
-import { httpFile, httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { httpDelete, httpFile, httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
 import type { HttpFileResponse } from '../../../shared/http/httpClient'
 import type {
   ConvocatoriaAdmisionCloseResponse,
@@ -7,6 +7,7 @@ import type {
   ConvocatoriaAdmisionDto,
   ConvocatoriaAdmisionListResponse,
   CreateConvocatoriaRequest,
+  DocenteEvaluadorOption,
   EvaluadoresConvocatoriaResponse,
   EvaluadorConvocatoriaDto,
   UpdateConvocatoriaFechasRequest,
@@ -39,7 +40,7 @@ export const updateConvocatoriaAdmisionFechas = async (
   return response.data ?? undefined
 }
 
-/** Edita fechas, cupos y observaciones; el servidor lo rechaza si la entrevista de algún aspirante ya se inició. */
+/** Edita fechas, cupos y observaciones; el servidor lo rechaza si la evaluación de algún aspirante ya se inició. */
 export const updateConvocatoriaAdmision = async (
   convocatoriaId: number,
   request: UpdateConvocatoriaRequest
@@ -93,6 +94,47 @@ export const getEvaluadoresConvocatoria = async (
   }
 
   return response.data ?? []
+}
+
+type DocenteApiDto = { uuid: string; fullName: string; tieneRolDocentePosgrados: boolean }
+
+/** Docentes habilitados (rol DOCENTE_POSGRADOS) que se pueden asignar como evaluadores de una convocatoria. */
+export const getDocentesEvaluadores = async (): Promise<DocenteEvaluadorOption[]> => {
+  const response = await httpGet<{ ok: boolean; message?: string; data?: DocenteApiDto[] | null }>(
+    '/sapp/docentes?skip=0&limit=200',
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible cargar los docentes')
+  }
+
+  return (response.data ?? [])
+    .filter((docente) => docente.tieneRolDocentePosgrados && docente.uuid?.trim() && docente.fullName?.trim())
+    .map((docente) => ({ uuid: docente.uuid.trim(), nombre: docente.fullName.trim() }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+}
+
+/** Agrega un docente como evaluador (miembro del comité); el servidor lo rechaza si la evaluación ya se inició. */
+export const addEvaluadorConvocatoria = async (convocatoriaId: number, evaluadorUuid: string): Promise<void> => {
+  const response = await httpPost<{ ok: boolean; message?: string }>('/sapp/evaluadorConvocatoria', {
+    convocatoriaId,
+    evaluadorUuid,
+  })
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible agregar el evaluador')
+  }
+}
+
+/** Quita un evaluador de la convocatoria; los miembros fijos y las convocatorias con evaluación iniciada lo rechazan. */
+export const removeEvaluadorConvocatoria = async (asignacionId: number): Promise<void> => {
+  const response = await httpDelete<{ ok: boolean; message?: string }>(
+    `/sapp/evaluadorConvocatoria/${asignacionId}`,
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'No fue posible quitar el evaluador')
+  }
 }
 
 /**
