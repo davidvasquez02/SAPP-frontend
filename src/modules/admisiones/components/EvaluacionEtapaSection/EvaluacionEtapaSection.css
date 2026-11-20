@@ -28,7 +28,7 @@
 .evaluacion-etapa-section__table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 720px;
 }
 
 .evaluacion-etapa-section__table th,
@@ -173,7 +173,8 @@
   justify-content: flex-end;
 }
 
-@container evaluacion (max-width: 980px) {
+/* La tabla pasa a tarjetas solo cuando el contenedor es angosto de verdad (zoom cercano a 125 % o pantallas pequenas). */
+@container evaluacion (max-width: 780px) {
   .evaluacion-etapa-section__table-wrapper { overflow: visible; border: 0; background: transparent; }
   .evaluacion-etapa-section__table,
   .evaluacion-etapa-section__table tbody { display: grid; min-width: 0; gap: .75rem; }
