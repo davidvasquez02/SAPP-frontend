@@ -82,3 +82,33 @@ export const formatProgramaAcademico = (
   if (canonical) return `${canonical.codigoUis} - ${canonical.nombre}`
   return typeof programa === 'string' ? programa.trim() : programa.nombre.trim()
 }
+
+const CON_CODIGO = /^\s*\d+\s*-\s*\S/
+const NOMBRE_POR_SIGLA: Record<string, string> = {
+  MISI: 'Maestría en Ingeniería de Sistemas e Informática',
+  DCC: 'Doctorado en Ciencias de la Computación',
+}
+
+/**
+ * Cómo se muestra un programa académico en todo el sistema: "302 - Maestría en…". Si el texto ya trae el código (lo
+ * normal cuando viene del servidor) se deja tal cual; si no, se le antepone el código del programa. Acepta el texto
+ * del programa o un objeto con id/nombre/código.
+ */
+export const etiquetaPrograma = (
+  programa: Partial<ProgramaAcademicoCatalogo> | string | null | undefined,
+): string => {
+  if (!programa) return ''
+
+  const texto = (typeof programa === 'string' ? programa : programa.codigoNombre || programa.nombre || '').trim()
+  if (CON_CODIGO.test(texto)) return texto
+
+  if (typeof programa !== 'string') {
+    const codigo = (programa.codigoUis ?? programa.codigo_uis)?.trim()
+    if (codigo && texto) return `${codigo} - ${texto}`
+  }
+
+  const canonico = getProgramaAcademico(programa)
+  if (!canonico) return texto
+  // un texto que es solo la sigla histórica (MISI, DCC) se muestra con el nombre completo del programa
+  return `${canonico.codigoUis} - ${NOMBRE_POR_SIGLA[texto.toUpperCase()] ?? (texto || canonico.nombre)}`
+}

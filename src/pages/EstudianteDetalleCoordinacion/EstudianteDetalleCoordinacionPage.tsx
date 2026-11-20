@@ -25,7 +25,7 @@ import { getFotoCacheada } from '../../modules/estudiantes/services/estudianteFo
 import type { EstudianteCoordinacion } from '../../modules/estudiantes/types'
 import { formatDocumentoIdentidad } from '../../modules/estudiantes/utils/formatDocumentoIdentidad'
 import './EstudianteDetalleCoordinacionPage.css'
-import { getProgramaAcademico } from '../../shared/domain/programaAcademico'
+import { etiquetaPrograma } from '../../shared/domain/programaAcademico'
 import SolicitudesDocumentosEstudiante from './SolicitudesDocumentosEstudiante'
 import HistorialAsignaturasEstudiante from '../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante'
 
@@ -102,7 +102,7 @@ const getProgramaDisplay = (estudiante: EstudianteCoordinacion) => {
     return EMPTY_VALUE
   }
 
-  return getProgramaAcademico({ id: estudiante.programaId, nombre: programa })?.nombre ?? programa
+  return etiquetaPrograma({ id: estudiante.programaId, nombre: programa }) || programa
 }
 
 const getFotoSrc = (estudiante: EstudianteCoordinacion) => {

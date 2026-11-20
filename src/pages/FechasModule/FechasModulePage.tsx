@@ -1,4 +1,5 @@
 import { RUTA_CALENDARIO } from '../../modules/administracionAcademica/rutas'
+import { etiquetaPrograma } from "../../shared/domain/programaAcademico";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModuleLayout } from "../../components";
@@ -35,12 +36,7 @@ const formatFecha = (value: string | null) => {
   return year && month && day ? `${day}/${month}/${year}` : value;
 };
 
-const resolveProgramaLabel = (programa: string) => {
-  const upper = programa.toUpperCase();
-  if (upper.includes("MISI")) return "Maestría en Ingeniería de Sistemas e Informática";
-  if (upper.includes("DCC")) return "Doctorado en Ciencias de la Computación";
-  return programa;
-};
+const resolveProgramaLabel = (programa: string) => etiquetaPrograma(programa);
 
 const resolveProgramaTabLabel = (programa: string) => {
   const upper = programa.toUpperCase();

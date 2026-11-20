@@ -49,7 +49,7 @@ import {
 import { tieneDocumentosObligatoriosCargados } from "../../modules/matricula/utils/documentosMatricula";
 import { parsePeriodo } from "../../modules/admisiones/utils/periodo";
 import "./MatriculaPage.css";
-import { formatProgramaAcademico, getProgramaAcademico } from "../../shared/domain/programaAcademico";
+import { etiquetaPrograma } from "../../shared/domain/programaAcademico";
 
 const TIPO_TRAMITE_ID_MATRICULA = 2;
 const LISTADO_PAGE_SIZE = 10;
@@ -81,9 +81,7 @@ const resolveProgramaLabel = (programa: string): string => {
     return "Seleccione un programa...";
   }
 
-  return getProgramaAcademico(programa)
-    ? formatProgramaAcademico(programa).replace(" - ", " · ")
-    : programa;
+  return etiquetaPrograma(programa);
 };
 
 const mapDocumentoTramiteToRequerido = (

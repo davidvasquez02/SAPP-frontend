@@ -123,7 +123,9 @@ test('presenta una cabecera jerárquica de convocatoria sin iconos decorativos',
 
   assert.match(source, /Convocatoria de admisión/)
   assert.match(source, /convocatoria-detalle__program-name/)
-  assert.match(source, /<span>Código<\/span>/)
+  // el programa se presenta como "código - nombre"
+  assert.match(source, /etiquetaPrograma\(/)
+  assert.doesNotMatch(source, /<span>Código<\/span>/)
   assert.match(source, /<span>Período académico<\/span>/)
   assert.doesNotMatch(source, /📅|🎓|＋/)
 })

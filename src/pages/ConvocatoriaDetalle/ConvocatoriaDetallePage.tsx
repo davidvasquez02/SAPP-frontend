@@ -4,7 +4,7 @@ import { ScrollText, UsersRound } from "lucide-react";
 import { BackButton, ModuleLayout } from "../../components";
 import { ROLES, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
-import { getProgramaAcademico } from "../../shared/domain/programaAcademico";
+import { etiquetaPrograma } from "../../shared/domain/programaAcademico";
 import { addEvaluadorConvocatoria, downloadDocumentosAspirantesConvocatoria, getConvocatoriasAdmision, getDocentesEvaluadores, getEvaluadoresConvocatoria, removeEvaluadorConvocatoria } from "../../modules/admisiones/api/convocatoriaAdmisionService";
 import { downloadBlobFile } from "../../shared/files/base64FileUtils";
 import type { ConvocatoriaAdmisionDto, DocenteEvaluadorOption, EvaluadorConvocatoriaDto } from "../../modules/admisiones/api/convocatoriaAdmisionTypes";
@@ -122,14 +122,8 @@ const ConvocatoriaDetallePage = () => {
     inscripciones[0]?.programaAcademico ??
     convocatoria?.programa ??
     null;
-  const programaCatalogo = getProgramaAcademico({
-    id: resolvedProgramaId ?? undefined,
-    nombre: programaConvocatoria ?? "",
-  });
   const programaNombrePresentacion =
-    programaCatalogo?.nombre ?? programaConvocatoria?.replace(/^\s*\d+\s*-\s*/, "") ?? null;
-  const programaCodigo =
-    programaCatalogo?.codigoUis ?? programaConvocatoria?.match(/^\s*(\d+)\s*-/)?.[1] ?? null;
+    etiquetaPrograma({ id: resolvedProgramaId ?? undefined, nombre: programaConvocatoria ?? "" }) || null;
 
   const cuposConvocatoria = typeof cupos === "number" ? cupos : null;
   const cuposExcedidos =
@@ -448,12 +442,6 @@ const ConvocatoriaDetallePage = () => {
             ) : null}
 
             <div className="convocatoria-detalle__metadata" aria-label="Datos de la convocatoria">
-              {programaCodigo ? (
-                <span className="convocatoria-detalle__metadata-item">
-                  <span>Código</span>
-                  <strong>{programaCodigo}</strong>
-                </span>
-              ) : null}
               {periodoConvocatoria ? (
                 <span className="convocatoria-detalle__metadata-item">
                   <span>Período académico</span>
