@@ -1,9 +1,11 @@
 import { httpGet, httpPost } from '../../../shared/http/httpClient'
+import { fileToBase64 } from '../../../utils/fileToBase64'
 import type { ApiResponse } from './types'
 import type {
   AspiranteCreateRequestDto,
   AspiranteCreateResponseDto,
   AspiranteConsultaResponseDto,
+  ImportacionAspirantesExcelDto,
 } from './aspiranteCreateTypes'
 
 const unwrapAspiranteResponse = <T>(response: ApiResponse<T>, fallbackMessage: string): T => {
@@ -56,4 +58,25 @@ export const createAspirante = async (
   }
 
   return response.data
+}
+
+/**
+ * Lee el Excel de aspirantes en el backend y devuelve una fila por aspirante, lista para crear con
+ * {@link createAspirante} o con los errores que la impiden. No crea nada.
+ */
+export const leerExcelAspirantes = async (
+  file: File,
+  convocatoriaAdmisionId: number,
+): Promise<ImportacionAspirantesExcelDto> => {
+  const response = await httpPost<ApiResponse<ImportacionAspirantesExcelDto>>(
+    '/sapp/aspirante/importar-excel',
+    {
+      contenidoBase64: await fileToBase64(file),
+      nombreArchivo: file.name,
+      convocatoriaAdmisionId,
+    },
+    { redirectOnUnauthorized: false },
+  )
+
+  return unwrapAspiranteResponse(response, 'No fue posible leer el archivo de aspirantes')
 }

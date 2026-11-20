@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ScrollText, UsersRound } from "lucide-react";
 import { BackButton, ModuleLayout } from "../../components";
@@ -11,6 +11,8 @@ import { getInscripcionesByConvocatoria } from "../../modules/admisiones/api/ins
 import type { InscripcionAdmisionDto } from "../../modules/admisiones/api/types";
 import type { AspiranteCreateResponseDto } from "../../modules/admisiones/api/aspiranteCreateTypes";
 import { CreateAspiranteModal } from "../../modules/admisiones/components/CreateAspiranteModal/CreateAspiranteModal";
+import { CargarAspirantesExcelModal } from "../../modules/admisiones/components/CargarAspirantesExcelModal/CargarAspirantesExcelModal";
+import type { ResultadoCargueAspirantes } from "../../modules/admisiones/components/CargarAspirantesExcelModal/CargarAspirantesExcelModal";
 import { CreateEstudianteModal } from "../../modules/admisiones/components/CreateEstudianteModal/CreateEstudianteModal";
 import { EvaluadoresConvocatoriaDialog } from "../../modules/admisiones/components/EvaluadoresConvocatoriaDialog";
 import StudentCard from "../../modules/admisiones/components/StudentCard/StudentCard";
@@ -45,6 +47,8 @@ const ConvocatoriaDetallePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastFeedback | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [excelAspirantes, setExcelAspirantes] = useState<File | null>(null);
+  const excelInputRef = useRef<HTMLInputElement | null>(null);
   const [aspirantesQuery, setAspirantesQuery] = useState("");
   const [aspirantesPage, setAspirantesPage] = useState(1);
   const [selectedAspirante, setSelectedAspirante] =
@@ -262,27 +266,47 @@ const ConvocatoriaDetallePage = () => {
   };
 
   const handleCreated = useCallback(
-    (result: {
-      created: AspiranteCreateResponseDto;
-      uploadSummary: { failedItems: { id: number }[] };
-    }) => {
-      const aspiranteNombre = getNombreCompletoAspirante(result.created) || "nuevo aspirante";
-      if (result.uploadSummary.failedItems.length > 0) {
-        setToast({
-          tone: "warning",
-          message: `Se creó al aspirante ${aspiranteNombre}, pero falló la carga de ${result.uploadSummary.failedItems.length} documento(s).`,
-        });
-      } else {
-        setToast({
-          tone: "success",
-          message: `Se creó al aspirante ${aspiranteNombre} de manera correcta.`,
-        });
-      }
+    (created: AspiranteCreateResponseDto) => {
+      const aspiranteNombre = getNombreCompletoAspirante(created) || "nuevo aspirante";
+      setToast({
+        tone: "success",
+        message: `Se creó al aspirante ${aspiranteNombre} de manera correcta.`,
+      });
       setIsCreateModalOpen(false);
       loadInscripciones();
     },
     [loadInscripciones],
   );
+
+  const handleExcelFinished = useCallback(
+    ({ creados, fallidos }: ResultadoCargueAspirantes) => {
+      setToast({
+        tone: fallidos > 0 ? "warning" : "success",
+        message:
+          fallidos > 0
+            ? `Cargue del Excel: se crearon ${creados} aspirante(s) y ${fallidos} no se pudieron crear.`
+            : `Cargue exitoso de ${creados} aspirante(s).`,
+      });
+      loadInscripciones();
+    },
+    [loadInscripciones],
+  );
+
+  const handleOpenExcelAspirantes = useCallback(() => {
+    if (!convocatoria || convocatoriaCerrada) {
+      window.alert("No es posible cargar aspirantes porque la convocatoria está cerrada.");
+      return;
+    }
+
+    if (cuposExcedidos) {
+      window.alert(
+        `No es posible crear más aspirantes: la convocatoria alcanzó su cupo máximo (${cuposConvocatoria}).`,
+      );
+      return;
+    }
+
+    excelInputRef.current?.click();
+  }, [convocatoria, convocatoriaCerrada, cuposConvocatoria, cuposExcedidos]);
 
   const handleOpenCreateAspirante = useCallback(() => {
     if (!convocatoria || convocatoriaCerrada) {
@@ -380,20 +404,48 @@ const ConvocatoriaDetallePage = () => {
                     </p>
                   </div>
                 </aside>
-              ) : canCreateAspirante ? <button
-                type="button"
-                className="convocatoria-detalle__create-button"
-                onClick={handleOpenCreateAspirante}
-                disabled={
-                  !resolvedProgramaId ||
-                  !parsedConvocatoriaId ||
-                  !convocatoria ||
-                  isLoading ||
-                  cuposExcedidos
-                }
-              >
-                Crear aspirante
-              </button> : null}
+              ) : canCreateAspirante ? <>
+                <button
+                  type="button"
+                  className="convocatoria-detalle__create-button"
+                  onClick={handleOpenCreateAspirante}
+                  disabled={
+                    !resolvedProgramaId ||
+                    !parsedConvocatoriaId ||
+                    !convocatoria ||
+                    isLoading ||
+                    cuposExcedidos
+                  }
+                >
+                  Crear aspirante
+                </button>
+                <button
+                  type="button"
+                  className="convocatoria-detalle__evaluators-button"
+                  onClick={handleOpenExcelAspirantes}
+                  disabled={
+                    !resolvedProgramaId ||
+                    !parsedConvocatoriaId ||
+                    !convocatoria ||
+                    isLoading ||
+                    cuposExcedidos
+                  }
+                >
+                  Cargar Excel de aspirantes
+                </button>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  hidden
+                  onChange={(event) => {
+                    const elegido = event.target.files?.[0] ?? null;
+                    // Se limpia el input para poder volver a elegir el mismo archivo.
+                    event.target.value = "";
+                    if (elegido) setExcelAspirantes(elegido);
+                  }}
+                />
+              </> : null}
               {canViewEvaluadores ? (
                 <button
                   type="button"
@@ -656,6 +708,15 @@ const ConvocatoriaDetallePage = () => {
         programaId={resolvedProgramaId}
         convocatoriaAdmisionId={parsedConvocatoriaId}
         onCreated={handleCreated}
+      />
+      <CargarAspirantesExcelModal
+        file={excelAspirantes}
+        convocatoriaAdmisionId={parsedConvocatoriaId}
+        cuposDisponibles={
+          typeof cuposConvocatoria === "number" ? Math.max(0, cuposConvocatoria - inscripciones.length) : null
+        }
+        onClose={() => setExcelAspirantes(null)}
+        onFinished={handleExcelFinished}
       />
       <CreateEstudianteModal
         aspirante={selectedAspirante}

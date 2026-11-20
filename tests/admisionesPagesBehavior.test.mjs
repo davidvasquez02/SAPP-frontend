@@ -62,8 +62,8 @@ test('admisiones: inicio, convocatoria y entrevistas del profesor', async t => {
     ui.fireEvent.click(v.getByText('Aspirante prueba 13')); await v.findByText('Destino /admisiones/convocatoria/107/inscripcion/172')
   })
   await t.test('cupo lleno y convocatoria cerrada bloquean crear aspirantes', async s => {
-    let v = mount(s, Detail, { state: { programaId: 1, cupos: 1 } }); await v.findByText('Cupo completo'); assert.equal(v.getByRole('button', { name: 'Crear aspirante', exact: true }).disabled, true)
-    await ui.cleanup(); calls[0].vigente = false; v = mount(s, Detail, { state: { programaId: 1, cupos: 30 } }); await v.findByText('Listado de aspirantes'); assert.equal(v.queryAllByRole('button', { name: 'Crear aspirante', exact: true }).length, 0)
+    let v = mount(s, Detail, { state: { programaId: 1, cupos: 1 } }); await v.findByText('Cupo completo'); assert.equal(v.getByRole('button', { name: 'Crear aspirante', exact: true }).disabled, true); assert.equal(v.getByRole('button', { name: 'Cargar Excel de aspirantes', exact: true }).disabled, true)
+    await ui.cleanup(); calls[0].vigente = false; v = mount(s, Detail, { state: { programaId: 1, cupos: 30 } }); await v.findByText('Listado de aspirantes'); assert.equal(v.queryAllByRole('button', { name: 'Crear aspirante', exact: true }).length, 0); assert.equal(v.queryAllByRole('button', { name: 'Cargar Excel de aspirantes', exact: true }).length, 0)
   })
   await t.test('detalle sin filas y fallo de consulta permiten recuperación', async s => {
     rows = []; let v = mount(s, Detail); await v.findByText('No hay aspirantes inscritos en esta convocatoria.'); await ui.cleanup()

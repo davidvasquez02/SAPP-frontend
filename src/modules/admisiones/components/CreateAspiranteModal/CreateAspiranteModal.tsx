@@ -1,22 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { uploadDocument } from '../../../../api/documentUploadService'
 import { getTiposDocumentoIdentificacion } from '../../../../api/tipoDocumentoIdentificacionService'
 import type { TipoDocumentoIdentificacionDto } from '../../../../api/tipoDocumentoIdentificacionTypes'
-import { DocumentUploadCard } from '../../../../components'
-import { fileToBase64 } from '../../../../utils/fileToBase64'
-import { sha256Hex } from '../../../../utils/sha256'
-import { isPdfFile, PDF_FILE_ACCEPT } from '../../../../shared/files/pdfFile'
 import { createAspirante } from '../../api/aspiranteService'
 import type {
   AspiranteCreateRequestDto,
   AspiranteCreateResponseDto,
 } from '../../api/aspiranteCreateTypes'
-import {
-  mapTramiteDocsToDocumentUploadItems,
-} from '../../api/tramiteDocumentoMappers'
-import { getTramiteDocumentos } from '../../api/tramiteDocumentoService'
-import type { DocumentUploadItem } from '../../../documentos/types/documentUploadTypes'
 import './CreateAspiranteModal.css'
 
 interface CreateAspiranteModalProps {
@@ -24,28 +14,11 @@ interface CreateAspiranteModalProps {
   onClose: () => void
   programaId: number | null
   convocatoriaAdmisionId: number | null
-  onCreated?: (result: CreateAspiranteResult) => void
+  onCreated?: (created: AspiranteCreateResponseDto) => void
 }
 
 type FormErrors = Partial<Record<keyof AspiranteCreateRequestDto, string>> & {
   general?: string
-  documentos?: string
-}
-
-interface UploadErrorItem {
-  id: number
-  nombre: string
-  errorMessage: string
-}
-
-interface UploadSummary {
-  status: 'idle' | 'success' | 'partial'
-  failedItems: UploadErrorItem[]
-}
-
-interface CreateAspiranteResult {
-  created: AspiranteCreateResponseDto
-  uploadSummary: UploadSummary
 }
 
 interface FormState {
@@ -75,6 +48,10 @@ const initialFormState: FormState = {
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const digitsRegex = /^\d+$/
 
+/**
+ * Crea un aspirante. Solo eso: los documentos del aspirante ya no se cargan aqui, los sube el propio aspirante
+ * (o el coordinador despues, desde su inscripcion).
+ */
 export const CreateAspiranteModal = ({
   open,
   onClose,
@@ -88,48 +65,13 @@ export const CreateAspiranteModal = ({
   const [tiposDocumento, setTiposDocumento] = useState<TipoDocumentoIdentificacionDto[]>([])
   const [tiposLoading, setTiposLoading] = useState(false)
   const [tiposError, setTiposError] = useState<string | null>(null)
-  const [documentos, setDocumentos] = useState<DocumentUploadItem[]>([])
-  const [isLoadingDocs, setIsLoadingDocs] = useState(false)
-  const [docsError, setDocsError] = useState<string | null>(null)
-  const [uploadSummary, setUploadSummary] = useState<UploadSummary>({
-    status: 'idle',
-    failedItems: [],
-  })
-  const [createdAspirante, setCreatedAspirante] = useState<AspiranteCreateResponseDto | null>(
-    null,
-  )
   const firstNameInputRef = useRef<HTMLInputElement | null>(null)
   const wasOpenRef = useRef(false)
-
-  const loadTramiteDocumentos = useCallback(async () => {
-    setIsLoadingDocs(true)
-    setDocsError(null)
-
-    try {
-      const docs = await getTramiteDocumentos()
-      const mappedDocs = mapTramiteDocsToDocumentUploadItems(docs)
-      setDocumentos(mappedDocs)
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'No fue posible cargar los documentos de admisiones.'
-      setDocsError(message)
-      setDocumentos([])
-    } finally {
-      setIsLoadingDocs(false)
-    }
-  }, [])
 
   const resetForm = useCallback(() => {
     setFormState(initialFormState)
     setErrors({})
     setIsSubmitting(false)
-    setUploadSummary({ status: 'idle', failedItems: [] })
-    setCreatedAspirante(null)
-    setDocumentos([])
-    setIsLoadingDocs(false)
-    setDocsError(null)
   }, [])
 
   const loadTiposDocumento = useCallback(async () => {
@@ -161,35 +103,12 @@ export const CreateAspiranteModal = ({
     }
 
     wasOpenRef.current = true
-
-    const shouldPreserveState =
-      createdAspirante != null && uploadSummary.status === 'partial'
-
-    if (!shouldPreserveState) {
-      resetForm()
-    } else if (documentos.length === 0 && !isLoadingDocs) {
-      loadTramiteDocumentos()
-    }
-
-    if (!shouldPreserveState) {
-      loadTramiteDocumentos()
-    }
+    resetForm()
 
     if (tiposDocumento.length === 0 && !tiposLoading) {
       loadTiposDocumento()
     }
-  }, [
-    open,
-    loadTiposDocumento,
-    resetForm,
-    tiposDocumento.length,
-    tiposLoading,
-    documentos.length,
-    isLoadingDocs,
-    loadTramiteDocumentos,
-    createdAspirante,
-    uploadSummary.status,
-  ])
+  }, [open, loadTiposDocumento, resetForm, tiposDocumento.length, tiposLoading])
 
   useEffect(() => {
     if (!open) {
@@ -212,10 +131,7 @@ export const CreateAspiranteModal = ({
 
   const formTitleId = useMemo(() => 'create-aspirante-title', [])
 
-  const handleChange = (
-    field: keyof FormState,
-    value: string
-  ) => {
+  const handleChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => ({
       ...prev,
@@ -226,181 +142,47 @@ export const CreateAspiranteModal = ({
 
   const validateForm = (): FormErrors => {
     const nextErrors: FormErrors = {}
-    const isAspiranteCreated = createdAspirante != null
 
-    if (!isAspiranteCreated && !formState.nombre1.trim()) {
+    if (!formState.nombre1.trim()) {
       nextErrors.nombre1 = 'El primer nombre es obligatorio.'
     }
 
-    if (!isAspiranteCreated && !formState.apellido1.trim()) {
+    if (!formState.apellido1.trim()) {
       nextErrors.apellido1 = 'El primer apellido es obligatorio.'
     }
 
-    if (!isAspiranteCreated && !formState.tipoDocumentoIdentificacionId) {
+    if (!formState.tipoDocumentoIdentificacionId) {
       nextErrors.tipoDocumentoIdentificacionId = 'Seleccione un tipo de documento.'
     }
 
-    if (!isAspiranteCreated && !formState.numeroDocumento.trim()) {
+    if (!formState.numeroDocumento.trim()) {
       nextErrors.numeroDocumento = 'El número de documento es obligatorio.'
-    } else if (!isAspiranteCreated && !digitsRegex.test(formState.numeroDocumento.trim())) {
+    } else if (!digitsRegex.test(formState.numeroDocumento.trim())) {
       nextErrors.numeroDocumento = 'Solo se permiten dígitos.'
     }
 
-    if (!isAspiranteCreated && !formState.emailPersonal.trim()) {
+    if (!formState.emailPersonal.trim()) {
       nextErrors.emailPersonal = 'El email es obligatorio.'
-    } else if (!isAspiranteCreated && !emailRegex.test(formState.emailPersonal.trim())) {
+    } else if (!emailRegex.test(formState.emailPersonal.trim())) {
       nextErrors.emailPersonal = 'Ingrese un email válido.'
     }
 
-    if (!isAspiranteCreated && !formState.numeroInscripcionUis.trim()) {
+    if (!formState.numeroInscripcionUis.trim()) {
       nextErrors.numeroInscripcionUis = 'El número de inscripción es obligatorio.'
-    } else if (
-      !isAspiranteCreated &&
-      !digitsRegex.test(formState.numeroInscripcionUis.trim())
-    ) {
+    } else if (!digitsRegex.test(formState.numeroInscripcionUis.trim())) {
       nextErrors.numeroInscripcionUis = 'Solo se permiten dígitos.'
     }
 
-    if (!programaId && !isAspiranteCreated) {
+    if (!programaId) {
       nextErrors.general = 'No se pudo determinar el programa de la convocatoria.'
     }
 
-    if (!convocatoriaAdmisionId && !isAspiranteCreated) {
+    if (!convocatoriaAdmisionId) {
       nextErrors.general = 'No se pudo determinar la convocatoria desde la URL.'
-    }
-
-    const missingDocument = documentos.find(
-      (item) => item.obligatorio && !item.selectedFile && !item.uploadedFileName,
-    )
-
-    if (missingDocument) {
-      nextErrors.documentos = 'Adjunte todos los documentos requeridos.'
     }
 
     return nextErrors
   }
-
-  const handleSelectFile = useCallback((id: number, file: File | null) => {
-    setDocumentos((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) {
-          return item
-        }
-
-        if (!file) {
-          return {
-            ...item,
-            selectedFile: null,
-            status: item.uploadedFileName ? 'UPLOADED' : 'NOT_SELECTED',
-            errorMessage: undefined,
-          }
-        }
-
-        if (!isPdfFile(file)) {
-          return {
-            ...item,
-            selectedFile: null,
-            status: item.uploadedFileName ? 'UPLOADED' : 'NOT_SELECTED',
-            errorMessage: 'Solo se permiten archivos PDF.',
-          }
-        }
-
-        return {
-          ...item,
-          selectedFile: file,
-          status: 'READY_TO_UPLOAD',
-          errorMessage: undefined,
-        }
-      }),
-    )
-    setErrors((prev) => ({ ...prev, documentos: undefined }))
-  }, [])
-
-  const handleRemoveFile = useCallback((id: number) => {
-    handleSelectFile(id, null)
-  }, [handleSelectFile])
-
-  const uploadSelectedDocuments = useCallback(
-    async (
-      aspiranteId: number,
-      tramiteId: number,
-      mode: 'all' | 'failed'
-    ): Promise<UploadErrorItem[]> => {
-      const itemsToUpload = documentos.filter((item) => {
-        if (!item.selectedFile) {
-          return false
-        }
-
-        if (mode === 'failed') {
-          return item.status === 'ERROR'
-        }
-
-        return item.status !== 'UPLOADING'
-      })
-
-      const failedItems: UploadErrorItem[] = []
-
-      for (const item of itemsToUpload) {
-        const file = item.selectedFile
-        if (!file) {
-          continue
-        }
-
-        setDocumentos((prev) =>
-          prev.map((current) =>
-            current.id === item.id
-              ? { ...current, status: 'UPLOADING', errorMessage: undefined }
-              : current,
-          ),
-        )
-
-        try {
-          const buffer = await file.arrayBuffer()
-          const contenidoBase64 = await fileToBase64(file)
-          const checksum = await sha256Hex(buffer)
-
-          const uploaded = await uploadDocument({
-            tipoDocumentoTramiteId: item.id,
-            nombreArchivo: file.name,
-            tramiteId,
-            usuarioCargaId: null,
-            aspiranteCargaId: aspiranteId,
-            contenidoBase64,
-            mimeType: file.type || 'application/octet-stream',
-            tamanoBytes: file.size,
-            checksum,
-          })
-
-          setDocumentos((prev) =>
-            prev.map((current) =>
-              current.id === item.id
-                ? {
-                  ...current,
-                  status: 'UPLOADED',
-                  uploadedFileName: uploaded.nombreArchivo,
-                  selectedFile: null,
-                  errorMessage: undefined,
-                }
-                : current,
-            ),
-          )
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Error desconocido'
-          failedItems.push({ id: item.id, nombre: item.nombre, errorMessage: message })
-          setDocumentos((prev) =>
-            prev.map((current) =>
-              current.id === item.id
-                ? { ...current, status: 'ERROR', errorMessage: message }
-                : current,
-            ),
-          )
-        }
-      }
-
-      return failedItems
-    },
-    [documentos],
-  )
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -408,67 +190,34 @@ export const CreateAspiranteModal = ({
     const validationErrors = validateForm()
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
-      if (validationErrors.documentos) {
-        setDocumentos((prev) =>
-          prev.map((item) => {
-            if (item.obligatorio && !item.selectedFile && !item.uploadedFileName) {
-              return {
-                ...item,
-                errorMessage: 'Documento obligatorio pendiente.',
-              }
-            }
-
-            return item
-          }),
-        )
-      }
       return
     }
 
-    if ((!programaId || !convocatoriaAdmisionId) && !createdAspirante) {
+    if (!programaId || !convocatoriaAdmisionId) {
       return
     }
 
     setIsSubmitting(true)
-    setUploadSummary({ status: 'idle', failedItems: [] })
     setErrors((prev) => ({ ...prev, general: undefined }))
 
     try {
-      let created = createdAspirante
-
-      if (!created) {
-        const payload: AspiranteCreateRequestDto = {
-          nombre1: formState.nombre1.trim(),
-          nombre2: formState.nombre2.trim() || null,
-          apellido1: formState.apellido1.trim(),
-          apellido2: formState.apellido2.trim() || null,
-          tipoDocumentoIdentificacionId: Number(formState.tipoDocumentoIdentificacionId),
-          numeroDocumento: formState.numeroDocumento.trim(),
-          emailPersonal: formState.emailPersonal.trim(),
-          numeroInscripcionUis: formState.numeroInscripcionUis.trim(),
-          telefono: formState.telefono.trim() || null,
-          observaciones: null,
-          programaId: programaId ?? 0,
-          convocatoriaAdmisionId: convocatoriaAdmisionId ?? 0,
-        }
-
-        created = await createAspirante(payload)
-        setCreatedAspirante(created)
+      const payload: AspiranteCreateRequestDto = {
+        nombre1: formState.nombre1.trim(),
+        nombre2: formState.nombre2.trim() || null,
+        apellido1: formState.apellido1.trim(),
+        apellido2: formState.apellido2.trim() || null,
+        tipoDocumentoIdentificacionId: Number(formState.tipoDocumentoIdentificacionId),
+        numeroDocumento: formState.numeroDocumento.trim(),
+        emailPersonal: formState.emailPersonal.trim(),
+        numeroInscripcionUis: formState.numeroInscripcionUis.trim(),
+        telefono: formState.telefono.trim() || null,
+        observaciones: null,
+        programaId,
+        convocatoriaAdmisionId,
       }
 
-      const failedItems = await uploadSelectedDocuments(
-        created.id,
-        created.inscripcionAdmisionId,
-        'all',
-      )
-
-      const summary: UploadSummary = {
-        status: failedItems.length === 0 ? 'success' : 'partial',
-        failedItems,
-      }
-
-      setUploadSummary(summary)
-      onCreated?.({ created, uploadSummary: summary })
+      const created = await createAspirante(payload)
+      onCreated?.(created)
       onClose()
       resetForm()
     } catch (error) {
@@ -487,39 +236,6 @@ export const CreateAspiranteModal = ({
     }
   }
 
-  const handleRetryFailed = useCallback(async () => {
-    if (!createdAspirante) {
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const failedItems = await uploadSelectedDocuments(
-        createdAspirante.id,
-        createdAspirante.inscripcionAdmisionId,
-        'failed',
-      )
-
-      const summary: UploadSummary = {
-        status: failedItems.length === 0 ? 'success' : 'partial',
-        failedItems,
-      }
-      setUploadSummary(summary)
-      onCreated?.({ created: createdAspirante, uploadSummary: summary })
-
-      if (failedItems.length === 0) {
-        onClose()
-        resetForm()
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [createdAspirante, onClose, onCreated, resetForm, uploadSelectedDocuments])
-
-  const isAspiranteCreated = createdAspirante != null
-  const hasUploadErrors = uploadSummary.failedItems.length > 0
-  const isDocsEmptyState = !isLoadingDocs && !docsError && documentos.length === 0
-
   if (!open) {
     return null
   }
@@ -528,26 +244,16 @@ export const CreateAspiranteModal = ({
     <div className="create-aspirante-modal" role="presentation">
       <div
         className="create-aspirante-modal__backdrop"
-        role="bn"
-        tabIndex={0}
-        aria-label="Cerrar"
+        role="presentation"
+        aria-hidden="true"
         onClick={() => {
           if (!isSubmitting) onClose()
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            if (!isSubmitting) onClose()
-          }
         }}
       />
       {isSubmitting ? (
         <div className="create-aspirante-modal__progress" role="status" aria-live="polite">
           <span className="create-aspirante-modal__spinner" aria-hidden="true" />
-          <strong>
-            {isAspiranteCreated
-              ? 'Subiendo documentos…'
-              : 'Creando aspirante y subiendo documentos…'}
-          </strong>
+          <strong>Creando aspirante…</strong>
           <span>Espere mientras finaliza el proceso.</span>
         </div>
       ) : null}
@@ -566,11 +272,6 @@ export const CreateAspiranteModal = ({
           <h3 className="create-aspirante-modal__section-title create-aspirante-modal__field--full">
             Datos del aspirante
           </h3>
-          {isAspiranteCreated ? (
-            <p className="create-aspirante-modal__status create-aspirante-modal__field--full">
-              Aspirante creado. Puede cargar o reintentar documentos pendientes.
-            </p>
-          ) : null}
           <label className="create-aspirante-modal__field">
             <span>Primer nombre</span>
             <input
@@ -580,7 +281,7 @@ export const CreateAspiranteModal = ({
               autoComplete="given-name"
               value={formState.nombre1}
               onChange={(event) => handleChange('nombre1', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
             {errors.nombre1 ? (
               <span className="create-aspirante-modal__error">{errors.nombre1}</span>
@@ -594,7 +295,7 @@ export const CreateAspiranteModal = ({
               placeholder="Segundo nombre"
               value={formState.nombre2}
               onChange={(event) => handleChange('nombre2', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -606,7 +307,7 @@ export const CreateAspiranteModal = ({
               autoComplete="family-name"
               value={formState.apellido1}
               onChange={(event) => handleChange('apellido1', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
             {errors.apellido1 ? (
               <span className="create-aspirante-modal__error">{errors.apellido1}</span>
@@ -620,7 +321,7 @@ export const CreateAspiranteModal = ({
               placeholder="Segundo apellido"
               value={formState.apellido2}
               onChange={(event) => handleChange('apellido2', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -632,7 +333,7 @@ export const CreateAspiranteModal = ({
                 onChange={(event) =>
                   handleChange('tipoDocumentoIdentificacionId', event.target.value)
                 }
-                disabled={isSubmitting || tiposLoading || isAspiranteCreated}
+                disabled={isSubmitting || tiposLoading}
               >
                 <option value="">Seleccione una opción</option>
                 {tiposDocumento.map((tipo) => (
@@ -672,7 +373,7 @@ export const CreateAspiranteModal = ({
               placeholder="Documento"
               value={formState.numeroDocumento}
               onChange={(event) => handleChange('numeroDocumento', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
             {errors.numeroDocumento ? (
               <span className="create-aspirante-modal__error">
@@ -688,7 +389,7 @@ export const CreateAspiranteModal = ({
               placeholder="correo@dominio.com"
               value={formState.emailPersonal}
               onChange={(event) => handleChange('emailPersonal', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
             {errors.emailPersonal ? (
               <span className="create-aspirante-modal__error">
@@ -704,7 +405,7 @@ export const CreateAspiranteModal = ({
               placeholder="Opcional"
               value={formState.telefono}
               onChange={(event) => handleChange('telefono', event.target.value)}
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
           </label>
 
@@ -717,7 +418,7 @@ export const CreateAspiranteModal = ({
               onChange={(event) =>
                 handleChange('numeroInscripcionUis', event.target.value)
               }
-              disabled={isSubmitting || isAspiranteCreated}
+              disabled={isSubmitting}
             />
             {errors.numeroInscripcionUis ? (
               <span className="create-aspirante-modal__error">
@@ -725,69 +426,6 @@ export const CreateAspiranteModal = ({
               </span>
             ) : null}
           </label>
-
-          <div className="create-aspirante-modal__field create-aspirante-modal__field--full">
-            <h3 className="create-aspirante-modal__section-title">Documentos</h3>
-            <p className="create-aspirante-modal__helper">
-              Adjunte los requisitos en formato PDF antes de enviar. Los obligatorios deben estar cargados.
-            </p>
-            <div className="create-aspirante-modal__documents">
-              {isLoadingDocs ? (
-                <p className="create-aspirante-modal__helper">Cargando documentos…</p>
-              ) : docsError ? (
-                <div className="create-aspirante-modal__docs-state">
-                  <p className="create-aspirante-modal__error">{docsError}</p>
-                  <button
-                    type="button"
-                    className="create-aspirante-modal__button create-aspirante-modal__button--ghost"
-                    onClick={loadTramiteDocumentos}
-                    disabled={isLoadingDocs || isSubmitting}
-                  >
-                    Reintentar
-                  </button>
-                </div>
-              ) : documentos.length === 0 ? (
-                <p className="create-aspirante-modal__helper">
-                  No hay documentos configurados para ADMISION_COORDINACION.
-                </p>
-              ) : (
-                documentos.map((item) => (
-                  <DocumentUploadCard
-                    key={item.id}
-                    item={item}
-                    onSelectFile={handleSelectFile}
-                    onRemoveFile={handleRemoveFile}
-                    disabled={isSubmitting}
-                    fileAccept={PDF_FILE_ACCEPT}
-                  />
-                ))
-              )}
-            </div>
-            {errors.documentos ? (
-              <span className="create-aspirante-modal__error">{errors.documentos}</span>
-            ) : null}
-            {isDocsEmptyState ? (
-              <span className="create-aspirante-modal__error">
-                No es posible finalizar porque no hay documentos del trámite configurados.
-              </span>
-            ) : null}
-          </div>
-
-          {uploadSummary.status === 'partial' ? (
-            <div className="create-aspirante-modal__summary create-aspirante-modal__field--full">
-              <p className="create-aspirante-modal__summary-title">
-                Aspirante creado. Falló la carga de {uploadSummary.failedItems.length}{' '}
-                documento(s).
-              </p>
-              <ul className="create-aspirante-modal__summary-list">
-                {uploadSummary.failedItems.map((item) => (
-                  <li key={item.id}>
-                    <strong>{item.nombre}:</strong> {item.errorMessage}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
 
           {errors.general ? (
             <p
@@ -808,34 +446,12 @@ export const CreateAspiranteModal = ({
             >
               Cancelar
             </button>
-            {hasUploadErrors ? (
-              <button
-                type="button"
-                className="create-aspirante-modal__button create-aspirante-modal__button--ghost"
-                onClick={handleRetryFailed}
-                disabled={isSubmitting}
-              >
-                Reintentar fallidos
-              </button>
-            ) : null}
             <button
               type="submit"
               className="create-aspirante-modal__button"
-              disabled={
-                isSubmitting ||
-                isLoadingDocs ||
-                ((!programaId || !convocatoriaAdmisionId) && !isAspiranteCreated) ||
-                (!!docsError && !import.meta.env.DEV) ||
-                isDocsEmptyState
-              }
+              disabled={isSubmitting || !programaId || !convocatoriaAdmisionId}
             >
-              {isSubmitting
-                ? isAspiranteCreated
-                  ? 'Cargando documentos…'
-                  : 'Creando…'
-                : isAspiranteCreated
-                  ? 'Cargar documentos'
-                  : 'Crear aspirante y cargar documentos'}
+              {isSubmitting ? 'Creando…' : 'Crear aspirante'}
             </button>
           </footer>
         </form>

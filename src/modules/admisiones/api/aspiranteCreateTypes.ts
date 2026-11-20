@@ -54,3 +54,28 @@ export interface AspiranteConsultaResponseDto {
   director: string | null
   grupoInvestigacion: string | null
 }
+
+/** Una fila del Excel de aspirantes ya interpretada por el backend (ver POST /aspirante/importar-excel). */
+export interface AspiranteExcelFilaDto {
+  fila: number
+  nombreOriginal: string
+  nombre1: string | null
+  nombre2: string | null
+  apellido1: string | null
+  apellido2: string | null
+  tipoDocumentoIdentificacionId: number | null
+  tipoDocumentoNombre: string | null
+  numeroDocumento: string | null
+  emailPersonal: string | null
+  telefono: string | null
+  numeroInscripcionUis: string | null
+  programaId: number | null
+  /** Razones por las que la fila no se puede crear; vacío si es válida. */
+  errores: string[]
+  valida: boolean
+}
+
+export interface ImportacionAspirantesExcelDto {
+  programaConvocatoria: string
+  filas: AspiranteExcelFilaDto[]
+}
