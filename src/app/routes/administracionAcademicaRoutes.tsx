@@ -39,6 +39,7 @@ export const administracionAcademicaRoutes = (
       <Route path="grupos-investigacion/instituciones" element={<InstitucionesGrupoPage />} />
       <Route path="grupos-investigacion/instituciones/escuelas/nueva" element={<InstitucionFormPage tipo="ESCUELA" />} />
       <Route path="grupos-investigacion/instituciones/facultades/nueva" element={<InstitucionFormPage tipo="FACULTAD" />} />
+      <Route path="grupos-investigacion/instituciones/externas/nueva" element={<InstitucionFormPage tipo="EXTERNA" />} />
       <Route path="plantillas-correo" element={<PlantillasCorreoPage />} />
       <Route path="plantillas-correo/:plantillaId/editar" element={<PlantillaCorreoFormPage />} />
       <Route path="rubrica-evaluacion" element={<RubricaEvaluacionPage />} />

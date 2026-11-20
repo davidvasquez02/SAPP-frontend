@@ -16,16 +16,33 @@ import './GestionGruposInvestigacionPage.css'
 
 const TIPO_ESCUELA: TipoInstitucionGrupo = 'ESCUELA'
 const TIPO_FACULTAD: TipoInstitucionGrupo = 'FACULTAD'
+const TIPO_EXTERNA: TipoInstitucionGrupo = 'EXTERNA'
 const TAMANO_PAGINA = 10
+
+type Ambito = 'UIS' | 'EXTERNAS'
 
 const RUTA_NUEVA: Record<TipoInstitucionGrupo, string> = {
   ESCUELA: `${RUTA_GRUPOS}/instituciones/escuelas/nueva`,
   FACULTAD: `${RUTA_GRUPOS}/instituciones/facultades/nueva`,
+  EXTERNA: `${RUTA_GRUPOS}/instituciones/externas/nueva`,
 }
 
 const TITULO: Record<TipoInstitucionGrupo, string> = {
   ESCUELA: 'Escuelas',
   FACULTAD: 'Facultades',
+  EXTERNA: 'Instituciones externas',
+}
+
+const SINGULAR: Record<TipoInstitucionGrupo, string> = {
+  ESCUELA: 'Escuela',
+  FACULTAD: 'Facultad',
+  EXTERNA: 'Institución externa',
+}
+
+const BOTON_NUEVA: Record<TipoInstitucionGrupo, string> = {
+  ESCUELA: 'Nueva escuela',
+  FACULTAD: 'Nueva facultad',
+  EXTERNA: 'Nueva institución externa',
 }
 
 interface MensajeNavegacion {
@@ -107,7 +124,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
         institucionPadreId: institucion.tipo === TIPO_ESCUELA && padreEditado ? Number(padreEditado) : null,
       })
       setEditandoId(null)
-      onMensaje(`${TITULO[tipo].slice(0, -1)} actualizada.`)
+      onMensaje(`${SINGULAR[tipo]} actualizada.`)
       setRecarga((valor) => valor + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No fue posible actualizar la institución.')
@@ -122,7 +139,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
     try {
       await eliminarInstitucionGrupo(institucion.id)
       setConfirmarEliminarId(null)
-      onMensaje(`${TITULO[tipo].slice(0, -1)} "${institucion.nombre}" eliminada.`)
+      onMensaje(`${SINGULAR[tipo]} "${institucion.nombre}" eliminada.`)
       setRecarga((valor) => valor + 1)
     } catch (err) {
       setConfirmarEliminarId(null)
@@ -136,13 +153,14 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
   const total = pagina?.totalElements ?? 0
   const totalPaginas = pagina?.totalPages ?? 0
   const hayFiltros = busqueda.trim() !== '' || (esEscuela && facultadFiltro !== '')
+  const minusculas = TITULO[tipo].toLowerCase()
 
   return (
     <section className="gestion-grupos__bloque" aria-labelledby={`bloque-${tipo}`}>
       <div className="gestion-grupos__bloque-cabecera">
         <h2 id={`bloque-${tipo}`} className="gestion-grupos__page-title">{TITULO[tipo]} <span className="gestion-grupos__conteo">({total})</span></h2>
         <button type="button" className="gestion-grupos__primary" onClick={() => navigate(RUTA_NUEVA[tipo])}>
-          Nueva {tipo === TIPO_ESCUELA ? 'escuela' : 'facultad'}
+          {BOTON_NUEVA[tipo]}
         </button>
       </div>
 
@@ -151,7 +169,7 @@ const BloqueInstituciones = ({ tipo, busqueda, facultadFiltro, facultades, onMen
 
       {!isLoading && total === 0 ? (
         <p className="gestion-grupos__status">
-          {hayFiltros ? `No hay ${TITULO[tipo].toLowerCase()} que coincidan con los filtros.` : `No hay ${TITULO[tipo].toLowerCase()} registradas.`}
+          {hayFiltros ? `No hay ${minusculas} que coincidan con los filtros.` : `No hay ${minusculas} registradas.`}
         </p>
       ) : null}
 
@@ -243,7 +261,11 @@ const InstitucionesGrupoPage = () => {
   const navegacion = location.state as MensajeNavegacion | null
   const mensajeInicial = navegacion?.mensaje ?? null
 
-  const [seccion, setSeccion] = useState<TipoInstitucionGrupo>(navegacion?.seccion ?? TIPO_ESCUELA)
+  const [ambito, setAmbito] = useState<Ambito>(navegacion?.seccion === TIPO_EXTERNA ? 'EXTERNAS' : 'UIS')
+  // dentro de la UIS la facultad va primero: de ella dependen las escuelas
+  const [seccion, setSeccion] = useState<TipoInstitucionGrupo>(
+    navegacion?.seccion === TIPO_ESCUELA ? TIPO_ESCUELA : TIPO_FACULTAD,
+  )
   const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
   const [mensaje, setMensaje] = useState<string | null>(mensajeInicial)
   const [busqueda, setBusqueda] = useState('')
@@ -253,45 +275,92 @@ const InstitucionesGrupoPage = () => {
     getOpcionesInstituciones(TIPO_FACULTAD).then(setFacultades).catch(() => setFacultades([]))
   }, [])
 
+  const tipoActivo: TipoInstitucionGrupo = ambito === 'EXTERNAS' ? TIPO_EXTERNA : seccion
+  const muestraFiltros = tipoActivo !== TIPO_FACULTAD
   const hayFiltros = busqueda.trim() !== '' || facultadFiltro !== ''
+  const limpiarFiltros = () => {
+    setBusqueda('')
+    setFacultadFiltro('')
+  }
+
+  const cambiarAmbito = (nuevo: Ambito) => {
+    setAmbito(nuevo)
+    limpiarFiltros()
+  }
+  const cambiarSeccion = (nueva: TipoInstitucionGrupo) => {
+    setSeccion(nueva)
+    limpiarFiltros()
+  }
 
   return (
     <GruposInvestigacionLayout>
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
-          <p>Facultades de la UIS y las escuelas de cada una. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.</p>
+          <p>
+            {ambito === 'UIS'
+              ? 'Facultades de la UIS y las escuelas de cada una. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.'
+              : 'Instituciones de otras universidades u organizaciones. Se registran en general (por ejemplo, Universidad de Valencia), sin facultades ni escuelas.'}
+          </p>
         </header>
 
         {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
 
-        <div className="gestion-grupos__subtabs" role="tablist" aria-label="Tipo de institución">
+        <div className="gestion-grupos__subtabs" role="tablist" aria-label="Ámbito de la institución">
           <button
             type="button"
             role="tab"
-            aria-selected={seccion === TIPO_ESCUELA}
-            className={`gestion-grupos__subtab${seccion === TIPO_ESCUELA ? ' gestion-grupos__subtab--active' : ''}`}
-            onClick={() => setSeccion(TIPO_ESCUELA)}
+            aria-selected={ambito === 'UIS'}
+            className={`gestion-grupos__subtab${ambito === 'UIS' ? ' gestion-grupos__subtab--active' : ''}`}
+            onClick={() => cambiarAmbito('UIS')}
           >
-            Escuelas
+            UIS
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={seccion === TIPO_FACULTAD}
-            className={`gestion-grupos__subtab${seccion === TIPO_FACULTAD ? ' gestion-grupos__subtab--active' : ''}`}
-            onClick={() => setSeccion(TIPO_FACULTAD)}
+            aria-selected={ambito === 'EXTERNAS'}
+            className={`gestion-grupos__subtab${ambito === 'EXTERNAS' ? ' gestion-grupos__subtab--active' : ''}`}
+            onClick={() => cambiarAmbito('EXTERNAS')}
           >
-            Facultades
+            Instituciones externas
           </button>
         </div>
 
-        {seccion === TIPO_ESCUELA ? (
-          <>
-            <div className="sapp-filters-panel">
-              <label className="sapp-filter-field">
-                <span>Buscar por nombre</span>
-                <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. Eléctrica o Sistemas" />
-              </label>
+        {ambito === 'UIS' ? (
+          <div className="gestion-grupos__subtabs gestion-grupos__subtabs--nivel2" role="tablist" aria-label="Tipo de institución de la UIS">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={seccion === TIPO_FACULTAD}
+              className={`gestion-grupos__subtab${seccion === TIPO_FACULTAD ? ' gestion-grupos__subtab--active' : ''}`}
+              onClick={() => cambiarSeccion(TIPO_FACULTAD)}
+            >
+              Facultades
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={seccion === TIPO_ESCUELA}
+              className={`gestion-grupos__subtab${seccion === TIPO_ESCUELA ? ' gestion-grupos__subtab--active' : ''}`}
+              onClick={() => cambiarSeccion(TIPO_ESCUELA)}
+            >
+              Escuelas
+            </button>
+          </div>
+        ) : null}
+
+        {muestraFiltros ? (
+          <div className="sapp-filters-panel">
+            <label className="sapp-filter-field">
+              <span>Buscar por nombre</span>
+              <input
+                type="search"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder={tipoActivo === TIPO_EXTERNA ? 'Ej. Valencia' : 'Ej. Eléctrica o Sistemas'}
+              />
+            </label>
+            {tipoActivo === TIPO_ESCUELA ? (
               <label className="sapp-filter-field">
                 <span>Facultad</span>
                 <select value={facultadFiltro} onChange={(e) => setFacultadFiltro(e.target.value)}>
@@ -301,27 +370,21 @@ const InstitucionesGrupoPage = () => {
                   ))}
                 </select>
               </label>
-              <button type="button" className="sapp-filters-clear-button" onClick={() => { setBusqueda(''); setFacultadFiltro('') }} disabled={!hayFiltros}>
-                Limpiar filtros
-              </button>
-            </div>
-            <BloqueInstituciones
-              tipo={TIPO_ESCUELA}
-              busqueda={busqueda}
-              facultadFiltro={facultadFiltro}
-              facultades={facultades}
-              onMensaje={setMensaje}
-            />
-          </>
-        ) : (
-          <BloqueInstituciones
-            tipo={TIPO_FACULTAD}
-            busqueda=""
-            facultadFiltro=""
-            facultades={facultades}
-            onMensaje={setMensaje}
-          />
-        )}
+            ) : null}
+            <button type="button" className="sapp-filters-clear-button" onClick={limpiarFiltros} disabled={!hayFiltros}>
+              Limpiar filtros
+            </button>
+          </div>
+        ) : null}
+
+        <BloqueInstituciones
+          key={tipoActivo}
+          tipo={tipoActivo}
+          busqueda={muestraFiltros ? busqueda : ''}
+          facultadFiltro={tipoActivo === TIPO_ESCUELA ? facultadFiltro : ''}
+          facultades={facultades}
+          onMensaje={setMensaje}
+        />
       </section>
     </GruposInvestigacionLayout>
   )

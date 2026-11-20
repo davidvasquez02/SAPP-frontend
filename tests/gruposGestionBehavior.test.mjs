@@ -64,6 +64,13 @@ test('gestión de grupos: creación, edición e instituciones', async t => {
     const v = mount(s, Institution, { tipo: 'FACULTAD' }); change(v, 'Nombre', 'Nueva facultad'); submit(v); await v.findByText(/Destino: Facultad/)
     assert.equal(reads.length, 0); assert.equal(writes[0].body.institucionPadreId, null)
   })
+  await t.test('institución externa se crea en general: sin facultad ni consulta de catálogo', async s => {
+    const v = mount(s, Institution, { tipo: 'EXTERNA' })
+    assert.equal(v.queryAllByLabelText('Facultad').length, 0)
+    submit(v); assert.ok(v.getByText('Escribe el nombre de la institución externa.'))
+    change(v, 'Nombre', '  Universidad de Valencia '); submit(v); await v.findByText(/Destino: Institución externa/)
+    assert.equal(reads.length, 0); assert.deepEqual(writes[0].body, { nombre: 'Universidad de Valencia', tipo: 'EXTERNA', institucionPadreId: null })
+  })
   await t.test('sin facultades no permite seleccionar padre; cancelar retorna sección', async s => {
     institutions = []; const v = mount(s, Institution, { tipo: 'ESCUELA' }); await v.findByText('Primero registra una facultad')
     assert.equal(v.getByLabelText('Facultad').disabled, true); ui.fireEvent.click(v.getByRole('button', { name: 'Cancelar' })); await v.findByText('Destino: ESCUELA')

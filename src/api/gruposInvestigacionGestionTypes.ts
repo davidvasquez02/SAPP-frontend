@@ -7,7 +7,8 @@ export interface GrupoGestionDto {
   estado: 'ACTIVO' | 'RETIRADO'
 }
 
-export type TipoInstitucionGrupo = 'FACULTAD' | 'ESCUELA'
+/** FACULTAD y ESCUELA son de la UIS; EXTERNA es una institución de otra universidad u organización, sin padre. */
+export type TipoInstitucionGrupo = 'FACULTAD' | 'ESCUELA' | 'EXTERNA'
 
 export interface InstitucionGrupoDto {
   id: number

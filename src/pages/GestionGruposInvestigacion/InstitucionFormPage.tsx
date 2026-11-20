@@ -19,7 +19,9 @@ interface InstitucionFormPageProps {
 const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
   const navigate = useNavigate()
   const esEscuela = tipo === 'ESCUELA'
-  const etiqueta = esEscuela ? 'escuela' : 'facultad'
+  const esExterna = tipo === 'EXTERNA'
+  const etiqueta = esEscuela ? 'escuela' : esExterna ? 'institución externa' : 'facultad'
+  const etiquetaCapital = esEscuela ? 'Escuela' : esExterna ? 'Institución externa' : 'Facultad'
 
   const [facultades, setFacultades] = useState<InstitucionGrupoDto[]>([])
   const [nombre, setNombre] = useState('')
@@ -58,7 +60,7 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
       })
       navigate(`${RUTA_GRUPOS}/instituciones`, {
         state: {
-          mensaje: `${esEscuela ? 'Escuela' : 'Facultad'} "${creada.nombre}" agregada correctamente.`,
+          mensaje: `${etiquetaCapital} "${creada.nombre}" agregada correctamente.`,
           seccion: tipo,
         },
       })
@@ -76,9 +78,10 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
           <div>
-            <h2 className="gestion-grupos__page-title">{esEscuela ? 'Nueva escuela' : 'Nueva facultad'}</h2>
+            <h2 className="gestion-grupos__page-title">Nueva {etiqueta}</h2>
             <p>
               Revisa primero la lista: si la {etiqueta} ya existe, no la agregues de nuevo. El sistema tampoco permite nombres repetidos.
+              {esExterna ? ' Regístrala en general, sin facultades ni escuelas (por ejemplo, Universidad de Valencia).' : null}
               {esEscuela ? <> Si la facultad no aparece, agrégala primero en <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</> : null}
             </p>
           </div>
@@ -97,7 +100,7 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
           >
             <label>
               Nombre
-              <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre completo" />
+              <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={esExterna ? 'Ej. Universidad de Valencia' : 'Nombre completo'} />
             </label>
 
             {esEscuela ? (
