@@ -40,6 +40,8 @@ type DocumentAction = 'view' | 'download'
 type DocumentCardDocument = DocumentoEstudianteMetadataDto & {
   tramiteId: number | null
   tipoTramite: string | null
+  /** Tarjeta vacía para agregar otro documento de un tipo que admite varios. */
+  esAgregarOtro?: boolean
 }
 
 type EnrollmentDocumentGroup = {
@@ -198,16 +200,47 @@ const withDocumentContext = (
   tipoTramite: group.tipoTramite,
 })
 
+/**
+ * Para los tipos que admiten varias cargas (las referencias académicas) y que ya tienen alguna, agrega al final de
+ * esas cargas una tarjeta vacía: es la que permite sumar otra sin reemplazar las que ya están.
+ */
+const withAddAnotherCard = (documentos: DocumentCardDocument[]): DocumentCardDocument[] => {
+  const resultado: DocumentCardDocument[] = []
+  documentos.forEach((documento, index) => {
+    resultado.push(documento)
+    const siguiente = documentos[index + 1]
+    const esUltimaDelTipo = !siguiente
+      || siguiente.tipoDocumentoTramiteId !== documento.tipoDocumentoTramiteId
+      || siguiente.tramiteId !== documento.tramiteId
+    if (documento.permiteMultiples && documento.id && esUltimaDelTipo) {
+      resultado.push({
+        ...documento,
+        id: null,
+        nombreArchivo: null,
+        estado: null,
+        fechaCarga: null,
+        version: null,
+        secuencia: null,
+        mimeType: null,
+        tamanoBytes: null,
+        documentoCargado: false,
+        esAgregarOtro: true,
+      })
+    }
+  })
+  return resultado
+}
+
 const buildAdmissionDocuments = (
   data: DocumentosEstudianteGrupoDto[],
 ): DocumentCardDocument[] => {
-  return ADMISSION_TYPES.flatMap((tipoTramite) =>
+  return withAddAnotherCard(ADMISSION_TYPES.flatMap((tipoTramite) =>
     data
       .filter((group) => normalizeTipoTramite(group.tipoTramite) === tipoTramite)
       .flatMap((group) => [...(group.documentos ?? [])]
         .sort(compareDocuments)
         .map((documento) => withDocumentContext(documento, group))),
-  )
+  ))
 }
 
 const buildEnrollmentGroups = (
@@ -305,7 +338,8 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
   const isViewing = isProcessing && activeAction?.action === 'view'
   const isDownloading = isProcessing && activeAction?.action === 'download'
   const uploadKey = getUploadDocumentKey(documento)
-  const uploadEnabled = canUploadDocument(documento)
+  // Un tipo que admite varias cargas no se "actualiza": cada carga es otro documento, y eso lo ofrece la tarjeta de agregar.
+  const uploadEnabled = canUploadDocument(documento) && !(documento.permiteMultiples && hasFile)
   const isUploading = uploadingAction?.key === uploadKey
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -323,7 +357,7 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
         <span className="estudiante-detalle__document-icon" aria-hidden="true">
           📄
         </span>
-        <h4>{documento.tipoDocumento || 'Documento requerido'}</h4>
+        <h4>{documento.tipoDocumento || 'Documento requerido'}{documento.esAgregarOtro ? ' (adicional)' : ''}</h4>
         <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${getDocumentoEstadoModifier(estado)}`}>
           {estado}
         </span>
@@ -359,7 +393,9 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               ? `${hasFile ? 'Actualizando' : 'Cargando'} ${uploadingAction?.filename ?? 'archivo'}...`
               : hasFile
                 ? 'Actualizar documento'
-                : 'Cargar documento'}
+                : documento.esAgregarOtro
+                  ? 'Agregar otro documento'
+                  : 'Cargar documento'}
             <input
               type="file"
               className="estudiante-detalle__upload-input"

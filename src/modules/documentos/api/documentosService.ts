@@ -6,6 +6,8 @@ import type { ApiResponse, DocumentoTramiteItemDto } from './types'
 export interface DocumentoEstudianteMetadataDto {
   documentoCargado?: boolean
   obligatorio?: boolean
+  /** true si de este tipo se pueden cargar varios documentos (p. ej. referencias académicas): se agrega otro en vez de reemplazar. */
+  permiteMultiples?: boolean
   id: number | null
   estado: string | null
   fechaCarga: string | null
