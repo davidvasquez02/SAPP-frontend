@@ -494,27 +494,6 @@ const InscripcionDocumentosPage = () => {
               </div>
             )
           })}
-          <div className="inscripcion-documentos__footer">
-            <div>
-              <p className="inscripcion-documentos__footer-title">
-                Obligatorios aprobados: {requiredApprovedCount}/{requiredDocs.length}
-              </p>
-              {!allRequiredApproved ? (
-                <p className="inscripcion-documentos__footer-hint">
-                  Aprueba todos los documentos obligatorios para continuar.
-                </p>
-              ) : null}
-            </div>
-            <button
-              type="button"
-              className="inscripcion-documentos__continue-button"
-              disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
-              aria-disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
-              onClick={() => void handleContinue()}
-            >
-              {isStartingEvaluacion ? 'Iniciando evaluación...' : 'Continuar evaluación'}
-            </button>
-          </div>
         </div>
       )}
       {!Number.isNaN(tramiteId) ? (
@@ -524,6 +503,30 @@ const InscripcionDocumentosPage = () => {
           puedeCargar={canManageDocuments}
           inscripcionCerrada={isEstadoFinal}
         />
+      ) : null}
+      {/* "Continuar" va al final de la pantalla, debajo del cargue de referencias. */}
+      {!isLoading && !errorMessage && documentos.length > 0 ? (
+        <div className="inscripcion-documentos__footer">
+          <div>
+            <p className="inscripcion-documentos__footer-title">
+              Obligatorios aprobados: {requiredApprovedCount}/{requiredDocs.length}
+            </p>
+            {!allRequiredApproved ? (
+              <p className="inscripcion-documentos__footer-hint">
+                Aprueba todos los documentos obligatorios para continuar.
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="inscripcion-documentos__continue-button"
+            disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
+            aria-disabled={!allRequiredApproved || isStartingEvaluacion || isEstadoFinal}
+            onClick={() => void handleContinue()}
+          >
+            {isStartingEvaluacion ? 'Iniciando evaluación...' : 'Continuar evaluación'}
+          </button>
+        </div>
       ) : null}
     </section>
   )
