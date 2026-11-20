@@ -245,8 +245,16 @@ export const CargarAspirantesExcelModal = ({
           <>
             <div className="cargar-aspirantes__avance" role="status" aria-live="polite">
               <div className="cargar-aspirantes__avance-texto">
-                <strong>{fase === 'creando' ? 'Creando aspirantes…' : 'Proceso terminado'}</strong>
+                <strong>{fase === 'creando' ? 'Creando aspirantes…' : 'Cargue terminado'}</strong>
                 <span>{procesados} de {filas.length}</span>
+              </div>
+              <div className="cargar-aspirantes__resumen" aria-label="Resumen del cargue">
+                <span className="cargar-aspirantes__resumen-ok">
+                  <b>✓ {creados}</b> {creados === 1 ? 'creado' : 'creados'}
+                </span>
+                <span className={`cargar-aspirantes__resumen-error${fallidos.length === 0 ? ' cargar-aspirantes__resumen--vacio' : ''}`}>
+                  <b>✗ {fallidos.length}</b> {fallidos.length === 1 ? 'con error' : 'con errores'}
+                </span>
               </div>
               <div
                 className="cargar-aspirantes__barra"
@@ -284,54 +292,17 @@ export const CargarAspirantesExcelModal = ({
                 </li>
               ))}
             </ol>
+            {fase === 'terminado' ? (
+              <footer className="cargar-aspirantes__pie">
+                <button type="button" className="cargar-aspirantes__boton" onClick={onClose} autoFocus>
+                  Cerrar
+                </button>
+              </footer>
+            ) : null}
           </>
         ) : null}
       </div>
 
-      {fase === 'terminado' ? (
-        <div className="cargar-aspirantes__resultado-capa" role="presentation">
-          <div
-            className="cargar-aspirantes__resultado"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="cargar-aspirantes-resultado-title"
-          >
-            <span
-              className={`cargar-aspirantes__icono cargar-aspirantes__icono--grande cargar-aspirantes__icono--${creados > 0 ? 'ok' : 'error'}`}
-              aria-hidden="true"
-            >
-              {creados > 0 ? '✓' : '✗'}
-            </span>
-            <h3 id="cargar-aspirantes-resultado-title">
-              {creados > 0
-                ? `Cargue exitoso de ${creados} aspirante${creados === 1 ? '' : 's'}`
-                : 'No se creó ningún aspirante'}
-            </h3>
-
-            {fallidos.length > 0 ? (
-              <div className="cargar-aspirantes__fallidos">
-                <p>
-                  {fallidos.length === 1
-                    ? 'No se pudo crear 1 aspirante:'
-                    : `No se pudieron crear ${fallidos.length} aspirantes:`}
-                </p>
-                <ul>
-                  {fallidos.map((item) => (
-                    <li key={item.fila.fila}>
-                      <strong>{nombreDe(item.fila)}</strong>
-                      <span>{item.motivo}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            <button type="button" className="cargar-aspirantes__boton" onClick={onClose} autoFocus>
-              Aceptar
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }

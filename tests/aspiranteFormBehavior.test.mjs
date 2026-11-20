@@ -176,21 +176,23 @@ test('admisiones React: cargue de aspirantes desde Excel, uno a uno y sin detene
 
   await t.test('crea los válidos, marca los fallidos con su razón y resume al final', async s => {
     const view = mount(s)
-    await view.findByText('Cargue exitoso de 2 aspirantes')
+    await view.findByRole('button', { name: 'Cerrar' })
     assert.equal(readBodies[0].convocatoriaAdmisionId, 107)
     assert.equal(readBodies[0].nombreArchivo, 'ESTUDIANTES_2026-1.xls')
     // La fila con error del Excel no se envía; la que falla en el backend sí se intentó y no detuvo a la siguiente.
     assert.deepEqual(creates.map(c => c.numeroInscripcionUis), ['11', '33', '44'])
     assert.deepEqual(finished, [{ creados: 2, fallidos: 2 }])
-    assert.ok(view.getByText('No se pudieron crear 2 aspirantes:'))
+    // El resumen y los fallidos con su razon quedan en la misma pantalla, sin un modal encima.
+    assert.ok(view.getByText('✓ 2')); assert.ok(view.getByText('✗ 2'))
+    assert.equal(view.queryAllByRole('alertdialog').length, 0)
     assert.ok(view.getAllByText(/Correo inválido/).length >= 1)
     assert.ok(view.getAllByText(/Ya existe un aspirante/).length >= 1)
-    assert.ok(view.getByRole('button', { name: 'Aceptar' }))
   })
 
   await t.test('lo que excede los cupos disponibles falla sin llamar al backend', async s => {
     const view = mount(s, { cuposDisponibles: 1 })
-    await view.findByText('Cargue exitoso de 1 aspirante')
+    await view.findByRole('button', { name: 'Cerrar' })
+    assert.ok(view.getByText('✓ 1'))
     assert.deepEqual(creates.map(c => c.numeroInscripcionUis), ['11'])
     assert.ok(view.getAllByText(/cupo máximo/).length >= 1)
   })
