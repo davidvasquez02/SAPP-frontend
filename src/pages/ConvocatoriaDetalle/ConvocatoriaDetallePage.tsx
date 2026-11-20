@@ -521,6 +521,7 @@ const ConvocatoriaDetallePage = () => {
                 <input
                   ref={excelInputRef}
                   type="file"
+                  data-file-drop="off"
                   accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   hidden
                   onChange={(event) => {
