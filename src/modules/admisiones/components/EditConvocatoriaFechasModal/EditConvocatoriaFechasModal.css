@@ -62,7 +62,8 @@
   font-weight: 600;
 }
 
-.edit-convocatoria-fechas-modal__fields input {
+.edit-convocatoria-fechas-modal__fields input,
+.edit-convocatoria-fechas-modal__fields textarea {
   width: 100%;
   border: 1px solid var(--outline);
   border-radius: 12px;
@@ -71,7 +72,17 @@
   color: var(--text-primary);
 }
 
-.edit-convocatoria-fechas-modal__fields input:focus {
+.edit-convocatoria-fechas-modal__field--wide {
+  grid-column: 1 / -1;
+}
+
+.edit-convocatoria-fechas-modal__fields textarea {
+  resize: vertical;
+  font: inherit;
+}
+
+.edit-convocatoria-fechas-modal__fields input:focus,
+.edit-convocatoria-fechas-modal__fields textarea:focus {
   outline: 2px solid var(--inverse-primary);
   outline-offset: 2px;
 }
@@ -143,11 +154,13 @@
   }
 
   .edit-convocatoria-fechas-modal__fields label,
-  .edit-convocatoria-fechas-modal__fields input {
+  .edit-convocatoria-fechas-modal__fields input,
+  .edit-convocatoria-fechas-modal__fields textarea {
     min-width: 0;
   }
 
-  .edit-convocatoria-fechas-modal__fields input {
+  .edit-convocatoria-fechas-modal__fields input,
+  .edit-convocatoria-fechas-modal__fields textarea {
     min-height: 44px;
     font-size: 16px;
   }

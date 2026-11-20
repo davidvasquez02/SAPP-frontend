@@ -348,7 +348,12 @@ const ConvocatoriasAdmisionConfigPage = () => {
                                   type="button"
                                   className="convocatorias-config__action convocatorias-config__action--ghost"
                                   onClick={() => setEditingConvocatoria(item)}
-                                  disabled={isRefreshing}
+                                  disabled={isRefreshing || item.editable === false}
+                                  title={
+                                    item.editable === false
+                                      ? "Ya no se puede editar: la entrevista de al menos un aspirante ya se inició."
+                                      : undefined
+                                  }
                                 >
                                   Editar
                                 </button>

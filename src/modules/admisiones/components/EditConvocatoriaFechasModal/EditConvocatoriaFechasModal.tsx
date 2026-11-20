@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { updateConvocatoriaAdmisionFechas } from '../../api/convocatoriaAdmisionService'
-import type { ConvocatoriaAdmisionDto, UpdateConvocatoriaFechasRequest } from '../../api/convocatoriaAdmisionTypes'
+import { updateConvocatoriaAdmision } from '../../api/convocatoriaAdmisionService'
+import type { ConvocatoriaAdmisionDto, UpdateConvocatoriaRequest } from '../../api/convocatoriaAdmisionTypes'
 import './EditConvocatoriaFechasModal.css'
 
 interface EditConvocatoriaFechasModalProps {
@@ -18,6 +18,8 @@ export const EditConvocatoriaFechasModal = ({
 }: EditConvocatoriaFechasModalProps) => {
   const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState('')
+  const [cupos, setCupos] = useState('')
+  const [observaciones, setObservaciones] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -26,6 +28,8 @@ export const EditConvocatoriaFechasModal = ({
 
     setFechaInicio(toDateInputValue(convocatoria.fechaInicio))
     setFechaFin(toDateInputValue(convocatoria.fechaFin))
+    setCupos(String(convocatoria.cupos ?? ''))
+    setObservaciones(convocatoria.observaciones ?? '')
     setError(null)
   }, [convocatoria])
 
@@ -33,7 +37,13 @@ export const EditConvocatoriaFechasModal = ({
 
   const initialFechaInicio = toDateInputValue(convocatoria.fechaInicio)
   const initialFechaFin = toDateInputValue(convocatoria.fechaFin)
-  const hasChanges = fechaInicio !== initialFechaInicio || fechaFin !== initialFechaFin
+  const initialCupos = String(convocatoria.cupos ?? '')
+  const initialObservaciones = convocatoria.observaciones ?? ''
+  const hasChanges =
+    fechaInicio !== initialFechaInicio ||
+    fechaFin !== initialFechaFin ||
+    cupos.trim() !== initialCupos ||
+    observaciones.trim() !== initialObservaciones.trim()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -49,24 +59,33 @@ export const EditConvocatoriaFechasModal = ({
       return
     }
 
-    const request: UpdateConvocatoriaFechasRequest = {}
+    const cuposNumero = Number(cupos)
+    if (!Number.isInteger(cuposNumero) || cuposNumero < 1) {
+      setError('Los cupos deben ser un número entero mayor o igual a 1.')
+      return
+    }
+
+    // Solo se envía lo que cambió.
+    const request: UpdateConvocatoriaRequest = {}
     if (fechaInicio !== initialFechaInicio) request.fechaInicio = fechaInicio
     if (fechaFin !== initialFechaFin) request.fechaFin = fechaFin
+    if (cupos.trim() !== initialCupos) request.cupos = cuposNumero
+    if (observaciones.trim() !== initialObservaciones.trim()) request.observaciones = observaciones.trim()
 
     if (Object.keys(request).length === 0) {
-      setError('Modifique al menos una fecha antes de guardar.')
+      setError('Modifique al menos un dato antes de guardar.')
       return
     }
 
     setIsSubmitting(true)
     try {
-      await updateConvocatoriaAdmisionFechas(convocatoria.id, request)
-      onSuccess('Fechas de la convocatoria actualizadas correctamente.')
+      await updateConvocatoriaAdmision(convocatoria.id, request)
+      onSuccess('Convocatoria actualizada correctamente.')
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : 'No fue posible actualizar las fechas de la convocatoria.',
+          : 'No fue posible actualizar la convocatoria.',
       )
     } finally {
       setIsSubmitting(false)
@@ -91,7 +110,7 @@ export const EditConvocatoriaFechasModal = ({
 
         <form onSubmit={handleSubmit}>
           <p className="edit-convocatoria-fechas-modal__intro">
-            Ajuste el intervalo disponible para esta convocatoria. Solo se enviarán las fechas modificadas.
+            Puede ajustar las fechas, los cupos y las observaciones mientras ningún aspirante haya iniciado la etapa de entrevista.
           </p>
           <div className="edit-convocatoria-fechas-modal__fields">
             <label>
@@ -110,6 +129,27 @@ export const EditConvocatoriaFechasModal = ({
                 value={fechaFin}
                 min={fechaInicio || undefined}
                 onChange={(event) => setFechaFin(event.target.value)}
+                disabled={isSubmitting}
+              />
+            </label>
+            <label>
+              Cupos
+              <input
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                value={cupos}
+                onChange={(event) => setCupos(event.target.value)}
+                disabled={isSubmitting}
+              />
+            </label>
+            <label className="edit-convocatoria-fechas-modal__field--wide">
+              Observaciones
+              <textarea
+                rows={3}
+                value={observaciones}
+                onChange={(event) => setObservaciones(event.target.value)}
                 disabled={isSubmitting}
               />
             </label>

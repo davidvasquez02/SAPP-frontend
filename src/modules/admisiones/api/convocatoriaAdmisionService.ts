@@ -10,6 +10,7 @@ import type {
   EvaluadoresConvocatoriaResponse,
   EvaluadorConvocatoriaDto,
   UpdateConvocatoriaFechasRequest,
+  UpdateConvocatoriaRequest,
 } from './convocatoriaAdmisionTypes'
 
 export const getConvocatoriasAdmision = async (): Promise<ConvocatoriaAdmisionDto[]> => {
@@ -33,6 +34,23 @@ export const updateConvocatoriaAdmisionFechas = async (
 
   if (!response.ok) {
     throw new Error(response.message || 'Error al actualizar las fechas de la convocatoria')
+  }
+
+  return response.data ?? undefined
+}
+
+/** Edita fechas, cupos y observaciones; el servidor lo rechaza si la entrevista de algún aspirante ya se inició. */
+export const updateConvocatoriaAdmision = async (
+  convocatoriaId: number,
+  request: UpdateConvocatoriaRequest
+): Promise<void | ConvocatoriaAdmisionDto> => {
+  const response = await httpPut<ConvocatoriaAdmisionDatesUpdateResponse>(
+    `/sapp/convocatoriaAdmision/${convocatoriaId}`,
+    request
+  )
+
+  if (!response.ok) {
+    throw new Error(response.message || 'Error al actualizar la convocatoria')
   }
 
   return response.data ?? undefined

@@ -11,6 +11,8 @@ export type ConvocatoriaAdmisionDto = {
   fechaFin: string
   observaciones: string | null
   vigente: boolean
+  /** false cuando ya hay puntajes de entrevista registrados: la convocatoria deja de poder editarse. */
+  editable?: boolean
 }
 
 export type CreateConvocatoriaRequest = {
@@ -20,6 +22,13 @@ export type CreateConvocatoriaRequest = {
   observaciones: string
   programaId: number
   periodoId: number
+}
+
+export type UpdateConvocatoriaRequest = {
+  fechaInicio?: string
+  fechaFin?: string
+  cupos?: number
+  observaciones?: string
 }
 
 export type UpdateConvocatoriaFechasRequest = {
