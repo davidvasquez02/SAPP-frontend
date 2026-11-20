@@ -5,7 +5,7 @@ import { useAuth } from '../../context/Auth'
 import { invalidateEvaluacionAvailabilityCache } from '../../modules/admisiones/api/evaluacionAdmisionAvailabilityCache'
 import { getEvaluacionEstado } from '../../modules/admisiones/api/evaluacionAdmisionEstadoService'
 import { iniciarEvaluacion } from '../../modules/admisiones/api/iniciarEvaluacionService'
-import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
+import { aprobarRechazarDocumento, deshacerDecisionDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import { getDocumentById } from '../../modules/documentos/api/documentosService'
 import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
 import type { DocumentoTramiteUiItem } from '../../modules/documentos/types/ui'
@@ -144,6 +144,29 @@ const InscripcionDocumentosPage = () => {
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
       setOperationMessage({ kind: 'success', text: 'Documento aprobado correctamente.' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setOperationMessage({ kind: 'error', text: message })
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
+
+  const handleUndo = async (id: number) => {
+    setBusyDocumentoId(id)
+    setOperationMessage(null)
+    try {
+      await deshacerDecisionDocumento(id)
+      invalidateInscripcionDocumentosCache(tramiteId)
+      setRejectingDocId((prev) => (prev === id ? null : prev))
+      setRejectNotes((prev) => {
+        const resto = { ...prev }
+        delete resto[id]
+        return resto
+      })
+      setRejectErrors((prev) => ({ ...prev, [id]: null }))
+      await loadDocumentos()
+      setOperationMessage({ kind: 'success', text: 'Decisión deshecha: el documento volvió a "por revisar".' })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setOperationMessage({ kind: 'error', text: message })
@@ -439,6 +462,8 @@ const InscripcionDocumentosPage = () => {
                   estadoUi={validacionEstado}
                   disabled={disableValidation}
                   onApprove={() => documentoId && void handleApprove(documentoId, disableValidation)}
+                  onUndo={() => documentoId && void handleUndo(documentoId)}
+                  undoDisabled={isLoadingDecision || isEstadoFinal}
                   onRejectStart={() =>
                     documentoId &&
                     handleRejectStart(documentoId, disableValidation, documento.validacionObservaciones ?? '')

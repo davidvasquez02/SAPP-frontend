@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { BackButton, ModuleLayout } from '../../components'
 import { canManagePosgrados } from '../../auth/roleGuards'
 import { useAuth } from '../../context/Auth'
-import { aprobarRechazarDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
+import { aprobarRechazarDocumento, deshacerDecisionDocumento } from '../../modules/documentos/api/aprobacionDocumentosService'
 import type { DocumentoTramiteItemDto } from '../../modules/documentos/api/types'
 import ValidationButtons from '../../modules/documentos/components/ValidationButtons/ValidationButtons'
 import type { DocumentoValidacionEstado } from '../../modules/documentos/types/ui'
@@ -346,6 +346,28 @@ const MatriculaDetalleCoordinacionPage = () => {
       await finalizeCompletedRequiredReview(updatedDocuments)
       setRejectingDocId((prev) => (prev === id ? null : prev))
       setRejectErrors((prev) => ({ ...prev, [id]: null }))
+    } catch (requestError) {
+      setToast({
+        tone: 'error',
+        message: requestError instanceof Error ? requestError.message : String(requestError),
+      })
+    } finally {
+      setBusyDocumentoId(null)
+    }
+  }
+
+  const handleUndoDoc = async (id: number) => {
+    setBusyDocumentoId(id)
+    try {
+      await deshacerDecisionDocumento(id)
+      setRejectingDocId((prev) => (prev === id ? null : prev))
+      setRejectNotes((prev) => {
+        const resto = { ...prev }
+        delete resto[id]
+        return resto
+      })
+      setRejectErrors((prev) => ({ ...prev, [id]: null }))
+      await loadDocumentos()
     } catch (requestError) {
       setToast({
         tone: 'error',
@@ -804,6 +826,8 @@ const MatriculaDetalleCoordinacionPage = () => {
                               onApprove={() =>
                                 documentoId && void handleApproveDoc(documentoId, disableValidation)
                               }
+                              onUndo={() => documentoId && void handleUndoDoc(documentoId)}
+                              undoDisabled={isLoadingDecision || busyDocumentoId !== null || isApprovingMatricula || disableDocumentValidation}
                               onRejectStart={() =>
                                 documentoId &&
                                 handleRejectStart(

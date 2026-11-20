@@ -75,3 +75,27 @@
 .validation-buttons__btn--neutral {
   border-color: color-mix(in srgb, var(--outline), transparent 15%);
 }
+
+/* Enlace pequeño y discreto para corregir una decisión equivocada. */
+.validation-buttons__undo {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.validation-buttons__undo:hover:not(:disabled),
+.validation-buttons__undo:focus-visible {
+  color: var(--text-primary);
+}
+
+.validation-buttons__undo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
