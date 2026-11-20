@@ -34,6 +34,8 @@ export interface EvaluacionJurado {
   rubricaNombreArchivo?: string | null
   rubricaFechaCarga?: string | null
   fechaRegistro?: string | null
+  /** 1 = concepto original; 2 en adelante = los emitidos tras las correcciones del estudiante. */
+  ronda?: number | null
 }
 
 export interface JuradoEvaluador {
@@ -114,6 +116,8 @@ export interface ProcesoEvaluacionTg {
   resultado?: string | null
   fechaResultado?: string | null
   sustentacionConNota?: boolean
+  /** Ronda de conceptos vigente: sube en uno cada vez que el estudiante entrega correcciones. */
+  rondaConceptos?: number | null
   notaFinal?: number | null
   actaId?: number | null
   historial?: HistorialProcesoEvaluacion[]

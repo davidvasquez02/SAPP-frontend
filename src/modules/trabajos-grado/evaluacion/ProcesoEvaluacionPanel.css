@@ -142,3 +142,6 @@
   .evaluacion-tg__confirmation-actions { display: flex; flex-direction: column-reverse; }
   .evaluacion-tg__confirmation-actions button { width: 100%; }
 }
+
+.evaluacion-tg__round { justify-self: start; padding: .05rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--primary), var(--surface) 88%); color: var(--primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); }
+.evaluacion-tg__ready--pending .evaluacion-tg__ready-icon { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); }

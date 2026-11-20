@@ -8,6 +8,7 @@ import { fileToBase64 } from '../../../utils/fileToBase64'
 import { sha256Hex } from '../../../utils/sha256'
 import { isPdfFile, PDF_FILE_ACCEPT } from '../../../shared/files/pdfFile'
 import { getProcesoEvaluacion } from './api'
+import { rondaDeEvaluacion } from './presentacionEvaluacion'
 import type { ProcesoEvaluacionTg } from './types'
 import './AjustesEstudiantePanel.css'
 
@@ -29,6 +30,9 @@ function documentoParaCorreccion(id: number, nombre: string, file: File | null, 
     status: file ? 'READY_TO_UPLOAD' : 'NOT_SELECTED',
   }
 }
+
+const rondaMasReciente = (proceso: ProcesoEvaluacionTg): number =>
+  Math.max(1, ...proceso.jurados.flatMap((jurado) => jurado.evaluaciones.map(rondaDeEvaluacion)))
 
 const AjustesEstudiantePanel = ({
   solicitudId,
@@ -91,9 +95,11 @@ const AjustesEstudiantePanel = ({
     if (enAjustes) void load()
   }, [enAjustes, load])
 
+  // Solo las observaciones de la ronda mas reciente: las anteriores ya se respondieron con una correccion.
   const observations = useMemo(
     () => proceso?.jurados.flatMap((jurado) =>
       jurado.evaluaciones
+        .filter((evaluacion) => rondaDeEvaluacion(evaluacion) === rondaMasReciente(proceso))
         .filter((evaluacion) => evaluacion.observaciones?.trim())
         .map((evaluacion) => ({ jurado: jurado.nombre, text: evaluacion.observaciones!.trim() })),
     ) ?? [],
