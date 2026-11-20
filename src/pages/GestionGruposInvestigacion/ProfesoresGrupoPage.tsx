@@ -2,8 +2,8 @@ import { DocentesPorGrupoPanel } from '../GestionProfesores/DocentesPorGrupoPane
 import { GruposInvestigacionLayout } from './GruposInvestigacionLayout'
 
 /**
- * Profesores asociados a cada grupo. Usa el mismo panel que Gestion de profesores, para que
- * ambas pantallas muestren y cambien los mismos datos.
+ * Profesores asociados a cada grupo (integrantes y director). Es el unico lugar donde se gestiona: Gestion de
+ * profesores solo administra el acceso (rol) de los profesores al sistema.
  */
 const ProfesoresGrupoPage = () => (
   <GruposInvestigacionLayout>

@@ -9,7 +9,7 @@ export { RUTA_GRUPOS } from '../../modules/administracionAcademica/rutas'
 const SECCIONES = [
   { to: RUTA_GRUPOS, label: 'Grupos', end: true },
   { to: `${RUTA_GRUPOS}/instituciones`, label: 'Instituciones', end: false },
-  { to: `${RUTA_GRUPOS}/profesores`, label: 'Profesores', end: false },
+  { to: `${RUTA_GRUPOS}/profesores`, label: 'Profesores por grupo', end: false },
 ] as const
 
 interface GruposInvestigacionLayoutProps {
