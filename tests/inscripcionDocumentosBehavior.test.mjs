@@ -9,7 +9,7 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
   const { default: Page } = await ui.load('/src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
   const cache = await ui.load('/src/pages/InscripcionDocumentos/documentosPrefetchCache.ts')
-  let undos, docs, refs, uploads, writes, starts, polls, alerts, failure, started, callback, content, preview
+  let docs, refs, uploads, writes, starts, polls, alerts, failure, started, callback, content, preview
   const documentRow = (estado = 'POR_REVISAR', uploaded = true) => ({
     idTipoDocumentoTramite: 1, codigoTipoDocumentoTramite: 'CEDULA', nombreTipoDocumentoTramite: 'Identidad de prueba',
     obligatorioTipoDocumentoTramite: true, documentoCargado: uploaded,
@@ -18,19 +18,13 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
   const timeout = ui.dom.window.setTimeout.bind(ui.dom.window)
   t.beforeEach(() => {
     cache.invalidateInscripcionDocumentosCache(160)
-    undos = []; docs = [documentRow()]; refs = []; uploads = []; writes = []; starts = 0; polls = 0; alerts = []; failure = false; started = true; callback = 0; content = ''
+    docs = [documentRow()]; refs = []; uploads = []; writes = []; starts = 0; polls = 0; alerts = []; failure = false; started = true; callback = 0; content = ''
     preview = { opener: {}, closed: false, location: {}, close() { this.closed = true } }
     ui.dom.window.alert = value => alerts.push(value)
     ui.dom.window.open = () => preview
     ui.dom.window.setTimeout = (fn, delay, ...args) => timeout(fn, delay === 500 ? 0 : delay, ...args)
     ui.response((url, init) => {
       const path = new URL(url, 'https://test.invalid').pathname
-      if (path.endsWith('/deshacer-decision') && init.method === 'PUT') {
-        undos.push(path)
-        if (failure) return Response.json({ message: 'No se pudo deshacer' }, { status: 409 })
-        docs = [documentRow('POR_REVISAR')]
-        return Response.json({ ok: true, data: null })
-      }
       if (path.endsWith('/document') && init.method === 'PUT') {
         const body = JSON.parse(init.body); writes.push(body)
         if (failure) return Response.json({ message: 'Revisión no disponible' }, { status: 409 })
@@ -109,33 +103,6 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
     assert.equal(v.getByRole('button', { name: 'Aprobar' }).disabled, true)
     assert.ok(v.getByText('Obligatorios aprobados: 1/1'))
     assert.equal(v.getByRole('button', { name: 'Continuar evaluación' }).disabled, false)
-  })
-  await t.test('deshacer: sin decisión no aparece; tras aprobar o rechazar devuelve el documento a por revisar', async s => {
-    const v = mount(s); await ready(v)
-    assert.equal(v.queryAllByRole('button', { name: 'Deshacer', exact: true }).length, 0)
-    click(v, 'Aprobar'); await v.findByText('Documento aprobado correctamente.')
-    assert.equal(v.getByRole('button', { name: 'Aprobar' }).disabled, true)
-    click(v, 'Deshacer'); await v.findByText(/Decisión deshecha/)
-    assert.deepEqual(undos.length, 1); assert.ok(undos[0].endsWith('/document/80/deshacer-decision'))
-    assert.equal(v.getByRole('button', { name: 'Aprobar' }).disabled, false)
-    assert.equal(v.getByRole('button', { name: 'Rechazar' }).disabled, false)
-    assert.equal(v.queryAllByRole('button', { name: 'Deshacer', exact: true }).length, 0)
-    assert.ok(v.getByText('Obligatorios aprobados: 0/1'))
-    // ya puede decidir de nuevo
-    click(v, 'Rechazar'); ui.fireEvent.change(v.getByLabelText('Motivo del rechazo'), { target: { value: 'Falta firma' } }); click(v, 'Confirmar rechazo')
-    await v.findByText('Documento rechazado correctamente.')
-    click(v, 'Deshacer'); await v.findAllByText(/Decisión deshecha/)
-    assert.equal(undos.length, 2)
-  })
-  await t.test('deshacer: un fallo se informa y la decisión se conserva', async s => {
-    const v = mount(s); await ready(v); click(v, 'Aprobar'); await v.findByText('Documento aprobado correctamente.')
-    failure = true; click(v, 'Deshacer')
-    await v.findByText(/No se pudo deshacer/)
-    assert.equal(v.getByRole('button', { name: 'Aprobar' }).disabled, true)
-  })
-  await t.test('deshacer: con la inscripción cerrada no se puede', async s => {
-    docs = [documentRow('APROBADO')]; const v = mount(s, { final: true }); await ready(v)
-    assert.equal(v.getByRole('button', { name: 'Deshacer', exact: true }).disabled, true)
   })
   await t.test('rechazo exige motivo, permite cancelar y envía texto recortado', async s => {
     const v = mount(s); await ready(v); click(v, 'Rechazar'); click(v, 'Confirmar rechazo')

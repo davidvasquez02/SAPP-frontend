@@ -5,9 +5,6 @@ interface ValidationButtonsProps {
   estadoUi: DocumentoValidacionEstado
   disabled: boolean
   onApprove: () => void
-  /** Si se envía, tras aprobar o rechazar aparece un enlace discreto "Deshacer" para corregir una decisión equivocada. */
-  onUndo?: () => void
-  undoDisabled?: boolean
   onRejectStart: () => void
   isRejectMode: boolean
   onRejectCancel: () => void
@@ -22,8 +19,6 @@ const ValidationButtons = ({
   estadoUi,
   disabled,
   onApprove,
-  onUndo,
-  undoDisabled = false,
   onRejectStart,
   isRejectMode,
   onRejectCancel,
@@ -35,7 +30,6 @@ const ValidationButtons = ({
 }: ValidationButtonsProps) => {
   const isApproveActive = estadoUi === 'APROBADO'
   const isRejectActive = estadoUi === 'RECHAZADO'
-  const canUndo = Boolean(onUndo) && (isApproveActive || isRejectActive)
 
   return (
     <div className="validation-buttons">
@@ -63,18 +57,6 @@ const ValidationButtons = ({
           Rechazar
         </button>
       </div>
-
-      {canUndo ? (
-        <button
-          type="button"
-          className="validation-buttons__undo"
-          onClick={onUndo}
-          disabled={undoDisabled}
-          title="Devolver el documento a por revisar para decidir de nuevo"
-        >
-          Deshacer
-        </button>
-      ) : null}
 
       {isRejectMode ? (
         <div className="validation-buttons__reject-mode">
