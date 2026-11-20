@@ -55,10 +55,12 @@ test('profesores: roles, integrantes y director de grupo', async t => {
     await v.findByText('Ana sintética es ahora el director del grupo de investigación.'); assert.equal(writes[0].query.get('docenteId'), '20')
     click(v, 'Retirar'); click(v, 'Sí, retirar del grupo'); await v.findByText('El docente fue retirado del grupo de investigación.'); assert.equal(writes[1].method, 'DELETE')
   })
-  await t.test('cambio de facultad limpia grupo y búsqueda disponible filtra resultados', async s => {
+  await t.test('el panel filtra solo por grupo y la búsqueda disponible filtra resultados', async s => {
     const v = mount(s, GruposPage); await group(v)
     ui.fireEvent.change(v.getByLabelText('Buscar profesor disponible'), { target: { value: 'inexistente' } }); assert.ok(v.getByText('No hay profesores de posgrados disponibles para agregar.'))
-    ui.fireEvent.change(v.getByLabelText('Facultad'), { target: { value: '3' } }); assert.equal(v.getByLabelText('Grupo de investigación').value, ''); assert.ok(v.getByText('Seleccione un grupo para consultar sus docentes.'))
+    // el único filtro del panel es el grupo: ya no hay facultad ni escuela
+    assert.equal(v.queryAllByLabelText('Facultad').length, 0); assert.equal(v.queryAllByLabelText('Escuela').length, 0)
+    ui.fireEvent.change(v.getByLabelText('Grupo de investigación'), { target: { value: '' } }); assert.ok(v.getByText('Seleccione un grupo para consultar sus docentes.'))
   })
   await t.test('gestión de profesores ya no repite la gestión de grupos', async s => {
     const v = mount(s); await v.findByText('Ana sintética')
