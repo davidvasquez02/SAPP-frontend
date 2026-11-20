@@ -53,8 +53,6 @@ test('coordinación edita el mensaje visualmente y conserva el formato de la pla
   assert.equal(await campoAsunto.getByRole('textbox', { name: 'Asunto' }).inputValue(), 'Bienvenida, {{nombre}}')
   await page.getByText(/Bienvenida, Laura Gómez/).waitFor()
   await campoAsunto.getByRole('button', { name: 'Listo', exact: true }).click()
-  const campo = page.locator('.plantillas-correo__campo').filter({ has: page.getByText('Mensaje', { exact: true }) })
-  await campo.getByRole('button', { name: 'Editar' }).click()
   const mensaje = page.frameLocator('iframe[title="Editor del mensaje"]').getByRole('textbox', { name: 'Mensaje del correo' })
   assert.equal(await mensaje.locator('[data-dato-editor]').innerText(), 'Nombre')
   const seleccionar = (texto) => mensaje.evaluate((editor, texto) => {
@@ -82,7 +80,6 @@ test('coordinación edita el mensaje visualmente y conserva el formato de la pla
   await page.getByLabel('Insertar dato en el mensaje').selectOption('nombre')
   assert.equal(await mensaje.locator('[data-dato-editor]').count(), 2)
   await page.frameLocator('iframe[title="Vista previa del correo"]').getByText(/Hola Laura Gómez/).waitFor()
-  await page.getByRole('button', { name: 'Listo', exact: true }).click()
   assert.equal(await page.getByRole('button', { name: 'Enviar correo de prueba' }).isDisabled(), true)
   await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await page.getByRole('button', { name: 'Confirmar y guardar' }).click()

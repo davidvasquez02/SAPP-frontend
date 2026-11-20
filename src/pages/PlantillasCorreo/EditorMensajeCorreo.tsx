@@ -56,7 +56,12 @@ const EditorMensajeCorreo = ({ html, variables, onChange }: EditorMensajeCorreoP
       nodo.replaceWith(fragmento)
     }
 
+    const htmlInicialEditor = mensaje.innerHTML
     const publicar = () => {
+      if (mensaje.innerHTML === htmlInicialEditor) {
+        onChange(inicial.current)
+        return
+      }
       const copia = mensaje.cloneNode(true) as HTMLElement
       copia.querySelectorAll<HTMLElement>('[data-dato-editor]').forEach((etiqueta) => {
         const dato = etiqueta.dataset.datoEditor

@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+En escritorio, las etiquetas de la barra lateral conservan una sola línea durante la expansión para evitar saltos en los iconos.
+
+El formulario de programación de sustentación separa los campos de los botones «Programar» y «Cancelar» en todas las modalidades.
+
+## Edición directa del mensaje — 2026-11-20
+
+El editor visual del mensaje se abre al cargar la plantilla y **Guardar** se habilita al detectar cambios. La pantalla omite la línea explicativa de la sigla.
+
 ## Editor visual de plantillas de correo — 2026-11-19
 
 En **Administración académica → Plantillas de correo**, el campo **Mensaje** ofrece edición visual con negrita, listas y enlaces. **Insertar dato** permite reutilizar en el asunto y en el mensaje las variables presentes en la versión guardada de esa plantilla. La vista previa muestra ejemplos de cómo se leerá el correo. Se guarda el HTML mediante la API existente y el envío de prueba sigue usando la versión guardada.

@@ -1,3 +1,15 @@
+## Expansión de la barra lateral — 2026-11-20
+
+`src/components/Sidebar/Sidebar.css` conserva las etiquetas y los subenlaces de escritorio en una línea durante la transición de ancho. La columna del grupo puede contraerse sin que el texto imponga su ancho mínimo. En móvil, las etiquetas pueden ocupar varias líneas.
+
+Pasaron la compilación y las 20 pruebas de navegación y presentación. Playwright reprodujo el salto con el CSS anterior y confirmó alturas constantes en cinco puntos de la expansión por cursor en Edge, usando una página de prueba con el CSS del componente. También se verificó la expansión por foco de teclado. `npm test` registró 631 aprobadas y 26 fallos en la suite completa.
+
+## Edición directa del mensaje — 2026-11-20
+
+- El editor de `PlantillaCorreoFormPage.tsx` queda abierto desde la carga. Los cambios del mensaje actualizan el borrador y la vista previa sin pasar por **Editar** o **Listo**. **Guardar** conserva la confirmación y el envío de prueba requiere la versión guardada. La sigla sigue en los datos de la plantilla y se omite su línea explicativa del formulario.
+- `EditorMensajeCorreo.tsx` recupera el HTML original al restaurar el contenido inicial. Si el servidor devuelve un cuerpo distinto al enviado, el formulario vuelve a cargar el editor con la versión guardada.
+- Validación: pruebas del módulo 9/9, `npm run build` e integración en Edge correctas. `npm test` y `npm run test:coverage` registraron 631/657, con los mismos 26 fallos de la validación anterior. Cobertura de líneas: 86,13 % global, 53,84 % en el editor y 86,72 % en el formulario. Alcance verificado sobre 353 archivos de `src`. Logs locales en `.mensaje-directo-tests.log` y `.mensaje-directo-coverage.log`.
+
 ## Editor visual de plantillas de correo — 2026-11-19
 
 - Ruta: `/administracion-academica/plantillas-correo/:plantillaId/editar`. `src/pages/PlantillasCorreo/EditorMensajeCorreo.tsx` edita el cuerpo en un iframe aislado y convierte las etiquetas de datos a `{{variable}}` antes de actualizar el borrador. `vistaPrevia.ts` aplica ejemplos al texto visible y conserva los atributos HTML. La API conserva `PUT /sapp/plantillasCorreo/{id}` con `contenidoHtml` y `POST /sapp/plantillasCorreo/{id}/prueba` sin destinatario en el cuerpo.
@@ -7877,3 +7889,8 @@ pm run build falla al cargar vite.config.ts por spawn EPERM y carga del binario 
 
 - Por solicitud del usuario se añadió una regla obligatoria en AGENTS.md, sección 9: mantener y crear pruebas para cambios funcionales, ejecutar npm test y, si cambia src ejecutable, cobertura global; compilar y ejecutar integración pertinente cuando cambie el aplicativo. No debilitar pruebas ni excluir archivos para ocultar fallos. Informar resultados y bloqueos. Cambios solo documentales requieren revisión del diff.
 - Esta solicitud modifica únicamente instrucciones/documentación; git diff --check PASS. No se ejecutó la suite porque no cambió código ejecutable.
+## Espaciado de programación de sustentación — 2026-11-20
+
+El formulario de sustentación de `ProcesoEvaluacionPanel` aplica un margen superior de `0.9rem` a sus acciones. La integración `sustentacionHibrida.test.mjs` comprueba la separación respecto al último campo visible en presencial y virtual.
+
+Compilación correcta y 5/5 pruebas de integración en Edge. La suite completa y la instrumentada dieron 631/657 aprobadas. Cobertura de líneas global 86,13 % y del panel 95,09 %. Alcance verificado sobre 353 archivos. Logs locales bajo el prefijo `.espacio-sust-`.

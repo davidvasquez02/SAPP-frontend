@@ -15,6 +15,7 @@ import { RUTA_PLANTILLAS } from './rutas'
 import './PlantillasCorreo.css'
 
 type Campo = keyof DatosPlantillaCorreo
+type CampoConEdicion = Exclude<Campo, 'contenidoHtml'>
 
 const ETIQUETAS: Record<Campo, string> = {
   nombre: 'Nombre',
@@ -29,7 +30,7 @@ const NOMBRE_IDIOMA: Record<IdiomaPlantillaCorreo, string> = {
   EN: 'Inglés',
 }
 
-const CAMPOS_CORTOS: Campo[] = ['nombre', 'asunto', 'idioma']
+const CAMPOS_CORTOS: CampoConEdicion[] = ['nombre', 'asunto', 'idioma']
 
 const datosDe = (plantilla: PlantillaCorreo): DatosPlantillaCorreo => ({
   nombre: plantilla.nombre,
@@ -46,7 +47,8 @@ const PlantillaCorreoFormPage = () => {
 
   const [original, setOriginal] = useState<PlantillaCorreo | null>(null)
   const [valores, setValores] = useState<DatosPlantillaCorreo | null>(null)
-  const [editando, setEditando] = useState<Campo[]>([])
+  const [editando, setEditando] = useState<CampoConEdicion[]>([])
+  const [revisionMensaje, setRevisionMensaje] = useState(0)
   const [confirmandoCambios, setConfirmandoCambios] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isGuardando, setIsGuardando] = useState(false)
@@ -89,16 +91,16 @@ const PlantillaCorreoFormPage = () => {
     setValores((actual) => (actual ? { ...actual, [campo]: valor } : actual))
   }
 
-  const iniciarEdicion = (campo: Campo) => {
+  const iniciarEdicion = (campo: CampoConEdicion) => {
     setMensaje(null)
     setEditando((actual) => [...actual, campo])
   }
 
-  const terminarEdicion = (campo: Campo) => {
+  const terminarEdicion = (campo: CampoConEdicion) => {
     setEditando((actual) => actual.filter((item) => item !== campo))
   }
 
-  const cancelarEdicion = (campo: Campo) => {
+  const cancelarEdicion = (campo: CampoConEdicion) => {
     if (original) actualizar(campo, datosDe(original)[campo])
     terminarEdicion(campo)
   }
@@ -147,6 +149,7 @@ const PlantillaCorreoFormPage = () => {
       const guardada = await actualizarPlantillaCorreo(original.id, datos)
       setOriginal(guardada)
       setValores(datosDe(guardada))
+      if (guardada.contenidoHtml !== datos.contenidoHtml) setRevisionMensaje((revision) => revision + 1)
       setConfirmandoCambios(false)
       setMensaje('Cambios guardados correctamente.')
     } catch (err) {
@@ -170,7 +173,7 @@ const PlantillaCorreoFormPage = () => {
     }
   }
 
-  const renderCampo = (campo: Campo) => {
+  const renderCampo = (campo: CampoConEdicion) => {
     if (!valores) return null
     const modificado = modificados.includes(campo)
     const enEdicion = editando.includes(campo)
@@ -208,8 +211,6 @@ const PlantillaCorreoFormPage = () => {
             </select>
           ) : campo === 'descripcion' ? (
             <textarea aria-label="Descripción" rows={4} value={valor} onChange={(e) => actualizar('descripcion', e.target.value)} />
-          ) : campo === 'contenidoHtml' ? (
-            <EditorMensajeCorreo html={valor} variables={variables} onChange={(html) => actualizar('contenidoHtml', html)} />
           ) : campo === 'asunto' ? (
             <>
               <input ref={asuntoRef} aria-label="Asunto" value={valor} onChange={(e) => actualizar(campo, e.target.value)} />
@@ -223,8 +224,6 @@ const PlantillaCorreoFormPage = () => {
           ) : (
             <input aria-label={ETIQUETAS[campo]} value={valor} onChange={(e) => actualizar(campo, e.target.value)} />
           )
-        ) : campo === 'contenidoHtml' ? (
-          <p className="plantillas-correo__meta">Consulta el mensaje en la vista previa.</p>
         ) : (
           <p className="plantillas-correo__valor">{campo === 'idioma' ? NOMBRE_IDIOMA[valor as IdiomaPlantillaCorreo] : valor || '—'}</p>
         )}
@@ -235,11 +234,6 @@ const PlantillaCorreoFormPage = () => {
   return (
     <ModuleLayout title="Editar plantilla de correo">
       <section className="plantillas-correo">
-        <header className="plantillas-correo__header">
-          <p>Sigla <strong>{original?.sigla}</strong>. La sigla no se puede cambiar porque el sistema la usa para enviar el correo.</p>
-        </header>
-
-
         {error ? <p className="plantillas-correo__alert plantillas-correo__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="plantillas-correo__alert plantillas-correo__alert--success" role="status">{mensaje}</p> : null}
         {isLoading ? <p className="plantillas-correo__status">Cargando plantilla...</p> : null}
@@ -254,7 +248,26 @@ const PlantillaCorreoFormPage = () => {
 
             <div className="plantillas-correo__editor-vista">
               <div className="plantillas-correo__panel">
-                {renderCampo('contenidoHtml')}
+                <div
+                  className={`plantillas-correo__campo plantillas-correo__campo--editando${modificados.includes('contenidoHtml') ? ' plantillas-correo__campo--modificado' : ''}`}
+                  inert={isGuardando || confirmandoCambios}
+                >
+                  <div className="plantillas-correo__campo-cabecera">
+                    <span className="plantillas-correo__campo-etiqueta">
+                      Mensaje
+                      {modificados.includes('contenidoHtml') && <em className="plantillas-correo__marca-modificado"> · modificado</em>}
+                    </span>
+                  </div>
+                  <EditorMensajeCorreo
+                    key={`${original?.id}-${revisionMensaje}`}
+                    html={valores.contenidoHtml}
+                    variables={variables}
+                    onChange={(html) => {
+                      setMensaje(null)
+                      actualizar('contenidoHtml', html)
+                    }}
+                  />
+                </div>
                 <p className="plantillas-correo__nota" role="note">
                   El sistema completa los datos del destinatario y agrega el encabezado y el pie institucional al enviar.
                 </p>

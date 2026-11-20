@@ -32,6 +32,7 @@
 .evaluacion-tg button:focus-visible, .evaluacion-tg a:focus-visible { outline: 2px solid var(--inverse-primary); outline-offset: 2px; }
 .evaluacion-tg__form-card, .evaluacion-tg__section { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--outline); border-radius: var(--radius-md); background: var(--surface-container-low); }
 .evaluacion-tg__form-card h4 { margin-top: 0; }
+.evaluacion-tg__form-card--sustentacion .evaluacion-tg__form-actions { margin-block-start: .9rem; }
 .evaluacion-tg__section-heading > div { display: grid; gap: .15rem; }
 .evaluacion-tg__section-heading > div > span { color: var(--text-secondary); font-size: var(--font-size-small); }
 .evaluacion-tg__add-evaluator { white-space: nowrap; }
