@@ -1,0 +1,7 @@
+/* Zona de carga resaltada mientras se arrastra un archivo sobre ella (ver fileDrop.ts). */
+.file-drop-active {
+  outline: 2px dashed var(--primary, #2f6f1f);
+  outline-offset: -2px;
+  background-color: color-mix(in srgb, var(--primary, #2f6f1f), transparent 92%) !important;
+  transition: background-color 120ms ease;
+}

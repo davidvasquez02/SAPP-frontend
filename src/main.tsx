@@ -2,6 +2,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/Auth'
 import './styles/globals.css'
+import './shared/files/fileDrop.css'
+import { installFileDrop } from './shared/files/fileDrop'
 import App from './app/App'
 
 const savedTheme = window.localStorage.getItem('sapp-theme')
@@ -11,6 +13,9 @@ document.body.classList.remove('light', 'dark')
 document.body.classList.add(initialTheme)
 document.body.style.colorScheme = initialTheme
 window.localStorage.setItem('sapp-theme', initialTheme)
+
+// Los documentos también se pueden cargar arrastrándolos desde el explorador de archivos.
+installFileDrop()
 
 createRoot(document.getElementById('root')!).render(
   <BrowserRouter>
