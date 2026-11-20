@@ -268,7 +268,7 @@ export const CreateAspiranteModal = ({
           <p>Complete la información para registrar el aspirante en el programa.</p>
         </header>
 
-        <form className="create-aspirante-modal__form" onSubmit={handleSubmit}>
+        <form className="create-aspirante-modal__form" onSubmit={handleSubmit} autoComplete="off">
           <h3 className="create-aspirante-modal__section-title create-aspirante-modal__field--full">
             Datos del aspirante
           </h3>
@@ -278,7 +278,7 @@ export const CreateAspiranteModal = ({
               ref={firstNameInputRef}
               type="text"
               placeholder="Primer nombre"
-              autoComplete="given-name"
+              autoComplete="off"
               value={formState.nombre1}
               onChange={(event) => handleChange('nombre1', event.target.value)}
               disabled={isSubmitting}
@@ -293,6 +293,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Segundo nombre"
+              autoComplete="off"
               value={formState.nombre2}
               onChange={(event) => handleChange('nombre2', event.target.value)}
               disabled={isSubmitting}
@@ -304,7 +305,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Primer apellido"
-              autoComplete="family-name"
+              autoComplete="off"
               value={formState.apellido1}
               onChange={(event) => handleChange('apellido1', event.target.value)}
               disabled={isSubmitting}
@@ -319,6 +320,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Segundo apellido"
+              autoComplete="off"
               value={formState.apellido2}
               onChange={(event) => handleChange('apellido2', event.target.value)}
               disabled={isSubmitting}
@@ -371,6 +373,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Documento"
+              autoComplete="off"
               value={formState.numeroDocumento}
               onChange={(event) => handleChange('numeroDocumento', event.target.value)}
               disabled={isSubmitting}
@@ -387,6 +390,7 @@ export const CreateAspiranteModal = ({
             <input
               type="email"
               placeholder="correo@dominio.com"
+              autoComplete="off"
               value={formState.emailPersonal}
               onChange={(event) => handleChange('emailPersonal', event.target.value)}
               disabled={isSubmitting}
@@ -403,6 +407,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Opcional"
+              autoComplete="off"
               value={formState.telefono}
               onChange={(event) => handleChange('telefono', event.target.value)}
               disabled={isSubmitting}
@@ -414,6 +419,7 @@ export const CreateAspiranteModal = ({
             <input
               type="text"
               placeholder="Ej: 202600015"
+              autoComplete="off"
               value={formState.numeroInscripcionUis}
               onChange={(event) =>
                 handleChange('numeroInscripcionUis', event.target.value)
