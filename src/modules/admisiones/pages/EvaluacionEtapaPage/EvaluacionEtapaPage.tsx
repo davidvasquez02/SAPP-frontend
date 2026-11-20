@@ -403,6 +403,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               onSaveBulk={handleSaveBulk}
               isReadOnly={isEstadoFinal}
               showObservations={!isHojaDeVida}
+              showConsideraciones={isHojaDeVida}
             />
           </div>
           {isHojaDeVida && (
@@ -496,6 +497,7 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
                 onChangeDraft={handleChangeDraft}
                 onSaveBulk={grupo.items.every(belongsToCurrentUser) ? handleSaveBulk : undefined}
                 isReadOnly={isEstadoFinal || !grupo.items.every(belongsToCurrentUser)}
+                showConsideraciones={false}
               />
             </ResponsiveInterviewGroup>
           ))}

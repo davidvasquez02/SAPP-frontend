@@ -28,11 +28,11 @@ test('evaluación por etapa: notas, borradores y propiedad de entrevista', async
       h(Route, { path: '/convocatoria/:convocatoriaId/inscripcion/:inscripcionId', element: h(Outlet, { context: { isEstadoFinal: final } }) }, h(Route, { path: 'etapa', element: h(Page, { title: 'Examen', etapa, embedded: true }) }))))))
   }
   const setScore = (v, value, index = 0) => ui.fireEvent.change(v.getAllByLabelText('Nota')[index], { target: { value } })
-  const save = v => ui.fireEvent.click(v.getByRole('button', { name: 'Actualizar', exact: true }))
+  const save = v => ui.fireEvent.click(v.getByRole('button', { name: 'Guardar', exact: true }))
   await t.test('notas vacías, negativas y mayores al máximo bloquean guardar', async s => {
     const v = mount(s); await v.findByLabelText('Nota')
     for (const [value, message] of [['', 'Ingrese un número'], ['-1', 'El puntaje no puede ser negativo'], ['6', 'No puede superar el puntaje máximo']]) {
-      setScore(v, value); assert.ok(v.getByText(message)); assert.equal(v.getByRole('button', { name: 'Actualizar' }).disabled, true)
+      setScore(v, value); assert.ok(v.getByText(message)); assert.equal(v.getByRole('button', { name: 'Guardar' }).disabled, true)
     }
     assert.equal(writes.length, 0)
   })
@@ -48,11 +48,11 @@ test('evaluación por etapa: notas, borradores y propiedad de entrevista', async
   })
   await t.test('volver a nota original elimina cambio y restaura borrador al remontar', async s => {
     let v = mount(s); await v.findByLabelText('Nota'); setScore(v, '3'); await ui.cleanup()
-    v = mount(s); await v.findByDisplayValue('3'); setScore(v, '2'); assert.equal(v.getByRole('button', { name: 'Actualizar' }).disabled, true)
+    v = mount(s); await v.findByDisplayValue('3'); setScore(v, '2'); assert.equal(v.getByRole('button', { name: 'Guardar' }).disabled, true)
     assert.equal(draftStore.hasEvaluationDrafts(160), false)
   })
   await t.test('estado final deja calificaciones en solo lectura', async s => {
-    const v = mount(s, { final: true }); await v.findByLabelText('Nota'); assert.equal(v.getByLabelText('Nota').disabled, true); assert.equal(v.getByRole('button', { name: 'Actualizar' }).disabled, true)
+    const v = mount(s, { final: true }); await v.findByLabelText('Nota'); assert.equal(v.getByLabelText('Nota').disabled, true); assert.equal(v.getByRole('button', { name: 'Guardar' }).disabled, true)
   })
   await t.test('docente solo ve y actualiza aspectos de su entrevista', async s => {
     items.push(item(2, 20)); const v = mount(s, { etapa: 'ENTREVISTA', roles: ['DOCENTE_POSGRADOS'] }); await v.findByLabelText('Nota')

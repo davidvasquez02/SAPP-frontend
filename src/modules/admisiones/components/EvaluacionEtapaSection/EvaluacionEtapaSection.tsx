@@ -24,6 +24,8 @@ interface EvaluacionEtapaSectionProps {
   onSaveBulk?: () => Promise<void>
   isReadOnly?: boolean
   showObservations?: boolean
+  /** Columna de consideraciones (criterios). Solo es visual: los datos siguen llegando del servicio. */
+  showConsideraciones?: boolean
 }
 
 const parseConsideraciones = (value: string): unknown => {
@@ -127,6 +129,7 @@ const EvaluacionEtapaSection = ({
   onSaveBulk,
   isReadOnly = false,
   showObservations = true,
+  showConsideraciones = true,
 }: EvaluacionEtapaSectionProps) => {
   const hasItems = items.length > 0
   // El total (hoja de vida, o el del evaluador en la entrevista) no se digita: se calcula con los demás aspectos y va al final.
@@ -152,7 +155,7 @@ const EvaluacionEtapaSection = ({
             <thead>
               <tr>
                 <th>Aspecto</th>
-                <th>Consideraciones</th>
+                {showConsideraciones ? <th>Consideraciones</th> : null}
                 <th className="evaluacion-etapa-section__th-max">Puntaje máx.</th>
                 <th className="evaluacion-etapa-section__th-nota">Nota</th>
                 {showObservations ? <th>Observaciones</th> : null}
@@ -174,13 +177,15 @@ const EvaluacionEtapaSection = ({
                 return (
                   <tr key={item.id} className={isModified ? 'evaluacion-etapa-section__row--modified' : ''}>
                     <td data-label="Aspecto" className="evaluacion-etapa-section__aspecto">{item.aspecto}</td>
-                    <td data-label="Consideraciones">
-                      {item.consideraciones ? (
-                        <Consideraciones value={item.consideraciones} contentId={considerationsId} />
-                      ) : (
-                        <span className="evaluacion-etapa-section__text-muted">-</span>
-                      )}
-                    </td>
+                    {showConsideraciones ? (
+                      <td data-label="Consideraciones">
+                        {item.consideraciones ? (
+                          <Consideraciones value={item.consideraciones} contentId={considerationsId} />
+                        ) : (
+                          <span className="evaluacion-etapa-section__text-muted">-</span>
+                        )}
+                      </td>
+                    ) : null}
                     <td data-label="Puntaje máximo" className="evaluacion-etapa-section__cell-max">{item.puntajeMax}</td>
                     <td className="evaluacion-etapa-section__cell-nota">
                       <div className="evaluacion-etapa-section__field evaluacion-etapa-section__nota-field">
@@ -233,9 +238,11 @@ const EvaluacionEtapaSection = ({
                     <strong>Total</strong>
                     <span className="evaluacion-etapa-section__total-note">{total.aspecto}</span>
                   </td>
-                  <td data-label="Consideraciones">
-                    <span className="evaluacion-etapa-section__text-muted">Cálculo automático</span>
-                  </td>
+                  {showConsideraciones ? (
+                    <td data-label="Consideraciones">
+                      <span className="evaluacion-etapa-section__text-muted">Cálculo automático</span>
+                    </td>
+                  ) : null}
                   <td data-label="Puntaje máximo" className="evaluacion-etapa-section__cell-max">{total.puntajeMax}</td>
                   <td className="evaluacion-etapa-section__cell-nota">
                     <output className="evaluacion-etapa-section__total-value" aria-label={`Total de ${total.aspecto}`}>
@@ -257,7 +264,7 @@ const EvaluacionEtapaSection = ({
             disabled={!hasChanges || hasErrors || isSavingBulk || isReadOnly}
             onClick={onSaveBulk}
           >
-            {isSavingBulk ? 'Actualizando...' : 'Actualizar'}
+            {isSavingBulk ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       )}
