@@ -43,6 +43,8 @@ export interface JuradoEvaluador {
   orden?: number
   nombre: string
   tratamiento?: string | null
+  /** Tratamiento para los correos en inglés; nulo = el genérico Professor. */
+  tratamientoEn?: string | null
   correo: string
   institucion: string | null
   externo: boolean
@@ -55,6 +57,8 @@ export interface JuradoEvaluador {
   fechaRespuesta?: string | null
   fechaLimiteEvaluacion?: string | null
   motivoDeclinacion?: string | null
+  /** Por qué el coordinador reemplazó o retiró al jurado; independiente de motivoDeclinacion. */
+  motivoReemplazo?: string | null
   nombreSugerido?: string | null
   correoSugerido?: string | null
   evaluaciones: EvaluacionJurado[]
@@ -126,6 +130,7 @@ export interface ProcesoEvaluacionTg {
 export interface BancoJurado {
   nombre: string
   tratamiento?: string | null
+  tratamientoEn?: string | null
   correo: string
   institucion?: string | null
   externo?: boolean
@@ -137,6 +142,7 @@ export interface BancoJurado {
 export interface JuradoInput {
   nombre: string
   tratamiento?: string
+  tratamientoEn?: string
   correo: string
   institucion: string
   externo: boolean

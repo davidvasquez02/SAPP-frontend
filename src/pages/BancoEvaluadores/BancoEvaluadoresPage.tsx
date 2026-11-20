@@ -15,6 +15,7 @@ const ITEMS_POR_PAGINA = 10
 const EMPTY_FORM: EvaluadorCandidatoRequest = {
   nombre: '',
   tratamiento: '',
+  tratamientoEn: '',
   correo: '',
   institucion: '',
   externo: true,
@@ -77,6 +78,7 @@ const BancoEvaluadoresPage = () => {
     setFormulario({
       nombre: candidato.nombre,
       tratamiento: candidato.tratamiento ?? '',
+      tratamientoEn: candidato.tratamientoEn ?? '',
       correo: candidato.correo,
       institucion: candidato.institucion ?? '',
       externo: candidato.externo,
@@ -165,7 +167,8 @@ const BancoEvaluadoresPage = () => {
             <h4>{editandoId != null ? 'Editar persona' : 'Registrar persona'}</h4>
             <div className="banco-evaluadores__form-grid">
               <label><span>Nombre *</span><input value={formulario.nombre} onChange={(e) => setFormulario((v) => v && { ...v, nombre: e.target.value })} /></label>
-              <label><span>Tratamiento (opcional)</span><input value={formulario.tratamiento} onChange={(e) => setFormulario((v) => v && { ...v, tratamiento: e.target.value })} placeholder="Dr., MSc., Ing., etc." /></label>
+              <label><span>Tratamiento en español (opcional)</span><input value={formulario.tratamiento} onChange={(e) => setFormulario((v) => v && { ...v, tratamiento: e.target.value })} placeholder="Dr., Dra., MSc., Ing., etc. Por defecto: Profesor(a)" /></label>
+              <label><span>Tratamiento en inglés (opcional)</span><input value={formulario.tratamientoEn ?? ''} onChange={(e) => setFormulario((v) => v && { ...v, tratamientoEn: e.target.value })} placeholder="Dr., Prof., etc. Por defecto: Professor" /></label>
               <label><span>Correo *</span><input type="email" value={formulario.correo} onChange={(e) => setFormulario((v) => v && { ...v, correo: e.target.value })} /></label>
               <label><span>Institución (opcional)</span><input value={formulario.institucion} onChange={(e) => setFormulario((v) => v && { ...v, institucion: e.target.value })} /></label>
               <label><span>Idioma</span><select value={formulario.idioma} onChange={(e) => setFormulario((v) => v && { ...v, idioma: e.target.value as 'ES' | 'EN' })}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>

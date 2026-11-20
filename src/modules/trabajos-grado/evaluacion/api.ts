@@ -91,6 +91,12 @@ export const descargarRubricaDiligenciada = async (evaluacionId: number): Promis
     'No fue posible descargar la rúbrica de evaluación diligenciada.',
   )
 
+export const descargarCartaAgradecimiento = async (solicitudId: number, juradoId: number): Promise<RubricaDiligenciadaDto> =>
+  unwrap(
+    await httpGet<ApiResponse<RubricaDiligenciadaDto>>(`${BASE}/solicitud/${solicitudId}/jurados/${juradoId}/carta-agradecimiento`),
+    'No fue posible generar la carta de agradecimiento.',
+  )
+
 export const enviarAAjustes = async (solicitudId: number) =>
   unwrap(
     await httpPost<ApiResponse<ProcesoEvaluacionTg>>(`${BASE}/solicitud/${solicitudId}/ajustes`),
