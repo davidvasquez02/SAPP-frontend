@@ -11,6 +11,7 @@ import EvaluacionEtapaSection, {
 } from '../../components/EvaluacionEtapaSection/EvaluacionEtapaSection'
 import type { EvaluacionAdmisionItem, EtapaEvaluacion } from '../../types/evaluacionAdmisionTypes'
 import { groupByEvaluador } from '../../utils/groupByEvaluador'
+import { promediarTotales, sumarAspectos } from '../../utils/totalesEvaluacion'
 import './EvaluacionEtapaPage.css'
 import type { InscripcionDetalleOutletContext } from '../../../../pages/InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
 import { evaluacionCache, cargarHojaVidaDocumento } from './evaluacionPrefetchCache'
@@ -346,6 +347,13 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
     [itemsSinResumen, belongsToCurrentUser],
   )
 
+  // Promedio de los totales de cada evaluador, calculado con lo que se ve (incluidos los cambios sin guardar). Al guardar,
+  // el backend recalcula el mismo valor.
+  const totalEntrevista = useMemo(
+    () => promediarTotales(gruposEntrevista.map((grupo) => sumarAspectos(grupo.items, drafts))),
+    [gruposEntrevista, drafts],
+  )
+
   const content = (
     <section
       className={`evaluacion-etapa-page${embedded ? ' evaluacion-etapa-page--embedded' : ''}`}
@@ -474,37 +482,6 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
       )}
       {!loading && !error && isEntrevista && entrevistaItems.length > 0 && (
         <div className="evaluacion-etapa-page__groups">
-          {resumenEntrevista && (
-            <section className="evaluacion-etapa-page__summary">
-              <h2 className="evaluacion-etapa-page__summary-title">Resumen entrevista</h2>
-              <div className="evaluacion-etapa-page__summary-grid">
-                <div>
-                  <p className="evaluacion-etapa-page__summary-label">Puntaje</p>
-                  <p className="evaluacion-etapa-page__summary-value">
-                    {resumenEntrevista.puntajeAspirante ?? '-'}
-                  </p>
-                </div>
-                <div>
-                  <p className="evaluacion-etapa-page__summary-label">Puntaje máximo</p>
-                  <p className="evaluacion-etapa-page__summary-value">
-                    {resumenEntrevista.puntajeMax}
-                  </p>
-                </div>
-                <div>
-                  <p className="evaluacion-etapa-page__summary-label">Consideraciones</p>
-                  <p className="evaluacion-etapa-page__summary-value">
-                    {resumenEntrevista.consideraciones || '-'}
-                  </p>
-                </div>
-                <div>
-                  <p className="evaluacion-etapa-page__summary-label">Observaciones</p>
-                  <p className="evaluacion-etapa-page__summary-value">
-                    {resumenEntrevista.observaciones || '-'}
-                  </p>
-                </div>
-              </div>
-            </section>
-          )}
           {saveMessage ? <p role="status" className={`evaluacion-etapa-page__save-message evaluacion-etapa-page__save-message--${saveMessage.kind}`}>{saveMessage.text}</p> : null}
           {gruposEntrevista.map((grupo) => (
             <ResponsiveInterviewGroup key={grupo.evaluadorKey} label={grupo.evaluadorLabel}>
@@ -522,6 +499,29 @@ const EvaluacionEtapaPage = ({ title, etapa, embedded = false }: EvaluacionEtapa
               />
             </ResponsiveInterviewGroup>
           ))}
+          {resumenEntrevista && (
+            <section className="evaluacion-etapa-page__summary evaluacion-etapa-page__summary--total" aria-labelledby="total-entrevista-title">
+              <h2 id="total-entrevista-title" className="evaluacion-etapa-page__summary-title">Total entrevista</h2>
+              <div className="evaluacion-etapa-page__summary-grid">
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Puntaje (promedio de los evaluadores)</p>
+                  <output className="evaluacion-etapa-page__summary-value evaluacion-etapa-page__summary-value--total">
+                    {totalEntrevista}
+                  </output>
+                </div>
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Puntaje máximo</p>
+                  <p className="evaluacion-etapa-page__summary-value">{resumenEntrevista.puntajeMax}</p>
+                </div>
+                <div>
+                  <p className="evaluacion-etapa-page__summary-label">Cómo se calcula</p>
+                  <p className="evaluacion-etapa-page__summary-value">
+                    {resumenEntrevista.consideraciones || 'Promedio de los totales de cada evaluador.'}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       )}
     </section>

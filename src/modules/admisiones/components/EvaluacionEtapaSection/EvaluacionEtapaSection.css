@@ -202,3 +202,39 @@
 @container evaluacion (max-width: 520px) {
   .evaluacion-etapa-section__score-guide ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Campo de nota: se escribe con el teclado, sin las flechitas para subir o bajar el valor. */
+.evaluacion-etapa-section__nota-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.evaluacion-etapa-section__nota-input::-webkit-outer-spin-button,
+.evaluacion-etapa-section__nota-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Fila de total calculado: no es un campo, se lee como resultado. */
+.evaluacion-etapa-section__row--total > td {
+  border-top: 2px solid color-mix(in srgb, var(--primary), transparent 55%);
+  background: color-mix(in srgb, var(--primary), var(--surface) 94%);
+}
+
+.evaluacion-etapa-section__total-note {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.evaluacion-etapa-section__total-value {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: var(--primary);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

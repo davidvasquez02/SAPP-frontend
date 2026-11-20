@@ -4,6 +4,7 @@ import {
   getPromedioPuntajeReglas,
   getPromedioRangoLabel,
 } from '../../utils/promedioPuntajeGuide'
+import { esTotalCalculado, sumarAspectos } from '../../utils/totalesEvaluacion'
 import './EvaluacionEtapaSection.css'
 
 export type EvaluacionDraft = {
@@ -128,6 +129,10 @@ const EvaluacionEtapaSection = ({
   showObservations = true,
 }: EvaluacionEtapaSectionProps) => {
   const hasItems = items.length > 0
+  // El total (hoja de vida, o el del evaluador en la entrevista) no se digita: se calcula con los demás aspectos y va al final.
+  const aspectos = items.filter((item) => !esTotalCalculado(item))
+  const totales = items.filter(esTotalCalculado)
+  const totalCalculado = sumarAspectos(items, drafts)
   const hasChanges = Object.values(modifiedByRow).some(Boolean)
   const hasErrors = Object.entries(errorsByRow).some(
     ([id, errorMessage]) => modifiedByRow[Number(id)] && Boolean(errorMessage),
@@ -154,7 +159,7 @@ const EvaluacionEtapaSection = ({
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => {
+              {aspectos.map((item) => {
                 const draft = drafts[item.id]
                 const errorMessage = errorsByRow[item.id]
                 const hasDraftScore = draft && Object.prototype.hasOwnProperty.call(draft, 'puntajeAspirante')
@@ -222,6 +227,24 @@ const EvaluacionEtapaSection = ({
                   </tr>
                 )
               })}
+              {totales.map((total) => (
+                <tr key={total.id} className="evaluacion-etapa-section__row--total">
+                  <td data-label="Aspecto" className="evaluacion-etapa-section__aspecto">
+                    <strong>Total</strong>
+                    <span className="evaluacion-etapa-section__total-note">{total.aspecto}</span>
+                  </td>
+                  <td data-label="Consideraciones">
+                    <span className="evaluacion-etapa-section__text-muted">Se calcula automáticamente con los puntajes de arriba.</span>
+                  </td>
+                  <td data-label="Puntaje máximo" className="evaluacion-etapa-section__cell-max">{total.puntajeMax}</td>
+                  <td className="evaluacion-etapa-section__cell-nota">
+                    <output className="evaluacion-etapa-section__total-value" aria-label={`Total de ${total.aspecto}`}>
+                      {totalCalculado}
+                    </output>
+                  </td>
+                  {showObservations ? <td data-label="Observaciones" /> : null}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
