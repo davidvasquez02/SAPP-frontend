@@ -381,8 +381,8 @@ const InscripcionDocumentosPage = () => {
               documentoResponse?.nombreArchivoDocumento ??
               `documento_${documento.idTipoDocumentoTramite}.pdf`
             const estadoDocumento = uploaded ? getEstadoDocumento(documento) ?? 'CARGADO' : 'PENDIENTE'
-            const isApproved = validacionEstado === 'APROBADO'
-            const disableValidation = !uploaded || isLoadingDecision || isEstadoFinal || isApproved
+            // Igual que en matrícula: una decisión ya tomada se puede cambiar (aprobar ↔ rechazar) mientras la inscripción siga abierta.
+            const disableValidation = !uploaded || isLoadingDecision || isEstadoFinal
             const isRejectMode = documentoId != null && rejectingDocId === documentoId
             const currentRejectNote =
               documentoId != null
