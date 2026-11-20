@@ -57,4 +57,14 @@ test('expediente estudiantil: orden documental, descargas y solicitudes paginada
     fail = '/solicitudesAcademicas/estudiante'; const v = mount(s, Requests); await v.findByText(/Consulta fallida/); fail = '/document'; ui.fireEvent.click(v.getByRole('button', { name: 'Reintentar' })); await v.findAllByText(/Consulta fallida/)
     const failures = v.getAllByText(/Consulta fallida/).length; fail = ''; ui.fireEvent.click(v.getAllByRole('button', { name: /Reintentar/ })[0]); await ui.waitFor(() => assert.equal(v.queryAllByText(/Consulta fallida/).length, failures - 1)); assert.equal(v.container.querySelectorAll('article').length, 5)
   })
+  await t.test('referencias de admisión: una sola tarjeta con todas las cargas y botón para agregar otra', async s => {
+    const ref = (id, n) => ({ id, tipoDocumentoTramiteId: 10, tipoDocumento: 'Referencia académica', estado: 'POR_REVISAR', nombreArchivo: `ref${n}.pdf`, fechaCarga: '2030-01-01', secuencia: n, permiteMultiples: true, documentoCargado: true })
+    groups = [{ tipoTramite: 'ADMISION_COORDINACION', periodo: null, tramiteId: 160, documentos: [ref(501, 1), ref(502, 2)] }]
+    const v = mount(s); await v.findByText('No hay documentos de matrícula registrados para este estudiante.'); ui.fireEvent.click(v.getByRole('tab', { name: 'Admisión' }))
+    await v.findByText('ref1.pdf'); assert.ok(v.getByText('ref2.pdf'))
+    // Las dos referencias van juntas en UNA tarjeta, no una tarjeta por cada una.
+    assert.equal(v.getAllByRole('heading', { level: 4, name: 'Referencia académica' }).length, 1)
+    assert.ok(v.getByText('2 cargados')); assert.ok(v.getByText('Cargar otro documento'))
+    assert.equal(v.queryAllByText('Actualizar documento').length, 0)
+  })
 })

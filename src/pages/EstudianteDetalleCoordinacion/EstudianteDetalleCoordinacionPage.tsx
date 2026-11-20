@@ -40,8 +40,6 @@ type DocumentAction = 'view' | 'download'
 type DocumentCardDocument = DocumentoEstudianteMetadataDto & {
   tramiteId: number | null
   tipoTramite: string | null
-  /** Tarjeta vacía para agregar otro documento de un tipo que admite varios. */
-  esAgregarOtro?: boolean
 }
 
 type EnrollmentDocumentGroup = {
@@ -200,47 +198,16 @@ const withDocumentContext = (
   tipoTramite: group.tipoTramite,
 })
 
-/**
- * Para los tipos que admiten varias cargas (las referencias académicas) y que ya tienen alguna, agrega al final de
- * esas cargas una tarjeta vacía: es la que permite sumar otra sin reemplazar las que ya están.
- */
-const withAddAnotherCard = (documentos: DocumentCardDocument[]): DocumentCardDocument[] => {
-  const resultado: DocumentCardDocument[] = []
-  documentos.forEach((documento, index) => {
-    resultado.push(documento)
-    const siguiente = documentos[index + 1]
-    const esUltimaDelTipo = !siguiente
-      || siguiente.tipoDocumentoTramiteId !== documento.tipoDocumentoTramiteId
-      || siguiente.tramiteId !== documento.tramiteId
-    if (documento.permiteMultiples && documento.id && esUltimaDelTipo) {
-      resultado.push({
-        ...documento,
-        id: null,
-        nombreArchivo: null,
-        estado: null,
-        fechaCarga: null,
-        version: null,
-        secuencia: null,
-        mimeType: null,
-        tamanoBytes: null,
-        documentoCargado: false,
-        esAgregarOtro: true,
-      })
-    }
-  })
-  return resultado
-}
-
 const buildAdmissionDocuments = (
   data: DocumentosEstudianteGrupoDto[],
 ): DocumentCardDocument[] => {
-  return withAddAnotherCard(ADMISSION_TYPES.flatMap((tipoTramite) =>
+  return ADMISSION_TYPES.flatMap((tipoTramite) =>
     data
       .filter((group) => normalizeTipoTramite(group.tipoTramite) === tipoTramite)
       .flatMap((group) => [...(group.documentos ?? [])]
         .sort(compareDocuments)
         .map((documento) => withDocumentContext(documento, group))),
-  ))
+  )
 }
 
 const buildEnrollmentGroups = (
@@ -338,8 +305,7 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
   const isViewing = isProcessing && activeAction?.action === 'view'
   const isDownloading = isProcessing && activeAction?.action === 'download'
   const uploadKey = getUploadDocumentKey(documento)
-  // Un tipo que admite varias cargas no se "actualiza": cada carga es otro documento, y eso lo ofrece la tarjeta de agregar.
-  const uploadEnabled = canUploadDocument(documento) && !(documento.permiteMultiples && hasFile)
+  const uploadEnabled = canUploadDocument(documento)
   const isUploading = uploadingAction?.key === uploadKey
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -357,7 +323,7 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
         <span className="estudiante-detalle__document-icon" aria-hidden="true">
           📄
         </span>
-        <h4>{documento.tipoDocumento || 'Documento requerido'}{documento.esAgregarOtro ? ' (adicional)' : ''}</h4>
+        <h4>{documento.tipoDocumento || 'Documento requerido'}</h4>
         <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${getDocumentoEstadoModifier(estado)}`}>
           {estado}
         </span>
@@ -393,9 +359,7 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
               ? `${hasFile ? 'Actualizando' : 'Cargando'} ${uploadingAction?.filename ?? 'archivo'}...`
               : hasFile
                 ? 'Actualizar documento'
-                : documento.esAgregarOtro
-                  ? 'Agregar otro documento'
-                  : 'Cargar documento'}
+                : 'Cargar documento'}
             <input
               type="file"
               className="estudiante-detalle__upload-input"
@@ -407,6 +371,132 @@ const DocumentCard = ({ documento, activeAction, uploadingAction, onView, onDown
         ) : !hasFile ? (
           <span className="estudiante-detalle__document-no-actions">No hay trámite disponible para cargar este archivo</span>
         ) : null}
+      </footer>
+    </article>
+  )
+}
+
+interface MultipleDocumentGroup {
+  key: string
+  /** Un documento cualquiera del tipo: da el trámite y el tipo con los que se carga uno nuevo. */
+  plantilla: DocumentCardDocument
+  /** Solo las cargas que ya existen, en orden. */
+  documentos: DocumentCardDocument[]
+}
+
+type DocumentGridItem =
+  | { kind: 'single'; documento: DocumentCardDocument }
+  | { kind: 'multiple'; grupo: MultipleDocumentGroup }
+
+/**
+ * Los tipos que admiten varias cargas (las referencias académicas) se muestran en UNA sola tarjeta con todas sus cargas
+ * y un botón para agregar otra; el resto de documentos siguen siendo una tarjeta por documento.
+ */
+const groupDocumentsForGrid = (documentos: DocumentCardDocument[]): DocumentGridItem[] => {
+  const items: DocumentGridItem[] = []
+  const grupos = new Map<string, MultipleDocumentGroup>()
+
+  documentos.forEach((documento) => {
+    if (!documento.permiteMultiples) {
+      items.push({ kind: 'single', documento })
+      return
+    }
+    const key = getUploadDocumentKey(documento)
+    let grupo = grupos.get(key)
+    if (!grupo) {
+      grupo = { key, plantilla: documento, documentos: [] }
+      grupos.set(key, grupo)
+      items.push({ kind: 'multiple', grupo })
+    }
+    if (documento.id) {
+      grupo.documentos.push(documento)
+    }
+  })
+
+  return items
+}
+
+interface MultipleDocumentCardProps {
+  grupo: MultipleDocumentGroup
+  activeAction: ActiveDocumentAction
+  uploadingAction: UploadingDocumentAction
+  onView: (documentoId: number) => void
+  onDownload: (documentoId: number) => void
+  onUpload: (documento: DocumentCardDocument, file: File) => void
+}
+
+const MultipleDocumentCard = ({ grupo, activeAction, uploadingAction, onView, onDownload, onUpload }: MultipleDocumentCardProps) => {
+  const { plantilla, documentos } = grupo
+  const total = documentos.length
+  const uploadEnabled = canUploadDocument(plantilla)
+  const isUploading = uploadingAction?.key === getUploadDocumentKey(plantilla)
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (file) {
+      onUpload(plantilla, file)
+    }
+  }
+
+  return (
+    <article className="estudiante-detalle__document-card estudiante-detalle__document-card--multiple">
+      <header className="estudiante-detalle__document-header">
+        <span className="estudiante-detalle__document-icon" aria-hidden="true">
+          📄
+        </span>
+        <h4>{plantilla.tipoDocumento || 'Documento requerido'}</h4>
+        <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${total > 0 ? 'is-loaded' : 'is-pending'}`}>
+          {total === 0 ? 'Pendiente' : total === 1 ? '1 cargado' : `${total} cargados`}
+        </span>
+      </header>
+
+      {total === 0 ? (
+        <p className="estudiante-detalle__multi-empty">Aún no se ha cargado ningún archivo.</p>
+      ) : (
+        <ul className="estudiante-detalle__multi-list">
+          {documentos.map((documento, index) => {
+            const procesando = Boolean(activeAction && activeAction.documentoId === documento.id)
+            const estado = getDocumentoEstado(documento)
+            return (
+              <li key={resolveDocumentoKey(documento, index)}>
+                <div className="estudiante-detalle__multi-info">
+                  <strong>{documento.nombreArchivo}</strong>
+                  <small>Cargado el {formatDate(documento.fechaCarga)}</small>
+                </div>
+                <span className={`estudiante-detalle__badge estudiante-detalle__badge--document ${getDocumentoEstadoModifier(estado)}`}>
+                  {estado}
+                </span>
+                <div className="estudiante-detalle__multi-actions">
+                  <button type="button" className="sapp-document-action" disabled={procesando} onClick={() => onView(documento.id as number)}>
+                    {procesando && activeAction?.action === 'view' ? 'Abriendo...' : 'Ver'}
+                  </button>
+                  <button type="button" className="sapp-document-action" disabled={procesando} onClick={() => onDownload(documento.id as number)}>
+                    {procesando && activeAction?.action === 'download' ? 'Descargando...' : 'Descargar'}
+                  </button>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      <footer className="estudiante-detalle__document-actions">
+        {uploadEnabled ? (
+          <label className={`estudiante-detalle__upload-button ${isUploading ? 'is-disabled' : ''}`}>
+            {isUploading ? `Cargando ${uploadingAction?.filename ?? 'archivo'}...` : total > 0 ? 'Cargar otro documento' : 'Cargar documento'}
+            <input
+              type="file"
+              className="estudiante-detalle__upload-input"
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg"
+              disabled={isUploading}
+              onChange={handleFileChange}
+            />
+          </label>
+        ) : (
+          <span className="estudiante-detalle__document-no-actions">No hay trámite disponible para cargar este archivo</span>
+        )}
       </footer>
     </article>
   )
@@ -429,10 +519,20 @@ const DocumentGrid = ({ documentos, emptyMessage, activeAction, uploadingAction,
 
   return (
     <div className="estudiante-detalle__documents-grid">
-      {documentos.map((documento, index) => (
+      {groupDocumentsForGrid(documentos).map((item, index) => item.kind === 'multiple' ? (
+        <MultipleDocumentCard
+          key={`multiple-${item.grupo.key}`}
+          grupo={item.grupo}
+          activeAction={activeAction}
+          uploadingAction={uploadingAction}
+          onView={onView}
+          onDownload={onDownload}
+          onUpload={onUpload}
+        />
+      ) : (
         <DocumentCard
-          key={resolveDocumentoKey(documento, index)}
-          documento={documento}
+          key={resolveDocumentoKey(item.documento, index)}
+          documento={item.documento}
           activeAction={activeAction}
           uploadingAction={uploadingAction}
           onView={onView}
