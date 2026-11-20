@@ -13,6 +13,7 @@ import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base6
 import './InscripcionDocumentosPage.css'
 import type { InscripcionDetalleOutletContext } from '../InscripcionAdmisionDetalle/InscripcionAdmisionDetallePage'
 import { getCachedDocumentos, invalidateInscripcionDocumentosCache, prefetchInscripcionDocumentos } from './documentosPrefetchCache'
+import ReferenciasAcademicasSection from './ReferenciasAcademicasSection'
 
 interface DocumentoActionState {
   viewing: boolean
@@ -516,6 +517,14 @@ const InscripcionDocumentosPage = () => {
           </div>
         </div>
       )}
+      {!Number.isNaN(tramiteId) ? (
+        <ReferenciasAcademicasSection
+          tramiteId={tramiteId}
+          usuarioCargaId={session?.kind === 'SAPP' ? session.user.id : null}
+          puedeCargar={canManageDocuments}
+          inscripcionCerrada={isEstadoFinal}
+        />
+      ) : null}
     </section>
   )
 }

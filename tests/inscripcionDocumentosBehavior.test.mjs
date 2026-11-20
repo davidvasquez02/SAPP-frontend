@@ -9,7 +9,7 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
   const { default: Page } = await ui.load('/src/pages/InscripcionDocumentos/InscripcionDocumentosPage.tsx')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
   const cache = await ui.load('/src/pages/InscripcionDocumentos/documentosPrefetchCache.ts')
-  let docs, writes, starts, polls, alerts, failure, started, callback, content, preview
+  let docs, refs, uploads, writes, starts, polls, alerts, failure, started, callback, content, preview
   const documentRow = (estado = 'POR_REVISAR', uploaded = true) => ({
     idTipoDocumentoTramite: 1, codigoTipoDocumentoTramite: 'CEDULA', nombreTipoDocumentoTramite: 'Identidad de prueba',
     obligatorioTipoDocumentoTramite: true, documentoCargado: uploaded,
@@ -18,7 +18,7 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
   const timeout = ui.dom.window.setTimeout.bind(ui.dom.window)
   t.beforeEach(() => {
     cache.invalidateInscripcionDocumentosCache(160)
-    docs = [documentRow()]; writes = []; starts = 0; polls = 0; alerts = []; failure = false; started = true; callback = 0; content = ''
+    docs = [documentRow()]; refs = []; uploads = []; writes = []; starts = 0; polls = 0; alerts = []; failure = false; started = true; callback = 0; content = ''
     preview = { opener: {}, closed: false, location: {}, close() { this.closed = true } }
     ui.dom.window.alert = value => alerts.push(value)
     ui.dom.window.open = () => preview
@@ -31,6 +31,9 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
         docs = [documentRow(body.aprobado ? 'APROBADO' : 'RECHAZADO')]
         return Response.json({ ok: true, data: null })
       }
+      // Las referencias académicas (trámite de coordinación 1001) se consultan aparte de los documentos del aspirante.
+      if (path.endsWith('/document') && init.method === 'POST') { uploads.push(JSON.parse(init.body)); return Response.json({ ok: true, data: { id: 900 + uploads.length } }) }
+      if (path.endsWith('/document') && new URL(url, 'https://test.invalid').searchParams.get('codigoTipoTramite') === '1001') return Response.json({ ok: true, data: refs })
       if (path.endsWith('/document')) return failure ? Response.json({ message: 'Consulta no disponible' }, { status: 503 }) : Response.json({ ok: true, data: docs })
       if (path.endsWith('/80')) return Response.json({ ok: true, data: { id: 80, contenidoBase64: content, mimeType: 'application/pdf', nombreArchivo: 'identidad.pdf' } })
       if (path.includes('/iniciarEvaluacion/')) { starts++; return failure ? Response.json({ ok: false, message: 'Inicio no disponible' }) : Response.json({ ok: true }) }
@@ -61,6 +64,31 @@ test('documentos de inscripción: revisión e inicio de evaluación', async t =>
     await ui.cleanup(); cache.invalidateInscripcionDocumentosCache(160); failure = true
     v = mount(s); await v.findByText(/Consulta no disponible/)
     assert.equal(writes.length, 0)
+  })
+  const referenciaRow = (id, nombre) => ({
+    idTipoDocumentoTramite: 10, codigoTipoDocumentoTramite: 'ANX-9', nombreTipoDocumentoTramite: 'Referencia académica', descripcionTipoDocumentoTramite: 'Referencia',
+    obligatorioTipoDocumentoTramite: false, documentoCargado: true, tipoTramite: 'ADMISION_COORDINACION',
+    documentoUploadedResponse: { idDocumento: id, nombreArchivoDocumento: nombre, versionDocumento: 1, fechaCargaDocumento: '2026-11-20T10:00:00' },
+  })
+  const pdf = nombre => new File(['%PDF-'], nombre, { type: 'application/pdf' })
+  await t.test('referencias académicas: lista las cargadas y el coordinador sube varias de una vez', async s => {
+    refs = [referenciaRow(901, 'ref1.pdf'), referenciaRow(902, 'ref2.pdf')]
+    const v = mount(s); await ready(v)
+    await v.findByText('ref1.pdf'); assert.ok(v.getByText('ref2.pdf'))
+    ui.fireEvent.change(v.getByLabelText('Seleccionar archivos'), { target: { files: [pdf('a.pdf'), pdf('b.pdf')] } })
+    click(v, 'Cargar referencias')
+    await ui.waitFor(() => assert.equal(uploads.length, 2))
+    // Cada archivo es un documento aparte del mismo tipo, cargado por el coordinador (no por un aspirante).
+    assert.deepEqual(uploads.map(u => [u.tipoDocumentoTramiteId, u.tramiteId, u.aspiranteCargaId]), [[10, 160, null], [10, 160, null]])
+    assert.deepEqual(uploads.map(u => u.nombreArchivo), ['a.pdf', 'b.pdf'])
+  })
+  await t.test('referencias académicas: con la inscripción cerrada o sin permiso solo se consultan', async s => {
+    refs = [referenciaRow(901, 'ref1.pdf')]
+    let v = mount(s, { final: true }); await v.findByText('ref1.pdf')
+    assert.equal(v.queryByLabelText('Seleccionar archivos'), null)
+    await ui.cleanup()
+    v = mount(s, { roles: ['ESTUDIANTE'] }); await v.findByText('ref1.pdf')
+    assert.equal(v.queryByLabelText('Seleccionar archivos'), null)
   })
   await t.test('obligatorios ausentes bloquean validación y avance', async s => {
     docs = [documentRow('POR_REVISAR', false)]

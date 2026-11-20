@@ -1,7 +1,7 @@
 import { getDocumentById, getDocumentosByTramiteParams } from '../../../documentos/api/documentosService'
 import {
-  CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION,
-  CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION,
+  CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA,
+  CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE,
 } from '../../../documentos/constants'
 import { getEvaluacionAdmisionInfo } from '../../api/evaluacionAdmisionService'
 import type { EtapaEvaluacion, EvaluacionAdmisionItem } from '../../types/evaluacionAdmisionTypes'
@@ -21,7 +21,7 @@ export const prefetchEvaluacionEtapa = async (inscripcionId: number, etapa: Etap
 export const cargarHojaVidaDocumento = async (inscripcionId: number): Promise<HojaVidaPreviewDocument | null> => {
   const cached = hojaVidaDocCache.get(inscripcionId)
   if (cached) return cached
-  const documentos = await getDocumentosByTramiteParams({ tramiteId: inscripcionId, codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_COORDINACION, codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA_COORDINACION, incluirContenido: false })
+  const documentos = await getDocumentosByTramiteParams({ tramiteId: inscripcionId, codigoTipoTramite: CODIGO_TIPO_TRAMITE_ADMISION_ASPIRANTE, codigoTipoDocumentoTramite: CODIGO_TIPO_DOCUMENTO_HOJA_DE_VIDA, incluirContenido: false })
   const uploaded = documentos[0]?.documentoUploadedResponse
   if (!uploaded?.idDocumento) return null
   const file = await getDocumentById(uploaded.idDocumento)
