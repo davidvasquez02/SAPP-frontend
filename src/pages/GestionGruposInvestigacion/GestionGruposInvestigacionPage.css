@@ -212,13 +212,13 @@
 }
 
 .gestion-grupos__tab {
-  padding: 0.4rem 1.1rem;
+  padding: 0.55rem 1.35rem;
   border-radius: 999px;
   color: var(--on-surface);
   text-align: center;
   text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 650;
+  font-size: 0.975rem;
+  font-weight: 700;
 }
 
 .gestion-grupos__tab--active {
@@ -278,13 +278,13 @@
 .gestion-grupos .sapp-filters-clear-button {
   flex: 0 0 auto;
   align-self: flex-end;
-  height: 2.4rem;
+  height: 2.7rem;
   min-height: 0;
-  padding: 0 0.9rem;
+  padding: 0 1.2rem;
   border: 1px solid var(--success);
   background: transparent;
   color: var(--success);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -350,19 +350,19 @@
 }
 
 .gestion-grupos button.gestion-grupos__subtab {
-  padding: 0.35rem 1rem;
+  padding: 0.5rem 1.25rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--on-surface);
-  font-size: 0.875rem;
-  font-weight: 650;
+  font-size: 0.95rem;
+  font-weight: 700;
   text-align: center;
 }
 
 /* Segundo nivel (Facultades / Escuelas dentro de la UIS): pestañas de texto con subrayado, más discretas. */
 .gestion-grupos__subtabs--nivel2 {
-  gap: 1.25rem;
+  gap: 1.5rem;
   width: 100%;
   padding: 0;
   border: 0;
@@ -372,7 +372,8 @@
 }
 
 .gestion-grupos .gestion-grupos__subtabs--nivel2 button.gestion-grupos__subtab {
-  padding: 0.4rem 0.15rem;
+  padding: 0.55rem 0.2rem;
+  font-size: 1rem;
   border-radius: 0;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
