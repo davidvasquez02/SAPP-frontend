@@ -57,10 +57,15 @@ body.dark .status-badge.status-badge--enviada-consejo {
   color: #b3261e;
 }
 
+/* Amarillo: el texto usa el tono oscuro del mismo color (como el resto de estados), no el color de texto general. */
 .status-badge.status-badge--en-ajustes {
   background: color-mix(in srgb, #facc15 24%, var(--surface));
   border-color: color-mix(in srgb, #facc15 52%, var(--outline));
-  color: var(--text-primary);
+  color: #8a6400;
+}
+
+body.dark .status-badge.status-badge--en-ajustes {
+  color: #fde047;
 }
 
 .status-badge.status-badge--devuelta {
