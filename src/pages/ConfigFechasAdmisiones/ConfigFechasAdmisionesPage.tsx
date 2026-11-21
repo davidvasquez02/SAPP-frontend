@@ -144,7 +144,6 @@ const ConfigFechasAdmisionesPage = () => {
         <header className="config-fechas-admisiones__header">
           <div>
             <h1>{form.periodoId === null ? 'Crear período académico' : 'Editar período académico'}</h1>
-            <p>{form.periodoId === null ? 'Defina el semestre y todas sus fechas académicas.' : `Actualice toda la información del período ${form.anio}-${form.periodo}.`}</p>
           </div>
         </header>
 

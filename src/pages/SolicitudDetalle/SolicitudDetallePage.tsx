@@ -754,7 +754,6 @@ const SolicitudDetallePage = () => {
                   </span>
                   <div>
                     <h3 id="acta-asociada-title">Acta asociada</h3>
-                    <p>Documento en el que quedó registrada la aprobación de esta solicitud.</p>
                   </div>
                 </div>
                 <dl className="solicitud-detalle-page__acta-details">
@@ -826,7 +825,6 @@ const SolicitudDetallePage = () => {
                   <div id="historial-homologaciones" className="solicitud-detalle-page__history" aria-live="polite">
                     <div>
                       <h4>Homologaciones anteriores</h4>
-                      <p>Consulta estos antecedentes como apoyo informativo antes de tomar una decisión.</p>
                     </div>
                     {historialLoading ? (
                       <p>Cargando historial...</p>

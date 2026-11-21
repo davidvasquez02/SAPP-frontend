@@ -337,9 +337,6 @@ const InscripcionDocumentosPage = () => {
       <div className="inscripcion-documentos__panel-header">
         <div>
           <h2 className="inscripcion-documentos__heading">Documentos cargados</h2>
-          <p className="inscripcion-documentos__subtitle">
-            Revisa los documentos cargados por el aspirante y marca la validación.
-          </p>
         </div>
       </div>
       {operationMessage ? (

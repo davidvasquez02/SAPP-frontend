@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   crearGrupoGestion,
   getGruposGestion,
@@ -116,7 +116,6 @@ const GrupoInvestigacionFormPage = () => {
         <header className="gestion-grupos__header">
           <div>
             <h2 className="gestion-grupos__page-title">{titulo}</h2>
-            <p>Un grupo pertenece a una escuela de la UIS o a una institución externa. Si no aparece, agrégala primero en la pestaña <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
           </div>
         </header>
 

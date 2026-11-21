@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   crearInstitucionGrupo,
   getOpcionesInstituciones,
@@ -79,11 +79,6 @@ const InstitucionFormPage = ({ tipo }: InstitucionFormPageProps) => {
         <header className="gestion-grupos__header">
           <div>
             <h2 className="gestion-grupos__page-title">Nueva {etiqueta}</h2>
-            <p>
-              Revisa primero la lista: si la {etiqueta} ya existe, no la agregues de nuevo. El sistema tampoco permite nombres repetidos.
-              {esExterna ? ' Regístrala en general, sin facultades ni escuelas (por ejemplo, Universidad de Valencia).' : null}
-              {esEscuela ? <> Si la facultad no aparece, agrégala primero en <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</> : null}
-            </p>
           </div>
         </header>
 

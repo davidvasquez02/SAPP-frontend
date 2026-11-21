@@ -88,10 +88,7 @@ const GestionRolesPage = () => {
   return (
     <ModuleLayout title="Gestión de roles">
       <main className="gestion-roles">
-        <header className="gestion-roles__hero">
-          <p>Asigne o retire roles del IAM a un usuario, sin depender de scripts de base de datos ni de la consola del IAM.</p>
-        </header>
-        {error ? <p className="gestion-roles__message gestion-roles__message--error" role="alert">{error}</p> : null}
+                {error ? <p className="gestion-roles__message gestion-roles__message--error" role="alert">{error}</p> : null}
         {success ? <p className="gestion-roles__message gestion-roles__message--success" role="status">{success}</p> : null}
 
         <section className="gestion-roles__card">

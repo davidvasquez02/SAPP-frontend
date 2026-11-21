@@ -181,13 +181,13 @@ const CreditosCondonablesCoordinacionPage = () => {
           <button type="button" ref={historyTabRef} id="creditos-tab-historico" role="tab" aria-selected={activeListing === 'historico'} aria-controls="creditos-panel-historico" tabIndex={activeListing === 'historico' ? 0 : -1} onClick={() => selectTab('historico')} onKeyDown={(event) => handleTabKeyDown(event, 'historico')}>Histórico <span aria-label={`${historico.length} solicitudes`}>{historico.length}</span></button>
         </div>}
         <section id="creditos-panel-pendientes" className="creditos-condonables__section" aria-labelledby={isMobile ? 'creditos-tab-pendientes' : 'creditos-pendientes-title'} role={isMobile ? 'tabpanel' : undefined} hidden={isMobile && activeListing !== 'pendientes'}>
-          <header><h2 id="creditos-pendientes-title">Solicitudes pendientes</h2><p>Solicitudes y renovaciones que requieren seguimiento.</p></header>
+          <header><h2 id="creditos-pendientes-title">Solicitudes pendientes</h2></header>
           <div className="creditos-condonables__filters"><EstadoFilter id="estado-credito-pendiente" value={estadoPendienteId} estados={estadosPendientes} disabled={loading} onChange={(value) => { setEstadoPendienteId(value); setPendingPage(1) }} /></div>
           {renderResults(pendingPagination.rows, pendientes.length === 0 ? 'No hay solicitudes pendientes.' : 'No hay solicitudes pendientes con el filtro seleccionado.')}
           {!loading && !error && pendientesFiltradas.length > 0 && renderPagination(pendingPagination.page, pendingPagination.totalPages, setPendingPage, 'solicitudes pendientes')}
         </section>
         <section id="creditos-panel-historico" className="creditos-condonables__section" aria-labelledby={isMobile ? 'creditos-tab-historico' : 'creditos-historico-title'} role={isMobile ? 'tabpanel' : undefined} hidden={isMobile && activeListing !== 'historico'}>
-          <header><h2 id="creditos-historico-title">Histórico de solicitudes</h2><p>Solicitudes aprobadas y rechazadas.</p></header>
+          <header><h2 id="creditos-historico-title">Histórico de solicitudes</h2></header>
           <div className="creditos-condonables__filters">
             <EstadoFilter id="estado-credito-historico" value={estadoHistoricoId} estados={estadosHistoricos} disabled={loading} onChange={(value) => { setEstadoHistoricoId(value); setHistoryPage(1) }} />
             <label className="creditos-condonables__field sapp-filter-field" htmlFor="estudiante-credito-historico"><span>Estudiante</span><select id="estudiante-credito-historico" value={estudianteId} disabled={loading || estudiantesHistoricos.length === 0} onChange={(event) => { setEstudianteId(event.target.value); setHistoryPage(1) }}><option value="">Todos</option>{estudiantesHistoricos.map((student) => <option key={student.id} value={student.id}>{formatNombrePersona(student.nombre)}{student.codigo ? ` — ${student.codigo}` : ''}</option>)}</select></label>

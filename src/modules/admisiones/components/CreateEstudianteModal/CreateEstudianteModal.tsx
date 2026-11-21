@@ -86,7 +86,6 @@ export const CreateEstudianteModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-student-title"
-        aria-describedby="create-student-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="create-student-modal__header">
@@ -96,10 +95,6 @@ export const CreateEstudianteModal = ({
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar" disabled={isSubmitting}>×</button>
         </header>
-
-        <p id="create-student-description" className="create-student-modal__description">
-          Completa los datos institucionales. El correo personal se obtiene del registro del aspirante.
-        </p>
 
         <form className="create-student-modal__form" onSubmit={handleSubmit}>
           <label>

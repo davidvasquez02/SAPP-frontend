@@ -55,10 +55,6 @@ const PlantillasCorreoPage = () => {
   return (
     <ModuleLayout title="Plantillas de correo">
       <section className="plantillas-correo">
-        <header className="plantillas-correo__header">
-          <p>Textos de los correos que envía el sistema. El encabezado y el pie generales se agregan automáticamente a cada correo.</p>
-        </header>
-
         {error ? <p className="plantillas-correo__alert plantillas-correo__alert--error" role="alert">{error}</p> : null}
         {mensaje ? <p className="plantillas-correo__alert plantillas-correo__alert--success" role="status">{mensaje}</p> : null}
 

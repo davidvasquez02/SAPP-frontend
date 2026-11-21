@@ -461,7 +461,6 @@ export const CreateConvocatoriaModal = ({
       <div className="create-convocatoria-modal__dialog">
         <div className="create-convocatoria-modal__header">
           <h2>Nueva convocatoria</h2>
-          <p>Complete los datos para registrar una nueva convocatoria de admisión.</p>
         </div>
 
         <form className="create-convocatoria-modal__form" onSubmit={handleSubmit}>

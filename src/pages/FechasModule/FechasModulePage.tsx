@@ -232,7 +232,7 @@ const FechasModulePage = () => {
         {!isLoading && !error ? <>
           <article className="config-module__card">
             <div className="config-module__card-header">
-              <div><h2>Períodos académicos</h2><p>Base para definir rangos de fechas y habilitar procesos por semestre.</p></div>
+              <div><h2>Períodos académicos</h2></div>
               <button type="button" onClick={() => navigate(`${RUTA_CALENDARIO}/periodos`)}>Crear período académico</button>
             </div>
             {periodos.length === 0 ? <p className="config-module__status">No hay períodos académicos registrados.</p> : null}
@@ -255,7 +255,7 @@ const FechasModulePage = () => {
 
           <article className="config-module__card">
             <div className="config-module__card-header">
-              <div><h2>Convocatorias de admisión</h2><p>Gestione convocatorias por programa, período y estado de vigencia.</p></div>
+              <div><h2>Convocatorias de admisión</h2></div>
               <button type="button" onClick={() => setIsCreateModalOpen(true)}>Crear convocatoria</button>
             </div>
             {isMobile && programaTabs.length > 0 ? <div className="config-module__program-tabs" role="tablist" aria-label="Programas de convocatorias de admisión">

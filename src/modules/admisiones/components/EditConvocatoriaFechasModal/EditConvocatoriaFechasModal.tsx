@@ -109,9 +109,6 @@ export const EditConvocatoriaFechasModal = ({
         </header>
 
         <form onSubmit={handleSubmit}>
-          <p className="edit-convocatoria-fechas-modal__intro">
-            Puede ajustar las fechas, los cupos y las observaciones mientras la evaluación no se haya iniciado para ningún aspirante. Los evaluadores se administran desde «Ver evaluadores» en la convocatoria.
-          </p>
           <div className="edit-convocatoria-fechas-modal__fields">
             <label>
               Fecha de inicio

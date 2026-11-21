@@ -130,7 +130,6 @@ const SolicitudDocumentosEditor = forwardRef<SolicitudDocumentosEditorHandle, So
       <section className="solicitud-documentos-editor">
         <div className="solicitud-documentos-editor__header">
           <h4>Documentos</h4>
-          <p>Requisitos según el tipo de solicitud seleccionado.</p>
         </div>
 
         {isLoading ? (

@@ -1254,7 +1254,6 @@ const MatriculaPage = () => {
                 <header className="matricula-page__tracking-header">
                   <div>
                     <h4 id="matricula-tracking-title">Resumen de la matrícula</h4>
-                    <p className="matricula-page__description">Consulta el estado informado para este periodo.</p>
                   </div>
                   <span className={getMatriculaEstadoClassName(activeMatricula.estado, activeMatricula.documentosCompletos)}>
                     {getMatriculaEstadoLabel(activeMatricula.estado, activeMatricula.documentosCompletos)}
@@ -1279,9 +1278,6 @@ const MatriculaPage = () => {
               {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                 <>
                   <h4>Selección de materias</h4>
-                  <p className="matricula-page__description">
-                    Agrega las materias que cursarás en este periodo.
-                  </p>
                 </>
               ) : null}
               {loadingForm ? (
@@ -1342,11 +1338,6 @@ const MatriculaPage = () => {
 
             <section className="matricula-page__card">
               {!isReadOnlyMatriculaFinalizada ? <h4>Cargue de documentos</h4> : null}
-              {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
-                <p className="matricula-page__description">
-                  Revisa y carga los documentos solicitados para la matrícula.
-                </p>
-              ) : null}
               {loadingForm ? (
                 <p className="matricula-page__status">Cargando documentos...</p>
               ) : null}

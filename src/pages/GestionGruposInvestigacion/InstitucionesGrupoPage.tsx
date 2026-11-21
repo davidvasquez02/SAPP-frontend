@@ -295,14 +295,6 @@ const InstitucionesGrupoPage = () => {
   return (
     <GruposInvestigacionLayout>
       <section className="gestion-grupos">
-        <header className="gestion-grupos__header">
-          <p>
-            {ambito === 'UIS'
-              ? 'Facultades de la UIS y las escuelas de cada una. Una escuela pertenece a una facultad, y los grupos de investigación pertenecen a una escuela.'
-              : 'Instituciones de otras universidades u organizaciones. Se registran en general (por ejemplo, Universidad de Valencia), sin facultades ni escuelas.'}
-          </p>
-        </header>
-
         {mensaje ? <p className="gestion-grupos__alert gestion-grupos__alert--success" role="status">{mensaje}</p> : null}
 
         <div className="gestion-grupos__subtabs" role="tablist" aria-label="Ámbito de la institución">

@@ -68,10 +68,6 @@ const RecordatoriosCandidatura = () => {
       <div>
         <p className="recordatorios-candidatura__eyebrow">Examen de candidatura doctoral</p>
         <h3 id="recordatorios-candidatura-title">Recordatorios por correo</h3>
-        <p>
-          Envía manualmente un correo a todos los estudiantes que deben recibir el recordatorio.
-          El servidor determina los destinatarios elegibles.
-        </p>
       </div>
       <button type="button" onClick={() => { setError(null); setMensaje(null); setConfirmando(true) }}>
         Enviar recordatorios

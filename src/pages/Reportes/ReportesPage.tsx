@@ -168,7 +168,6 @@ const ReportesPage = () => {
         <header className="reports__header">
           {/* <p className="reports__eyebrow">Coordinación académica</p>
           <h1>Informes a dependencias</h1> */}
-          <p>Seleccione el proceso y los parámetros institucionales que se incluirán en el informe.</p>
         </header>
 
         <div className="reports__processes" aria-label="Tipo de proceso">

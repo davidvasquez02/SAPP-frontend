@@ -112,7 +112,6 @@ const GestionGruposInvestigacionPage = () => {
     <GruposInvestigacionLayout>
       <section className="gestion-grupos">
         <header className="gestion-grupos__header">
-          <p>Crea, modifica o retira los grupos de investigación. Un grupo retirado se conserva con su historial y deja de ofrecerse para nuevas asignaciones.</p>
           <button type="button" className="gestion-grupos__primary" onClick={() => navigate(`${RUTA_GRUPOS}/nuevo`)}>
             Nuevo grupo
           </button>

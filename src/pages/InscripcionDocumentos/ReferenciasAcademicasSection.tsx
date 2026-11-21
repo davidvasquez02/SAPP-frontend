@@ -187,9 +187,6 @@ const ReferenciasAcademicasSection = ({
   return (
     <section className="inscripcion-documentos__referencias" aria-labelledby="referencias-academicas-title">
       <h3 id="referencias-academicas-title" className="inscripcion-documentos__referencias-title">Referencias académicas</h3>
-      <p className="inscripcion-documentos__subtitle">
-        Las referencias las carga el coordinador; puedes agregar varias. El resto de documentos los carga el aspirante.
-      </p>
 
       {mensaje ? (
         <p role="status" className={`inscripcion-documentos__operation-message inscripcion-documentos__operation-message--${mensaje.tipo === 'ok' ? 'success' : 'error'}`}>

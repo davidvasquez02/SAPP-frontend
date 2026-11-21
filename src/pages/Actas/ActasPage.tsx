@@ -279,7 +279,7 @@ const ActasPage = () => {
     <ModuleLayout title="Actas">
       <section className="actas-page">
         <header className="actas-page__hero">
-          <div><h1>Gestión de actas</h1><p>Consulte las actas institucionales y registre nuevos documentos en PDF.</p></div>
+          <div><h1>Gestión de actas</h1></div>
           <button type="button" className="actas-page__primary" onClick={() => setShowForm((value) => !value)}>
             {showForm ? "Cancelar carga" : "+ Cargar acta"}
           </button>

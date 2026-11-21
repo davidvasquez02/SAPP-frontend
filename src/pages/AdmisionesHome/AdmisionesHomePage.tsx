@@ -284,10 +284,6 @@ const AdmisionesHomePage = () => {
               >
                 Seleccione una convocatoria
               </h2>
-              <p className="admisiones-section-header__description">
-                Elige un programa académico para ver la convocatoria vigente o
-                consultar convocatorias anteriores.
-              </p>
             </div>
           </div>
 

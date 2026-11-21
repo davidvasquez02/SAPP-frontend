@@ -31,9 +31,6 @@ const AdmisionesMisEntrevistasPage = () => {
       <section className="admisiones-mis-entrevistas">
         <header className="admisiones-mis-entrevistas__header">
           <h1 className="admisiones-mis-entrevistas__title">Mis entrevistas</h1>
-          <p className="admisiones-mis-entrevistas__subtitle">
-            Listado de aspirantes asignados para calificación de entrevista.
-          </p>
         </header>
 
         {asignaciones.length === 0 ? (

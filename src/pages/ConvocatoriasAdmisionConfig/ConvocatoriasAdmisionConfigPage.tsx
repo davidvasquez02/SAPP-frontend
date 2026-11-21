@@ -179,9 +179,6 @@ const ConvocatoriasAdmisionConfigPage = () => {
         <header className="convocatorias-config__header">
           <div>
             <h1>Configuración de convocatorias de admisión</h1>
-            <p>
-              Gestione convocatorias por programa, periodo y estado de vigencia.
-            </p>
           </div>
           <div className="convocatorias-config__header-actions">
             <button

@@ -681,7 +681,6 @@ const MatriculaDetalleCoordinacionPage = () => {
             <article className="matricula-detalle__card">
               <header className="matricula-detalle__header">
                 <h3>Documentos de la matrícula</h3>
-                <p>Valida documentos obligatorios y complementarios antes de aprobar.</p>
               </header>
 
               {isLoading ? (

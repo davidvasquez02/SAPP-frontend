@@ -10,12 +10,12 @@ const AdministracionAcademicaLayout = () => (
     <div className="administracion-academica">
       <nav className="administracion-academica__nav" aria-label="Administración académica">
         <p className="administracion-academica__caption">Gestionar</p>
-        {SECCIONES_ADMINISTRACION.map(({ to, label, description, icon }) => (
+        {SECCIONES_ADMINISTRACION.map(({ to, label, icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) =>
             `administracion-academica__link${isActive ? ' administracion-academica__link--active' : ''}`
           }>
             <SidebarModuleIcon modulePath={icon} className="administracion-academica__icon" />
-            <span><strong>{label}</strong><small>{description}</small></span>
+            <span><strong>{label}</strong></span>
           </NavLink>
         ))}
       </nav>

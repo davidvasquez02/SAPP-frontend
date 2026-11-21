@@ -216,7 +216,7 @@ const PerfilPage = () => {
 
         <section className="profile-page__card" aria-labelledby="personal-title">
           <div className="profile-page__heading">
-            <div><h2 id="personal-title">Información personal</h2><p>Datos asociados a tu identidad institucional.</p></div>
+            <div><h2 id="personal-title">Información personal</h2></div>
             {idpAccountUrl && (
               <a
                 className="profile-page__file-button profile-page__heading-action"
@@ -239,7 +239,7 @@ const PerfilPage = () => {
         </section>
 
         {isCoordination && <section className="profile-page__card" aria-labelledby="coord-title">
-          <div className="profile-page__heading"><div><h2 id="coord-title">Información de coordinación</h2><p>Contexto académico disponible para tu rol.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="coord-title">Información de coordinación</h2></div></div>
           <dl className="profile-page__data-grid">
             <div>
               <dt>Programa a cargo</dt>
@@ -255,7 +255,7 @@ const PerfilPage = () => {
         </section>}
 
         {isStudent && <section className="profile-page__card" aria-labelledby="student-title">
-          <div className="profile-page__heading"><div><h2 id="student-title">Información académica</h2><p>Resumen de tu vinculación como estudiante.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="student-title">Información académica</h2></div></div>
           <dl className="profile-page__data-grid">
             <div><dt>Código UIS</dt><dd>{valueOrPending(studentCode)}</dd></div>
             <div><dt>Programa</dt><dd>{valueOrPending(academicProgram)}</dd></div>
@@ -270,12 +270,12 @@ const PerfilPage = () => {
         </section>}
 
         {hasStudentRole && user.estudiante?.id && <section className="profile-page__card" aria-labelledby="historial-materias-title">
-          <div className="profile-page__heading"><div><h2 id="historial-materias-title">Historial de materias</h2><p>Cada cambio de estado de tus materias, de todas tus matrículas.</p></div></div>
+          <div className="profile-page__heading"><div><h2 id="historial-materias-title">Historial de materias</h2></div></div>
           <HistorialAsignaturasEstudiante estudianteId={user.estudiante.id} />
         </section>}
 
         <section className="profile-page__card profile-page__signature" aria-labelledby="signature-title">
-          <div className="profile-page__heading"><span aria-hidden="true">✎</span><div><h2 id="signature-title">Firma</h2><p>Selecciona la imagen y guarda los cambios para utilizarla en documentos autorizados.</p></div></div>
+          <div className="profile-page__heading"><span aria-hidden="true">✎</span><div><h2 id="signature-title">Firma</h2></div></div>
           <div className="profile-page__signature-content">
             <div className="profile-page__signature-preview">
               {isLoadingSignature ? <span>Cargando firma…</span> : signatureSrc ? <img src={signatureSrc} alt="Vista previa de la firma" /> : <span>Sin firma cargada</span>}

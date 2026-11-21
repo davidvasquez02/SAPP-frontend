@@ -409,7 +409,6 @@ const EstudiantesCoordinacionPage = () => {
           <div className="estudiantes-coordinacion__graduates-heading">
             <div>
               <h2 id="egresados-title">Egresados</h2>
-              <p>Consulta los egresados del programa y sus perfiles.</p>
             </div>
             <button
               type="button"

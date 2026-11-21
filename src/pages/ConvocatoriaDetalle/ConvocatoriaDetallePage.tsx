@@ -589,7 +589,6 @@ const ConvocatoriaDetallePage = () => {
             <div>
               <p className="admission-detail-header__eyebrow">✓ Convocatoria cerrada</p>
               <h2 id="crear-estudiantes-title">Crear estudiantes admitidos</h2>
-              <p>Asigna el código UIS y el correo institucional a cada aspirante admitido.</p>
             </div>
             {aspirantesAdmitidos.length === 0 ? (
               <p>No hay aspirantes con estado ADMITIDO en esta convocatoria.</p>

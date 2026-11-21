@@ -148,10 +148,6 @@ const BancoEvaluadoresPage = () => {
     <ModuleLayout title="Banco de evaluadores">
       <section className="banco-evaluadores">
         <header className="banco-evaluadores__header">
-          <p>
-            Registra personas interesadas en ser jurado de trabajo de grado, antes de que participen en ningún
-            proceso. Al designar un jurado, estas personas aparecen junto a quienes ya han evaluado antes.
-          </p>
           {!formulario && (
             <button type="button" className="banco-evaluadores__primary" onClick={abrirNuevo}>
               Registrar persona

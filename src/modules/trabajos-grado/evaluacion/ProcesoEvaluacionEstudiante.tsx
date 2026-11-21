@@ -44,7 +44,6 @@ const ProcesoEvaluacionEstudiante = ({ proceso }: ProcesoEvaluacionEstudiantePro
         <div>
           <p className="evaluacion-estudiante__eyebrow">Evaluación del proyecto de grado</p>
           <h3 id="evaluacion-estudiante-title">Resultado de la evaluación</h3>
-          <p>Consulta el resultado y los conceptos emitidos por tus evaluadores.</p>
         </div>
         <div className="evaluacion-estudiante__result" aria-label={`Resultado: ${resultado || 'Pendiente'}`}>
           <span>Resultado</span>

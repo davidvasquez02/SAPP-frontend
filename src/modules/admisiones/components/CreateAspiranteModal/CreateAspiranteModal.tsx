@@ -265,7 +265,6 @@ export const CreateAspiranteModal = ({
       >
         <header className="create-aspirante-modal__header">
           <h2 id={formTitleId}>Crear aspirante</h2>
-          <p>Complete la información para registrar el aspirante en el programa.</p>
         </header>
 
         <form className="create-aspirante-modal__form" onSubmit={handleSubmit} autoComplete="off">

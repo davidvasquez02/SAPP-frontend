@@ -136,10 +136,6 @@ const RubricaEvaluacionPage = () => {
         <header className="rubrica-evaluacion__hero">
           <div>
             <h1>Rúbrica de evaluación de jurados</h1>
-            <p>
-              Este es el formato que se le entrega a cada jurado para que lo diligencie y lo adjunte al emitir
-              su concepto sobre un trabajo de grado. Solo hay una versión vigente a la vez.
-            </p>
           </div>
         </header>
 

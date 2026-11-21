@@ -8,13 +8,13 @@ export const RUTA_BANCO_EVALUADORES = `${RUTA_ADMINISTRACION}/banco-evaluadores`
 export const RUTA_ROLES = `${RUTA_ADMINISTRACION}/roles`
 
 export const SECCIONES_ADMINISTRACION = [
-  { to: RUTA_CALENDARIO, label: 'Calendario académico', description: 'Períodos y fechas de los procesos', icon: '/fechas' },
-  { to: RUTA_PROFESORES, label: 'Profesores', description: 'Vinculación docente a posgrados', icon: '/coordinacion/profesores' },
-  { to: RUTA_GRUPOS, label: 'Grupos de investigación', description: 'Grupos, instituciones e integrantes', icon: '/coordinacion/grupos-investigacion' },
-  { to: RUTA_PLANTILLAS, label: 'Plantillas de correo', description: 'Contenido de las comunicaciones', icon: '/coordinacion/plantillas-correo' },
-  { to: RUTA_RUBRICA, label: 'Rúbrica de evaluación', description: 'Formato que se entrega a los jurados de trabajo de grado', icon: '/coordinacion/rubrica-evaluacion' },
-  { to: RUTA_BANCO_EVALUADORES, label: 'Banco de evaluadores', description: 'Personas interesadas en ser jurado, antes de participar en un proceso', icon: '/coordinacion/banco-evaluadores' },
-  { to: RUTA_ROLES, label: 'Gestión de roles', description: 'Asignar o retirar roles del IAM a un usuario', icon: '/coordinacion/roles' },
+  { to: RUTA_CALENDARIO, label: 'Calendario académico', icon: '/fechas' },
+  { to: RUTA_PROFESORES, label: 'Profesores', icon: '/coordinacion/profesores' },
+  { to: RUTA_GRUPOS, label: 'Grupos de investigación', icon: '/coordinacion/grupos-investigacion' },
+  { to: RUTA_PLANTILLAS, label: 'Plantillas de correo', icon: '/coordinacion/plantillas-correo' },
+  { to: RUTA_RUBRICA, label: 'Rúbrica de evaluación', icon: '/coordinacion/rubrica-evaluacion' },
+  { to: RUTA_BANCO_EVALUADORES, label: 'Banco de evaluadores', icon: '/coordinacion/banco-evaluadores' },
+  { to: RUTA_ROLES, label: 'Gestión de roles', icon: '/coordinacion/roles' },
 ] as const
 
 export const RUTAS_ANTERIORES_ADMINISTRACION = [

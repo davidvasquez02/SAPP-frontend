@@ -133,18 +133,16 @@ const GestionProfesoresPage = () => {
   return (
     <ModuleLayout title="Gestión profesores">
       <main className="gestion-profesores">
-        <header className="gestion-profesores__hero"><p>Administre el acceso de los profesores de la EISI al sistema de posgrados. Su participación en los grupos de investigación se gestiona en el módulo de Grupos de investigación.</p></header>
-
         <div className="gestion-profesores__panel">
           {error ? <p className="gestion-profesores__message gestion-profesores__message--error" role="alert">{error}</p> : null}
           {success ? <p className="gestion-profesores__message gestion-profesores__message--success" role="status">{success}</p> : null}
           <label className="gestion-profesores__search"><span>Buscar profesor</span><input type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Nombre, documento o correo institucional" /></label>
           <section className="gestion-profesores__card" aria-labelledby="posgrados-title">
-            <div className="gestion-profesores__heading"><div><h2 id="posgrados-title">Profesores de posgrados</h2><p>Usuarios con el rol de docente de posgrados activo en SAPP.</p></div><span>{docentesPosgrados.length} profesores</span></div>
+            <div className="gestion-profesores__heading"><div><h2 id="posgrados-title">Profesores de posgrados</h2></div><span>{docentesPosgrados.length} profesores</span></div>
             {isLoading ? <p className="gestion-profesores__empty">Cargando profesores...</p> : renderDocentesTable(docentesPosgrados, false, paginaPosgrados, paginasPosgrados, setPaginaPosgrados)}
           </section>
           <section className="gestion-profesores__card" aria-labelledby="escuela-title">
-            <div className="gestion-profesores__heading"><div><h2 id="escuela-title">Profesores de la EISI disponibles</h2><p>Profesores que todavía no tienen el rol de docente de posgrados en SAPP.</p></div><span>{docentesEscuela.length} profesores</span></div>
+            <div className="gestion-profesores__heading"><div><h2 id="escuela-title">Profesores de la EISI disponibles</h2></div><span>{docentesEscuela.length} profesores</span></div>
             {isLoading ? <p className="gestion-profesores__empty">Cargando profesores...</p> : renderDocentesTable(docentesEscuela, true, paginaEscuela, paginasEscuela, setPaginaEscuela)}
           </section>
         </div>
