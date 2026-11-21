@@ -68,8 +68,8 @@ const GestionGruposInvestigacionPage = () => {
   }
 
   useEffect(() => {
-    getOpcionesInstituciones('ESCUELA')
-      .then(setInstituciones)
+    Promise.all([getOpcionesInstituciones('ESCUELA'), getOpcionesInstituciones('EXTERNA')])
+      .then(([escuelas, externas]) => setInstituciones([...escuelas, ...externas]))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'No fue posible cargar las instituciones.'))
   }, [])
 
@@ -130,14 +130,23 @@ const GestionGruposInvestigacionPage = () => {
               <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Ej. STI o Sistemas" />
             </label>
             <label className="sapp-filter-field">
-              <span>Escuela</span>
+              <span>Escuela o institución</span>
               <select value={institucionFiltro} onChange={(e) => setInstitucionFiltro(e.target.value)}>
                 <option value="">Todas</option>
-                {instituciones.filter((institucion) => institucion.tipo === 'ESCUELA').map((institucion) => (
-                  <option key={institucion.id} value={institucion.id}>
-                    {institucion.nombre}
-                  </option>
-                ))}
+                <optgroup label="UIS">
+                  {instituciones.filter((institucion) => institucion.tipo === 'ESCUELA').map((institucion) => (
+                    <option key={institucion.id} value={institucion.id}>
+                      {institucion.nombre}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Instituciones externas">
+                  {instituciones.filter((institucion) => institucion.tipo === 'EXTERNA').map((institucion) => (
+                    <option key={institucion.id} value={institucion.id}>
+                      {institucion.nombre}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
             <label className="sapp-filter-field">
@@ -167,7 +176,7 @@ const GestionGruposInvestigacionPage = () => {
                 <tr>
                   <th>Código</th>
                   <th>Nombre</th>
-                  <th>Escuela</th>
+                  <th>Escuela / Institución</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>

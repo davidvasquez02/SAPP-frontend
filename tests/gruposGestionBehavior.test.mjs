@@ -39,12 +39,25 @@ test('gestión de grupos: creación, edición e instituciones', async t => {
   const submit = v => ui.fireEvent.submit(v.container.querySelector('form'))
   await t.test('grupo exige código, nombre y escuela antes de crear', async s => {
     const v = mount(s, Group); await v.findByLabelText('Código'); submit(v); assert.ok(v.getByText('El código y el nombre del grupo son obligatorios.'))
-    change(v, 'Código', '  G9 '); change(v, 'Nombre', ' Grupo nuevo '); submit(v); assert.ok(v.getByText('Selecciona la institución del grupo.'))
+    change(v, 'Código', '  G9 '); change(v, 'Nombre', ' Grupo nuevo '); submit(v); assert.ok(v.getByText('Indica si el grupo es de la UIS o de una institución externa.'))
+    // primero se indica el origen del grupo; mientras tanto el selector de institución está deshabilitado
+    assert.equal(v.getByLabelText('Escuela').disabled, true)
+    submit(v); assert.ok(v.getByText('Indica si el grupo es de la UIS o de una institución externa.'))
+    ui.fireEvent.click(v.getByLabelText('La UIS')); assert.equal(v.getByLabelText('Escuela').disabled, false)
+    submit(v); assert.ok(v.getByText('Selecciona la escuela del grupo.'))
     change(v, 'Escuela', '2'); submit(v); await v.findByText(/Destino: Grupo de investigación creado/)
     assert.deepEqual(writes[0].body, { codigo: 'G9', nombre: 'Grupo nuevo', institucionId: 2 })
   })
+  await t.test('grupo de una institución externa usa el selector de instituciones externas', async s => {
+    institutions = [...institutions, { id: 9, nombre: 'Universidad de Valencia', tipo: 'EXTERNA' }]
+    const v = mount(s, Group); await v.findByLabelText('Código'); change(v, 'Código', 'EXT1'); change(v, 'Nombre', 'Grupo externo')
+    ui.fireEvent.click(v.getByLabelText('Una institución externa'))
+    assert.equal(v.queryAllByRole('option', { name: 'Escuela sintética' }).length, 0)
+    change(v, 'Institución externa', '9'); submit(v); await v.findByText(/Destino: Grupo de investigación creado/)
+    assert.deepEqual(writes[0].body, { codigo: 'EXT1', nombre: 'Grupo externo', institucionId: 9 })
+  })
   await t.test('edición carga valores y actualiza id existente', async s => {
-    const v = mount(s, Group, {}, true); await v.findByDisplayValue('G8'); change(v, 'Nombre', 'Nombre actualizado'); submit(v)
+    const v = mount(s, Group, {}, true); await v.findByDisplayValue('G8'); assert.equal(v.getByLabelText('La UIS').checked, true); change(v, 'Nombre', 'Nombre actualizado'); submit(v)
     await v.findByText(/Destino: Grupo de investigación actualizado/); assert.ok(writes[0].path.endsWith('/grupos/8'))
   })
   await t.test('grupo inexistente oculta formulario de modificación', async s => {

@@ -13,6 +13,8 @@ import type {
 import { GruposInvestigacionLayout, RUTA_GRUPOS } from './GruposInvestigacionLayout'
 import './GestionGruposInvestigacionPage.css'
 
+type Origen = 'UIS' | 'EXTERNA'
+
 const GrupoInvestigacionFormPage = () => {
   const navigate = useNavigate()
   const { grupoId } = useParams<{ grupoId: string }>()
@@ -22,6 +24,7 @@ const GrupoInvestigacionFormPage = () => {
   const [grupoOriginal, setGrupoOriginal] = useState<GrupoGestionDto | null>(null)
   const [codigo, setCodigo] = useState('')
   const [nombre, setNombre] = useState('')
+  const [origen, setOrigen] = useState<Origen | null>(null)
   const [institucionId, setInstitucionId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isGuardando, setIsGuardando] = useState(false)
@@ -32,10 +35,12 @@ const GrupoInvestigacionFormPage = () => {
       setIsLoading(true)
       setError(null)
       try {
-        const [institucionesData, gruposData] = await Promise.all([
+        const [escuelas, externas, gruposData] = await Promise.all([
           getOpcionesInstituciones('ESCUELA'),
+          getOpcionesInstituciones('EXTERNA'),
           esEdicion ? getGruposGestion() : Promise.resolve([] as GrupoGestionDto[]),
         ])
+        const institucionesData = [...escuelas, ...externas]
         setInstituciones(institucionesData)
         if (esEdicion) {
           const grupo = gruposData.find((item) => String(item.id) === grupoId)
@@ -47,6 +52,8 @@ const GrupoInvestigacionFormPage = () => {
           setCodigo(grupo.codigo)
           setNombre(grupo.nombre)
           setInstitucionId(String(grupo.institucionId))
+          // el origen se deduce de la institución actual del grupo
+          setOrigen(institucionesData.find((item) => item.id === grupo.institucionId)?.tipo === 'EXTERNA' ? 'EXTERNA' : 'UIS')
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'No fue posible cargar el grupo de investigación.')
@@ -64,8 +71,12 @@ const GrupoInvestigacionFormPage = () => {
       setError('El código y el nombre del grupo son obligatorios.')
       return
     }
+    if (!origen) {
+      setError('Indica si el grupo es de la UIS o de una institución externa.')
+      return
+    }
     if (!institucionId) {
-      setError('Selecciona la institución del grupo.')
+      setError(origen === 'UIS' ? 'Selecciona la escuela del grupo.' : 'Selecciona la institución externa del grupo.')
       return
     }
 
@@ -87,6 +98,16 @@ const GrupoInvestigacionFormPage = () => {
     }
   }
 
+  const cambiarOrigen = (nuevo: Origen) => {
+    if (nuevo === origen) return
+    setOrigen(nuevo)
+    // la institución elegida pertenece al otro origen: se limpia para no guardar una combinación incorrecta
+    setInstitucionId('')
+  }
+
+  const tipoInstitucion = origen === 'EXTERNA' ? 'EXTERNA' : 'ESCUELA'
+  const opciones = instituciones.filter((institucion) => institucion.tipo === tipoInstitucion)
+
   const titulo = esEdicion ? `Editar ${grupoOriginal?.codigo ?? ''}`.trim() : 'Nuevo grupo'
 
   return (
@@ -95,7 +116,7 @@ const GrupoInvestigacionFormPage = () => {
         <header className="gestion-grupos__header">
           <div>
             <h2 className="gestion-grupos__page-title">{titulo}</h2>
-            <p>Un grupo pertenece a una escuela de la UIS. Si la escuela no aparece, agrégala primero en la pestaña <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
+            <p>Un grupo pertenece a una escuela de la UIS o a una institución externa. Si no aparece, agrégala primero en la pestaña <Link to={`${RUTA_GRUPOS}/instituciones`}>Instituciones</Link>.</p>
           </div>
         </header>
 
@@ -120,11 +141,29 @@ const GrupoInvestigacionFormPage = () => {
               <input value={nombre} onChange={(e) => setNombre(e.target.value)} />
             </label>
 
+            <fieldset className="gestion-grupos__origen">
+              <legend>El grupo es de</legend>
+              <label className="gestion-grupos__opcion">
+                <input type="radio" name="origen-grupo" checked={origen === 'UIS'} onChange={() => cambiarOrigen('UIS')} />
+                <span>La UIS</span>
+              </label>
+              <label className="gestion-grupos__opcion">
+                <input type="radio" name="origen-grupo" checked={origen === 'EXTERNA'} onChange={() => cambiarOrigen('EXTERNA')} />
+                <span>Una institución externa</span>
+              </label>
+            </fieldset>
+
             <label>
-              Escuela
-              <select value={institucionId} onChange={(e) => setInstitucionId(e.target.value)}>
-                <option value="">Selecciona una escuela</option>
-                {instituciones.filter((institucion) => institucion.tipo === 'ESCUELA').map((institucion) => (
+              {origen === 'EXTERNA' ? 'Institución externa' : 'Escuela'}
+              <select value={institucionId} onChange={(e) => setInstitucionId(e.target.value)} disabled={!origen}>
+                <option value="">
+                  {!origen
+                    ? 'Primero indica si el grupo es de la UIS o externo'
+                    : origen === 'UIS'
+                      ? 'Selecciona una escuela'
+                      : 'Selecciona una institución externa'}
+                </option>
+                {opciones.map((institucion) => (
                   <option key={institucion.id} value={institucion.id}>
                     {institucion.nombre}
                   </option>

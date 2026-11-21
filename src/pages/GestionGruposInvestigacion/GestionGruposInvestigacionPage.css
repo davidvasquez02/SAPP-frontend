@@ -398,3 +398,39 @@
 .gestion-grupos__acciones--derecha {
   justify-content: flex-end;
 }
+
+/* Origen del grupo (UIS o institución externa): dos opciones en línea, compactas. */
+.gestion-grupos__origen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gestion-grupos__origen legend {
+  float: left;
+  margin-right: 1rem;
+  padding: 0;
+  color: var(--text-secondary);
+  font-weight: 650;
+}
+
+.gestion-grupos__form label.gestion-grupos__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gestion-grupos__form .gestion-grupos__opcion input {
+  min-height: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  accent-color: var(--primary);
+}
