@@ -154,8 +154,6 @@ const MatriculaPage = () => {
   const [convocatoria, setConvocatoria] =
     useState<MatriculaConvocatoria | null>(null);
   const [materiasCatalogo, setMateriasCatalogo] = useState<MateriaDto[]>([]);
-  const [programaMateriasId, setProgramaMateriasId] = useState<number | null>(null);
-  const [loadingMateriasPrograma, setLoadingMateriasPrograma] = useState(false);
   const [documentos, setDocumentos] = useState<DocumentoRequerido[]>([]);
   const [activeMatricula, setActiveMatricula] =
     useState<MatriculaAcademicaVigenteDto | null>(null);
@@ -319,6 +317,13 @@ const MatriculaPage = () => {
     return (session.user as AuthUser).estudiante?.programaId ?? null;
   }, [session]);
 
+  // Ajuste matricula academica: la seleccion de materias siempre es del programa al que esta
+  // atado el estudiante, no de uno que el elija -- este texto es solo informativo.
+  const programaMateriaLabel = useMemo(
+    () => Object.values(PROGRAMAS_ACADEMICOS).find((programa) => programa.id === programaId)?.nombre ?? "—",
+    [programaId],
+  );
+
   const usuarioCargaId = useMemo(() => {
     if (session?.kind !== "SAPP") {
       return null;
@@ -392,7 +397,6 @@ const MatriculaPage = () => {
         }
 
         setMateriasCatalogo(materiasResult);
-        setProgramaMateriasId(programaId);
 
         applyMatriculaValidation(matriculaValidation, materiasResult);
       } catch (error) {
@@ -583,28 +587,6 @@ const MatriculaPage = () => {
       applyMatriculaValidation(validation, materiasCatalogo);
     } catch {
       // La UI ya muestra el mensaje de éxito del panel; un refresco fallido no es crítico.
-    }
-  };
-
-  const handleProgramaMateriasChange = async (nuevoProgramaId: number) => {
-    if (nuevoProgramaId === programaMateriasId) {
-      return;
-    }
-
-    try {
-      setLoadingMateriasPrograma(true);
-      setErrorForm(null);
-      const materiasResult = await getAsignaturasPorPrograma(nuevoProgramaId);
-      setMateriasCatalogo(materiasResult);
-      setProgramaMateriasId(nuevoProgramaId);
-    } catch (error) {
-      setErrorForm(
-        error instanceof Error
-          ? error.message
-          : "No fue posible consultar las materias del programa seleccionado.",
-      );
-    } finally {
-      setLoadingMateriasPrograma(false);
     }
   };
 
@@ -1296,25 +1278,15 @@ const MatriculaPage = () => {
                 <>
                   {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                     <>
-                      <label className="matricula-page__programa-materias-field">
+                      <div className="matricula-page__programa-materias-field">
                         <span>Programa de la materia</span>
-                        <select
-                          value={programaMateriasId ?? ""}
-                          disabled={isSubmitting || loadingMateriasPrograma}
-                          onChange={(event) => void handleProgramaMateriasChange(Number(event.target.value))}
-                        >
-                          {Object.values(PROGRAMAS_ACADEMICOS).map((programa) => (
-                            <option key={programa.id} value={programa.id}>
-                              {programa.codigoUis} - {programa.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                        <p>{programaMateriaLabel}</p>
+                      </div>
                       <MateriasSelector
                         materias={materiasCatalogo}
                         selected={selectedMaterias}
                         onAdd={handleAddMateria}
-                        disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula || loadingMateriasPrograma}
+                        disabled={isSubmitting || isReadOnlyMatriculaFinalizada || hasExistingMatricula || loadingForm}
                       />
                       <MateriaExternaForm
                         disabled={isSubmitting}

@@ -375,7 +375,10 @@
     font-weight: 600;
 }
 
-.matricula-page__programa-materias-field select {
+.matricula-page__programa-materias-field p {
+    display: flex;
+    align-items: center;
+    margin: 0;
     border: 1px solid var(--outline);
     border-radius: 12px;
     min-height: 2.8rem;
