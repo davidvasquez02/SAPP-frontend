@@ -39,7 +39,6 @@ import type {
 } from "../../modules/matricula/types";
 import MateriaExternaForm from "../../modules/matricula/components/MateriaExternaForm/MateriaExternaForm";
 import InclusionCancelacionPanel from "../../modules/matricula/components/InclusionCancelacionPanel/InclusionCancelacionPanel";
-import { PROGRAMAS_ACADEMICOS } from "../../shared/domain/programaAcademico";
 import {
   formatBackendDateTime,
   getMatriculaAcademicaDetallePath,
@@ -316,13 +315,6 @@ const MatriculaPage = () => {
 
     return (session.user as AuthUser).estudiante?.programaId ?? null;
   }, [session]);
-
-  // Ajuste matricula academica: la seleccion de materias siempre es del programa al que esta
-  // atado el estudiante, no de uno que el elija -- este texto es solo informativo.
-  const programaMateriaLabel = useMemo(
-    () => Object.values(PROGRAMAS_ACADEMICOS).find((programa) => programa.id === programaId)?.nombre ?? "—",
-    [programaId],
-  );
 
   const usuarioCargaId = useMemo(() => {
     if (session?.kind !== "SAPP") {
@@ -1278,10 +1270,6 @@ const MatriculaPage = () => {
                 <>
                   {!isReadOnlyMatriculaFinalizada && !hasExistingMatricula ? (
                     <>
-                      <div className="matricula-page__programa-materias-field">
-                        <span>Programa de la materia</span>
-                        <p>{programaMateriaLabel}</p>
-                      </div>
                       <MateriasSelector
                         materias={materiasCatalogo}
                         selected={selectedMaterias}
