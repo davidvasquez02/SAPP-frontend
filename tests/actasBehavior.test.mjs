@@ -40,7 +40,7 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
   })
   await t.test('carga exige campos y rechaza MIME incorrecto o tamaño excesivo', async s => {
     const v = mount(s); await ready(v); click(v, '+ Cargar acta'); ui.fireEvent.submit(v.container.querySelector('form'))
-    assert.ok(v.getByText('Complete el nombre, el código, el año y seleccione un archivo PDF o Word.'))
+    assert.ok(v.getByText('Complete el consecutivo, la fecha, el número y el nombre del acta.'))
     const input = v.container.querySelector('input[type=file]')
     ui.fireEvent.change(input, { target: { files: [new ui.dom.window.File(['x'], 'imagen.png', { type: 'image/png' })] } })
     assert.ok(v.getByText('El archivo del acta debe estar en formato PDF o Word.'))
@@ -56,27 +56,31 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
   })
   await t.test('crear acta envía PDF, checksum y campos normalizados', async s => {
     const v = mount(s); await ready(v); click(v, '+ Cargar acta')
-    set(v, /Nombre del acta/, '  Acta sintética  '); set(v, 'Año del acta', '2030'); set(v, /Observaciones/, '  Observación  ')
-    ui.fireEvent.change(v.getByPlaceholderText('001'), { target: { value: 'a-1' } })
+    const datos = v.getByRole('region', { name: 'Datos del acta' })
+    assert.ok(datos.textContent.includes('Fecha de la sesión'))
+    assert.equal(v.queryByLabelText(/Alcance del documento|Código del acta/), null)
+    set(v, /Nombre del acta/, '  Acta sintética  '); set(v, /Observaciones/, '  Observación  ')
+    set(v, 'Tipo de acta *', 'CONSEJO')
     const bytes = new TextEncoder().encode('%PDF-test'); const file = new ui.dom.window.File([bytes], 'acta.pdf', { type: 'application/pdf' }); file.arrayBuffer = async () => bytes.buffer
     ui.fireEvent.change(v.container.querySelector('input[type=file]'), { target: { files: [file] } })
     ui.fireEvent.submit(v.container.querySelector('form'))
-    assert.ok(v.getByText('Complete el consecutivo, la fecha y el número del acta.'))
+    assert.ok(v.getByText('Complete el consecutivo, la fecha, el número y el nombre del acta.'))
     assert.equal(writes.length, 0)
-    set(v, /Consecutivo del documento/, '2')
+    set(v, /Consecutivo/, '2')
     set(v, /Fecha del acta/, '2026-07-17')
     set(v, /Número del acta/, '15')
-    set(v, /Alcance del documento/, 'PARTE DE ACTA')
-    const expectedName = '0002_20260717_ACTA_No. 15_Acta sintética - PARTE DE ACTA'
-    assert.ok(v.getByText(`Nombre generado: ${expectedName}`))
+    const expectedName = '0002_20260717_ACTA_No. 15_Acta sintética'
+    assert.ok(v.getByText(expectedName))
     click(v, 'Crear acta')
     await v.findByText(/fue creada correctamente/)
-    assert.equal(writes[0].body.codigo, 'ACTA_COMITE_A1-2030'); assert.equal(writes[0].body.nombre, expectedName); assert.equal(writes[0].body.observaciones, 'Observación')
+    assert.equal(writes[0].body.codigo, 'ACTA_CONSEJO_0002-2026'); assert.equal(writes[0].body.tipoConsejo, true); assert.equal(writes[0].body.nombre, expectedName); assert.equal(writes[0].body.observaciones, 'Observación')
     assert.equal(writes[0].body.contenidoBase64, Buffer.from(bytes).toString('base64')); assert.match(writes[0].body.checksum, /^[a-f0-9]{64}$/)
   })
   await t.test('descarga actas nuevas con el formato generado y conserva el nombre histórico', async s => {
-    const name = '0003_20260717_ACTA_No. 15_Acta sintética - OTRA PARTE DE ACTA'
+    const name = '0002_20260717_ACTA_No. 15_Acta sintética'
+    const previousName = '0003_20260717_ACTA_No. 15_Acta sintética - OTRA PARTE DE ACTA'
     rows[11].nombre = name
+    rows[10].nombre = previousName
     content = Buffer.from('%PDF-test').toString('base64')
     const downloads = []
     s.mock.method(ui.dom.window.HTMLAnchorElement.prototype, 'click', function () {
@@ -88,7 +92,9 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     ui.fireEvent.click(buttons[0])
     await ui.waitFor(() => assert.equal(buttons[0].disabled, false))
     ui.fireEvent.click(buttons[1])
-    await ui.waitFor(() => assert.deepEqual(downloads, [`${name}.pdf`, 'original.pdf']))
+    await ui.waitFor(() => assert.equal(buttons[1].disabled, false))
+    ui.fireEvent.click(buttons[2])
+    await ui.waitFor(() => assert.deepEqual(downloads, [`${name}.pdf`, `${previousName}.pdf`, 'original.pdf']))
   })
   await t.test('eliminar requiere confirmación y Escape cancela', async s => {
     const v = mount(s); await ready(v); ui.fireEvent.click(v.getAllByRole('button', { name: 'Eliminar' })[0]); click(v, 'Cancelar'); assert.equal(writes.length, 0)

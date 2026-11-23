@@ -37,9 +37,7 @@ const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
 type TipoActaFilter = "" | TipoActa;
-const ALCANCES_ACTA = ["ACTA COMPLETA", "PARTE DE ACTA", "OTRA PARTE DE ACTA"] as const;
-type AlcanceActa = typeof ALCANCES_ACTA[number];
-const FORMATO_NOMBRE_ACTA = /^\d{4}_\d{8}_ACTA_No\. \d+_.+ - (ACTA COMPLETA|PARTE DE ACTA|OTRA PARTE DE ACTA)$/;
+const FORMATO_NOMBRE_ACTA = /^\d{4}_\d{8}_ACTA_No\. \d+_.+$/;
 const caracteresNoPermitidosEnArchivo = /[<>:"/\\|?*]/g;
 
 const getColombiaToday = () => {
@@ -100,7 +98,6 @@ const getChecksum = async (file: File) => {
 };
 
 const ActasPage = () => {
-  const currentYear = getColombiaToday().slice(0, 4);
   const [actas, setActas] = useState<ActaDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -115,13 +112,7 @@ const ActasPage = () => {
   const [consecutivo, setConsecutivo] = useState("");
   const [fechaActa, setFechaActa] = useState(getColombiaToday);
   const [numeroActa, setNumeroActa] = useState("");
-  const [alcanceActa, setAlcanceActa] = useState<AlcanceActa>("ACTA COMPLETA");
-  const nombreSeguro = nombre.trim().replace(caracteresNoPermitidosEnArchivo, "_");
-  const nombreCompleto = `${consecutivo.padStart(4, "0")}_${fechaActa.replaceAll("-", "")}_ACTA_No. ${numeroActa}_${nombreSeguro} - ${alcanceActa}`;
-  const tieneFormatoCompleto = Boolean(consecutivo && nombreSeguro && FORMATO_NOMBRE_ACTA.test(nombreCompleto));
   const [tipoActa, setTipoActa] = useState<TipoActa>("COMITE");
-  const [codigoActa, setCodigoActa] = useState("");
-  const [anio, setAnio] = useState(currentYear);
   const [observaciones, setObservaciones] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileAction, setFileAction] = useState<{ actaId: number; action: FileAction } | null>(null);
@@ -165,7 +156,11 @@ const ActasPage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [actaToDelete, deletingActaId]);
 
-  const codigo = `ACTA_${tipoActa}_${codigoActa.trim().toUpperCase()}-${anio}`;
+  const consecutivoFormateado = consecutivo.padStart(4, "0");
+  const nombreSeguro = nombre.trim().replace(caracteresNoPermitidosEnArchivo, "_");
+  const nombreCompleto = `${consecutivoFormateado}_${fechaActa.replaceAll("-", "")}_ACTA_No. ${numeroActa}_${nombreSeguro}`;
+  const tieneFormatoCompleto = consecutivo !== "" && FORMATO_NOMBRE_ACTA.test(nombreCompleto);
+  const codigo = `ACTA_${tipoActa}_${consecutivoFormateado}-${fechaActa.slice(0, 4)}`;
   const years = useMemo(
     () => Array.from(new Set(actas.map(getActaYear).filter(Boolean))).sort().reverse(),
     [actas],
@@ -254,12 +249,12 @@ const ActasPage = () => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
-    if (!file || !nombre.trim() || !codigoActa.trim() || !/^\d{4}$/.test(anio)) {
-      setError("Complete el nombre, el código, el año y seleccione un archivo PDF o Word.");
+    if (!tieneFormatoCompleto) {
+      setError("Complete el consecutivo, la fecha, el número y el nombre del acta.");
       return;
     }
-    if (!tieneFormatoCompleto) {
-      setError("Complete el consecutivo, la fecha y el número del acta.");
+    if (!file) {
+      setError("Seleccione un archivo PDF o Word.");
       return;
     }
 
@@ -282,10 +277,7 @@ const ActasPage = () => {
       setConsecutivo("");
       setFechaActa(getColombiaToday());
       setNumeroActa("");
-      setAlcanceActa("ACTA COMPLETA");
       setTipoActa("COMITE");
-      setCodigoActa("");
-      setAnio(currentYear);
       setObservaciones("");
       setFile(null);
       setShowForm(false);
@@ -314,13 +306,47 @@ const ActasPage = () => {
           <form className="actas-form" onSubmit={handleSubmit}>
             <div className="actas-form__heading"><h2>Nueva acta</h2><p>La fecha de creación se asignará automáticamente: {formatDate(getColombiaToday())}.</p></div>
             <label><span>Tipo de acta *</span><select value={tipoActa} onChange={(event) => setTipoActa(event.target.value as TipoActa)} required><option value="COMITE">Comité Asesor de Posgrados</option><option value="CONSEJO">Consejo Académico</option></select></label>
-            <label><span>Nombre del acta *</span><input value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder={tipoActa === "CONSEJO" ? "Ej. Consejo Académico" : "Ej. Comité Asesor de Posgrados"} required /></label>
-            <label><span>Consecutivo del documento *</span><input inputMode="numeric" maxLength={4} value={consecutivo} onChange={(event) => setConsecutivo(event.target.value.replace(/\D/g, ""))} required /></label>
-            <label><span>Fecha del acta *</span><input type="date" value={fechaActa} onChange={(event) => setFechaActa(event.target.value)} required /></label>
-            <label><span>Número del acta *</span><input inputMode="numeric" value={numeroActa} onChange={(event) => setNumeroActa(event.target.value.replace(/\D/g, ""))} required /></label>
-            <label><span>Alcance del documento *</span><select value={alcanceActa} onChange={(event) => setAlcanceActa(event.target.value as AlcanceActa)}>{ALCANCES_ACTA.map((alcance) => <option key={alcance}>{alcance}</option>)}</select></label>
-            <label><span>Código del acta *</span><div className="actas-form__code"><span>ACTA_{tipoActa}_</span><input value={codigoActa} onChange={(event) => setCodigoActa(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))} placeholder="001" required /><span>-</span><input aria-label="Año del acta" inputMode="numeric" maxLength={4} value={anio} onChange={(event) => setAnio(event.target.value.replace(/\D/g, ""))} required /></div><small>Código generado: {codigo}</small></label>
-            {tieneFormatoCompleto ? <small className="actas-form__wide">Nombre generado: {nombreCompleto}</small> : null}
+            <section className="actas-form__identificacion actas-form__wide" aria-labelledby="actas-datos">
+              <h3 id="actas-datos">Datos del acta</h3>
+              <div className="actas-form__segmentos">
+                <div>
+                  <label>
+                    <span>Consecutivo *</span>
+                    <input aria-describedby="actas-consecutivo-ayuda" inputMode="numeric" maxLength={4} value={consecutivo} onChange={(event) => setConsecutivo(event.target.value.replace(/\D/g, ""))} required />
+                  </label>
+                  <small id="actas-consecutivo-ayuda">Ej. 0002</small>
+                </div>
+                <div>
+                  <label>
+                    <span>Fecha del acta *</span>
+                    <input aria-describedby="actas-fecha-ayuda" type="date" value={fechaActa} onChange={(event) => setFechaActa(event.target.value)} required />
+                  </label>
+                  <small id="actas-fecha-ayuda">Fecha de la sesión</small>
+                </div>
+                <div>
+                  <label>
+                    <span>Número del acta *</span>
+                    <span className="actas-form__numero">
+                      <span aria-hidden="true">ACTA_No.</span>
+                      <input aria-describedby="actas-numero-ayuda" inputMode="numeric" value={numeroActa} onChange={(event) => setNumeroActa(event.target.value.replace(/\D/g, ""))} required />
+                    </span>
+                  </label>
+                  <small id="actas-numero-ayuda">Ej. 15</small>
+                </div>
+                <div>
+                  <label>
+                    <span>Nombre del acta *</span>
+                    <input aria-describedby="actas-nombre-ayuda" value={nombre} onChange={(event) => setNombre(event.target.value)} required />
+                  </label>
+                  <small id="actas-nombre-ayuda">{tipoActa === "CONSEJO" ? "Ej. Consejo Académico" : "Ej. Comité de Posgrados"}</small>
+                </div>
+              </div>
+              <p className="actas-form__vista-previa">
+                <strong>Nombre generado:</strong>{" "}
+                <code>{tieneFormatoCompleto ? nombreCompleto : "0002_20260717_ACTA_No. 15_Comité de Posgrados"}</code>
+                {!tieneFormatoCompleto ? <small>Ejemplo</small> : null}
+              </p>
+            </section>
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
             <div className="actas-form__wide actas-form__file" role="group" aria-labelledby="actas-file-label">
               <span id="actas-file-label">Archivo del acta (PDF o Word, máximo 15 MB) *</span>

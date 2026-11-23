@@ -2,7 +2,7 @@
 
 ## Nombres de documentos de actas — 2026-11-23
 
-En **Gestión de actas**, el formulario genera y muestra el nombre antes de guardar. El usuario ingresa el consecutivo del documento, la fecha de la sesión, el número del acta y el nombre, y selecciona **ACTA COMPLETA**, **PARTE DE ACTA** u **OTRA PARTE DE ACTA**. Por ejemplo, el consecutivo `2` genera `0002_20260717_ACTA_No. 15_nombre - PARTE DE ACTA`. Al descargar, se añade la extensión PDF o Word según el documento.
+En **Gestión de actas**, **Datos del acta** agrupa el consecutivo, la fecha de la sesión, el número del acta y el nombre, con ayuda visible y una vista previa. Por ejemplo, el consecutivo `2` genera `0002_20260717_ACTA_No. 15_Comité de Posgrados`. El tipo de acta, el consecutivo de cuatro dígitos y el año de la sesión forman automáticamente el código interno, por ejemplo `ACTA_COMITE_0002-2026`. Al descargar, se añade la extensión PDF o Word.
 
 ## Acciones de jurados evaluadores — 2026-11-23
 
