@@ -151,7 +151,8 @@ const MatriculaDetalleCoordinacionPage = () => {
   const isRadicada = normalizedMatriculaEstado === 'RADICADA'
   const isFinalizada = normalizedMatriculaEstado === 'FINALIZADA'
   const disableDocumentValidation = isRadicada || isFinalizada
-  const disableAsignaturasValidation = isFinalizada
+  // Bug: el boton se habilitaba sin importar si los documentos obligatorios ya estaban
+  // aprobados -- solo miraba que la matricula no estuviera FINALIZADA.
 
   useEffect(() => {
     if (!toast) return
@@ -283,6 +284,10 @@ const MatriculaDetalleCoordinacionPage = () => {
       ),
     [getEstadoDocumento, requiredDocs],
   )
+
+  // La validacion de asignaturas solo tiene sentido una vez el coordinador ya aprobo todos los
+  // documentos obligatorios (si los hay): antes de eso, el boton se habilitaba igual.
+  const disableAsignaturasValidation = isFinalizada || (requiredDocs.length > 0 && !allRequiredApproved)
 
   const refreshDocumentsAfterDecision = useCallback(
     async (
@@ -938,6 +943,11 @@ const MatriculaDetalleCoordinacionPage = () => {
               </div>
               {!isFinalizada ? (
                 <div className="matricula-detalle__asignatura-actions">
+                  {requiredDocs.length > 0 && !allRequiredApproved ? (
+                    <p className="matricula-detalle__footer-hint">
+                      Debes aprobar todos los documentos obligatorios antes de guardar la validación de asignaturas.
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     className="matricula-detalle__approve-button"
