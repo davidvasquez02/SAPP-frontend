@@ -49,6 +49,12 @@
     color: var(--text-secondary);
 }
 
+.matricula-page__periodo-destacado {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
 .matricula-page__card {
     border-radius: 16px;
     border: 1px solid color-mix(in srgb, var(--outline), transparent 25%);

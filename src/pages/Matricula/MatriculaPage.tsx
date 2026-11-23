@@ -1200,7 +1200,7 @@ const MatriculaPage = () => {
         ) : null}
         <header className="matricula-page__header">
           {convocatoria?.periodoLabel ? (
-            <p>Periodo académico: {convocatoria.periodoLabel}</p>
+            <p className="matricula-page__periodo-destacado">Periodo académico: {convocatoria.periodoLabel}</p>
           ) : null}
         </header>
 
