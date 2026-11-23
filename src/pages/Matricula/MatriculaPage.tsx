@@ -866,13 +866,20 @@ const MatriculaPage = () => {
     ? `La carga no está disponible mientras la matrícula se encuentre en estado ${getMatriculaEstadoLabel(activeMatricula?.estado ?? "")}.`
     : null;
 
+  // Bug: el boton se habilitaba con solo elegir una materia, sin exigir los documentos
+  // obligatorios -- la matricula quedaba creada aunque faltara cargar alguno.
+  const allRequiredDocumentsSelected = useMemo(
+    () => documentos.filter((documento) => documento.obligatorio).every((documento) => Boolean(documento.selectedFile)),
+    [documentos],
+  );
+
   const canConfirmMatricula = useMemo(() => {
     if (isSubmitting || isReadOnlyMatriculaFinalizada || isExistingMatriculaBlocked) {
       return false;
     }
 
     if (canCreateMatricula) {
-      return selectedMaterias.length > 0;
+      return selectedMaterias.length > 0 && allRequiredDocumentsSelected;
     }
 
     if (hasExistingMatricula) {
@@ -881,6 +888,7 @@ const MatriculaPage = () => {
 
     return false;
   }, [
+    allRequiredDocumentsSelected,
     canCreateMatricula,
     hasRejectedDocuments,
     hasExistingMatricula,
@@ -1402,6 +1410,11 @@ const MatriculaPage = () => {
 
             {!isReadOnlyMatriculaFinalizada && (!hasExistingMatricula || hasRejectedDocuments) ? (
               <div className="matricula-page__actions">
+                {canCreateMatricula && selectedMaterias.length > 0 && !allRequiredDocumentsSelected ? (
+                  <p className="matricula-page__status">
+                    Debes adjuntar todos los documentos obligatorios para poder confirmar la matrícula.
+                  </p>
+                ) : null}
                 <button
                   type="button"
                   className="matricula-page__confirm"
