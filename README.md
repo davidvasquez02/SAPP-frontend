@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Acciones de jurados evaluadores — 2026-11-23
+
+En el panel de evaluación, los botones del formulario de reemplazo tienen espacio respecto al motivo. Las acciones de cada jurado se muestran en una columna de ancho uniforme, tanto en la tabla como en las tarjetas móviles.
+
 ## Recuperación de redirecciones REST — 2026-11-20
 
 Si el gateway redirige una consulta o descarga GET, SAPP repite la petición una vez sin usar la respuesta en caché. Si la redirección persiste o afecta un envío, el cliente devuelve un aviso sin recargar la vista ni repetir la escritura. Para corregir el origen, revisar en el gateway el destino de la redirección y el estado de su sesión. Si la sesión expiró, la API debe responder con HTTP 401 y reservar el redireccionamiento al proveedor de identidad para la navegación del usuario.

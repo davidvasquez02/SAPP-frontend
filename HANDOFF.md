@@ -1,3 +1,9 @@
+## Acciones de jurados evaluadores — 2026-11-23
+
+- `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.css` aplica un margen común al pie de los formularios y organiza Reenviar, Reemplazar y Retirar en una columna. El ajuste es de presentación y conserva el contrato de la API.
+- Pasaron las tres pruebas de `tests/procesoEvaluacionResponsive.test.ts` y `npm run build` con Node 24.11.0, npm 11.6.1 y las dependencias locales. Playwright con Edge comprobó el espaciado y la alineación a 1536, 900 y 375 px mediante una página de prueba con el CSS del panel. Queda pendiente verificar el flujo con una sesión institucional.
+- `npm test` registró 642 pruebas aprobadas y 40 fallos en la corrida iniciada antes de agregar la prueba focalizada. Los logs de la suite y la compilación quedaron en `%TEMP%/sapp-jurados-test.log` y `%TEMP%/sapp-jurados-build.log`. No se reprodujo el total contra HEAD.
+
 ## Redirecciones REST del gateway — 2026-11-20
 
 - La captura de producción muestra un GET a `/api/sapp/solicitudesAcademicas/126` con HTTP 302 y peticiones posteriores a `auth?state=…`. Falta confirmar el destino en la cabecera `Location` y correlacionar la petición con logs de sesión del gateway. Este repositorio contiene el frontend y su nginx estático.
