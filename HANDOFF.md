@@ -1,3 +1,10 @@
+## Nombres de documentos de actas — 2026-11-23
+
+- `src/pages/Actas/ActasPage.tsx` guarda el nombre completo en `nombre` de `POST /sapp/actas`. El consecutivo se ingresa manualmente y se rellena a cuatro dígitos. La fecha ingresada identifica la sesión. El contrato conserva `codigo` como identificador interno y `fechaCreacion` como fecha del registro en Colombia.
+- La descarga toma el nombre generado de `GET /sapp/actas` y la extensión del MIME del documento. Para nombres históricos usa `nombreArchivo` de `GET /sapp/actas/{id}` o el código con su extensión. Pendiente confirmar que el backend institucional devuelva íntegro el nombre guardado.
+- `tests/actasBehavior.test.mjs` cubre la validación, vista previa, POST y descarga de actas nuevas e históricas. Pasaron 12 pruebas focalizadas y `npm run build`. Usar Node 24.11.0, npm 11.6.1 y las dependencias de `package-lock.json` instaladas en la raíz.
+- `npm test` y `npm run test:coverage` registraron 647 aprobadas y los mismos 37 fallos fuera de Actas. Los fallos de matrícula también se reprodujeron ejecutando sus dos suites aisladas. `node scripts/verify-coverage.mjs` verificó los 358 archivos fuente, incluidos 120 TSX. Cobertura de líneas de 85,09 % global y 93,62 % en `ActasPage.tsx`. Registros en `%TEMP%/sapp-actas-final-{focused,full,coverage}.log`, `%TEMP%/sapp-actas-matricula.log` y `%TEMP%/sapp-actas-build.log`.
+
 ## Acciones de jurados evaluadores — 2026-11-23
 
 - `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.css` aplica un margen común al pie de los formularios y organiza Reenviar, Reemplazar y Retirar en una columna. El ajuste es de presentación y conserva el contrato de la API.

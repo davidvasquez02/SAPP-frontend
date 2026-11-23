@@ -37,6 +37,10 @@ const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
 type TipoActaFilter = "" | TipoActa;
+const ALCANCES_ACTA = ["ACTA COMPLETA", "PARTE DE ACTA", "OTRA PARTE DE ACTA"] as const;
+type AlcanceActa = typeof ALCANCES_ACTA[number];
+const FORMATO_NOMBRE_ACTA = /^\d{4}_\d{8}_ACTA_No\. \d+_.+ - (ACTA COMPLETA|PARTE DE ACTA|OTRA PARTE DE ACTA)$/;
+const caracteresNoPermitidosEnArchivo = /[<>:"/\\|?*]/g;
 
 const getColombiaToday = () => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -108,6 +112,13 @@ const ActasPage = () => {
   const [tipoFilter, setTipoFilter] = useState<TipoActaFilter>("");
   const [page, setPage] = useState(1);
   const [nombre, setNombre] = useState("");
+  const [consecutivo, setConsecutivo] = useState("");
+  const [fechaActa, setFechaActa] = useState(getColombiaToday);
+  const [numeroActa, setNumeroActa] = useState("");
+  const [alcanceActa, setAlcanceActa] = useState<AlcanceActa>("ACTA COMPLETA");
+  const nombreSeguro = nombre.trim().replace(caracteresNoPermitidosEnArchivo, "_");
+  const nombreCompleto = `${consecutivo.padStart(4, "0")}_${fechaActa.replaceAll("-", "")}_ACTA_No. ${numeroActa}_${nombreSeguro} - ${alcanceActa}`;
+  const tieneFormatoCompleto = Boolean(consecutivo && nombreSeguro && FORMATO_NOMBRE_ACTA.test(nombreCompleto));
   const [tipoActa, setTipoActa] = useState<TipoActa>("COMITE");
   const [codigoActa, setCodigoActa] = useState("");
   const [anio, setAnio] = useState(currentYear);
@@ -189,7 +200,10 @@ const ActasPage = () => {
       }
 
       const mimeType = document.mimeType || acta.mimeType || "application/pdf";
-      const filename = document.nombreArchivo || `${acta.codigo}.${getFileExtension(mimeType)}`;
+      const extension = getFileExtension(mimeType);
+      const filename = FORMATO_NOMBRE_ACTA.test(acta.nombre)
+        ? `${acta.nombre.replace(caracteresNoPermitidosEnArchivo, "_")}.${extension}`
+        : document.nombreArchivo || `${acta.codigo}.${extension}`;
       if (action === "view") {
         openBase64InNewTab(document.contenidoBase64, mimeType, filename);
       } else {
@@ -244,11 +258,15 @@ const ActasPage = () => {
       setError("Complete el nombre, el código, el año y seleccione un archivo PDF o Word.");
       return;
     }
+    if (!tieneFormatoCompleto) {
+      setError("Complete el consecutivo, la fecha y el número del acta.");
+      return;
+    }
 
     setIsSaving(true);
     try {
       const payload: CrearActaRequest = {
-        nombre: nombre.trim(),
+        nombre: nombreCompleto,
         codigo,
         fechaCreacion: getColombiaToday(),
         observaciones: observaciones.trim(),
@@ -261,6 +279,10 @@ const ActasPage = () => {
       await crearActa(payload);
       setSuccess(`El acta ${codigo} fue creada correctamente.`);
       setNombre("");
+      setConsecutivo("");
+      setFechaActa(getColombiaToday());
+      setNumeroActa("");
+      setAlcanceActa("ACTA COMPLETA");
       setTipoActa("COMITE");
       setCodigoActa("");
       setAnio(currentYear);
@@ -293,10 +315,15 @@ const ActasPage = () => {
             <div className="actas-form__heading"><h2>Nueva acta</h2><p>La fecha de creación se asignará automáticamente: {formatDate(getColombiaToday())}.</p></div>
             <label><span>Tipo de acta *</span><select value={tipoActa} onChange={(event) => setTipoActa(event.target.value as TipoActa)} required><option value="COMITE">Comité Asesor de Posgrados</option><option value="CONSEJO">Consejo Académico</option></select></label>
             <label><span>Nombre del acta *</span><input value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder={tipoActa === "CONSEJO" ? "Ej. Consejo Académico" : "Ej. Comité Asesor de Posgrados"} required /></label>
+            <label><span>Consecutivo del documento *</span><input inputMode="numeric" maxLength={4} value={consecutivo} onChange={(event) => setConsecutivo(event.target.value.replace(/\D/g, ""))} required /></label>
+            <label><span>Fecha del acta *</span><input type="date" value={fechaActa} onChange={(event) => setFechaActa(event.target.value)} required /></label>
+            <label><span>Número del acta *</span><input inputMode="numeric" value={numeroActa} onChange={(event) => setNumeroActa(event.target.value.replace(/\D/g, ""))} required /></label>
+            <label><span>Alcance del documento *</span><select value={alcanceActa} onChange={(event) => setAlcanceActa(event.target.value as AlcanceActa)}>{ALCANCES_ACTA.map((alcance) => <option key={alcance}>{alcance}</option>)}</select></label>
             <label><span>Código del acta *</span><div className="actas-form__code"><span>ACTA_{tipoActa}_</span><input value={codigoActa} onChange={(event) => setCodigoActa(event.target.value.replace(/[^a-zA-Z0-9]/g, ""))} placeholder="001" required /><span>-</span><input aria-label="Año del acta" inputMode="numeric" maxLength={4} value={anio} onChange={(event) => setAnio(event.target.value.replace(/\D/g, ""))} required /></div><small>Código generado: {codigo}</small></label>
+            {tieneFormatoCompleto ? <small className="actas-form__wide">Nombre generado: {nombreCompleto}</small> : null}
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
             <div className="actas-form__wide actas-form__file" role="group" aria-labelledby="actas-file-label">
-              <span id="actas-file-label">Archivo del acta (PDF, máximo 15 MB) *</span>
+              <span id="actas-file-label">Archivo del acta (PDF o Word, máximo 15 MB) *</span>
               <FileSelectButton accept="application/pdf,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" onChange={handleFile}>
                 {file ? "Reemplazar archivo" : "Seleccionar archivo"}
               </FileSelectButton>

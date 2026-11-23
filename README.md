@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Nombres de documentos de actas — 2026-11-23
+
+En **Gestión de actas**, el formulario genera y muestra el nombre antes de guardar. El usuario ingresa el consecutivo del documento, la fecha de la sesión, el número del acta y el nombre, y selecciona **ACTA COMPLETA**, **PARTE DE ACTA** u **OTRA PARTE DE ACTA**. Por ejemplo, el consecutivo `2` genera `0002_20260717_ACTA_No. 15_nombre - PARTE DE ACTA`. Al descargar, se añade la extensión PDF o Word según el documento.
+
 ## Acciones de jurados evaluadores — 2026-11-23
 
 En el panel de evaluación, los botones del formulario de reemplazo tienen espacio respecto al motivo. Las acciones de cada jurado se muestran en una columna de ancho uniforme, tanto en la tabla como en las tarjetas móviles.
