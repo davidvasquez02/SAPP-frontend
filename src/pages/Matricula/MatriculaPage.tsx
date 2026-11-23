@@ -720,7 +720,13 @@ const MatriculaPage = () => {
         }
       }
 
-      applyMatriculaValidation(matriculaValidation, materiasCatalogo);
+      // Bug visual: documentosCompletos viene en la MISMA respuesta de la matricula, pero
+      // matriculaValidation se capturo ANTES de subir los documentos -- reusarla aca mostraba
+      // "Pendiente de documentos" aunque ya estuvieran todos cargados, hasta que el estudiante
+      // recargaba la pagina y se volvia a consultar.
+      const matriculaValidationActualizada =
+        await getMatriculaVigenteValidationByEstudiante(estudianteId);
+      applyMatriculaValidation(matriculaValidationActualizada, materiasCatalogo);
       setSubmissionStage("FINALIZING");
       const documentosActualizados = await getDocumentosMatriculaAcademica(
         matriculaValidation.matricula.id,
