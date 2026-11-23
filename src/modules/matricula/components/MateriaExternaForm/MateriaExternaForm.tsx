@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getOpcionesInstituciones } from '../../../../api/gruposInvestigacionGestionService'
+import type { InstitucionGrupoDto } from '../../../../api/gruposInvestigacionGestionTypes'
 import type { AsignaturaExternaDto } from '../../types'
 import './MateriaExternaForm.css'
 
 type MateriaExternaFormProps = {
   disabled?: boolean
-  onAdd: (externa: AsignaturaExternaDto) => void
+  onAdd: (externa: AsignaturaExternaDto, escuelaNombre?: string) => void
 }
 
 const MateriaExternaForm = ({ disabled = false, onAdd }: MateriaExternaFormProps) => {
@@ -12,15 +14,39 @@ const MateriaExternaForm = ({ disabled = false, onAdd }: MateriaExternaFormProps
   const [codigo, setCodigo] = useState('')
   const [nombre, setNombre] = useState('')
   const [creditos, setCreditos] = useState('')
+  const [esExterna, setEsExterna] = useState(false)
+  const [escuelaId, setEscuelaId] = useState('')
   const [institucion, setInstitucion] = useState('')
+  const [escuelas, setEscuelas] = useState<InstitucionGrupoDto[]>([])
+  const [loadingEscuelas, setLoadingEscuelas] = useState(false)
+
+  useEffect(() => {
+    if (!open || esExterna || escuelas.length > 0) return
+
+    const cargarEscuelas = async () => {
+      setLoadingEscuelas(true)
+      try {
+        setEscuelas(await getOpcionesInstituciones('ESCUELA'))
+      } catch {
+        setEscuelas([])
+      } finally {
+        setLoadingEscuelas(false)
+      }
+    }
+
+    void cargarEscuelas()
+  }, [open, esExterna, escuelas.length])
 
   const creditosNumero = Number(creditos)
-  const canSubmit = codigo.trim() !== '' && nombre.trim() !== '' && institucion.trim() !== '' && Number.isInteger(creditosNumero) && creditosNumero > 0
+  const datosBasicosCompletos = codigo.trim() !== '' && nombre.trim() !== '' && Number.isInteger(creditosNumero) && creditosNumero > 0
+  const canSubmit = datosBasicosCompletos && (esExterna ? institucion.trim() !== '' : escuelaId !== '')
 
   const reset = () => {
     setCodigo('')
     setNombre('')
     setCreditos('')
+    setEsExterna(false)
+    setEscuelaId('')
     setInstitucion('')
   }
 
@@ -38,7 +64,16 @@ const MateriaExternaForm = ({ disabled = false, onAdd }: MateriaExternaFormProps
       onSubmit={(event) => {
         event.preventDefault()
         if (!canSubmit) return
-        onAdd({ codigo: codigo.trim(), nombre: nombre.trim(), creditos: creditosNumero, institucion: institucion.trim() })
+        const escuela = esExterna ? undefined : escuelas.find((item) => item.id === Number(escuelaId))
+        onAdd(
+          {
+            codigo: codigo.trim(),
+            nombre: nombre.trim(),
+            creditos: creditosNumero,
+            ...(esExterna ? { institucion: institucion.trim() } : { escuelaId: Number(escuelaId) }),
+          },
+          escuela?.nombre,
+        )
         reset()
         setOpen(false)
       }}
@@ -55,10 +90,37 @@ const MateriaExternaForm = ({ disabled = false, onAdd }: MateriaExternaFormProps
         <span>Créditos</span>
         <input type="number" min="1" step="1" value={creditos} disabled={disabled} required onChange={(event) => setCreditos(event.target.value)} />
       </label>
-      <label>
-        <span>Institución</span>
-        <input value={institucion} disabled={disabled} required onChange={(event) => setInstitucion(event.target.value)} />
+      <label className="materia-externa-form__checkbox">
+        <input
+          type="checkbox"
+          checked={esExterna}
+          disabled={disabled}
+          onChange={(event) => {
+            setEsExterna(event.target.checked)
+            setEscuelaId('')
+            setInstitucion('')
+          }}
+        />
+        <span>Es de otra universidad (no de la UIS)</span>
       </label>
+      {esExterna ? (
+        <label>
+          <span>Institución</span>
+          <input value={institucion} disabled={disabled} required onChange={(event) => setInstitucion(event.target.value)} />
+        </label>
+      ) : (
+        <label>
+          <span>Escuela</span>
+          <select value={escuelaId} disabled={disabled || loadingEscuelas} required onChange={(event) => setEscuelaId(event.target.value)}>
+            <option value="">{loadingEscuelas ? 'Cargando escuelas…' : 'Selecciona una escuela...'}</option>
+            {escuelas.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <div className="materia-externa-form__actions">
         <button type="button" className="materia-externa-form__cancel" disabled={disabled} onClick={() => { reset(); setOpen(false) }}>
           Cancelar

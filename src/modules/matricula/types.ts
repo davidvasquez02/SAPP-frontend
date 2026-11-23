@@ -14,11 +14,15 @@ export type MateriaDto = {
   programaId?: number
 }
 
+// Toda materia externa queda relacionada con una escuela de la UIS (escuelaId, si es de otro
+// programa de la misma universidad) o directamente marcada como externa (institucion, texto
+// libre, si es de otra universidad) -- exactamente una de las dos, nunca ambas.
 export type AsignaturaExternaDto = {
   codigo: string
   nombre: string
   creditos: number
-  institucion: string
+  escuelaId?: number
+  institucion?: string
 }
 
 export type MateriaSeleccionada = MateriaDto & {
@@ -29,6 +33,7 @@ export type MateriaSeleccionada = MateriaDto & {
   observaciones?: string | null
   externa?: AsignaturaExternaDto
   institucion?: string | null
+  escuela?: string | null
 }
 
 export type DocumentoRequerido = {
@@ -65,6 +70,7 @@ export type MatriculaAsignaturaVigenteDto = {
   asignaturaCodigo: string | null
   asignaturaNombre: string
   asignaturaInstitucion?: string | null
+  asignaturaEscuela?: string | null
   grupo: string | null
   estado: string
   observaciones: string | null

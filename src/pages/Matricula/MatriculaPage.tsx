@@ -246,6 +246,7 @@ const MatriculaPage = () => {
             grupo: asignatura.grupo,
             observaciones: asignatura.observaciones,
             institucion: asignatura.asignaturaInstitucion,
+            escuela: asignatura.asignaturaEscuela,
           } satisfies MateriaSeleccionada;
         })
 
@@ -557,7 +558,7 @@ const MatriculaPage = () => {
     });
   };
 
-  const handleAddExterna = (externa: AsignaturaExternaDto) => {
+  const handleAddExterna = (externa: AsignaturaExternaDto, escuelaNombre?: string) => {
     setSelectedMaterias((current) => [
       ...current,
       {
@@ -568,6 +569,7 @@ const MatriculaPage = () => {
         addedAt: new Date().toISOString(),
         externa,
         institucion: externa.institucion,
+        escuela: escuelaNombre,
       },
     ]);
   };

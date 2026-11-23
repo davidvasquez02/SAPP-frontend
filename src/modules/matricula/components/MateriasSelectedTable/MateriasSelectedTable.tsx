@@ -28,7 +28,7 @@ const MateriasSelectedTable = ({
           <tr>
             <th>Materia</th>
             <th>Código</th>
-            <th>Institución</th>
+            <th>Institución/Escuela</th>
             <th>Nivel</th>
             {readOnlyView || hideActionColumn ? <th>Estado</th> : null}
             {readOnlyView || hideActionColumn ? <th>Grupo</th> : null}
@@ -41,7 +41,7 @@ const MateriasSelectedTable = ({
             <tr key={materia.id}>
               <td data-label="Materia">{materia.nombre}</td>
               <td data-label="Código">{materia.codigo ?? 'Sin código'}</td>
-              <td data-label="Institución">{materia.institucion?.trim() || '—'}</td>
+              <td data-label="Institución/Escuela">{materia.institucion?.trim() || materia.escuela?.trim() || '—'}</td>
               <td data-label="Nivel">{materia.nivel == null ? 'Electiva' : materia.nivel}</td>
               {readOnlyView || hideActionColumn ? (
                 <td data-label="Estado">

@@ -28,13 +28,26 @@
   font-weight: 600;
 }
 
-.materia-externa-form input {
+.materia-externa-form input,
+.materia-externa-form select {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
   border-radius: 12px;
   min-height: 2.8rem;
   padding: 0.65rem 0.85rem;
   background: var(--surface);
   color: var(--text-primary);
+}
+
+.materia-externa-form__checkbox {
+  grid-column: 1 / -1;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+}
+
+.materia-externa-form__checkbox input {
+  min-height: 0;
+  width: auto;
 }
 
 .materia-externa-form__actions {

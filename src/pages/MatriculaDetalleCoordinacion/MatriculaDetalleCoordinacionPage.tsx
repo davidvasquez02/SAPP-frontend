@@ -857,7 +857,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                     <tr>
                       <th>Código</th>
                       <th>Asignatura</th>
-                      <th>Institución</th>
+                      <th>Institución/Escuela</th>
                       <th>Estado</th>
                       <th>Validación coordinación</th>
                       <th>Comentarios</th>
@@ -877,7 +877,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                       <tr key={asignatura.id}>
                         <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
                         <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
-                        <td data-label="Institución">{asignatura.asignaturaInstitucion?.trim() || '—'}</td>
+                        <td data-label="Institución/Escuela">{asignatura.asignaturaInstitucion?.trim() || asignatura.asignaturaEscuela?.trim() || '—'}</td>
                         <td data-label="Estado">{getAsignaturaEstadoLabel(asignatura.estado)}</td>
                         <td data-label="Validación coordinación">
                           {isFinalizada ? (
@@ -971,7 +971,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                           const deciding = decidingInclusionCancelacionId === asignatura.id
                           return (
                             <tr key={asignatura.id}>
-                              <td data-label="Asignatura">{asignatura.asignaturaNombre}{asignatura.asignaturaInstitucion ? ` (${asignatura.asignaturaInstitucion})` : ''}</td>
+                              <td data-label="Asignatura">{asignatura.asignaturaNombre}{(asignatura.asignaturaInstitucion ?? asignatura.asignaturaEscuela) ? ` (${asignatura.asignaturaInstitucion ?? asignatura.asignaturaEscuela})` : ''}</td>
                               <td data-label="Tipo">{esInclusion ? 'Inclusión' : 'Cancelación'}</td>
                               <td data-label="Decisión">
                                 <div className="matricula-detalle__decision-group">
