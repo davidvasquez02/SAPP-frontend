@@ -28,9 +28,8 @@ test('el proceso del estudiante evita columnas apretadas dentro del detalle', as
   assert.match(css, /\.evaluacion-estudiante__defense,[\s\S]*grid-template-columns: minmax\(0, 1fr\)/)
 })
 
-test('el panel separa el pie del formulario y mantiene en columna las acciones de jurados', async () => {
+test('el panel separa el pie del formulario', async () => {
   const css = await readFile(coordinacionCssPath, 'utf8')
 
   assert.match(css, /\.evaluacion-tg__form-card > \.evaluacion-tg__form-actions \{ margin-block-start: \.9rem; \}/)
-  assert.match(css, /\.evaluacion-tg__row-actions \{ display: grid; grid-template-columns: minmax\(min-content, 8rem\); gap: \.55rem; \}/)
 })

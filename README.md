@@ -1,5 +1,13 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Acciones de jurados evaluadores — 2026-11-25
+
+La columna **Acciones** agrupa los iconos de **Reenviar**, **Reemplazar** y **Retirar**. Cada etiqueta aparece al pasar el cursor o al enfocar el botón con el teclado. En móvil, los botones tienen un área táctil de 44 × 44 px.
+
+## Sangría en el detalle de solicitudes — 2026-11-25
+
+En el detalle de solicitudes, cada valor de la ficha de información tiene una sangría uniforme respecto de su etiqueta, también en móvil.
+
 ## Icono de Minerva — 2026-11-25
 
 La barra lateral muestra el búho de Minerva con espacio alrededor de la silueta. La pestaña del navegador usa `public/brand/minerva-favicon.png`, una versión de 64 × 64 px con esquinas redondeadas.

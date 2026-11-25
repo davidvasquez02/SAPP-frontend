@@ -1,3 +1,14 @@
+## Acciones de jurados evaluadores — 2026-11-25
+
+- `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` presenta iconos para **Reenviar**, **Reemplazar** y **Retirar** con nombres accesibles. El CSS muestra las etiquetas con el cursor o el foco del teclado, mantiene las acciones en una fila en escritorio y permite ajustarlas al ancho móvil con áreas táctiles de 44 × 44 px.
+- `tests/integration/evaluadoresDocumentosCarga.test.mjs` verifica la fila de iconos, las etiquetas con cursor y teclado, el tamaño móvil y los flujos de reenvío, reemplazo y retiro. Esta prueba sustituye la comprobación de la columna vertical en `tests/procesoEvaluacionResponsive.test.ts`, que conserva la prueba del espaciado del formulario.
+- Pasaron 21 pruebas focalizadas, 13 pruebas de integración en Edge con API simulada y `npm run build`. Reutilizar Node 24.11.0, npm 11.6.1 y el Playwright local configurado mediante `SAPP_PLAYWRIGHT_MODULE`. `npm test` y `npm run test:coverage` registraron 654 aprobadas y los mismos 38 fallos observados antes del cambio de iconos. Logs en `%TEMP%/sapp-jurados-iconos-*-final.log`.
+- `node scripts/verify-coverage.mjs` verificó los 361 archivos de `src`. Cobertura de líneas de 84,63 % global y 89,91 % en el panel. El informe anterior al merge registró 85,02 % global y 89,63 % en el panel. El panel conservó 23 líneas sin cubrir y pasó de 199 a 205 cubiertas. La corrida previa a los iconos ya incluía cinco fallos adicionales en rúbricas e informes respecto de la corrida anterior al merge.
+
+## Sangría en el detalle de solicitudes — 2026-11-25
+
+- `src/pages/SolicitudDetalle/SolicitudDetallePage.css` aplica una sangría de `1rem` a los valores de la ficha de información. Pasaron las 31 pruebas de comportamiento del detalle. `tests/integration/solicitudDetallePresentacion.test.mjs` comprueba la sangría en escritorio y móvil, en ambos temas, para solicitudes generales, proyectos y créditos.
+
 ## Icono de Minerva — 2026-11-25
 
 - Ajuste posterior: `src/components/Sidebar/Sidebar.css` reduce la escala del búho de 1,4 a 1,17 en escritorio y móvil para darle margen dentro del marco. `index.html` sirve `/brand/minerva-favicon.png`, un PNG de 64 × 64 px con esquinas transparentes.

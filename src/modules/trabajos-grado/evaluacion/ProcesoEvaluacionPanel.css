@@ -25,12 +25,49 @@
 .evaluacion-tg__ready p { margin: .15rem 0 0; color: var(--text-secondary); }
 .evaluacion-tg__actions, .evaluacion-tg__form-actions { display: flex; flex-wrap: wrap; gap: .55rem; }
 .evaluacion-tg__actions { margin-top: 1rem; }
-.evaluacion-tg__row-actions { display: grid; grid-template-columns: minmax(min-content, 8rem); gap: .55rem; }
+.evaluacion-tg__row-actions { display: flex; align-items: center; gap: .25rem; }
+.evaluacion-tg__row-action { position: relative; display: inline-flex; }
 .evaluacion-tg button { min-height: 2.5rem; border: 1px solid var(--primary); border-radius: 999px; padding: .55rem .9rem; background: var(--primary); color: var(--on-primary); cursor: pointer; font: inherit; font-weight: var(--font-weight-semibold); }
-.evaluacion-tg button.secondary, .evaluacion-tg__row-actions button { background: transparent; color: var(--primary); }
+.evaluacion-tg button.secondary { background: transparent; color: var(--primary); }
 .evaluacion-tg button.danger { border-color: var(--danger); color: var(--danger); }
 .evaluacion-tg button:disabled { opacity: .48; cursor: not-allowed; }
 .evaluacion-tg button:focus-visible, .evaluacion-tg a:focus-visible { outline: 2px solid var(--inverse-primary); outline-offset: 2px; }
+.evaluacion-tg button.evaluacion-tg__row-action-button {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  min-block-size: 2.25rem;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--primary);
+}
+.evaluacion-tg button.evaluacion-tg__row-action-button[aria-label="Retirar"] { color: var(--danger); }
+.evaluacion-tg button.evaluacion-tg__row-action-button:hover:enabled,
+.evaluacion-tg button.evaluacion-tg__row-action-button:focus-visible {
+  background: color-mix(in srgb, currentColor, transparent 88%);
+}
+.evaluacion-tg__row-action-hint {
+  position: absolute;
+  z-index: 2;
+  inset-block-end: calc(100% + .2rem);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  padding: .25rem .5rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+}
+.evaluacion-tg__row-action:hover .evaluacion-tg__row-action-hint,
+.evaluacion-tg__row-action-button:focus-visible + .evaluacion-tg__row-action-hint { visibility: visible; }
+@media (pointer: coarse), (max-width: 760px) {
+  .evaluacion-tg button.evaluacion-tg__row-action-button { inline-size: 44px; min-block-size: 44px; }
+}
 .evaluacion-tg__form-card, .evaluacion-tg__section { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--outline); border-radius: var(--radius-md); background: var(--surface-container-low); }
 .evaluacion-tg__form-card h4 { margin-top: 0; }
 .evaluacion-tg__form-card > .evaluacion-tg__form-actions { margin-block-start: .9rem; }
@@ -94,6 +131,7 @@
 .evaluacion-tg__chip--declinada, .evaluacion-tg__chip--reemplazado { border-color: var(--danger); color: var(--danger); }
 .evaluacion-tg__motivo-declinacion { display: block; margin-top: .3rem; color: var(--text-secondary); font-size: var(--font-size-caption); }
 @media (max-width: 760px) {
+  .evaluacion-tg__row-actions { flex-wrap: wrap; }
   .evaluacion-tg__header { display: grid; }
   .evaluacion-tg__ready { grid-template-columns: auto 1fr; }
   .evaluacion-tg__ready button { grid-column: 1 / -1; width: 100%; }

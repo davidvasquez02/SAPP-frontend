@@ -72,7 +72,12 @@ test('distribución del detalle de solicitudes en ambos temas', async t => {
                 const menu = page.locator('.sidebar').getByRole('link', { name: 'Proyectos de investigación', exact: true })
                 assert.equal(await menu.getAttribute('href'), '/proyectos-investigacion')
               }
-              await page.getByRole('region', { name: tituloSeccion }).waitFor()
+              const ficha = page.getByRole('region', { name: tituloSeccion })
+              await ficha.waitFor()
+              const sangrias = await ficha.locator('dl > div > dd').evaluateAll(valores =>
+                valores.map(valor => valor.getBoundingClientRect().left - valor.previousElementSibling.getBoundingClientRect().left))
+              assert.ok(sangrias.length > 0)
+              assert.ok(sangrias.every(sangria => sangria > 0 && sangria === sangrias[0]))
               await page.getByText('0 documentos', { exact: true }).waitFor()
               assert.ok(await page.locator('body').evaluate((body, value) => body.classList.contains(value), theme))
               const badge = await header.locator('.status-badge').boundingBox()
@@ -81,7 +86,7 @@ test('distribución del detalle de solicitudes en ambos temas', async t => {
               else assert.ok(badge.x >= titleBox.x + titleBox.width)
               const grid = page.getByLabel('Datos generales')
               assert.equal(await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), width === 390 ? 1 : 2)
-              for (const block of [header, grid, page.getByRole('region', { name: tituloSeccion })]) {
+              for (const block of [header, grid, ficha]) {
                 assert.ok(await block.evaluate(el => el.scrollWidth <= el.clientWidth && el.getBoundingClientRect().right <= innerWidth + 1))
               }
               if (process.env.SAPP_DETALLE_CAPTURAS && familia === 'proyecto' && !estudiante) {

@@ -121,6 +121,7 @@
 }
 
 .solicitud-detalle-page__ficha dd {
+    margin-inline-start: 1rem;
     white-space: pre-wrap;
 }
 
