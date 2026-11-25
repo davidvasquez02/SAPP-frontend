@@ -14,17 +14,23 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     writes = []; failure = ''; content = ''
     ui.response((url, init) => {
       const path = new URL(url, 'https://test.invalid').pathname
-      if (init.method === 'POST' || init.method === 'DELETE') {
+      if (init.method === 'POST' || init.method === 'PUT' || init.method === 'DELETE') {
         writes.push({ path, method: init.method, body: init.body ? JSON.parse(init.body) : null })
         if (failure) return Response.json({ message: 'Acta no disponible' }, { status: 409 })
         if (init.method === 'DELETE') return new Response(null, { status: 204 })
+        if (init.method === 'PUT') {
+          const acta = rows.find(row => path.endsWith(`/${row.id}`))
+          Object.assign(acta, writes.at(-1).body)
+          return Response.json({ ok: true, data: acta })
+        }
         const acta = { ...writes.at(-1).body, id: 99 }
         rows.push(acta)
         return Response.json({ ok: true, data: acta })
       }
       if (failure === 'list') return Response.json({ ok: false, message: 'Lista no disponible' })
       if (path.endsWith('/actas')) return Response.json({ ok: true, data: rows })
-      return Response.json({ ok: true, data: { contenidoBase64: content, mimeType: 'application/pdf', nombreArchivo: 'original.pdf' } })
+      const acta = rows.find(row => path.endsWith(`/${row.id}`))
+      return Response.json({ ok: true, data: { contenidoBase64: acta?.contenidoBase64 ?? content, mimeType: acta?.mimeType, nombreArchivo: 'original.pdf' } })
     })
   })
   const mount = s => { s.after(ui.cleanup); return ui.render(h(MemoryRouter, null, h(AuthContext.Provider, { value: { user: null, session: null } }, h(Page)))) }
@@ -106,6 +112,44 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
       await ui.waitFor(() => assert.equal(button.disabled, false))
     }
     assert.deepEqual(downloads, [`${code}_${name}.pdf`, `${previousName}.pdf`, 'original.pdf'])
+  })
+  await t.test('reemplazo valida, permite cancelar y reintenta sin cambiar el registro', async s => {
+    const v = mount(s)
+    const row = (await ready(v)).closest('tr')
+    const trigger = ui.within(row).getByRole('button', { name: 'Reemplazar documento' })
+    ui.fireEvent.click(trigger)
+    click(v, 'Cancelar')
+    assert.equal(writes.length, 0)
+    assert.equal(v.queryByRole('dialog'), null)
+    ui.fireEvent.click(trigger)
+    const dialog = v.getByRole('dialog', { name: 'Reemplazar documento' })
+    const input = dialog.querySelector('input[type=file]')
+    const submit = ui.within(dialog).getByRole('button', { name: 'Confirmar reemplazo' })
+    ui.fireEvent.change(input, { target: { files: [new ui.dom.window.File(['x'], 'imagen.png', { type: 'image/png' })] } })
+    assert.equal(submit.disabled, true)
+    assert.match(ui.within(dialog).getByRole('alert').textContent, /PDF o Word/)
+    const bytes = new TextEncoder().encode('nuevo documento')
+    const file = new ui.dom.window.File([bytes], 'acta.doc', { type: 'application/msword' })
+    file.arrayBuffer = async () => bytes.buffer
+    ui.fireEvent.change(input, { target: { files: [file] } })
+    failure = 'replace'
+    ui.fireEvent.click(submit)
+    await ui.within(dialog).findByText('Acta no disponible')
+    assert.match(row.textContent, /PDF/)
+    failure = ''
+    ui.fireEvent.click(submit)
+    await v.findByText(/Se reemplazó el documento/)
+    assert.equal(v.queryByRole('dialog'), null)
+    assert.match(row.textContent, /ACTA_COMITE_12-2030.*Acta prueba 12.*Word/)
+    assert.equal(writes.length, 2)
+    assert.equal(writes[1].method, 'PUT')
+    assert.match(writes[1].path, /\/actas\/12$/)
+    assert.deepEqual(writes[1].body, {
+      contenidoBase64: Buffer.from(bytes).toString('base64'),
+      mimeType: 'application/msword',
+      tamanoBytes: bytes.length,
+      checksum: Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex'),
+    })
   })
   await t.test('eliminar requiere confirmación y Escape cancela', async s => {
     const v = mount(s); await ready(v); ui.fireEvent.click(v.getAllByRole('button', { name: 'Eliminar' })[0]); click(v, 'Cancelar'); assert.equal(writes.length, 0)

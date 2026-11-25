@@ -93,6 +93,17 @@
   box-shadow: var(--shadow-soft, 0 1.25rem 3rem color-mix(in srgb, var(--outline), transparent 45%));
 }
 
+.actas-delete-modal__dialog.actas-replace-form {
+  grid-template-columns: minmax(0, 1fr);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+}
+
+.actas-replace-form .actas-form__file {
+  margin-top: 1rem;
+  overflow-wrap: anywhere;
+}
+
 .actas-delete-modal__icon {
   display: grid;
   width: 3rem;
@@ -383,6 +394,7 @@
 
 .actas-table__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
@@ -592,10 +604,6 @@
     min-height: 44px;
   }
 
-  .actas-table__actions .actas-table__delete {
-    grid-column: 1 / -1;
-  }
-
   .actas-pagination {
     justify-content: space-between;
     gap: 0.45rem;
@@ -648,10 +656,6 @@
 
   .actas-table__actions {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .actas-table__actions .actas-table__delete {
-    grid-column: auto;
   }
 
   .actas-pagination {

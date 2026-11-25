@@ -13,16 +13,19 @@ export interface ActaDto {
   checksum: string;
 }
 
-export interface CrearActaRequest {
+export interface DocumentoActaRequest {
+  contenidoBase64: string;
+  mimeType: string;
+  tamanoBytes: number;
+  checksum: string;
+}
+
+export interface CrearActaRequest extends DocumentoActaRequest {
   nombre: string;
   codigo: string;
   fechaCreacion: string;
   observaciones: string;
   tipoConsejo: boolean;
-  contenidoBase64: string;
-  mimeType: string;
-  tamanoBytes: number;
-  checksum: string;
 }
 
 export type ActasListResponse = ApiResponse<ActaDto[]>;

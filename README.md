@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Reemplazo de documentos de actas — 2026-11-25
+
+En **Gestión de actas**, **Reemplazar documento** abre un diálogo con el nombre y el código del registro. Permite elegir un PDF o Word de hasta 15 MB y confirmar el cambio. El nuevo archivo se guarda en la misma acta, con sus vínculos, código y nombre.
+
 ## Código y nombre de actas — 2026-11-25
 
 Al crear un acta, el formulario guarda por separado el código `0002_20261125_ACTA_NO. 12` y el nombre `CREDITOS`. La vista previa y la descarga combinan ambos como `0002_20261125_ACTA_NO. 12_CREDITOS`. El año del listado se obtiene de la fecha incluida en el código.

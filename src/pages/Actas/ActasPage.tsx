@@ -1,7 +1,7 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FileSelectButton, ModuleLayout } from "../../components";
-import { crearActa, eliminarActa, getActas, getDocumentoActa } from "../../modules/actas/api";
-import type { ActaDto, CrearActaRequest } from "../../modules/actas/types";
+import { crearActa, eliminarActa, getActas, getDocumentoActa, reemplazarDocumentoActa } from "../../modules/actas/api";
+import type { ActaDto, CrearActaRequest, DocumentoActaRequest } from "../../modules/actas/types";
 import { downloadBase64File, openBase64InNewTab } from "../../shared/files/base64FileUtils";
 import { canPreviewSolicitudDocument } from "../../modules/solicitudes/utils/solicitudDocumentFile";
 import "./ActasPage.css";
@@ -33,6 +33,7 @@ const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/msword",
 ];
+const ARCHIVOS_ACTA_ACCEPT = "application/pdf,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword";
 
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
@@ -99,6 +100,20 @@ const getChecksum = async (file: File) => {
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
+const prepararDocumentoActa = async (file: File): Promise<DocumentoActaRequest> => ({
+  contenidoBase64: await fileToBase64(file),
+  mimeType: file.type || "application/pdf",
+  tamanoBytes: file.size,
+  checksum: await getChecksum(file),
+});
+
+const validarArchivoActa = (file: File | null): string | null => {
+  if (!file) return null;
+  if (!TIPOS_ARCHIVO_ACTA_PERMITIDOS.includes(file.type)) return "El archivo del acta debe estar en formato PDF o Word.";
+  if (file.size > MAX_FILE_SIZE) return "El archivo no puede superar 15 MB.";
+  return null;
+};
+
 const ActasPage = () => {
   const [actas, setActas] = useState<ActaDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,6 +137,12 @@ const ActasPage = () => {
   const [actaToDelete, setActaToDelete] = useState<ActaDto | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const [actaToReplace, setActaToReplace] = useState<ActaDto | null>(null);
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
+  const [replacementError, setReplacementError] = useState<string | null>(null);
+  const [isReplacing, setIsReplacing] = useState(false);
+  const replacementTrigger = useRef<HTMLButtonElement>(null);
+  const cancelReplacementButton = useRef<HTMLButtonElement>(null);
 
   const loadActas = async () => {
     setIsLoading(true);
@@ -157,6 +178,13 @@ const ActasPage = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [actaToDelete, deletingActaId]);
+
+  useEffect(() => {
+    if (!actaToReplace) return;
+    const trigger = replacementTrigger.current;
+    cancelReplacementButton.current?.focus();
+    return () => trigger?.focus();
+  }, [actaToReplace]);
 
   const consecutivoFormateado = consecutivo.padStart(4, "0");
   const nombreActa = nombre.trim();
@@ -231,22 +259,37 @@ const ActasPage = () => {
     }
   };
 
-  const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (event: ChangeEvent<HTMLInputElement>, replacing = false) => {
     const selected = event.target.files?.[0] ?? null;
-    setError(null);
-    if (selected && !TIPOS_ARCHIVO_ACTA_PERMITIDOS.includes(selected.type)) {
-      setFile(null);
-      setError("El archivo del acta debe estar en formato PDF o Word.");
-      event.target.value = "";
-      return;
+    const validationError = validarArchivoActa(selected);
+    const setSelectedFile = replacing ? setReplacementFile : setFile;
+    const setFileError = replacing ? setReplacementError : setError;
+    setFileError(validationError);
+    setSelectedFile(validationError ? null : selected);
+    if (validationError) event.target.value = "";
+  };
+
+  const handleReplace = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!actaToReplace || !replacementFile || isReplacing) return;
+    setReplacementError(null);
+    setSuccess(null);
+    setIsReplacing(true);
+    try {
+      const payload = await prepararDocumentoActa(replacementFile);
+      const { mimeType, tamanoBytes, checksum, documentoContenidoId } =
+        await reemplazarDocumentoActa(actaToReplace.id, payload);
+      setActas((current) => current.map((acta) => acta.id === actaToReplace.id
+        ? { ...acta, mimeType, tamanoBytes, checksum, documentoContenidoId }
+        : acta));
+      setActaToReplace(null);
+      setReplacementFile(null);
+      setSuccess(`Se reemplazó el documento del acta ${actaToReplace.codigo}.`);
+    } catch (requestError) {
+      setReplacementError(requestError instanceof Error ? requestError.message : "No fue posible reemplazar el documento del acta.");
+    } finally {
+      setIsReplacing(false);
     }
-    if (selected && selected.size > MAX_FILE_SIZE) {
-      setFile(null);
-      setError("El archivo no puede superar 15 MB.");
-      event.target.value = "";
-      return;
-    }
-    setFile(selected);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -270,10 +313,7 @@ const ActasPage = () => {
         fechaCreacion: getColombiaToday(),
         observaciones: observaciones.trim(),
         tipoConsejo: tipoActa === "CONSEJO",
-        contenidoBase64: await fileToBase64(file),
-        mimeType: file.type || "application/pdf",
-        tamanoBytes: file.size,
-        checksum: await getChecksum(file),
+        ...await prepararDocumentoActa(file),
       };
       await crearActa(payload);
       setSuccess(`El acta ${codigo} fue creada correctamente.`);
@@ -354,7 +394,7 @@ const ActasPage = () => {
             <label className="actas-form__wide"><span>Observaciones</span><textarea rows={3} value={observaciones} onChange={(event) => setObservaciones(event.target.value)} placeholder="Información adicional del acta" /></label>
             <div className="actas-form__wide actas-form__file" role="group" aria-labelledby="actas-file-label">
               <span id="actas-file-label">Archivo del acta (PDF o Word, máximo 15 MB) *</span>
-              <FileSelectButton accept="application/pdf,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" onChange={handleFile}>
+              <FileSelectButton accept={ARCHIVOS_ACTA_ACCEPT} onChange={handleFile}>
                 {file ? "Reemplazar archivo" : "Seleccionar archivo"}
               </FileSelectButton>
               <small className={file ? undefined : "actas-form__file-empty"}>
@@ -378,7 +418,7 @@ const ActasPage = () => {
             const isViewing = fileAction?.actaId === acta.id && fileAction.action === "view";
             const isDownloading = fileAction?.actaId === acta.id && fileAction.action === "download";
             const isDeleting = deletingActaId === acta.id;
-            const actionsDisabled = fileAction !== null || deletingActaId !== null;
+            const actionsDisabled = fileAction !== null || deletingActaId !== null || isReplacing;
             return <tr key={acta.id}>
               <td className="actas-table__code" data-label="Código"><strong>{acta.codigo}</strong></td>
               <td className="actas-table__type" data-label="Tipo de acta">{isActaConsejo(acta) ? "Consejo Académico" : "Comité Asesor de Posgrados"}</td>
@@ -387,11 +427,60 @@ const ActasPage = () => {
               <td className="actas-table__date" data-label="Fecha de creación">{formatDate(acta.fechaCreacion)}</td>
               <td className="actas-table__observations" data-label="Observaciones">{acta.observaciones ? <span className="actas-table__observations-text" title={acta.observaciones}>{acta.observaciones}</span> : "—"}</td>
               <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">{getFileTypeLabel(acta.mimeType)} · {formatSize(acta.tamanoBytes)}</span></td>
-              <td className="actas-table__action-cell" data-label="Acciones"><div className="actas-table__actions"><button type="button" className="sapp-document-action" disabled={actionsDisabled || !canPreviewSolicitudDocument(acta.mimeType)} title={canPreviewSolicitudDocument(acta.mimeType) ? undefined : "Vista previa no disponible para este tipo de archivo"} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button><button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button><button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }}>{isDeleting ? "Eliminando..." : "Eliminar"}</button></div></td>
+              <td className="actas-table__action-cell" data-label="Acciones">
+                <div className="actas-table__actions">
+                  <button type="button" className="sapp-document-action" disabled={actionsDisabled || !canPreviewSolicitudDocument(acta.mimeType)} title={canPreviewSolicitudDocument(acta.mimeType) ? undefined : "Vista previa no disponible para este tipo de archivo"} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button>
+                  <button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button>
+                  <button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={(event) => {
+                    replacementTrigger.current = event.currentTarget;
+                    setReplacementFile(null);
+                    setReplacementError(null);
+                    setActaToReplace(acta);
+                  }}>Reemplazar documento</button>
+                  <button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }}>{isDeleting ? "Eliminando..." : "Eliminar"}</button>
+                </div>
+              </td>
             </tr>;
           })}</tbody></table></div> : null}
           {totalPages > 1 ? <nav className="actas-pagination" aria-label="Paginación de actas"><button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Anterior</button><span>Página {page} de {totalPages}</span><button type="button" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>Siguiente</button></nav> : null}
         </section>
+
+        {actaToReplace ? (
+          <div className="actas-delete-modal" role="dialog" aria-modal="true" aria-labelledby="actas-replace-title" onKeyDown={(event) => {
+            if (event.key === "Escape" && !isReplacing) setActaToReplace(null);
+            if (event.key !== "Tab") return;
+            const controls = event.currentTarget.querySelectorAll<HTMLElement>("form input:enabled, form button:enabled");
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (!first || (event.shiftKey ? event.target === first : event.target === last)) {
+              event.preventDefault();
+              (event.shiftKey ? last : first)?.focus();
+            }
+          }}>
+            <button className="actas-delete-modal__backdrop" type="button" tabIndex={-1} aria-label="Cancelar reemplazo" disabled={isReplacing} onClick={() => setActaToReplace(null)} />
+            <form className="actas-delete-modal__dialog actas-replace-form" onSubmit={handleReplace} aria-busy={isReplacing}>
+              <div className="actas-delete-modal__content">
+                <h2 id="actas-replace-title">Reemplazar documento</h2>
+                <dl className="actas-delete-modal__details">
+                  <div><dt>Acta</dt><dd>{actaToReplace.nombre}</dd></div>
+                  <div><dt>Código</dt><dd>{actaToReplace.codigo}</dd></div>
+                </dl>
+                <div className="actas-form__file" role="group" aria-labelledby="actas-replace-file">
+                  <span id="actas-replace-file">Archivo nuevo (PDF o Word, máximo 15 MB)</span>
+                  <FileSelectButton accept={ARCHIVOS_ACTA_ACCEPT} disabled={isReplacing} onChange={(event) => handleFile(event, true)}>
+                    {replacementFile ? "Cambiar archivo" : "Seleccionar archivo"}
+                  </FileSelectButton>
+                  {replacementFile ? <small>{replacementFile.name} · {formatSize(replacementFile.size)}</small> : null}
+                </div>
+                {replacementError ? <p className="actas-delete-modal__error" role="alert">{replacementError}</p> : null}
+              </div>
+              <div className="actas-delete-modal__actions">
+                <button ref={cancelReplacementButton} type="button" className="actas-delete-modal__cancel" disabled={isReplacing} onClick={() => setActaToReplace(null)}>Cancelar</button>
+                <button type="submit" className="actas-page__primary" disabled={!replacementFile || isReplacing}>{isReplacing ? "Reemplazando..." : "Confirmar reemplazo"}</button>
+              </div>
+            </form>
+          </div>
+        ) : null}
 
         {actaToDelete ? (
           <div className="actas-delete-modal" role="dialog" aria-modal="true" aria-labelledby="actas-delete-title" aria-describedby="actas-delete-description">

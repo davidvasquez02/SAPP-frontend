@@ -1,3 +1,10 @@
+## Reemplazo de documentos de actas — 2026-11-25
+
+- `src/pages/Actas/ActasPage.tsx` ofrece **Reemplazar documento** por fila. Reutiliza el selector, la validación de formato/tamaño y la preparación del archivo usados al crear actas. El diálogo mantiene la selección y el mensaje si la petición falla.
+- `src/modules/actas/api.ts` usa el `PUT /sapp/actas/{id}` existente y envía solo `contenidoBase64`, `mimeType`, `tamanoBytes` y `checksum`. Espera `{ ok, message, data }` y actualiza los metadatos de archivo de la fila con la respuesta. El backend local en `back - v2/sapp-backend` implementa una actualización parcial transaccional y conserva el ID del acta.
+- Las pruebas de `tests/actasBehavior.test.mjs` simulan la cancelación, el rechazo de formatos inválidos, el error de API, el reintento y la conservación del registro. Reutilizar Node y npm en la raíz con `package-lock.json`.
+- Pasaron 15 pruebas focalizadas, `npm run build` y 9 pruebas del backend local (`ActaControllerTest` y `ActaActualizacionEliminacionTest`, Java 21). Las suites completas registraron 654 aprobadas y 36 fallos ya observados. La verificación independiente midió los 360 archivos de `src`. Cobertura de líneas de 84,87 % global, 91,76 % en la pantalla de Actas y 83,33 % en su API. La caída en la pantalla coincide con las nuevas rutas del diálogo que la prueba de reemplazo no ejercita, incluida la navegación por teclado. Registros en `%TEMP%/sapp-actas-reemplazo-{focused,build,test,coverage,backend21}.log`. Pendiente verificar en el despliegue institucional.
+
 ## Código y nombre de actas — 2026-11-25
 
 - `src/pages/Actas/ActasPage.tsx` envía `codigo: "0002_20261125_ACTA_NO. 12"` y `nombre: "CREDITOS"` en el mismo `POST /sapp/actas`. `tipoConsejo` sigue clasificando el acta. Las columnas muestran ambos valores por separado y el filtro de año admite tanto la fecha del código nuevo como el sufijo del código histórico.

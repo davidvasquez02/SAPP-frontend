@@ -7,7 +7,8 @@ const documentUploadCard = readFileSync('src/components/DocumentUploadCard/Docum
 const fileSelectStyles = readFileSync('src/components/FileSelectButton/FileSelectButton.css', 'utf8')
 
 test('actas y las tarjetas documentales reutilizan el mismo selector de archivos', () => {
-  assert.match(actasPage, /<FileSelectButton accept="application\/pdf,\.pdf"/)
+  assert.match(actasPage, /const ARCHIVOS_ACTA_ACCEPT = "application\/pdf,\.pdf,/)
+  assert.equal([...actasPage.matchAll(/<FileSelectButton accept=\{ARCHIVOS_ACTA_ACCEPT\}/g)].length, 2)
   assert.match(documentUploadCard, /<FileSelectButton/)
   assert.doesNotMatch(actasPage, /<input type="file"/)
 })
