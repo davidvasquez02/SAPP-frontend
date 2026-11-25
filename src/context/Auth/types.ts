@@ -37,6 +37,11 @@ export interface AuthContextValue {
   isInitializing: boolean
   initializationError: string | null
   retryInitialization: () => Promise<void>
+  /** Roles con los que el usuario puede elegir trabajar (los asignados en el IAM, sin el rol genérico). */
+  availableRoles: string[]
+  /** Rol con el que está trabajando ahora: `user.roles` solo contiene este, y es lo que determina la interfaz. */
+  activeRole: string | null
+  changeActiveRole: (role: string) => void
   actualizarDirectorGrado: (asignacion: DirectorGradoPerfil) => void
   logout: () => Promise<void>
 }

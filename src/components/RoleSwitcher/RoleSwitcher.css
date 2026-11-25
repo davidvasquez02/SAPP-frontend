@@ -1,0 +1,147 @@
+.role-switcher {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+}
+
+.role-switcher__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--primary), var(--outline) 55%);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.role-switcher__pill:hover {
+  background: color-mix(in srgb, var(--primary), var(--surface) 92%);
+  border-color: var(--primary);
+}
+
+.role-switcher__pill:focus-visible,
+.role-switcher__option:focus-visible,
+.role-switcher__search input:focus-visible {
+  outline: 3px solid var(--inverse-primary, color-mix(in srgb, var(--primary), transparent 55%));
+  outline-offset: 2px;
+}
+
+.role-switcher__pill--static {
+  cursor: default;
+}
+
+.role-switcher__pill--static:hover {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--primary), var(--outline) 55%);
+}
+
+.role-switcher__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-switcher__icon,
+.role-switcher__caret {
+  flex: 0 0 auto;
+}
+
+.role-switcher__panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 60;
+  display: grid;
+  gap: 0.4rem;
+  width: min(20rem, calc(100vw - 2rem));
+  max-height: min(24rem, 70vh);
+  padding: 0.4rem;
+  overflow: hidden;
+  border: 1px solid var(--outline);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text-primary), transparent 80%);
+}
+
+.role-switcher__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  background: var(--surface-container-low);
+  color: var(--text-secondary);
+}
+
+.role-switcher__search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.role-switcher__search input:focus-visible {
+  outline: none;
+}
+
+.role-switcher__list {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.role-switcher__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.role-switcher__option:hover {
+  background: color-mix(in srgb, var(--outline), transparent 55%);
+}
+
+.role-switcher__option--selected,
+.role-switcher__option--selected:hover {
+  background: color-mix(in srgb, var(--primary), var(--surface) 84%);
+  font-weight: 700;
+}
+
+.role-switcher__check {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.role-switcher__empty {
+  padding: 0.7rem 0.8rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+body.dark .role-switcher__panel {
+  box-shadow: 0 12px 32px rgb(0 0 0 / 55%);
+}

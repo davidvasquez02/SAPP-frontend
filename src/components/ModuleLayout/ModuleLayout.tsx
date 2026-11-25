@@ -4,11 +4,10 @@ import { Link } from 'react-router-dom'
 import { EmbeddedModuleContext } from './EmbeddedModuleContext'
 import { useAuth } from '../../context/Auth'
 import { imageDataUrl } from '../../shared/files/base64FileUtils'
-import { formatRoleLabel } from '../../modules/auth/roles/roleUtils'
+import RoleSwitcher from '../RoleSwitcher/RoleSwitcher'
 import './ModuleLayout.css'
 
 const UIS_LOGO_SRC = '/brand/LOGO UIS_PNG.png'
-const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const FALLBACK_AVATAR =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="%23e6e9ef"/><circle cx="60" cy="46" r="20" fill="%2399a1ad"/><path d="M22 98c6-18 20-28 38-28s32 10 38 28" fill="%2399a1ad"/></svg>'
@@ -24,8 +23,6 @@ const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile
   const { user } = useAuth()
   const embedded = useContext(EmbeddedModuleContext)
   const displayName = user ? formatNombrePersona(user.nombreCompleto) || user.username : 'Usuario'
-  const functionalRole = user?.roles?.find((role) => role.toUpperCase() !== GENERIC_SYSTEM_ROLE)
-  const roleLabel = functionalRole ? formatRoleLabel(functionalRole) : 'SIN ROL ASIGNADO'
   const estudianteFoto =
     user?.estudiante?.foto ?? null
   const avatarSrc = imageDataUrl(estudianteFoto?.contenidoBase64, estudianteFoto?.mimeType) ?? FALLBACK_AVATAR
@@ -50,7 +47,7 @@ const ModuleLayout = ({ title, children, showUserSummary = true, compactOnMobile
             <>
               <div>
                 <p className="module-layout__user-name">{displayName}</p>
-                <p className="module-layout__user-role">{roleLabel}</p>
+                <RoleSwitcher />
               </div>
               <Link className="module-layout__profile-link" to="/perfil" aria-label="Abrir mi perfil">
                 <img className="module-layout__avatar" src={avatarSrc} alt={`Foto de perfil de ${displayName}`} />

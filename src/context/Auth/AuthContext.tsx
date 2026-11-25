@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getLogoutRedirectUrl, loginFromGateway } from '../../api/authService'
 import { mapGatewayLoginToUserSession } from '../../api/authMappers'
 import { canManagePosgrados } from '../../auth/roleGuards'
+import {
+  applyActiveRole,
+  clearStoredActiveRole,
+  getSelectableRoles,
+  readStoredActiveRole,
+  resolveActiveRole,
+  storeActiveRole,
+} from '../../modules/auth/roles/activeRole'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
 import { clearBrowserSession } from '../../modules/auth/session/clearBrowserSession'
 import { prefetchFotosEstudiantesActivos } from '../../modules/estudiantes/services/estudianteFotoPrefetch'
@@ -25,8 +33,18 @@ const getInitialSession = () => {
   return storedSession
 }
 
+/** Clave con la que se recuerda el rol elegido de cada usuario. */
+const claveDeUsuario = (session: AuthSession | null): string | null =>
+  session ? String(session.user.uuid ?? session.user.id) : null
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSessionState] = useState<AuthSession | null>(() => getInitialSession())
+  // Sesión tal como la entrega el IAM, con todos los roles del usuario. Es la que se guarda; la que ven las pantallas
+  // (`session`) solo trae el rol con el que se está trabajando.
+  const [baseSession, setSessionState] = useState<AuthSession | null>(() => getInitialSession())
+  const [preferredRole, setPreferredRole] = useState<string | null>(() => {
+    const clave = claveDeUsuario(getInitialSession())
+    return clave ? readStoredActiveRole(clave) : null
+  })
   const [isInitializing, setIsInitializing] = useState(true)
   const [initializationError, setInitializationError] = useState<string | null>(null)
 
@@ -39,11 +57,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const authenticatedSession = mapGatewayLoginToUserSession(loginDto)
       setSessionState(authenticatedSession)
       saveSession(authenticatedSession)
+      const clave = claveDeUsuario(authenticatedSession)
+      setPreferredRole(clave ? readStoredActiveRole(clave) : null)
 
       // Adelanta la carga de fotos del modulo de Estudiantes para que, cuando el coordinador
       // entre, ya esten en cache y no haya que esperar el lote (~10s). Fire-and-forget: no
       // bloquea el login ni afecta nada si falla.
-      if (canManagePosgrados(authenticatedSession.user.roles)) {
+      const rolInicial = resolveActiveRole(
+        getSelectableRoles(authenticatedSession.user.roles),
+        clave ? readStoredActiveRole(clave) : null,
+      )
+      if (rolInicial && canManagePosgrados([rolInicial])) {
         void prefetchFotosEstudiantesActivos()
       }
     } catch (error) {
@@ -63,7 +87,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = useCallback(async () => {
     clearSession()
+    clearStoredActiveRole()
     setSessionState(null)
+    setPreferredRole(null)
 
     try {
       await clearBrowserSession()
@@ -77,8 +103,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    if (session) saveSession(session)
-  }, [session])
+    if (baseSession) saveSession(baseSession)
+  }, [baseSession])
+
+  const availableRoles = useMemo(() => getSelectableRoles(baseSession?.user.roles), [baseSession])
+  const activeRole = useMemo(() => resolveActiveRole(availableRoles, preferredRole), [availableRoles, preferredRole])
+  const session = useMemo(() => applyActiveRole(baseSession, activeRole), [baseSession, activeRole])
+
+  const changeActiveRole = useCallback(
+    (role: string) => {
+      const clave = claveDeUsuario(baseSession)
+      // solo se puede elegir uno de los roles asignados; cualquier otro valor se ignora
+      if (!clave || !availableRoles.includes(role)) return
+      storeActiveRole(clave, role)
+      setPreferredRole(role)
+    },
+    [availableRoles, baseSession],
+  )
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -89,10 +130,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isInitializing,
       initializationError,
       retryInitialization: initializeFromGateway,
+      availableRoles,
+      activeRole,
+      changeActiveRole,
       actualizarDirectorGrado,
       logout,
     }),
-    [session, isInitializing, initializationError, initializeFromGateway, actualizarDirectorGrado, logout],
+    [
+      session,
+      isInitializing,
+      initializationError,
+      initializeFromGateway,
+      availableRoles,
+      activeRole,
+      changeActiveRole,
+      actualizarDirectorGrado,
+      logout,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
