@@ -1,3 +1,9 @@
+## Rúbricas por concepto de evaluación — 2026-11-25
+
+- `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` muestra la descarga en la tarjeta de la evaluación y etiqueta los conceptos **Inicial** y **Tras las correcciones**. Reutiliza `GET /sapp/procesoEvaluacionTg/evaluaciones/{evaluacionId}/rubrica` y los campos `contenidoBase64`, `mimeType` y `nombreArchivo`. La carta de agradecimiento aparece bajo las evaluaciones del jurado.
+- Pasaron 33 pruebas focalizadas, `npm run build` y 14 pruebas de integración en Edge con API simulada. `tests/evaluacionResultadosBehavior.test.mjs` cubre ausencia del archivo, error dentro de la tarjeta y reintento. `tests/integration/evaluadoresDocumentosCarga.test.mjs` verifica rondas, tamaños de 32 y 44 px y descarga de archivos distintos en escritorio y móvil. Reutilizar Node 24.11.0, npm 11.6.1 y el Playwright local mediante `SAPP_PLAYWRIGHT_MODULE`.
+- `npm test` y `npm run test:coverage` registraron 654 aprobadas y los mismos 38 fallos previos. El verificador confirmó los 361 archivos de `src`. La cobertura de líneas fue de 84,63 % global y 89,86 % en el panel. Al reemplazar la lista de descargas, el panel pasó de 228 a 227 líneas medibles y conservó las mismas 23 sin cubrir. Logs en `%TEMP%/sapp-rubrica-concepto-*.log`.
+
 ## Acciones de jurados evaluadores — 2026-11-25
 
 - `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` presenta iconos para **Reenviar**, **Reemplazar** y **Retirar** con nombres accesibles. El CSS muestra las etiquetas con el cursor o el foco del teclado, mantiene las acciones en una fila en escritorio y permite ajustarlas al ancho móvil con áreas táctiles de 44 × 44 px.

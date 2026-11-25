@@ -35,6 +35,7 @@ import {
 } from './estadoProcesoEvaluacion'
 import { esExamenCandidaturaDoctoral } from '../constants'
 import {
+  esConceptoDelDocumento,
   etiquetaRondaEvaluacion,
   evaluacionesOrdenadas,
   presentarNotaFinalCandidatura,
@@ -122,19 +123,55 @@ const EvaluacionDetalle = ({ evaluacion, tipoSolicitudCodigo }: {
   evaluacion: JuradoEvaluador['evaluaciones'][number]
   tipoSolicitudCodigo: string
 }) => {
+  const [descargando, setDescargando] = useState(false)
+  const [falloRubrica, setFalloRubrica] = useState(false)
   const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
   const { etiqueta, valor } = presentarValorEvaluacion(evaluacion, tipoSolicitudCodigo)
   const observaciones = evaluacion.observaciones?.trim()
-  const etiquetaRonda = etiquetaRondaEvaluacion(evaluacion)
+  const etiquetaRonda = etiquetaRondaEvaluacion(evaluacion) ?? (esConceptoDelDocumento(evaluacion) ? 'Inicial' : null)
+  const etiquetaDescarga = `Descargar rúbrica de ${momento}${etiquetaRonda ? ` (${etiquetaRonda})` : ''}`
+
+  const descargar = async () => {
+    setDescargando(true)
+    setFalloRubrica(false)
+    try {
+      const rubrica = await descargarRubricaDiligenciada(evaluacion.id)
+      downloadBase64File(rubrica.contenidoBase64, rubrica.mimeType, rubrica.nombreArchivo)
+    } catch {
+      setFalloRubrica(true)
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <article className="evaluacion-tg__evaluation">
-      <strong>{momento}</strong>
+      <div className="evaluacion-tg__evaluation-heading">
+        <strong>{momento}</strong>
+        {evaluacion.rubricaNombreArchivo && (
+          <span className="evaluacion-tg__row-action">
+            <button
+              type="button"
+              className="evaluacion-tg__row-action-button evaluacion-tg__rubrica-download"
+              disabled={descargando}
+              aria-label={descargando ? 'Descargando rúbrica' : etiquetaDescarga}
+              onClick={() => void descargar()}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4" />
+              </svg>
+            </button>
+            <span className="evaluacion-tg__row-action-hint" aria-hidden="true">Descargar rúbrica</span>
+          </span>
+        )}
+      </div>
       {etiquetaRonda && <small className="evaluacion-tg__round">{etiquetaRonda}</small>}
       {valor != null && valor !== '' && (
         <span><b>{etiqueta}:</b> {valor}</span>
       )}
       {observaciones && <span><b>Observaciones:</b> {observaciones}</span>}
+      {!evaluacion.rubricaNombreArchivo && <small className="evaluacion-tg__rubrica-empty">Sin rúbrica adjunta</small>}
+      {falloRubrica && <small className="evaluacion-tg__rubrica-error" role="alert">No se pudo descargar la rúbrica.</small>}
     </article>
   )
 }
@@ -162,47 +199,6 @@ const CartaAgradecimientoBoton = ({ solicitudId, juradoId }: { solicitudId: numb
         {generando ? 'Generando…' : 'Carta de agradecimiento'}
       </button>
       {fallo && <small role="alert">No fue posible generar la carta.</small>}
-    </div>
-  )
-}
-
-const RubricaCelda = ({ evaluaciones }: { evaluaciones: JuradoEvaluador['evaluaciones'] }) => {
-  const [descargandoId, setDescargandoId] = useState<number | null>(null)
-  const conRubrica = evaluaciones?.filter((evaluacion) => evaluacion.rubricaNombreArchivo) ?? []
-
-  if (conRubrica.length === 0) return <span className="evaluacion-tg__rubrica-empty">—</span>
-
-  const descargar = async (evaluacion: JuradoEvaluador['evaluaciones'][number]) => {
-    setDescargandoId(evaluacion.id)
-    try {
-      const rubrica = await descargarRubricaDiligenciada(evaluacion.id)
-      downloadBase64File(rubrica.contenidoBase64, rubrica.mimeType, rubrica.nombreArchivo)
-    } catch {
-      // Falla silenciosa: no hay un lugar en esta columna para mostrar un error puntual por fila.
-    } finally {
-      setDescargandoId(null)
-    }
-  }
-
-  return (
-    <div className="evaluacion-tg__rubricas">
-      {conRubrica.map((evaluacion) => {
-        const momento = evaluacion.momentoNombre || evaluacion.momento || evaluacion.momentoCodigo
-        return (
-          <button
-            key={evaluacion.id}
-            type="button"
-            className="evaluacion-tg__rubrica-download"
-            disabled={descargandoId === evaluacion.id}
-            onClick={() => void descargar(evaluacion)}
-            title={`Descargar rúbrica: ${momento} (${evaluacion.rubricaNombreArchivo})`}
-            aria-label={`Descargar rúbrica de ${momento}`}
-          >
-            <span aria-hidden="true">⬇</span>
-            {descargandoId === evaluacion.id ? 'Descargando…' : 'Descargar rúbrica'}
-          </button>
-        )
-      })}
     </div>
   )
 }
@@ -540,7 +536,20 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
 
       {formulario === 'resultado' && canRegisterResult && <div className="evaluacion-tg__form-card"><h4>Registrar resultado</h4><div className="evaluacion-tg__form-grid">{esCandidaturaDoctoral ? <label><span>Nota final *</span><input type="number" min="0" max="5" step="0.01" value={notaFinal} onChange={(e) => setNotaFinal(e.target.value)} aria-describedby="nota-final-ayuda" /></label> : <label><span>Resultado *</span><select value={resultado} onChange={(e) => setResultado(e.target.value)}>{catalogos?.resultados.map((item) => <option key={item.codigo} value={item.codigo}>{item.nombre}</option>)}</select></label>}<label><span>Acta</span><select value={actaId} onChange={(e) => setActaId(e.target.value)}><option value="">Sin acta asociada</option>{actas.map((acta) => <option key={acta.id} value={acta.id}>{acta.codigo} — {acta.nombre}</option>)}</select></label></div>{esCandidaturaDoctoral && <p id="nota-final-ayuda">La nota se precarga con el promedio de las calificaciones de sustentación de los jurados activos. Puedes modificarla antes de registrar.</p>}<div className="evaluacion-tg__form-actions"><button type="button" disabled={busy || (esCandidaturaDoctoral ? !notaFinalValida : !resultado)} onClick={() => void runMutation(() => registrarResultado(solicitudId, esCandidaturaDoctoral ? { resultadoCodigo: '', notaFinal: notaFinalNumero, actaId: actaId ? Number(actaId) : null } : { resultadoCodigo: resultado, notaFinal: null, actaId: actaId ? Number(actaId) : null }), 'Resultado registrado y proceso cerrado.')}>Registrar resultado</button><button type="button" className="secondary" onClick={() => setFormulario(null)}>Cancelar</button></div></div>}
 
-      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><div><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{canManageJurors && formulario !== 'designar' && <button type="button" className="evaluacion-tg__add-evaluator" onClick={() => { setReemplazando(null); setJurado(EMPTY_JURADO); setFormulario('designar') }} disabled={busy}><span aria-hidden="true">＋</span> Agregar evaluador</button>}</div>{activeJurors.length === 0 ? <p>No se han agregado evaluadores.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th><th>Rúbrica</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.tratamiento ? `${item.tratamiento} ` : ''}{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span>{item.motivoDeclinacion && <small className="evaluacion-tg__motivo-declinacion">Declinó: {item.motivoDeclinacion}</small>}{item.motivoReemplazo && <small className="evaluacion-tg__motivo-declinacion">Motivo del reemplazo: {item.motivoReemplazo}</small>}{(item.nombreSugerido || item.correoSugerido) && <small className="evaluacion-tg__motivo-declinacion">Sugiere: {item.nombreSugerido || '—'}{item.correoSugerido ? ` (${item.correoSugerido})` : ''}</small>}</td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td><td data-label="Evaluaciones">{item.evaluaciones?.length ? <div className="evaluacion-tg__evaluations">{evaluacionesOrdenadas(item).map((evaluation) => <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} tipoSolicitudCodigo={proceso.tipoSolicitudCodigo} />)}</div> : 'Pendientes'}</td><td data-label="Rúbrica"><RubricaCelda evaluaciones={item.evaluaciones} />{proceso.resultadoCodigo && item.estadoInvitacionCodigo === 'ACEPTADA' && <CartaAgradecimientoBoton solicitudId={solicitudId} juradoId={item.id} />}</td>{hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions">
+      <section className="evaluacion-tg__section" aria-labelledby="jurados-title"><div className="evaluacion-tg__section-heading"><div><h4 id="jurados-title">Jurados evaluadores</h4><span>{activeJurors.filter((item) => item.activo).length} activos</span></div>{canManageJurors && formulario !== 'designar' && <button type="button" className="evaluacion-tg__add-evaluator" onClick={() => { setReemplazando(null); setJurado(EMPTY_JURADO); setFormulario('designar') }} disabled={busy}><span aria-hidden="true">＋</span> Agregar evaluador</button>}</div>{activeJurors.length === 0 ? <p>No se han agregado evaluadores.</p> : <div className="evaluacion-tg__table-shell"><table><thead><tr><th>Jurado</th><th>Institución</th><th>Invitación</th><th>Respuesta</th><th>Evaluaciones</th>{hasJurorActions && <th>Acciones</th>}</tr></thead><tbody>{activeJurors.map((item) => <tr key={item.id} className={!item.activo ? 'evaluacion-tg__inactive' : undefined}><td data-label="Jurado"><strong>{item.tratamiento ? `${item.tratamiento} ` : ''}{item.nombre}</strong><span>{item.correo}</span></td><td data-label="Institución">{item.institucion || '—'}</td><td data-label="Invitación"><span className={`evaluacion-tg__chip evaluacion-tg__chip--${item.estadoInvitacion.toLocaleLowerCase()}`}>{item.estadoInvitacionNombre || item.estadoInvitacion}</span>{item.motivoDeclinacion && <small className="evaluacion-tg__motivo-declinacion">Declinó: {item.motivoDeclinacion}</small>}{item.motivoReemplazo && <small className="evaluacion-tg__motivo-declinacion">Motivo del reemplazo: {item.motivoReemplazo}</small>}{(item.nombreSugerido || item.correoSugerido) && <small className="evaluacion-tg__motivo-declinacion">Sugiere: {item.nombreSugerido || '—'}{item.correoSugerido ? ` (${item.correoSugerido})` : ''}</small>}</td><td data-label="Respuesta">{formatDate(item.fechaRespuesta, true)}</td>
+                  <td data-label="Evaluaciones">
+                    {item.evaluaciones?.length ? (
+                      <div className="evaluacion-tg__evaluations">
+                        {evaluacionesOrdenadas(item).map((evaluation) => (
+                          <EvaluacionDetalle key={evaluation.id} evaluacion={evaluation} tipoSolicitudCodigo={proceso.tipoSolicitudCodigo} />
+                        ))}
+                      </div>
+                    ) : 'Pendientes'}
+                    {proceso.resultadoCodigo && item.estadoInvitacionCodigo === 'ACEPTADA' && (
+                      <CartaAgradecimientoBoton solicitudId={solicitudId} juradoId={item.id} />
+                    )}
+                  </td>
+                  {hasJurorActions && <td data-label="Acciones">{item.activo && <div className="evaluacion-tg__row-actions">
         {ESTADOS_INVITACION_CON_REENVIO.has(item.estadoInvitacionCodigo ?? '') && (
           <JuradoActionButton action="Reenviar" disabled={busy} onClick={() => void runMutation(() => reenviarInvitacion(solicitudId, item.id), 'Invitación reenviada.')} />
         )}

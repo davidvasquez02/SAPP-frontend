@@ -18,7 +18,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
   const browser = await chromium.launch({ headless: true, channel: process.env.SAPP_BROWSER_CHANNEL || 'msedge' })
   t.after(() => browser.close())
 
-  const scenario = async (run, { student = false, failDocuments = false, validarProyecto = false, cartaName = null } = {}) => {
+  const scenario = async (run, { student = false, failDocuments = false, validarProyecto = false, cartaName = null, jurados = [] } = {}) => {
     const context = await browser.newContext({ acceptDownloads: true })
     const page = await context.newPage()
     page.setDefaultTimeout(8000)
@@ -27,7 +27,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       fileId: 101, fileName: 'tesis-original.pdf', cartaName, uploads: [],
       proceso: { id: 9, solicitudAcademicaId: 42, tipoSolicitudCodigo: 'DEF_TESIS_DCC', titulo: 'Tesis de prueba', programa: 'Doctorado',
         estadoSolicitud: validarProyecto ? 'EN_VALIDACION_COORDINACION' : student ? 'EN_AJUSTES' : 'JUR_POR_DESIG', documentoEvaluarId: 101, documentoEvaluarNombre: 'tesis-original.pdf',
-        fechaLimiteEvaluacion: '2027-12-01', jurados: [] },
+        fechaLimiteEvaluacion: '2027-12-01', jurados },
     }
     const solicitud = () => ({ id: 42, estudianteId: 10, estudiante: 'Estudiante de prueba', codigoEstudianteUis: '20260001', programaAcademico: 'Doctorado', tipoSolicitudId: 9, tipoSolicitudCodigo: 'DEF_TESIS_DCC', tipoSolicitud: 'Defensa de tesis doctoral', tipoTramiteCodigo: '1008', estadoId: student ? (state.proceso.estadoSolicitud === 'EN_AJUSTES' ? 16 : 21) : 15, estadoSigla: state.proceso.estadoSolicitud, estado: state.proceso.estadoSolicitud, fechaRegistro: '2026-10-16', fechaResolucion: null, observaciones: null })
     const errors = []
@@ -83,6 +83,8 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       }
       if (url.pathname.endsWith('/procesoEvaluacionTg/catalogos')) return reply({ modalidades: [], estadosInvitacion: [], momentos: [], conceptos: [], resultados: [] })
       if (url.pathname.endsWith('/procesoEvaluacionTg/solicitud/42')) { state.processGets++; return reply(state.proceso) }
+      const rubrica = url.pathname.match(/\/evaluaciones\/(\d+)\/rubrica$/)
+      if (rubrica) return reply({ nombreArchivo: `rubrica-${rubrica[1]}.pdf`, mimeType: 'application/pdf', contenidoBase64: 'JVBERi0=' })
       if (url.pathname.includes('/procesoEvaluacionTg/solicitud/42/documento-evaluar/')) {
         state.proceso.documentoEvaluarId = Number(url.pathname.split('/').at(-1))
         state.proceso.documentoEvaluarNombre = state.fileName
@@ -118,6 +120,32 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       throw error
     } finally { await context.close() }
   }
+
+  await t.test('cada concepto descarga su rúbrica desde la misma tarjeta en escritorio y móvil', async () => {
+    const concepto = { momentoCodigo: 'CONCEPTO_DOCUMENTO', momentoNombre: 'Concepto del documento', conceptoNombre: 'Favorable' }
+    const jurados = [{ id: 1, nombre: 'Evaluador de prueba', activo: true, estadoInvitacion: 'ACEPTADA', evaluaciones: [
+      { ...concepto, id: 102, ronda: 2, rubricaNombreArchivo: 'corregida.pdf' },
+      { ...concepto, id: 101, ronda: 1, rubricaNombreArchivo: 'inicial.pdf' },
+    ] }]
+    await scenario(async page => {
+      const seccion = page.getByRole('region', { name: 'Jurados evaluadores' })
+      const tarjetas = seccion.getByRole('article')
+      await tarjetas.first().waitFor()
+      assert.equal(await seccion.getByRole('columnheader', { name: 'Rúbrica', exact: true }).count(), 0)
+      for (const [index, ronda, width] of [[0, 'Inicial', 1280], [1, 'Tras las correcciones', 390]]) {
+        await page.setViewportSize({ width, height: 900 })
+        const tarjeta = tarjetas.nth(index)
+        assert.ok(await tarjeta.getByText(ronda, { exact: true }).isVisible())
+        const boton = tarjeta.getByRole('button', { name: `Descargar rúbrica de Concepto del documento (${ronda})` })
+        const caja = await boton.boundingBox()
+        assert.equal(caja.width, index === 0 ? 32 : 44)
+        assert.ok(caja.x + caja.width <= width)
+        const descarga = page.waitForEvent('download')
+        await boton.click()
+        assert.equal((await descarga).suggestedFilename(), `rubrica-${101 + index}.pdf`)
+      }
+    }, { jurados })
+  })
 
   await t.test('las decisiones de coordinación actualizan la ficha y un único histórico en la misma página', async () => {
     await scenario(async (page, state) => {

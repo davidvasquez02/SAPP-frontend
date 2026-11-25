@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Rúbricas por concepto de evaluación — 2026-11-25
+
+Cada concepto tiene su icono de descarga junto al encabezado de la tarjeta. Las etiquetas **Inicial** y **Tras las correcciones** distinguen las rondas, y las evaluaciones sin archivo muestran **Sin rúbrica adjunta**.
+
 ## Acciones de jurados evaluadores — 2026-11-25
 
 La columna **Acciones** agrupa los iconos de **Reenviar**, **Reemplazar** y **Retirar**. Cada etiqueta aparece al pasar el cursor o al enfocar el botón con el teclado. En móvil, los botones tienen un área táctil de 44 × 44 px.
