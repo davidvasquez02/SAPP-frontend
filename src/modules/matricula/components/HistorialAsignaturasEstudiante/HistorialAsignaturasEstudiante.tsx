@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { getHistorialAsignaturasEstudiante } from '../../services/matriculaAcademicaService'
 import type { HistorialAsignaturaDto } from '../../types'
-import { formatBackendDateTime, getAsignaturaEstadoLabel } from '../../utils/matriculaPresentation'
+import {
+  formatBackendDateTime,
+  getAsignaturaBadgeModifier,
+  getAsignaturaEstadoLabel,
+  resumirHistorialAsignaturasPorPeriodo,
+} from '../../utils/matriculaPresentation'
 import './HistorialAsignaturasEstudiante.css'
 
 type HistorialAsignaturasEstudianteProps = {
   estudianteId: number
-  matriculaId?: number
+  vista?: 'cambios' | 'resumen-por-periodo'
   active?: boolean
 }
 
-const HistorialAsignaturasEstudiante = ({ estudianteId, matriculaId, active = true }: HistorialAsignaturasEstudianteProps) => {
+const HistorialAsignaturasEstudiante = ({ estudianteId, vista = 'cambios', active = true }: HistorialAsignaturasEstudianteProps) => {
   const [historial, setHistorial] = useState<HistorialAsignaturaDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,13 +47,37 @@ const HistorialAsignaturasEstudiante = ({ estudianteId, matriculaId, active = tr
   if (isLoading) return <p className="historial-asignaturas__status">Cargando historial de materias…</p>
   if (error) return <p className="historial-asignaturas__status historial-asignaturas__status--error">{error}</p>
 
-  const filas = (matriculaId == null ? historial : historial.filter((fila) => fila.matriculaId === matriculaId))
-    .slice()
-    .sort((a, b) => b.fecha.localeCompare(a.fecha))
-
-  if (filas.length === 0) {
+  if (historial.length === 0) {
     return <p className="historial-asignaturas__status">No hay historial de materias registrado.</p>
   }
+
+  if (vista === 'resumen-por-periodo') {
+    return (
+      <div className="historial-asignaturas__periodos">
+        {resumirHistorialAsignaturasPorPeriodo(historial).map(({ periodo, asignaturas }) => (
+          <section
+            key={periodo}
+            aria-label={periodo ? `Periodo ${periodo}` : 'Periodo sin identificar'}
+            className="historial-asignaturas__periodo"
+          >
+            <h4>{periodo || 'Periodo sin identificar'}</h4>
+            <ul role="list">
+              {asignaturas.map((asignatura) => (
+                <li key={asignatura.asignaturaId}>
+                  <span>{asignatura.asignaturaNombre}{asignatura.asignaturaCodigo ? ` (${asignatura.asignaturaCodigo})` : ''}</span>
+                  <span className={`historial-asignaturas__resultado historial-asignaturas__resultado--${getAsignaturaBadgeModifier(asignatura.estadoNuevo)}`}>
+                    {getAsignaturaEstadoLabel(asignatura.estadoNuevo)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    )
+  }
+
+  const filas = [...historial].sort((a, b) => b.fecha.localeCompare(a.fecha))
 
   return (
     <div className="historial-asignaturas__wrapper sapp-table-shell">
@@ -56,7 +85,7 @@ const HistorialAsignaturasEstudiante = ({ estudianteId, matriculaId, active = tr
         <thead>
           <tr>
             <th>Materia</th>
-            {matriculaId == null ? <th>Periodo</th> : null}
+            <th>Periodo</th>
             <th>Cambio</th>
             <th>Fecha</th>
             <th>Responsable</th>
@@ -67,7 +96,7 @@ const HistorialAsignaturasEstudiante = ({ estudianteId, matriculaId, active = tr
           {filas.map((fila, index) => (
             <tr key={`${fila.matriculaId}-${fila.asignaturaId}-${fila.fecha}-${index}`}>
               <td data-label="Materia">{fila.asignaturaNombre}{fila.asignaturaCodigo ? ` (${fila.asignaturaCodigo})` : ''}</td>
-              {matriculaId == null ? <td data-label="Periodo">{fila.periodoAcademico}</td> : null}
+              <td data-label="Periodo">{fila.periodoAcademico}</td>
               <td data-label="Cambio">
                 {fila.estadoAnterior ? `${getAsignaturaEstadoLabel(fila.estadoAnterior)} → ` : ''}
                 {getAsignaturaEstadoLabel(fila.estadoNuevo)}

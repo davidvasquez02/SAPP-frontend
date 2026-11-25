@@ -23,3 +23,60 @@
   border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
   vertical-align: top;
 }
+
+.historial-asignaturas__periodos {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.historial-asignaturas__periodo {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.historial-asignaturas__periodo h4 {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--outline);
+  background: var(--surface-container-low);
+  font-size: var(--font-size-component-title);
+}
+
+.historial-asignaturas__periodo ul {
+  margin: 0;
+  padding: 0 0.75rem;
+  list-style: none;
+}
+
+.historial-asignaturas__periodo li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.75rem;
+  padding: 0.45rem 0;
+  overflow-wrap: anywhere;
+}
+
+.historial-asignaturas__periodo li + li {
+  border-top: 1px solid color-mix(in srgb, var(--outline), transparent 45%);
+}
+
+.historial-asignaturas__resultado {
+  --resultado-acento: var(--outline);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--resultado-acento), var(--outline) 65%);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--resultado-acento), var(--text-primary) 65%);
+  background: color-mix(in srgb, var(--resultado-acento), var(--surface) 88%);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+}
+
+.historial-asignaturas__resultado--approved { --resultado-acento: var(--success); }
+.historial-asignaturas__resultado--rejected { --resultado-acento: var(--danger); }
+.historial-asignaturas__resultado--review { --resultado-acento: var(--warning); }

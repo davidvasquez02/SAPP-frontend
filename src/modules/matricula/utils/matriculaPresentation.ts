@@ -1,3 +1,5 @@
+import type { HistorialAsignaturaDto } from '../types'
+
 type MatriculaSeleccionable = {
   id: number
   periodoId: number
@@ -12,6 +14,10 @@ const MATRICULA_ESTADO_LABELS: Record<string, string> = {
 
 const ASIGNATURA_ESTADO_LABELS: Record<string, string> = {
   APROBADA: 'Aprobada',
+  CANCELACION_RECHAZADA: 'Cancelación rechazada',
+  CANCELACION_SOLICITADA: 'Cancelación solicitada',
+  INCLUSION_RECHAZADA: 'Inclusión rechazada',
+  INCLUSION_SOLICITADA: 'Inclusión solicitada',
   MATRICULADA: 'Matriculada',
   NO_MATRICULADA: 'No matriculada',
   PENDIENTE: 'Pendiente',
@@ -41,6 +47,48 @@ export const getMatriculaEstadoLabel = (estado: string, documentosCompletos?: bo
 
 export const getAsignaturaEstadoLabel = (estado: string): string =>
   ASIGNATURA_ESTADO_LABELS[estado.trim().toUpperCase()] ?? humanizeUnknownEstado(estado)
+
+export const getAsignaturaBadgeModifier = (estado: string) => {
+  switch (estado.trim().toUpperCase()) {
+    case 'APROBADA':
+    case 'MATRICULADA':
+    case 'CANCELACION_RECHAZADA':
+      return 'approved'
+    case 'NO_MATRICULADA':
+    case 'RECHAZADA':
+    case 'INCLUSION_RECHAZADA':
+    case 'CANCELADA':
+      return 'rejected'
+    case 'INCLUSION_SOLICITADA':
+    case 'CANCELACION_SOLICITADA':
+      return 'review'
+    default:
+      return 'pending'
+  }
+}
+
+export const resumirHistorialAsignaturasPorPeriodo = (historial: HistorialAsignaturaDto[]) => {
+  const periodos = new Map<string, Map<number, HistorialAsignaturaDto>>()
+
+  for (const fila of historial) {
+    const periodo = fila.periodoAcademico.trim().replace(/\s*-\s*/g, '-')
+    const asignaturas = periodos.get(periodo) ?? new Map<number, HistorialAsignaturaDto>()
+    const cambioAnterior = asignaturas.get(fila.asignaturaId)
+    // La API ordena por fecha e ID ascendentes, así que en un empate prevalece la última fila.
+    if (!cambioAnterior || fila.fecha.replace(' ', 'T') >= cambioAnterior.fecha.replace(' ', 'T')) {
+      asignaturas.set(fila.asignaturaId, fila)
+    }
+    periodos.set(periodo, asignaturas)
+  }
+
+  return Array.from(periodos)
+    .sort(([periodoA], [periodoB]) => periodoB.localeCompare(periodoA, 'es-CO', { numeric: true }))
+    .map(([periodo, asignaturas]) => ({
+      periodo,
+      asignaturas: Array.from(asignaturas.values()).sort((a, b) =>
+        a.asignaturaNombre.localeCompare(b.asignaturaNombre, 'es-CO')),
+    }))
+}
 
 export const getMatriculaEstadoModifier = (estado: string, documentosCompletos?: boolean | null): string => {
   const normalized = estado.trim().toUpperCase()

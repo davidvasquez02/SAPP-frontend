@@ -249,21 +249,21 @@
 }
 
 .matricula-detalle__badge--approved {
-  color: #166534;
-  background: color-mix(in srgb, #22c55e, var(--surface) 84%);
-  border: 1px solid color-mix(in srgb, #22c55e, transparent 62%);
+  color: color-mix(in srgb, var(--success), var(--text-primary) 60%);
+  background: color-mix(in srgb, var(--success), var(--surface) 88%);
+  border: 1px solid color-mix(in srgb, var(--success), var(--outline) 65%);
 }
 
 .matricula-detalle__badge--rejected {
-  color: #991b1b;
-  background: color-mix(in srgb, #ef4444, var(--surface) 88%);
-  border: 1px solid color-mix(in srgb, #ef4444, transparent 64%);
+  color: color-mix(in srgb, var(--danger), var(--text-primary) 60%);
+  background: color-mix(in srgb, var(--danger), var(--surface) 88%);
+  border: 1px solid color-mix(in srgb, var(--danger), var(--outline) 65%);
 }
 
 .matricula-detalle__badge--review {
-  color: var(--inverse-primary);
-  background: color-mix(in srgb, var(--inverse-primary), transparent 80%);
-  border: 1px solid color-mix(in srgb, var(--inverse-primary), transparent 60%);
+  color: color-mix(in srgb, var(--warning), var(--text-primary) 60%);
+  background: color-mix(in srgb, var(--warning), var(--surface) 88%);
+  border: 1px solid color-mix(in srgb, var(--warning), var(--outline) 65%);
 }
 
 .matricula-detalle__badge--pending {

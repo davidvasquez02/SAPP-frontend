@@ -24,6 +24,7 @@ import type {
 } from '../../modules/matricula/types'
 import {
   formatBackendDateTime,
+  getAsignaturaBadgeModifier,
   getAsignaturaEstadoLabel,
   getMatriculaEstadoLabel,
   getMatriculaEstadoModifier,
@@ -639,7 +640,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   return (
     <ModuleLayout title="Matrícula">
       <section className="matricula-detalle">
-        <BackButton to="/matricula">Volver al listado</BackButton>
+        <BackButton to="/matricula/academica">Volver al listado</BackButton>
 
         {isLoading ? <p className="matricula-detalle__status">Cargando detalle de matrícula...</p> : null}
         {!isLoading && error ? (
@@ -864,7 +865,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                       <th>Asignatura</th>
                       <th>Institución/Escuela</th>
                       <th>Estado</th>
-                      <th>Validación coordinación</th>
+                      {!isFinalizada && <th>Validación coordinación</th>}
                       <th>Comentarios</th>
                     </tr>
                   </thead>
@@ -883,11 +884,13 @@ const MatriculaDetalleCoordinacionPage = () => {
                         <td data-label="Código">{asignatura.asignaturaCodigo ?? '—'}</td>
                         <td data-label="Asignatura">{asignatura.asignaturaNombre}</td>
                         <td data-label="Institución/Escuela">{asignatura.asignaturaInstitucion?.trim() || asignatura.asignaturaEscuela?.trim() || '—'}</td>
-                        <td data-label="Estado">{getAsignaturaEstadoLabel(asignatura.estado)}</td>
-                        <td data-label="Validación coordinación">
-                          {isFinalizada ? (
-                            <span className="matricula-detalle__obs-empty">—</span>
-                          ) : (
+                        <td data-label="Estado">
+                          <span className={`matricula-detalle__badge matricula-detalle__badge--${getAsignaturaBadgeModifier(asignatura.estado)}`}>
+                            {getAsignaturaEstadoLabel(asignatura.estado)}
+                          </span>
+                        </td>
+                        {!isFinalizada && (
+                          <td data-label="Validación coordinación">
                             <div className="matricula-detalle__decision-group">
                               <button
                                 type="button"
@@ -920,21 +923,25 @@ const MatriculaDetalleCoordinacionPage = () => {
                                 {isRejectSelected ? 'Rechazada' : 'Rechazar'}
                               </button>
                             </div>
-                          )}
-                        </td>
+                          </td>
+                        )}
                         <td data-label="Comentarios">
-                          <textarea
-                            className="matricula-detalle__asignatura-comments"
-                            value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
-                            onChange={(event) =>
-                              updateAsignaturaDecision(asignatura.id, {
-                                observaciones: event.target.value,
-                              })
-                            }
-                            placeholder="Observaciones de validación"
-                            rows={2}
-                            disabled={disableComments}
-                          />
+                          {isFinalizada ? (
+                            asignatura.observaciones?.trim() || '—'
+                          ) : (
+                            <textarea
+                              className="matricula-detalle__asignatura-comments"
+                              value={asignaturasDecision[asignatura.id]?.observaciones ?? ''}
+                              onChange={(event) =>
+                                updateAsignaturaDecision(asignatura.id, {
+                                  observaciones: event.target.value,
+                                })
+                              }
+                              placeholder="Observaciones de validación"
+                              rows={2}
+                              disabled={disableComments}
+                            />
+                          )}
                         </td>
                       </tr>
                     )})}
@@ -1029,7 +1036,7 @@ const MatriculaDetalleCoordinacionPage = () => {
 
             <article className="matricula-detalle__card">
               <h3>Historial de materias</h3>
-              <HistorialAsignaturasEstudiante estudianteId={matricula.estudianteId} matriculaId={matricula.id} />
+              <HistorialAsignaturasEstudiante key={matricula.estudianteId} estudianteId={matricula.estudianteId} vista="resumen-por-periodo" />
             </article>
           </>
         ) : null}
@@ -1039,7 +1046,7 @@ const MatriculaDetalleCoordinacionPage = () => {
         ) : null}
 
         {!isLoading && !Number.isNaN(parsedMatriculaId) && !matricula ? (
-          <BackButton to="/matricula">Volver al listado</BackButton>
+          <BackButton to="/matricula/academica">Volver al listado</BackButton>
         ) : null}
       </section>
       {toast ? (

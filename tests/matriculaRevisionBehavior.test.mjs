@@ -7,6 +7,7 @@ import { reactApiHarness } from './helpers/domHarness.mjs'
 test('revisión de matrícula React: documentos, asignaturas y finalización', async t => {
   const ui = await reactApiHarness(t)
   const { default: Page } = await ui.load('/src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx')
+  const { default: Historial } = await ui.load('/src/modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante.tsx')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
   const document = (estado = 'POR_REVISAR') => ({
     idTipoDocumentoTramite: 5, codigoTipoDocumentoTramite: 'ANX-1', nombreTipoDocumentoTramite: 'Certificado', obligatorioTipoDocumentoTramite: true,
@@ -16,13 +17,18 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     } : null,
   })
   let matricula, documents, missing, fetchError, decisionError, finalizationError, approvalError, validationError, decisions, approvals, finalized, savedSubjects
+  let historial, historialError
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
-    matricula = { id: 24, estudianteNombreCompleto: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', periodoAcademico: '2026-2', estado: 'PENDIENTE_DOCUMENTOS', fechaSolicitud: '2026-10-17T10:00:00', asignaturas: [{ id: 33, asignaturaId: 7, asignaturaCodigo: 'UIS-7', asignaturaNombre: 'Investigación', estado: 'PENDIENTE', observaciones: null }] }
+    matricula = { id: 24, estudianteId: 17, estudianteNombreCompleto: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', periodoAcademico: '2026-2', estado: 'PENDIENTE_DOCUMENTOS', fechaSolicitud: '2026-10-17T10:00:00', asignaturas: [{ id: 33, asignaturaId: 7, asignaturaCodigo: 'UIS-7', asignaturaNombre: 'Investigación', estado: 'PENDIENTE', observaciones: null }] }
     documents = [document()]; missing = false; fetchError = false; decisionError = false; finalizationError = false; approvalError = false; validationError = false
     decisions = []; approvals = 0; finalized = 0; savedSubjects = []
+    historial = []; historialError = false
     ui.response((url, init) => {
       const path = new URL(url, 'https://example.test').pathname
+      if (path.endsWith('/matriculaAcademica/estudiante/17/historialAsignaturas')) {
+        return historialError ? Response.json({ ok: false, message: 'Historial no disponible' }, { status: 503 }) : ok(historial)
+      }
       if (path.endsWith('/matriculaAcademica')) return fetchError ? Response.json({ message: 'Detalle no disponible' }, { status: 503 }) : ok(missing ? [] : [matricula])
       if (path.endsWith('/document')) {
         if (init.method === 'PUT') {
@@ -57,12 +63,82 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   const mount = (s, { id = '24', roles = ['COORDINADOR'] } = {}) => {
     s.after(ui.cleanup)
     const user = { id: 10, username: 'persona', nombreCompleto: 'Persona de prueba', roles }
-    return ui.render(createElement(MemoryRouter, { initialEntries: [`/revision/${id}`] },
+    return ui.render(createElement(MemoryRouter, { initialEntries: [`/matricula/academica/${id}`] },
       createElement(AuthContext.Provider, { value: { session: { kind: 'SAPP', user }, user } },
-        createElement(Routes, null, createElement(Route, { path: '/revision/:matriculaId', element: createElement(Page) })))))
+        createElement(Routes, null,
+          createElement(Route, { path: '/matricula/academica/:matriculaId', element: createElement(Page) }),
+          createElement(Route, { path: '/matricula/academica', element: createElement('h1', null, 'Listado de matrícula académica') })))))
   }
   const ready = async view => { await view.findByRole('heading', { name: 'Asignaturas registradas' }) }
   const approveDoc = view => ui.fireEvent.click(view.getAllByRole('button', { name: 'Aprobar' })[0])
+
+  await t.test('volver desde el detalle abre el listado de matrícula académica', async s => {
+    const view = mount(s)
+    await ready(view)
+    ui.fireEvent.click(view.getByRole('link', { name: 'Volver al listado' }))
+    await view.findByRole('heading', { name: 'Listado de matrícula académica' })
+  })
+
+  await t.test('el detalle muestra el último resultado de cada materia en todos sus periodos', async s => {
+    const base = {
+      matriculaId: 24, periodoAcademico: '2026 - 2', asignaturaId: 7, asignaturaCodigo: '456',
+      asignaturaNombre: 'Interna 1', estadoAnterior: null, estadoNuevo: 'SELECCIONADA',
+      fecha: '2026-10-17T09:00:00', responsable: 'Coordinación de prueba', detalle: 'Observación del historial',
+    }
+    historial = [
+      { ...base, matriculaId: 12, periodoAcademico: '2026 - 1', estadoNuevo: 'MATRICULADA', fecha: '2026-05-09T09:00:00' },
+      { ...base, estadoNuevo: 'NO_MATRICULADA', fecha: '2026-10-17T10:00:00' },
+      { ...base, periodoAcademico: '2026-2' },
+      { ...base, asignaturaId: 8, asignaturaCodigo: '123', asignaturaNombre: 'Externa' },
+      { ...base, asignaturaId: 8, asignaturaCodigo: '123', asignaturaNombre: 'Externa', estadoNuevo: 'NO_MATRICULADA' },
+      { ...base, asignaturaId: 9, asignaturaCodigo: '28220', asignaturaNombre: 'Propuesta de Tesis Doctoral I', estadoNuevo: 'MATRICULADA' },
+    ]
+    const view = mount(s)
+    const actual = await view.findByRole('region', { name: 'Periodo 2026-2' })
+    const anterior = view.getByRole('region', { name: 'Periodo 2026-1' })
+    assert.deepEqual(view.getAllByRole('region', { name: /^Periodo 2026/ }), [actual, anterior])
+    const verificarFilas = (periodo, filas) => {
+      const items = ui.within(periodo).getAllByRole('listitem')
+      assert.equal(items.length, filas.length)
+      for (const [index, [materia, estado, variante]] of filas.entries()) {
+        const fila = ui.within(items[index])
+        assert.ok(fila.getByText(materia, { exact: true }))
+        assert.ok(fila.getByText(estado, { exact: true }).classList.contains(`historial-asignaturas__resultado--${variante}`))
+      }
+    }
+    verificarFilas(actual, [
+      ['Externa (123)', 'No matriculada', 'rejected'],
+      ['Interna 1 (456)', 'No matriculada', 'rejected'],
+      ['Propuesta de Tesis Doctoral I (28220)', 'Matriculada', 'approved'],
+    ])
+    verificarFilas(anterior, [['Interna 1 (456)', 'Matriculada', 'approved']])
+    assert.equal(view.queryByText('Coordinación de prueba'), null)
+    assert.equal(view.queryByText('Observación del historial'), null)
+  })
+
+  await t.test('el detalle informa si el historial está vacío o la consulta falla', async s => {
+    const vacio = mount(s)
+    await vacio.findByText('No hay historial de materias registrado.')
+    await ui.cleanup()
+    historialError = true
+    const fallido = mount(s)
+    await fallido.findByText('Historial no disponible')
+    assert.equal(fallido.queryAllByRole('region', { name: /^Periodo/ }).length, 0)
+  })
+
+  await t.test('la vista de cambios conserva los eventos individuales del historial', async s => {
+    s.after(ui.cleanup)
+    const fila = {
+      matriculaId: 24, periodoAcademico: '2026-2', asignaturaId: 7, asignaturaCodigo: null,
+      asignaturaNombre: 'Interna 1', estadoAnterior: null, estadoNuevo: 'SELECCIONADA',
+      fecha: '2026-10-17T09:00:00', responsable: 'Coordinación de prueba', detalle: null,
+    }
+    historial = [fila, { ...fila, estadoAnterior: 'SELECCIONADA', estadoNuevo: 'MATRICULADA', fecha: '2026-10-17T10:00:00' }]
+    const view = ui.render(createElement(Historial, { estudianteId: 17 }))
+    const tabla = await view.findByRole('table')
+    assert.equal(ui.within(tabla).getAllByText('Interna 1', { exact: true }).length, 2)
+    assert.ok(ui.within(tabla).getByText('Seleccionada → Matriculada'))
+  })
 
   await t.test('id inválido y matrícula inexistente muestran errores sin acciones', async s => {
     let view = mount(s, { id: 'invalido' })
@@ -73,6 +149,11 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     view = mount(s)
     await view.findByText('No se encontró la matrícula seleccionada.')
     assert.equal(view.queryAllByRole('button', { name: 'Guardar validación de asignaturas' }).length, 0)
+    const enlaces = view.getAllByRole('link', { name: 'Volver al listado' })
+    assert.equal(enlaces.length, 2)
+    for (const enlace of enlaces) assert.equal(enlace.getAttribute('href'), '/matricula/academica')
+    ui.fireEvent.click(enlaces[1])
+    await view.findByRole('heading', { name: 'Listado de matrícula académica' })
   })
 
   await t.test('fallo del servidor no presenta controles de revisión utilizables', async s => {
@@ -166,8 +247,13 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   })
 
   await t.test('validación de asignaturas exige una decisión y envía usuario e ids correctos', async s => {
+    matricula.estado = 'RADICADA'
+    documents = [document('APROBADO')]
     const view = mount(s)
     await ready(view)
+    const fila = ui.within(view.getByRole('row', { name: /Investigación/ }))
+    assert.ok(fila.getByText('Pendiente', { exact: true }).classList.contains('matricula-detalle__badge--pending'))
+    assert.ok(view.getByRole('columnheader', { name: 'Validación coordinación' }))
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
     await view.findByText('Debe seleccionar al menos una asignatura para aprobar o rechazar.')
     assert.equal(savedSubjects.length, 0)
@@ -175,10 +261,13 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     ui.fireEvent.change(view.getByPlaceholderText('Observaciones de validación'), { target: { value: '  No cumple prerrequisito  ' } })
     ui.fireEvent.click(view.getByRole('button', { name: 'Guardar validación de asignaturas' }))
     await view.findByText('La validación de asignaturas fue guardada correctamente.')
+    assert.ok(fila.getByText('No matriculada', { exact: true }).classList.contains('matricula-detalle__badge--rejected'))
     assert.deepEqual(savedSubjects, [{ usuarioRevisionId: 10, observaciones: 'Revision manual', asignaturas: [{ asignaturaId: 7, estado: 'NO_MATRICULADA', observaciones: 'No cumple prerrequisito' }] }])
   })
 
   await t.test('error al guardar asignaturas mantiene decisión para reintentar', async s => {
+    matricula.estado = 'RADICADA'
+    documents = [document('APROBADO')]
     validationError = true
     const view = mount(s)
     await ready(view)
@@ -191,13 +280,22 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     await ui.waitFor(() => assert.equal(savedSubjects.length, 1))
   })
 
-  await t.test('finalizada no ofrece aprobación documental ni guardado de asignaturas', async s => {
-    matricula = { ...matricula, estado: 'FINALIZADA' }
+  await t.test('finalizada muestra el estado y los comentarios guardados sin controles de validación', async s => {
+    matricula = { ...matricula, estado: 'FINALIZADA', asignaturas: [
+      { ...matricula.asignaturas[0], estado: 'MATRICULADA', observaciones: 'Validada por coordinación' },
+      { id: 34, asignaturaId: 8, asignaturaNombre: 'Seminario', estado: 'INCLUSION_SOLICITADA', observaciones: null },
+    ] }
     const view = mount(s)
     await ready(view)
-    assert.equal(view.queryAllByRole('button', { name: 'Aprobar' }).length, 0)
+    const aprobacionInclusion = view.getByRole('button', { name: 'Aprobar', exact: true })
+    assert.ok(ui.within(aprobacionInclusion.closest('tr')).getByText('Seminario'))
     assert.equal(view.queryAllByRole('button', { name: 'Guardar validación de asignaturas' }).length, 0)
-    assert.equal(view.getByPlaceholderText('Observaciones de validación').disabled, true)
+    assert.equal(view.queryByRole('columnheader', { name: 'Validación coordinación' }), null)
+    assert.equal(view.queryByPlaceholderText('Observaciones de validación'), null)
+    const fila = ui.within(view.getByRole('row', { name: /Investigación/ }))
+    assert.ok(fila.getByText('Matriculada', { exact: true }).classList.contains('matricula-detalle__badge--approved'))
+    assert.ok(fila.getByText('Validada por coordinación'))
+    assert.ok(view.getByText('Inclusión solicitada', { exact: true }).classList.contains('matricula-detalle__badge--review'))
   })
 
   await t.test('abrir y descargar documento usa contenido y nombre del checklist', async sub => {

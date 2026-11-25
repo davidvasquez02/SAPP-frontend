@@ -1,5 +1,17 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Historial de materias por periodo — 2026-11-25
+
+El detalle de matrícula académica agrupa el historial del estudiante por periodo, del más reciente al más antiguo. Cada asignatura aparece una vez por semestre con su código, cuando está disponible, y una etiqueta con el último estado registrado.
+
+## Estado y validación de asignaturas — 2026-11-25
+
+En **Asignaturas registradas**, el estado de cada materia se muestra como una etiqueta. La columna **Validación coordinación** contiene las acciones para aprobar o rechazar mientras la matrícula está abierta. Al finalizarla, la tabla muestra los estados y los comentarios guardados en modo de lectura.
+
+## Navegación de matrícula académica — 2026-11-25
+
+El botón **Volver al listado** del detalle de matrícula académica abre `/matricula/academica`, también cuando la matrícula no está disponible.
+
 ## Rúbricas por concepto de evaluación — 2026-11-25
 
 Cada concepto tiene su icono de descarga junto al encabezado de la tarjeta. Las etiquetas **Inicial** y **Tras las correcciones** distinguen las rondas, y las evaluaciones sin archivo muestran **Sin rúbrica adjunta**.
