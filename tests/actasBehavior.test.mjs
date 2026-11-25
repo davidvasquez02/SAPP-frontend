@@ -17,7 +17,10 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
       if (init.method === 'POST' || init.method === 'DELETE') {
         writes.push({ path, method: init.method, body: init.body ? JSON.parse(init.body) : null })
         if (failure) return Response.json({ message: 'Acta no disponible' }, { status: 409 })
-        return init.method === 'DELETE' ? new Response(null, { status: 204 }) : Response.json({ ok: true, data: { id: 99 } })
+        if (init.method === 'DELETE') return new Response(null, { status: 204 })
+        const acta = { ...writes.at(-1).body, id: 99 }
+        rows.push(acta)
+        return Response.json({ ok: true, data: acta })
       }
       if (failure === 'list') return Response.json({ ok: false, message: 'Lista no disponible' })
       if (path.endsWith('/actas')) return Response.json({ ok: true, data: rows })
@@ -62,25 +65,34 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     set(v, /Nombre del acta/, '  Acta sintética  '); set(v, /Observaciones/, '  Observación  ')
     set(v, 'Tipo de acta *', 'CONSEJO')
     const bytes = new TextEncoder().encode('%PDF-test'); const file = new ui.dom.window.File([bytes], 'acta.pdf', { type: 'application/pdf' }); file.arrayBuffer = async () => bytes.buffer
-    ui.fireEvent.change(v.container.querySelector('input[type=file]'), { target: { files: [file] } })
     ui.fireEvent.submit(v.container.querySelector('form'))
     assert.ok(v.getByText('Complete el consecutivo, la fecha, el número y el nombre del acta.'))
     assert.equal(writes.length, 0)
     set(v, /Consecutivo/, '2')
     set(v, /Fecha del acta/, '2026-07-17')
     set(v, /Número del acta/, '15')
-    const expectedName = '0002_20260717_ACTA_No. 15_Acta sintética'
-    assert.ok(v.getByText(expectedName))
+    const expectedCode = '0002_20260717_ACTA_NO. 15'
+    assert.ok(v.getByText(`${expectedCode}_Acta sintética`))
+    ui.fireEvent.submit(v.container.querySelector('form'))
+    assert.ok(v.getByText('Seleccione un archivo PDF o Word.'))
+    ui.fireEvent.change(v.container.querySelector('input[type=file]'), { target: { files: [file] } })
     click(v, 'Crear acta')
     await v.findByText(/fue creada correctamente/)
-    assert.equal(writes[0].body.codigo, 'ACTA_CONSEJO_0002-2026'); assert.equal(writes[0].body.tipoConsejo, true); assert.equal(writes[0].body.nombre, expectedName); assert.equal(writes[0].body.observaciones, 'Observación')
+    assert.equal(writes[0].body.codigo, expectedCode); assert.equal(writes[0].body.tipoConsejo, true); assert.equal(writes[0].body.nombre, 'Acta sintética'); assert.equal(writes[0].body.observaciones, 'Observación')
     assert.equal(writes[0].body.contenidoBase64, Buffer.from(bytes).toString('base64')); assert.match(writes[0].body.checksum, /^[a-f0-9]{64}$/)
+    await v.findByRole('option', { name: '2026' })
+    set(v, 'Año', '2026')
+    const row = v.getByRole('row', { name: /Acta sintética/ })
+    const cells = Array.from(row.cells, cell => cell.textContent)
+    assert.deepEqual(cells.slice(0, 4), [expectedCode, 'Consejo Académico', 'Acta sintética', '2026'])
   })
   await t.test('descarga actas nuevas con el formato generado y conserva el nombre histórico', async s => {
-    const name = '0002_20260717_ACTA_No. 15_Acta sintética'
+    const code = '0002_20260717_ACTA_NO. 15'
+    const name = 'Acta sintética'
     const previousName = '0003_20260717_ACTA_No. 15_Acta sintética - OTRA PARTE DE ACTA'
-    rows[11].nombre = name
-    rows[10].nombre = previousName
+    rows = rows.slice(-3)
+    Object.assign(rows[2], { codigo: code, nombre: name })
+    rows[1].nombre = previousName
     content = Buffer.from('%PDF-test').toString('base64')
     const downloads = []
     s.mock.method(ui.dom.window.HTMLAnchorElement.prototype, 'click', function () {
@@ -88,13 +100,12 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     })
     const v = mount(s)
     await v.findByText(name)
-    const buttons = v.getAllByRole('button', { name: 'Descargar', exact: true })
-    ui.fireEvent.click(buttons[0])
-    await ui.waitFor(() => assert.equal(buttons[0].disabled, false))
-    ui.fireEvent.click(buttons[1])
-    await ui.waitFor(() => assert.equal(buttons[1].disabled, false))
-    ui.fireEvent.click(buttons[2])
-    await ui.waitFor(() => assert.deepEqual(downloads, [`${name}.pdf`, `${previousName}.pdf`, 'original.pdf']))
+    for (const rowName of [name, previousName, 'Acta prueba 10']) {
+      const button = v.getByText(rowName).closest('tr').querySelector('button:nth-child(2)')
+      ui.fireEvent.click(button)
+      await ui.waitFor(() => assert.equal(button.disabled, false))
+    }
+    assert.deepEqual(downloads, [`${code}_${name}.pdf`, `${previousName}.pdf`, 'original.pdf'])
   })
   await t.test('eliminar requiere confirmación y Escape cancela', async s => {
     const v = mount(s); await ready(v); ui.fireEvent.click(v.getAllByRole('button', { name: 'Eliminar' })[0]); click(v, 'Cancelar'); assert.equal(writes.length, 0)

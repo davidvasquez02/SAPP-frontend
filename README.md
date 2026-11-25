@@ -1,8 +1,12 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Código y nombre de actas — 2026-11-25
+
+Al crear un acta, el formulario guarda por separado el código `0002_20261125_ACTA_NO. 12` y el nombre `CREDITOS`. La vista previa y la descarga combinan ambos como `0002_20261125_ACTA_NO. 12_CREDITOS`. El año del listado se obtiene de la fecha incluida en el código.
+
 ## Nombres de documentos de actas — 2026-11-23
 
-En **Gestión de actas**, **Datos del acta** agrupa el consecutivo, la fecha de la sesión, el número del acta y el nombre, con ayuda visible y una vista previa. Por ejemplo, el consecutivo `2` genera `0002_20260717_ACTA_No. 15_Comité de Posgrados`. El tipo de acta, el consecutivo de cuatro dígitos y el año de la sesión forman automáticamente el código interno, por ejemplo `ACTA_COMITE_0002-2026`. Al descargar, se añade la extensión PDF o Word.
+En **Gestión de actas**, **Datos del acta** agrupa el consecutivo, la fecha de la sesión, el número del acta y el nombre, con ayuda visible y una vista previa. Al descargar, se añade la extensión PDF o Word.
 
 ## Acciones de jurados evaluadores — 2026-11-23
 

@@ -37,7 +37,8 @@ const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
 type FileAction = "view" | "download";
 type TipoActa = "COMITE" | "CONSEJO";
 type TipoActaFilter = "" | TipoActa;
-const FORMATO_NOMBRE_ACTA = /^\d{4}_\d{8}_ACTA_No\. \d+_.+$/;
+const FORMATO_CODIGO_ACTA = /^\d{4}_(\d{4})\d{4}_ACTA_NO\. \d+$/i;
+const FORMATO_NOMBRE_ANTERIOR = /^\d{4}_\d{8}_ACTA_NO\. \d+_.+$/i;
 const caracteresNoPermitidosEnArchivo = /[<>:"/\\|?*]/g;
 
 const getColombiaToday = () => {
@@ -62,7 +63,8 @@ const formatSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const getActaYear = (acta: ActaDto) => acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
+const getActaYear = (acta: ActaDto) =>
+  acta.codigo.match(FORMATO_CODIGO_ACTA)?.[1] ?? acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
 
 const getActaCode = (acta: ActaDto) => acta.codigo.replace(/-\d{4}$/, "");
 
@@ -157,10 +159,10 @@ const ActasPage = () => {
   }, [actaToDelete, deletingActaId]);
 
   const consecutivoFormateado = consecutivo.padStart(4, "0");
-  const nombreSeguro = nombre.trim().replace(caracteresNoPermitidosEnArchivo, "_");
-  const nombreCompleto = `${consecutivoFormateado}_${fechaActa.replaceAll("-", "")}_ACTA_No. ${numeroActa}_${nombreSeguro}`;
-  const tieneFormatoCompleto = consecutivo !== "" && FORMATO_NOMBRE_ACTA.test(nombreCompleto);
-  const codigo = `ACTA_${tipoActa}_${consecutivoFormateado}-${fechaActa.slice(0, 4)}`;
+  const nombreActa = nombre.trim();
+  const codigo = `${consecutivoFormateado}_${fechaActa.replaceAll("-", "")}_ACTA_NO. ${numeroActa}`;
+  const nombreCompleto = `${codigo}_${nombreActa.replace(caracteresNoPermitidosEnArchivo, "_")}`;
+  const tieneFormatoCompleto = consecutivo !== "" && nombreActa !== "" && FORMATO_CODIGO_ACTA.test(codigo);
   const years = useMemo(
     () => Array.from(new Set(actas.map(getActaYear).filter(Boolean))).sort().reverse(),
     [actas],
@@ -196,8 +198,10 @@ const ActasPage = () => {
 
       const mimeType = document.mimeType || acta.mimeType || "application/pdf";
       const extension = getFileExtension(mimeType);
-      const filename = FORMATO_NOMBRE_ACTA.test(acta.nombre)
-        ? `${acta.nombre.replace(caracteresNoPermitidosEnArchivo, "_")}.${extension}`
+      const codigoNuevo = FORMATO_CODIGO_ACTA.test(acta.codigo);
+      const nombreDocumento = codigoNuevo ? `${acta.codigo}_${acta.nombre}` : acta.nombre;
+      const filename = codigoNuevo || FORMATO_NOMBRE_ANTERIOR.test(acta.nombre)
+        ? `${nombreDocumento.replace(caracteresNoPermitidosEnArchivo, "_")}.${extension}`
         : document.nombreArchivo || `${acta.codigo}.${extension}`;
       if (action === "view") {
         openBase64InNewTab(document.contenidoBase64, mimeType, filename);
@@ -261,7 +265,7 @@ const ActasPage = () => {
     setIsSaving(true);
     try {
       const payload: CrearActaRequest = {
-        nombre: nombreCompleto,
+        nombre: nombreActa,
         codigo,
         fechaCreacion: getColombiaToday(),
         observaciones: observaciones.trim(),
@@ -327,7 +331,7 @@ const ActasPage = () => {
                   <label>
                     <span>Número del acta *</span>
                     <span className="actas-form__numero">
-                      <span aria-hidden="true">ACTA_No.</span>
+                      <span aria-hidden="true">ACTA_NO.</span>
                       <input aria-describedby="actas-numero-ayuda" inputMode="numeric" value={numeroActa} onChange={(event) => setNumeroActa(event.target.value.replace(/\D/g, ""))} required />
                     </span>
                   </label>
@@ -343,7 +347,7 @@ const ActasPage = () => {
               </div>
               <p className="actas-form__vista-previa">
                 <strong>Nombre generado:</strong>{" "}
-                <code>{tieneFormatoCompleto ? nombreCompleto : "0002_20260717_ACTA_No. 15_Comité de Posgrados"}</code>
+                <code>{tieneFormatoCompleto ? nombreCompleto : "0002_20260717_ACTA_NO. 15_Comité de Posgrados"}</code>
                 {!tieneFormatoCompleto ? <small>Ejemplo</small> : null}
               </p>
             </section>

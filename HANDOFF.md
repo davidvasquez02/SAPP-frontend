@@ -1,3 +1,10 @@
+## Código y nombre de actas — 2026-11-25
+
+- `src/pages/Actas/ActasPage.tsx` envía `codigo: "0002_20261125_ACTA_NO. 12"` y `nombre: "CREDITOS"` en el mismo `POST /sapp/actas`. `tipoConsejo` sigue clasificando el acta. Las columnas muestran ambos valores por separado y el filtro de año admite tanto la fecha del código nuevo como el sufijo del código histórico.
+- La descarga de un acta nueva concatena código y nombre, adapta los caracteres al nombre de archivo y añade la extensión por MIME. Las descargas históricas conservan su comportamiento. Queda pendiente verificar con la API institucional que acepte y devuelva ambos valores. Los registros ya guardados requieren una corrección de datos independiente.
+- `tests/actasBehavior.test.mjs` valida el POST, la recarga de la fila, el filtro por año y las descargas nuevas e históricas. Reutilizar Node/npm en la raíz y las versiones de `package-lock.json`.
+- Pasaron las 12 pruebas focalizadas y `npm run build`. Las suites completas con y sin cobertura registraron 652 aprobadas y 37 fallos. La verificación independiente de cobertura incluyó 360 archivos de `src`. La cobertura de líneas de Actas subió a 93,96 %. La global fue 84,88 % sobre 10.071 líneas, frente a 85,06 % sobre 9.972 líneas en la corrida del 23 de noviembre, antes de incorporar otros cambios del repositorio. Logs en `%TEMP%/sapp-actas-split-{focused,build,test,coverage}.log`.
+
 ## Nombres de documentos de actas — 2026-11-23
 
 - El formulario agrupa los cuatro campos en **Datos del acta** con etiquetas, ejemplos y vista previa. El nombre nuevo sigue `0002_20260717_ACTA_No. 15_Comité de Posgrados`. El código interno se deriva del tipo, el consecutivo y el año de la sesión. El alcance se retiró del formulario y de los nombres nuevos. El reconocimiento en descarga también admite los nombres generados en el formato anterior con sufijo.
