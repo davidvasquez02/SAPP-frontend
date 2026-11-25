@@ -1,3 +1,8 @@
+## Icono de Minerva — 2026-11-25
+
+- `public/brand/minerva-buho.png` contiene el PNG adjunto, copiado sin modificaciones. `index.html` lo declara como favicon `image/png` y `src/components/Sidebar/Sidebar.tsx` utiliza la misma ruta `/brand/minerva-buho.png` en escritorio y móvil.
+- Con Node 24.11.0 y npm 11.6.1 pasaron las 12 pruebas de navegación y `npm run build`. Se verificó que `dist/index.html` apunta al PNG y que la copia compilada coincide con el adjunto. `npm test` registró 659 aprobadas y los mismos 33 fallos de la ejecución anterior. Logs en `%TEMP%/sapp-icono-{navegacion,build,test}.log`.
+
 ## Idioma y tratamiento de evaluadores — 2026-11-25
 
 - `src/pages/BancoEvaluadores/BancoEvaluadoresPage.tsx` y `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` muestran un solo tratamiento después del idioma y limpian el campo al cambiarlo. `src/shared/evaluadores/tratamiento.ts` define los ejemplos y valores por defecto `PROFESOR` y `PROFESSOR`.

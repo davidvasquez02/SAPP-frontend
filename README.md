@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Icono de Minerva — 2026-11-25
+
+La barra lateral y la pestaña del navegador usan el nuevo búho de Minerva de `public/brand/minerva-buho.png`.
+
 ## Idioma y tratamiento de evaluadores — 2026-11-25
 
 En **Banco de evaluadores** y **Evaluación de proyecto de grado**, el idioma se elige antes del tratamiento. El formulario muestra un solo campo opcional, con **PROFESOR** para español y **PROFESSOR** para inglés. Si se deja vacío, se guarda el valor sugerido. Al cambiar de idioma, el campo se limpia para indicar el tratamiento correspondiente.
