@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Presentación de inclusiones y cancelaciones — 2026-11-25
+
+El panel usa la tarjeta de Matrícula y muestra la fecha límite junto al título. Las secciones de inclusión y cancelación tienen un espaciado uniforme. Cada materia que se puede cancelar tiene una fila seleccionable con su casilla alineada. Las acciones se ajustan al ancho disponible en móvil.
+
 ## Plazo de inclusiones y cancelaciones — 2026-11-25
 
 En **Administración académica → Calendario académico → Períodos académicos**, al crear o editar un período se puede indicar la fecha final de inclusiones y cancelaciones. El sistema toma como inicio la fecha de cierre de la matrícula académica del mismo período y exige que el plazo termine dentro del semestre. El listado muestra la fecha final guardada.

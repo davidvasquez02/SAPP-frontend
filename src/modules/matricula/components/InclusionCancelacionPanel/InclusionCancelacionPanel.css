@@ -4,7 +4,7 @@
 
 .inclusion-cancelacion-panel__toggle {
   border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
-  border-radius: 12px;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--primary);
   font-weight: 600;
@@ -18,12 +18,37 @@
 }
 
 .inclusion-cancelacion-panel--open {
+  margin-top: 0;
+}
+
+.inclusion-cancelacion-panel__header,
+.inclusion-cancelacion-panel__section {
   display: grid;
-  gap: 1rem;
-  border: 1px solid color-mix(in srgb, var(--outline), transparent 10%);
-  border-radius: 14px;
-  padding: 1rem;
-  background: var(--surface);
+  gap: 0.75rem;
+  min-width: 0;
+  border-bottom: 1px solid var(--outline);
+  padding-bottom: 0.85rem;
+}
+
+.inclusion-cancelacion-panel--open > p,
+.inclusion-cancelacion-panel__header p,
+.inclusion-cancelacion-panel__section > h5,
+.inclusion-cancelacion-panel__section > p {
+  margin: 0;
+}
+
+.inclusion-cancelacion-panel__deadline {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.inclusion-cancelacion-panel__deadline time {
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.inclusion-cancelacion-panel__section .materias-selector {
+  width: 100%;
 }
 
 .inclusion-cancelacion-panel__error {
@@ -32,7 +57,7 @@
 
 .inclusion-cancelacion-panel__list {
   list-style: none;
-  margin: 0.6rem 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
   gap: 0.4rem;
@@ -43,6 +68,38 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
+  border-radius: 12px;
+  background: var(--surface-container-low);
+  overflow-wrap: anywhere;
+}
+
+.inclusion-cancelacion-panel__list li:has(> button) {
+  padding: 0.45rem 0.75rem;
+}
+
+.inclusion-cancelacion-panel__list li > button {
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+}
+
+.inclusion-cancelacion-panel__choice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+}
+
+.inclusion-cancelacion-panel__choice input {
+  position: static;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--primary);
 }
 
 .inclusion-cancelacion-panel__actions {
@@ -52,10 +109,22 @@
 }
 
 .inclusion-cancelacion-panel__actions button {
+  min-height: 44px;
   border-radius: 999px;
   padding: 0.6rem 1.1rem;
   font-weight: 650;
   cursor: pointer;
+}
+
+.inclusion-cancelacion-panel__actions button:not(.inclusion-cancelacion-panel__submit) {
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.inclusion-cancelacion-panel :is(button, input):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .inclusion-cancelacion-panel__actions button:disabled {
@@ -67,4 +136,14 @@
   border: 1px solid var(--primary);
   background: var(--primary);
   color: var(--on-primary);
+}
+
+@media (max-width: 480px) {
+  .inclusion-cancelacion-panel__actions {
+    flex-wrap: wrap;
+  }
+
+  .inclusion-cancelacion-panel__actions button {
+    flex: 1 1 auto;
+  }
 }

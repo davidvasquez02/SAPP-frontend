@@ -109,8 +109,13 @@ const InclusionCancelacionPanel = ({ matricula, materiasCatalogo, onSolicitudEnv
   }
 
   return (
-    <section className="inclusion-cancelacion-panel inclusion-cancelacion-panel--open" aria-labelledby="inclusion-cancelacion-titulo">
-      <h4 id="inclusion-cancelacion-titulo">Inclusión y cancelación de materias</h4>
+    <section className="matricula-page__card inclusion-cancelacion-panel inclusion-cancelacion-panel--open" aria-labelledby="inclusion-cancelacion-titulo">
+      <header className="inclusion-cancelacion-panel__header">
+        <h4 id="inclusion-cancelacion-titulo">Inclusión y cancelación de materias</h4>
+        {!checkingVentana && ventana ? (
+          <p className="inclusion-cancelacion-panel__deadline">Solicitudes hasta el <time dateTime={ventana.fechaFin}>{ventana.fechaFin.split('-').reverse().join('/')}</time>.</p>
+        ) : null}
+      </header>
       {checkingVentana ? <p role="status">Verificando la ventana de inclusión y cancelación…</p> : null}
       {error ? <p role="alert" className="inclusion-cancelacion-panel__error">{error}</p> : null}
       {!checkingVentana && !error && !ventana ? (
@@ -118,8 +123,7 @@ const InclusionCancelacionPanel = ({ matricula, materiasCatalogo, onSolicitudEnv
       ) : null}
       {!checkingVentana && ventana ? (
         <>
-          <p>Solicitudes hasta el <time dateTime={ventana.fechaFin}>{ventana.fechaFin.split('-').reverse().join('/')}</time>.</p>
-          <div>
+          <div className="inclusion-cancelacion-panel__section">
             <h5>Incluir materias nuevas</h5>
             <MateriasSelector materias={materiasCatalogo} selected={incluir} onAdd={(materia) => setIncluir((current) => current.some((item) => item.id === materia.id) ? current : [...current, { ...materia, addedAt: new Date().toISOString() }])} disabled={enviando} />
             <MateriaExternaForm disabled={enviando} onAdd={handleAddExterna} />
@@ -134,7 +138,7 @@ const InclusionCancelacionPanel = ({ matricula, materiasCatalogo, onSolicitudEnv
               </ul>
             ) : null}
           </div>
-          <div>
+          <div className="inclusion-cancelacion-panel__section">
             <h5>Cancelar materias matriculadas</h5>
             {materiasMatriculadas.length === 0 ? (
               <p>No tienes materias matriculadas para cancelar.</p>
@@ -142,9 +146,9 @@ const InclusionCancelacionPanel = ({ matricula, materiasCatalogo, onSolicitudEnv
               <ul className="inclusion-cancelacion-panel__list">
                 {materiasMatriculadas.map((asignatura) => (
                   <li key={asignatura.asignaturaId}>
-                    <label>
+                    <label className="inclusion-cancelacion-panel__choice">
                       <input type="checkbox" disabled={enviando} checked={cancelarIds.has(asignatura.asignaturaId)} onChange={() => toggleCancelar(asignatura.asignaturaId)} />
-                      {asignatura.asignaturaNombre}
+                      <span>{asignatura.asignaturaNombre}</span>
                     </label>
                   </li>
                 ))}

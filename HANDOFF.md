@@ -1,3 +1,9 @@
+## Presentación de inclusiones y cancelaciones — 2026-11-25
+
+- `src/modules/matricula/components/InclusionCancelacionPanel/` reutiliza la tarjeta de Matrícula, agrupa el plazo con el título y aplica los tokens globales a las filas y a los botones. La etiqueta completa permite seleccionar la materia.
+- Pasaron `npm run build` y `tests/integration/inclusionCancelacionLayout.test.mjs` en Edge con API simulada. La prueba cubre alineación de casilla y texto, ancho del panel, altura y posición de acciones y selección desde el nombre de la materia a 1440 px en tema claro y 375 px en tema oscuro. Reutilizar Node 24.11.0, npm 11.6.1 y el Playwright instalado mediante `SAPP_PLAYWRIGHT_MODULE`.
+- `npm test` y `npm run test:coverage` registraron 666 de 701 pruebas aprobadas, con los 35 fallos previos. Se verificó la cobertura de los 361 archivos de `src`, con 85,54 % global y 96,61 % en el panel. Logs en `%TEMP%/sapp-panel-visual-*.log`.
+
 ## Plazo de inclusiones y cancelaciones — 2026-11-25
 
 - En `src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx`, el calendario agrega un único campo de fecha. El listado de `src/pages/FechasModule/FechasModulePage.tsx` muestra el fin guardado. El campo es opcional si el período aún carece de un plazo. Una vez configurado puede actualizarse en el mismo formulario.
