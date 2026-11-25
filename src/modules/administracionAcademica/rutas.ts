@@ -12,7 +12,7 @@ export const SECCIONES_ADMINISTRACION = [
   { to: RUTA_PROFESORES, label: 'Profesores', icon: '/coordinacion/profesores' },
   { to: RUTA_GRUPOS, label: 'Grupos de investigación', icon: '/coordinacion/grupos-investigacion' },
   { to: RUTA_PLANTILLAS, label: 'Plantillas de correo', icon: '/coordinacion/plantillas-correo' },
-  { to: RUTA_RUBRICA, label: 'Rúbrica de evaluación', icon: '/coordinacion/rubrica-evaluacion' },
+  { to: RUTA_RUBRICA, label: 'Rúbricas de evaluación', icon: '/coordinacion/rubrica-evaluacion' },
   { to: RUTA_BANCO_EVALUADORES, label: 'Banco de evaluadores', icon: '/coordinacion/banco-evaluadores' },
   { to: RUTA_ROLES, label: 'Gestión de roles', icon: '/coordinacion/roles' },
 ] as const

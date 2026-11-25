@@ -43,6 +43,32 @@
   background: color-mix(in srgb, var(--success), transparent 94%);
 }
 
+.rubrica-evaluacion__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+
+.rubrica-evaluacion__card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rubrica-evaluacion__card-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.rubrica-evaluacion__card .rubrica-evaluacion__empty {
+  padding: 0;
+}
+
+.rubrica-evaluacion__card .rubrica-evaluacion__actions {
+  margin-top: auto;
+}
+
 .rubrica-evaluacion__details {
   display: flex;
   flex-wrap: wrap;
