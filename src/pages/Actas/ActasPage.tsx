@@ -63,8 +63,9 @@ const ActaActionButton = ({ action, label, hint = label, disabled, onClick }: Ac
 );
 type TipoActa = "COMITE" | "CONSEJO";
 type TipoActaFilter = "" | TipoActa;
-const FORMATO_CODIGO_ACTA = /^\d{4}_(\d{4})\d{4}_ACTA_NO\. \d+$/i;
-const FORMATO_NOMBRE_ANTERIOR = /^\d{4}_\d{8}_ACTA_NO\. \d+_.+$/i;
+const FORMATO_CODIGO_ACTA = /^(\d{4})_(\d{4})\d{4}_ACTA_NO\. (\d+)$/i;
+const FORMATO_NOMBRE_ANTERIOR = /^(\d{4})_\d{8}_ACTA_NO\. (\d+)_.+$/i;
+const FORMATO_CODIGO_ANTERIOR = /^(?:ACTA_(?:COMITE|CONSEJO)_|ACT-)(\d+)-\d{4}$/i;
 const caracteresNoPermitidosEnArchivo = /[<>:"/\\|?*]/g;
 
 const getColombiaToday = () => {
@@ -90,7 +91,7 @@ const formatSize = (bytes: number) => {
 };
 
 const getActaYear = (acta: ActaDto) =>
-  acta.codigo.match(FORMATO_CODIGO_ACTA)?.[1] ?? acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
+  acta.codigo.match(FORMATO_CODIGO_ACTA)?.[2] ?? acta.codigo.match(/-(\d{4})$/)?.[1] ?? "";
 
 const getActaCode = (acta: ActaDto) => acta.codigo.replace(/-\d{4}$/, "");
 
@@ -98,7 +99,23 @@ const getActaCode = (acta: ActaDto) => acta.codigo.replace(/-\d{4}$/, "");
 // aquí evita que la etiqueta de la tabla y el filtro interpreten tipos distintos.
 const isActaConsejo = (acta: ActaDto) => acta.tipoConsejo === true;
 
+const getActaOrder = (acta: ActaDto) => {
+  const codigo = acta.codigo.match(FORMATO_CODIGO_ACTA);
+  if (codigo) return { numero: codigo[3], consecutivo: Number(codigo[1]) };
+
+  const nombre = acta.nombre.match(FORMATO_NOMBRE_ANTERIOR);
+  if (nombre) return { numero: nombre[2], consecutivo: Number(nombre[1]) };
+
+  return { numero: acta.codigo.match(FORMATO_CODIGO_ANTERIOR)?.[1] ?? "", consecutivo: Infinity };
+};
+
 const compareActas = (a: ActaDto, b: ActaDto) => {
+  const ordenA = getActaOrder(a);
+  const ordenB = getActaOrder(b);
+  const byNumero = ordenB.numero.localeCompare(ordenA.numero, "es", { numeric: true });
+  if (byNumero !== 0) return byNumero;
+  if (ordenA.consecutivo !== ordenB.consecutivo) return ordenA.consecutivo - ordenB.consecutivo;
+
   const byCode = getActaCode(b).localeCompare(getActaCode(a), "es", {
     numeric: true,
     sensitivity: "base",

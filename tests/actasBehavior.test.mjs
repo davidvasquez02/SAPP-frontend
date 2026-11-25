@@ -50,6 +50,23 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     set(v, 'Tipo de acta', 'CONSEJO'); assert.equal(v.container.querySelectorAll('tbody tr').length, 2)
     set(v, 'Buscar por nombre o código', 'inexistente'); assert.ok(v.getByText('No hay actas que coincidan con los filtros.'))
   })
+  await t.test('ordena por número de acta descendente y consecutivo ascendente', async s => {
+    const expected = [
+      '0001_20261125_ACTA_NO. 15',
+      '0001_20261125_ACTA_NO. 14',
+      '0002_20261125_ACTA_NO. 14',
+      'ACTA_COMITE_99-2026',
+      'ACTA_CONSEJO_14-2026',
+      'ACT-9-2026',
+      'ACTA_COMITE_A1-2026',
+    ]
+    const actas = expected.map((codigo, i) => ({ ...rows[i], codigo }))
+    actas[3].nombre = '0003_20261125_ACTA_No. 14_Acta histórica'
+    rows = [actas[3], actas[2], actas[6], actas[5], actas[0], actas[4], actas[1]]
+    const v = mount(s)
+    await v.findByText(expected[0])
+    assert.deepEqual(Array.from(v.container.querySelectorAll('tbody tr'), row => row.cells[0].textContent), expected)
+  })
   await t.test('fallo de consulta muestra error', async s => {
     failure = 'list'; const v = mount(s); await v.findByText('Lista no disponible'); assert.equal(v.container.querySelectorAll('tbody tr').length, 0)
   })

@@ -1,3 +1,9 @@
+## Orden del listado de actas
+
+- `src/pages/Actas/ActasPage.tsx` ordena por número de acta descendente y por consecutivo ascendente. Lee ambos valores del código actual o del nombre completo histórico. Para los códigos históricos numéricos usa el número disponible y ubica esos registros después de los que tienen consecutivo dentro del mismo número. Los códigos sin número reconocible quedan al final y conservan su orden anterior.
+- `tests/actasBehavior.test.mjs` verifica el orden con formatos actuales e históricos. Reutilizar Node y npm en la raíz con las versiones de `package-lock.json`.
+- Pasaron 16 pruebas focalizadas y la compilación. `npm test` y `npm run test:coverage` registraron 655 aprobadas y los mismos 36 fallos observados previamente. La verificación de cobertura incluyó las 360 fuentes, con 84,87 % global y 91,47 % en la pantalla de Actas. El caso nuevo cubre ambos criterios de orden y deja sin ejecutar el desempate final entre códigos equivalentes. Logs en `%TEMP%/sapp-actas-orden-{focused,build,test,coverage}.log`.
+
 ## Acciones del listado de actas — 2026-11-25
 
 - `src/pages/Actas/ActasPage.tsx` usa botones con iconos y nombres accesibles en las cuatro acciones por fila. `src/pages/Actas/ActasPage.css` presenta las etiquetas con hover y foco, distingue la acción de eliminar con el token de peligro y conserva áreas táctiles de 44 px en móvil. Los contratos HTTP y los diálogos de reemplazo y eliminación se conservan.

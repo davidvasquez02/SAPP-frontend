@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Orden del listado de actas
+
+El listado ordena por número de acta de mayor a menor y, para cada número, por consecutivo de menor a mayor. El orden se aplica antes de paginar.
+
 ## Acciones del listado de actas — 2026-11-25
 
 La columna **Acciones** usa iconos para **Ver**, **Descargar**, **Reemplazar documento** y **Eliminar**. Las etiquetas aparecen al pasar el cursor o al enfocar el botón con el teclado. En pantallas pequeñas, los botones tienen un área táctil de 44 × 44 px.
