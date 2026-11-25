@@ -1,3 +1,9 @@
+## Historial en la matrícula del estudiante — 2026-11-25
+
+- `src/pages/Matricula/MatriculaPage.tsx` presenta al final de la rama estudiantil el resumen por periodo de `HistorialAsignaturasEstudiante`. Usa el ID del estudiante autenticado y consulta `/sapp/matriculaAcademica/estudiante/{estudianteId}/historialAsignaturas` con independencia de la convocatoria vigente. La sección actualiza su consulta tras crear una matrícula o enviar una solicitud de inclusión o cancelación.
+- `tests/matriculaPageBehavior.test.mjs` verifica la consulta y la posición del historial con la convocatoria cerrada, la recarga tras crear la matrícula y la ausencia de la sección y de su consulta en el listado de gestión. Logs en `%TEMP%/sapp-historial-estudiante-*.log`.
+- Pasó `npm run build`. Las pruebas focalizadas registraron 33 aprobadas y dos fallos previos, incluido el test padre de un caso de selección de materias cuya confirmación requiere adjuntar documentos. `npm test` y `npm run test:coverage` registraron 661 aprobadas y los mismos 35 fallos anteriores. Se verificaron 361 archivos. Cobertura de líneas de 85,04 % global, 86,19 % en la página y 100 % en el historial. La cobertura global pasó de 8.648/10.168 a 8.650/10.171 líneas. Las pruebas ejecutan la recarga tras crear matrícula y todavía no ejercitan la recarga desde el callback de inclusión o cancelación.
+
 ## Historial de materias por periodo — 2026-11-25
 
 - El detalle de matrícula usa `vista="resumen-por-periodo"` de `src/modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante.tsx`. El perfil y el expediente del estudiante usan la vista de cambios individuales.

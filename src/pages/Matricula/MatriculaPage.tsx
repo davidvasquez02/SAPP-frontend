@@ -6,6 +6,7 @@ import { ModuleLayout } from "../../components";
 import { canManagePosgrados, hasAnyRole } from "../../auth/roleGuards";
 import { useAuth } from "../../context/Auth";
 import type { AuthUser } from "../../context/Auth/types";
+import HistorialAsignaturasEstudiante from "../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante";
 import DocumentosRequeridosTable from "../../modules/matricula/components/DocumentosRequeridosTable/DocumentosRequeridosTable";
 import MatriculaClosedState from "../../modules/matricula/components/MatriculaClosedState/MatriculaClosedState";
 import MateriasSelectedTable from "../../modules/matricula/components/MateriasSelectedTable/MateriasSelectedTable";
@@ -150,6 +151,7 @@ const MatriculaPage = () => {
 
   const [loadingConvocatoria, setLoadingConvocatoria] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
+  const [revisionHistorial, setRevisionHistorial] = useState(0);
   const [convocatoria, setConvocatoria] =
     useState<MatriculaConvocatoria | null>(null);
   const [materiasCatalogo, setMateriasCatalogo] = useState<MateriaDto[]>([]);
@@ -576,6 +578,7 @@ const MatriculaPage = () => {
 
   const handleInclusionCancelacionEnviada = async () => {
     if (!estudianteId) return;
+    setRevisionHistorial((revision) => revision + 1);
     try {
       const validation = await getMatriculaVigenteValidationByEstudiante(estudianteId);
       applyMatriculaValidation(validation, materiasCatalogo);
@@ -625,6 +628,7 @@ const MatriculaPage = () => {
               : { asignaturaId: materia.id, grupo: materia.grupo ?? undefined },
           ),
         });
+        setRevisionHistorial((revision) => revision + 1);
       }
 
       const matriculaValidation =
@@ -1436,6 +1440,18 @@ const MatriculaPage = () => {
             ) : null}
           </>
         ) : null}
+        <section className="matricula-page__card" aria-labelledby="matricula-historial-title">
+          <h4 id="matricula-historial-title">Historial de materias</h4>
+          {estudianteId ? (
+            <HistorialAsignaturasEstudiante
+              key={`${estudianteId}-${revisionHistorial}`}
+              estudianteId={estudianteId}
+              vista="resumen-por-periodo"
+            />
+          ) : (
+            <p className="historial-asignaturas__status">No fue posible identificar el estudiante autenticado.</p>
+          )}
+        </section>
       </div>
     </ModuleLayout>
   );

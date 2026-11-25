@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Historial en la matrícula del estudiante — 2026-11-25
+
+La vista de matrícula académica del estudiante muestra al final el historial de materias por periodo, incluso cuando la convocatoria está cerrada o no hay una matrícula vigente.
+
 ## Historial de materias por periodo — 2026-11-25
 
 El detalle de matrícula académica agrupa el historial del estudiante por periodo, del más reciente al más antiguo. Cada asignatura aparece una vez por semestre con su código, cuando está disponible, y una etiqueta con el último estado registrado.

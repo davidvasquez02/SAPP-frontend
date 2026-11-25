@@ -17,15 +17,21 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     } : null,
   })
   let validation, documents, listado, listError, docsError, uploadError, uploadUnconfirmed, validationError, activePeriod, notificationError, notificationSent, createCount, uploadCount, completedCount, openingCount
+  let historial, consultasHistorial
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     validation = { puedeCrear: true, periodoId: 7 }; documents = [document()]; listado = []
     listError = false; docsError = false; uploadError = false; notificationError = false; notificationSent = false
     validationError = false; uploadUnconfirmed = false; activePeriod = true
     createCount = 0; uploadCount = 0; completedCount = 0; openingCount = 0
+    historial = []; consultasHistorial = 0
     ui.response((url, init) => {
       const parsed = new URL(url, 'https://example.test')
       const path = parsed.pathname
+      if (path.endsWith('/matriculaAcademica/estudiante/18/historialAsignaturas')) {
+        consultasHistorial++
+        return ok(historial)
+      }
       if (path.endsWith('/matriculaAcademica/vigente/estudiante/18')) return validationError ? Response.json({ message: 'Validación temporalmente no disponible' }, { status: 503 }) : ok(validation)
       if (path.endsWith('/asignaturas')) {
         assert.equal(parsed.searchParams.get('programaId'), '1')
@@ -68,6 +74,8 @@ test('página de matrícula React: roles, creación, documentos y listado admini
           createCount++
           assert.deepEqual(JSON.parse(init.body), { estudianteId: 18, periodoId: 7, asignaturas: [{ asignaturaId: 1 }] })
           validation = matricula
+          historial = [{ matriculaId: 24, periodoAcademico: '2026-2', asignaturaId: 1, asignaturaCodigo: 'UIS-1',
+            asignaturaNombre: 'Investigación', estadoAnterior: null, estadoNuevo: 'SELECCIONADA', fecha: '2026-10-17T10:00:00' }]
           return ok({ id: 24 })
         }
         return listError ? Response.json({ message: 'Listado no disponible' }, { status: 503 }) : ok(listado)
@@ -102,9 +110,17 @@ test('página de matrícula React: roles, creación, documentos y listado admini
   })
 
   await t.test('sin periodo activo oculta la creación y comunica el motivo', async s => {
+    activePeriod = false
     validation = { puedeCrear: false, periodoId: 7 }
+    historial = [{ matriculaId: 12, periodoAcademico: '2026-1', asignaturaId: 2, asignaturaCodigo: 'UIS-2',
+      asignaturaNombre: 'Seminario', estadoAnterior: null, estadoNuevo: 'MATRICULADA', fecha: '2026-05-10T10:00:00' }]
     const view = mount(s)
     await view.findByRole('heading', { name: 'No hay fechas de matrícula habilitadas actualmente.' })
+    const seccion = view.getByRole('region', { name: 'Historial de materias' })
+    const periodo = await ui.within(seccion).findByRole('region', { name: 'Periodo 2026-1' })
+    assert.ok(ui.within(periodo).getByText('Seminario (UIS-2)'))
+    assert.ok(ui.within(periodo).getByText('Matriculada'))
+    assert.equal(seccion.parentElement.lastElementChild, seccion)
     assert.equal(view.queryAllByRole('button', { name: 'Confirmar matrícula' }).length, 0)
     assert.equal(createCount, 0)
   })
@@ -124,6 +140,8 @@ test('página de matrícula React: roles, creación, documentos y listado admini
 
   await t.test('crear, subir PDF y notificar documentos completos usa los ids correctos', async s => {
     const view = mount(s)
+    const seccion = view.getByRole('region', { name: 'Historial de materias' })
+    await ui.within(seccion).findByText('No hay historial de materias registrado.')
     await add(view)
     selectPdf(view)
     ui.fireEvent.click(view.getByRole('button', { name: 'Confirmar matrícula' }))
@@ -133,6 +151,9 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     assert.equal(uploadCount, 1)
     assert.ok(view.getByText('Resumen de la matrícula'))
     assert.ok(view.getByText('certificado.pdf'))
+    const periodo = await ui.within(seccion).findByRole('region', { name: 'Periodo 2026-2' })
+    assert.ok(ui.within(periodo).getByText('Investigación (UIS-1)'))
+    assert.equal(consultasHistorial, 2)
   })
 
   await t.test('error de carga no notifica ni duplica la matrícula al reintentar', async s => {
@@ -241,6 +262,8 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     }))
     const view = mount(s, ['SECRETARIA'])
     await view.findByText('Registros encontrados: 12')
+    assert.equal(view.queryByRole('region', { name: 'Historial de materias' }), null)
+    assert.equal(consultasHistorial, 0)
     assert.ok(view.getByText('Página 1 de 2'))
     ui.fireEvent.click(view.getByRole('button', { name: 'Siguiente' }))
     assert.ok(view.getByText('Página 2 de 2'))
