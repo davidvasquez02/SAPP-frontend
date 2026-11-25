@@ -39,6 +39,12 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
   const set = (v, label, value) => ui.fireEvent.change(v.getByLabelText(label), { target: { value } })
   await t.test('pagina y combina búsqueda con tipo', async s => {
     const v = mount(s); await ready(v); assert.equal(v.container.querySelectorAll('tbody tr').length, 10)
+    const actions = ui.within(v.getByText('Acta prueba 12').closest('tr'))
+    for (const name of ['Ver', 'Descargar', 'Reemplazar documento', 'Eliminar']) {
+      const button = actions.getByRole('button', { name, exact: true })
+      assert.ok(button.querySelector('svg[aria-hidden="true"]'))
+      assert.equal(button.nextElementSibling.textContent, name)
+    }
     click(v, 'Siguiente'); await v.findByText('Página 2 de 2'); click(v, 'Anterior')
     set(v, 'Buscar por nombre o código', 'prueba 1'); assert.equal(v.container.querySelectorAll('tbody tr').length, 4)
     set(v, 'Tipo de acta', 'CONSEJO'); assert.equal(v.container.querySelectorAll('tbody tr').length, 2)
@@ -107,7 +113,7 @@ test('actas: consulta, filtros, carga PDF y eliminación confirmada', async t =>
     const v = mount(s)
     await v.findByText(name)
     for (const rowName of [name, previousName, 'Acta prueba 10']) {
-      const button = v.getByText(rowName).closest('tr').querySelector('button:nth-child(2)')
+      const button = ui.within(v.getByText(rowName).closest('tr')).getByRole('button', { name: 'Descargar', exact: true })
       ui.fireEvent.click(button)
       await ui.waitFor(() => assert.equal(button.disabled, false))
     }

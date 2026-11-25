@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Acciones del listado de actas — 2026-11-25
+
+La columna **Acciones** usa iconos para **Ver**, **Descargar**, **Reemplazar documento** y **Eliminar**. Las etiquetas aparecen al pasar el cursor o al enfocar el botón con el teclado. En pantallas pequeñas, los botones tienen un área táctil de 44 × 44 px.
+
 ## Reemplazo de documentos de actas — 2026-11-25
 
 En **Gestión de actas**, **Reemplazar documento** abre un diálogo con el nombre y el código del registro. Permite elegir un PDF o Word de hasta 15 MB y confirmar el cambio. El nuevo archivo se guarda en la misma acta, con sus vínculos, código y nombre.

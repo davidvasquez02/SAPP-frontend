@@ -1,3 +1,9 @@
+## Acciones del listado de actas — 2026-11-25
+
+- `src/pages/Actas/ActasPage.tsx` usa botones con iconos y nombres accesibles en las cuatro acciones por fila. `src/pages/Actas/ActasPage.css` presenta las etiquetas con hover y foco, distingue la acción de eliminar con el token de peligro y conserva áreas táctiles de 44 px en móvil. Los contratos HTTP y los diálogos de reemplazo y eliminación se conservan.
+- `tests/actasBehavior.test.mjs` verifica los cuatro iconos, sus nombres accesibles y la descarga por fila. Pasaron 15 pruebas focalizadas y la compilación. Playwright en Edge comprobó hover, foco y disposición a 1400 y 375 px en una página de prueba con los estilos de Actas.
+- `npm test` registró 654 aprobadas y 36 fallos. `npm run test:coverage` registró 652 aprobadas y 38 fallos, incluidos el caso adicional de generación de PDF de Crédito condonable y su suite contenedora. La verificación independiente incluyó 360 fuentes, con 84,87 % de cobertura de líneas global y 91,86 % en `ActasPage.tsx`. Registros en `%TEMP%/sapp-actas-iconos-{focused,build,test,coverage}.log`.
+
 ## Reemplazo de documentos de actas — 2026-11-25
 
 - `src/pages/Actas/ActasPage.tsx` ofrece **Reemplazar documento** por fila. Reutiliza el selector, la validación de formato/tamaño y la preparación del archivo usados al crear actas. El diálogo mantiene la selección y el mensaje si la petición falla.

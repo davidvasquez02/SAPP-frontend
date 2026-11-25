@@ -394,19 +394,72 @@
 
 .actas-table__actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
-.actas-table__actions .actas-table__delete {
-  border-color: var(--danger);
-  color: var(--danger);
+.actas-table__action {
+  position: relative;
 }
 
-.actas-table__actions .actas-table__delete:hover:not(:disabled),
-.actas-table__actions .actas-table__delete:focus-visible {
-  background: color-mix(in srgb, var(--danger), transparent 90%);
+.actas-table__action-button {
+  --action-color: var(--primary);
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--action-color);
+  background: transparent;
+  cursor: pointer;
+}
+
+.actas-table__action-button[data-action="delete"] {
+  --action-color: var(--danger);
+}
+
+.actas-table__action-button:hover:enabled,
+.actas-table__action-button:focus-visible {
+  background: color-mix(in srgb, var(--action-color), transparent 88%);
+}
+
+.actas-table__action-button:focus-visible {
+  outline: 2px solid var(--action-color);
+  outline-offset: 1px;
+}
+
+.actas-table__action-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.actas-table__action-hint {
+  position: absolute;
+  z-index: 2;
+  inset-block-end: 100%;
+  inset-inline-start: 0;
+  visibility: hidden;
+  width: max-content;
+  max-width: 12rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  background: var(--inverse-surface, var(--text-primary));
+  color: var(--inverse-on-surface, var(--surface));
+  font-size: 0.8rem;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.actas-table__action:nth-child(n + 3) .actas-table__action-hint {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.actas-table__action:hover .actas-table__action-hint,
+.actas-table__action-button:focus-visible + .actas-table__action-hint {
+  visibility: visible;
 }
 
 .actas-pagination {
@@ -593,15 +646,13 @@
   }
 
   .actas-table__actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
-  .actas-table__actions button {
-    width: 100%;
-    min-width: 0;
-    min-height: 44px;
+  .actas-table__action-button {
+    inline-size: 44px;
+    block-size: 44px;
   }
 
   .actas-pagination {
@@ -652,10 +703,6 @@
       "document"
       "actions";
     padding: 0.85rem;
-  }
-
-  .actas-table__actions {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .actas-pagination {

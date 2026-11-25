@@ -36,6 +36,31 @@ const TIPOS_ARCHIVO_ACTA_PERMITIDOS = [
 const ARCHIVOS_ACTA_ACCEPT = "application/pdf,.pdf,.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword";
 
 type FileAction = "view" | "download";
+const actionIconPaths = {
+  view: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z",
+  download: "M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4",
+  replace: "M20 7H4m4-4L4 7l4 4m-4 6h16m-4-4 4 4-4 4",
+  delete: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5m4-5v5",
+};
+
+interface ActaActionButtonProps {
+  action: keyof typeof actionIconPaths;
+  label: string;
+  hint?: string;
+  disabled: boolean;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+}
+
+const ActaActionButton = ({ action, label, hint = label, disabled, onClick }: ActaActionButtonProps) => (
+  <span className="actas-table__action">
+    <button type="button" className="actas-table__action-button" data-action={action} aria-label={label} disabled={disabled} onClick={onClick}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d={actionIconPaths[action]} />
+      </svg>
+    </button>
+    <span className="actas-table__action-hint" aria-hidden="true">{hint}</span>
+  </span>
+);
 type TipoActa = "COMITE" | "CONSEJO";
 type TipoActaFilter = "" | TipoActa;
 const FORMATO_CODIGO_ACTA = /^\d{4}_(\d{4})\d{4}_ACTA_NO\. \d+$/i;
@@ -429,15 +454,15 @@ const ActasPage = () => {
               <td className="actas-table__document" data-label="Tipo y tamaño del archivo"><span className="actas-table__file">{getFileTypeLabel(acta.mimeType)} · {formatSize(acta.tamanoBytes)}</span></td>
               <td className="actas-table__action-cell" data-label="Acciones">
                 <div className="actas-table__actions">
-                  <button type="button" className="sapp-document-action" disabled={actionsDisabled || !canPreviewSolicitudDocument(acta.mimeType)} title={canPreviewSolicitudDocument(acta.mimeType) ? undefined : "Vista previa no disponible para este tipo de archivo"} onClick={() => void handleFileAction(acta, "view")}>{isViewing ? "Abriendo..." : "Ver"}</button>
-                  <button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")}>{isDownloading ? "Descargando..." : "Descargar"}</button>
-                  <button type="button" className="sapp-document-action" disabled={actionsDisabled} onClick={(event) => {
+                  <ActaActionButton action="view" label={isViewing ? "Abriendo..." : "Ver"} hint={canPreviewSolicitudDocument(acta.mimeType) ? undefined : "Vista previa no disponible"} disabled={actionsDisabled || !canPreviewSolicitudDocument(acta.mimeType)} onClick={() => void handleFileAction(acta, "view")} />
+                  <ActaActionButton action="download" label={isDownloading ? "Descargando..." : "Descargar"} disabled={actionsDisabled} onClick={() => void handleFileAction(acta, "download")} />
+                  <ActaActionButton action="replace" label="Reemplazar documento" disabled={actionsDisabled} onClick={(event) => {
                     replacementTrigger.current = event.currentTarget;
                     setReplacementFile(null);
                     setReplacementError(null);
                     setActaToReplace(acta);
-                  }}>Reemplazar documento</button>
-                  <button type="button" className="actas-table__delete" disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }}>{isDeleting ? "Eliminando..." : "Eliminar"}</button>
+                  }} />
+                  <ActaActionButton action="delete" label={isDeleting ? "Eliminando..." : "Eliminar"} disabled={actionsDisabled} onClick={() => { setDeleteError(null); setActaToDelete(acta); }} />
                 </div>
               </td>
             </tr>;
