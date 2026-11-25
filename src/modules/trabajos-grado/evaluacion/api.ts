@@ -61,12 +61,6 @@ export const retirarJurado = async (solicitudId: number, juradoId: number) =>
     'No fue posible retirar el jurado.',
   )
 
-export const enviarRecordatorios = async (solicitudId: number): Promise<number> =>
-  unwrap(
-    await httpPost<ApiResponse<number>>(`${BASE}/solicitud/${solicitudId}/recordatorios`),
-    'No fue posible enviar los recordatorios.',
-  )
-
 interface ResultadoRecordatoriosCandidatura {
   correosEnviados: number
 }

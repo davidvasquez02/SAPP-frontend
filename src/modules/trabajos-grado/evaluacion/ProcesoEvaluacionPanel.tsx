@@ -10,7 +10,6 @@ import {
   descargarRubricaDiligenciada,
   designarJurados,
   enviarAAjustes,
-  enviarRecordatorios,
   getCatalogosEvaluacion,
   getProcesoEvaluacion,
   programarSustentacion,
@@ -406,7 +405,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
   if (loading) return <section className="evaluacion-tg evaluacion-tg--status"><p>Cargando proceso de evaluación…</p></section>
   if (!proceso) return <section className="evaluacion-tg evaluacion-tg--status"><p role="alert">{error}</p><button type="button" onClick={() => void load()}>Reintentar</button></section>
 
-  const canSendReminders = ['EN_EVALUACION', 'JUR_INVITADO', 'AJUSTES_RECIB'].includes(estado)
   const canSendToAdjustments = ESTADOS_CON_AJUSTES.has(estado)
   const canScheduleDefense = puedeAgendarSustentacion(estado)
   const esperandoNuevosConceptos = estado === 'AJUSTES_RECIB'
@@ -417,7 +415,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
   const notaFinalPresentada = presentarNotaFinalCandidatura(proceso.notaFinal, proceso.tipoSolicitudCodigo)
   const notaFinalNumero = notaFinal.trim() === '' ? Number.NaN : Number(notaFinal)
   const notaFinalValida = Number.isFinite(notaFinalNumero) && notaFinalNumero >= 0 && notaFinalNumero <= 5
-  const hasProcessActions = canSendReminders || canSendToAdjustments || canRegisterResult
+  const hasProcessActions = canSendToAdjustments || canRegisterResult
   const hasJurorActions = canManageJurors && activeJurors.some((item) => item.activo)
   const sustentacion = obtenerDetalleSustentacion(proceso)
 
@@ -474,14 +472,6 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
       )}
 
       {hasProcessActions && <div className="evaluacion-tg__actions" aria-label="Acciones del proceso">
-        {canSendReminders && <button type="button" onClick={() => {
-          setBusy(true); setError(null); setMessage(null)
-          enviarRecordatorios(solicitudId).then(async (count) => {
-            const [nextProceso] = await Promise.all([getProcesoEvaluacion(solicitudId), onUpdated()])
-            setProceso(nextProceso)
-            setMessage(`Se enviaron ${count} recordatorio(s).`)
-          }).catch((e: unknown) => setError(getErrorMessage(e, 'No fue posible enviar recordatorios.'))).finally(() => setBusy(false))
-        }} disabled={busy} title="Solo se envían a jurados que aceptaron y aún no evaluaron.">Enviar recordatorios</button>}
         {canSendToAdjustments && <button type="button" onClick={() => void runMutation(() => enviarAAjustes(solicitudId), 'El trabajo fue enviado a correcciones.')} disabled={busy}>Enviar a correcciones</button>}
         {canRegisterResult && <button type="button" onClick={() => {
           const promedio = promedioNotasSustentacion(activeJurors)

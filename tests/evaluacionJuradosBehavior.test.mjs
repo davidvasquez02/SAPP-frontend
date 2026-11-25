@@ -27,7 +27,6 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
       else if (path.endsWith('/jurados/1') && init.method === 'PUT') proceso = { ...proceso, jurados: [{ ...jurado, activo: false }, { ...body, id: 2, activo: true, estadoInvitacion: 'PENDIENTE', evaluaciones: [] }] }
       else if (path.endsWith('/jurados/1') && init.method === 'DELETE') proceso = { ...proceso, jurados: [{ ...jurado, activo: false }] }
       else if (path.endsWith('/reenviar-invitacion')) { /* Conserva proceso tras reenviar. */ }
-      else if (path.endsWith('/recordatorios')) return ok(2)
       else if (path.endsWith('/ajustes')) proceso = { ...proceso, estadoSolicitud: 'EN_AJUSTES' }
       else if (path.endsWith('/sustentacion')) proceso = { ...proceso, estadoSolicitud: 'SUST_PROGRAMADA', ...body }
       else throw new Error(`Petición inesperada: ${path}`)
@@ -203,13 +202,15 @@ test('evaluación React: jurados, estados, directorio y sustentación', async t 
     assert.equal(updated, 1)
   })
 
-  await t.test('recordatorios muestran cantidad y refrescan proceso', async s => {
-    proceso = { ...proceso, estadoSolicitud: 'EN_EVALUACION' }
+  await t.test('evaluacion ofrece reenvio solo por jurado pendiente', async s => {
+    const pendiente = { ...jurado, id: 1234, nombre: 'Jurado pendiente', estadoInvitacion: 'PENDIENTE', estadoInvitacionCodigo: 'PENDIENTE' }
+    proceso = { ...proceso, estadoSolicitud: 'EN_EVALUACION', jurados: [jurado, pendiente] }
     const view = mount(s)
     await ready(view)
-    ui.fireEvent.click(view.getByRole('button', { name: 'Enviar recordatorios' }))
-    await view.findByText('Se enviaron 2 recordatorio(s).')
-    assert.equal(updated, 1)
+    assert.equal(view.queryByRole('button', { name: 'Enviar recordatorios' }), null)
+    const reenviar = view.getByRole('button', { name: 'Reenviar' })
+    assert.match(reenviar.closest('tr').textContent, /Jurado pendiente/)
+    assert.equal(updated, 0)
   })
 
   await t.test('conceptos recibidos permiten enviar a correcciones', async s => {

@@ -6,7 +6,7 @@ Cada concepto tiene su icono de descarga junto al encabezado de la tarjeta. Las 
 
 ## Acciones de jurados evaluadores — 2026-11-25
 
-La columna **Acciones** agrupa los iconos de **Reenviar**, **Reemplazar** y **Retirar**. Cada etiqueta aparece al pasar el cursor o al enfocar el botón con el teclado. En móvil, los botones tienen un área táctil de 44 × 44 px.
+La columna **Acciones** agrupa los iconos de **Reenviar**, **Reemplazar** y **Retirar**. El reenvío manual se realiza desde la fila del jurado. Cada etiqueta aparece al pasar el cursor o al enfocar el botón con el teclado. En móvil, los botones tienen un área táctil de 44 × 44 px.
 
 ## Sangría en el detalle de solicitudes — 2026-11-25
 

@@ -106,7 +106,6 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
         if (request.method() === 'DELETE') item.activo = false
         return reply(state.proceso)
       }
-      if (url.pathname.endsWith('/procesoEvaluacionTg/solicitud/42/recordatorios')) { state.mutations++; return reply(1) }
       if (['fetch', 'xhr'].includes(request.resourceType())) return reply([])
       if (url.origin !== origin) return route.abort()
       return route.continue()
@@ -183,7 +182,7 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
     return form
   }
 
-  await t.test('solo agregar omite documentos; reemplazar, reenviar, retirar y recordar sí consultan', async () => {
+  await t.test('solo agregar omite documentos; reemplazar, reenviar y retirar sí consultan', async () => {
     await scenario(async (page, state) => {
       await page.locator('.documentos-adjuntos__filename').filter({ hasText: 'tesis-original.pdf' }).waitFor()
       await page.getByRole('button', { name: 'Agregar evaluador' }).waitFor()
@@ -231,17 +230,15 @@ test('solo agregar evaluadores reutiliza documentos; las demás acciones conserv
       await row.getByRole('button', { name: 'Reenviar', exact: true }).click()
       await page.getByRole('status').filter({ hasText: 'Invitación reenviada.' }).waitFor()
       assert.equal(state.documentsGets, initialDocs + 2)
-      await page.getByRole('button', { name: 'Enviar recordatorios', exact: true }).click()
-      await page.getByRole('status').filter({ hasText: 'Se enviaron 1 recordatorio(s).' }).waitFor()
-      assert.equal(state.documentsGets, initialDocs + 3)
+      assert.equal(await page.getByRole('button', { name: 'Enviar recordatorios', exact: true }).count(), 0)
       await row.getByRole('button', { name: 'Retirar', exact: true }).click()
       await page.getByRole('dialog').getByRole('button', { name: 'Sí, retirar jurado', exact: true }).click()
       await page.getByRole('status').filter({ hasText: 'Jurado retirado.' }).waitFor()
-      assert.equal(state.documentsGets, initialDocs + 4)
+      assert.equal(state.documentsGets, initialDocs + 3)
       assert.ok(state.processGets > initialProcess)
       assert.equal(initialHistory, 1)
-      assert.equal(state.historyGets, initialHistory + 6)
-      await page.getByText('Cambio 6', { exact: true }).waitFor()
+      assert.equal(state.historyGets, initialHistory + 5)
+      await page.getByText('Cambio 5', { exact: true }).waitFor()
       assert.equal(await page.getByRole('button', { name: 'Descargar tesis-original.pdf', exact: true }).isEnabled(), true)
       const download = page.waitForEvent('download')
       await page.getByRole('button', { name: 'Descargar tesis-original.pdf', exact: true }).click()

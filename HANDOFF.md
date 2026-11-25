@@ -1,3 +1,10 @@
+## Reenvío de invitaciones a jurados en el día 15 — 2026-11-25
+
+- Backend privado sobre `origin/dev` en `03df345`. `ReenvioInvitacionesJuradoScheduler` corre a diario a las 6:15 a. m. de Colombia y selecciona solo a quienes cumplen 15 días calendario desde la creación ese día. Requiere jurado activo, invitación pendiente con enlace vigente y plazo sin vencer, y una solicitud de propuesta o defensa que todavía espera respuestas. Se conserva el plazo y se usa la fecha existente de última invitación para evitar repetir el envío ese día. Una ejecución perdida no se recupera al día siguiente. `JURADOS_REENVIO_CRON=-` deshabilita la tarea.
+- Se retiró la migración local y la columna extra propuesta. El frontend elimina «Enviar recordatorios» del panel y conserva «Reenviar» por jurado. Las pruebas de interfaz verifican la ausencia de la acción general y el reenvío desde la fila. Los contratos HTTP del backend conservan sus rutas.
+- Reutilizar el JDK existente `C:/Users/david/.jdks/ms-21.0.9`, Maven Wrapper 3.9.11 y Spring Boot 4.0.0. Frontend con Node 24.11.0, npm 11.6.1 y Edge mediante `SAPP_PLAYWRIGHT_MODULE`. Logs en `target/reenvio-dia15-package.log` del backend y `%TEMP%/sapp-reenvio-dia15-*.log` del frontend.
+- Pasaron 1617 pruebas y el empaquetado del backend, 18 pruebas focalizadas de React, `npm run build` y 7 pruebas de integración en Edge. `npm test` y `npm run test:coverage` registraron 654 aprobadas y los mismos 38 fallos previos. Se verificó el alcance de 361 archivos. Cobertura de líneas de 84,62 % global, 92,11 % en el módulo y 89,54 % en el panel. El panel conserva 23 líneas sin cubrir y pasa de 227 a 220 líneas medibles tras retirar la acción general.
+
 ## Rúbricas por concepto de evaluación — 2026-11-25
 
 - `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` muestra la descarga en la tarjeta de la evaluación y etiqueta los conceptos **Inicial** y **Tras las correcciones**. Reutiliza `GET /sapp/procesoEvaluacionTg/evaluaciones/{evaluacionId}/rubrica` y los campos `contenidoBase64`, `mimeType` y `nombreArchivo`. La carta de agradecimiento aparece bajo las evaluaciones del jurado.
