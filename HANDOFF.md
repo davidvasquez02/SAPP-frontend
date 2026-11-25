@@ -1,5 +1,8 @@
 ## Icono de Minerva — 2026-11-25
 
+- Ajuste posterior: `src/components/Sidebar/Sidebar.css` reduce la escala del búho de 1,4 a 1,17 en escritorio y móvil para darle margen dentro del marco. `index.html` sirve `/brand/minerva-favicon.png`, un PNG de 64 × 64 px con esquinas transparentes.
+- Pasaron las 12 pruebas de navegación y `npm run build`. El favicon compilado coincide con el de `public`. `npm test` registró 659 aprobadas y los mismos 33 fallos de la corrida anterior. Logs en `%TEMP%/sapp-icono-redondo-{navegacion,build,test}.log`.
+
 - `public/brand/minerva-buho.png` contiene el PNG adjunto, copiado sin modificaciones. `index.html` lo declara como favicon `image/png` y `src/components/Sidebar/Sidebar.tsx` utiliza la misma ruta `/brand/minerva-buho.png` en escritorio y móvil.
 - Con Node 24.11.0 y npm 11.6.1 pasaron las 12 pruebas de navegación y `npm run build`. Se verificó que `dist/index.html` apunta al PNG y que la copia compilada coincide con el adjunto. `npm test` registró 659 aprobadas y los mismos 33 fallos de la ejecución anterior. Logs en `%TEMP%/sapp-icono-{navegacion,build,test}.log`.
 

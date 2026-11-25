@@ -63,8 +63,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Acerca el búho dentro del margen blanco de la imagen original. */
-  transform: scale(1.4);
+  transform: scale(1.17);
 }
 
 .sidebar__brand-logo {

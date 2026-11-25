@@ -2,7 +2,7 @@
 
 ## Icono de Minerva — 2026-11-25
 
-La barra lateral y la pestaña del navegador usan el nuevo búho de Minerva de `public/brand/minerva-buho.png`.
+La barra lateral muestra el búho de Minerva con espacio alrededor de la silueta. La pestaña del navegador usa `public/brand/minerva-favicon.png`, una versión de 64 × 64 px con esquinas redondeadas.
 
 ## Idioma y tratamiento de evaluadores — 2026-11-25
 
