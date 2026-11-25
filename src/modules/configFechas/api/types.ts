@@ -33,6 +33,7 @@ export type CreatePeriodoAcademicoRequestDto = {
   periodo: 1 | 2
   fechaInicio: string
   fechaFin: string
+  fechaFinInclusionCancelacion?: string
   fechas: Array<{
     tipoTramiteId: number
     fechaInicio: string
@@ -44,6 +45,7 @@ export type CreatePeriodoAcademicoRequestDto = {
 export type UpdatePeriodoAcademicoRequestDto = {
   fechaInicio: string
   fechaFin: string
+  fechaFinInclusionCancelacion?: string
   descripcion: string
   fechas: Array<{
     tipoTramiteId: number

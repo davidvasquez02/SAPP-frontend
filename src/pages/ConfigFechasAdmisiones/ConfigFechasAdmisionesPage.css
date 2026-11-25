@@ -40,6 +40,11 @@
   grid-column: span 2;
 }
 
+.config-fechas-admisiones__field small {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
 .config-fechas-admisiones__field input,
 .config-fechas-admisiones__field select,
 .config-fechas-admisiones__field textarea {

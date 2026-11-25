@@ -14,7 +14,7 @@ import { EditConvocatoriaFechasModal } from "../../modules/admisiones/components
 import { isConvocatoriaVigente } from "../../modules/admisiones/utils/convocatoriaEstado";
 import { getPeriodosAcademicosWithFechas } from "../../modules/configFechas/api/periodoAcademicoService";
 import type { PeriodoAcademicoWithFechasDto } from "../../modules/configFechas/api/types";
-import { TIPO_TRAMITE_ADMISIONES } from "../../modules/configFechas/constants";
+import { ID_TIPO_TRAMITE_MATRICULA, TIPO_TRAMITE_INCLUSION_CANCELACION, TIPO_TRAMITE_MATRICULA } from "../../modules/configFechas/constants";
 import "./FechasModulePage.css";
 
 type VigenteFilter = "TODOS" | "VIGENTE" | "CERRADA";
@@ -237,15 +237,19 @@ const FechasModulePage = () => {
             </div>
             {periodos.length === 0 ? <p className="config-module__status">No hay períodos académicos registrados.</p> : null}
             {periodos.length > 0 ? <div className="config-module__table-wrap sapp-table-shell">
-              <table className="config-module__table sapp-table"><thead><tr><th>Período</th><th>Fecha inicio</th><th>Fecha fin</th><th>Inicio matrículas</th><th>Fin matrículas</th><th>Acciones</th></tr></thead>
+              <table className="config-module__table sapp-table"><thead><tr><th>Período</th><th>Fecha inicio</th><th>Fecha fin</th><th>Inicio matrículas</th><th>Fin matrículas</th><th>Fin de inclusiones y cancelaciones</th><th>Acciones</th></tr></thead>
                 <tbody>{periodosPreview.map((item) => {
-                  const fechaMatricula = item.fechas.find((fecha) => fecha.tipoTramite.id === TIPO_TRAMITE_ADMISIONES);
+                  const fechaMatricula = item.fechas.find((fecha) => fecha.tipoTramite.nombre
+                    ? fecha.tipoTramite.nombre.trim().toUpperCase() === TIPO_TRAMITE_MATRICULA
+                    : fecha.tipoTramite.id === ID_TIPO_TRAMITE_MATRICULA);
+                  const fechaInclusionCancelacion = item.fechas.find((fecha) => fecha.tipoTramite.nombre?.trim().toUpperCase() === TIPO_TRAMITE_INCLUSION_CANCELACION);
                   return <tr key={item.periodo.id}>
                     <td data-label="Período" className="config-module__period-title">{item.periodo.anioPeriodo}</td>
                     <td data-label="Inicio" data-date-group="Período académico">{formatFecha(item.periodo.fechaInicio)}</td>
                     <td data-label="Fin" data-date-group="Período académico">{formatFecha(item.periodo.fechaFin)}</td>
                     <td data-label="Inicio" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaInicio ?? null)}</td>
                     <td data-label="Fin" data-date-group="Matrículas">{formatFecha(fechaMatricula?.fechaFin ?? null)}</td>
+                    <td data-label="Fin de inclusiones y cancelaciones">{formatFecha(fechaInclusionCancelacion?.fechaFin ?? null)}</td>
                     <td data-label="Acciones" className="config-module__actions-cell"><button type="button" className="config-module__edit-button" onClick={() => navigate(`${RUTA_CALENDARIO}/periodos?periodoId=${item.periodo.id}`)}>Editar</button></td>
                   </tr>;
                 })}</tbody></table>

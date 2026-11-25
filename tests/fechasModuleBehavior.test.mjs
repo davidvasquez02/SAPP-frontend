@@ -10,6 +10,8 @@ test('calendario académico: paginación, filtros, cierre y edición de fechas',
   Object.defineProperty(globalThis, 'requestAnimationFrame', { configurable: true, value: fn => { fn(); return 1 } })
   t.after(() => previousRaf ? Object.defineProperty(globalThis, 'requestAnimationFrame', previousRaf) : delete globalThis.requestAnimationFrame)
   const { default: Page } = await ui.load('/src/pages/FechasModule/FechasModulePage.tsx')
+  const { default: PeriodoForm } = await ui.load('/src/pages/ConfigFechasAdmisiones/ConfigFechasAdmisionesPage.tsx')
+  const { RUTA_CALENDARIO } = await ui.load('/src/modules/administracionAcademica/rutas.ts')
   const { AuthContext } = await ui.load('/src/context/Auth/context.ts')
   let convocatorias, periods, writes, failure, mobile
   ui.dom.window.requestAnimationFrame = fn => { fn(); return 1 }
@@ -20,7 +22,7 @@ test('calendario académico: paginación, filtros, cierre y edición de fechas',
     convocatorias = Array.from({ length: 6 }, (_, i) => ({ id: i + 1, programaId: i === 5 ? 2 : 1, programa: i === 5 ? 'DCC' : 'MISI', periodo: `${2030 - i}-1`, cupos: 10, vigente: i % 2 === 0, fechaInicio: '2030-01-01', fechaFin: '2030-06-30', observaciones: `Convocatoria ${i + 1}` }))
     ui.response((url, init) => {
       const path = new URL(url, 'https://test.invalid').pathname
-      if (init.method === 'PUT') {
+      if (init.method === 'PUT' || init.method === 'POST') {
         writes.push({ path, body: init.body ? JSON.parse(init.body) : null })
         if (failure) return Response.json({ message: 'Operación no disponible' }, { status: 409 })
         if (path.includes('cerrar')) convocatorias[0].vigente = false
@@ -34,8 +36,63 @@ test('calendario académico: paginación, filtros, cierre y edición de fechas',
   })
   const Destination = () => h('p', null, `Destino ${useLocation().pathname}`)
   const mount = s => { s.after(ui.cleanup); return ui.render(h(MemoryRouter, { initialEntries: ['/fechas'] }, h(AuthContext.Provider, { value: { user: null, session: null } }, h(Routes, null, h(Route, { path: '/fechas', element: h(Page) }), h(Route, { path: '/admisiones/convocatoria/:id', element: h(Destination) })))) ) }
+  const mountPeriodos = (s, path = RUTA_CALENDARIO) => {
+    s.after(ui.cleanup)
+    return ui.render(h(MemoryRouter, { initialEntries: [path] },
+      h(AuthContext.Provider, { value: { user: null, session: null } },
+        h(Routes, null,
+          h(Route, { path: RUTA_CALENDARIO, element: h(Page) }),
+          h(Route, { path: `${RUTA_CALENDARIO}/periodos`, element: h(PeriodoForm) })))))
+  }
   const ready = v => v.findByText('Convocatoria 1')
   const change = (v, label, value) => ui.fireEvent.change(v.getByLabelText(label), { target: { value } })
+  const finInclusiones = 'Fecha fin de inclusiones y cancelaciones'
+
+  await t.test('calendario muestra el plazo y permite editar el fin junto con el cierre de matrícula', async s => {
+    periods[0].fechas = [
+      { tipoTramite: { id: 2, nombre: 'MATRICULA' }, fechaInicio: '2030-01-03', fechaFin: '2030-01-10' },
+      { tipoTramite: { id: 25, nombre: 'INCLUSION_CANCELACION_MATRICULA' }, fechaInicio: '2030-01-10', fechaFin: '2030-01-20' },
+    ]
+    const v = mountPeriodos(s)
+    const fila = (await v.findByText('2030 - 1', { selector: 'td' })).closest('tr')
+    assert.ok(ui.within(fila).getByText('20/01/2030'))
+    ui.fireEvent.click(ui.within(fila).getByRole('button', { name: 'Editar' }))
+    await ui.waitFor(() => assert.equal(v.getByLabelText(finInclusiones).value, '2030-01-20'))
+    assert.equal(v.getByLabelText(finInclusiones).min, '2030-01-10')
+    assert.ok(v.queryByText('El plazo comienza en la fecha de cierre de la matrícula académica.'))
+
+    change(v, 'Fecha fin matrículas', '2030-01-21')
+    ui.fireEvent.click(v.getByRole('button', { name: 'Actualizar período' }))
+    assert.ok(v.getByText(/debe estar entre el cierre de matrículas y el fin del semestre/))
+    assert.equal(writes.length, 0)
+    change(v, finInclusiones, '2030-07-01')
+    ui.fireEvent.click(v.getByRole('button', { name: 'Actualizar período' }))
+    assert.equal(writes.length, 0)
+    change(v, finInclusiones, '2030-01-25')
+    ui.fireEvent.click(v.getByRole('button', { name: 'Actualizar período' }))
+    await v.findByRole('heading', { name: 'Períodos académicos' })
+    assert.equal(writes.length, 1)
+    assert.ok(writes[0].path.endsWith('/periodoAcademico/1'))
+    assert.deepEqual(writes[0].body, {
+      fechaInicio: '2030-01-01', fechaFin: '2030-06-30', fechaFinInclusionCancelacion: '2030-01-25',
+      descripcion: '', fechas: [{ tipoTramiteId: 2, fechaInicio: '2030-01-03', fechaFin: '2030-01-21', descripcion: '' }],
+    })
+  })
+
+  await t.test('crear periodo conserva el plazo como opcional', async s => {
+    const v = mountPeriodos(s, `${RUTA_CALENDARIO}/periodos`)
+    await ui.waitFor(() => assert.equal(v.getByRole('button', { name: 'Crear período' }).disabled, false))
+    change(v, 'Fecha inicio', '2030-01-01')
+    change(v, 'Fecha fin', '2030-06-30')
+    change(v, 'Fecha inicio matrículas', '2030-01-03')
+    change(v, 'Fecha fin matrículas', '2030-01-10')
+    assert.equal(v.getByLabelText(finInclusiones).required, false)
+    ui.fireEvent.click(v.getByRole('button', { name: 'Crear período' }))
+    await v.findByRole('heading', { name: 'Períodos académicos' })
+    assert.equal(writes.length, 1)
+    assert.ok(writes[0].path.endsWith('/periodoAcademico'))
+    assert.equal(Object.hasOwn(writes[0].body, 'fechaFinInclusionCancelacion'), false)
+  })
   await t.test('periodos ordenados y paginados sin mezclar con convocatorias', async s => {
     const v = mount(s); await ready(v); const card = v.getByRole('heading', { name: 'Períodos académicos' }).closest('article'); const scope = ui.within(card)
     assert.equal(card.querySelectorAll('tbody tr').length, 4); ui.fireEvent.click(scope.getByRole('button', { name: 'Siguiente' })); assert.ok(scope.getByText('Página 2 de 2')); assert.ok(scope.getByText('2026 - 1'))

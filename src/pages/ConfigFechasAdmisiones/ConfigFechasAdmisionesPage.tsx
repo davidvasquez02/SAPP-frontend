@@ -7,7 +7,11 @@ import {
   getPeriodosAcademicosWithFechas,
   updatePeriodoAcademico,
 } from '../../modules/configFechas/api/periodoAcademicoService'
-import { TIPO_TRAMITE_ADMISIONES } from '../../modules/configFechas/constants'
+import {
+  ID_TIPO_TRAMITE_MATRICULA,
+  TIPO_TRAMITE_INCLUSION_CANCELACION,
+  TIPO_TRAMITE_MATRICULA,
+} from '../../modules/configFechas/constants'
 import './ConfigFechasAdmisionesPage.css'
 
 type FormState = {
@@ -18,6 +22,9 @@ type FormState = {
   fechaFin: string
   fechaInicioMatricula: string
   fechaFinMatricula: string
+  tipoTramiteMatriculaId: number
+  fechaFinInclusionCancelacion: string
+  fechaFinInclusionCancelacionGuardada: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -28,6 +35,9 @@ const EMPTY_FORM: FormState = {
   fechaFin: '',
   fechaInicioMatricula: '',
   fechaFinMatricula: '',
+  tipoTramiteMatriculaId: ID_TIPO_TRAMITE_MATRICULA,
+  fechaFinInclusionCancelacion: '',
+  fechaFinInclusionCancelacionGuardada: '',
 }
 
 const ConfigFechasAdmisionesPage = () => {
@@ -48,7 +58,12 @@ const ConfigFechasAdmisionesPage = () => {
       const item = data.find((candidate) => candidate.periodo.id === requestedPeriodoId)
       if (item) {
         const fechaMatricula = item.fechas.find(
-          (fecha) => fecha.tipoTramite.id === TIPO_TRAMITE_ADMISIONES
+          (fecha) => fecha.tipoTramite.nombre
+            ? fecha.tipoTramite.nombre.trim().toUpperCase() === TIPO_TRAMITE_MATRICULA
+            : fecha.tipoTramite.id === ID_TIPO_TRAMITE_MATRICULA
+        )
+        const fechaInclusionCancelacion = item.fechas.find(
+          (fecha) => fecha.tipoTramite.nombre?.trim().toUpperCase() === TIPO_TRAMITE_INCLUSION_CANCELACION
         )
         setForm({
           periodoId: item.periodo.id,
@@ -58,6 +73,9 @@ const ConfigFechasAdmisionesPage = () => {
           fechaFin: item.periodo.fechaFin ?? '',
           fechaInicioMatricula: fechaMatricula?.fechaInicio ?? '',
           fechaFinMatricula: fechaMatricula?.fechaFin ?? '',
+          tipoTramiteMatriculaId: fechaMatricula?.tipoTramite.id ?? ID_TIPO_TRAMITE_MATRICULA,
+          fechaFinInclusionCancelacion: fechaInclusionCancelacion?.fechaFin ?? '',
+          fechaFinInclusionCancelacionGuardada: fechaInclusionCancelacion?.fechaFin ?? '',
         })
       } else {
         setForm(EMPTY_FORM)
@@ -97,36 +115,44 @@ const ConfigFechasAdmisionesPage = () => {
       return
     }
 
+    if (form.fechaFinInclusionCancelacionGuardada && !form.fechaFinInclusionCancelacion) {
+      setError('Debe seleccionar la fecha de fin de inclusiones y cancelaciones.')
+      return
+    }
+
+    if (form.fechaFinInclusionCancelacion && (
+      form.fechaFinInclusionCancelacion < form.fechaFinMatricula || form.fechaFinInclusionCancelacion > form.fechaFin
+    )) {
+      setError('El fin de inclusiones y cancelaciones debe estar entre el cierre de matrículas y el fin del semestre.')
+      return
+    }
+
+    const fechasPeriodo = {
+      fechaInicio: form.fechaInicio,
+      fechaFin: form.fechaFin,
+      fechaFinInclusionCancelacion: form.fechaFinInclusionCancelacion !== form.fechaFinInclusionCancelacionGuardada
+        ? form.fechaFinInclusionCancelacion
+        : undefined,
+      fechas: [{
+        tipoTramiteId: form.tipoTramiteMatriculaId,
+        fechaInicio: form.fechaInicioMatricula,
+        fechaFin: form.fechaFinMatricula,
+        descripcion: '',
+      }],
+    }
+
     setIsSaving(true)
     try {
       if (form.periodoId === null) {
         await createPeriodoAcademico({
           anio: Number(form.anio),
           periodo: Number(form.periodo) as 1 | 2,
-          fechaInicio: form.fechaInicio,
-          fechaFin: form.fechaFin,
-          fechas: [
-            {
-              tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-              fechaInicio: form.fechaInicioMatricula,
-              fechaFin: form.fechaFinMatricula,
-              descripcion: '',
-            },
-          ],
+          ...fechasPeriodo,
         })
       } else {
         await updatePeriodoAcademico(form.periodoId, {
-          fechaInicio: form.fechaInicio,
-          fechaFin: form.fechaFin,
+          ...fechasPeriodo,
           descripcion: '',
-          fechas: [
-            {
-              tipoTramiteId: TIPO_TRAMITE_ADMISIONES,
-              fechaInicio: form.fechaInicioMatricula,
-              fechaFin: form.fechaFinMatricula,
-              descripcion: '',
-            },
-          ],
         })
       }
       navigate(RUTA_CALENDARIO)
@@ -199,6 +225,21 @@ const ConfigFechasAdmisionesPage = () => {
                 onChange={(event) => setForm((c) => ({ ...c, fechaFinMatricula: event.target.value }))}
               />
             </label>
+
+            <div className="config-fechas-admisiones__field config-fechas-admisiones__field--full">
+              <label htmlFor="fecha-fin-inclusiones">Fecha fin de inclusiones y cancelaciones</label>
+              <input
+                id="fecha-fin-inclusiones"
+                type="date"
+                value={form.fechaFinInclusionCancelacion}
+                min={form.fechaFinMatricula || undefined}
+                max={form.fechaFin || undefined}
+                required={Boolean(form.fechaFinInclusionCancelacionGuardada)}
+                aria-describedby="inicio-inclusiones-ayuda"
+                onChange={(event) => setForm((c) => ({ ...c, fechaFinInclusionCancelacion: event.target.value }))}
+              />
+              <small id="inicio-inclusiones-ayuda">El plazo comienza en la fecha de cierre de la matrícula académica.</small>
+            </div>
 
           </div>
 

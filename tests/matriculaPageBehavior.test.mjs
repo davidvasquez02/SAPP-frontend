@@ -18,6 +18,9 @@ test('página de matrícula React: roles, creación, documentos y listado admini
   })
   let validation, documents, listado, listError, docsError, uploadError, uploadUnconfirmed, validationError, activePeriod, notificationError, notificationSent, createCount, uploadCount, completedCount, openingCount
   let historial, consultasHistorial
+  let ventanasInclusiones, errorVentanas, solicitudesInclusiones, plazoCierraAlEnviar
+  const ventanaInclusion = { id: 8, tipoTramite: { nombre: 'INCLUSION_CANCELACION_MATRICULA' },
+    periodo: { id: 7, anioPeriodo: '2026-2' }, fechaInicio: '2026-10-31', fechaFin: '2026-11-05' }
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     validation = { puedeCrear: true, periodoId: 7 }; documents = [document()]; listado = []
@@ -25,6 +28,7 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     validationError = false; uploadUnconfirmed = false; activePeriod = true
     createCount = 0; uploadCount = 0; completedCount = 0; openingCount = 0
     historial = []; consultasHistorial = 0
+    ventanasInclusiones = []; errorVentanas = null; solicitudesInclusiones = []; plazoCierraAlEnviar = false
     ui.response((url, init) => {
       const parsed = new URL(url, 'https://example.test')
       const path = parsed.pathname
@@ -65,10 +69,25 @@ test('página de matrícula React: roles, creación, documentos y listado admini
         notificationSent = true
         return Response.json({ ok: true, message: 'Notificación enviada', data: null })
       }
-      if (path.endsWith('/periodoAcademicoFecha/vigente')) return ok(activePeriod ? [{
-        id: 3, tipoTramite: { nombre: 'MATRICULA' }, periodo: { id: 7, anioPeriodo: '2026-2' },
-        fechaInicio: '2026-10-01', fechaFin: '2026-10-31', notificacionAperturaEnviada: notificationSent,
-      }] : [])
+      if (path.endsWith('/periodoAcademicoFecha/vigente')) {
+        if (errorVentanas) return Response.json({ message: 'Fechas no disponibles' }, { status: errorVentanas })
+        return ok([
+          ...(activePeriod ? [{
+            id: 3, tipoTramite: { nombre: 'MATRICULA' }, periodo: { id: 7, anioPeriodo: '2026-2' },
+            fechaInicio: '2026-10-01', fechaFin: '2026-10-31', notificacionAperturaEnviada: notificationSent,
+          }] : []),
+          ...ventanasInclusiones,
+        ])
+      }
+      if (path.endsWith('/matriculaAcademica/24/inclusionCancelacion')) {
+        assert.equal(init.method, 'POST')
+        if (plazoCierraAlEnviar) {
+          ventanasInclusiones = []
+          return Response.json({ message: 'El plazo de inclusiones y cancelaciones no está vigente para esta matrícula.' }, { status: 400 })
+        }
+        solicitudesInclusiones.push(JSON.parse(init.body))
+        return ok(validation)
+      }
       if (path.endsWith('/matriculaAcademica')) {
         if (init.method === 'POST') {
           createCount++
@@ -182,6 +201,72 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     assert.equal(view.getByRole('button', { name: 'Cargar' }).disabled, true)
     assert.equal(view.queryAllByRole('button', { name: /Actualizar matrícula|Confirmar matrícula/ }).length, 0)
     assert.equal(view.queryAllByLabelText('Materia').length, 0)
+  })
+
+  await t.test('matrícula finalizada permite incluir y cancelar con plazo vigente aunque cerró matrícula', async s => {
+    activePeriod = false
+    validation = { ...matricula, estado: 'FINALIZADA' }
+    ventanasInclusiones = [ventanaInclusion]
+    const view = mount(s)
+    const abrir = await view.findByRole('button', { name: 'Solicitar inclusión o cancelación de materias' })
+    assert.ok(view.queryByRole('heading', { name: 'No hay fechas de matrícula habilitadas actualmente.' }))
+    ui.fireEvent.click(abrir)
+    const materia = await view.findByLabelText('Materia')
+    assert.ok(view.getByText('05/11/2026', { selector: 'time' }))
+    assert.equal(view.queryByText(/Verificando la ventana/), null)
+    ui.fireEvent.change(materia, { target: { value: 'Seminario' } })
+    ui.fireEvent.click(view.getByRole('button', { name: /Seminario.*UIS-2/ }))
+    ui.fireEvent.click(view.getByRole('checkbox', { name: 'Investigación' }))
+    ui.fireEvent.click(view.getByRole('button', { name: 'Enviar solicitud' }))
+    await view.findByText(/Solicitud registrada/)
+    assert.deepEqual(solicitudesInclusiones, [{ incluir: [{ asignaturaId: 2 }], cancelarAsignaturaIds: [1] }])
+    await ui.waitFor(() => assert.equal(consultasHistorial, 2))
+  })
+
+  await t.test('valida el mismo periodo y permite volver a consultar después de un 404 o un error de API', async s => {
+    activePeriod = false
+    validation = { ...matricula, estado: 'FINALIZADA' }
+    errorVentanas = 404
+    const view = mount(s)
+    const abrir = () => ui.fireEvent.click(view.getByRole('button', { name: 'Solicitar inclusión o cancelación de materias' }))
+    const cerrar = () => ui.fireEvent.click(view.getByRole('button', { name: 'Cerrar' }))
+    const mensajePlazo = 'No hay una ventana de inclusión y cancelación vigente para este periodo.'
+    await view.findByRole('button', { name: 'Solicitar inclusión o cancelación de materias' })
+    abrir()
+    await view.findByText(mensajePlazo)
+    cerrar()
+    errorVentanas = 503
+    abrir()
+    await view.findByText('Fechas no disponibles')
+    cerrar()
+    errorVentanas = null
+    ventanasInclusiones = [{ ...ventanaInclusion, periodo: { id: 6 } }]
+    abrir()
+    await view.findByText(mensajePlazo)
+    assert.equal(view.queryByRole('button', { name: 'Enviar solicitud' }), null)
+    cerrar()
+    ventanasInclusiones.push(ventanaInclusion)
+    abrir()
+    await view.findByRole('button', { name: 'Enviar solicitud' })
+    assert.equal(solicitudesInclusiones.length, 0)
+  })
+
+  await t.test('si vence el plazo antes de enviar muestra el error y permite comprobar el cierre', async s => {
+    activePeriod = false
+    validation = { ...matricula, estado: 'FINALIZADA' }
+    ventanasInclusiones = [ventanaInclusion]
+    plazoCierraAlEnviar = true
+    const view = mount(s)
+    const textoAbrir = 'Solicitar inclusión o cancelación de materias'
+    ui.fireEvent.click(await view.findByRole('button', { name: textoAbrir }))
+    ui.fireEvent.click(await view.findByRole('checkbox', { name: 'Investigación' }))
+    ui.fireEvent.click(view.getByRole('button', { name: 'Enviar solicitud' }))
+    await view.findByText('El plazo de inclusiones y cancelaciones no está vigente para esta matrícula.')
+    assert.equal(solicitudesInclusiones.length, 0)
+    ui.fireEvent.click(view.getByRole('button', { name: 'Cerrar' }))
+    ui.fireEvent.click(view.getByRole('button', { name: textoAbrir }))
+    await view.findByText('No hay una ventana de inclusión y cancelación vigente para este periodo.')
+    assert.equal(view.queryByRole('button', { name: 'Enviar solicitud' }), null)
   })
 
   await t.test('si el periodo cierra antes de confirmar no crea ni carga documentos', async s => {

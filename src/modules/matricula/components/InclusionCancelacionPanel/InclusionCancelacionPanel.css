@@ -62,3 +62,9 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.inclusion-cancelacion-panel__submit {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}

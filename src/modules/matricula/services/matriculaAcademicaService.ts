@@ -1,4 +1,5 @@
-import { httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { HttpError, httpGet, httpPost, httpPut } from '../../../shared/http/httpClient'
+import { TIPO_TRAMITE_INCLUSION_CANCELACION, TIPO_TRAMITE_MATRICULA } from '../../configFechas/constants'
 import { getDocumentosByTramiteParams } from '../../documentos/api/documentosService'
 import type { DocumentoTramiteItemDto } from '../../documentos/api/types'
 import { CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA } from '../constants'
@@ -85,17 +86,23 @@ export const getMatriculasAcademicas = async (): Promise<MatriculaAcademicaLista
   return response.data
 }
 
-export const getPeriodoMatriculaVigente = async (): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
-  const response = await httpGet<ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>>(
-    '/sapp/periodoAcademicoFecha/vigente',
-  )
-
-  if (!response.ok) {
-    throw new Error(response.message || 'No fue posible verificar las fechas de matrícula vigentes.')
+const getFechasVigentes = async (mensajeError: string): Promise<PeriodoAcademicoMatriculaVigenteDto[]> => {
+  try {
+    const response = await httpGet<ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>>('/sapp/periodoAcademicoFecha/vigente')
+    if (!response.ok) {
+      throw new Error(response.message || mensajeError)
+    }
+    return response.data
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 404) return []
+    throw error
   }
+}
 
-  return response.data.find(
-    (fecha) => fecha.tipoTramite.nombre.trim().toUpperCase() === 'MATRICULA',
+export const getPeriodoMatriculaVigente = async (): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
+  const fechas = await getFechasVigentes('No fue posible verificar las fechas de matrícula vigentes.')
+  return fechas.find(
+    (fecha) => fecha.tipoTramite.nombre.trim().toUpperCase() === TIPO_TRAMITE_MATRICULA,
   ) ?? null
 }
 
@@ -250,18 +257,10 @@ export const getDocumentosMatriculaAcademica = async (
     codigoTipoTramite: CODIGO_TIPO_TRAMITE_MATRICULA_ACADEMICA,
   })
 
-/** Ajuste 50: ventana corta y opcional, tras FINALIZADA, para incluir/cancelar materias. */
-export const getVentanaInclusionCancelacionVigente = async (): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
-  const response = await httpGet<ApiResponse<PeriodoAcademicoMatriculaVigenteDto[]>>(
-    '/sapp/periodoAcademicoFecha/vigente',
-  )
-
-  if (!response.ok) {
-    throw new Error(response.message || 'No fue posible verificar la ventana de inclusión y cancelación.')
-  }
-
-  return response.data.find(
-    (fecha) => fecha.tipoTramite.nombre.trim().toUpperCase() === 'INCLUSION_CANCELACION_MATRICULA',
+export const getVentanaInclusionCancelacionVigente = async (periodoId: number): Promise<PeriodoAcademicoMatriculaVigenteDto | null> => {
+  const fechas = await getFechasVigentes('No fue posible verificar la ventana de inclusión y cancelación.')
+  return fechas.find(
+    (fecha) => fecha.periodo.id === periodoId && fecha.tipoTramite.nombre.trim().toUpperCase() === TIPO_TRAMITE_INCLUSION_CANCELACION,
   ) ?? null
 }
 

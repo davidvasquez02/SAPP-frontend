@@ -375,7 +375,9 @@ const MatriculaPage = () => {
           return;
         }
 
-        if (!convocatoriaResult.isOpen) {
+        const matriculaFinalizada = matriculaValidation.status === "EXISTS"
+          && matriculaValidation.matricula.estado.toUpperCase() === "FINALIZADA";
+        if (!convocatoriaResult.isOpen && !matriculaFinalizada) {
           return;
         }
 
@@ -384,7 +386,7 @@ const MatriculaPage = () => {
 
         const [materiasResult] = await Promise.all([
           getAsignaturasPorPrograma(programaId),
-          loadDocumentosMatricula(matriculaValidation),
+          convocatoriaResult.isOpen ? loadDocumentosMatricula(matriculaValidation) : Promise.resolve(),
         ]);
 
         if (cancelled) {
@@ -1431,13 +1433,17 @@ const MatriculaPage = () => {
                 </button>
               </div>
             ) : null}
-            {isReadOnlyMatriculaFinalizada && activeMatricula ? (
-              <InclusionCancelacionPanel
-                matricula={activeMatricula}
-                materiasCatalogo={materiasCatalogo}
-                onSolicitudEnviada={() => void handleInclusionCancelacionEnviada()}
-              />
-            ) : null}
+          </>
+        ) : null}
+        {!loadingConvocatoria && isReadOnlyMatriculaFinalizada && activeMatricula ? (
+          <>
+            {!convocatoria?.isOpen && errorForm ? <p className="matricula-page__error">{errorForm}</p> : null}
+            <InclusionCancelacionPanel
+              key={activeMatricula.id}
+              matricula={activeMatricula}
+              materiasCatalogo={materiasCatalogo}
+              onSolicitudEnviada={() => void handleInclusionCancelacionEnviada()}
+            />
           </>
         ) : null}
         <section className="matricula-page__card" aria-labelledby="matricula-historial-title">
