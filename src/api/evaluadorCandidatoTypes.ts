@@ -17,7 +17,6 @@ export interface EvaluadorCandidatoDto {
 export interface EvaluadorCandidatoRequest {
   nombre: string
   tratamiento?: string
-  tratamientoEn?: string
   correo: string
   institucion?: string
   externo: boolean

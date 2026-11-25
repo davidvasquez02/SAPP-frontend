@@ -1,3 +1,11 @@
+## Idioma y tratamiento de evaluadores — 2026-11-25
+
+- `src/pages/BancoEvaluadores/BancoEvaluadoresPage.tsx` y `src/modules/trabajos-grado/evaluacion/ProcesoEvaluacionPanel.tsx` muestran un solo tratamiento después del idioma y limpian el campo al cambiarlo. `src/shared/evaluadores/tratamiento.ts` define los ejemplos y valores por defecto `PROFESOR` y `PROFESSOR`.
+- El registro y la edición en el banco, y la designación y el reemplazo de jurados, envían `idioma` y `tratamiento` mediante los endpoints existentes. El frontend recorta espacios y aplica el valor por defecto a un campo vacío. Si un registro en inglés trae `tratamientoEn` del contrato anterior, el formulario lo recupera al editarlo o seleccionarlo desde el directorio. El backend local guarda el campo `tratamiento` para ambos idiomas.
+- Reutilizar Node 24.11.0, npm 11.6.1 y `package-lock.json`. Las pruebas de comportamiento están en `tests/bancoEvaluadoresBehavior.test.mjs` y `tests/evaluacionJuradosBehavior.test.mjs`. La compilación y los seis casos de integración de `tests/integration/evaluadoresDocumentosCarga.test.mjs` pasaron en Edge con API simulada. Pendiente verificar con la API desplegada. Logs en `%TEMP%/sapp-tratamiento-*.log`.
+- Pasaron 31 pruebas focalizadas, incluidas las comprobaciones de orden, campo único, valores por defecto y tratamiento personalizado. Se corrigió la prueba de reenvío para partir de una invitación pendiente. `npm test` registró 659 aprobadas y 33 fallos ya observados en la corrida de referencia de Actas.
+- `npm run test:coverage` registró 659 aprobadas y 33 fallos preexistentes. `node scripts/verify-coverage.mjs` confirmó los 361 archivos ejecutables de `src`. Cobertura de líneas de 85,02 % global, 90,52 % en el banco, 89,63 % en el panel de evaluación y 100 % en la función de valores predeterminados.
+
 ## Orden del listado de actas
 
 - `src/pages/Actas/ActasPage.tsx` ordena por número de acta descendente y por consecutivo ascendente. Lee ambos valores del código actual o del nombre completo histórico. Para los códigos históricos numéricos usa el número disponible y ubica esos registros después de los que tienen consecutivo dentro del mismo número. Los códigos sin número reconocible quedan al final y conservan su orden anterior.

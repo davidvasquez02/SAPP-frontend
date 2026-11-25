@@ -1,3 +1,4 @@
+import { tratamientoPredeterminado } from '../../../shared/evaluadores/tratamiento'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ActaDto } from '../../actas/types'
 import StatusBadge from '../../solicitudes/components/StatusBadge/StatusBadge'
@@ -53,7 +54,7 @@ interface ProcesoEvaluacionPanelProps {
 
 type FormularioActivo = 'designar' | 'sustentacion' | 'resultado' | null
 
-const EMPTY_JURADO: JuradoInput = { nombre: '', tratamiento: '', tratamientoEn: '', correo: '', institucion: '', externo: true, idioma: 'ES', motivoReemplazo: '' }
+const EMPTY_JURADO: JuradoInput = { nombre: '', tratamiento: '', correo: '', institucion: '', externo: true, idioma: 'ES', motivoReemplazo: '' }
 const SUCCESS_MESSAGE_DURATION_MS = 5_000
 const ESTADOS_CON_AJUSTES = new Set(['CONCEPTOS_REC'])
 const ESTADOS_CON_RESULTADO = new Set(['SUST_PROGRAMADA'])
@@ -296,8 +297,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
   const selectBanco = (item: BancoJurado) => {
     setJurado({
       nombre: item.nombre,
-      tratamiento: item.tratamiento ?? '',
-      tratamientoEn: item.tratamientoEn ?? '',
+      tratamiento: (item.idioma === 'EN' ? item.tratamientoEn || item.tratamiento : item.tratamiento) ?? '',
       correo: item.correo,
       institucion: item.institucion ?? '',
       externo: item.externo ?? true,
@@ -331,9 +331,10 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
       setError('Completa nombre, correo e institución del jurado.')
       return
     }
+    const datos = { ...jurado, tratamiento: jurado.tratamiento?.trim() || tratamientoPredeterminado(jurado.idioma) }
     if (reemplazando) {
       void runMutation(
-        () => reemplazarJurado(solicitudId, reemplazando.id, jurado),
+        () => reemplazarJurado(solicitudId, reemplazando.id, datos),
         'El jurado fue reemplazado y el nuevo evaluador fue invitado.',
       )
       return
@@ -350,7 +351,7 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
         // from falling back to the most recently uploaded document.
         await definirDocumentoEvaluar(solicitudId, selectedDocument)
         await designarJurados(solicitudId, {
-          jurados: [jurado],
+          jurados: [datos],
           fechaLimiteEvaluacion: fechaLimite,
           documentoEvaluarId: selectedDocument,
           enviarInvitaciones: true,
@@ -500,11 +501,10 @@ const ProcesoEvaluacionPanel = ({ solicitudId, documentos, actas, onUpdated, onJ
           )}
           <div className="evaluacion-tg__form-grid">
             <label><span>Nombre *</span><input value={jurado.nombre} onChange={(e) => setJurado((v) => ({ ...v, nombre: e.target.value }))} /></label>
-            <label><span>Tratamiento en español (opcional)</span><input value={jurado.tratamiento} onChange={(e) => setJurado((v) => ({ ...v, tratamiento: e.target.value }))} placeholder="Dr., Dra., MSc., Ing., etc. Por defecto: Profesor(a)" /></label>
-            <label><span>Tratamiento en inglés (opcional)</span><input value={jurado.tratamientoEn ?? ''} onChange={(e) => setJurado((v) => ({ ...v, tratamientoEn: e.target.value }))} placeholder="Dr., Prof., etc. Por defecto: Professor" /></label>
+            <label><span>Idioma de la invitación</span><select value={jurado.idioma} onChange={(e) => setJurado((v) => ({ ...v, idioma: e.target.value as IdiomaJurado, tratamiento: '' }))}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>
+            <label><span>Tratamiento en {jurado.idioma === 'EN' ? 'inglés' : 'español'} (opcional)</span><input value={jurado.tratamiento} onChange={(e) => setJurado((v) => ({ ...v, tratamiento: e.target.value }))} placeholder={tratamientoPredeterminado(jurado.idioma)} /></label>
             <label><span>Correo *</span><input type="email" value={jurado.correo} onChange={(e) => setJurado((v) => ({ ...v, correo: e.target.value }))} /></label>
             <label><span>Institución *</span><input value={jurado.institucion} onChange={(e) => setJurado((v) => ({ ...v, institucion: e.target.value }))} /></label>
-            <label><span>Idioma de la invitación</span><select value={jurado.idioma} onChange={(e) => setJurado((v) => ({ ...v, idioma: e.target.value as IdiomaJurado }))}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>
             {!reemplazando && <><label><span>Fecha límite *</span><input type="date" value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} /></label><label><span>Documento a evaluar *</span><select value={documentoId} onChange={(e) => setDocumentoId(e.target.value)}><option value="">Selecciona un documento</option>{documentos.map((doc) => <option key={doc.idDocumento} value={doc.idDocumento}>{doc.nombreArchivo}</option>)}</select></label></>}
           </div>
           <label className="evaluacion-tg__check"><input type="checkbox" checked={jurado.externo} onChange={(e) => setJurado((v) => ({ ...v, externo: e.target.checked }))} /> Evaluador externo a la UIS</label>

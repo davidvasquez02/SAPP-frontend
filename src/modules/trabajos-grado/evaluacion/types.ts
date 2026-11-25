@@ -142,7 +142,6 @@ export interface BancoJurado {
 export interface JuradoInput {
   nombre: string
   tratamiento?: string
-  tratamientoEn?: string
   correo: string
   institucion: string
   externo: boolean

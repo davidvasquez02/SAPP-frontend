@@ -1,3 +1,4 @@
+import { tratamientoPredeterminado } from '../../shared/evaluadores/tratamiento'
 import { useEffect, useRef, useState } from 'react'
 import { ModuleLayout } from '../../components'
 import {
@@ -7,7 +8,7 @@ import {
   modificarEvaluadorCandidato,
   reactivarEvaluadorCandidato,
 } from '../../api/evaluadorCandidatoService'
-import type { EvaluadorCandidatoDto, EvaluadorCandidatoRequest } from '../../api/evaluadorCandidatoTypes'
+import type { EvaluadorCandidatoDto, EvaluadorCandidatoRequest, IdiomaEvaluadorCandidato } from '../../api/evaluadorCandidatoTypes'
 import './BancoEvaluadoresPage.css'
 
 const ITEMS_POR_PAGINA = 10
@@ -15,7 +16,6 @@ const ITEMS_POR_PAGINA = 10
 const EMPTY_FORM: EvaluadorCandidatoRequest = {
   nombre: '',
   tratamiento: '',
-  tratamientoEn: '',
   correo: '',
   institucion: '',
   externo: true,
@@ -77,8 +77,7 @@ const BancoEvaluadoresPage = () => {
   const abrirEditar = (candidato: EvaluadorCandidatoDto) => {
     setFormulario({
       nombre: candidato.nombre,
-      tratamiento: candidato.tratamiento ?? '',
-      tratamientoEn: candidato.tratamientoEn ?? '',
+      tratamiento: (candidato.idioma === 'EN' ? candidato.tratamientoEn || candidato.tratamiento : candidato.tratamiento) ?? '',
       correo: candidato.correo,
       institucion: candidato.institucion ?? '',
       externo: candidato.externo,
@@ -100,15 +99,16 @@ const BancoEvaluadoresPage = () => {
       setError('Completa el nombre y el correo de la persona.')
       return
     }
+    const datos = { ...formulario, tratamiento: formulario.tratamiento?.trim() || tratamientoPredeterminado(formulario.idioma) }
     setGuardando(true)
     setError(null)
     setMensaje(null)
     try {
       if (editandoId != null) {
-        await modificarEvaluadorCandidato(editandoId, formulario)
+        await modificarEvaluadorCandidato(editandoId, datos)
         setMensaje('Los datos fueron actualizados.')
       } else {
-        await crearEvaluadorCandidato(formulario)
+        await crearEvaluadorCandidato(datos)
         setMensaje('La persona fue registrada en el banco de evaluadores.')
       }
       cerrarFormulario()
@@ -163,11 +163,10 @@ const BancoEvaluadoresPage = () => {
             <h4>{editandoId != null ? 'Editar persona' : 'Registrar persona'}</h4>
             <div className="banco-evaluadores__form-grid">
               <label><span>Nombre *</span><input value={formulario.nombre} onChange={(e) => setFormulario((v) => v && { ...v, nombre: e.target.value })} /></label>
-              <label><span>Tratamiento en español (opcional)</span><input value={formulario.tratamiento} onChange={(e) => setFormulario((v) => v && { ...v, tratamiento: e.target.value })} placeholder="Dr., Dra., MSc., Ing., etc. Por defecto: Profesor(a)" /></label>
-              <label><span>Tratamiento en inglés (opcional)</span><input value={formulario.tratamientoEn ?? ''} onChange={(e) => setFormulario((v) => v && { ...v, tratamientoEn: e.target.value })} placeholder="Dr., Prof., etc. Por defecto: Professor" /></label>
+              <label><span>Idioma</span><select value={formulario.idioma} onChange={(e) => setFormulario((v) => v && { ...v, idioma: e.target.value as IdiomaEvaluadorCandidato, tratamiento: '' })}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>
+              <label><span>Tratamiento en {formulario.idioma === 'EN' ? 'inglés' : 'español'} (opcional)</span><input value={formulario.tratamiento} onChange={(e) => setFormulario((v) => v && { ...v, tratamiento: e.target.value })} placeholder={tratamientoPredeterminado(formulario.idioma)} /></label>
               <label><span>Correo *</span><input type="email" value={formulario.correo} onChange={(e) => setFormulario((v) => v && { ...v, correo: e.target.value })} /></label>
               <label><span>Institución (opcional)</span><input value={formulario.institucion} onChange={(e) => setFormulario((v) => v && { ...v, institucion: e.target.value })} /></label>
-              <label><span>Idioma</span><select value={formulario.idioma} onChange={(e) => setFormulario((v) => v && { ...v, idioma: e.target.value as 'ES' | 'EN' })}><option value="ES">Español</option><option value="EN">Inglés</option></select></label>
               <label className="banco-evaluadores__check"><input type="checkbox" checked={formulario.externo} onChange={(e) => setFormulario((v) => v && { ...v, externo: e.target.checked })} /> Externo a la UIS</label>
               <label className="banco-evaluadores__wide"><span>Notas (opcional)</span><textarea rows={2} value={formulario.notas} onChange={(e) => setFormulario((v) => v && { ...v, notas: e.target.value })} placeholder="De dónde se conoce, área de interés, etc." /></label>
             </div>

@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Idioma y tratamiento de evaluadores — 2026-11-25
+
+En **Banco de evaluadores** y **Evaluación de proyecto de grado**, el idioma se elige antes del tratamiento. El formulario muestra un solo campo opcional, con **PROFESOR** para español y **PROFESSOR** para inglés. Si se deja vacío, se guarda el valor sugerido. Al cambiar de idioma, el campo se limpia para indicar el tratamiento correspondiente.
+
 ## Orden del listado de actas
 
 El listado ordena por número de acta de mayor a menor y, para cada número, por consecutivo de menor a mayor. El orden se aplica antes de paginar.
