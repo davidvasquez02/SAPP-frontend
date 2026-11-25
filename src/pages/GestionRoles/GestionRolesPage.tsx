@@ -152,7 +152,7 @@ const GestionRolesPage = () => {
                   const busy = cambiandoRol === rol
                   return (
                     <li key={rol} className="gestion-roles__role">
-                      <span className={`gestion-roles__role-badge${tieneRol ? ' gestion-roles__role-badge--active' : ''}`}>
+                      <span className={`gestion-roles__role-badge${tieneRol ? ' gestion-roles__role-badge--active' : ''}`} title={rol}>
                         {formatRoleLabel(rol)}
                       </span>
                       <button
