@@ -4,6 +4,8 @@ import { normalizeRole, normalizeRoles } from './roleUtils'
 export const GENERIC_SYSTEM_ROLE = 'DEFAULT-ROLES-EISI'
 
 const STORAGE_KEY = 'SAPP_ACTIVE_ROLE'
+const COORDINADOR = 'COORDINADOR_POSGRADOS'
+const PROFESOR = 'DOCENTE_POSGRADOS'
 
 const ETIQUETAS: Readonly<Record<string, string>> = {
   ADMIN_POSGRADOS: 'Administrador',
@@ -15,8 +17,16 @@ const ETIQUETAS: Readonly<Record<string, string>> = {
 }
 
 /** Roles con los que el usuario puede elegir trabajar: los asignados, sin el rol genérico del sistema. */
-export const getSelectableRoles = (roles: readonly string[] | null | undefined): string[] =>
-  normalizeRoles(roles ?? []).filter((role) => role !== GENERIC_SYSTEM_ROLE)
+export const getSelectableRoles = (roles: readonly string[] | null | undefined): string[] => {
+  const elegibles = normalizeRoles(roles ?? []).filter((role) => role !== GENERIC_SYSTEM_ROLE)
+  const profesor = elegibles.indexOf(PROFESOR)
+  const coordinador = elegibles.indexOf(COORDINADOR)
+  if (profesor >= 0 && coordinador > profesor) {
+    elegibles.splice(coordinador, 1)
+    elegibles.splice(profesor, 0, COORDINADOR)
+  }
+  return elegibles
+}
 
 /**
  * Rol con el que se trabaja: el último que el usuario eligió, si todavía lo tiene asignado; si no, el primero de su
@@ -27,6 +37,12 @@ export const resolveActiveRole = (selectable: readonly string[], preferred: stri
   const elegido = preferred ? normalizeRole(preferred) : null
   return elegido && selectable.includes(elegido) ? elegido : selectable[0]
 }
+
+/** Al cargar, Coordinador tiene prioridad sobre una elección anterior de Profesor. */
+export const resolveInitialActiveRole = (selectable: readonly string[], preferred: string | null): string | null =>
+  preferred && normalizeRole(preferred) === PROFESOR && selectable.includes(PROFESOR) && selectable.includes(COORDINADOR)
+    ? COORDINADOR
+    : resolveActiveRole(selectable, preferred)
 
 /** Copia de la sesión que solo expone el rol activo: así cada pantalla y cada guarda de rutas muestra lo de ese rol. */
 export const applyActiveRole = <T extends { user: { roles: string[] } }>(session: T | null, activeRole: string | null): T | null => {

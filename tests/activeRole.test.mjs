@@ -40,6 +40,18 @@ test('el rol activo es el último elegido si sigue asignado; si no, el primero',
   assert.equal(m.resolveActiveRole([], 'DOCENTE_POSGRADOS'), null)
 })
 
+test('la carga prioriza Coordinador sobre Profesor aunque Profesor estuviera guardado', () => {
+  const roles = m.getSelectableRoles(['profesor', 'coordinador'])
+  assert.deepEqual(roles, ['COORDINADOR_POSGRADOS', 'DOCENTE_POSGRADOS'])
+  assert.equal(m.resolveInitialActiveRole(roles, null), 'COORDINADOR_POSGRADOS')
+  assert.equal(m.resolveInitialActiveRole(roles, 'profesor'), 'COORDINADOR_POSGRADOS')
+  assert.equal(m.resolveActiveRole(roles, 'profesor'), 'DOCENTE_POSGRADOS')
+  assert.equal(m.resolveInitialActiveRole(m.getSelectableRoles(['profesor']), 'profesor'), 'DOCENTE_POSGRADOS')
+  const gestion = m.getSelectableRoles(['admin', 'profesor', 'coordinador'])
+  assert.equal(m.resolveInitialActiveRole(gestion, null), 'ADMIN_POSGRADOS')
+  assert.equal(m.resolveInitialActiveRole(gestion, 'admin'), 'ADMIN_POSGRADOS')
+})
+
 test('la sesión solo expone el rol activo, sin modificar la original', () => {
   const base = { token: 't', user: { id: 1, roles: ['COORDINADOR_POSGRADOS', 'DOCENTE_POSGRADOS'] } }
   const activa = m.applyActiveRole(base, 'DOCENTE_POSGRADOS')

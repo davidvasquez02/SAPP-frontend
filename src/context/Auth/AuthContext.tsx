@@ -8,6 +8,7 @@ import {
   getSelectableRoles,
   readStoredActiveRole,
   resolveActiveRole,
+  resolveInitialActiveRole,
   storeActiveRole,
 } from '../../modules/auth/roles/activeRole'
 import { clearSession, getSession, saveSession } from '../../modules/auth/session/sessionStore'
@@ -37,14 +38,16 @@ const getInitialSession = () => {
 const claveDeUsuario = (session: AuthSession | null): string | null =>
   session ? String(session.user.uuid ?? session.user.id) : null
 
+const rolInicialDeSesion = (session: AuthSession | null): string | null => {
+  const clave = claveDeUsuario(session)
+  return resolveInitialActiveRole(getSelectableRoles(session?.user.roles), clave ? readStoredActiveRole(clave) : null)
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Sesión tal como la entrega el IAM, con todos los roles del usuario. Es la que se guarda; la que ven las pantallas
   // (`session`) solo trae el rol con el que se está trabajando.
   const [baseSession, setSessionState] = useState<AuthSession | null>(() => getInitialSession())
-  const [preferredRole, setPreferredRole] = useState<string | null>(() => {
-    const clave = claveDeUsuario(getInitialSession())
-    return clave ? readStoredActiveRole(clave) : null
-  })
+  const [preferredRole, setPreferredRole] = useState<string | null>(() => rolInicialDeSesion(baseSession))
   const [isInitializing, setIsInitializing] = useState(true)
   const [initializationError, setInitializationError] = useState<string | null>(null)
 
@@ -57,16 +60,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const authenticatedSession = mapGatewayLoginToUserSession(loginDto)
       setSessionState(authenticatedSession)
       saveSession(authenticatedSession)
-      const clave = claveDeUsuario(authenticatedSession)
-      setPreferredRole(clave ? readStoredActiveRole(clave) : null)
+      const rolInicial = rolInicialDeSesion(authenticatedSession)
+      setPreferredRole(rolInicial)
 
       // Adelanta la carga de fotos del modulo de Estudiantes para que, cuando el coordinador
       // entre, ya esten en cache y no haya que esperar el lote (~10s). Fire-and-forget: no
       // bloquea el login ni afecta nada si falla.
-      const rolInicial = resolveActiveRole(
-        getSelectableRoles(authenticatedSession.user.roles),
-        clave ? readStoredActiveRole(clave) : null,
-      )
       if (rolInicial && canManagePosgrados([rolInicial])) {
         void prefetchFotosEstudiantesActivos()
       }

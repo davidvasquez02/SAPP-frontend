@@ -1,3 +1,10 @@
+## Rol inicial de Coordinador — 2026-11-25
+
+- `src/modules/auth/roles/activeRole.ts` ordena Coordinador antes de Profesor al recibir ambos roles. `src/context/Auth/AuthContext.tsx` aplica esa prioridad a la sesión recuperada y al inicializar desde el gateway, incluso si Profesor era la selección guardada. El cambio manual a Profesor funciona durante la visita. Se respetan las preferencias guardadas para los demás roles.
+- `tests/activeRole.test.mjs` cubre el orden invertido, la preferencia anterior y las cuentas con otros roles. `tests/integration/rolInicial.test.mjs` carga la aplicación en Edge con gateway simulado y comprueba el selector y la recarga. Reutilizar Node 24.11.0, npm 11.6.1, el lockfile y `SAPP_PLAYWRIGHT_MODULE`.
+- Pasaron 18 pruebas focalizadas, la integración en Edge y la compilación. `npm run test:coverage` dio 668 de 703 aprobadas con los mismos 35 fallos previos y verificó los 361 archivos de `src`. Cobertura de líneas de 85,69 % global, 91,37 % en `AuthContext.tsx` y 78,04 % en `activeRole.ts`. El porcentaje global pasó de 85,70 % a 85,69 % al añadir diez líneas medibles, ocho cubiertas. Las dos líneas que reordenan la lista se ejercitan en Edge fuera del informe de cobertura.
+- La repetición de `npm test` también registró 668 de 703 aprobadas con los mismos 35 fallos. Logs en `%TEMP%/sapp-rol-inicial-*.log`.
+
 ## Guardado de decisiones de inclusión y cancelación — 2026-11-25
 
 - `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` aplica los estilos de validación ordinaria y mantiene un borrador por materia. El botón de guardar envía las filas marcadas en orden mediante el PUT existente. Cada respuesta actualiza la matrícula sin recargar el detalle. Ante un fallo, las decisiones ya confirmadas permanecen guardadas y los borradores restantes siguen disponibles. El historial y los documentos se consultan al concluir el guardado.

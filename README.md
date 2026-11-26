@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Rol inicial de Coordinador — 2026-11-25
+
+Si una cuenta tiene los roles Coordinador y Profesor, Coordinador aparece primero en el selector y tiene prioridad al cargar. El usuario puede cambiar manualmente a Profesor durante la visita.
+
 ## Guardado de decisiones de inclusión y cancelación — 2026-11-25
 
 Coordinación marca **Aprobar** o **Rechazar** y escribe las observaciones en cada fila. **Guardar decisiones de inclusión y cancelación** envía las filas marcadas. Si falla una decisión, el panel conserva las que faltan para reintentar.
