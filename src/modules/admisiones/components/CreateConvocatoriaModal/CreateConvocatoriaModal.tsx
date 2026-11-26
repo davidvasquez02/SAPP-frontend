@@ -111,7 +111,7 @@ const initialFormState: FormState = {
   programaId: '',
   anio: String(nowYear),
   semestre: '1',
-  cupos: '1',
+  cupos: '12',
   fechaInicio: initialDates.inicio,
   fechaFin: initialDates.fin,
 }

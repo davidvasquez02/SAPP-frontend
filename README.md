@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Cupos de nuevas convocatorias de admisión — 2026-11-25
+
+En el calendario académico, «Nueva convocatoria» propone 12 cupos. El valor se puede editar antes de crear la convocatoria.
+
 ## Rol inicial de Coordinador — 2026-11-25
 
 Si una cuenta tiene los roles Coordinador y Profesor, Coordinador aparece primero en el selector y tiene prioridad al cargar. El usuario puede cambiar manualmente a Profesor durante la visita.

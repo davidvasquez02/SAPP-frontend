@@ -1,3 +1,9 @@
+## Cupos de nuevas convocatorias de admisión — 2026-11-25
+
+- `src/modules/admisiones/components/CreateConvocatoriaModal/CreateConvocatoriaModal.tsx` inicia las convocatorias con 12 cupos. El campo sigue siendo editable y el POST conserva el contrato numérico. El formulario de edición conserva los cupos de la convocatoria existente.
+- `tests/convocatoriaFormBehavior.test.mjs` comprueba que el formulario muestra 12 y lo envía al guardar. El caso con 8 cupos comprueba que un valor editado se envía correctamente. Logs en `%TEMP%/sapp-cupos12-*.log`.
+- Pasaron las pruebas del formulario de creación y `npm run build`. En las pruebas focalizadas del calendario siguió fallando el caso previo de edición de fechas invertidas. `npm test` registró 668 de 703 aprobadas con los mismos 35 fallos previos.
+
 ## Rol inicial de Coordinador — 2026-11-25
 
 - `src/modules/auth/roles/activeRole.ts` ordena Coordinador antes de Profesor al recibir ambos roles. `src/context/Auth/AuthContext.tsx` aplica esa prioridad a la sesión recuperada y al inicializar desde el gateway, incluso si Profesor era la selección guardada. El cambio manual a Profesor funciona durante la visita. Se respetan las preferencias guardadas para los demás roles.

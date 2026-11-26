@@ -110,15 +110,17 @@ test('convocatorias React: fechas, duplicados, periodo y asignación de evaluado
     assert.equal(closed, 1)
   })
 
-  await t.test('periodo ausente crea sus fechas antes de registrar convocatoria', async s => {
+  await t.test('periodo ausente crea sus fechas antes de registrar convocatoria con 12 cupos por defecto', async s => {
     periods = [{ id: 7, anioPeriodo: '2029 - 2' }]
     const view = mount(s)
     await ready(view)
+    assert.equal(view.getByLabelText(/^Cupos/).value, '12')
     submit(view)
     await ui.waitFor(() => assert.equal(success.length, 1))
     assert.equal(periodWrites[0].periodoId, 8)
     assert.equal(periodWrites[0].fechaInicio, '2030-01-01')
     assert.equal(creations[0].periodoId, 8)
+    assert.equal(creations[0].cupos, 12)
   })
 
   await t.test('fallo creando fechas no continúa con convocatoria', async s => {
