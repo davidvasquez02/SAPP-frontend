@@ -18,7 +18,7 @@ Cada documento muestra su nombre una sola vez cuando la descripción lo repite. 
 
 ## Listado de matrículas académicas — 2026-11-25
 
-El buscador y los filtros comparten una fila en escritorio. La tabla mantiene el período y «Ver detalle» en una línea y usa etiquetas de estado ajustadas a su texto. En móvil se muestran tarjetas. El listado explica cuándo la búsqueda no tiene resultados y muestra la paginación cuando hay más de una página.
+El buscador y los filtros comparten una fila en escritorio. La tabla mantiene el período y «Ver detalle» en una línea. Las etiquetas de estado tienen ancho y altura uniformes y usan los colores del tema. En móvil, la etiqueta se muestra debajo del nombre del estudiante. El listado explica cuándo la búsqueda no tiene resultados y muestra la paginación cuando hay más de una página.
 
 ## Presentación de inclusiones y cancelaciones — 2026-11-25
 
