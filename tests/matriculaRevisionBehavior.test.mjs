@@ -18,18 +18,33 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   })
   let matricula, documents, missing, fetchError, decisionError, finalizationError, approvalError, validationError, decisions, approvals, finalized, savedSubjects
   let historial, historialError
+  let consultasMatricula
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     matricula = { id: 24, estudianteId: 17, estudianteNombreCompleto: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', periodoAcademico: '2026-2', estado: 'PENDIENTE_DOCUMENTOS', fechaSolicitud: '2026-10-17T10:00:00', asignaturas: [{ id: 33, asignaturaId: 7, asignaturaCodigo: 'UIS-7', asignaturaNombre: 'Investigación', estado: 'PENDIENTE', observaciones: null }] }
     documents = [document()]; missing = false; fetchError = false; decisionError = false; finalizationError = false; approvalError = false; validationError = false
     decisions = []; approvals = 0; finalized = 0; savedSubjects = []
     historial = []; historialError = false
+    consultasMatricula = 0
     ui.response((url, init) => {
       const path = new URL(url, 'https://example.test').pathname
       if (path.endsWith('/matriculaAcademica/estudiante/17/historialAsignaturas')) {
         return historialError ? Response.json({ ok: false, message: 'Historial no disponible' }, { status: 503 }) : ok(historial)
       }
-      if (path.endsWith('/matriculaAcademica')) return fetchError ? Response.json({ message: 'Detalle no disponible' }, { status: 503 }) : ok(missing ? [] : [matricula])
+      if (path.endsWith('/matriculaAcademica')) {
+        consultasMatricula++
+        return fetchError ? Response.json({ message: 'Detalle no disponible' }, { status: 503 }) : ok(missing ? [] : [matricula])
+      }
+      if (path.includes('/matriculaAcademica/24/inclusionCancelacion/')) {
+        const id = Number(path.split('/').at(-1))
+        const body = JSON.parse(init.body)
+        const asignaturas = matricula.asignaturas.map(item => item.id === id
+          ? { ...item, estado: body.aprobado ? 'MATRICULADA' : 'INCLUSION_RECHAZADA', observaciones: body.observaciones }
+          : item)
+        matricula = { ...matricula, asignaturas, estado: asignaturas.some(item => item.estado === 'INCLUSION_SOLICITADA')
+          ? 'INCLUSION_POR_VALIDAR' : 'FINALIZADA' }
+        return ok(matricula)
+      }
       if (path.endsWith('/document')) {
         if (init.method === 'PUT') {
           if (decisionError) return Response.json({ message: 'Decisión no guardada' }, { status: 503 })
@@ -301,6 +316,27 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     assert.ok(fila.getByText('Matriculada', { exact: true }).classList.contains('matricula-detalle__badge--approved'))
     assert.ok(fila.getByText('Validada por coordinación'))
     assert.ok(view.getByText('Inclusión solicitada', { exact: true }).classList.contains('matricula-detalle__badge--review'))
+  })
+
+  await t.test('decide inclusiones por fila y muestra Finalizada tras la última decisión sin recargar detalle', async s => {
+    matricula = { ...matricula, estado: 'INCLUSION_POR_VALIDAR', asignaturas: [
+      { ...matricula.asignaturas[0], estado: 'INCLUSION_SOLICITADA' },
+      { id: 34, asignaturaId: 8, asignaturaNombre: 'Seminario', estado: 'INCLUSION_SOLICITADA' },
+    ] }
+    const view = mount(s)
+    await ready(view)
+    const tabla = ui.within(view.getByRole('heading', { name: 'Solicitudes de inclusión y cancelación pendientes' }).parentElement)
+    const fila = nombre => ui.within(tabla.getByRole('row', { name: new RegExp(nombre) }))
+    ui.fireEvent.change(fila('Seminario').getByRole('textbox'), { target: { value: 'Revisar requisitos' } })
+    ui.fireEvent.click(fila('Investigación').getByRole('button', { name: 'Aprobar' }))
+    await view.findByText('Solicitud aprobada correctamente.')
+    assert.ok(view.getByText('Inclusión por validar', { exact: true }))
+    assert.equal(fila('Seminario').getByRole('textbox').value, 'Revisar requisitos')
+    assert.equal(tabla.queryByRole('row', { name: /Investigación/ }), null)
+    ui.fireEvent.click(fila('Seminario').getByRole('button', { name: 'Rechazar' }))
+    await view.findByText('Solicitud rechazada correctamente.')
+    assert.ok(view.getByText('Finalizada', { exact: true }))
+    assert.equal(consultasMatricula, 1)
   })
 
   await t.test('abrir y descargar documento usa contenido y nombre del checklist', async sub => {

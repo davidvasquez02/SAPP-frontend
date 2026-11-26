@@ -85,7 +85,9 @@ test('página de matrícula React: roles, creación, documentos y listado admini
           ventanasInclusiones = []
           return Response.json({ message: 'El plazo de inclusiones y cancelaciones no está vigente para esta matrícula.' }, { status: 400 })
         }
-        solicitudesInclusiones.push(JSON.parse(init.body))
+        const solicitud = JSON.parse(init.body)
+        solicitudesInclusiones.push(solicitud)
+        if (solicitud.incluir.length) validation = { ...validation, estado: 'INCLUSION_POR_VALIDAR' }
         return ok(validation)
       }
       if (path.endsWith('/matriculaAcademica')) {
@@ -219,6 +221,7 @@ test('página de matrícula React: roles, creación, documentos y listado admini
     ui.fireEvent.click(view.getByRole('checkbox', { name: 'Investigación' }))
     ui.fireEvent.click(view.getByRole('button', { name: 'Enviar solicitud' }))
     await view.findByText(/Solicitud registrada/)
+    await view.findByText('Inclusión por validar')
     assert.deepEqual(solicitudesInclusiones, [{ incluir: [{ asignaturaId: 2 }], cancelarAsignaturaIds: [1] }])
     await ui.waitFor(() => assert.equal(consultasHistorial, 2))
   })

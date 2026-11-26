@@ -24,6 +24,7 @@ import type {
 } from '../../modules/matricula/types'
 import {
   formatBackendDateTime,
+  esMatriculaConSeleccionCerrada,
   getAsignaturaBadgeModifier,
   getAsignaturaEstadoLabel,
   getMatriculaEstadoLabel,
@@ -153,7 +154,8 @@ const MatriculaDetalleCoordinacionPage = () => {
 
   const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
   const isRadicada = normalizedMatriculaEstado === 'RADICADA'
-  const isFinalizada = normalizedMatriculaEstado === 'FINALIZADA'
+  const isFinalizada = esMatriculaConSeleccionCerrada(normalizedMatriculaEstado)
+  const [revisionHistorial, setRevisionHistorial] = useState(0)
   const disableDocumentValidation = isRadicada || isFinalizada
   // Bug: el boton se habilitaba sin importar si los documentos obligatorios ya estaban
   // aprobados -- solo miraba que la matricula no estuviera FINALIZADA.
@@ -609,18 +611,31 @@ const MatriculaDetalleCoordinacionPage = () => {
   }
 
   const handleDecidirInclusionCancelacion = async (matriculaAsignaturaId: number, aprobado: boolean) => {
-    if (!matricula || session?.kind !== 'SAPP') {
+    if (!matricula || session?.kind !== 'SAPP' || decidingInclusionCancelacionId !== null) {
       return
     }
 
     setDecidingInclusionCancelacionId(matriculaAsignaturaId)
     try {
-      await decidirInclusionCancelacion(matricula.id, matriculaAsignaturaId, {
+      const actualizada = await decidirInclusionCancelacion(matricula.id, matriculaAsignaturaId, {
         aprobado,
         usuarioRevisionId: session.user.id,
         observaciones: inclusionCancelacionObservaciones[matriculaAsignaturaId]?.trim() || null,
       })
-      await loadDetalle()
+      setMatricula((actual) => actual?.id === actualizada.id ? {
+        ...actual,
+        estado: actualizada.estado,
+        asignaturas: actualizada.asignaturas,
+        fechaRevision: actualizada.fechaRevision ?? actual.fechaRevision,
+        usuarioRevisionUsername: actualizada.usuarioRevisionUsername ?? actual.usuarioRevisionUsername,
+      } : actual)
+      setRevisionHistorial((revision) => revision + 1)
+      try {
+        await loadDocumentos()
+      } catch {
+        setToast({ tone: 'error', message: 'Decisión guardada. No fue posible actualizar el formato de matrícula.' })
+        return
+      }
       setToast({ tone: 'success', message: aprobado ? 'Solicitud aprobada correctamente.' : 'Solicitud rechazada correctamente.' })
     } catch (requestError) {
       setToast({
@@ -1000,7 +1015,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                                   <button
                                     type="button"
                                     className="matricula-detalle__decision-button matricula-detalle__decision-button--approve"
-                                    disabled={deciding}
+                                    disabled={decidingInclusionCancelacionId !== null}
                                     onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, true)}
                                   >
                                     Aprobar
@@ -1008,7 +1023,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                                   <button
                                     type="button"
                                     className="matricula-detalle__decision-button matricula-detalle__decision-button--reject"
-                                    disabled={deciding}
+                                    disabled={decidingInclusionCancelacionId !== null}
                                     onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, false)}
                                   >
                                     Rechazar
@@ -1041,7 +1056,7 @@ const MatriculaDetalleCoordinacionPage = () => {
 
             <article className="matricula-detalle__card">
               <h3>Historial de materias</h3>
-              <HistorialAsignaturasEstudiante key={matricula.estudianteId} estudianteId={matricula.estudianteId} vista="resumen-por-periodo" />
+              <HistorialAsignaturasEstudiante key={`${matricula.estudianteId}-${revisionHistorial}`} estudianteId={matricula.estudianteId} vista="resumen-por-periodo" />
             </article>
           </>
         ) : null}

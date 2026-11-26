@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Inclusión por validar — 2026-11-25
+
+Al solicitar una inclusión, la matrícula pasa a **Inclusión por validar**. Coordinación puede aprobar o rechazar cada materia desde su fila. La matrícula vuelve a **Finalizada** al resolver la última solicitud pendiente.
+
 ## Documentos en el detalle de matrícula — 2026-11-25
 
 Cada documento muestra su nombre una sola vez cuando la descripción lo repite. Las descripciones que aportan información se conservan. El nombre del archivo aparece como texto secundario y las acciones «Ver» y «Descargar» se agrupan. La columna «Validación» aparece durante la revisión y se retira al finalizar la matrícula.

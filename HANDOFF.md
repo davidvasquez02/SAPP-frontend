@@ -1,3 +1,10 @@
+## Inclusión por validar — 2026-11-25
+
+- El backend en `back - v2/sapp-backend` usa `INCLUSION_POR_VALIDAR` cuando el POST de inclusión recibe al menos una materia. Una solicitud de solo cancelación conserva el estado existente. Si se mezclan solicitudes de inclusión y cancelación, la última decisión de cualquiera de ellas devuelve la matrícula a `FINALIZADA`. El estado se almacena en el campo de texto existente y las decisiones del mismo trámite se serializan con un bloqueo de la matrícula.
+- El PUT de decisión devuelve la matrícula actualizada. Coordinación toma de esa respuesta las materias y el estado y actualiza el historial y el formato de matrícula con consultas de esas secciones. La validación ordinaria se mantiene cerrada. En el estudiante se muestra **Inclusión por validar** incluso con la convocatoria ordinaria cerrada.
+- Reutilizar Node 24.11.0, npm 11.6.1, el lockfile y el JDK Microsoft 21.0.9 en `C:/Users/david/.jdks/ms-21.0.9` con Maven Wrapper. Pruebas en `tests/matriculaPageBehavior.test.mjs`, `tests/matriculaRevisionBehavior.test.mjs` y `MatriculaAcademicaGestionTest`. Desplegar frontend y backend juntos.
+- Pasaron 96 pruebas focalizadas del backend, los dos casos de integración en Edge y la compilación. Las suites completas del frontend registraron 667 de 702 aprobadas con los mismos 35 fallos previos. El verificador incluyó los 361 archivos de `src`. Cobertura de líneas de 85,65 % global, 87,43 % en Matrícula y 90,75 % en el detalle de Coordinación. Logs de validación en `%TEMP%/sapp-inclusion-estado-*.log`.
+
 ## Documentos en el detalle de matrícula — 2026-11-25
 
 - `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` compara nombre y descripción tras normalizar espacios y usa la comparación de texto en español sin distinguir tildes ni mayúsculas. El CSS agrupa las acciones de archivo y ajusta la grilla cuando la matrícula está finalizada. La descarga y la vista previa reutilizan los manejadores existentes.

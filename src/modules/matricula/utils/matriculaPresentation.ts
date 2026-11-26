@@ -10,7 +10,11 @@ const MATRICULA_ESTADO_LABELS: Record<string, string> = {
   PENDIENTE_DOCUMENTOS: 'Pendiente de documentos',
   RADICADA: 'Radicada',
   FINALIZADA: 'Finalizada',
+  INCLUSION_POR_VALIDAR: 'Inclusión por validar',
 }
+
+export const esMatriculaConSeleccionCerrada = (estado: string): boolean =>
+  ['FINALIZADA', 'INCLUSION_POR_VALIDAR'].includes(estado.trim().toUpperCase())
 
 const ASIGNATURA_ESTADO_LABELS: Record<string, string> = {
   APROBADA: 'Aprobada',
@@ -94,6 +98,7 @@ export const getMatriculaEstadoModifier = (estado: string, documentosCompletos?:
   const normalized = estado.trim().toUpperCase()
   if (normalized === 'PENDIENTE_DOCUMENTOS') return documentosCompletos ? 'pendiente-validacion' : 'pendiente-documentos'
   if (normalized === 'RADICADA') return 'radicada'
+  if (normalized === 'INCLUSION_POR_VALIDAR') return 'pendiente-validacion'
   if (normalized === 'FINALIZADA') return 'finalizada'
   return 'default'
 }

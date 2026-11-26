@@ -42,6 +42,7 @@ import MateriaExternaForm from "../../modules/matricula/components/MateriaExtern
 import InclusionCancelacionPanel from "../../modules/matricula/components/InclusionCancelacionPanel/InclusionCancelacionPanel";
 import {
   formatBackendDateTime,
+  esMatriculaConSeleccionCerrada,
   getMatriculaAcademicaDetallePath,
   getMatriculaEstadoLabel,
   getMatriculaEstadoModifier,
@@ -214,7 +215,7 @@ const MatriculaPage = () => {
       setCanCreateMatricula(false);
       setHasExistingMatricula(true);
       setIsReadOnlyMatriculaFinalizada(
-        validation.matricula.estado.toUpperCase() === "FINALIZADA",
+        esMatriculaConSeleccionCerrada(validation.matricula.estado),
       );
       setMatriculaValidationMessage(
         validation.matricula.estado.toUpperCase() === "FINALIZADA"
@@ -376,7 +377,7 @@ const MatriculaPage = () => {
         }
 
         const matriculaFinalizada = matriculaValidation.status === "EXISTS"
-          && matriculaValidation.matricula.estado.toUpperCase() === "FINALIZADA";
+          && esMatriculaConSeleccionCerrada(matriculaValidation.matricula.estado);
         if (!convocatoriaResult.isOpen && !matriculaFinalizada) {
           return;
         }
@@ -1437,6 +1438,9 @@ const MatriculaPage = () => {
         ) : null}
         {!loadingConvocatoria && isReadOnlyMatriculaFinalizada && activeMatricula ? (
           <>
+            {!convocatoria?.isOpen && activeMatricula.estado === "INCLUSION_POR_VALIDAR" ? (
+              <p className="matricula-page__status">{getMatriculaEstadoLabel(activeMatricula.estado)}</p>
+            ) : null}
             {!convocatoria?.isOpen && errorForm ? <p className="matricula-page__error">{errorForm}</p> : null}
             <InclusionCancelacionPanel
               key={activeMatricula.id}
