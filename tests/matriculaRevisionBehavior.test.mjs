@@ -19,6 +19,7 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   let matricula, documents, missing, fetchError, decisionError, finalizationError, approvalError, validationError, decisions, approvals, finalized, savedSubjects
   let historial, historialError
   let consultasMatricula
+  let decisionesInclusiones, falloInclusion
   const ok = data => Response.json({ ok: true, data })
   t.beforeEach(() => {
     matricula = { id: 24, estudianteId: 17, estudianteNombreCompleto: 'Persona de prueba', codigoEstudianteUis: '2026001', programaAcademico: 'Maestría', periodoAcademico: '2026-2', estado: 'PENDIENTE_DOCUMENTOS', fechaSolicitud: '2026-10-17T10:00:00', asignaturas: [{ id: 33, asignaturaId: 7, asignaturaCodigo: 'UIS-7', asignaturaNombre: 'Investigación', estado: 'PENDIENTE', observaciones: null }] }
@@ -26,6 +27,7 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     decisions = []; approvals = 0; finalized = 0; savedSubjects = []
     historial = []; historialError = false
     consultasMatricula = 0
+    decisionesInclusiones = []; falloInclusion = false
     ui.response((url, init) => {
       const path = new URL(url, 'https://example.test').pathname
       if (path.endsWith('/matriculaAcademica/estudiante/17/historialAsignaturas')) {
@@ -38,6 +40,8 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
       if (path.includes('/matriculaAcademica/24/inclusionCancelacion/')) {
         const id = Number(path.split('/').at(-1))
         const body = JSON.parse(init.body)
+        if (falloInclusion && id === 34) return Response.json({ message: 'No se guardó Seminario' }, { status: 503 })
+        decisionesInclusiones.push({ id, ...body })
         const asignaturas = matricula.asignaturas.map(item => item.id === id
           ? { ...item, estado: body.aprobado ? 'MATRICULADA' : 'INCLUSION_RECHAZADA', observaciones: body.observaciones }
           : item)
@@ -318,7 +322,7 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     assert.ok(view.getByText('Inclusión solicitada', { exact: true }).classList.contains('matricula-detalle__badge--review'))
   })
 
-  await t.test('decide inclusiones por fila y muestra Finalizada tras la última decisión sin recargar detalle', async s => {
+  await t.test('marca inclusiones sin escribir y guarda las decisiones marcadas con un botón', async s => {
     matricula = { ...matricula, estado: 'INCLUSION_POR_VALIDAR', asignaturas: [
       { ...matricula.asignaturas[0], estado: 'INCLUSION_SOLICITADA' },
       { id: 34, asignaturaId: 8, asignaturaNombre: 'Seminario', estado: 'INCLUSION_SOLICITADA' },
@@ -327,14 +331,27 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
     await ready(view)
     const tabla = ui.within(view.getByRole('heading', { name: 'Solicitudes de inclusión y cancelación pendientes' }).parentElement)
     const fila = nombre => ui.within(tabla.getByRole('row', { name: new RegExp(nombre) }))
+    const guardar = () => tabla.getByRole('button', { name: 'Guardar decisiones de inclusión y cancelación' })
+    assert.ok(guardar().disabled)
     ui.fireEvent.change(fila('Seminario').getByRole('textbox'), { target: { value: 'Revisar requisitos' } })
     ui.fireEvent.click(fila('Investigación').getByRole('button', { name: 'Aprobar' }))
-    await view.findByText('Solicitud aprobada correctamente.')
+    assert.equal(fila('Investigación').getByRole('button', { name: 'Aprobada' }).getAttribute('aria-pressed'), 'true')
+    ui.fireEvent.click(fila('Seminario').getByRole('button', { name: 'Rechazar' }))
+    assert.deepEqual(decisionesInclusiones, [])
+    falloInclusion = true
+    ui.fireEvent.click(guardar())
+    await view.findByText('Decisiones guardadas: 1. No se guardó Seminario')
     assert.ok(view.getByText('Inclusión por validar', { exact: true }))
     assert.equal(fila('Seminario').getByRole('textbox').value, 'Revisar requisitos')
     assert.equal(tabla.queryByRole('row', { name: /Investigación/ }), null)
-    ui.fireEvent.click(fila('Seminario').getByRole('button', { name: 'Rechazar' }))
-    await view.findByText('Solicitud rechazada correctamente.')
+    assert.equal(fila('Seminario').getByRole('button', { name: 'Rechazada' }).getAttribute('aria-pressed'), 'true')
+    falloInclusion = false
+    ui.fireEvent.click(guardar())
+    await view.findByText('Decisiones guardadas correctamente.')
+    assert.deepEqual(decisionesInclusiones.map(({ id, aprobado, observaciones }) => ({ id, aprobado, observaciones })), [
+      { id: 33, aprobado: true, observaciones: null },
+      { id: 34, aprobado: false, observaciones: 'Revisar requisitos' },
+    ])
     assert.ok(view.getByText('Finalizada', { exact: true }))
     assert.equal(consultasMatricula, 1)
   })

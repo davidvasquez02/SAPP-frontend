@@ -16,6 +16,8 @@ test('los documentos finalizados muestran acciones juntas y se adaptan a móvil'
   t.after(() => browser.close())
   const page = await browser.newPage({ viewport: { width: 1440, height: 769 } })
   let estado = 'FINALIZADA'
+  let asignaturas = []
+  const decisiones = []
   await page.route('**/*', route => {
     const request = route.request()
     const url = new URL(request.url())
@@ -25,8 +27,18 @@ test('los documentos finalizados muestran acciones juntas y se adaptan a móvil'
       detalle: { persona: { id: 100, fullName: 'Persona Prueba', attributes: {} } },
     })
     if (url.pathname.endsWith('/matriculaAcademica')) return reply([{
-      id: 24, estudianteId: 17, estudianteNombreCompleto: 'Persona Prueba', estado, asignaturas: [],
+      id: 24, estudianteId: 17, estudianteNombreCompleto: 'Persona Prueba', estado, asignaturas,
     }])
+    if (url.pathname.includes('/matriculaAcademica/24/inclusionCancelacion/')) {
+      const id = Number(url.pathname.split('/').at(-1))
+      const { aprobado } = request.postDataJSON()
+      decisiones.push({ id, aprobado })
+      asignaturas = asignaturas.map(item => item.id === id
+        ? { ...item, estado: aprobado ? 'MATRICULADA' : 'CANCELACION_RECHAZADA' }
+        : item)
+      if (decisiones.length === 2) estado = 'FINALIZADA'
+      return reply({ id: 24, estado, asignaturas })
+    }
     if (url.pathname.endsWith('/document')) return reply([{
       idTipoDocumentoTramite: 5, nombreTipoDocumentoTramite: 'Certificado EPS',
       descripcionTipoDocumentoTramite: 'Certificado Eps', obligatorioTipoDocumentoTramite: true, documentoCargado: true,
@@ -58,4 +70,26 @@ test('los documentos finalizados muestran acciones juntas y se adaptan a móvil'
   const descargaMovil = await descargar.boundingBox()
   assert.equal(vistaMovil.y, descargaMovil.y)
   assert.ok(vistaMovil.height >= 44 && descargaMovil.x + descargaMovil.width <= 375)
+
+  estado = 'INCLUSION_POR_VALIDAR'
+  asignaturas = [
+    { id: 31, asignaturaId: 1, asignaturaNombre: 'Investigación', estado: 'INCLUSION_SOLICITADA' },
+    { id: 32, asignaturaId: 2, asignaturaNombre: 'Seminario', estado: 'CANCELACION_SOLICITADA' },
+  ]
+  await page.reload()
+  const solicitudes = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'Solicitudes de inclusión y cancelación pendientes' }),
+  })
+  const guardar = solicitudes.getByRole('button', { name: 'Guardar decisiones de inclusión y cancelación' })
+  await guardar.waitFor()
+  assert.ok(await guardar.isDisabled())
+  const inclusion = solicitudes.getByRole('row', { name: /Investigación/ })
+  await inclusion.getByRole('button', { name: 'Aprobar' }).click()
+  assert.equal(await inclusion.getByRole('button', { name: 'Aprobada' }).getAttribute('aria-pressed'), 'true')
+  await solicitudes.getByRole('row', { name: /Seminario/ }).getByRole('button', { name: 'Rechazar' }).click()
+  assert.deepEqual(decisiones, [])
+  await guardar.click()
+  await page.getByText('Decisiones guardadas correctamente.').waitFor()
+  assert.deepEqual(decisiones, [{ id: 31, aprobado: true }, { id: 32, aprobado: false }])
+  assert.ok(await page.getByText('Finalizada', { exact: true }).isVisible())
 })

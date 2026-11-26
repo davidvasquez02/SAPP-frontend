@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Guardado de decisiones de inclusión y cancelación — 2026-11-25
+
+Coordinación marca **Aprobar** o **Rechazar** y escribe las observaciones en cada fila. **Guardar decisiones de inclusión y cancelación** envía las filas marcadas. Si falla una decisión, el panel conserva las que faltan para reintentar.
+
 ## Inclusión por validar — 2026-11-25
 
 Al solicitar una inclusión, la matrícula pasa a **Inclusión por validar**. Coordinación puede aprobar o rechazar cada materia desde su fila. La matrícula vuelve a **Finalizada** al resolver la última solicitud pendiente.

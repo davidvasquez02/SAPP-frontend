@@ -1,3 +1,9 @@
+## Guardado de decisiones de inclusión y cancelación — 2026-11-25
+
+- `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` aplica los estilos de validación ordinaria y mantiene un borrador por materia. El botón de guardar envía las filas marcadas en orden mediante el PUT existente. Cada respuesta actualiza la matrícula sin recargar el detalle. Ante un fallo, las decisiones ya confirmadas permanecen guardadas y los borradores restantes siguen disponibles. El historial y los documentos se consultan al concluir el guardado.
+- `tests/matriculaRevisionBehavior.test.mjs` cubre marcado local, un solo guardado, fallo parcial, preservación de observaciones y reintento que devuelve el estado **Finalizada**. Reutilizar Node 24.11.0, npm 11.6.1 y el lockfile.
+- Pasaron las 19 pruebas focalizadas, la compilación, ESLint de la pantalla y la integración `tests/integration/matriculaDocumentosLayout.test.mjs` en Edge, que comprueba el guardado conjunto de una inclusión y una cancelación en móvil. `npm test` y `npm run test:coverage` registraron 667 de 702 aprobadas con los 35 fallos previos. Se verificaron los 361 archivos de `src`, con 85,70 % de cobertura global de líneas y 91,87 % en el detalle. Logs en `%TEMP%/sapp-inclusion-lote-*.log`.
+
 ## Inclusión por validar — 2026-11-25
 
 - El backend en `back - v2/sapp-backend` usa `INCLUSION_POR_VALIDAR` cuando el POST de inclusión recibe al menos una materia. Una solicitud de solo cancelación conserva el estado existente. Si se mezclan solicitudes de inclusión y cancelación, la última decisión de cualquiera de ellas devuelve la matrícula a `FINALIZADA`. El estado se almacena en el campo de texto existente y las decisiones del mismo trámite se serializan con un bloqueo de la matrícula.

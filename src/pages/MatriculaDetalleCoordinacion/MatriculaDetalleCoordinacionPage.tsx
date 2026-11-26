@@ -148,8 +148,8 @@ const MatriculaDetalleCoordinacionPage = () => {
   const completedReviewFinalizationMatriculaIdRef = useRef<number | null>(null)
   const [asignaturasDecision, setAsignaturasDecision] = useState<Record<number, AsignaturaDecisionState>>({})
   const [isSavingAsignaturas, setIsSavingAsignaturas] = useState(false)
-  const [inclusionCancelacionObservaciones, setInclusionCancelacionObservaciones] = useState<Record<number, string>>({})
-  const [decidingInclusionCancelacionId, setDecidingInclusionCancelacionId] = useState<number | null>(null)
+  const [decisionesInclusiones, setDecisionesInclusiones] = useState<Record<number, Partial<AsignaturaDecisionState>>>({})
+  const [guardandoInclusiones, setGuardandoInclusiones] = useState(false)
   const [toast, setToast] = useState<ToastFeedback | null>(null)
 
   const normalizedMatriculaEstado = matricula?.estado.toUpperCase() ?? ''
@@ -251,6 +251,7 @@ const MatriculaDetalleCoordinacionPage = () => {
   }, [loadDocumentos, parsedMatriculaId])
 
   useEffect(() => {
+    setDecisionesInclusiones({})
     void loadDetalle()
   }, [loadDetalle])
 
@@ -610,40 +611,64 @@ const MatriculaDetalleCoordinacionPage = () => {
     }
   }
 
-  const handleDecidirInclusionCancelacion = async (matriculaAsignaturaId: number, aprobado: boolean) => {
-    if (!matricula || session?.kind !== 'SAPP' || decidingInclusionCancelacionId !== null) {
-      return
+  const inclusionesPendientes = matricula?.asignaturas.filter((asignatura) =>
+    ['INCLUSION_SOLICITADA', 'CANCELACION_SOLICITADA'].includes(asignatura.estado.toUpperCase()),
+  ) ?? []
+  const hayDecisionesInclusiones = inclusionesPendientes.some(({ id }) => decisionesInclusiones[id]?.decision)
+
+  const actualizarDecisionInclusion = (id: number, cambios: Partial<AsignaturaDecisionState>) => {
+    setDecisionesInclusiones((actuales) => ({ ...actuales, [id]: { ...actuales[id], ...cambios } }))
+  }
+
+  const guardarDecisionesInclusiones = async () => {
+    if (!matricula || session?.kind !== 'SAPP' || guardandoInclusiones || !hayDecisionesInclusiones) return
+
+    setGuardandoInclusiones(true)
+    let guardadas = 0
+    let errorGuardado = ''
+    try {
+      for (const { id } of inclusionesPendientes) {
+        const borrador = decisionesInclusiones[id]
+        if (!borrador?.decision) continue
+
+        const actualizada = await decidirInclusionCancelacion(matricula.id, id, {
+          aprobado: borrador.decision === 'APROBADA',
+          usuarioRevisionId: session.user.id,
+          observaciones: borrador.observaciones?.trim() || null,
+        })
+        guardadas++
+        setMatricula((actual) => actual?.id === actualizada.id ? {
+          ...actual,
+          estado: actualizada.estado,
+          asignaturas: actualizada.asignaturas,
+          fechaRevision: actualizada.fechaRevision ?? actual.fechaRevision,
+          usuarioRevisionUsername: actualizada.usuarioRevisionUsername ?? actual.usuarioRevisionUsername,
+        } : actual)
+        setDecisionesInclusiones((actuales) => {
+          const restantes = { ...actuales }
+          delete restantes[id]
+          return restantes
+        })
+      }
+    } catch (error) {
+      errorGuardado = error instanceof Error ? error.message : String(error)
     }
 
-    setDecidingInclusionCancelacionId(matriculaAsignaturaId)
     try {
-      const actualizada = await decidirInclusionCancelacion(matricula.id, matriculaAsignaturaId, {
-        aprobado,
-        usuarioRevisionId: session.user.id,
-        observaciones: inclusionCancelacionObservaciones[matriculaAsignaturaId]?.trim() || null,
-      })
-      setMatricula((actual) => actual?.id === actualizada.id ? {
-        ...actual,
-        estado: actualizada.estado,
-        asignaturas: actualizada.asignaturas,
-        fechaRevision: actualizada.fechaRevision ?? actual.fechaRevision,
-        usuarioRevisionUsername: actualizada.usuarioRevisionUsername ?? actual.usuarioRevisionUsername,
-      } : actual)
-      setRevisionHistorial((revision) => revision + 1)
-      try {
+      if (guardadas > 0) {
+        setRevisionHistorial((revision) => revision + 1)
         await loadDocumentos()
-      } catch {
-        setToast({ tone: 'error', message: 'Decisión guardada. No fue posible actualizar el formato de matrícula.' })
-        return
       }
-      setToast({ tone: 'success', message: aprobado ? 'Solicitud aprobada correctamente.' : 'Solicitud rechazada correctamente.' })
-    } catch (requestError) {
-      setToast({
-        tone: 'error',
-        message: requestError instanceof Error ? requestError.message : String(requestError),
-      })
+      if (errorGuardado) {
+        setToast({ tone: 'error', message: `Decisiones guardadas: ${guardadas}. ${errorGuardado}` })
+      } else {
+        setToast({ tone: 'success', message: 'Decisiones guardadas correctamente.' })
+      }
+    } catch {
+      const aviso = 'No fue posible actualizar el formato de matrícula.'
+      setToast({ tone: 'error', message: [`Decisiones guardadas: ${guardadas}.`, errorGuardado, aviso].filter(Boolean).join(' ') })
     } finally {
-      setDecidingInclusionCancelacionId(null)
+      setGuardandoInclusiones(false)
     }
   }
 
@@ -987,7 +1012,7 @@ const MatriculaDetalleCoordinacionPage = () => {
               ) : null}
             </article>
 
-            {matricula.asignaturas.some((asignatura) => ['INCLUSION_SOLICITADA', 'CANCELACION_SOLICITADA'].includes(asignatura.estado.toUpperCase())) ? (
+            {inclusionesPendientes.length > 0 ? (
               <article className="matricula-detalle__card">
                 <h3>Solicitudes de inclusión y cancelación pendientes</h3>
                 <div className="matricula-detalle__table-wrapper sapp-table-shell">
@@ -1001,11 +1026,9 @@ const MatriculaDetalleCoordinacionPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {matricula.asignaturas
-                        .filter((asignatura) => ['INCLUSION_SOLICITADA', 'CANCELACION_SOLICITADA'].includes(asignatura.estado.toUpperCase()))
-                        .map((asignatura) => {
+                      {inclusionesPendientes.map((asignatura) => {
                           const esInclusion = asignatura.estado.toUpperCase() === 'INCLUSION_SOLICITADA'
-                          const deciding = decidingInclusionCancelacionId === asignatura.id
+                          const borrador = decisionesInclusiones[asignatura.id]
                           return (
                             <tr key={asignatura.id}>
                               <td data-label="Asignatura">{asignatura.asignaturaNombre}{(asignatura.asignaturaInstitucion ?? asignatura.asignaturaEscuela) ? ` (${asignatura.asignaturaInstitucion ?? asignatura.asignaturaEscuela})` : ''}</td>
@@ -1014,35 +1037,32 @@ const MatriculaDetalleCoordinacionPage = () => {
                                 <div className="matricula-detalle__decision-group">
                                   <button
                                     type="button"
-                                    className="matricula-detalle__decision-button matricula-detalle__decision-button--approve"
-                                    disabled={decidingInclusionCancelacionId !== null}
-                                    onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, true)}
+                                    className={`matricula-detalle__decision-button matricula-detalle__decision-button--approve ${borrador?.decision === 'APROBADA' ? 'matricula-detalle__decision-button--active' : ''}`}
+                                    aria-pressed={borrador?.decision === 'APROBADA'}
+                                    disabled={guardandoInclusiones}
+                                    onClick={() => actualizarDecisionInclusion(asignatura.id, { decision: 'APROBADA' })}
                                   >
-                                    Aprobar
+                                    {borrador?.decision === 'APROBADA' ? 'Aprobada' : 'Aprobar'}
                                   </button>
                                   <button
                                     type="button"
-                                    className="matricula-detalle__decision-button matricula-detalle__decision-button--reject"
-                                    disabled={decidingInclusionCancelacionId !== null}
-                                    onClick={() => void handleDecidirInclusionCancelacion(asignatura.id, false)}
+                                    className={`matricula-detalle__decision-button matricula-detalle__decision-button--reject ${borrador?.decision === 'NO_MATRICULADA' ? 'matricula-detalle__decision-button--active' : ''}`}
+                                    aria-pressed={borrador?.decision === 'NO_MATRICULADA'}
+                                    disabled={guardandoInclusiones}
+                                    onClick={() => actualizarDecisionInclusion(asignatura.id, { decision: 'NO_MATRICULADA' })}
                                   >
-                                    Rechazar
+                                    {borrador?.decision === 'NO_MATRICULADA' ? 'Rechazada' : 'Rechazar'}
                                   </button>
                                 </div>
                               </td>
                               <td data-label="Observaciones">
                                 <textarea
                                   className="matricula-detalle__asignatura-comments"
-                                  value={inclusionCancelacionObservaciones[asignatura.id] ?? ''}
-                                  onChange={(event) =>
-                                    setInclusionCancelacionObservaciones((current) => ({
-                                      ...current,
-                                      [asignatura.id]: event.target.value,
-                                    }))
-                                  }
+                                  value={borrador?.observaciones ?? ''}
+                                  onChange={(event) => actualizarDecisionInclusion(asignatura.id, { observaciones: event.target.value })}
                                   placeholder="Observaciones de la decisión"
                                   rows={2}
-                                  disabled={deciding}
+                                  disabled={guardandoInclusiones}
                                 />
                               </td>
                             </tr>
@@ -1050,6 +1070,16 @@ const MatriculaDetalleCoordinacionPage = () => {
                         })}
                     </tbody>
                   </table>
+                </div>
+                <div className="matricula-detalle__asignatura-actions">
+                  <button
+                    type="button"
+                    className="matricula-detalle__approve-button"
+                    onClick={() => void guardarDecisionesInclusiones()}
+                    disabled={guardandoInclusiones || !hayDecisionesInclusiones}
+                  >
+                    {guardandoInclusiones ? 'Guardando...' : 'Guardar decisiones de inclusión y cancelación'}
+                  </button>
                 </div>
               </article>
             ) : null}
