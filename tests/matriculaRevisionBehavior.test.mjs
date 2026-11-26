@@ -281,12 +281,17 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   })
 
   await t.test('finalizada muestra el estado y los comentarios guardados sin controles de validación', async s => {
+    documents = [{ ...document('APROBADO'), nombreTipoDocumentoTramite: 'Certificado EPS', descripcionTipoDocumentoTramite: ' Certificado   Éps ' }]
     matricula = { ...matricula, estado: 'FINALIZADA', asignaturas: [
       { ...matricula.asignaturas[0], estado: 'MATRICULADA', observaciones: 'Validada por coordinación' },
       { id: 34, asignaturaId: 8, asignaturaNombre: 'Seminario', estado: 'INCLUSION_SOLICITADA', observaciones: null },
     ] }
     const view = mount(s)
     await ready(view)
+    assert.equal(view.getAllByText('Certificado EPS', { exact: true }).length, 1)
+    assert.equal(view.queryByText('Certificado Éps', { exact: true }), null)
+    assert.equal(view.queryByText('Validación', { exact: true }), null)
+    assert.ok(view.getByText('certificado.pdf', { exact: true }))
     const aprobacionInclusion = view.getByRole('button', { name: 'Aprobar', exact: true })
     assert.ok(ui.within(aprobacionInclusion.closest('tr')).getByText('Seminario'))
     assert.equal(view.queryAllByRole('button', { name: 'Guardar validación de asignaturas' }).length, 0)
@@ -299,10 +304,13 @@ test('revisión de matrícula React: documentos, asignaturas y finalización', a
   })
 
   await t.test('abrir y descargar documento usa contenido y nombre del checklist', async sub => {
+    documents = [{ ...document(), descripcionTipoDocumentoTramite: 'Debe incluir la fecha de afiliación' }]
     const opened = [], downloaded = []; const previous = ui.dom.window.open; const anchorClick = ui.dom.window.HTMLAnchorElement.prototype.click
     ui.dom.window.open = url => { opened.push(url); return null }; ui.dom.window.HTMLAnchorElement.prototype.click = function () { downloaded.push(this.download) }
     sub.after(() => { ui.dom.window.open = previous; ui.dom.window.HTMLAnchorElement.prototype.click = anchorClick })
     const view = mount(sub); await ready(view); ui.fireEvent.click(view.getByRole('button', { name: 'Ver', exact: true })); await ui.waitFor(() => assert.equal(opened.length, 1))
+    assert.ok(view.getByText('Debe incluir la fecha de afiliación'))
+    assert.ok(view.getByText('Validación', { exact: true }))
     ui.fireEvent.click(view.getByRole('button', { name: 'Descargar', exact: true })); await ui.waitFor(() => assert.equal(downloaded.length, 1)); assert.equal(downloaded[0], 'certificado.pdf')
   })
 })

@@ -1,3 +1,9 @@
+## Documentos en el detalle de matrícula — 2026-11-25
+
+- `src/pages/MatriculaDetalleCoordinacion/MatriculaDetalleCoordinacionPage.tsx` compara nombre y descripción tras normalizar espacios y usa la comparación de texto en español sin distinguir tildes ni mayúsculas. El CSS agrupa las acciones de archivo y ajusta la grilla cuando la matrícula está finalizada. La descarga y la vista previa reutilizan los manejadores existentes.
+- `tests/matriculaRevisionBehavior.test.mjs` comprueba descripciones repetidas y útiles, disponibilidad de validación y acciones del archivo. `tests/integration/matriculaDocumentosLayout.test.mjs` usa API simulada en Edge. Reutilizar Node 24.11.0, npm 11.6.1, el lockfile y `SAPP_PLAYWRIGHT_MODULE`.
+- Pasaron 18 pruebas focalizadas, la integración en Edge a 1440 y 375 px y la compilación. `npm test` y `npm run test:coverage` dieron 666 de 701 pruebas aprobadas con los 35 fallos previos. El verificador midió los 361 archivos de `src`, con 85,53 % de líneas globales y 87,87 % en el detalle. Se cubrieron cuatro líneas adicionales en el detalle. Logs en `%TEMP%/sapp-docvisual-*.log`.
+
 ## Listado de matrículas académicas — 2026-11-25
 
 - `src/pages/Matricula/MatriculaPage.tsx` y su CSS reorganizan los filtros, mantienen en una línea el período y el enlace al detalle, y muestran el estado vacío en ambos tamaños. Los controles de paginación aparecen a partir de dos páginas. La consulta y las rutas existentes sirven el listado.

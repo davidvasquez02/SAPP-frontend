@@ -201,9 +201,34 @@
 .matricula-detalle__documents-header,
 .matricula-detalle__documents-row {
   display: grid;
-  grid-template-columns: minmax(15rem, 2fr) minmax(7rem, 0.75fr) minmax(9rem, 1fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr) minmax(11rem, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(6.25rem, 0.75fr) minmax(7rem, 0.85fr) minmax(0, 1fr) minmax(10.5rem, 0.9fr) var(--document-validation-column, );
   gap: 0.7rem;
   align-items: start;
+}
+
+.matricula-detalle__documents--editable {
+  --document-validation-column: minmax(9rem, 1fr);
+}
+
+.matricula-detalle__doc-info {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.matricula-detalle__doc-name {
+  font-weight: 650;
+}
+
+.matricula-detalle__doc-filename {
+  font-size: 0.8rem;
+}
+
+.matricula-detalle__file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .matricula-detalle__documents-header {
@@ -361,6 +386,10 @@
     color: var(--text-secondary);
     font-size: 0.78rem;
     font-weight: 700;
+  }
+
+  .matricula-detalle__file-actions::before {
+    flex-basis: 100%;
   }
 
   .matricula-detalle__footer {

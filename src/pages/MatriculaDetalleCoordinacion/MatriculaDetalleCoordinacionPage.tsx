@@ -34,6 +34,9 @@ import { downloadBase64File, openBase64InNewTab } from '../../shared/files/base6
 import HistorialAsignaturasEstudiante from '../../modules/matricula/components/HistorialAsignaturasEstudiante/HistorialAsignaturasEstudiante'
 import './MatriculaDetalleCoordinacionPage.css'
 
+const comparadorDocumento = new Intl.Collator('es-CO', { sensitivity: 'base' })
+const limpiarTextoDocumento = (valor: string) => valor.trim().replace(/\s+/g, ' ')
+
 interface DocumentoActionState {
   viewing: boolean
   downloading: boolean
@@ -699,14 +702,14 @@ const MatriculaDetalleCoordinacionPage = () => {
               ) : sortedDocumentos.length === 0 ? (
                 <p className="matricula-detalle__status">No hay documentos registrados para esta matrícula.</p>
               ) : (
-                <div className="matricula-detalle__documents">
+                <div className={`matricula-detalle__documents${isFinalizada ? '' : ' matricula-detalle__documents--editable'}`}>
                   <div className="matricula-detalle__documents-header">
                     <span>Documento</span>
                     <span>Estado</span>
                     <span>Fecha de revisión</span>
                     <span>Observaciones</span>
-                    <span>Visualización</span>
-                    <span>Validación</span>
+                    <span>Archivo</span>
+                    {!isFinalizada && <span>Validación</span>}
                   </div>
                   {sortedDocumentos.map((documento) => {
                     const documentoId = documento.documentoUploadedResponse?.idDocumento
@@ -738,22 +741,24 @@ const MatriculaDetalleCoordinacionPage = () => {
                         : ''
                     const currentRejectError = documentoId != null ? rejectErrors[documentoId] : null
                     const canOpenActions = uploaded && Boolean(base64) && Boolean(mimeType)
+                    const nombre = limpiarTextoDocumento(documento.nombreTipoDocumentoTramite)
+                    const descripcion = limpiarTextoDocumento(documento.descripcionTipoDocumentoTramite ?? '')
 
                     return (
                       <div key={documento.idTipoDocumentoTramite} className="matricula-detalle__documents-row">
-                        <div>
-                          <p className="matricula-detalle__doc-name">{documento.nombreTipoDocumentoTramite}</p>
-                          {documento.descripcionTipoDocumentoTramite ? (
+                        <div className="matricula-detalle__doc-info">
+                          <p className="matricula-detalle__doc-name">{nombre}</p>
+                          {descripcion && comparadorDocumento.compare(nombre, descripcion) !== 0 ? (
                             <p className="matricula-detalle__doc-description">
-                              {documento.descripcionTipoDocumentoTramite}
+                              {descripcion}
                             </p>
                           ) : null}
                           <p className="matricula-detalle__doc-meta">
                             {documento.obligatorioTipoDocumentoTramite ? 'Obligatorio' : 'Opcional'}
                           </p>
                           {uploaded ? (
-                            <p className="matricula-detalle__doc-meta">
-                              <strong>Archivo:</strong> {filename}
+                            <p className="matricula-detalle__doc-meta matricula-detalle__doc-filename">
+                              {filename}
                             </p>
                           ) : null}
                         </div>
@@ -776,7 +781,7 @@ const MatriculaDetalleCoordinacionPage = () => {
                           )}
                         </div>
 
-                        <div className="matricula-detalle__doc-actions" data-label="Visualización">
+                        <div className="matricula-detalle__file-actions" data-label="Archivo">
                           <button
                             type="button"
                             className="sapp-document-action matricula-detalle__view-button"
@@ -801,8 +806,8 @@ const MatriculaDetalleCoordinacionPage = () => {
                           </button>
                         </div>
 
-                        <div className="matricula-detalle__doc-actions" data-label="Validación">
-                          {!isFinalizada ? (
+                        {!isFinalizada && (
+                          <div className="matricula-detalle__doc-actions" data-label="Validación">
                             <ValidationButtons
                               estadoUi={validacionEstado}
                               disabled={disableValidation}
@@ -833,8 +838,8 @@ const MatriculaDetalleCoordinacionPage = () => {
                               rejectError={currentRejectError}
                               textareaId={documentoId ? `matricula-doc-${documentoId}` : undefined}
                             />
-                          ) : null}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })}

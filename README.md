@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Documentos en el detalle de matrícula — 2026-11-25
+
+Cada documento muestra su nombre una sola vez cuando la descripción lo repite. Las descripciones que aportan información se conservan. El nombre del archivo aparece como texto secundario y las acciones «Ver» y «Descargar» se agrupan. La columna «Validación» aparece durante la revisión y se retira al finalizar la matrícula.
+
 ## Listado de matrículas académicas — 2026-11-25
 
 El buscador y los filtros comparten una fila en escritorio. La tabla mantiene el período y «Ver detalle» en una línea y usa etiquetas de estado ajustadas a su texto. En móvil se muestran tarjetas. El listado explica cuándo la búsqueda no tiene resultados y muestra la paginación cuando hay más de una página.
