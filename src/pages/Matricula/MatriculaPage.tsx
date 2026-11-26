@@ -965,6 +965,15 @@ const MatriculaPage = () => {
           <section className="matricula-page__card matricula-page__filters sapp-filters-panel">
             <h3 className="matricula-page__list-title">Listado de matrículas académicas</h3>
             <div className="matricula-page__filters-top-row">
+              <label className="sapp-filter-field matricula-page__search-filter">
+                <span>Buscar estudiante</span>
+                <input
+                  type="search"
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Nombre, código o programa"
+                />
+              </label>
               <label className="sapp-filter-field matricula-page__filter-field">
                 <span>Programa académico</span>
                 <select
@@ -973,7 +982,7 @@ const MatriculaPage = () => {
                 >
                   {programas.map((programa) => (
                     <option key={programa} value={programa}>
-                      {resolveProgramaLabel(programa)}
+                      {programa === "TODOS" ? "Todos los programas" : resolveProgramaLabel(programa)}
                     </option>
                   ))}
                 </select>
@@ -986,7 +995,7 @@ const MatriculaPage = () => {
                 >
                   {periodos.map((periodo) => (
                     <option key={periodo} value={periodo}>
-                      {periodo}
+                      {periodo === "TODOS" ? "Todos los períodos" : periodo}
                     </option>
                   ))}
                 </select>
@@ -999,21 +1008,12 @@ const MatriculaPage = () => {
                 >
                   {estados.map((estado) => (
                     <option key={estado} value={estado}>
-                      {estado}
+                      {estado === "TODOS" ? "Todos los estados" : getMatriculaEstadoLabel(estado)}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
-            <label className="sapp-filter-field matricula-page__search-filter">
-              <span>Buscar estudiante</span>
-              <input
-                type="text"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Nombre, código o programa"
-              />
-            </label>
           </section>
 
           <section className="matricula-page__card">
@@ -1029,7 +1029,12 @@ const MatriculaPage = () => {
                 <p className="matricula-page__description">
                   Registros encontrados: {filteredMatriculas.length}
                 </p>
-                <div className="matricula-page__table-wrapper sapp-table-shell">
+                {filteredMatriculas.length === 0 ? (
+                  <p className="matricula-page__placeholder">
+                    No hay matrículas que coincidan con los filtros seleccionados.
+                  </p>
+                ) : null}
+                <div className="matricula-page__table-wrapper sapp-table-shell" hidden={filteredMatriculas.length === 0}>
                   <table className="matricula-page__table sapp-table" role="grid">
                     <thead>
                       <tr>
@@ -1037,7 +1042,7 @@ const MatriculaPage = () => {
                         <th>Programa</th>
                         <th>Periodo</th>
                         <th>Estado</th>
-                        <th>Fecha solicitud</th>
+                        <th>Fecha de solicitud</th>
                         <th>Acción</th>
                       </tr>
                     </thead>
@@ -1052,7 +1057,7 @@ const MatriculaPage = () => {
                             </small>
                           </td>
                           <td>{item.programaAcademico}</td>
-                          <td>{item.periodoAcademico}</td>
+                          <td className="matricula-page__period-cell">{item.periodoAcademico}</td>
                           <td>
                             <span className={getMatriculaEstadoClassName(item.estado, item.documentosCompletos)}>
                               {getMatriculaEstadoLabel(item.estado, item.documentosCompletos)}
@@ -1076,11 +1081,6 @@ const MatriculaPage = () => {
                   className="matricula-page__mobile-list"
                   aria-label="Matrículas académicas"
                 >
-                  {filteredMatriculas.length === 0 ? (
-                    <p className="matricula-page__placeholder">
-                      No hay matrículas que coincidan con los filtros seleccionados.
-                    </p>
-                  ) : null}
                   {paginatedMatriculas.map((item) => (
                     <article className="matricula-page__mobile-card" key={item.id}>
                       <header className="matricula-page__mobile-card-header">
@@ -1117,7 +1117,7 @@ const MatriculaPage = () => {
                     </article>
                   ))}
                 </div>
-                {filteredMatriculas.length > 0 ? (
+                {listadoTotalPages > 1 ? (
                   <footer
                     className="matricula-page__pagination"
                     aria-label="Paginación de matrículas académicas"

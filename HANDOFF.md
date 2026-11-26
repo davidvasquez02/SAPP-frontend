@@ -1,3 +1,9 @@
+## Listado de matrículas académicas — 2026-11-25
+
+- `src/pages/Matricula/MatriculaPage.tsx` y su CSS reorganizan los filtros, mantienen en una línea el período y el enlace al detalle, y muestran el estado vacío en ambos tamaños. Los controles de paginación aparecen a partir de dos páginas. La consulta y las rutas existentes sirven el listado.
+- `tests/matriculaPageBehavior.test.mjs` cubre los filtros, una sola página, el estado vacío y la ruta al detalle. `tests/integration/matriculaListadoLayout.test.mjs` comprueba el listado con API simulada en Edge a 1407 px y la vista móvil oscura a 375 px. Reutilizar Node 24.11.0, npm 11.6.1, el lockfile y el Playwright local mediante `SAPP_PLAYWRIGHT_MODULE`.
+- Pasaron la compilación y la integración en Edge. `npm test` y `npm run test:coverage` registraron 666 de 701 pruebas aprobadas, con los mismos 35 fallos previos. El verificador incluyó los 361 archivos de `src`. La cobertura global fue 85,53 % y la de la página 87,43 %, con una línea cubierta menos en la página y el mismo total de 414 líneas medibles. En el listado quedaron sin ejecutar los manejadores de cambio de período y retroceso en la paginación. Logs en `%TEMP%/sapp-listado-visual-*.log`.
+
 ## Presentación de inclusiones y cancelaciones — 2026-11-25
 
 - `src/modules/matricula/components/InclusionCancelacionPanel/` reutiliza la tarjeta de Matrícula, agrupa el plazo con el título y aplica los tokens globales a las filas y a los botones. La etiqueta completa permite seleccionar la materia.

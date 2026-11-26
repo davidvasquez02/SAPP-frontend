@@ -1,5 +1,9 @@
 # SAPP Frontend — sistema de apoyo a posgrados EISI–UIS
 
+## Listado de matrículas académicas — 2026-11-25
+
+El buscador y los filtros comparten una fila en escritorio. La tabla mantiene el período y «Ver detalle» en una línea y usa etiquetas de estado ajustadas a su texto. En móvil se muestran tarjetas. El listado explica cuándo la búsqueda no tiene resultados y muestra la paginación cuando hay más de una página.
+
 ## Presentación de inclusiones y cancelaciones — 2026-11-25
 
 El panel usa la tarjeta de Matrícula y muestra la fecha límite junto al título. Las secciones de inclusión y cancelación tienen un espaciado uniforme. Cada materia que se puede cancelar tiene una fila seleccionable con su casilla alineada. Las acciones se ajustan al ancho disponible en móvil.

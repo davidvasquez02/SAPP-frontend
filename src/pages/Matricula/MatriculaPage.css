@@ -318,11 +318,7 @@
 
 @media (min-width: 900px) {
     .matricula-page__filters-top-row {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        justify-content: end;
-    }
-    .matricula-page__search-filter {
-        width: 100%;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr) repeat(2, minmax(0, 0.85fr));
     }
 }
 
@@ -345,7 +341,15 @@
     border-bottom: 1px solid color-mix(in srgb, var(--outline), transparent 40%);
     padding: 0.7rem;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
+}
+
+.matricula-page__table small {
+    color: var(--text-secondary);
+}
+
+.matricula-page__period-cell {
+    white-space: nowrap;
 }
 
 .matricula-page__table tbody tr:hover {
@@ -363,6 +367,11 @@
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+}
+
+.matricula-page__table .matricula-page__estado-badge {
+    min-width: 0;
+    text-align: center;
 }
 
 .matricula-page__estado-badge--pendiente-documentos {
@@ -399,6 +408,22 @@
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
+    white-space: nowrap;
+}
+
+.matricula-page__table .matricula-page__detail-button {
+    border-color: var(--outline);
+    background: var(--surface);
+    color: var(--primary);
+}
+
+.matricula-page__table .matricula-page__detail-button:hover {
+    background: var(--surface-container-low);
+}
+
+.matricula-page__detail-button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
 }
 
 .matricula-page__mobile-list {
